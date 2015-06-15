@@ -731,7 +731,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @return zimbraDistributionListSubscriptionPolicy, or null if unset and/or has invalid value
      *
@@ -746,7 +746,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @return zimbraDistributionListSubscriptionPolicy, or null if unset
      *
@@ -761,7 +761,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @param zimbraDistributionListSubscriptionPolicy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -779,7 +779,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @param zimbraDistributionListSubscriptionPolicy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -798,7 +798,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @param zimbraDistributionListSubscriptionPolicy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -816,7 +816,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @param zimbraDistributionListSubscriptionPolicy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -835,7 +835,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -852,7 +852,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -870,7 +870,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @return zimbraDistributionListUnsubscriptionPolicy, or null if unset and/or has invalid value
      *
@@ -885,7 +885,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @return zimbraDistributionListUnsubscriptionPolicy, or null if unset
      *
@@ -900,7 +900,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @param zimbraDistributionListUnsubscriptionPolicy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -918,7 +918,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @param zimbraDistributionListUnsubscriptionPolicy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -937,7 +937,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @param zimbraDistributionListUnsubscriptionPolicy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -955,7 +955,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @param zimbraDistributionListUnsubscriptionPolicy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -974,7 +974,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -991,7 +991,7 @@ public abstract class ZAttrDynamicGroup extends Group {
      * distribution subscription policy. ACCEPT: always accept, REJECT:
      * always reject, APPROVAL: require owners approval.
      *
-     * <p>Valid values: [APPROVAL, ACCEPT, REJECT]
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -1521,7 +1521,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @return zimbraMailStatus, or null if unset and/or has invalid value
      */
@@ -1533,7 +1533,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @return zimbraMailStatus, or null if unset
      */
@@ -1545,7 +1545,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @param zimbraMailStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1560,7 +1560,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @param zimbraMailStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1576,7 +1576,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @param zimbraMailStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1591,7 +1591,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @param zimbraMailStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1607,7 +1607,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -1621,7 +1621,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     /**
      * mail delivery status (enabled/disabled)
      *
-     * <p>Valid values: [enabled, disabled]
+     * <p>Valid values: [disabled, enabled]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

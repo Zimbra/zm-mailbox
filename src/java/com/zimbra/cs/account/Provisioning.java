@@ -38,6 +38,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -986,7 +987,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return
      * @throws ServiceException
      */
-    public abstract Domain getDefaultZMGDomain() throws ServiceException;
+    public Domain getDefaultZMGDomain() throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
 
     /**
      * Creates an account for an app that interfaces with the Mobile Gateway features.
@@ -995,7 +998,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @param appCredsDigest a string representing the unique set of credentials of the app
      * @return
      */
-    public abstract Account createZMGAppAccount(String accountId, String appCredsDigest) throws ServiceException;
+    public Account autoProvZMGAppAccount(String accountId, String appCredsDigest) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    public Pair<Account, Boolean> autoProvZMGProxyAccount(String emailAddr, String password) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
 
     /**
      * Looks up an account by the specified key.

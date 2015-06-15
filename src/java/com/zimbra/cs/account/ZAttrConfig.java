@@ -782,7 +782,7 @@ public abstract class ZAttrConfig extends Entry {
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
-     * <p>Valid values: [global, acl]
+     * <p>Valid values: [acl, global]
      *
      * @return zimbraAdminAccessControlMech, or ZAttrProvisioning.AdminAccessControlMech.acl if unset and/or has invalid value
      *
@@ -797,7 +797,7 @@ public abstract class ZAttrConfig extends Entry {
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
-     * <p>Valid values: [global, acl]
+     * <p>Valid values: [acl, global]
      *
      * @return zimbraAdminAccessControlMech, or "acl" if unset
      *
@@ -812,7 +812,7 @@ public abstract class ZAttrConfig extends Entry {
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
-     * <p>Valid values: [global, acl]
+     * <p>Valid values: [acl, global]
      *
      * @param zimbraAdminAccessControlMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -830,7 +830,7 @@ public abstract class ZAttrConfig extends Entry {
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
-     * <p>Valid values: [global, acl]
+     * <p>Valid values: [acl, global]
      *
      * @param zimbraAdminAccessControlMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -849,7 +849,7 @@ public abstract class ZAttrConfig extends Entry {
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
-     * <p>Valid values: [global, acl]
+     * <p>Valid values: [acl, global]
      *
      * @param zimbraAdminAccessControlMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -867,7 +867,7 @@ public abstract class ZAttrConfig extends Entry {
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
-     * <p>Valid values: [global, acl]
+     * <p>Valid values: [acl, global]
      *
      * @param zimbraAdminAccessControlMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -886,7 +886,7 @@ public abstract class ZAttrConfig extends Entry {
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
-     * <p>Valid values: [global, acl]
+     * <p>Valid values: [acl, global]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -903,7 +903,7 @@ public abstract class ZAttrConfig extends Entry {
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
-     * <p>Valid values: [global, acl]
+     * <p>Valid values: [acl, global]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2155,7 +2155,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Amavis final destination for Spam. Default is to discard it
      *
-     * <p>Valid values: [D_BOUNCE, D_DISCARD, D_PASS, D_REJECT]
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @return zimbraAmavisFinalSpamDestiny, or ZAttrProvisioning.AmavisFinalSpamDestiny.D_DISCARD if unset and/or has invalid value
      *
@@ -2169,7 +2169,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Amavis final destination for Spam. Default is to discard it
      *
-     * <p>Valid values: [D_BOUNCE, D_DISCARD, D_PASS, D_REJECT]
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @return zimbraAmavisFinalSpamDestiny, or "D_DISCARD" if unset
      *
@@ -2183,7 +2183,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Amavis final destination for Spam. Default is to discard it
      *
-     * <p>Valid values: [D_BOUNCE, D_DISCARD, D_PASS, D_REJECT]
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @param zimbraAmavisFinalSpamDestiny new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2200,7 +2200,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Amavis final destination for Spam. Default is to discard it
      *
-     * <p>Valid values: [D_BOUNCE, D_DISCARD, D_PASS, D_REJECT]
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @param zimbraAmavisFinalSpamDestiny new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2218,7 +2218,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Amavis final destination for Spam. Default is to discard it
      *
-     * <p>Valid values: [D_BOUNCE, D_DISCARD, D_PASS, D_REJECT]
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @param zimbraAmavisFinalSpamDestiny new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2235,7 +2235,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Amavis final destination for Spam. Default is to discard it
      *
-     * <p>Valid values: [D_BOUNCE, D_DISCARD, D_PASS, D_REJECT]
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @param zimbraAmavisFinalSpamDestiny new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2253,7 +2253,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Amavis final destination for Spam. Default is to discard it
      *
-     * <p>Valid values: [D_BOUNCE, D_DISCARD, D_PASS, D_REJECT]
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2269,7 +2269,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Amavis final destination for Spam. Default is to discard it
      *
-     * <p>Valid values: [D_BOUNCE, D_DISCARD, D_PASS, D_REJECT]
+     * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -4615,7 +4615,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * backup mode
      *
-     * <p>Valid values: [Standard, Auto-Grouped]
+     * <p>Valid values: [Auto-Grouped, Standard]
      *
      * @return zimbraBackupMode, or ZAttrProvisioning.BackupMode.Standard if unset and/or has invalid value
      */
@@ -4627,7 +4627,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * backup mode
      *
-     * <p>Valid values: [Standard, Auto-Grouped]
+     * <p>Valid values: [Auto-Grouped, Standard]
      *
      * @return zimbraBackupMode, or "Standard" if unset
      */
@@ -4639,7 +4639,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * backup mode
      *
-     * <p>Valid values: [Standard, Auto-Grouped]
+     * <p>Valid values: [Auto-Grouped, Standard]
      *
      * @param zimbraBackupMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4654,7 +4654,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * backup mode
      *
-     * <p>Valid values: [Standard, Auto-Grouped]
+     * <p>Valid values: [Auto-Grouped, Standard]
      *
      * @param zimbraBackupMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4670,7 +4670,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * backup mode
      *
-     * <p>Valid values: [Standard, Auto-Grouped]
+     * <p>Valid values: [Auto-Grouped, Standard]
      *
      * @param zimbraBackupMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4685,7 +4685,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * backup mode
      *
-     * <p>Valid values: [Standard, Auto-Grouped]
+     * <p>Valid values: [Auto-Grouped, Standard]
      *
      * @param zimbraBackupMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4701,7 +4701,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * backup mode
      *
-     * <p>Valid values: [Standard, Auto-Grouped]
+     * <p>Valid values: [Auto-Grouped, Standard]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -4715,7 +4715,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * backup mode
      *
-     * <p>Valid values: [Standard, Auto-Grouped]
+     * <p>Valid values: [Auto-Grouped, Standard]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5623,7 +5623,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Bypass fail mode. Default is tempfail
      *
-     * <p>Valid values: [pass, tempfail]
+     * <p>Valid values: [tempfail, pass]
      *
      * @return zimbraCBPolicydBypassMode, or ZAttrProvisioning.CBPolicydBypassMode.tempfail if unset and/or has invalid value
      *
@@ -5637,7 +5637,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Bypass fail mode. Default is tempfail
      *
-     * <p>Valid values: [pass, tempfail]
+     * <p>Valid values: [tempfail, pass]
      *
      * @return zimbraCBPolicydBypassMode, or "tempfail" if unset
      *
@@ -5651,7 +5651,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Bypass fail mode. Default is tempfail
      *
-     * <p>Valid values: [pass, tempfail]
+     * <p>Valid values: [tempfail, pass]
      *
      * @param zimbraCBPolicydBypassMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5668,7 +5668,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Bypass fail mode. Default is tempfail
      *
-     * <p>Valid values: [pass, tempfail]
+     * <p>Valid values: [tempfail, pass]
      *
      * @param zimbraCBPolicydBypassMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5686,7 +5686,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Bypass fail mode. Default is tempfail
      *
-     * <p>Valid values: [pass, tempfail]
+     * <p>Valid values: [tempfail, pass]
      *
      * @param zimbraCBPolicydBypassMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5703,7 +5703,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Bypass fail mode. Default is tempfail
      *
-     * <p>Valid values: [pass, tempfail]
+     * <p>Valid values: [tempfail, pass]
      *
      * @param zimbraCBPolicydBypassMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5721,7 +5721,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Bypass fail mode. Default is tempfail
      *
-     * <p>Valid values: [pass, tempfail]
+     * <p>Valid values: [tempfail, pass]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5737,7 +5737,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Bypass fail mode. Default is tempfail
      *
-     * <p>Valid values: [pass, tempfail]
+     * <p>Valid values: [tempfail, pass]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -9016,7 +9016,7 @@ public abstract class ZAttrConfig extends Entry {
      * &quot;RedHat&quot; for Red Hat cluster or &quot;Veritas&quot; for
      * Veritas Cluster Server from Symantec
      *
-     * <p>Valid values: [RedHat, Veritas, none]
+     * <p>Valid values: [RedHat, none, Veritas]
      *
      * @return zimbraClusterType, or ZAttrProvisioning.ClusterType.none if unset and/or has invalid value
      */
@@ -9030,7 +9030,7 @@ public abstract class ZAttrConfig extends Entry {
      * &quot;RedHat&quot; for Red Hat cluster or &quot;Veritas&quot; for
      * Veritas Cluster Server from Symantec
      *
-     * <p>Valid values: [RedHat, Veritas, none]
+     * <p>Valid values: [RedHat, none, Veritas]
      *
      * @return zimbraClusterType, or "none" if unset
      */
@@ -9044,7 +9044,7 @@ public abstract class ZAttrConfig extends Entry {
      * &quot;RedHat&quot; for Red Hat cluster or &quot;Veritas&quot; for
      * Veritas Cluster Server from Symantec
      *
-     * <p>Valid values: [RedHat, Veritas, none]
+     * <p>Valid values: [RedHat, none, Veritas]
      *
      * @param zimbraClusterType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9061,7 +9061,7 @@ public abstract class ZAttrConfig extends Entry {
      * &quot;RedHat&quot; for Red Hat cluster or &quot;Veritas&quot; for
      * Veritas Cluster Server from Symantec
      *
-     * <p>Valid values: [RedHat, Veritas, none]
+     * <p>Valid values: [RedHat, none, Veritas]
      *
      * @param zimbraClusterType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -9079,7 +9079,7 @@ public abstract class ZAttrConfig extends Entry {
      * &quot;RedHat&quot; for Red Hat cluster or &quot;Veritas&quot; for
      * Veritas Cluster Server from Symantec
      *
-     * <p>Valid values: [RedHat, Veritas, none]
+     * <p>Valid values: [RedHat, none, Veritas]
      *
      * @param zimbraClusterType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9096,7 +9096,7 @@ public abstract class ZAttrConfig extends Entry {
      * &quot;RedHat&quot; for Red Hat cluster or &quot;Veritas&quot; for
      * Veritas Cluster Server from Symantec
      *
-     * <p>Valid values: [RedHat, Veritas, none]
+     * <p>Valid values: [RedHat, none, Veritas]
      *
      * @param zimbraClusterType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -9114,7 +9114,7 @@ public abstract class ZAttrConfig extends Entry {
      * &quot;RedHat&quot; for Red Hat cluster or &quot;Veritas&quot; for
      * Veritas Cluster Server from Symantec
      *
-     * <p>Valid values: [RedHat, Veritas, none]
+     * <p>Valid values: [RedHat, none, Veritas]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -9130,7 +9130,7 @@ public abstract class ZAttrConfig extends Entry {
      * &quot;RedHat&quot; for Red Hat cluster or &quot;Veritas&quot; for
      * Veritas Cluster Server from Symantec
      *
-     * <p>Valid values: [RedHat, Veritas, none]
+     * <p>Valid values: [RedHat, none, Veritas]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11290,7 +11290,7 @@ public abstract class ZAttrConfig extends Entry {
      * For zimbra dnscache, whether or not to only use TCP when talking to
      * the upstream Master DNS servers. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraDNSTCPUpstream, or ZAttrProvisioning.DNSTCPUpstream.no if unset and/or has invalid value
      *
@@ -11305,7 +11305,7 @@ public abstract class ZAttrConfig extends Entry {
      * For zimbra dnscache, whether or not to only use TCP when talking to
      * the upstream Master DNS servers. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraDNSTCPUpstream, or "no" if unset
      *
@@ -11320,7 +11320,7 @@ public abstract class ZAttrConfig extends Entry {
      * For zimbra dnscache, whether or not to only use TCP when talking to
      * the upstream Master DNS servers. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSTCPUpstream new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11338,7 +11338,7 @@ public abstract class ZAttrConfig extends Entry {
      * For zimbra dnscache, whether or not to only use TCP when talking to
      * the upstream Master DNS servers. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSTCPUpstream new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11357,7 +11357,7 @@ public abstract class ZAttrConfig extends Entry {
      * For zimbra dnscache, whether or not to only use TCP when talking to
      * the upstream Master DNS servers. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSTCPUpstream new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11375,7 +11375,7 @@ public abstract class ZAttrConfig extends Entry {
      * For zimbra dnscache, whether or not to only use TCP when talking to
      * the upstream Master DNS servers. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSTCPUpstream new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11394,7 +11394,7 @@ public abstract class ZAttrConfig extends Entry {
      * For zimbra dnscache, whether or not to only use TCP when talking to
      * the upstream Master DNS servers. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11411,7 +11411,7 @@ public abstract class ZAttrConfig extends Entry {
      * For zimbra dnscache, whether or not to only use TCP when talking to
      * the upstream Master DNS servers. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11428,7 +11428,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use TCP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraDNSUseTCP, or ZAttrProvisioning.DNSUseTCP.yes if unset and/or has invalid value
      *
@@ -11442,7 +11442,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use TCP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraDNSUseTCP, or "yes" if unset
      *
@@ -11456,7 +11456,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use TCP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSUseTCP new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11473,7 +11473,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use TCP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSUseTCP new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11491,7 +11491,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use TCP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSUseTCP new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11508,7 +11508,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use TCP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSUseTCP new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11526,7 +11526,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use TCP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11542,7 +11542,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use TCP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11559,7 +11559,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use UDP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraDNSUseUDP, or ZAttrProvisioning.DNSUseUDP.yes if unset and/or has invalid value
      *
@@ -11573,7 +11573,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use UDP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraDNSUseUDP, or "yes" if unset
      *
@@ -11587,7 +11587,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use UDP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSUseUDP new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11604,7 +11604,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use UDP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSUseUDP new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11622,7 +11622,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use UDP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSUseUDP new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11639,7 +11639,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use UDP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraDNSUseUDP new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11657,7 +11657,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use UDP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11673,7 +11673,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * For zimbra dnscache, whether or not to use UDP. Defaults to yes
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11764,7 +11764,7 @@ public abstract class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @return zimbraDataSourceConnectionType, or ZAttrProvisioning.DataSourceConnectionType.cleartext if unset and/or has invalid value
      */
@@ -11778,7 +11778,7 @@ public abstract class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @return zimbraDataSourceConnectionType, or "cleartext" if unset
      */
@@ -11792,7 +11792,7 @@ public abstract class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @param zimbraDataSourceConnectionType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11809,7 +11809,7 @@ public abstract class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @param zimbraDataSourceConnectionType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11827,7 +11827,7 @@ public abstract class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @param zimbraDataSourceConnectionType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11844,7 +11844,7 @@ public abstract class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @param zimbraDataSourceConnectionType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11862,7 +11862,7 @@ public abstract class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -11878,7 +11878,7 @@ public abstract class ZAttrConfig extends Entry {
      * tls if available). If not set on data source, fallback to the value on
      * global config.
      *
-     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -12518,7 +12518,7 @@ public abstract class ZAttrConfig extends Entry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @return zimbraDomainAggregateQuotaPolicy, or ZAttrProvisioning.DomainAggregateQuotaPolicy.ALLOWSENDRECEIVE if unset and/or has invalid value
      *
@@ -12533,7 +12533,7 @@ public abstract class ZAttrConfig extends Entry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @return zimbraDomainAggregateQuotaPolicy, or "ALLOWSENDRECEIVE" if unset
      *
@@ -12548,7 +12548,7 @@ public abstract class ZAttrConfig extends Entry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @param zimbraDomainAggregateQuotaPolicy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12566,7 +12566,7 @@ public abstract class ZAttrConfig extends Entry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @param zimbraDomainAggregateQuotaPolicy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -12585,7 +12585,7 @@ public abstract class ZAttrConfig extends Entry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @param zimbraDomainAggregateQuotaPolicy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12603,7 +12603,7 @@ public abstract class ZAttrConfig extends Entry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @param zimbraDomainAggregateQuotaPolicy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -12622,7 +12622,7 @@ public abstract class ZAttrConfig extends Entry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -12639,7 +12639,7 @@ public abstract class ZAttrConfig extends Entry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -13403,7 +13403,7 @@ public abstract class ZAttrConfig extends Entry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @return zimbraDomainStatus, or null if unset and/or has invalid value
      *
@@ -13436,7 +13436,7 @@ public abstract class ZAttrConfig extends Entry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @return zimbraDomainStatus, or null if unset
      *
@@ -13469,7 +13469,7 @@ public abstract class ZAttrConfig extends Entry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @param zimbraDomainStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13505,7 +13505,7 @@ public abstract class ZAttrConfig extends Entry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @param zimbraDomainStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13542,7 +13542,7 @@ public abstract class ZAttrConfig extends Entry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @param zimbraDomainStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13578,7 +13578,7 @@ public abstract class ZAttrConfig extends Entry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @param zimbraDomainStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13615,7 +13615,7 @@ public abstract class ZAttrConfig extends Entry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -13650,7 +13650,7 @@ public abstract class ZAttrConfig extends Entry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -14697,7 +14697,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @return zimbraFreebusyExchangeAuthScheme, or null if unset and/or has invalid value
      *
@@ -14711,7 +14711,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @return zimbraFreebusyExchangeAuthScheme, or null if unset
      *
@@ -14725,7 +14725,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14742,7 +14742,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14760,7 +14760,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14777,7 +14777,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14795,7 +14795,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -14811,7 +14811,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -17093,7 +17093,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @return zimbraGalTokenizeAutoCompleteKey, or ZAttrProvisioning.GalTokenizeAutoCompleteKey.and if unset and/or has invalid value
      *
@@ -17108,7 +17108,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @return zimbraGalTokenizeAutoCompleteKey, or "and" if unset
      *
@@ -17123,7 +17123,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17141,7 +17141,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17160,7 +17160,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17178,7 +17178,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17197,7 +17197,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -17214,7 +17214,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -17232,7 +17232,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @return zimbraGalTokenizeSearchKey, or ZAttrProvisioning.GalTokenizeSearchKey.and if unset and/or has invalid value
      *
@@ -17247,7 +17247,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @return zimbraGalTokenizeSearchKey, or "and" if unset
      *
@@ -17262,7 +17262,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeSearchKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17280,7 +17280,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeSearchKey new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17299,7 +17299,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeSearchKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17317,7 +17317,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeSearchKey new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17336,7 +17336,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -17353,7 +17353,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -19659,7 +19659,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * supported IP mode
      *
-     * <p>Valid values: [ipv4, ipv6, both]
+     * <p>Valid values: [both, ipv6, ipv4]
      *
      * @return zimbraIPMode, or ZAttrProvisioning.IPMode.ipv4 if unset and/or has invalid value
      *
@@ -19673,7 +19673,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * supported IP mode
      *
-     * <p>Valid values: [ipv4, ipv6, both]
+     * <p>Valid values: [both, ipv6, ipv4]
      *
      * @return zimbraIPMode, or "ipv4" if unset
      *
@@ -19687,7 +19687,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * supported IP mode
      *
-     * <p>Valid values: [ipv4, ipv6, both]
+     * <p>Valid values: [both, ipv6, ipv4]
      *
      * @param zimbraIPMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19704,7 +19704,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * supported IP mode
      *
-     * <p>Valid values: [ipv4, ipv6, both]
+     * <p>Valid values: [both, ipv6, ipv4]
      *
      * @param zimbraIPMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19722,7 +19722,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * supported IP mode
      *
-     * <p>Valid values: [ipv4, ipv6, both]
+     * <p>Valid values: [both, ipv6, ipv4]
      *
      * @param zimbraIPMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19739,7 +19739,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * supported IP mode
      *
-     * <p>Valid values: [ipv4, ipv6, both]
+     * <p>Valid values: [both, ipv6, ipv4]
      *
      * @param zimbraIPMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19757,7 +19757,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * supported IP mode
      *
-     * <p>Valid values: [ipv4, ipv6, both]
+     * <p>Valid values: [both, ipv6, ipv4]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -19773,7 +19773,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * supported IP mode
      *
-     * <p>Valid values: [ipv4, ipv6, both]
+     * <p>Valid values: [both, ipv6, ipv4]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -24373,7 +24373,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to run HTTP or HTTPS or both/mixed mode or redirect mode. See
      * also related attributes zimbraMailPort and zimbraMailSSLPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @return zimbraMailMode, or null if unset and/or has invalid value
      */
@@ -24386,7 +24386,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to run HTTP or HTTPS or both/mixed mode or redirect mode. See
      * also related attributes zimbraMailPort and zimbraMailSSLPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @return zimbraMailMode, or null if unset
      */
@@ -24399,7 +24399,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to run HTTP or HTTPS or both/mixed mode or redirect mode. See
      * also related attributes zimbraMailPort and zimbraMailSSLPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @param zimbraMailMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24415,7 +24415,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to run HTTP or HTTPS or both/mixed mode or redirect mode. See
      * also related attributes zimbraMailPort and zimbraMailSSLPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @param zimbraMailMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24432,7 +24432,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to run HTTP or HTTPS or both/mixed mode or redirect mode. See
      * also related attributes zimbraMailPort and zimbraMailSSLPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @param zimbraMailMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24448,7 +24448,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to run HTTP or HTTPS or both/mixed mode or redirect mode. See
      * also related attributes zimbraMailPort and zimbraMailSSLPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @param zimbraMailMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24465,7 +24465,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to run HTTP or HTTPS or both/mixed mode or redirect mode. See
      * also related attributes zimbraMailPort and zimbraMailSSLPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -24480,7 +24480,7 @@ public abstract class ZAttrConfig extends Entry {
      * whether to run HTTP or HTTPS or both/mixed mode or redirect mode. See
      * also related attributes zimbraMailPort and zimbraMailSSLPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -25253,7 +25253,7 @@ public abstract class ZAttrConfig extends Entry {
      * reverse-proxied - reverse proxy is in place and should never send
      * refer
      *
-     * <p>Valid values: [always, wronghost, reverse-proxied]
+     * <p>Valid values: [always, reverse-proxied, wronghost]
      *
      * @return zimbraMailReferMode, or ZAttrProvisioning.MailReferMode.wronghost if unset and/or has invalid value
      *
@@ -25271,7 +25271,7 @@ public abstract class ZAttrConfig extends Entry {
      * reverse-proxied - reverse proxy is in place and should never send
      * refer
      *
-     * <p>Valid values: [always, wronghost, reverse-proxied]
+     * <p>Valid values: [always, reverse-proxied, wronghost]
      *
      * @return zimbraMailReferMode, or "wronghost" if unset
      *
@@ -25289,7 +25289,7 @@ public abstract class ZAttrConfig extends Entry {
      * reverse-proxied - reverse proxy is in place and should never send
      * refer
      *
-     * <p>Valid values: [always, wronghost, reverse-proxied]
+     * <p>Valid values: [always, reverse-proxied, wronghost]
      *
      * @param zimbraMailReferMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25310,7 +25310,7 @@ public abstract class ZAttrConfig extends Entry {
      * reverse-proxied - reverse proxy is in place and should never send
      * refer
      *
-     * <p>Valid values: [always, wronghost, reverse-proxied]
+     * <p>Valid values: [always, reverse-proxied, wronghost]
      *
      * @param zimbraMailReferMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -25332,7 +25332,7 @@ public abstract class ZAttrConfig extends Entry {
      * reverse-proxied - reverse proxy is in place and should never send
      * refer
      *
-     * <p>Valid values: [always, wronghost, reverse-proxied]
+     * <p>Valid values: [always, reverse-proxied, wronghost]
      *
      * @param zimbraMailReferMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25353,7 +25353,7 @@ public abstract class ZAttrConfig extends Entry {
      * reverse-proxied - reverse proxy is in place and should never send
      * refer
      *
-     * <p>Valid values: [always, wronghost, reverse-proxied]
+     * <p>Valid values: [always, reverse-proxied, wronghost]
      *
      * @param zimbraMailReferMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -25375,7 +25375,7 @@ public abstract class ZAttrConfig extends Entry {
      * reverse-proxied - reverse proxy is in place and should never send
      * refer
      *
-     * <p>Valid values: [always, wronghost, reverse-proxied]
+     * <p>Valid values: [always, reverse-proxied, wronghost]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -25395,7 +25395,7 @@ public abstract class ZAttrConfig extends Entry {
      * reverse-proxied - reverse proxy is in place and should never send
      * refer
      *
-     * <p>Valid values: [always, wronghost, reverse-proxied]
+     * <p>Valid values: [always, reverse-proxied, wronghost]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -25423,7 +25423,7 @@ public abstract class ZAttrConfig extends Entry {
      * the usual entry page of the requested webapp, where username/password
      * is prompted.
      *
-     * <p>Valid values: [Disabled, NeedClientAuth, WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @return zimbraMailSSLClientCertMode, or ZAttrProvisioning.MailSSLClientCertMode.Disabled if unset and/or has invalid value
      *
@@ -25448,7 +25448,7 @@ public abstract class ZAttrConfig extends Entry {
      * the usual entry page of the requested webapp, where username/password
      * is prompted.
      *
-     * <p>Valid values: [Disabled, NeedClientAuth, WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @return zimbraMailSSLClientCertMode, or "Disabled" if unset
      *
@@ -25473,7 +25473,7 @@ public abstract class ZAttrConfig extends Entry {
      * the usual entry page of the requested webapp, where username/password
      * is prompted.
      *
-     * <p>Valid values: [Disabled, NeedClientAuth, WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @param zimbraMailSSLClientCertMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25501,7 +25501,7 @@ public abstract class ZAttrConfig extends Entry {
      * the usual entry page of the requested webapp, where username/password
      * is prompted.
      *
-     * <p>Valid values: [Disabled, NeedClientAuth, WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @param zimbraMailSSLClientCertMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -25530,7 +25530,7 @@ public abstract class ZAttrConfig extends Entry {
      * the usual entry page of the requested webapp, where username/password
      * is prompted.
      *
-     * <p>Valid values: [Disabled, NeedClientAuth, WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @param zimbraMailSSLClientCertMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25558,7 +25558,7 @@ public abstract class ZAttrConfig extends Entry {
      * the usual entry page of the requested webapp, where username/password
      * is prompted.
      *
-     * <p>Valid values: [Disabled, NeedClientAuth, WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @param zimbraMailSSLClientCertMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -25587,7 +25587,7 @@ public abstract class ZAttrConfig extends Entry {
      * the usual entry page of the requested webapp, where username/password
      * is prompted.
      *
-     * <p>Valid values: [Disabled, NeedClientAuth, WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -25614,7 +25614,7 @@ public abstract class ZAttrConfig extends Entry {
      * the usual entry page of the requested webapp, where username/password
      * is prompted.
      *
-     * <p>Valid values: [Disabled, NeedClientAuth, WantClientAuth]
+     * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -28791,8 +28791,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
+     * id of the doamin under which (hidden) accounts for apps would be
+     * created
      *
      * @return zimbraMobileGatewayDefaultAppAccountDomainId, or null if unset
      *
@@ -28804,8 +28804,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
+     * id of the doamin under which (hidden) accounts for apps would be
+     * created
      *
      * @param zimbraMobileGatewayDefaultAppAccountDomainId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28820,8 +28820,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
+     * id of the doamin under which (hidden) accounts for apps would be
+     * created
      *
      * @param zimbraMobileGatewayDefaultAppAccountDomainId new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28837,8 +28837,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
+     * id of the doamin under which (hidden) accounts for apps would be
+     * created
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -28852,8 +28852,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
+     * id of the doamin under which (hidden) accounts for apps would be
+     * created
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -28864,6 +28864,742 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMobileGatewayDefaultAppAccountDomainId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileGatewayDefaultAppAccountDomainId, "");
+        return attrs;
+    }
+
+    /**
+     * Id of the domain under which &quot;Proxy&quot; accounts would be
+     * created. One can configure the system to act as a &quot;Proxy&quot; to
+     * another Zimbra system. When the Proxy mode is enabled, some accounts
+     * in the system would be syncing mailbox data from a Zimbra account
+     * hosted on a different Zimbra system into a data source.
+     *
+     * @return zimbraMobileGatewayDefaultProxyAccountDomainId, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2029)
+    public String getMobileGatewayDefaultProxyAccountDomainId() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayDefaultProxyAccountDomainId, null);
+    }
+
+    /**
+     * Id of the domain under which &quot;Proxy&quot; accounts would be
+     * created. One can configure the system to act as a &quot;Proxy&quot; to
+     * another Zimbra system. When the Proxy mode is enabled, some accounts
+     * in the system would be syncing mailbox data from a Zimbra account
+     * hosted on a different Zimbra system into a data source.
+     *
+     * @param zimbraMobileGatewayDefaultProxyAccountDomainId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2029)
+    public void setMobileGatewayDefaultProxyAccountDomainId(String zimbraMobileGatewayDefaultProxyAccountDomainId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultProxyAccountDomainId, zimbraMobileGatewayDefaultProxyAccountDomainId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Id of the domain under which &quot;Proxy&quot; accounts would be
+     * created. One can configure the system to act as a &quot;Proxy&quot; to
+     * another Zimbra system. When the Proxy mode is enabled, some accounts
+     * in the system would be syncing mailbox data from a Zimbra account
+     * hosted on a different Zimbra system into a data source.
+     *
+     * @param zimbraMobileGatewayDefaultProxyAccountDomainId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2029)
+    public Map<String,Object> setMobileGatewayDefaultProxyAccountDomainId(String zimbraMobileGatewayDefaultProxyAccountDomainId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultProxyAccountDomainId, zimbraMobileGatewayDefaultProxyAccountDomainId);
+        return attrs;
+    }
+
+    /**
+     * Id of the domain under which &quot;Proxy&quot; accounts would be
+     * created. One can configure the system to act as a &quot;Proxy&quot; to
+     * another Zimbra system. When the Proxy mode is enabled, some accounts
+     * in the system would be syncing mailbox data from a Zimbra account
+     * hosted on a different Zimbra system into a data source.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2029)
+    public void unsetMobileGatewayDefaultProxyAccountDomainId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultProxyAccountDomainId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Id of the domain under which &quot;Proxy&quot; accounts would be
+     * created. One can configure the system to act as a &quot;Proxy&quot; to
+     * another Zimbra system. When the Proxy mode is enabled, some accounts
+     * in the system would be syncing mailbox data from a Zimbra account
+     * hosted on a different Zimbra system into a data source.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2029)
+    public Map<String,Object> unsetMobileGatewayDefaultProxyAccountDomainId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultProxyAccountDomainId, "");
+        return attrs;
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
+     *
+     * @return zimbraMobileGatewayProxyImapConnectionType, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public ZAttrProvisioning.MobileGatewayProxyImapConnectionType getMobileGatewayProxyImapConnectionType() {
+        try { String v = getAttr(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType); return v == null ? null : ZAttrProvisioning.MobileGatewayProxyImapConnectionType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
+     *
+     * @return zimbraMobileGatewayProxyImapConnectionType, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public String getMobileGatewayProxyImapConnectionTypeAsString() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, null);
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
+     *
+     * @param zimbraMobileGatewayProxyImapConnectionType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public void setMobileGatewayProxyImapConnectionType(ZAttrProvisioning.MobileGatewayProxyImapConnectionType zimbraMobileGatewayProxyImapConnectionType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, zimbraMobileGatewayProxyImapConnectionType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
+     *
+     * @param zimbraMobileGatewayProxyImapConnectionType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public Map<String,Object> setMobileGatewayProxyImapConnectionType(ZAttrProvisioning.MobileGatewayProxyImapConnectionType zimbraMobileGatewayProxyImapConnectionType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, zimbraMobileGatewayProxyImapConnectionType.toString());
+        return attrs;
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
+     *
+     * @param zimbraMobileGatewayProxyImapConnectionType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public void setMobileGatewayProxyImapConnectionTypeAsString(String zimbraMobileGatewayProxyImapConnectionType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, zimbraMobileGatewayProxyImapConnectionType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
+     *
+     * @param zimbraMobileGatewayProxyImapConnectionType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public Map<String,Object> setMobileGatewayProxyImapConnectionTypeAsString(String zimbraMobileGatewayProxyImapConnectionType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, zimbraMobileGatewayProxyImapConnectionType);
+        return attrs;
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public void unsetMobileGatewayProxyImapConnectionType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, ssl, cleartext]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public Map<String,Object> unsetMobileGatewayProxyImapConnectionType(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, "");
+        return attrs;
+    }
+
+    /**
+     * IMAP host name of the Zimbra system being proxied
+     *
+     * @return zimbraMobileGatewayProxyImapHost, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2030)
+    public String getMobileGatewayProxyImapHost() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxyImapHost, null);
+    }
+
+    /**
+     * IMAP host name of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2030)
+    public void setMobileGatewayProxyImapHost(String zimbraMobileGatewayProxyImapHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapHost, zimbraMobileGatewayProxyImapHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP host name of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2030)
+    public Map<String,Object> setMobileGatewayProxyImapHost(String zimbraMobileGatewayProxyImapHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapHost, zimbraMobileGatewayProxyImapHost);
+        return attrs;
+    }
+
+    /**
+     * IMAP host name of the Zimbra system being proxied
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2030)
+    public void unsetMobileGatewayProxyImapHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP host name of the Zimbra system being proxied
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2030)
+    public Map<String,Object> unsetMobileGatewayProxyImapHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapHost, "");
+        return attrs;
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * <p>Use getMobileGatewayProxyImapPortAsString to access value as a string.
+     *
+     * @see #getMobileGatewayProxyImapPortAsString()
+     *
+     * @return zimbraMobileGatewayProxyImapPort, or -1 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public int getMobileGatewayProxyImapPort() {
+        return getIntAttr(Provisioning.A_zimbraMobileGatewayProxyImapPort, -1);
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @return zimbraMobileGatewayProxyImapPort, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public String getMobileGatewayProxyImapPortAsString() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxyImapPort, null);
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public void setMobileGatewayProxyImapPort(int zimbraMobileGatewayProxyImapPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, Integer.toString(zimbraMobileGatewayProxyImapPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public Map<String,Object> setMobileGatewayProxyImapPort(int zimbraMobileGatewayProxyImapPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, Integer.toString(zimbraMobileGatewayProxyImapPort));
+        return attrs;
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public void setMobileGatewayProxyImapPortAsString(String zimbraMobileGatewayProxyImapPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, zimbraMobileGatewayProxyImapPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public Map<String,Object> setMobileGatewayProxyImapPortAsString(String zimbraMobileGatewayProxyImapPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, zimbraMobileGatewayProxyImapPort);
+        return attrs;
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public void unsetMobileGatewayProxyImapPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public Map<String,Object> unsetMobileGatewayProxyImapPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, "");
+        return attrs;
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [ssl, cleartext]
+     *
+     * @return zimbraMobileGatewayProxySmtpConnectionType, or ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public ZAttrProvisioning.MobileGatewayProxySmtpConnectionType getMobileGatewayProxySmtpConnectionType() {
+        try { String v = getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType); return v == null ? ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl : ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl; }
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [ssl, cleartext]
+     *
+     * @return zimbraMobileGatewayProxySmtpConnectionType, or "ssl" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public String getMobileGatewayProxySmtpConnectionTypeAsString() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, "ssl");
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [ssl, cleartext]
+     *
+     * @param zimbraMobileGatewayProxySmtpConnectionType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public void setMobileGatewayProxySmtpConnectionType(ZAttrProvisioning.MobileGatewayProxySmtpConnectionType zimbraMobileGatewayProxySmtpConnectionType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, zimbraMobileGatewayProxySmtpConnectionType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [ssl, cleartext]
+     *
+     * @param zimbraMobileGatewayProxySmtpConnectionType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public Map<String,Object> setMobileGatewayProxySmtpConnectionType(ZAttrProvisioning.MobileGatewayProxySmtpConnectionType zimbraMobileGatewayProxySmtpConnectionType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, zimbraMobileGatewayProxySmtpConnectionType.toString());
+        return attrs;
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [ssl, cleartext]
+     *
+     * @param zimbraMobileGatewayProxySmtpConnectionType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public void setMobileGatewayProxySmtpConnectionTypeAsString(String zimbraMobileGatewayProxySmtpConnectionType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, zimbraMobileGatewayProxySmtpConnectionType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [ssl, cleartext]
+     *
+     * @param zimbraMobileGatewayProxySmtpConnectionType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public Map<String,Object> setMobileGatewayProxySmtpConnectionTypeAsString(String zimbraMobileGatewayProxySmtpConnectionType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, zimbraMobileGatewayProxySmtpConnectionType);
+        return attrs;
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [ssl, cleartext]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public void unsetMobileGatewayProxySmtpConnectionType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [ssl, cleartext]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public Map<String,Object> unsetMobileGatewayProxySmtpConnectionType(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, "");
+        return attrs;
+    }
+
+    /**
+     * SMTP host name of the Zimbra system being proxied
+     *
+     * @return zimbraMobileGatewayProxySmtpHost, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2033)
+    public String getMobileGatewayProxySmtpHost() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpHost, null);
+    }
+
+    /**
+     * SMTP host name of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2033)
+    public void setMobileGatewayProxySmtpHost(String zimbraMobileGatewayProxySmtpHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpHost, zimbraMobileGatewayProxySmtpHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP host name of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2033)
+    public Map<String,Object> setMobileGatewayProxySmtpHost(String zimbraMobileGatewayProxySmtpHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpHost, zimbraMobileGatewayProxySmtpHost);
+        return attrs;
+    }
+
+    /**
+     * SMTP host name of the Zimbra system being proxied
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2033)
+    public void unsetMobileGatewayProxySmtpHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP host name of the Zimbra system being proxied
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2033)
+    public Map<String,Object> unsetMobileGatewayProxySmtpHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpHost, "");
+        return attrs;
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * <p>Use getMobileGatewayProxySmtpPortAsString to access value as a string.
+     *
+     * @see #getMobileGatewayProxySmtpPortAsString()
+     *
+     * @return zimbraMobileGatewayProxySmtpPort, or -1 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public int getMobileGatewayProxySmtpPort() {
+        return getIntAttr(Provisioning.A_zimbraMobileGatewayProxySmtpPort, -1);
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @return zimbraMobileGatewayProxySmtpPort, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public String getMobileGatewayProxySmtpPortAsString() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpPort, null);
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public void setMobileGatewayProxySmtpPort(int zimbraMobileGatewayProxySmtpPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, Integer.toString(zimbraMobileGatewayProxySmtpPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public Map<String,Object> setMobileGatewayProxySmtpPort(int zimbraMobileGatewayProxySmtpPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, Integer.toString(zimbraMobileGatewayProxySmtpPort));
+        return attrs;
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public void setMobileGatewayProxySmtpPortAsString(String zimbraMobileGatewayProxySmtpPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, zimbraMobileGatewayProxySmtpPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public Map<String,Object> setMobileGatewayProxySmtpPortAsString(String zimbraMobileGatewayProxySmtpPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, zimbraMobileGatewayProxySmtpPort);
+        return attrs;
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public void unsetMobileGatewayProxySmtpPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public Map<String,Object> unsetMobileGatewayProxySmtpPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, "");
         return attrs;
     }
 
@@ -29729,7 +30465,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf always_add_missing_headers
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaAlwaysAddMissingHeaders, or ZAttrProvisioning.MtaAlwaysAddMissingHeaders.yes if unset and/or has invalid value
      *
@@ -29743,7 +30479,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf always_add_missing_headers
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaAlwaysAddMissingHeaders, or "yes" if unset
      *
@@ -29757,7 +30493,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf always_add_missing_headers
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaAlwaysAddMissingHeaders new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29774,7 +30510,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf always_add_missing_headers
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaAlwaysAddMissingHeaders new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29792,7 +30528,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf always_add_missing_headers
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaAlwaysAddMissingHeaders new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29809,7 +30545,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf always_add_missing_headers
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaAlwaysAddMissingHeaders new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29827,7 +30563,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf always_add_missing_headers
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -29843,7 +30579,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf always_add_missing_headers
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -30980,7 +31716,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf broken_sasl_auth_clients
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaBrokenSaslAuthClients, or ZAttrProvisioning.MtaBrokenSaslAuthClients.yes if unset and/or has invalid value
      *
@@ -30994,7 +31730,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf broken_sasl_auth_clients
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaBrokenSaslAuthClients, or "yes" if unset
      *
@@ -31008,7 +31744,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf broken_sasl_auth_clients
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaBrokenSaslAuthClients new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31025,7 +31761,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf broken_sasl_auth_clients
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaBrokenSaslAuthClients new value
      * @param attrs existing map to populate, or null to create a new map
@@ -31043,7 +31779,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf broken_sasl_auth_clients
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaBrokenSaslAuthClients new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31060,7 +31796,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf broken_sasl_auth_clients
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaBrokenSaslAuthClients new value
      * @param attrs existing map to populate, or null to create a new map
@@ -31078,7 +31814,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf broken_sasl_auth_clients
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -31094,7 +31830,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf broken_sasl_auth_clients
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -32416,7 +33152,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_host_lookup
      *
-     * <p>Valid values: [dns, native]
+     * <p>Valid values: [native, dns]
      *
      * @return zimbraMtaLmtpHostLookup, or empty array if unset
      *
@@ -32430,7 +33166,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_host_lookup
      *
-     * <p>Valid values: [dns, native]
+     * <p>Valid values: [native, dns]
      *
      * @param zimbraMtaLmtpHostLookup new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32447,7 +33183,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_host_lookup
      *
-     * <p>Valid values: [dns, native]
+     * <p>Valid values: [native, dns]
      *
      * @param zimbraMtaLmtpHostLookup new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32465,7 +33201,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_host_lookup
      *
-     * <p>Valid values: [dns, native]
+     * <p>Valid values: [native, dns]
      *
      * @param zimbraMtaLmtpHostLookup new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32482,7 +33218,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_host_lookup
      *
-     * <p>Valid values: [dns, native]
+     * <p>Valid values: [native, dns]
      *
      * @param zimbraMtaLmtpHostLookup new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32500,7 +33236,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_host_lookup
      *
-     * <p>Valid values: [dns, native]
+     * <p>Valid values: [native, dns]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -32516,7 +33252,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_host_lookup
      *
-     * <p>Valid values: [dns, native]
+     * <p>Valid values: [native, dns]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -32677,7 +33413,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaLmtpTlsCiphers, or ZAttrProvisioning.MtaLmtpTlsCiphers.export if unset and/or has invalid value
      *
@@ -32691,7 +33427,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaLmtpTlsCiphers, or "export" if unset
      *
@@ -32705,7 +33441,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaLmtpTlsCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32722,7 +33458,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaLmtpTlsCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32740,7 +33476,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaLmtpTlsCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32757,7 +33493,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaLmtpTlsCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32775,7 +33511,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -32791,7 +33527,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -32957,7 +33693,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaLmtpTlsMandatoryCiphers, or ZAttrProvisioning.MtaLmtpTlsMandatoryCiphers.medium if unset and/or has invalid value
      *
@@ -32971,7 +33707,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaLmtpTlsMandatoryCiphers, or "medium" if unset
      *
@@ -32985,7 +33721,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaLmtpTlsMandatoryCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -33002,7 +33738,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaLmtpTlsMandatoryCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -33020,7 +33756,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaLmtpTlsMandatoryCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -33037,7 +33773,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaLmtpTlsMandatoryCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -33055,7 +33791,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -33071,7 +33807,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -33232,7 +33968,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @return zimbraMtaLmtpTlsSecurityLevel, or ZAttrProvisioning.MtaLmtpTlsSecurityLevel.may if unset and/or has invalid value
      *
@@ -33246,7 +33982,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @return zimbraMtaLmtpTlsSecurityLevel, or "may" if unset
      *
@@ -33260,7 +33996,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @param zimbraMtaLmtpTlsSecurityLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -33277,7 +34013,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @param zimbraMtaLmtpTlsSecurityLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -33295,7 +34031,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @param zimbraMtaLmtpTlsSecurityLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -33312,7 +34048,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @param zimbraMtaLmtpTlsSecurityLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -33330,7 +34066,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -33346,7 +34082,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf lmtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -33939,7 +34675,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf milter_default_action
      *
-     * <p>Valid values: [tempfail, quarantine, reject, accept]
+     * <p>Valid values: [quarantine, tempfail, accept, reject]
      *
      * @return zimbraMtaMilterDefaultAction, or ZAttrProvisioning.MtaMilterDefaultAction.tempfail if unset and/or has invalid value
      *
@@ -33953,7 +34689,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf milter_default_action
      *
-     * <p>Valid values: [tempfail, quarantine, reject, accept]
+     * <p>Valid values: [quarantine, tempfail, accept, reject]
      *
      * @return zimbraMtaMilterDefaultAction, or "tempfail" if unset
      *
@@ -33967,7 +34703,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf milter_default_action
      *
-     * <p>Valid values: [tempfail, quarantine, reject, accept]
+     * <p>Valid values: [quarantine, tempfail, accept, reject]
      *
      * @param zimbraMtaMilterDefaultAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -33984,7 +34720,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf milter_default_action
      *
-     * <p>Valid values: [tempfail, quarantine, reject, accept]
+     * <p>Valid values: [quarantine, tempfail, accept, reject]
      *
      * @param zimbraMtaMilterDefaultAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34002,7 +34738,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf milter_default_action
      *
-     * <p>Valid values: [tempfail, quarantine, reject, accept]
+     * <p>Valid values: [quarantine, tempfail, accept, reject]
      *
      * @param zimbraMtaMilterDefaultAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34019,7 +34755,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf milter_default_action
      *
-     * <p>Valid values: [tempfail, quarantine, reject, accept]
+     * <p>Valid values: [quarantine, tempfail, accept, reject]
      *
      * @param zimbraMtaMilterDefaultAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34037,7 +34773,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf milter_default_action
      *
-     * <p>Valid values: [tempfail, quarantine, reject, accept]
+     * <p>Valid values: [quarantine, tempfail, accept, reject]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -34053,7 +34789,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf milter_default_action
      *
-     * <p>Valid values: [tempfail, quarantine, reject, accept]
+     * <p>Valid values: [quarantine, tempfail, accept, reject]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -34588,7 +35324,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf notify_classes
      *
-     * <p>Valid values: [protocol, delay, data, software, bounce, resource, 2bounce, policy]
+     * <p>Valid values: [software, protocol, resource, data, policy, delay, 2bounce, bounce]
      *
      * @return zimbraMtaNotifyClasses, or empty array if unset
      *
@@ -34602,7 +35338,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf notify_classes
      *
-     * <p>Valid values: [protocol, delay, data, software, bounce, resource, 2bounce, policy]
+     * <p>Valid values: [software, protocol, resource, data, policy, delay, 2bounce, bounce]
      *
      * @param zimbraMtaNotifyClasses new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34619,7 +35355,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf notify_classes
      *
-     * <p>Valid values: [protocol, delay, data, software, bounce, resource, 2bounce, policy]
+     * <p>Valid values: [software, protocol, resource, data, policy, delay, 2bounce, bounce]
      *
      * @param zimbraMtaNotifyClasses new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34637,7 +35373,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf notify_classes
      *
-     * <p>Valid values: [protocol, delay, data, software, bounce, resource, 2bounce, policy]
+     * <p>Valid values: [software, protocol, resource, data, policy, delay, 2bounce, bounce]
      *
      * @param zimbraMtaNotifyClasses new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34654,7 +35390,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf notify_classes
      *
-     * <p>Valid values: [protocol, delay, data, software, bounce, resource, 2bounce, policy]
+     * <p>Valid values: [software, protocol, resource, data, policy, delay, 2bounce, bounce]
      *
      * @param zimbraMtaNotifyClasses new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34672,7 +35408,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf notify_classes
      *
-     * <p>Valid values: [protocol, delay, data, software, bounce, resource, 2bounce, policy]
+     * <p>Valid values: [software, protocol, resource, data, policy, delay, 2bounce, bounce]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -34688,7 +35424,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf notify_classes
      *
-     * <p>Valid values: [protocol, delay, data, software, bounce, resource, 2bounce, policy]
+     * <p>Valid values: [software, protocol, resource, data, policy, delay, 2bounce, bounce]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -34854,7 +35590,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenBareNewlineAction, or ZAttrProvisioning.MtaPostscreenBareNewlineAction.ignore if unset and/or has invalid value
      *
@@ -34868,7 +35604,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenBareNewlineAction, or "ignore" if unset
      *
@@ -34882,7 +35618,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenBareNewlineAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34899,7 +35635,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenBareNewlineAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34917,7 +35653,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenBareNewlineAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34934,7 +35670,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenBareNewlineAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34952,7 +35688,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -34968,7 +35704,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -34985,7 +35721,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaPostscreenBareNewlineEnable, or ZAttrProvisioning.MtaPostscreenBareNewlineEnable.no if unset and/or has invalid value
      *
@@ -34999,7 +35735,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaPostscreenBareNewlineEnable, or "no" if unset
      *
@@ -35013,7 +35749,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenBareNewlineEnable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35030,7 +35766,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenBareNewlineEnable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35048,7 +35784,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenBareNewlineEnable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35065,7 +35801,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenBareNewlineEnable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35083,7 +35819,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -35099,7 +35835,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_bare_newline_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -35188,7 +35924,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_blacklist_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenBlacklistAction, or ZAttrProvisioning.MtaPostscreenBlacklistAction.ignore if unset and/or has invalid value
      *
@@ -35202,7 +35938,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_blacklist_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenBlacklistAction, or "ignore" if unset
      *
@@ -35216,7 +35952,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_blacklist_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenBlacklistAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35233,7 +35969,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_blacklist_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenBlacklistAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35251,7 +35987,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_blacklist_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenBlacklistAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35268,7 +36004,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_blacklist_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenBlacklistAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35286,7 +36022,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_blacklist_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -35302,7 +36038,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_blacklist_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -35535,7 +36271,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_dnsbl_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenDnsblAction, or ZAttrProvisioning.MtaPostscreenDnsblAction.ignore if unset and/or has invalid value
      *
@@ -35549,7 +36285,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_dnsbl_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenDnsblAction, or "ignore" if unset
      *
@@ -35563,7 +36299,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_dnsbl_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenDnsblAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35580,7 +36316,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_dnsbl_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenDnsblAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35598,7 +36334,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_dnsbl_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenDnsblAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35615,7 +36351,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_dnsbl_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenDnsblAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35633,7 +36369,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_dnsbl_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -35649,7 +36385,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_dnsbl_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -36108,7 +36844,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_greet_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenGreetAction, or ZAttrProvisioning.MtaPostscreenGreetAction.ignore if unset and/or has invalid value
      *
@@ -36122,7 +36858,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_greet_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenGreetAction, or "ignore" if unset
      *
@@ -36136,7 +36872,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_greet_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenGreetAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36153,7 +36889,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_greet_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenGreetAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36171,7 +36907,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_greet_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenGreetAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36188,7 +36924,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_greet_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenGreetAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36206,7 +36942,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_greet_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -36222,7 +36958,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_greet_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -36311,7 +37047,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenNonSmtpCommandAction, or ZAttrProvisioning.MtaPostscreenNonSmtpCommandAction.drop if unset and/or has invalid value
      *
@@ -36325,7 +37061,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenNonSmtpCommandAction, or "drop" if unset
      *
@@ -36339,7 +37075,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenNonSmtpCommandAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36356,7 +37092,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenNonSmtpCommandAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36374,7 +37110,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenNonSmtpCommandAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36391,7 +37127,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenNonSmtpCommandAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36409,7 +37145,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -36425,7 +37161,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -36442,7 +37178,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaPostscreenNonSmtpCommandEnable, or ZAttrProvisioning.MtaPostscreenNonSmtpCommandEnable.no if unset and/or has invalid value
      *
@@ -36456,7 +37192,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaPostscreenNonSmtpCommandEnable, or "no" if unset
      *
@@ -36470,7 +37206,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenNonSmtpCommandEnable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36487,7 +37223,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenNonSmtpCommandEnable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36505,7 +37241,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenNonSmtpCommandEnable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36522,7 +37258,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenNonSmtpCommandEnable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36540,7 +37276,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -36556,7 +37292,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_non_smtp_command_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -36645,7 +37381,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenPipeliningAction, or ZAttrProvisioning.MtaPostscreenPipeliningAction.enforce if unset and/or has invalid value
      *
@@ -36659,7 +37395,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @return zimbraMtaPostscreenPipeliningAction, or "enforce" if unset
      *
@@ -36673,7 +37409,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenPipeliningAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36690,7 +37426,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenPipeliningAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36708,7 +37444,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenPipeliningAction new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36725,7 +37461,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param zimbraMtaPostscreenPipeliningAction new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36743,7 +37479,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -36759,7 +37495,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_action.
      *
-     * <p>Valid values: [drop, ignore, enforce]
+     * <p>Valid values: [enforce, drop, ignore]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -36776,7 +37512,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaPostscreenPipeliningEnable, or ZAttrProvisioning.MtaPostscreenPipeliningEnable.no if unset and/or has invalid value
      *
@@ -36790,7 +37526,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaPostscreenPipeliningEnable, or "no" if unset
      *
@@ -36804,7 +37540,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenPipeliningEnable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36821,7 +37557,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenPipeliningEnable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36839,7 +37575,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenPipeliningEnable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36856,7 +37592,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaPostscreenPipeliningEnable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36874,7 +37610,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -36890,7 +37626,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf postscreen_pipelining_enable.
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -37128,7 +37864,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf propagate_unmatched_extensions
      *
-     * <p>Valid values: [alias, include, virtual, canonical, forward, generic]
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
      *
      * @return zimbraMtaPropagateUnmatchedExtensions, or empty array if unset
      *
@@ -37142,7 +37878,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf propagate_unmatched_extensions
      *
-     * <p>Valid values: [alias, include, virtual, canonical, forward, generic]
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
      *
      * @param zimbraMtaPropagateUnmatchedExtensions new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37159,7 +37895,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf propagate_unmatched_extensions
      *
-     * <p>Valid values: [alias, include, virtual, canonical, forward, generic]
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
      *
      * @param zimbraMtaPropagateUnmatchedExtensions new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37177,7 +37913,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf propagate_unmatched_extensions
      *
-     * <p>Valid values: [alias, include, virtual, canonical, forward, generic]
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
      *
      * @param zimbraMtaPropagateUnmatchedExtensions new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37194,7 +37930,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf propagate_unmatched_extensions
      *
-     * <p>Valid values: [alias, include, virtual, canonical, forward, generic]
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
      *
      * @param zimbraMtaPropagateUnmatchedExtensions new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37212,7 +37948,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf propagate_unmatched_extensions
      *
-     * <p>Valid values: [alias, include, virtual, canonical, forward, generic]
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -37228,7 +37964,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf propagate_unmatched_extensions
      *
-     * <p>Valid values: [alias, include, virtual, canonical, forward, generic]
+     * <p>Valid values: [generic, virtual, forward, alias, canonical, include]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -37755,7 +38491,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSaslAuthEnable, or ZAttrProvisioning.MtaSaslAuthEnable.yes if unset and/or has invalid value
      *
@@ -37769,7 +38505,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSaslAuthEnable, or "yes" if unset
      *
@@ -37783,7 +38519,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSaslAuthEnable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37800,7 +38536,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSaslAuthEnable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37818,7 +38554,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSaslAuthEnable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37835,7 +38571,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSaslAuthEnable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37853,7 +38589,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -37869,7 +38605,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -38173,7 +38909,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_cname_overrides_servername
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpCnameOverridesServername, or ZAttrProvisioning.MtaSmtpCnameOverridesServername.no if unset and/or has invalid value
      *
@@ -38187,7 +38923,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_cname_overrides_servername
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpCnameOverridesServername, or "no" if unset
      *
@@ -38201,7 +38937,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_cname_overrides_servername
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpCnameOverridesServername new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -38218,7 +38954,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_cname_overrides_servername
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpCnameOverridesServername new value
      * @param attrs existing map to populate, or null to create a new map
@@ -38236,7 +38972,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_cname_overrides_servername
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpCnameOverridesServername new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -38253,7 +38989,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_cname_overrides_servername
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpCnameOverridesServername new value
      * @param attrs existing map to populate, or null to create a new map
@@ -38271,7 +39007,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_cname_overrides_servername
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -38287,7 +39023,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_cname_overrides_servername
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -38448,7 +39184,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpSaslAuthEnable, or ZAttrProvisioning.MtaSmtpSaslAuthEnable.no if unset and/or has invalid value
      *
@@ -38462,7 +39198,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpSaslAuthEnable, or "no" if unset
      *
@@ -38476,7 +39212,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpSaslAuthEnable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -38493,7 +39229,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpSaslAuthEnable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -38511,7 +39247,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpSaslAuthEnable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -38528,7 +39264,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpSaslAuthEnable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -38546,7 +39282,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -38562,7 +39298,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_auth_enable
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -38785,7 +39521,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @return zimbraMtaSmtpSaslSecurityOptions, or empty array if unset
      *
@@ -38799,7 +39535,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @param zimbraMtaSmtpSaslSecurityOptions new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -38816,7 +39552,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @param zimbraMtaSmtpSaslSecurityOptions new value
      * @param attrs existing map to populate, or null to create a new map
@@ -38834,7 +39570,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @param zimbraMtaSmtpSaslSecurityOptions new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -38851,7 +39587,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @param zimbraMtaSmtpSaslSecurityOptions new value
      * @param attrs existing map to populate, or null to create a new map
@@ -38869,7 +39605,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -38885,7 +39621,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -39046,7 +39782,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaSmtpTlsCiphers, or ZAttrProvisioning.MtaSmtpTlsCiphers.export if unset and/or has invalid value
      *
@@ -39060,7 +39796,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaSmtpTlsCiphers, or "export" if unset
      *
@@ -39074,7 +39810,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpTlsCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39091,7 +39827,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpTlsCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39109,7 +39845,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpTlsCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39126,7 +39862,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpTlsCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39144,7 +39880,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -39160,7 +39896,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -39254,7 +39990,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaSmtpTlsMandatoryCiphers, or ZAttrProvisioning.MtaSmtpTlsMandatoryCiphers.medium if unset and/or has invalid value
      *
@@ -39268,7 +40004,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaSmtpTlsMandatoryCiphers, or "medium" if unset
      *
@@ -39282,7 +40018,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpTlsMandatoryCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39299,7 +40035,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpTlsMandatoryCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39317,7 +40053,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpTlsMandatoryCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39334,7 +40070,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpTlsMandatoryCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39352,7 +40088,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -39368,7 +40104,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -39529,7 +40265,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @return zimbraMtaSmtpTlsSecurityLevel, or ZAttrProvisioning.MtaSmtpTlsSecurityLevel.may if unset and/or has invalid value
      *
@@ -39543,7 +40279,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @return zimbraMtaSmtpTlsSecurityLevel, or "may" if unset
      *
@@ -39557,7 +40293,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @param zimbraMtaSmtpTlsSecurityLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39574,7 +40310,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @param zimbraMtaSmtpTlsSecurityLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39592,7 +40328,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @param zimbraMtaSmtpTlsSecurityLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39609,7 +40345,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @param zimbraMtaSmtpTlsSecurityLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39627,7 +40363,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -39643,7 +40379,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_security_level
      *
-     * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
+     * <p>Valid values: [dane, fingerprint, may, dane-only, verify, encrypt, secure, none]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -39732,7 +40468,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_client_port_logging. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdClientPortLogging, or ZAttrProvisioning.MtaSmtpdClientPortLogging.no if unset and/or has invalid value
      *
@@ -39746,7 +40482,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_client_port_logging. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdClientPortLogging, or "no" if unset
      *
@@ -39760,7 +40496,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_client_port_logging. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdClientPortLogging new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39777,7 +40513,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_client_port_logging. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdClientPortLogging new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39795,7 +40531,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_client_port_logging. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdClientPortLogging new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39812,7 +40548,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_client_port_logging. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdClientPortLogging new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39830,7 +40566,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_client_port_logging. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -39846,7 +40582,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_client_port_logging. Defaults to no
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -40151,7 +40887,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_helo_required
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdHeloRequired, or ZAttrProvisioning.MtaSmtpdHeloRequired.yes if unset and/or has invalid value
      *
@@ -40165,7 +40901,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_helo_required
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdHeloRequired, or "yes" if unset
      *
@@ -40179,7 +40915,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_helo_required
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdHeloRequired new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40196,7 +40932,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_helo_required
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdHeloRequired new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40214,7 +40950,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_helo_required
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdHeloRequired new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40231,7 +40967,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_helo_required
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdHeloRequired new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40249,7 +40985,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_helo_required
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -40265,7 +41001,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_helo_required
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -40426,7 +41162,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_recipient
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdRejectUnlistedRecipient, or ZAttrProvisioning.MtaSmtpdRejectUnlistedRecipient.no if unset and/or has invalid value
      *
@@ -40440,7 +41176,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_recipient
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdRejectUnlistedRecipient, or "no" if unset
      *
@@ -40454,7 +41190,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_recipient
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdRejectUnlistedRecipient new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40471,7 +41207,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_recipient
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdRejectUnlistedRecipient new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40489,7 +41225,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_recipient
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdRejectUnlistedRecipient new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40506,7 +41242,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_recipient
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdRejectUnlistedRecipient new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40524,7 +41260,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_recipient
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -40540,7 +41276,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_recipient
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -40557,7 +41293,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_sender
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdRejectUnlistedSender, or ZAttrProvisioning.MtaSmtpdRejectUnlistedSender.no if unset and/or has invalid value
      *
@@ -40571,7 +41307,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_sender
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdRejectUnlistedSender, or "no" if unset
      *
@@ -40585,7 +41321,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_sender
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdRejectUnlistedSender new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40602,7 +41338,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_sender
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdRejectUnlistedSender new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40620,7 +41356,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_sender
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdRejectUnlistedSender new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40637,7 +41373,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_sender
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdRejectUnlistedSender new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40655,7 +41391,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_sender
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -40671,7 +41407,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_reject_unlisted_sender
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -40688,7 +41424,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_authenticated_header
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdSaslAuthenticatedHeader, or ZAttrProvisioning.MtaSmtpdSaslAuthenticatedHeader.no if unset and/or has invalid value
      *
@@ -40702,7 +41438,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_authenticated_header
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdSaslAuthenticatedHeader, or "no" if unset
      *
@@ -40716,7 +41452,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_authenticated_header
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdSaslAuthenticatedHeader new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40733,7 +41469,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_authenticated_header
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdSaslAuthenticatedHeader new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40751,7 +41487,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_authenticated_header
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdSaslAuthenticatedHeader new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40768,7 +41504,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_authenticated_header
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdSaslAuthenticatedHeader new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40786,7 +41522,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_authenticated_header
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -40802,7 +41538,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_authenticated_header
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -40819,7 +41555,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @return zimbraMtaSmtpdSaslSecurityOptions, or empty array if unset
      *
@@ -40833,7 +41569,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @param zimbraMtaSmtpdSaslSecurityOptions new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40850,7 +41586,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @param zimbraMtaSmtpdSaslSecurityOptions new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40868,7 +41604,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @param zimbraMtaSmtpdSaslSecurityOptions new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40885,7 +41621,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @param zimbraMtaSmtpdSaslSecurityOptions new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40903,7 +41639,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -40919,7 +41655,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_security_options
      *
-     * <p>Valid values: [noactive, nodictionary, noplaintext, noanonymous, mutual_auth]
+     * <p>Valid values: [nodictionary, mutual_auth, noactive, noanonymous, noplaintext]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -41214,7 +41950,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ask_ccert
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdTlsAskCcert, or ZAttrProvisioning.MtaSmtpdTlsAskCcert.no if unset and/or has invalid value
      *
@@ -41228,7 +41964,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ask_ccert
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaSmtpdTlsAskCcert, or "no" if unset
      *
@@ -41242,7 +41978,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ask_ccert
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdTlsAskCcert new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41259,7 +41995,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ask_ccert
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdTlsAskCcert new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41277,7 +42013,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ask_ccert
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdTlsAskCcert new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41294,7 +42030,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ask_ccert
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSmtpdTlsAskCcert new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41312,7 +42048,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ask_ccert
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -41328,7 +42064,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ask_ccert
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -41561,7 +42297,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaSmtpdTlsCiphers, or ZAttrProvisioning.MtaSmtpdTlsCiphers.export if unset and/or has invalid value
      *
@@ -41575,7 +42311,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaSmtpdTlsCiphers, or "export" if unset
      *
@@ -41589,7 +42325,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpdTlsCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41606,7 +42342,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpdTlsCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41624,7 +42360,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpdTlsCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41641,7 +42377,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpdTlsCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41659,7 +42395,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -41675,7 +42411,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -41841,7 +42577,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaSmtpdTlsMandatoryCiphers, or ZAttrProvisioning.MtaSmtpdTlsMandatoryCiphers.medium if unset and/or has invalid value
      *
@@ -41855,7 +42591,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @return zimbraMtaSmtpdTlsMandatoryCiphers, or "medium" if unset
      *
@@ -41869,7 +42605,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpdTlsMandatoryCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41886,7 +42622,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpdTlsMandatoryCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41904,7 +42640,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpdTlsMandatoryCiphers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41921,7 +42657,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param zimbraMtaSmtpdTlsMandatoryCiphers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41939,7 +42675,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -41955,7 +42691,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_mandatory_ciphers
      *
-     * <p>Valid values: [high, medium, null, export, low]
+     * <p>Valid values: [export, high, low, null, medium]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -42260,7 +42996,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf tls_append_default_CA
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaTlsAppendDefaultCA, or ZAttrProvisioning.MtaTlsAppendDefaultCA.no if unset and/or has invalid value
      *
@@ -42274,7 +43010,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf tls_append_default_CA
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @return zimbraMtaTlsAppendDefaultCA, or "no" if unset
      *
@@ -42288,7 +43024,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf tls_append_default_CA
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaTlsAppendDefaultCA new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42305,7 +43041,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf tls_append_default_CA
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaTlsAppendDefaultCA new value
      * @param attrs existing map to populate, or null to create a new map
@@ -42323,7 +43059,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf tls_append_default_CA
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaTlsAppendDefaultCA new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42340,7 +43076,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf tls_append_default_CA
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaTlsAppendDefaultCA new value
      * @param attrs existing map to populate, or null to create a new map
@@ -42358,7 +43094,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf tls_append_default_CA
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -42374,7 +43110,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf tls_append_default_CA
      *
-     * <p>Valid values: [no, yes]
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -48513,7 +49249,7 @@ public abstract class ZAttrConfig extends Entry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @return zimbraReverseProxyClientCertMode, or ZAttrProvisioning.ReverseProxyClientCertMode.off if unset and/or has invalid value
      *
@@ -48528,7 +49264,7 @@ public abstract class ZAttrConfig extends Entry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @return zimbraReverseProxyClientCertMode, or "off" if unset
      *
@@ -48543,7 +49279,7 @@ public abstract class ZAttrConfig extends Entry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @param zimbraReverseProxyClientCertMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -48561,7 +49297,7 @@ public abstract class ZAttrConfig extends Entry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @param zimbraReverseProxyClientCertMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -48580,7 +49316,7 @@ public abstract class ZAttrConfig extends Entry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @param zimbraReverseProxyClientCertMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -48598,7 +49334,7 @@ public abstract class ZAttrConfig extends Entry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @param zimbraReverseProxyClientCertMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -48617,7 +49353,7 @@ public abstract class ZAttrConfig extends Entry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -48634,7 +49370,7 @@ public abstract class ZAttrConfig extends Entry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -50501,7 +51237,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @return zimbraReverseProxyImapStartTlsMode, or ZAttrProvisioning.ReverseProxyImapStartTlsMode.only if unset and/or has invalid value
      *
@@ -50517,7 +51253,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @return zimbraReverseProxyImapStartTlsMode, or "only" if unset
      *
@@ -50533,7 +51269,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @param zimbraReverseProxyImapStartTlsMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -50552,7 +51288,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @param zimbraReverseProxyImapStartTlsMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -50572,7 +51308,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @param zimbraReverseProxyImapStartTlsMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -50591,7 +51327,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @param zimbraReverseProxyImapStartTlsMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -50611,7 +51347,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -50629,7 +51365,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -50858,7 +51594,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Log level for NGINX Proxy error log
      *
-     * <p>Valid values: [warn, debug, debug_core, crit, debug_zimbra, error, debug_mail, info, notice, debug_http]
+     * <p>Valid values: [warn, debug_http, error, crit, debug_mail, debug, debug_zimbra, notice, debug_core, info]
      *
      * @return zimbraReverseProxyLogLevel, or ZAttrProvisioning.ReverseProxyLogLevel.info if unset and/or has invalid value
      *
@@ -50872,7 +51608,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Log level for NGINX Proxy error log
      *
-     * <p>Valid values: [warn, debug, debug_core, crit, debug_zimbra, error, debug_mail, info, notice, debug_http]
+     * <p>Valid values: [warn, debug_http, error, crit, debug_mail, debug, debug_zimbra, notice, debug_core, info]
      *
      * @return zimbraReverseProxyLogLevel, or "info" if unset
      *
@@ -50886,7 +51622,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Log level for NGINX Proxy error log
      *
-     * <p>Valid values: [warn, debug, debug_core, crit, debug_zimbra, error, debug_mail, info, notice, debug_http]
+     * <p>Valid values: [warn, debug_http, error, crit, debug_mail, debug, debug_zimbra, notice, debug_core, info]
      *
      * @param zimbraReverseProxyLogLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -50903,7 +51639,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Log level for NGINX Proxy error log
      *
-     * <p>Valid values: [warn, debug, debug_core, crit, debug_zimbra, error, debug_mail, info, notice, debug_http]
+     * <p>Valid values: [warn, debug_http, error, crit, debug_mail, debug, debug_zimbra, notice, debug_core, info]
      *
      * @param zimbraReverseProxyLogLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -50921,7 +51657,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Log level for NGINX Proxy error log
      *
-     * <p>Valid values: [warn, debug, debug_core, crit, debug_zimbra, error, debug_mail, info, notice, debug_http]
+     * <p>Valid values: [warn, debug_http, error, crit, debug_mail, debug, debug_zimbra, notice, debug_core, info]
      *
      * @param zimbraReverseProxyLogLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -50938,7 +51674,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Log level for NGINX Proxy error log
      *
-     * <p>Valid values: [warn, debug, debug_core, crit, debug_zimbra, error, debug_mail, info, notice, debug_http]
+     * <p>Valid values: [warn, debug_http, error, crit, debug_mail, debug, debug_zimbra, notice, debug_core, info]
      *
      * @param zimbraReverseProxyLogLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -50956,7 +51692,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Log level for NGINX Proxy error log
      *
-     * <p>Valid values: [warn, debug, debug_core, crit, debug_zimbra, error, debug_mail, info, notice, debug_http]
+     * <p>Valid values: [warn, debug_http, error, crit, debug_mail, debug, debug_zimbra, notice, debug_core, info]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -50972,7 +51708,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Log level for NGINX Proxy error log
      *
-     * <p>Valid values: [warn, debug, debug_core, crit, debug_zimbra, error, debug_mail, info, notice, debug_http]
+     * <p>Valid values: [warn, debug_http, error, crit, debug_mail, debug, debug_zimbra, notice, debug_core, info]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -51455,7 +52191,7 @@ public abstract class ZAttrConfig extends Entry {
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @return zimbraReverseProxyMailMode, or null if unset and/or has invalid value
      *
@@ -51471,7 +52207,7 @@ public abstract class ZAttrConfig extends Entry {
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @return zimbraReverseProxyMailMode, or null if unset
      *
@@ -51487,7 +52223,7 @@ public abstract class ZAttrConfig extends Entry {
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @param zimbraReverseProxyMailMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -51506,7 +52242,7 @@ public abstract class ZAttrConfig extends Entry {
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @param zimbraReverseProxyMailMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -51526,7 +52262,7 @@ public abstract class ZAttrConfig extends Entry {
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @param zimbraReverseProxyMailMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -51545,7 +52281,7 @@ public abstract class ZAttrConfig extends Entry {
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @param zimbraReverseProxyMailMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -51565,7 +52301,7 @@ public abstract class ZAttrConfig extends Entry {
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -51583,7 +52319,7 @@ public abstract class ZAttrConfig extends Entry {
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
      *
-     * <p>Valid values: [redirect, http, mixed, https, both]
+     * <p>Valid values: [https, mixed, redirect, both, http]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -52297,7 +53033,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @return zimbraReverseProxyPop3StartTlsMode, or ZAttrProvisioning.ReverseProxyPop3StartTlsMode.only if unset and/or has invalid value
      *
@@ -52313,7 +53049,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @return zimbraReverseProxyPop3StartTlsMode, or "only" if unset
      *
@@ -52329,7 +53065,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @param zimbraReverseProxyPop3StartTlsMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -52348,7 +53084,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @param zimbraReverseProxyPop3StartTlsMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -52368,7 +53104,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @param zimbraReverseProxyPop3StartTlsMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -52387,7 +53123,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @param zimbraReverseProxyPop3StartTlsMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -52407,7 +53143,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -52425,7 +53161,7 @@ public abstract class ZAttrConfig extends Entry {
      * is offered on plain port only - you have to use starttls before clear
      * text login
      *
-     * <p>Valid values: [only, off, on]
+     * <p>Valid values: [off, only, on]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -58629,7 +59365,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Connection mode when connecting to share notification MTA.
      *
-     * <p>Valid values: [CLEARTEXT, SSL, STARTTLS]
+     * <p>Valid values: [SSL, CLEARTEXT, STARTTLS]
      *
      * @return zimbraShareNotificationMtaConnectionType, or ZAttrProvisioning.ShareNotificationMtaConnectionType.CLEARTEXT if unset and/or has invalid value
      *
@@ -58643,7 +59379,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Connection mode when connecting to share notification MTA.
      *
-     * <p>Valid values: [CLEARTEXT, SSL, STARTTLS]
+     * <p>Valid values: [SSL, CLEARTEXT, STARTTLS]
      *
      * @return zimbraShareNotificationMtaConnectionType, or "CLEARTEXT" if unset
      *
@@ -58657,7 +59393,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Connection mode when connecting to share notification MTA.
      *
-     * <p>Valid values: [CLEARTEXT, SSL, STARTTLS]
+     * <p>Valid values: [SSL, CLEARTEXT, STARTTLS]
      *
      * @param zimbraShareNotificationMtaConnectionType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -58674,7 +59410,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Connection mode when connecting to share notification MTA.
      *
-     * <p>Valid values: [CLEARTEXT, SSL, STARTTLS]
+     * <p>Valid values: [SSL, CLEARTEXT, STARTTLS]
      *
      * @param zimbraShareNotificationMtaConnectionType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -58692,7 +59428,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Connection mode when connecting to share notification MTA.
      *
-     * <p>Valid values: [CLEARTEXT, SSL, STARTTLS]
+     * <p>Valid values: [SSL, CLEARTEXT, STARTTLS]
      *
      * @param zimbraShareNotificationMtaConnectionType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -58709,7 +59445,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Connection mode when connecting to share notification MTA.
      *
-     * <p>Valid values: [CLEARTEXT, SSL, STARTTLS]
+     * <p>Valid values: [SSL, CLEARTEXT, STARTTLS]
      *
      * @param zimbraShareNotificationMtaConnectionType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -58727,7 +59463,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Connection mode when connecting to share notification MTA.
      *
-     * <p>Valid values: [CLEARTEXT, SSL, STARTTLS]
+     * <p>Valid values: [SSL, CLEARTEXT, STARTTLS]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -58743,7 +59479,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Connection mode when connecting to share notification MTA.
      *
-     * <p>Valid values: [CLEARTEXT, SSL, STARTTLS]
+     * <p>Valid values: [SSL, CLEARTEXT, STARTTLS]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -63006,7 +63742,7 @@ public abstract class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @return zimbraTableMaintenanceOperation, or ZAttrProvisioning.TableMaintenanceOperation.ANALYZE if unset and/or has invalid value
      */
@@ -63020,7 +63756,7 @@ public abstract class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @return zimbraTableMaintenanceOperation, or "ANALYZE" if unset
      */
@@ -63034,7 +63770,7 @@ public abstract class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -63051,7 +63787,7 @@ public abstract class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -63069,7 +63805,7 @@ public abstract class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -63086,7 +63822,7 @@ public abstract class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @param zimbraTableMaintenanceOperation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -63104,7 +63840,7 @@ public abstract class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -63120,7 +63856,7 @@ public abstract class ZAttrConfig extends Entry {
      * See bug 19145. Orig desc: table maintenance operation that will be
      * performed. Valid options: &quot;ANALYZE&quot;, &quot;OPTIMIZE&quot;
      *
-     * <p>Valid values: [ANALYZE, OPTIMIZE]
+     * <p>Valid values: [OPTIMIZE, ANALYZE]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -63533,7 +64269,7 @@ public abstract class ZAttrConfig extends Entry {
      * function when working with authenticators that deviate from this
      * standard.
      *
-     * <p>Valid values: [SHA256, SHA512, SHA1]
+     * <p>Valid values: [SHA256, SHA1, SHA512]
      *
      * @return zimbraTwoFactorAuthHashAlgorithm, or ZAttrProvisioning.TwoFactorAuthHashAlgorithm.SHA1 if unset and/or has invalid value
      *
@@ -63550,7 +64286,7 @@ public abstract class ZAttrConfig extends Entry {
      * function when working with authenticators that deviate from this
      * standard.
      *
-     * <p>Valid values: [SHA256, SHA512, SHA1]
+     * <p>Valid values: [SHA256, SHA1, SHA512]
      *
      * @return zimbraTwoFactorAuthHashAlgorithm, or "SHA1" if unset
      *
@@ -63567,7 +64303,7 @@ public abstract class ZAttrConfig extends Entry {
      * function when working with authenticators that deviate from this
      * standard.
      *
-     * <p>Valid values: [SHA256, SHA512, SHA1]
+     * <p>Valid values: [SHA256, SHA1, SHA512]
      *
      * @param zimbraTwoFactorAuthHashAlgorithm new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -63587,7 +64323,7 @@ public abstract class ZAttrConfig extends Entry {
      * function when working with authenticators that deviate from this
      * standard.
      *
-     * <p>Valid values: [SHA256, SHA512, SHA1]
+     * <p>Valid values: [SHA256, SHA1, SHA512]
      *
      * @param zimbraTwoFactorAuthHashAlgorithm new value
      * @param attrs existing map to populate, or null to create a new map
@@ -63608,7 +64344,7 @@ public abstract class ZAttrConfig extends Entry {
      * function when working with authenticators that deviate from this
      * standard.
      *
-     * <p>Valid values: [SHA256, SHA512, SHA1]
+     * <p>Valid values: [SHA256, SHA1, SHA512]
      *
      * @param zimbraTwoFactorAuthHashAlgorithm new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -63628,7 +64364,7 @@ public abstract class ZAttrConfig extends Entry {
      * function when working with authenticators that deviate from this
      * standard.
      *
-     * <p>Valid values: [SHA256, SHA512, SHA1]
+     * <p>Valid values: [SHA256, SHA1, SHA512]
      *
      * @param zimbraTwoFactorAuthHashAlgorithm new value
      * @param attrs existing map to populate, or null to create a new map
@@ -63649,7 +64385,7 @@ public abstract class ZAttrConfig extends Entry {
      * function when working with authenticators that deviate from this
      * standard.
      *
-     * <p>Valid values: [SHA256, SHA512, SHA1]
+     * <p>Valid values: [SHA256, SHA1, SHA512]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -63668,7 +64404,7 @@ public abstract class ZAttrConfig extends Entry {
      * function when working with authenticators that deviate from this
      * standard.
      *
-     * <p>Valid values: [SHA256, SHA512, SHA1]
+     * <p>Valid values: [SHA256, SHA1, SHA512]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

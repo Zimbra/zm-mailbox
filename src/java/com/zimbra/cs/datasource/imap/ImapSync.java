@@ -63,9 +63,15 @@ public class ImapSync extends MailItemImport {
     private static final Log LOG = ZimbraLog.datasource;
 
     public ImapSync(DataSource ds) throws ServiceException {
-        super(ds);
+        this(ds, false);
+    }
+
+    public ImapSync(DataSource ds, boolean test) throws ServiceException {
+        super(ds, test);
         validateDataSource();
-        syncState = SyncStateManager.getInstance().getOrCreateSyncState(ds);
+        if (ds.getAccount() != null || !test) {
+            syncState = SyncStateManager.getInstance().getOrCreateSyncState(ds);
+        }
         syncedFolders = new LinkedHashMap<Integer, ImapFolderSync>();
         reuseConnections = ds.isOffline();
     }

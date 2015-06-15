@@ -39,6 +39,12 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import org.apache.commons.codec.binary.Hex;
 
 import com.google.common.base.Strings;
@@ -3341,29 +3347,115 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return domainId == null ? null : getDomainById(domainId);
     }
 
+    private static final String ZMG_APP_CREDS_FOREIGN_PRINCIPAL_PREFIX = "zmgappcreds:";
+
     @Override
-    public Account createZMGAppAccount(String accountId, String appCredsDigest) throws ServiceException {
+    public Account autoProvZMGAppAccount(String accountId, String appCredsDigest) throws ServiceException {
+        Account acct = getAccountById(accountId);
+        if (acct != null) {
+            return acct;
+        }
         Domain domain = getDefaultZMGDomain();
         if (domain == null) {
-            ZimbraLog.account.error("zimbraMobileGatewayDefaultAppAccountDomainId has not been configured. It is " +
-                    "required for enabling Mobile Gateway features.");
+            ZimbraLog.account.info(A_zimbraMobileGatewayDefaultAppAccountDomainId + " has not been configured.");
             throw ServiceException.FAILURE("Missing server configuration", null);
         }
 
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsMobileGatewayAppAccount, ProvisioningConstants.TRUE);
         attrs.put(Provisioning.A_zimbraId, accountId);
-        attrs.put(Provisioning.A_zimbraForeignPrincipal, "zmgappcreds:" + appCredsDigest);
+        attrs.put(Provisioning.A_zimbraForeignPrincipal, ZMG_APP_CREDS_FOREIGN_PRINCIPAL_PREFIX + appCredsDigest);
         attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
         attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MailStatus.disabled.toString());
         attrs.put(Provisioning.A_zimbraMailHost, getLocalServer().getServiceHostname());
+        return createDummyAccount(attrs, null, domain);
+    }
 
+    private Account createDummyAccount(Map<String, Object> attrs, String password, Domain domain)
+            throws ServiceException {
         SecureRandom random = new SecureRandom();
         byte[] keyBytes = new byte[10];
         random.nextBytes(keyBytes);
         String dummyEmailAddr = String.valueOf(Hex.encodeHex(keyBytes)) + "@" + domain.getName();
+        return createAccount(dummyEmailAddr, password, attrs);
+    }
 
-        return createAccount(dummyEmailAddr, null, attrs);
+    private static final String ZMG_PROXY_ACCT_FOREIGN_PRINCIPAL_PREFIX = "zmgproxyacct:";
+
+    public Pair<Account, Boolean> autoProvZMGProxyAccount(String emailAddr, String password) throws ServiceException {
+        Account acct = getAccountByForeignPrincipal(ZMG_PROXY_ACCT_FOREIGN_PRINCIPAL_PREFIX + emailAddr);
+        if (acct != null) {
+            return new Pair<>(acct, false);
+        }
+        String domainId = getConfig().getMobileGatewayDefaultProxyAccountDomainId();
+        if (domainId == null) {
+            return new Pair<>(null, false) ;
+        }
+        Domain domain = getDomainById(domainId);
+        if (domain == null) {
+            ZimbraLog.account.error("Domain corresponding to" + A_zimbraMobileGatewayDefaultProxyAccountDomainId + "not found ");
+            throw ServiceException.FAILURE("Missing server configuration", null);
+        }
+
+        String testDsId = "TestId";
+        Map<String, Object> testAttrs = getZMGProxyDataSourceAttrs(emailAddr, password, true, testDsId);
+        DataSource dsToTest = new DataSource(null, DataSourceType.imap, "Test", testDsId, testAttrs, this);
+        try {
+            DataSourceManager.test(dsToTest);
+        } catch (ServiceException e) {
+            ZimbraLog.account.debug("ZMG Proxy account auto provisioning failed", e);
+            throw AuthFailedServiceException.AUTH_FAILED(emailAddr, SystemUtil.getInnermostException(e).getMessage(), e);
+        }
+
+        Map<String, Object> acctAttrs = new HashMap<String, Object>();
+        acctAttrs.put(Provisioning.A_zimbraIsMobileGatewayProxyAccount, ProvisioningConstants.TRUE);
+        acctAttrs.put(Provisioning.A_zimbraForeignPrincipal, ZMG_PROXY_ACCT_FOREIGN_PRINCIPAL_PREFIX + emailAddr);
+        acctAttrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
+        acctAttrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MailStatus.disabled.toString());
+        acctAttrs.put(Provisioning.A_zimbraMailHost, getLocalServer().getServiceHostname());
+        acct = createDummyAccount(acctAttrs, password, domain);
+
+        DataSource ds;
+        try {
+            Map<String, Object> dsAttrs = getZMGProxyDataSourceAttrs(emailAddr, password, false, null);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+            dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId,
+                    Integer.toString(mbox.createFolder(null, "/" + emailAddr, new Folder.FolderOptions()).getId()));
+            ds = createDataSource(acct, DataSourceType.imap, emailAddr, dsAttrs);
+        } catch (ServiceException e) {
+            try {
+                deleteAccount(acct.getId());
+            } catch (ServiceException e1) {
+                if (!AccountServiceException.NO_SUCH_ACCOUNT.equals(e1.getCode())) {
+                    throw e1;
+                }
+            }
+            throw e;
+        }
+
+        DataSourceManager.asyncImportData(ds);
+
+        return new Pair<>(acct, true);
+    }
+
+    private Map<String, Object> getZMGProxyDataSourceAttrs(String emailAddr, String password,
+            boolean encryptPassword, String dsId) throws ServiceException {
+        Map<String, Object> testAttrs = new HashMap<String, Object>();
+        Config config = getConfig();
+        testAttrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_TRUE);
+        testAttrs.put(Provisioning.A_zimbraDataSourceIsZmgProxy, LdapConstants.LDAP_TRUE);
+        testAttrs.put(Provisioning.A_zimbraDataSourceHost, config.getMobileGatewayProxyImapHost());
+        testAttrs.put(Provisioning.A_zimbraDataSourcePort, Integer.toString(config.getMobileGatewayProxyImapPort()));
+        testAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, config.getMobileGatewayProxyImapConnectionType().toString());
+        testAttrs.put(Provisioning.A_zimbraDataSourceUsername, emailAddr);
+        testAttrs.put(Provisioning.A_zimbraDataSourcePassword, encryptPassword ?
+                DataSource.encryptData(dsId, password) : password);
+        testAttrs.put(Provisioning.A_zimbraDataSourceSmtpEnabled, LdapConstants.LDAP_TRUE);
+        testAttrs.put(Provisioning.A_zimbraDataSourceSmtpHost, config.getMobileGatewayProxySmtpHost());
+        testAttrs.put(Provisioning.A_zimbraDataSourceSmtpPort, Integer.toString(config.getMobileGatewayProxySmtpPort()));
+        testAttrs.put(Provisioning.A_zimbraDataSourceSmtpConnectionType, config.getMobileGatewayProxySmtpConnectionType().toString());
+        testAttrs.put(Provisioning.A_zimbraDataSourceSmtpAuthRequired, LdapConstants.LDAP_TRUE);
+        return testAttrs;
     }
 
     private void deleteDomain(String zimbraId, boolean deleteDomainAliases) throws ServiceException {

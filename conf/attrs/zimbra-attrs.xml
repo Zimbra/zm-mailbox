@@ -8399,12 +8399,11 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1759" name="zimbraMobileGatewayDefaultAppAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0">
-  <desc>id of the doamin under which temporary/hidden accounts for apps would be created</desc>
+  <desc>id of the doamin under which (hidden) accounts for apps would be created</desc>
 </attr>
 
-<attr id="1760" name="zimbraIsMobileGatewayAppAccount" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.0">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>whether or not an account represents a temporary/hidden mobile gateway app</desc>
+<attr id="1760" name="zimbraIsMobileGatewayAppAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.7.0">
+  <desc>whether or not an account represents a Mobile Gateway app</desc>
 </attr>
 
 <attr id="1761" name="zimbraDataSourceOAuthToken" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0">
@@ -8904,6 +8903,48 @@ TODO: delete them permanently from here
 <attr id="2027" name="zimbraZimletUserPropertiesMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,domainAdminModifiable" since="8.7.0,9.0.0">
   <defaultCOSValue>150</defaultCOSValue>
   <desc>maximum number of user properties for zimlet allowed on an account</desc>
+</attr>
+
+<attr id="2029" name="zimbraMobileGatewayDefaultProxyAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <desc>
+    Id of the domain under which "Proxy" accounts would be created.
+    One can configure the system to act as a "Proxy" to another Zimbra system. When the Proxy mode is enabled, some
+    accounts in the system would be syncing mailbox data from a Zimbra account hosted on a different Zimbra system
+    into a data source.
+  </desc>
+</attr>
+
+<attr id="2030" name="zimbraMobileGatewayProxyImapHost" type="astring" max="256" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <desc>IMAP host name of the Zimbra system being proxied</desc>
+</attr>
+
+<attr id="2031" name="zimbraMobileGatewayProxyImapPort" type="port" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <desc>IMAP port of the Zimbra system being proxied</desc>
+</attr>
+
+<attr id="2032" name="zimbraMobileGatewayProxyImapConnectionType" type="enum" value="cleartext,ssl,tls,tls_if_available" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <desc>IMAP connection type of the Zimbra system being proxied</desc>
+</attr>
+
+<attr id="2033" name="zimbraMobileGatewayProxySmtpHost" type="astring" max="256" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <desc>SMTP host name of the Zimbra system being proxied</desc>
+</attr>
+
+<attr id="2034" name="zimbraMobileGatewayProxySmtpPort" type="port" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <desc>SMTP port of the Zimbra system being proxied</desc>
+</attr>
+
+<attr id="2035" name="zimbraMobileGatewayProxySmtpConnectionType" type="enum" value="cleartext,ssl" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <globalConfigValue>ssl</globalConfigValue>
+  <desc>SMTP connection type of the Zimbra system being proxied</desc>
+</attr>
+
+<attr id="2036" name="zimbraIsMobileGatewayProxyAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.7.0, 9.0.0">
+  <desc>whether or not an account represents a Mobile Gateway Proxy account</desc>
+</attr>
+
+<attr id="2037" name="zimbraDataSourceIsZmgProxy" type="boolean" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0">
+  <desc>whether this data source corresponds to an account on the Zimbra system being proxied</desc>
 </attr>
 
 </attrs>

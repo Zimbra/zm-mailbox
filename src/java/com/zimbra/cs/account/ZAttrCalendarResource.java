@@ -102,7 +102,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar user type - USER (default) or RESOURCE
      *
-     * <p>Valid values: [USER, RESOURCE]
+     * <p>Valid values: [RESOURCE, USER]
      *
      * @return zimbraAccountCalendarUserType, or null if unset and/or has invalid value
      */
@@ -114,7 +114,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar user type - USER (default) or RESOURCE
      *
-     * <p>Valid values: [USER, RESOURCE]
+     * <p>Valid values: [RESOURCE, USER]
      *
      * @return zimbraAccountCalendarUserType, or null if unset
      */
@@ -126,7 +126,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar user type - USER (default) or RESOURCE
      *
-     * <p>Valid values: [USER, RESOURCE]
+     * <p>Valid values: [RESOURCE, USER]
      *
      * @param zimbraAccountCalendarUserType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -141,7 +141,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar user type - USER (default) or RESOURCE
      *
-     * <p>Valid values: [USER, RESOURCE]
+     * <p>Valid values: [RESOURCE, USER]
      *
      * @param zimbraAccountCalendarUserType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -157,7 +157,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar user type - USER (default) or RESOURCE
      *
-     * <p>Valid values: [USER, RESOURCE]
+     * <p>Valid values: [RESOURCE, USER]
      *
      * @param zimbraAccountCalendarUserType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -172,7 +172,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar user type - USER (default) or RESOURCE
      *
-     * <p>Valid values: [USER, RESOURCE]
+     * <p>Valid values: [RESOURCE, USER]
      *
      * @param zimbraAccountCalendarUserType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -188,7 +188,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar user type - USER (default) or RESOURCE
      *
-     * <p>Valid values: [USER, RESOURCE]
+     * <p>Valid values: [RESOURCE, USER]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -202,7 +202,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar user type - USER (default) or RESOURCE
      *
-     * <p>Valid values: [USER, RESOURCE]
+     * <p>Valid values: [RESOURCE, USER]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -1140,7 +1140,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar resource type - Location or Equipment
      *
-     * <p>Valid values: [Equipment, Location]
+     * <p>Valid values: [Location, Equipment]
      *
      * @return zimbraCalResType, or null if unset and/or has invalid value
      */
@@ -1152,7 +1152,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar resource type - Location or Equipment
      *
-     * <p>Valid values: [Equipment, Location]
+     * <p>Valid values: [Location, Equipment]
      *
      * @return zimbraCalResType, or null if unset
      */
@@ -1164,7 +1164,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar resource type - Location or Equipment
      *
-     * <p>Valid values: [Equipment, Location]
+     * <p>Valid values: [Location, Equipment]
      *
      * @param zimbraCalResType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1179,7 +1179,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar resource type - Location or Equipment
      *
-     * <p>Valid values: [Equipment, Location]
+     * <p>Valid values: [Location, Equipment]
      *
      * @param zimbraCalResType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1195,7 +1195,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar resource type - Location or Equipment
      *
-     * <p>Valid values: [Equipment, Location]
+     * <p>Valid values: [Location, Equipment]
      *
      * @param zimbraCalResType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1210,7 +1210,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar resource type - Location or Equipment
      *
-     * <p>Valid values: [Equipment, Location]
+     * <p>Valid values: [Location, Equipment]
      *
      * @param zimbraCalResType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1226,7 +1226,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar resource type - Location or Equipment
      *
-     * <p>Valid values: [Equipment, Location]
+     * <p>Valid values: [Location, Equipment]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -1240,7 +1240,7 @@ public class ZAttrCalendarResource extends Account {
     /**
      * calendar resource type - Location or Equipment
      *
-     * <p>Valid values: [Equipment, Location]
+     * <p>Valid values: [Location, Equipment]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
