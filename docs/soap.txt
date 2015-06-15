@@ -431,7 +431,7 @@ global soap/system errors used with zimbra:Error/Code:
    [<deviceId>...</deviceId>]
  </AuthRequest>
 
- <AuthResponse">
+ <AuthResponse>
    <authToken>...</authToken>
    [<csrfToken>...</csrfToken>]
    <lifetime>{lifetime-in-millseconds}</lifetime>

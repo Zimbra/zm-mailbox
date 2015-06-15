@@ -253,7 +253,7 @@ final class ConnectionManager {
                 clientId.put(IDInfo.NAME, IDInfo.DATASOURCE_IMAP_CLIENT_NAME);
                 clientId.put(IDInfo.VERSION, BuildInfo.VERSION);
                 IDInfo id = ic.id(clientId);
-                if ("Zimbra".equalsIgnoreCase(id.get(IDInfo.NAME))) {
+                if ("Zimbra".equalsIgnoreCase(id.get(IDInfo.NAME)) && ds.getAccount() != null) {
                     String user = id.get("user");
                     String server = id.get("server");
                     return user != null && user.equals(ds.getAccount().getName()) &&

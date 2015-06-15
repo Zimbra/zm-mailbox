@@ -36,6 +36,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
@@ -159,7 +160,7 @@ public class Auth extends AccountDocumentHandler {
             Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
             Boolean registerTrustedDevice = false;
             if (acct != null && TwoFactorManager.twoFactorAuthEnabled(acct)) {
-                registerTrustedDevice = trustedToken != null? false: request.getAttributeBool(AccountConstants.A_TRUSTED_DEVICE, false);
+                registerTrustedDevice = trustedToken == null && request.getAttributeBool(AccountConstants.A_TRUSTED_DEVICE, false);
             }
             String deviceId = request.getAttribute(AccountConstants.E_DEVICE_ID, null);
             long expires = 0;
@@ -186,12 +187,10 @@ public class Auth extends AccountDocumentHandler {
                     }
                 }
             }
-            boolean usingTwoFactorAuth = acct != null? TwoFactorManager.twoFactorAuthRequired(acct) && !trustedDeviceOverride: false;
+            boolean usingTwoFactorAuth = acct != null && TwoFactorManager.twoFactorAuthRequired(acct) && !trustedDeviceOverride;
 
             if (acct == null) {
-                //
-                // try auto provision the account
-                //
+                // try LAZY auto provision if it is enabled
                 if (acctBy == AccountBy.name || acctBy == AccountBy.krb5Principal) {
                     try {
                         if (acctBy == AccountBy.name) {
@@ -208,7 +207,7 @@ public class Auth extends AccountDocumentHandler {
 
                                 acct = prov.autoProvAccountLazy(domain, acctValuePassedIn, null, AutoProvAuthMech.PREAUTH);
                             }
-                        } else if (acctBy == AccountBy.krb5Principal) {
+                        } else {
                             if (password != null) {
                                 Domain domain = Krb5Principal.getDomainByKrb5Principal(acctValuePassedIn);
                                 if (domain != null) {
@@ -224,6 +223,24 @@ public class Auth extends AccountDocumentHandler {
                         ZimbraLog.account.debug("auth failed, unable to auto provisioing acct " + acctValue, e);
                     } catch (ServiceException e) {
                         ZimbraLog.account.info("unable to auto provisioing acct " + acctValue, e);
+                    }
+                }
+            }
+
+            if (acct == null) {
+                // try ZMG Proxy auto provision if it is enabled
+                if (acctBy == AccountBy.name && password != null) {
+                    Pair<Account, Boolean> result = null;
+                    try {
+                        result = prov.autoProvZMGProxyAccount(acctValuePassedIn, password);
+                    } catch (AuthFailedServiceException e) {
+                        // Most likely in error with user creds
+                    } catch (ServiceException e) {
+                        ZimbraLog.account.info("unable to auto provision acct " + acctValuePassedIn, e);
+                    }
+                    if (result != null) {
+                        acct = result.getFirst();
+                        acctAutoProvisioned = result.getSecond();
                     }
                 }
             }
@@ -298,6 +315,7 @@ public class Auth extends AccountDocumentHandler {
                     throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
                 }
             }
+
             AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
             if (registerTrustedDevice && (trustedToken == null || trustedToken.isExpired())) {
                 //generate a new trusted device token if there is no existing one or if the current one is no longer valid
@@ -429,6 +447,9 @@ public class Auth extends AccountDocumentHandler {
         }
         if (deviceId != null) {
             response.addUniqueElement(AccountConstants.E_DEVICE_ID).setText(deviceId);
+        }
+        if (acct.isIsMobileGatewayProxyAccount()) {
+            response.addAttribute(AccountConstants.A_ZMG_PROXY, true);
         }
         return response;
     }

@@ -45558,8 +45558,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
+     * id of the doamin under which (hidden) accounts for apps would be
+     * created
      *
      * @return zimbraMobileGatewayDefaultAppAccountDomainId, or null if unset
      *
@@ -45571,8 +45571,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
+     * id of the doamin under which (hidden) accounts for apps would be
+     * created
      *
      * @param zimbraMobileGatewayDefaultAppAccountDomainId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -45587,8 +45587,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
+     * id of the doamin under which (hidden) accounts for apps would be
+     * created
      *
      * @param zimbraMobileGatewayDefaultAppAccountDomainId new value
      * @param attrs existing map to populate, or null to create a new map
@@ -45604,8 +45604,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
+     * id of the doamin under which (hidden) accounts for apps would be
+     * created
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -45619,8 +45619,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
+     * id of the doamin under which (hidden) accounts for apps would be
+     * created
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -45631,6 +45631,742 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMobileGatewayDefaultAppAccountDomainId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileGatewayDefaultAppAccountDomainId, "");
+        return attrs;
+    }
+
+    /**
+     * Id of the domain under which &quot;Proxy&quot; accounts would be
+     * created. One can configure the system to act as a &quot;Proxy&quot; to
+     * another Zimbra system. When the Proxy mode is enabled, some accounts
+     * in the system would be syncing mailbox data from a Zimbra account
+     * hosted on a different Zimbra system into a data source.
+     *
+     * @return zimbraMobileGatewayDefaultProxyAccountDomainId, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2029)
+    public String getMobileGatewayDefaultProxyAccountDomainId() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayDefaultProxyAccountDomainId, null);
+    }
+
+    /**
+     * Id of the domain under which &quot;Proxy&quot; accounts would be
+     * created. One can configure the system to act as a &quot;Proxy&quot; to
+     * another Zimbra system. When the Proxy mode is enabled, some accounts
+     * in the system would be syncing mailbox data from a Zimbra account
+     * hosted on a different Zimbra system into a data source.
+     *
+     * @param zimbraMobileGatewayDefaultProxyAccountDomainId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2029)
+    public void setMobileGatewayDefaultProxyAccountDomainId(String zimbraMobileGatewayDefaultProxyAccountDomainId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultProxyAccountDomainId, zimbraMobileGatewayDefaultProxyAccountDomainId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Id of the domain under which &quot;Proxy&quot; accounts would be
+     * created. One can configure the system to act as a &quot;Proxy&quot; to
+     * another Zimbra system. When the Proxy mode is enabled, some accounts
+     * in the system would be syncing mailbox data from a Zimbra account
+     * hosted on a different Zimbra system into a data source.
+     *
+     * @param zimbraMobileGatewayDefaultProxyAccountDomainId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2029)
+    public Map<String,Object> setMobileGatewayDefaultProxyAccountDomainId(String zimbraMobileGatewayDefaultProxyAccountDomainId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultProxyAccountDomainId, zimbraMobileGatewayDefaultProxyAccountDomainId);
+        return attrs;
+    }
+
+    /**
+     * Id of the domain under which &quot;Proxy&quot; accounts would be
+     * created. One can configure the system to act as a &quot;Proxy&quot; to
+     * another Zimbra system. When the Proxy mode is enabled, some accounts
+     * in the system would be syncing mailbox data from a Zimbra account
+     * hosted on a different Zimbra system into a data source.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2029)
+    public void unsetMobileGatewayDefaultProxyAccountDomainId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultProxyAccountDomainId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Id of the domain under which &quot;Proxy&quot; accounts would be
+     * created. One can configure the system to act as a &quot;Proxy&quot; to
+     * another Zimbra system. When the Proxy mode is enabled, some accounts
+     * in the system would be syncing mailbox data from a Zimbra account
+     * hosted on a different Zimbra system into a data source.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2029)
+    public Map<String,Object> unsetMobileGatewayDefaultProxyAccountDomainId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultProxyAccountDomainId, "");
+        return attrs;
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     *
+     * @return zimbraMobileGatewayProxyImapConnectionType, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public ZAttrProvisioning.MobileGatewayProxyImapConnectionType getMobileGatewayProxyImapConnectionType() {
+        try { String v = getAttr(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType); return v == null ? null : ZAttrProvisioning.MobileGatewayProxyImapConnectionType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     *
+     * @return zimbraMobileGatewayProxyImapConnectionType, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public String getMobileGatewayProxyImapConnectionTypeAsString() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, null);
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     *
+     * @param zimbraMobileGatewayProxyImapConnectionType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public void setMobileGatewayProxyImapConnectionType(ZAttrProvisioning.MobileGatewayProxyImapConnectionType zimbraMobileGatewayProxyImapConnectionType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, zimbraMobileGatewayProxyImapConnectionType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     *
+     * @param zimbraMobileGatewayProxyImapConnectionType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public Map<String,Object> setMobileGatewayProxyImapConnectionType(ZAttrProvisioning.MobileGatewayProxyImapConnectionType zimbraMobileGatewayProxyImapConnectionType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, zimbraMobileGatewayProxyImapConnectionType.toString());
+        return attrs;
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     *
+     * @param zimbraMobileGatewayProxyImapConnectionType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public void setMobileGatewayProxyImapConnectionTypeAsString(String zimbraMobileGatewayProxyImapConnectionType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, zimbraMobileGatewayProxyImapConnectionType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     *
+     * @param zimbraMobileGatewayProxyImapConnectionType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public Map<String,Object> setMobileGatewayProxyImapConnectionTypeAsString(String zimbraMobileGatewayProxyImapConnectionType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, zimbraMobileGatewayProxyImapConnectionType);
+        return attrs;
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public void unsetMobileGatewayProxyImapConnectionType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [tls, tls_if_available, cleartext, ssl]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public Map<String,Object> unsetMobileGatewayProxyImapConnectionType(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapConnectionType, "");
+        return attrs;
+    }
+
+    /**
+     * IMAP host name of the Zimbra system being proxied
+     *
+     * @return zimbraMobileGatewayProxyImapHost, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2030)
+    public String getMobileGatewayProxyImapHost() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxyImapHost, null);
+    }
+
+    /**
+     * IMAP host name of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2030)
+    public void setMobileGatewayProxyImapHost(String zimbraMobileGatewayProxyImapHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapHost, zimbraMobileGatewayProxyImapHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP host name of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2030)
+    public Map<String,Object> setMobileGatewayProxyImapHost(String zimbraMobileGatewayProxyImapHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapHost, zimbraMobileGatewayProxyImapHost);
+        return attrs;
+    }
+
+    /**
+     * IMAP host name of the Zimbra system being proxied
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2030)
+    public void unsetMobileGatewayProxyImapHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP host name of the Zimbra system being proxied
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2030)
+    public Map<String,Object> unsetMobileGatewayProxyImapHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapHost, "");
+        return attrs;
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * <p>Use getMobileGatewayProxyImapPortAsString to access value as a string.
+     *
+     * @see #getMobileGatewayProxyImapPortAsString()
+     *
+     * @return zimbraMobileGatewayProxyImapPort, or -1 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public int getMobileGatewayProxyImapPort() {
+        return getIntAttr(Provisioning.A_zimbraMobileGatewayProxyImapPort, -1);
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @return zimbraMobileGatewayProxyImapPort, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public String getMobileGatewayProxyImapPortAsString() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxyImapPort, null);
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public void setMobileGatewayProxyImapPort(int zimbraMobileGatewayProxyImapPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, Integer.toString(zimbraMobileGatewayProxyImapPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public Map<String,Object> setMobileGatewayProxyImapPort(int zimbraMobileGatewayProxyImapPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, Integer.toString(zimbraMobileGatewayProxyImapPort));
+        return attrs;
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public void setMobileGatewayProxyImapPortAsString(String zimbraMobileGatewayProxyImapPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, zimbraMobileGatewayProxyImapPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxyImapPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public Map<String,Object> setMobileGatewayProxyImapPortAsString(String zimbraMobileGatewayProxyImapPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, zimbraMobileGatewayProxyImapPort);
+        return attrs;
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public void unsetMobileGatewayProxyImapPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public Map<String,Object> unsetMobileGatewayProxyImapPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxyImapPort, "");
+        return attrs;
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [cleartext, ssl]
+     *
+     * @return zimbraMobileGatewayProxySmtpConnectionType, or ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public ZAttrProvisioning.MobileGatewayProxySmtpConnectionType getMobileGatewayProxySmtpConnectionType() {
+        try { String v = getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType); return v == null ? ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl : ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl; }
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [cleartext, ssl]
+     *
+     * @return zimbraMobileGatewayProxySmtpConnectionType, or "ssl" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public String getMobileGatewayProxySmtpConnectionTypeAsString() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, "ssl");
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [cleartext, ssl]
+     *
+     * @param zimbraMobileGatewayProxySmtpConnectionType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public void setMobileGatewayProxySmtpConnectionType(ZAttrProvisioning.MobileGatewayProxySmtpConnectionType zimbraMobileGatewayProxySmtpConnectionType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, zimbraMobileGatewayProxySmtpConnectionType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [cleartext, ssl]
+     *
+     * @param zimbraMobileGatewayProxySmtpConnectionType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public Map<String,Object> setMobileGatewayProxySmtpConnectionType(ZAttrProvisioning.MobileGatewayProxySmtpConnectionType zimbraMobileGatewayProxySmtpConnectionType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, zimbraMobileGatewayProxySmtpConnectionType.toString());
+        return attrs;
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [cleartext, ssl]
+     *
+     * @param zimbraMobileGatewayProxySmtpConnectionType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public void setMobileGatewayProxySmtpConnectionTypeAsString(String zimbraMobileGatewayProxySmtpConnectionType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, zimbraMobileGatewayProxySmtpConnectionType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [cleartext, ssl]
+     *
+     * @param zimbraMobileGatewayProxySmtpConnectionType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public Map<String,Object> setMobileGatewayProxySmtpConnectionTypeAsString(String zimbraMobileGatewayProxySmtpConnectionType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, zimbraMobileGatewayProxySmtpConnectionType);
+        return attrs;
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [cleartext, ssl]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public void unsetMobileGatewayProxySmtpConnectionType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * <p>Valid values: [cleartext, ssl]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public Map<String,Object> unsetMobileGatewayProxySmtpConnectionType(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, "");
+        return attrs;
+    }
+
+    /**
+     * SMTP host name of the Zimbra system being proxied
+     *
+     * @return zimbraMobileGatewayProxySmtpHost, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2033)
+    public String getMobileGatewayProxySmtpHost() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpHost, null);
+    }
+
+    /**
+     * SMTP host name of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2033)
+    public void setMobileGatewayProxySmtpHost(String zimbraMobileGatewayProxySmtpHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpHost, zimbraMobileGatewayProxySmtpHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP host name of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2033)
+    public Map<String,Object> setMobileGatewayProxySmtpHost(String zimbraMobileGatewayProxySmtpHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpHost, zimbraMobileGatewayProxySmtpHost);
+        return attrs;
+    }
+
+    /**
+     * SMTP host name of the Zimbra system being proxied
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2033)
+    public void unsetMobileGatewayProxySmtpHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP host name of the Zimbra system being proxied
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2033)
+    public Map<String,Object> unsetMobileGatewayProxySmtpHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpHost, "");
+        return attrs;
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * <p>Use getMobileGatewayProxySmtpPortAsString to access value as a string.
+     *
+     * @see #getMobileGatewayProxySmtpPortAsString()
+     *
+     * @return zimbraMobileGatewayProxySmtpPort, or -1 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public int getMobileGatewayProxySmtpPort() {
+        return getIntAttr(Provisioning.A_zimbraMobileGatewayProxySmtpPort, -1);
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @return zimbraMobileGatewayProxySmtpPort, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public String getMobileGatewayProxySmtpPortAsString() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpPort, null);
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public void setMobileGatewayProxySmtpPort(int zimbraMobileGatewayProxySmtpPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, Integer.toString(zimbraMobileGatewayProxySmtpPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public Map<String,Object> setMobileGatewayProxySmtpPort(int zimbraMobileGatewayProxySmtpPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, Integer.toString(zimbraMobileGatewayProxySmtpPort));
+        return attrs;
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public void setMobileGatewayProxySmtpPortAsString(String zimbraMobileGatewayProxySmtpPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, zimbraMobileGatewayProxySmtpPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @param zimbraMobileGatewayProxySmtpPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public Map<String,Object> setMobileGatewayProxySmtpPortAsString(String zimbraMobileGatewayProxySmtpPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, zimbraMobileGatewayProxySmtpPort);
+        return attrs;
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public void unsetMobileGatewayProxySmtpPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public Map<String,Object> unsetMobileGatewayProxySmtpPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayProxySmtpPort, "");
         return attrs;
     }
 

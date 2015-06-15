@@ -172,11 +172,15 @@ public class DataSourceManager {
     }
 
     public DataImport getDataImport(DataSource ds) throws ServiceException {
+        return getDataImport(ds, false);
+    }
+
+    public DataImport getDataImport(DataSource ds, boolean test) throws ServiceException {
         switch (ds.getType()) {
         case pop3:
             return new Pop3Sync(ds);
         case imap:
-            return new ImapSync(ds);
+            return new ImapSync(ds, test);
         case caldav:
             return new CalDavDataImport(ds);
         case rss:
@@ -223,7 +227,7 @@ public class DataSourceManager {
     public static void test(DataSource ds) throws ServiceException {
         ZimbraLog.datasource.info("Testing: %s", ds);
         try {
-            DataImport di = getInstance().getDataImport(ds);
+            DataImport di = getInstance().getDataImport(ds, true);
             di.test();
 
             if (ds.isSmtpEnabled()) {

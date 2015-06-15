@@ -17355,9 +17355,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether to allow a user to access touch client. Note: touch client is
-     * a Network feature, this attribute is effective only if touch client is
-     * permitted by license.
+     * Whether to allow a user to access touch client
      *
      * @return zimbraFeatureTouchClientEnabled, or false if unset
      *
@@ -17369,9 +17367,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether to allow a user to access touch client. Note: touch client is
-     * a Network feature, this attribute is effective only if touch client is
-     * permitted by license.
+     * Whether to allow a user to access touch client
      *
      * @param zimbraFeatureTouchClientEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17386,9 +17382,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether to allow a user to access touch client. Note: touch client is
-     * a Network feature, this attribute is effective only if touch client is
-     * permitted by license.
+     * Whether to allow a user to access touch client
      *
      * @param zimbraFeatureTouchClientEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17404,9 +17398,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether to allow a user to access touch client. Note: touch client is
-     * a Network feature, this attribute is effective only if touch client is
-     * permitted by license.
+     * Whether to allow a user to access touch client
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -17420,9 +17412,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether to allow a user to access touch client. Note: touch client is
-     * a Network feature, this attribute is effective only if touch client is
-     * permitted by license.
+     * Whether to allow a user to access touch client
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -22025,8 +22015,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether or not an account represents a temporary/hidden mobile gateway
-     * app
+     * whether or not an account represents a Mobile Gateway app
      *
      * @return zimbraIsMobileGatewayAppAccount, or false if unset
      *
@@ -22038,8 +22027,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether or not an account represents a temporary/hidden mobile gateway
-     * app
+     * whether or not an account represents a Mobile Gateway app
      *
      * @param zimbraIsMobileGatewayAppAccount new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22054,8 +22042,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether or not an account represents a temporary/hidden mobile gateway
-     * app
+     * whether or not an account represents a Mobile Gateway app
      *
      * @param zimbraIsMobileGatewayAppAccount new value
      * @param attrs existing map to populate, or null to create a new map
@@ -22071,8 +22058,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether or not an account represents a temporary/hidden mobile gateway
-     * app
+     * whether or not an account represents a Mobile Gateway app
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -22086,8 +22072,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether or not an account represents a temporary/hidden mobile gateway
-     * app
+     * whether or not an account represents a Mobile Gateway app
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -22098,6 +22083,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetIsMobileGatewayAppAccount(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIsMobileGatewayAppAccount, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not an account represents a Mobile Gateway Proxy account
+     *
+     * @return zimbraIsMobileGatewayProxyAccount, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2036)
+    public boolean isIsMobileGatewayProxyAccount() {
+        return getBooleanAttr(Provisioning.A_zimbraIsMobileGatewayProxyAccount, false);
+    }
+
+    /**
+     * whether or not an account represents a Mobile Gateway Proxy account
+     *
+     * @param zimbraIsMobileGatewayProxyAccount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2036)
+    public void setIsMobileGatewayProxyAccount(boolean zimbraIsMobileGatewayProxyAccount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsMobileGatewayProxyAccount, zimbraIsMobileGatewayProxyAccount ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not an account represents a Mobile Gateway Proxy account
+     *
+     * @param zimbraIsMobileGatewayProxyAccount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2036)
+    public Map<String,Object> setIsMobileGatewayProxyAccount(boolean zimbraIsMobileGatewayProxyAccount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsMobileGatewayProxyAccount, zimbraIsMobileGatewayProxyAccount ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not an account represents a Mobile Gateway Proxy account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2036)
+    public void unsetIsMobileGatewayProxyAccount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsMobileGatewayProxyAccount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not an account represents a Mobile Gateway Proxy account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2036)
+    public Map<String,Object> unsetIsMobileGatewayProxyAccount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsMobileGatewayProxyAccount, "");
         return attrs;
     }
 

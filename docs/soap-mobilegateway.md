@@ -154,3 +154,22 @@ APNS -
 {"ac":"CreateMessage","aps":{"badge":26,"alert":"From: rambasta@zimbra.com\nafadfadfgdg","sound":"default"},
 "ty":"MESSAGE","id":291,"sdn":"Rohan Ambasta","fr":"asdfdsgdg","sa":"rambasta@zimbra.com",
 "cid":-291,"ra":"zimbrasoap@gmail.com"}
+
+
+------ ZMG "Proxy" mode -----
+
+ZMG can be configured to act as a "Proxy" to another Zimbra system. In the Proxy mode, some accounts in the ZMG could
+be syncing email data from a Zimbra account hosted on a different Zimbra system into a data source.
+
+The client can send user credentials on the target system inside the <AuthRequest>. The <AuthResponse> would contain an
+additional flag to indicate that the authenticated account corresponds to a Proxy one:
+
+<AuthResponse zmgProxy="0|1">
+  ...
+</AuthResponse>
+
+In this scenario there would be a data source object that is part of the authenticated account and where the proxied
+account data is synced. The data source would have an additional "zimbraDataSourceIsProxy" provisioning attribute set
+on it with value TRUE.
+
+

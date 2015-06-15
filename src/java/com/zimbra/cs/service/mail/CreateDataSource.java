@@ -169,18 +169,12 @@ public class CreateDataSource extends MailDocumentHandler {
             Element eDataSource, DataSourceType type)
             throws ServiceException {
         String acctId = zsc.getAuthtokenAccountId();
-        boolean isAppProvisioned = false;
         AuthToken authToken = zsc.getAuthToken();
         if (authToken.isZMGAppBootstrap() && prov.getAccountById(acctId) == null) {
-            Account acct = prov.createZMGAppAccount(acctId, authToken.getDigest());
-
             // test the data source to make sure it is a valid one
-            try {
-                TestDataSource.testDataSourceConnection(prov, eDataSource, type, acct);
-            } catch (Exception e) {
-                prov.deleteAccount(acctId);
-                throw e;
-            }
+            TestDataSource.testDataSourceConnection(prov, eDataSource, type, null);
+
+            Account acct = prov.autoProvZMGAppAccount(acctId, authToken.getDigest());
 
             MailboxManager mailboxManager = MailboxManager.getInstance();
             if (mailboxManager.getMailboxByAccountId(acctId, false) ==  null) {
@@ -192,9 +186,9 @@ public class CreateDataSource extends MailDocumentHandler {
                     throw e;
                 }
             }
-            isAppProvisioned = true;
+            return true;
         }
-        return isAppProvisioned;
+        return false;
     }
 
     /**

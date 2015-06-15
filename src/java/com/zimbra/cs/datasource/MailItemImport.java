@@ -53,8 +53,12 @@ public abstract class MailItemImport implements DataSource.DataImport {
     private int MAX_PURGE_ATTEMPTS = 10;
 
     public MailItemImport(DataSource ds) throws ServiceException {
+        this(ds, false);
+    }
+
+    public MailItemImport(DataSource ds, boolean test) throws ServiceException {
         dataSource = ds;
-        mbox = DataSourceManager.getInstance().getMailbox(ds);
+        mbox = ds.getAccount() == null && test ? null : DataSourceManager.getInstance().getMailbox(ds);
     }
 
     public void validateDataSource() throws ServiceException {

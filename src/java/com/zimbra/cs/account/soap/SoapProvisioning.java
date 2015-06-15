@@ -1525,16 +1525,6 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public Domain getDefaultZMGDomain() throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Account createZMGAppAccount(String accountId, String appCredsDigest) throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void renameCalendarResource(String zimbraId, String newName)
             throws ServiceException {
         invokeJaxb(new RenameCalendarResourceRequest(zimbraId, newName));
