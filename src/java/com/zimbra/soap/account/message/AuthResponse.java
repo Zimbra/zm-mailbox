@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,6 +31,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Session;
@@ -112,6 +114,13 @@ public class AuthResponse {
      */
     @XmlElement(name=AccountConstants.E_TRUSTED_TOKEN /* trustedToken */, required=false)
     private String trustedToken;
+
+    /**
+     * @zm-api-field-description indicates whether the authentication account acts as a "Proxy" to a Zimbra account
+     * on another system.
+     */
+    @XmlAttribute(name=AccountConstants.A_ZMG_PROXY /* zmgProxy */, required=false)
+    private ZmBoolean zmgProxy;
 
     /**
      * @zm-api-field-description Requested preference settings.
@@ -219,4 +228,7 @@ public class AuthResponse {
 
     public ZmBoolean getTwoFactorAuthRequired() { return twoFactorAuthRequired; }
     public AuthResponse setTwoFactorAuthRequired(boolean bool) { this.twoFactorAuthRequired = ZmBoolean.fromBool(bool); return this; }
+
+    public Boolean getZmgProxy() { return ZmBoolean.toBool(zmgProxy); }
+    public void setZmgProxy(Boolean zmgProxy) { this.zmgProxy = ZmBoolean.fromBool(zmgProxy); }
 }
