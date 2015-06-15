@@ -506,6 +506,7 @@ public class AccountConstants {
     public static final String A_REGISTRATION_ID = "registrationId";
     public static final String A_PUSH_PROVIDER = "pushProvider";
     public static final String E_GCM_SENDER_ID = "gcmSenderId";
+    public static final String A_ZMG_PROXY = "zmgProxy";
 
     //two-factor auth attributes
     public static final String E_TWO_FACTOR_CODE = "twoFactorCode";

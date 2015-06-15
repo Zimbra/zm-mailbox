@@ -724,6 +724,42 @@ public class ZAttrProvisioning {
         public boolean isSubjrefs() { return this == subjrefs;}
     }
 
+    public static enum MobileGatewayProxyImapConnectionType {
+        tls_if_available("tls_if_available"),
+        tls("tls"),
+        ssl("ssl"),
+        cleartext("cleartext");
+        private String mValue;
+        private MobileGatewayProxyImapConnectionType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MobileGatewayProxyImapConnectionType fromString(String s) throws ServiceException {
+            for (MobileGatewayProxyImapConnectionType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isTls_if_available() { return this == tls_if_available;}
+        public boolean isTls() { return this == tls;}
+        public boolean isSsl() { return this == ssl;}
+        public boolean isCleartext() { return this == cleartext;}
+    }
+
+    public static enum MobileGatewayProxySmtpConnectionType {
+        ssl("ssl"),
+        cleartext("cleartext");
+        private String mValue;
+        private MobileGatewayProxySmtpConnectionType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MobileGatewayProxySmtpConnectionType fromString(String s) throws ServiceException {
+            for (MobileGatewayProxySmtpConnectionType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSsl() { return this == ssl;}
+        public boolean isCleartext() { return this == cleartext;}
+    }
+
     public static enum MtaAlwaysAddMissingHeaders {
         yes("yes"),
         no("no");
@@ -4746,6 +4782,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceIsInternal = "zimbraDataSourceIsInternal";
 
     /**
+     * whether this data source corresponds to an account on the Zimbra
+     * system being proxied
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2037)
+    public static final String A_zimbraDataSourceIsZmgProxy = "zimbraDataSourceIsZmgProxy";
+
+    /**
      * If the last data source sync failed, contains the error message. If
      * the last data source sync succeeded, this attribute is unset.
      *
@@ -7709,13 +7754,20 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIsExternalVirtualAccount = "zimbraIsExternalVirtualAccount";
 
     /**
-     * whether or not an account represents a temporary/hidden mobile gateway
-     * app
+     * whether or not an account represents a Mobile Gateway app
      *
      * @since ZCS 8.7.0
      */
     @ZAttr(id=1760)
     public static final String A_zimbraIsMobileGatewayAppAccount = "zimbraIsMobileGatewayAppAccount";
+
+    /**
+     * whether or not an account represents a Mobile Gateway Proxy account
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2036)
+    public static final String A_zimbraIsMobileGatewayProxyAccount = "zimbraIsMobileGatewayProxyAccount";
 
     /**
      * true if this server is the monitor host
@@ -8917,13 +8969,73 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileForceSamsungProtocol25 = "zimbraMobileForceSamsungProtocol25";
 
     /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
+     * id of the doamin under which (hidden) accounts for apps would be
+     * created
      *
      * @since ZCS 8.7.0
      */
     @ZAttr(id=1759)
     public static final String A_zimbraMobileGatewayDefaultAppAccountDomainId = "zimbraMobileGatewayDefaultAppAccountDomainId";
+
+    /**
+     * Id of the domain under which &quot;Proxy&quot; accounts would be
+     * created. One can configure the system to act as a &quot;Proxy&quot; to
+     * another Zimbra system. When the Proxy mode is enabled, some accounts
+     * in the system would be syncing mailbox data from a Zimbra account
+     * hosted on a different Zimbra system into a data source.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2029)
+    public static final String A_zimbraMobileGatewayDefaultProxyAccountDomainId = "zimbraMobileGatewayDefaultProxyAccountDomainId";
+
+    /**
+     * IMAP connection type of the Zimbra system being proxied
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2032)
+    public static final String A_zimbraMobileGatewayProxyImapConnectionType = "zimbraMobileGatewayProxyImapConnectionType";
+
+    /**
+     * IMAP host name of the Zimbra system being proxied
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2030)
+    public static final String A_zimbraMobileGatewayProxyImapHost = "zimbraMobileGatewayProxyImapHost";
+
+    /**
+     * IMAP port of the Zimbra system being proxied
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2031)
+    public static final String A_zimbraMobileGatewayProxyImapPort = "zimbraMobileGatewayProxyImapPort";
+
+    /**
+     * SMTP connection type of the Zimbra system being proxied
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2035)
+    public static final String A_zimbraMobileGatewayProxySmtpConnectionType = "zimbraMobileGatewayProxySmtpConnectionType";
+
+    /**
+     * SMTP host name of the Zimbra system being proxied
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2033)
+    public static final String A_zimbraMobileGatewayProxySmtpHost = "zimbraMobileGatewayProxySmtpHost";
+
+    /**
+     * SMTP port of the Zimbra system being proxied
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2034)
+    public static final String A_zimbraMobileGatewayProxySmtpPort = "zimbraMobileGatewayProxySmtpPort";
 
     /**
      * Notifications Queue Thread Pool Size
