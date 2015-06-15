@@ -10279,5 +10279,6 @@ TODO: delete them permanently from here
 
 <attr id="2037" name="zimbraDataSourceIsZmgProxy" type="boolean" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0">
   <desc>whether this data source corresponds to an account on the Zimbra system being proxied</desc>
+</attr>
 
 </attrs>
