@@ -155,36 +155,37 @@ public class TestTrustedToken extends TestCase {
         mbox = TestUtil.getZMailbox(USER, scratchCodes.remove(0));
     }
 
-    private String testAuthWithTrustedToken(String trustedToken, boolean shouldWork) {
+    private String testAuthWithTrustedToken(String trustedToken, boolean shouldWork) throws ServiceException {
         return testAuthWithTrustedToken(trustedToken, null, shouldWork);
     }
 
-    private String testAuthWithTrustedToken(String trustedToken, String deviceId, boolean shouldWork) {
+    private String testAuthWithTrustedToken(String trustedToken, String deviceId, boolean shouldWork) throws ServiceException {
         Options options = new Options();
         options.setAccount(USER);
         options.setPassword(PASSWORD);
-        options.setTrustedDevice(true);
         if (deviceId != null) {
             options.setDeviceId(deviceId);
         }
         ZAuthToken curToken = mbox.getAuthToken();
         mbox.initAuthToken(null);
         mbox.initTrustedToken(trustedToken);
-        try {
-            ZAuthResult res = mbox.authByPassword(options, PASSWORD);
-            mbox.initAuthToken(res.getAuthToken());
-            if (!shouldWork) {
-                fail("should not be able to authenticate with this token");
-            }
-            return res.getTrustedToken();
-        } catch (ServiceException e) {
+        ZAuthResult res = mbox.authByPassword(options, PASSWORD);
+        boolean needs2FA = res.getTwoFactorAuthRequired();
+        if (needs2FA) {
             if (shouldWork) {
                 fail("should be able to authenticate with this token");
+            } else {
+                mbox.initAuthToken(curToken);
             }
-            //set back previous auth token;
-            mbox.initAuthToken(curToken);
-            return null;
+        } else {
+            if (shouldWork) {
+                mbox.initAuthToken(res.getAuthToken());
+                return res.getTrustedToken();
+            } else {
+                fail("should not be able to authenticate with this token");
+            }
         }
+        return null;
     }
 
     private static String getCosId() throws Exception {
