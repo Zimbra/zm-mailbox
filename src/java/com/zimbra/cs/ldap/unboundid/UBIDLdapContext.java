@@ -18,6 +18,7 @@ package com.zimbra.cs.ldap.unboundid;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +38,8 @@ import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.LDAPResult;
+import com.unboundid.ldap.sdk.Modification;
+import com.unboundid.ldap.sdk.ModificationType;
 import com.unboundid.ldap.sdk.ModifyRequest;
 import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchRequest;
@@ -49,6 +52,7 @@ import com.unboundid.ldap.sdk.controls.SimplePagedResultsControl;
 import com.unboundid.ldap.sdk.extensions.StartTLSExtendedRequest;
 import com.unboundid.ldap.sdk.schema.Schema;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -380,13 +384,47 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public void modifyAttributes(String dn, ZModificationList modList)
     throws LdapException {
+        UBIDModificationList modificationList = (UBIDModificationList) modList;
+        modifyAttributes(dn, modificationList);
+    }
+
+    private void modifyAttributes(String dn, UBIDModificationList modificationList)
+    throws LdapException {
         try {
             LDAPResult result = UBIDLdapOperation.MODIFY_ATTRS.execute(
-                    this, dn, ((UBIDModificationList)modList).getModList());
+                    this, dn, modificationList.getModList());
         } catch (LDAPException e) {
+            if (e.getResultCode() == ResultCode.NO_SUCH_ATTRIBUTE) {
+                if (e.getMessage() != null && e.getMessage().indexOf(':') != -1) {
+                    String [] attrs = e.getMessage().split(":");
+                    String attr = null;
+                    if (attrs.length >= 2) {
+                        attr = attrs[1];
+                    }
+                    if (!StringUtil.isNullOrEmpty(attr)) {
+                        attr = attr.trim();
+                        Iterator<Modification> iter = modificationList.getModList().iterator();
+                        while (iter.hasNext()) {
+                            Modification mod = iter.next();
+                            if (mod.getAttributeName().equalsIgnoreCase(attr)) {
+                                if (mod.getModificationType() == ModificationType.DELETE ||
+                                    (mod.getModificationType() == ModificationType.REPLACE && !mod.hasValue())) {
+                                    ZimbraLog.ldap.warn("Ignoring delete/modify empty value attribute, reason: %s", e.getMessage());
+                                    iter.remove();
+                                    if (!modificationList.getModList().isEmpty()) {
+                                        modifyAttributes(dn, modificationList);
+                                    }
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             throw mapToLdapException("unable to modify attributes", e);
         }
     }
+
 
     @Override
     public boolean testAndModifyAttributes(String dn,
