@@ -1145,14 +1145,20 @@ class ZMLookupHandlerVar extends ProxyConfVar{
                 Server s = mProv.getServerByName(handlerName);
                 String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 int port = s.getIntAttr(Provisioning.A_zimbraExtensionBindPort, 7072);
+                String proto = "http://";
+                int major = s.getIntAttr(Provisioning.A_zimbraServerVersionMajor, 0);
+                int minor = s.getIntAttr(Provisioning.A_zimbraServerVersionMinor, 0);
+                if ((major == 8 && minor >= 7) || (major > 8)) {
+                    proto = "https://";
+                }
                 boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
                 if (isTarget) {
                     InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
                     Formatter f = new Formatter();
                     if (ip instanceof Inet4Address) {
-                        f.format("%s:%d", ip.getHostAddress(), port);
+                        f.format("%s%s:%d", proto, ip.getHostAddress(), port);
                     } else {
-                        f.format("[%s]:%d", ip.getHostAddress(), port);
+                        f.format("%s[%s]:%d", proto, ip.getHostAddress(), port);
                     }
                     servers.add(f.toString());
                     mLog.debug("Route Lookup: Added server " + ip);
@@ -1165,14 +1171,20 @@ class ZMLookupHandlerVar extends ProxyConfVar{
             {
                 String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 int port = s.getIntAttr(Provisioning.A_zimbraExtensionBindPort, 7072);
+                String proto = "http://";
+                int major = s.getIntAttr(Provisioning.A_zimbraServerVersionMajor, 0);
+                int minor = s.getIntAttr(Provisioning.A_zimbraServerVersionMinor, 0);
+                if ((major == 8 && minor >= 7) || (major > 8)) {
+                    proto = "https://";
+                }
                 boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
                 if (isTarget) {
                     InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
                     Formatter f = new Formatter();
                     if (ip instanceof Inet4Address) {
-                        f.format("%s:%d", ip.getHostAddress(), port);
+                        f.format("%s%s:%d", proto, ip.getHostAddress(), port);
                     } else {
-                        f.format("[%s]:%d", ip.getHostAddress(), port);
+                        f.format("%s[%s]:%d", proto, ip.getHostAddress(), port);
                     }
                     servers.add(f.toString());
                     mLog.debug("Route Lookup: Added server " + ip);
