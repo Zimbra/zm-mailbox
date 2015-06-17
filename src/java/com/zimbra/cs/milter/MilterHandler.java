@@ -127,7 +127,7 @@ public final class MilterHandler implements NioHandler {
 
     @Override
     public void connectionIdle() throws IOException {
-        ZimbraLog.milter.info("Dropping connection because inactive for more than %s seconds (milter_max_idle_time)",
+        ZimbraLog.milter.info("Dropping connection because inactive for more than %s seconds (zimbraMilterMaxIdleTIme)",
                 connection.getServer().getConfig().getMaxIdleTime());
         dropConnection();
     }
