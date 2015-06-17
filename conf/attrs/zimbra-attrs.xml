@@ -10156,7 +10156,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="2012" name="zimbraWebClientSupportedHelps" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited,accountInfo,domainAdminModifiable" since="9.0.0">
+<attr id="2012" name="zimbraWebClientSupportedHelps" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited,accountInfo,domainAdminModifiable" since="8.7.0,9.0.0">
   <globalConfigValue>productHelp</globalConfigValue>
   <globalConfigValue>onlineHelp</globalConfigValue>
   <globalConfigValue>newFeatures</globalConfigValue>

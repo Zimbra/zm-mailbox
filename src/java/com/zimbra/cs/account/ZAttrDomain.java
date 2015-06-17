@@ -22092,7 +22092,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraWebClientSupportedHelps, or empty array if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2012)
     public String[] getWebClientSupportedHelps() {
@@ -22116,7 +22116,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraWebClientSupportedHelps new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2012)
     public void setWebClientSupportedHelps(String[] zimbraWebClientSupportedHelps) throws com.zimbra.common.service.ServiceException {
@@ -22143,7 +22143,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2012)
     public Map<String,Object> setWebClientSupportedHelps(String[] zimbraWebClientSupportedHelps, Map<String,Object> attrs) {
@@ -22169,7 +22169,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraWebClientSupportedHelps new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2012)
     public void addWebClientSupportedHelps(String zimbraWebClientSupportedHelps) throws com.zimbra.common.service.ServiceException {
@@ -22196,7 +22196,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2012)
     public Map<String,Object> addWebClientSupportedHelps(String zimbraWebClientSupportedHelps, Map<String,Object> attrs) {
@@ -22222,7 +22222,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraWebClientSupportedHelps existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2012)
     public void removeWebClientSupportedHelps(String zimbraWebClientSupportedHelps) throws com.zimbra.common.service.ServiceException {
@@ -22249,7 +22249,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2012)
     public Map<String,Object> removeWebClientSupportedHelps(String zimbraWebClientSupportedHelps, Map<String,Object> attrs) {
@@ -22274,7 +22274,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2012)
     public void unsetWebClientSupportedHelps() throws com.zimbra.common.service.ServiceException {
@@ -22300,7 +22300,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2012)
     public Map<String,Object> unsetWebClientSupportedHelps(Map<String,Object> attrs) {
