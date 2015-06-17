@@ -26,12 +26,14 @@ import java.util.TimerTask;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.RangeUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ZAttrServer;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailItem;
@@ -70,9 +72,7 @@ public class WaitSetMgr {
 
     private static final HashMap<String /*AccountId*/, List<String /*WaitSetId*/>> sWaitSetsByAccountId = new HashMap<String, List<String>>();
 
-    private static final int WAITSET_SWEEP_DELAY = 1000 * 60; // once every minute
-
-    private static final int WAITSET_TIMEOUT = 1000 * 60 * 20; // 20min
+    private static final long WAITSET_SWEEP_DELAY = ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraMailboxWaitsetSweepDelay, 60 * Constants.MILLIS_PER_SECOND); // once every minute
 
     /**
      * Create a new WaitSet, optionally specifying an initial set of accounts
@@ -286,8 +286,10 @@ public class WaitSetMgr {
         int activeSessions = 0;
         int removed = 0;
         int withCallback = 0;
+        long waitset_timeout =  ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraMailboxActiveWaitsetTimeOut, 20 * Constants.MILLIS_PER_MINUTE);
         synchronized(sWaitSets) {
-            long cutoffTime = System.currentTimeMillis() - WAITSET_TIMEOUT;
+            ZimbraLog.session.debug("active waitset timeout = %d ms", waitset_timeout);
+            long cutoffTime = System.currentTimeMillis() - waitset_timeout;
 
             for (Iterator<WaitSetBase> iter = sWaitSets.values().iterator(); iter.hasNext();) {
                 WaitSetBase ws = iter.next();

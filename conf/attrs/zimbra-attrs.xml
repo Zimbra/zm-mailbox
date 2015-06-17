@@ -10281,4 +10281,14 @@ TODO: delete them permanently from here
   <desc>whether this data source corresponds to an account on the Zimbra system being proxied</desc>
 </attr>
 
+<attr id="2038" name="zimbraMailboxActiveWaitsetTimeOut" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>20m</globalConfigValue>
+  <desc>Duration after which active waitset threads, that have not been updated, are timed out.</desc>
+</attr>
+
+<attr id="2039" name="zimbraMailboxWaitsetSweepDelay" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0" requiresRestart="mailbox">
+  <globalConfigValue>60s</globalConfigValue>
+  <desc>Waitset sweeper thread interval.</desc>
+</attr>
+
 </attrs>

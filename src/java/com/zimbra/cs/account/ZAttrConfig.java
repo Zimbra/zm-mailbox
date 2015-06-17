@@ -38999,6 +38999,118 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Duration after which active waitset threads, that have not been
+     * updated, are timed out.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getMailboxActiveWaitsetTimeOutAsString to access value as a string.
+     *
+     * @see #getMailboxActiveWaitsetTimeOutAsString()
+     *
+     * @return zimbraMailboxActiveWaitsetTimeOut in millseconds, or 1200000 (20m)  if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2038)
+    public long getMailboxActiveWaitsetTimeOut() {
+        return getTimeInterval(Provisioning.A_zimbraMailboxActiveWaitsetTimeOut, 1200000L);
+    }
+
+    /**
+     * Duration after which active waitset threads, that have not been
+     * updated, are timed out.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraMailboxActiveWaitsetTimeOut, or "20m" if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2038)
+    public String getMailboxActiveWaitsetTimeOutAsString() {
+        return getAttr(Provisioning.A_zimbraMailboxActiveWaitsetTimeOut, "20m");
+    }
+
+    /**
+     * Duration after which active waitset threads, that have not been
+     * updated, are timed out.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraMailboxActiveWaitsetTimeOut new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2038)
+    public void setMailboxActiveWaitsetTimeOut(String zimbraMailboxActiveWaitsetTimeOut) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxActiveWaitsetTimeOut, zimbraMailboxActiveWaitsetTimeOut);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Duration after which active waitset threads, that have not been
+     * updated, are timed out.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraMailboxActiveWaitsetTimeOut new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2038)
+    public Map<String,Object> setMailboxActiveWaitsetTimeOut(String zimbraMailboxActiveWaitsetTimeOut, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxActiveWaitsetTimeOut, zimbraMailboxActiveWaitsetTimeOut);
+        return attrs;
+    }
+
+    /**
+     * Duration after which active waitset threads, that have not been
+     * updated, are timed out.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2038)
+    public void unsetMailboxActiveWaitsetTimeOut() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxActiveWaitsetTimeOut, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Duration after which active waitset threads, that have not been
+     * updated, are timed out.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2038)
+    public Map<String,Object> unsetMailboxActiveWaitsetTimeOut(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxActiveWaitsetTimeOut, "");
+        return attrs;
+    }
+
+    /**
      * Disable timeout for archive formatter.Introduced in bug 56458. This is
      * a workaround for an issue in Jetty 6.1.22.zc6m when we upgrade we
      * should re-evaluate/remove these settings and the code that uses them.
@@ -42875,6 +42987,112 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailboxWaitsetNoDataSleepTime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxWaitsetNoDataSleepTime, "");
+        return attrs;
+    }
+
+    /**
+     * Waitset sweeper thread interval.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getMailboxWaitsetSweepDelayAsString to access value as a string.
+     *
+     * @see #getMailboxWaitsetSweepDelayAsString()
+     *
+     * @return zimbraMailboxWaitsetSweepDelay in millseconds, or 60000 (60s)  if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2039)
+    public long getMailboxWaitsetSweepDelay() {
+        return getTimeInterval(Provisioning.A_zimbraMailboxWaitsetSweepDelay, 60000L);
+    }
+
+    /**
+     * Waitset sweeper thread interval.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraMailboxWaitsetSweepDelay, or "60s" if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2039)
+    public String getMailboxWaitsetSweepDelayAsString() {
+        return getAttr(Provisioning.A_zimbraMailboxWaitsetSweepDelay, "60s");
+    }
+
+    /**
+     * Waitset sweeper thread interval.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraMailboxWaitsetSweepDelay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2039)
+    public void setMailboxWaitsetSweepDelay(String zimbraMailboxWaitsetSweepDelay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxWaitsetSweepDelay, zimbraMailboxWaitsetSweepDelay);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Waitset sweeper thread interval.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraMailboxWaitsetSweepDelay new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2039)
+    public Map<String,Object> setMailboxWaitsetSweepDelay(String zimbraMailboxWaitsetSweepDelay, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxWaitsetSweepDelay, zimbraMailboxWaitsetSweepDelay);
+        return attrs;
+    }
+
+    /**
+     * Waitset sweeper thread interval.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2039)
+    public void unsetMailboxWaitsetSweepDelay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxWaitsetSweepDelay, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Waitset sweeper thread interval.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2039)
+    public Map<String,Object> unsetMailboxWaitsetSweepDelay(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxWaitsetSweepDelay, "");
         return attrs;
     }
 
