@@ -13661,7 +13661,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyLogLevel = "zimbraReverseProxyLogLevel";
 
     /**
-     * whether this server is a reverse proxy lookup target
+     * whether this server is a valid upstream and needs to be included in
+     * the upstream config of the reverse proxy
      */
     @ZAttr(id=504)
     public static final String A_zimbraReverseProxyLookupTarget = "zimbraReverseProxyLookupTarget";
