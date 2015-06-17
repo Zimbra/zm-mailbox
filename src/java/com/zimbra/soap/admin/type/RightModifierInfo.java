@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -48,7 +48,7 @@ public class RightModifierInfo {
      */
     @XmlAttribute(name=AdminConstants.A_DISINHERIT_SUB_GROUPS /* disinheritSubGroups */, required=false)
     private final ZmBoolean disinheritSubGroups;
-    
+
     /**
      * @zm-api-field-tag subdomain-flag
      * @zm-api-field-description subDomain flag - default is <b>0 (false)</b>
@@ -77,6 +77,10 @@ public class RightModifierInfo {
     @SuppressWarnings("unused")
     private RightModifierInfo() {
         this((Boolean) null, (Boolean) null, (Boolean) null, (Boolean) null, (String) null);
+    }
+
+    public RightModifierInfo(String value) {
+        this((Boolean) null, (Boolean) null, (Boolean) null, (Boolean) null, value);
     }
 
     public RightModifierInfo(Boolean deny, Boolean canDelegate,

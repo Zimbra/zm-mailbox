@@ -42,6 +42,11 @@ public class DistributionListSelector {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
+
+        public com.zimbra.common.account.Key.DistributionListBy toKeyDistributionListBy()
+        throws ServiceException {
+            return com.zimbra.common.account.Key.DistributionListBy.fromString(this.name());
+        }
     }
 
     /**

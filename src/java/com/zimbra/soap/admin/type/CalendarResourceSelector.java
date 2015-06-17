@@ -43,6 +43,10 @@ public class CalendarResourceSelector {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
+        public com.zimbra.common.account.Key.CalendarResourceBy toKeyCalendarResourceBy()
+        throws ServiceException {
+            return com.zimbra.common.account.Key.CalendarResourceBy.fromString(this.name());
+        }
     }
 
     /**
@@ -73,6 +77,14 @@ public class CalendarResourceSelector {
     public CalendarResourceSelector(CalendarResourceBy by, String key) {
         this.calResourceBy = by;
         this.key = key;
+    }
+
+    public static CalendarResourceSelector fromId(String id) {
+        return new CalendarResourceSelector(CalendarResourceBy.id, id);
+    }
+
+    public static CalendarResourceSelector fromName(String name) {
+        return new CalendarResourceSelector(CalendarResourceBy.name, name);
     }
 
     public String getKey() { return key; }
