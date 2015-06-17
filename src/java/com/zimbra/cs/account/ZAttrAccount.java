@@ -31430,7 +31430,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the body of an email notification message
      *
@@ -31442,7 +31442,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the body of an email notification message
      *
@@ -31457,7 +31457,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the body of an email notification message
      *
@@ -31473,7 +31473,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the body of an email notification message
      *
@@ -31487,7 +31487,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the body of an email notification message
      *
@@ -31502,7 +31502,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the sender of an email notification message
      *
@@ -31514,7 +31514,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the sender of an email notification message
      *
@@ -31529,7 +31529,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the sender of an email notification message
      *
@@ -31545,7 +31545,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the sender of an email notification message
      *
@@ -31559,7 +31559,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the sender of an email notification message
      *
@@ -31585,7 +31585,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraNewMailNotificationMessage, or null if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2019)
     public String getNewMailNotificationMessage() {
@@ -31605,7 +31605,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraNewMailNotificationMessage new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2019)
     public void setNewMailNotificationMessage(String zimbraNewMailNotificationMessage) throws com.zimbra.common.service.ServiceException {
@@ -31628,7 +31628,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2019)
     public Map<String,Object> setNewMailNotificationMessage(String zimbraNewMailNotificationMessage, Map<String,Object> attrs) {
@@ -31649,7 +31649,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2019)
     public void unsetNewMailNotificationMessage() throws com.zimbra.common.service.ServiceException {
@@ -31671,7 +31671,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2019)
     public Map<String,Object> unsetNewMailNotificationMessage(Map<String,Object> attrs) {
@@ -31681,7 +31681,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the subject of an email notification message
      *
@@ -31693,7 +31693,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the subject of an email notification message
      *
@@ -31708,7 +31708,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the subject of an email notification message
      *
@@ -31724,7 +31724,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the subject of an email notification message
      *
@@ -31738,7 +31738,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 9.0.0. Deprecated in favor of the
+     * Deprecated since: 8.7.0. Deprecated in favor of the
      * zimbraNewMailNotificationMessage. Orig desc: template used to
      * construct the subject of an email notification message
      *
