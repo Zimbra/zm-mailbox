@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,15 +22,11 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Splitter;
-import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -39,7 +35,10 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.message.ReIndexRequest;
+import com.zimbra.soap.admin.type.ReindexMailboxInfo;
 
 /**
  * Admin operation handler for {@code reIndexMailbox(rim)}.
@@ -75,30 +74,29 @@ public final class ReIndex extends AdminDocumentHandler {
         return true;
     }
 
+    /**
+     * @return true - which means accept responsibility for measures to prevent account harvesting by delegate admins
+     */
+    @Override
+    public boolean defendsAgainstDelegateAdminAccountHarvesting() {
+        return true;
+    }
+
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        ReIndexRequest req = JaxbUtil.elementToJaxb(request);
 
-        String action = request.getAttribute(MailConstants.E_ACTION);
+        String action = req.getAction();
 
-        Element mreq = request.getElement(AdminConstants.E_MAILBOX);
-        String accountId = mreq.getAttribute(AdminConstants.A_ACCOUNTID);
+        ReindexMailboxInfo reIndexMboxInfo = req.getMbox();
+        String accountId = reIndexMboxInfo.getAccountId();
 
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.id, accountId, zsc.getAuthToken());
-        if (account == null) {
-            throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-        }
-
-        if (account.isCalendarResource()) {
-            // need a CalendarResource instance for RightChecker
-            CalendarResource resource = prov.get(Key.CalendarResourceBy.id, account.getId());
-            checkCalendarResourceRight(zsc, resource, Admin.R_reindexCalendarResourceMailbox);
-        } else {
-            checkAccountRight(zsc, account, Admin.R_reindexMailbox);
-        }
-
+        defendAgainstAccountOrCalendarResourceHarvesting(account, AccountBy.id, accountId, zsc,
+                Admin.R_reindexMailbox, Admin.R_reindexCalendarResourceMailbox);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
         if (mbox == null) {
             throw ServiceException.FAILURE("mailbox not found for account " + accountId, null);
@@ -110,8 +108,8 @@ public final class ReIndex extends AdminDocumentHandler {
             if (mbox.index.isReIndexInProgress()) {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
             } else {
-                String typesStr = mreq.getAttribute(MailConstants.A_SEARCH_TYPES, null);
-                String idsStr = mreq.getAttribute(MailConstants.A_IDS, null);
+                String typesStr = reIndexMboxInfo.getTypes();
+                String idsStr = reIndexMboxInfo.getIds();
 
                 if (typesStr != null && idsStr != null) {
                     ServiceException.INVALID_REQUEST("Can't specify both 'types' and 'ids'", null);

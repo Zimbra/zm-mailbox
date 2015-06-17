@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -51,7 +51,7 @@ public class AddGalSyncDataSource extends AdminDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        
+
         AddGalSyncDataSourceRequest dsRequest = JaxbUtil.elementToJaxb(request);
 
         String name = dsRequest.getName();
@@ -65,18 +65,20 @@ public class AddGalSyncDataSource extends AdminDocumentHandler {
 
         Domain domain = prov.getDomainByName(domainStr);
 
-        if (domain == null)
+        if (domain == null) {
             throw AccountServiceException.NO_SUCH_DOMAIN(domainStr);
+        }
 
         Account account = null;
         try {
-            account = prov.get(acctBy.toKeyDomainBy(), acctValue, zsc.getAuthToken());
+            account = prov.get(acctBy.toKeyAccountBy(), acctValue, zsc.getAuthToken());
         } catch (ServiceException se) {
             ZimbraLog.gal.warn("error checking GalSyncAccount", se);
         }
 
-        if (account == null)
+        if (account == null) {
             throw AccountServiceException.NO_SUCH_ACCOUNT(acctValue);
+        }
 
         if (!Provisioning.onLocalServer(account)) {
             String host = account.getMailHost();
@@ -85,14 +87,14 @@ public class AddGalSyncDataSource extends AdminDocumentHandler {
         }
 
         CreateGalSyncAccount.addDataSource(request, zsc, account, domain, folder, name, type);
-        
+
         Element response = zsc.createElement(AdminConstants.ADD_GAL_SYNC_DATASOURCE_RESPONSE);
         ToXML.encodeAccount(response, account, false, emptySet, null);
         return response;
     }
 
     private static final Set<String> emptySet = Collections.emptySet();
-    
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         // XXX revisit

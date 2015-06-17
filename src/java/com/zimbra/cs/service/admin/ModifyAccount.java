@@ -83,10 +83,9 @@ public class ModifyAccount extends AdminDocumentHandler {
         String id = req.getId();
 
         Account account = prov.get(AccountBy.id, id, authToken);
-        defendAgainstAccountHarvesting(account, AccountBy.id, id, zsc);
 
         Map<String, Object> attrs = req.getAttrsAsOldMultimap();
-        checkAccountRight(zsc, account, attrs);
+        defendAgainstAccountHarvesting(account, AccountBy.id, id, zsc, attrs);
 
         // check to see if quota is being changed
         long curQuota = account.getLongAttr(Provisioning.A_zimbraMailQuota, 0);

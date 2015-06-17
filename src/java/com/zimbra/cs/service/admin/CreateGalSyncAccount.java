@@ -83,25 +83,28 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 
         Domain domain = prov.getDomainByName(domainStr);
 
-        if (domain == null)
+        if (domain == null) {
             throw AccountServiceException.NO_SUCH_DOMAIN(domainStr);
+        }
 
         Account account = null;
         try {
-            account = prov.get(acctBy.toKeyDomainBy(), acctValue, zsc.getAuthToken());
+            account = prov.get(acctBy.toKeyAccountBy(), acctValue, zsc.getAuthToken());
         } catch (ServiceException se) {
             ZimbraLog.gal.warn("error checking GalSyncAccount", se);
         }
 
         // create the system account if not already exists.
         if (account == null) {
-            if (acctBy != AccountBy.name)
+            if (acctBy != AccountBy.name) {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(acctValue);
+            }
             // there should be one gal sync account per domain per mailhost
             for (String acctId : domain.getGalAccountId()) {
                 Account acct = prov.getAccountById(acctId);
-                if ((acct != null) && (acct.getMailHost().equals(mailHost)))
+                if ((acct != null) && (acct.getMailHost().equals(mailHost))) {
                     throw AccountServiceException.ACCOUNT_EXISTS(acct.getName());
+                }
             }
             // XXX revisit
             checkDomainRightByEmail(zsc, acctValue, Admin.R_createAccount);

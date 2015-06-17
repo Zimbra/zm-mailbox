@@ -67,7 +67,7 @@ public class SetPassword extends AdminDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-
+        SetPasswordResponse resp = null;
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
@@ -76,31 +76,44 @@ public class SetPassword extends AdminDocumentHandler {
         String newPassword = req.getNewPassword();
 
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
-        defendAgainstAccountHarvesting(account, AccountBy.id, id, zsc);
-
-        boolean enforcePasswordPolicy;
-        if (account.isCalendarResource()) {
-            // need a CalendarResource instance for RightChecker
-            CalendarResource resource = prov.get(CalendarResourceBy.id, id);
-            enforcePasswordPolicy = checkCalendarResourceRights(zsc, resource);
+        if (account == null) {
+            try {
+                defendAgainstAccountOrCalendarResourceHarvestingWhenAbsent(AccountBy.id, id, zsc,
+                        Admin.R_setAccountPassword, Admin.R_setCalendarResourcePassword);
+            } catch (ServiceException se1) {
+                defendAgainstAccountOrCalendarResourceHarvestingWhenAbsent(AccountBy.id, id, zsc,
+                        Admin.R_changeAccountPassword, Admin.R_changeCalendarResourcePassword);
+            }
         } else {
-            enforcePasswordPolicy = checkAccountRights(zsc, account);
+            try {
+                defendAgainstAccountOrCalendarResourceHarvesting(account, AccountBy.id, id, zsc,
+                        Admin.R_setAccountPassword, Admin.R_setCalendarResourcePassword);
+            } catch (ServiceException se1) {
+                defendAgainstAccountOrCalendarResourceHarvesting(account, AccountBy.id, id, zsc,
+                        Admin.R_changeAccountPassword, Admin.R_changeCalendarResourcePassword);
+            }
+            boolean enforcePasswordPolicy;
+            if (account.isCalendarResource()) {
+                CalendarResource resource = prov.get(CalendarResourceBy.id, id);
+                enforcePasswordPolicy = checkCalendarResourceRights(zsc, resource);
+            } else {
+                enforcePasswordPolicy = checkAccountRights(zsc, account);
+            }
+
+            SetPasswordResult result = prov.setPassword(account, newPassword, enforcePasswordPolicy);
+
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                    new String[] {"cmd", "SetPassword","name", account.getName()}));
+
+
+            if (result.hasMessage()) {
+                ZimbraLog.security.info(result.getMessage());
+                resp = new SetPasswordResponse(result.getMessage());
+            } else {
+                resp = new SetPasswordResponse((String) null);
+            }
+
         }
-
-        SetPasswordResult result = prov.setPassword(account, newPassword, enforcePasswordPolicy);
-
-        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "SetPassword","name", account.getName()}));
-
-
-        SetPasswordResponse resp;
-        if (result.hasMessage()) {
-            ZimbraLog.security.info(result.getMessage());
-            resp = new SetPasswordResponse(result.getMessage());
-        } else {
-            resp = new SetPasswordResponse((String) null);
-        }
-
         return zsc.jaxbToElement(resp);
     }
 
