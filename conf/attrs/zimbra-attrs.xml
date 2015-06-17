@@ -2614,7 +2614,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="504" name="zimbraReverseProxyLookupTarget" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy">
   <globalConfigValue>FALSE</globalConfigValue>
-  <desc>whether this server is a reverse proxy lookup target</desc>
+  <desc>whether this server is a valid upstream and needs to be included in the upstream config of the reverse proxy</desc>
 </attr>
 
 <attr id="505" name="zimbraMtaAuthTarget" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta">
