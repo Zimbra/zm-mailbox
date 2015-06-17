@@ -56854,7 +56854,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether this server is a reverse proxy lookup target
+     * whether this server is a valid upstream and needs to be included in
+     * the upstream config of the reverse proxy
      *
      * @return zimbraReverseProxyLookupTarget, or false if unset
      */
@@ -56864,7 +56865,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether this server is a reverse proxy lookup target
+     * whether this server is a valid upstream and needs to be included in
+     * the upstream config of the reverse proxy
      *
      * @param zimbraReverseProxyLookupTarget new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -56877,7 +56879,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether this server is a reverse proxy lookup target
+     * whether this server is a valid upstream and needs to be included in
+     * the upstream config of the reverse proxy
      *
      * @param zimbraReverseProxyLookupTarget new value
      * @param attrs existing map to populate, or null to create a new map
@@ -56891,7 +56894,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether this server is a reverse proxy lookup target
+     * whether this server is a valid upstream and needs to be included in
+     * the upstream config of the reverse proxy
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -56903,7 +56907,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether this server is a reverse proxy lookup target
+     * whether this server is a valid upstream and needs to be included in
+     * the upstream config of the reverse proxy
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
