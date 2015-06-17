@@ -24,6 +24,8 @@ import java.util.Set;
 import com.google.common.base.Joiner;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CalendarResourceBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -31,6 +33,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
@@ -42,6 +45,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -107,52 +111,433 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         return cr;
     }
 
-    /**
-     * Checks for a minimal access requirement to info about accounts
-     */
-    protected void defendAgainstAccountHarvesting(Account account, AccountBy accountBy, String accountSelectorKey,
-            ZimbraSoapContext zsc)
-    throws ServiceException {
-        defendAgainstAccountHarvesting(account, accountBy, accountSelectorKey, zsc, Admin.R_getAccountInfo);
+    public static Entry pseudoTargetInSameDomainAsEmail(TargetType targetType, String emailAddr) {
+        String parts[] = EmailUtil.getLocalPartAndDomain(emailAddr);
+        if (parts == null || parts.length <2) {
+            return null;
+        }
+        String domainStr = parts[1];
+        try {
+            return PseudoTarget.createPseudoTarget(Provisioning.getInstance(), targetType, DomainBy.name, domainStr,
+                    false, null, null);
+        } catch (ServiceException e) {
+            return null;
+        }
     }
 
-    protected void defendAgainstAccountHarvesting(Account account, AccountBy accountBy, String accountSelectorKey,
-            ZimbraSoapContext zsc, AdminRight right)
+    protected void defendAgainstAccountHarvestingWhenAbsent(AccountBy by,
+            String selectorKey, ZimbraSoapContext zsc, AccountHarvestingChecker checker)
     throws ServiceException {
         AuthToken authToken = zsc.getAuthToken();
-        if (account == null) {
-            if (authToken.isAdmin()) {
-                throw AccountServiceException.NO_SUCH_ACCOUNT(accountSelectorKey);
-            } else {
-                if (AccountBy.name.equals(accountBy) && AuthToken.isAnyAdmin(authToken)) {
-                    try {
-                        String parts[] = EmailUtil.getLocalPartAndDomain(accountSelectorKey);
-                        if (parts == null || parts.length <2) {
-                            throw ServiceException.DEFEND_ACCOUNT_HARVEST(accountSelectorKey);
-                        }
-                        String domainStr = parts[1];
-                        Entry pseudoTarget = PseudoTarget.createPseudoTarget(
-                                Provisioning.getInstance(), TargetType.account, DomainBy.name, domainStr,
-                                false, null, null);
-                        checkAccountRight(zsc, (Account) pseudoTarget, right);
-                    } catch (ServiceException se) {
-                        throw ServiceException.DEFEND_ACCOUNT_HARVEST(accountSelectorKey);
-                    }
-                    throw AccountServiceException.NO_SUCH_ACCOUNT(accountSelectorKey);
+        if (authToken.isAdmin()) {
+            throw AccountServiceException.NO_SUCH_ACCOUNT(selectorKey);
+        } else {
+            if (AccountBy.name.equals(by) && AuthToken.isAnyAdmin(authToken)) {
+                Entry pseudoTarget = pseudoTargetInSameDomainAsEmail(TargetType.account, selectorKey);
+                if (pseudoTarget != null) {
+                    checker.check((Account)pseudoTarget, selectorKey);
+                    throw AccountServiceException.NO_SUCH_ACCOUNT(selectorKey); // passed the check
                 }
             }
-            throw ServiceException.DEFEND_ACCOUNT_HARVEST(accountSelectorKey);
         }
+        throw ServiceException.DEFEND_ACCOUNT_HARVEST(selectorKey);
+    }
 
+    protected void defendAgainstAccountHarvesting(Account account, AccountBy by, String selectorKey,
+            ZimbraSoapContext zsc, AccountHarvestingChecker checker)
+    throws ServiceException {
+        if (account == null) {
+            defendAgainstAccountHarvestingWhenAbsent(by, selectorKey, zsc, checker);
+            return;
+        }
+        checker.check(account, selectorKey);
+    }
+
+    protected void defendAgainstAccountHarvestingWhenAbsent(AccountBy by,
+            String selectorKey, ZimbraSoapContext zsc, Object needed)
+    throws ServiceException {
+        defendAgainstAccountHarvestingWhenAbsent(by, selectorKey, zsc,
+                new AccountHarvestingCheckerUsingCheckAccountRight(zsc, needed));
+    }
+
+    protected void defendAgainstAccountHarvesting(Account account, AccountBy by,
+            String selectorKey, ZimbraSoapContext zsc, Object needed)
+    throws ServiceException {
+        AccountHarvestingCheckerUsingCheckAccountRight checker =
+                new AccountHarvestingCheckerUsingCheckAccountRight(zsc, needed);
+        if (account == null) {
+            defendAgainstAccountHarvestingWhenAbsent(by, selectorKey, zsc, checker);
+            return;
+        }
+        checker.check(account, selectorKey);
+    }
+
+    protected void defendAgainstAccountOrCalendarResourceHarvestingWhenAbsent(AccountBy accountBy,
+            String selectorKey, ZimbraSoapContext zsc, AdminRight rightForAcct, AdminRight rightForCalRes)
+    throws ServiceException {
         try {
-            checkAccountRight(zsc, account, right);
-        } catch (ServiceException se) {
-            if (authToken.isAdmin()) {
-                throw se;
-            } else {
-                throw ServiceException.DEFEND_ACCOUNT_HARVEST(accountSelectorKey);
+            CalendarResourceBy calResBy = CalendarResourceBy.fromString(accountBy.toString());
+            defendAgainstCalResourceHarvestingWhenAbsent(calResBy, selectorKey, zsc,
+                 new CalResourceHarvestingCheckerUsingCheckCalendarResourceRight(zsc, rightForCalRes));
+        } catch (ServiceException e) {
+            defendAgainstAccountHarvestingWhenAbsent(accountBy, selectorKey, zsc, rightForAcct);
+        }
+    }
+
+    protected void defendAgainstAccountOrCalendarResourceHarvesting(Account account, AccountBy accountBy,
+            String selectorKey, ZimbraSoapContext zsc, AdminRight rightForAcct, AdminRight rightForCalRes)
+    throws ServiceException {
+        if (account == null) {
+            defendAgainstAccountOrCalendarResourceHarvestingWhenAbsent(accountBy, selectorKey, zsc,
+                    rightForAcct, rightForCalRes);
+        } else if (account.isCalendarResource()) {
+            Provisioning prov = Provisioning.getInstance();
+            CalendarResource resource = prov.get(CalendarResourceBy.id, account.getId());
+            CalendarResourceBy calResBy = CalendarResourceBy.fromString(accountBy.toString());
+            defendAgainstCalResourceHarvesting(resource, calResBy, selectorKey, zsc, rightForCalRes);
+        } else {
+            defendAgainstAccountHarvesting(account, accountBy, selectorKey, zsc, rightForAcct);
+        }
+    }
+
+    protected void defendAgainstCalResourceHarvestingWhenAbsent(CalendarResourceBy by,
+            String selectorKey, ZimbraSoapContext zsc, CalResourceHarvestingChecker checker)
+    throws ServiceException {
+        AuthToken authToken = zsc.getAuthToken();
+        if (authToken.isAdmin()) {
+            throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(selectorKey);
+        } else {
+            if (CalendarResourceBy.name.equals(by) && AuthToken.isAnyAdmin(authToken)) {
+                Entry pseudoTarget = pseudoTargetInSameDomainAsEmail(TargetType.calresource, selectorKey);
+                if (pseudoTarget != null) {
+                    checker.check((CalendarResource)pseudoTarget, selectorKey);
+                    throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(selectorKey); // passed the check
+                }
             }
         }
+        throw ServiceException.DEFEND_CALENDAR_RESOURCE_HARVEST(selectorKey);
+    }
+
+    protected void defendAgainstCalResourceHarvesting(CalendarResource calRes, CalendarResourceBy by, String selectorKey,
+            ZimbraSoapContext zsc, CalResourceHarvestingChecker checker)
+    throws ServiceException {
+        if (calRes == null) {
+            defendAgainstCalResourceHarvestingWhenAbsent(by, selectorKey, zsc, checker);
+            return;
+        }
+        checker.check(calRes, selectorKey);
+    }
+
+    protected void defendAgainstCalResourceHarvesting(CalendarResource calRes, CalendarResourceBy by,
+            String selectorKey, ZimbraSoapContext zsc, Object needed)
+    throws ServiceException {
+        CalResourceHarvestingCheckerUsingCheckCalendarResourceRight checker =
+                new CalResourceHarvestingCheckerUsingCheckCalendarResourceRight(zsc, needed);
+        if (calRes == null) {
+            defendAgainstCalResourceHarvestingWhenAbsent(by, selectorKey, zsc, checker);
+            return;
+        }
+        checker.check(calRes, selectorKey);
+    }
+
+    protected interface AccountHarvestingChecker {
+        public void check(Account account, String selectorKey) throws ServiceException;
+    }
+
+    protected abstract class AccountHarvestingCheckerBase implements AccountHarvestingChecker {
+        protected final ZimbraSoapContext zsc;
+        protected final AuthToken authToken;
+        protected ServiceException firstException = null;
+
+        protected abstract void doRightsCheck(Account account) throws ServiceException;
+
+        public AccountHarvestingCheckerBase(ZimbraSoapContext zsc) {
+            this.zsc = zsc;
+            authToken = zsc.getAuthToken();
+        }
+
+        protected boolean hasRight(Account account, String selectorKey) {
+            try {
+                doRightsCheck(account);
+                return true;
+            } catch (ServiceException se) {
+                if (firstException == null) {
+                    if (authToken.isAdmin()) {
+                        firstException = se;
+                    } else {
+                        firstException = ServiceException.DEFEND_ACCOUNT_HARVEST(selectorKey);
+                    }
+                }
+                return false;
+            }
+        }
+    }
+
+    protected class AccountHarvestingCheckerUsingCheckAccountRight extends AccountHarvestingCheckerBase {
+        private Object needed = null;
+
+        public AccountHarvestingCheckerUsingCheckAccountRight(ZimbraSoapContext zsc, Object needed) {
+            super(zsc);
+            this.needed = needed;
+        }
+
+        @Override
+        protected void doRightsCheck(Account account) throws ServiceException {
+            checkAccountRight(zsc, account, needed);
+        }
+
+        @Override
+        public void check(Account account, String selectorKey) throws ServiceException {
+            if (hasRight(account, selectorKey)) {
+                return;
+            }
+            throw firstException;
+        }
+    }
+
+    protected class AccountHarvestingCheckerUsingCheckRight extends AccountHarvestingCheckerBase {
+        private final AdminRight adminRight;
+        private final Map<String, Object> context;
+
+        public AccountHarvestingCheckerUsingCheckRight(ZimbraSoapContext zsc, Map<String, Object> context,
+                AdminRight right) {
+            super(zsc);
+            this.adminRight = right;
+            this.context = context;
+        }
+
+        @Override
+        protected void doRightsCheck(Account account) throws ServiceException {
+            checkRight(zsc, context, account, adminRight);
+        }
+
+        @Override
+        public void check(Account account, String selectorKey) throws ServiceException {
+            if (hasRight(account, selectorKey)) {
+                return;
+            }
+            throw firstException;
+        }
+    }
+
+    protected interface CalResourceHarvestingChecker {
+        public void check(CalendarResource account, String selectorKey) throws ServiceException;
+    }
+
+    protected abstract class CalResourceHarvestingCheckerBase implements CalResourceHarvestingChecker {
+        protected final ZimbraSoapContext zsc;
+        protected final AuthToken authToken;
+        protected ServiceException firstException = null;
+
+        protected abstract void doRightsCheck(CalendarResource calRes) throws ServiceException;
+
+        public CalResourceHarvestingCheckerBase(ZimbraSoapContext zsc) {
+            this.zsc = zsc;
+            authToken = zsc.getAuthToken();
+        }
+
+        protected boolean hasRight(CalendarResource calRes, String selectorKey) {
+            try {
+                doRightsCheck(calRes);
+                return true;
+            } catch (ServiceException se) {
+                if (firstException == null) {
+                    if (authToken.isAdmin()) {
+                        firstException = se;
+                    } else {
+                        firstException = ServiceException.DEFEND_CALENDAR_RESOURCE_HARVEST(selectorKey);
+                    }
+                }
+                return false;
+            }
+        }
+    }
+
+    protected class CalResourceHarvestingCheckerUsingCheckCalendarResourceRight
+    extends CalResourceHarvestingCheckerBase {
+        private Object needed = null;
+
+        public CalResourceHarvestingCheckerUsingCheckCalendarResourceRight(ZimbraSoapContext zsc,
+                Object needed) {
+            super(zsc);
+            this.needed = needed;
+        }
+
+        @Override
+        protected void doRightsCheck(CalendarResource calRes) throws ServiceException {
+            checkCalendarResourceRight(zsc, calRes, needed);
+        }
+
+        @Override
+        public void check(CalendarResource calRes, String selectorKey) throws ServiceException {
+            if (hasRight(calRes, selectorKey)) {
+                return;
+            }
+            throw firstException;
+        }
+    }
+
+    protected interface GroupHarvestingChecker {
+        public void check(Group group, String groupSelectorKey) throws ServiceException;
+    }
+
+    protected abstract class GroupHarvestingCheckerBase implements GroupHarvestingChecker {
+        protected final ZimbraSoapContext zsc;
+        protected final AuthToken authToken;
+        protected ServiceException firstException = null;
+
+        protected abstract void doRightsCheck(Group group) throws ServiceException;
+
+        public GroupHarvestingCheckerBase(ZimbraSoapContext zsc) {
+            this.zsc = zsc;
+            authToken = zsc.getAuthToken();
+        }
+
+        protected boolean hasRight(Group group, String selectorKey) {
+            try {
+                doRightsCheck(group);
+                return true;
+            } catch (ServiceException se) {
+                if (firstException == null) {
+                    if (authToken.isAdmin()) {
+                        firstException = se;
+                    } else {
+                        firstException = ServiceException.DEFEND_DL_HARVEST(selectorKey);
+                    }
+                }
+                return false;
+            }
+        }
+    }
+
+    protected class GroupHarvestingCheckerUsingCheckGroupRight extends GroupHarvestingCheckerBase {
+        private Object needed = null;
+
+        public GroupHarvestingCheckerUsingCheckGroupRight(ZimbraSoapContext zsc, Object needed) {
+            super(zsc);
+            this.needed = needed;
+        }
+
+        @Override
+        protected void doRightsCheck(Group group) throws ServiceException {
+            if (group.isDynamic()) {
+                checkDynamicGroupRight(zsc, (DynamicGroup)group, needed);
+            } else {
+                checkDistributionListRight(zsc, (DistributionList) group, needed);
+            }
+        }
+
+        @Override
+        public void check(Group group, String selectorKey) throws ServiceException {
+            if (hasRight(group, selectorKey)) {
+                return;
+            }
+            throw firstException;
+        }
+    }
+
+    protected class GroupHarvestingCheckerUsingGetAttrsPerms extends GroupHarvestingCheckerBase {
+        private final AttrRightChecker arc;
+        private final List<String> getAttrs;
+        private String currAttr;
+
+        public GroupHarvestingCheckerUsingGetAttrsPerms(ZimbraSoapContext zsc,
+                AttrRightChecker arc, List<String> getAttrs) {
+            super(zsc);
+            this.arc = arc;
+            this.getAttrs = getAttrs;
+        }
+
+        @Override
+        protected void doRightsCheck(Group group) throws ServiceException {
+            if ((arc != null) && !arc.allowAttr(currAttr)) {
+                throw ServiceException.DEFEND_DL_HARVEST(group.getName());
+            }
+        }
+
+        @Override
+        public void check(Group group, String selectorKey) throws ServiceException {
+            for (String attr : getAttrs) {
+                currAttr = attr;
+                if (hasRight(group, selectorKey)) {
+                    return;
+                }
+            }
+            throw firstException;
+        }
+    }
+
+    protected class GroupHarvestingCheckerUsingCheckRight extends GroupHarvestingCheckerBase {
+        private final AdminRight adminRight;
+        private final Map<String, Object> context;
+
+        public GroupHarvestingCheckerUsingCheckRight(ZimbraSoapContext zsc, Map<String, Object> context,
+                AdminRight right) {
+            super(zsc);
+            this.adminRight = right;
+            this.context = context;
+        }
+
+        @Override
+        protected void doRightsCheck(Group group) throws ServiceException {
+            checkRight(zsc, context, group, adminRight);
+        }
+
+        @Override
+        public void check(Group group, String selectorKey) throws ServiceException {
+            if (hasRight(group, selectorKey)) {
+                return;
+            }
+            throw firstException;
+        }
+    }
+
+    protected void defendAgainstGroupHarvestingWhenAbsent(DistributionListBy dlBy,
+            String groupSelectorKey, ZimbraSoapContext zsc, GroupHarvestingChecker checker)
+    throws ServiceException {
+        AuthToken authToken = zsc.getAuthToken();
+        if (authToken.isAdmin()) {
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(groupSelectorKey);
+        } else {
+            if (DistributionListBy.name.equals(dlBy) && AuthToken.isAnyAdmin(authToken)) {
+                Entry pseudoTarget = pseudoTargetInSameDomainAsEmail(TargetType.dl, groupSelectorKey);
+                if (pseudoTarget != null) {
+                    checker.check((DistributionList)pseudoTarget, groupSelectorKey);
+                    throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(groupSelectorKey); // passed the check
+                }
+            }
+        }
+        throw ServiceException.DEFEND_DL_HARVEST(groupSelectorKey);
+    }
+
+    protected void defendAgainstGroupHarvesting(Group group, DistributionListBy dlBy, String groupSelectorKey,
+            ZimbraSoapContext zsc, GroupHarvestingChecker checker)
+    throws ServiceException {
+        if (group == null) {
+            defendAgainstGroupHarvestingWhenAbsent(dlBy, groupSelectorKey, zsc, checker);
+            return;
+        }
+        checker.check(group, groupSelectorKey);
+    }
+
+    protected void defendAgainstGroupHarvestingWhenAbsent(DistributionListBy dlBy,
+            String groupSelectorKey, ZimbraSoapContext zsc, AdminRight dlRight)
+    throws ServiceException {
+        defendAgainstGroupHarvestingWhenAbsent(dlBy, groupSelectorKey, zsc,
+                new GroupHarvestingCheckerUsingCheckGroupRight(zsc, dlRight));
+    }
+
+    protected void defendAgainstGroupHarvesting(Group group, DistributionListBy dlBy,
+            String groupSelectorKey, ZimbraSoapContext zsc, Object dynamicGroupNeeded, Object dlNeeded)
+    throws ServiceException {
+        if (group == null) {
+            defendAgainstGroupHarvestingWhenAbsent(dlBy, groupSelectorKey, zsc,
+                    new GroupHarvestingCheckerUsingCheckGroupRight(zsc, dlNeeded));
+            return;
+        }
+        GroupHarvestingCheckerUsingCheckGroupRight checker =
+                new GroupHarvestingCheckerUsingCheckGroupRight(zsc, group.isDynamic() ? dynamicGroupNeeded : dlNeeded);
+        checker.check(group, groupSelectorKey);
     }
 
     @Override
@@ -470,13 +855,15 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     /*
      * convenient method for checking the admin login as right
      */
-    protected AdminAccessControl checkAdminLoginAsRight(ZimbraSoapContext zsc, Provisioning prov, Account account) throws ServiceException {
+    protected AdminAccessControl checkAdminLoginAsRight(ZimbraSoapContext zsc, Provisioning prov, Account account)
+    throws ServiceException {
         if (account.isCalendarResource()) {
             // need a CalendarResource instance for RightChecker
             CalendarResource resource = prov.get(Key.CalendarResourceBy.id, account.getId());
             return checkCalendarResourceRight(zsc, resource, Admin.R_adminLoginCalendarResourceAs);
-        } else
+        } else {
             return checkAccountRight(zsc, account, Admin.R_adminLoginAs);
+        }
     }
 
     /*

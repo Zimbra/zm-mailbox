@@ -23,14 +23,13 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -78,23 +77,25 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
         if (id != null) {
             account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         }
-        defendAgainstAccountHarvesting(account, AccountBy.id, id, zsc);
+
+        try {
+            defendAgainstAccountOrCalendarResourceHarvesting(account, AccountBy.id, id, zsc,
+                    Admin.R_removeAccountAlias, Admin.R_removeCalendarResourceAlias);
+        } catch (AccountServiceException ase) {
+            // still may want to remove the alias, even if it doesn't point at anything
+            // note: if we got a permission denied instead of AccountServiceException,
+            //       means we don't have the rights so shouldn't get any further
+        }
 
         String acctName = "";
         if (account != null) {
-            if (account.isCalendarResource()) {
-                // need a CalendarResource instance for RightChecker
-                CalendarResource resource = prov.get(Key.CalendarResourceBy.id, id);
-                checkCalendarResourceRight(zsc, resource, Admin.R_removeCalendarResourceAlias);
-            } else {
-                checkAccountRight(zsc, account, Admin.R_removeAccountAlias);
-            }
             acctName = account.getName();
         }
 
         // if the admin can remove an alias in the domain
         checkDomainRightByEmail(zsc, alias, Admin.R_deleteAlias);
 
+        // If account is null, still invoke removeAlias. Ensures dangling aliases are cleaned up as much as possible
         prov.removeAlias(account, alias);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(

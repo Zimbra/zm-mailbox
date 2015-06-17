@@ -62,6 +62,8 @@ public class PermissionCache {
     }
 
     public static void invalidateCache() {
+        RightBearer.Grantee.clearGranteeCache();
+        RightCommand.clearAllEffectiveRightsCache();
         PermCacheManager.getInstance().invalidateCache();
     }
 

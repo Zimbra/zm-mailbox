@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,27 +25,41 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.DynamicGroup;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.Group.GroupOwner;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.message.GetDistributionListRequest;
+import com.zimbra.soap.admin.type.DistributionListSelector;
 
 public class GetDistributionList extends DistributionListDocumentHandler {
-    
+
     /**
      * must be careful and only allow access to domain if domain admin
      */
+    @Override
     public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
+    /**
+     * @return true - which means accept responsibility for measures to prevent account harvesting by delegate admins
+     */
+    @Override
+    public boolean defendsAgainstDelegateAdminAccountHarvesting() {
         return true;
     }
 
@@ -54,49 +68,61 @@ public class GetDistributionList extends DistributionListDocumentHandler {
         Element eDL = request.getElement(AdminConstants.E_DL);
         String key = eDL.getAttribute(AdminConstants.A_BY);
         String value = eDL.getText();
-        
+
         return Provisioning.getInstance().getGroup(Key.DistributionListBy.fromString(key), value);
     }
-    
-    public Element handle(Element request, Map<String, Object> context) 
+
+    private static String[] minimumAttrs = {Provisioning.A_zimbraId, Provisioning.A_zimbraMailAlias};
+
+    @Override
+    public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
-	    
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Provisioning prov = Provisioning.getInstance();
-	    
-        int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, 0);
+        GetDistributionListRequest req = JaxbUtil.elementToJaxb(request);
+
+        int limit = (req.getLimit() == null) ? 0 : req.getLimit();
         if (limit < 0) {
-        	throw ServiceException.INVALID_REQUEST("limit" + limit + " is negative", null);
+            throw ServiceException.INVALID_REQUEST("limit" + limit + " is negative", null);
         }
-        int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
+        int offset = (req.getOffset() == null) ? 0 : req.getOffset();
         if (offset < 0) {
-        	throw ServiceException.INVALID_REQUEST("offset" + offset + " is negative", null);
+            throw ServiceException.INVALID_REQUEST("offset" + offset + " is negative", null);
         }
-        boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
-        Set<String> reqAttrs = getReqAttrs(request, AttributeClass.distributionList);
-	    
+        boolean sortAscending = !Boolean.FALSE.equals(req.isSortAscending());
+        Set<String> reqAttrs = getReqAttrs(req.getAttrs(), AttributeClass.distributionList);
+        DistributionListSelector dlSel = req.getDl();
+        DistributionListBy dlBy = dlSel.getBy().toKeyDistributionListBy();
+        AttrRightChecker arc = null;
         Group group = getGroupFromContext(context);
         if (group == null) {
-            Element d = request.getElement(AdminConstants.E_DL);
-            String value = d.getText();
-            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
-        }
-        
-        AttrRightChecker arc = null;
-        
-        if (group.isDynamic()) {
-            AdminAccessControl aac = checkDynamicGroupRight(zsc, 
-                    (DynamicGroup) group, AdminRight.PR_ALWAYS_ALLOW);
+            if (DistributionListBy.name.equals(dlBy)) {
+                Entry pseudoTarget = pseudoTargetInSameDomainAsEmail(TargetType.dl, dlSel.getKey());
+                if (null != pseudoTarget) {
+                    AdminAccessControl aac = checkDistributionListRight(zsc,
+                            (DistributionList) pseudoTarget, AdminRight.PR_ALWAYS_ALLOW);
+                    arc = aac.getAttrRightChecker(pseudoTarget);
+                }
+            }
+            if (arc != null) {
+                defendAgainstGroupHarvestingWhenAbsent(dlBy, dlSel.getKey(), zsc,
+                        new GroupHarvestingCheckerUsingGetAttrsPerms(zsc, arc, Arrays.asList(minimumAttrs)));
+            } else {
+                defendAgainstGroupHarvestingWhenAbsent(dlBy, dlSel.getKey(), zsc, Admin.R_getDistributionList);
+            }
+        } else if (group.isDynamic()) {
+            AdminAccessControl aac = checkDynamicGroupRight(zsc, (DynamicGroup) group, AdminRight.PR_ALWAYS_ALLOW);
             arc = aac.getAttrRightChecker(group);
         } else {
-            AdminAccessControl aac = checkDistributionListRight(zsc, 
+            AdminAccessControl aac = checkDistributionListRight(zsc,
                     (DistributionList) group, AdminRight.PR_ALWAYS_ALLOW);
             arc = aac.getAttrRightChecker(group);
         }
-        
+        defendAgainstGroupHarvesting(group, dlBy, dlSel.getKey(), zsc,
+                        new GroupHarvestingCheckerUsingGetAttrsPerms(zsc, arc, Arrays.asList(minimumAttrs)));
+
         Element response = zsc.createElement(AdminConstants.GET_DISTRIBUTION_LIST_RESPONSE);
         Element eDL = encodeDistributionList(response, group, true, false, reqAttrs, arc);
-                
+
         // return member info only if the authed has right to see zimbraMailForwardingAddress
         boolean allowMembers = true;
         if (group.isDynamic()) {
@@ -104,15 +130,14 @@ public class GetDistributionList extends DistributionListDocumentHandler {
         } else {
             allowMembers = arc == null ? true : arc.allowAttr(Provisioning.A_zimbraMailForwardingAddress);
         }
-        
+
         if (allowMembers) {
             encodeMembers(response, eDL, group, offset, limit, sortAscending);
         }
-        
         return response;
     }
-    
-    private void encodeMembers(Element response, Element dlElement, Group group, 
+
+    private void encodeMembers(Element response, Element dlElement, Group group,
             int offset, int limit, boolean sortAscending) throws ServiceException {
         String[] members;
         if (group instanceof DynamicGroup) {
@@ -120,9 +145,9 @@ public class GetDistributionList extends DistributionListDocumentHandler {
         } else {
             members = group.getAllMembers();
         }
-        
+
         if (offset > 0 && offset >= members.length) {
-            throw ServiceException.INVALID_REQUEST("offset " + offset + 
+            throw ServiceException.INVALID_REQUEST("offset " + offset +
                     " greater than size " + members.length, null);
         }
         int stop = offset + limit;
@@ -132,7 +157,7 @@ public class GetDistributionList extends DistributionListDocumentHandler {
         if (stop > members.length) {
             stop = members.length;
         }
-        
+
         if (sortAscending) {
             Arrays.sort(members);
         } else {
@@ -141,32 +166,32 @@ public class GetDistributionList extends DistributionListDocumentHandler {
         for (int i = offset; i < stop; i++) {
             dlElement.addElement(AdminConstants.E_DLM).setText(members[i]);
         }
-        
+
         response.addAttribute(AdminConstants.A_MORE, stop < members.length);
         response.addAttribute(AdminConstants.A_TOTAL, members.length);
     }
 
-    public static Element encodeDistributionList(Element e, Group group) 
-    throws ServiceException {
+    public static Element encodeDistributionList(Element e, Group group)
+            throws ServiceException {
         return encodeDistributionList(e, group, true, false, null, null);
     }
-    
-    public static Element encodeDistributionList(Element e, Group group, 
-            boolean hideMembers, boolean hideOwners, Set<String> reqAttrs, 
+
+    public static Element encodeDistributionList(Element e, Group group,
+            boolean hideMembers, boolean hideOwners, Set<String> reqAttrs,
             AttrRightChecker attrRightChecker) throws ServiceException {
-        return encodeDistributionList(e, group, hideMembers, hideOwners, true, 
+        return encodeDistributionList(e, group, hideMembers, hideOwners, true,
                 reqAttrs, attrRightChecker);
     }
-    
-    public static Element encodeDistributionList(Element e, Group group, 
-            boolean hideMembers, boolean hideOwners, boolean encodeAttrs, 
-            Set<String> reqAttrs, AttrRightChecker attrRightChecker) 
-    throws ServiceException {
+
+    public static Element encodeDistributionList(Element e, Group group,
+            boolean hideMembers, boolean hideOwners, boolean encodeAttrs,
+            Set<String> reqAttrs, AttrRightChecker attrRightChecker)
+                    throws ServiceException {
         Element eDL = e.addElement(AdminConstants.E_DL);
         eDL.addAttribute(AdminConstants.A_NAME, group.getUnicodeName());
         eDL.addAttribute(AdminConstants.A_ID,group.getId());
         eDL.addAttribute(AdminConstants.A_DYNAMIC, group.isDynamic());
-        
+
         if (encodeAttrs) {
             Set<String> hideAttrs = null;
             if (hideMembers) {
@@ -177,34 +202,34 @@ public class GetDistributionList extends DistributionListDocumentHandler {
                     hideAttrs.add(Provisioning.A_zimbraMailForwardingAddress);
                 }
             }
-    
-            ToXML.encodeAttrs(eDL, group.getUnicodeAttrs(), 
+
+            ToXML.encodeAttrs(eDL, group.getUnicodeAttrs(),
                     AdminConstants.A_N, reqAttrs, hideAttrs, attrRightChecker);
         }
-        
+
         if (!hideOwners) {
             encodeOwners(eDL, group);
         }
-        
+
         return eDL;
     }
-    
+
     public static Element encodeOwners(Element eParent, Group group) throws ServiceException {
         Element eOwners = null;
-        
+
         List<GroupOwner> owners = GroupOwner.getOwners(group, true);
         if (!owners.isEmpty()) {
             eOwners = eParent.addElement(AdminConstants.E_DL_OWNERS);
-            
+
             for (GroupOwner owner : owners) {
                 Element eOwner = eOwners.addElement(AdminConstants.E_DL_OWNER);
-                
+
                 eOwner.addAttribute(AdminConstants.A_TYPE, owner.getType().getCode());
                 eOwner.addAttribute(AdminConstants.A_ID, owner.getId());
                 eOwner.addAttribute(AdminConstants.A_NAME, owner.getName());
             }
         }
-        
+
         return eOwners;
     }
 

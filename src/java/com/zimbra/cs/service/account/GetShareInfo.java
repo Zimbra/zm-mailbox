@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -178,16 +178,14 @@ public class GetShareInfo  extends AccountDocumentHandler {
 
     public static byte getGranteeType(Element eGrantee) throws ServiceException {
         String granteeType = null;
-        if (eGrantee != null)
+        if (eGrantee != null) {
             granteeType = eGrantee.getAttribute(AccountConstants.A_TYPE, null);
-
-        byte gt;
-        if (granteeType == null)
-            gt = 0;
-        else {
-            gt = ACL.stringToType(granteeType);
         }
-        return gt;
+        return getGranteeType(granteeType);
+    }
+
+    public static byte getGranteeType(String granteeType) throws ServiceException {
+        return (granteeType == null) ? 0 : ACL.stringToType(granteeType);
     }
 
     public static interface ResultFilter {
