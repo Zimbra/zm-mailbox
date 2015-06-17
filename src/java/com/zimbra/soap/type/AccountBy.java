@@ -37,7 +37,7 @@ public enum AccountBy {
         }
     }
 
-    public com.zimbra.common.account.Key.AccountBy toKeyDomainBy()
+    public com.zimbra.common.account.Key.AccountBy toKeyAccountBy()
     throws ServiceException {
         return com.zimbra.common.account.Key.AccountBy.fromString(this.name());
     }

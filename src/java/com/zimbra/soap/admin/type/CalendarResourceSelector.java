@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -41,6 +41,10 @@ public class CalendarResourceSelector {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
+        public com.zimbra.common.account.Key.CalendarResourceBy toKeyCalendarResourceBy()
+        throws ServiceException {
+            return com.zimbra.common.account.Key.CalendarResourceBy.fromString(this.name());
+        }
     }
 
     /**
@@ -71,6 +75,14 @@ public class CalendarResourceSelector {
     public CalendarResourceSelector(CalendarResourceBy by, String key) {
         this.calResourceBy = by;
         this.key = key;
+    }
+
+    public static CalendarResourceSelector fromId(String id) {
+        return new CalendarResourceSelector(CalendarResourceBy.id, id);
+    }
+
+    public static CalendarResourceSelector fromName(String name) {
+        return new CalendarResourceSelector(CalendarResourceBy.name, name);
     }
 
     public String getKey() { return key; }

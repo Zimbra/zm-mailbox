@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,10 +22,11 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
+import com.zimbra.soap.admin.type.Attr;
 
 /**
  * @zm-api-command-auth-required true
@@ -56,7 +57,7 @@ public class CreateAccountRequest extends AdminAttrsImpl {
      * @zm-api-field-tag account-password
      * @zm-api-field-description New account's password
      */
-    @XmlAttribute(name=AdminConstants.E_PASSWORD, required=true)
+    @XmlAttribute(name=AdminConstants.E_PASSWORD, required=false)
     private String password;
 
     public CreateAccountRequest() {

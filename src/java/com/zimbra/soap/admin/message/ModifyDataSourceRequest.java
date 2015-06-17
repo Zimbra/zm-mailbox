@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -26,13 +26,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
-import com.zimbra.soap.type.Id;
+import com.zimbra.soap.admin.type.DataSourceInfo;
 
 /**
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Changes attributes of the given data source.
- * Only the attributes specified in the request are modified. To change the name, specify 
+ * Only the attributes specified in the request are modified. To change the name, specify
  * <b>"zimbraDataSourceName"</b> as an attribute.
  * <br />
  * <br />
@@ -54,21 +54,21 @@ public class ModifyDataSourceRequest extends AdminAttrsImpl {
      * @zm-api-field-description Data source specification
      */
     @XmlElement(name=AccountConstants.E_DATA_SOURCE, required=true)
-    private final Id dataSource;
+    private final DataSourceInfo dataSource;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private ModifyDataSourceRequest() {
-        this((String) null, (Id) null);
+        this((String) null, (DataSourceInfo) null);
     }
 
-    public ModifyDataSourceRequest(String id, Id dataSource) {
+    public ModifyDataSourceRequest(String id, DataSourceInfo dataSource) {
         this.id = id;
         this.dataSource = dataSource;
     }
 
     public String getId() { return id; }
-    public Id getDataSource() { return dataSource; }
+    public DataSourceInfo getDataSource() { return dataSource; }
 }

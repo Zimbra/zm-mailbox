@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,8 +24,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AdminAttrsImpl;
 import com.zimbra.soap.admin.type.DistributionListSelector;
+import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
@@ -37,7 +37,7 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_DISTRIBUTION_LIST_REQUEST)
-public class GetDistributionListRequest extends AdminAttrsImpl {
+public class GetDistributionListRequest extends AttributeSelectorImpl {
 
     /**
      * @zm-api-field-tag limit
