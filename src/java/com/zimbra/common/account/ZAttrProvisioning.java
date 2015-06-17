@@ -10851,20 +10851,40 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkLicense = "zimbraNetworkLicense";
 
     /**
-     * template used to construct the body of an email notification message
+     * Deprecated since: 8.7.0. Deprecated in favor of the
+     * zimbraNewMailNotificationMessage. Orig desc: template used to
+     * construct the body of an email notification message
      */
     @ZAttr(id=152)
     public static final String A_zimbraNewMailNotificationBody = "zimbraNewMailNotificationBody";
 
     /**
-     * template used to construct the sender of an email notification message
+     * Deprecated since: 8.7.0. Deprecated in favor of the
+     * zimbraNewMailNotificationMessage. Orig desc: template used to
+     * construct the sender of an email notification message
      */
     @ZAttr(id=150)
     public static final String A_zimbraNewMailNotificationFrom = "zimbraNewMailNotificationFrom";
 
     /**
-     * template used to construct the subject of an email notification
-     * message
+     * Template used to construct an email notification message. Sample
+     * configuration: From: Postmaster
+     * &lt;postmaster@${RECIPIENT_DOMAIN}&gt;${NEWLINE}To:
+     * &lt;${RECIPIENT_ADDRESS}&gt;${NEWLINE}Subject: New message received at
+     * ${RECIPIENT_ADDRESS}${NEWLINE}Date: ${DATE}${NEWLINE}Content-Type:
+     * text/plain${NEWLINE}${NEWLINE}New message received at
+     * ${RECIPIENT_ADDRESS}.${NEWLINE}Sender:
+     * ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2019)
+    public static final String A_zimbraNewMailNotificationMessage = "zimbraNewMailNotificationMessage";
+
+    /**
+     * Deprecated since: 8.7.0. Deprecated in favor of the
+     * zimbraNewMailNotificationMessage. Orig desc: template used to
+     * construct the subject of an email notification message
      */
     @ZAttr(id=151)
     public static final String A_zimbraNewMailNotificationSubject = "zimbraNewMailNotificationSubject";
