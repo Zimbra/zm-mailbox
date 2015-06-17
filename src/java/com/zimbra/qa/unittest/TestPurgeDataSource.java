@@ -427,6 +427,5 @@ public class TestPurgeDataSource extends TestCase {
         mbox.deleteFolder(pop3DsFolderId);
         setPurgeParams(false, 0, 0);
         setThreadingAlgorithm("references");
-        msgCounter = 0;
     }
 }
