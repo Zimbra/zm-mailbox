@@ -15678,6 +15678,25 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientStaySignedInDisabled = "zimbraWebClientStaySignedInDisabled";
 
     /**
+     * Specify which help file&#039;s link should be displayed on the
+     * pull-down menu in the Ajax Web client. The value is case-sensitive.
+     * When &quot;productHelp&quot; is specified, &quot;Product Help&quot;
+     * menu item will available and link to the default help files stored in
+     * the same mail server (http://[service
+     * URL]/help/[locale]/advanced/zimbra_user_help.htm) or URL specified in
+     * skin or ZmMsg properties file (&quot;helpURI&quot;). When
+     * &quot;onlineHelp&quot; is specified, &quot;Help Central Online&quot;
+     * menu item will be available to link to http://help.zimbra.com/. When
+     * &quot;newFeatures&quot; is specified, &quot;New Features&quot; menu
+     * item will be available to link to
+     * http://www.zimbra.com/products/whats_new.html.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2012)
+    public static final String A_zimbraWebClientSupportedHelps = "zimbraWebClientSupportedHelps";
+
+    /**
      * weclient URL to directly connect when making service to JS calls from
      * mail server in split mode
      *
