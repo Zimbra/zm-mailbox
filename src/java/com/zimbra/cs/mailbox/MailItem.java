@@ -3038,7 +3038,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             return;
         }
         markItemModified(Change.FOLDER);
-        mData.prevFolders = getMailbox().getOperationChangeID() + ":" + mData.folderId;
         mData.folderId = newFolder.getId();
         mData.imapId   = getMailbox().isTrackingImap() ? imapId : mData.imapId;
         metadataChanged();
