@@ -24,6 +24,7 @@ import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.qa.unittest.prov.soap.SoapTest;
 import com.zimbra.soap.admin.message.ModifyAccountRequest;
@@ -45,6 +46,7 @@ import com.zimbra.soap.mail.type.MailPop3DataSource;
 import com.zimbra.soap.mail.type.NewFolderSpec;
 import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
 import com.zimbra.soap.type.DataSource.ConnectionType;
+import com.zimbra.soap.type.SearchSortBy;
 
 public class TestPurgeDataSource extends TestCase {
     private static final String USER_NAME = "user1";
@@ -76,17 +78,27 @@ public class TestPurgeDataSource extends TestCase {
         transport = TestUtil.getAdminSoapTransport();
         account = TestUtil.getAccount(USER_NAME);
         mbox = TestUtil.getZMailbox(USER_NAME);
-        TestUtil.createAccount(IMAP_ACCOUNT_NAME_1);
-        TestUtil.createAccount(IMAP_ACCOUNT_NAME_2);
-        TestUtil.createAccount(POP3_ACCOUNT_NAME);
+        createAccount(IMAP_ACCOUNT_NAME_1);
+        createAccount(IMAP_ACCOUNT_NAME_2);
+        createAccount(POP3_ACCOUNT_NAME);
         imapDsMbox1 = TestUtil.getZMailbox(IMAP_ACCOUNT_NAME_1);
         imapDsMbox2 = TestUtil.getZMailbox(IMAP_ACCOUNT_NAME_2);
         pop3DsMbox = TestUtil.getZMailbox(POP3_ACCOUNT_NAME);
         createFolders();
-        createImapDataSources();
+        createDataSources();
         setThreadingAlgorithm("subject");
     }
 
+    private void createAccount(String acctName) throws ServiceException {
+        try {
+            TestUtil.createAccount(acctName);
+        } catch (ServiceException e) {
+            if (e.getCode().equals(AccountServiceException.ACCOUNT_EXISTS)) {
+                TestUtil.deleteAccount(acctName);
+                TestUtil.createAccount(acctName);
+            }
+        }
+    }
     private void setPurgeParams(boolean purgeEnabled, long dsQuota, long totalQuota) throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraFeatureDataSourcePurgingEnabled, purgeEnabled ? ProvisioningConstants.TRUE: ProvisioningConstants.FALSE);
@@ -96,7 +108,8 @@ public class TestPurgeDataSource extends TestCase {
         modifyRequest.setAttrs(attrs);
         SoapTest.invokeJaxb(transport, modifyRequest);
     }
-    private void createImapDataSources() throws ServiceException {
+
+    private void createDataSources() throws ServiceException {
         CreateDataSourceRequest req = new CreateDataSourceRequest();
         MailImapDataSource imap = new MailImapDataSource();
         imap.setUsername(IMAP_ACCOUNT_NAME_1);
@@ -223,6 +236,7 @@ public class TestPurgeDataSource extends TestCase {
     private List<ZSearchHit> doSearch(String query) throws ServiceException {
         ZSearchParams params = new ZSearchParams(query);
         params.setFetch(Fetch.all);
+        params.setSortBy(SearchSortBy.dateDesc);
         ZSearchResult result = mbox.search(params);
         List<ZSearchHit> hits = result.getHits();
         return hits;
@@ -241,7 +255,6 @@ public class TestPurgeDataSource extends TestCase {
         assertEquals(2, hits.size());
         assertEquals("conversation 3", getSubject(hits.get(0)));
         assertEquals("conversation 2", getSubject(hits.get(1)));
-
         addMessage(imapDsMbox1, "re:conversation 1");
         // this should restore conversation 1, purging conversations 2 and 3 in the process
         refreshImapData();
@@ -363,7 +376,7 @@ public class TestPurgeDataSource extends TestCase {
 
     private void addMessage(ZMailbox mbox, String subject) throws Exception {
         mbox.addMessage("2", null, null, System.currentTimeMillis(), getMessage(subject), true);
-        Thread.sleep(500);
+        Thread.sleep(1000);
     }
 
     private String getMessage(String subject) throws MessagingException, ServiceException, IOException {
