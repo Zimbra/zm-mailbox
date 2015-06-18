@@ -174,7 +174,6 @@ public class TestTwoFactorAuth extends TestCase {
         ZAuthResult res = mbox.authByPassword(options, PASSWORD);
         assertTrue(res.getTwoFactorAuthRequired());
         options = new ZMailbox.Options();
-        options.setAccount(USER_NAME);
         options.setTwoFactorCode(scratchCodes.remove(0));
         options.setAuthToken(res.getAuthToken());
         try {
