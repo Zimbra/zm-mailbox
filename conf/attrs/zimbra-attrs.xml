@@ -9878,20 +9878,6 @@ TODO: delete them permanently from here
   <desc>trusted device token secret key</desc>
 </attr>
 
-<attr id="1965" name="zimbraReverseProxyPageSpeedEnabled" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
-  <globalConfigValue>on</globalConfigValue>
-  <desc>Enables or disables pagespeed module for nginx</desc>
-</attr>
-
-<attr id="1966" name="zimbraReverseProxyPageSpeedRespectVary" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
-  <globalConfigValue>off</globalConfigValue>
-  <desc>Enables or disables respecting of the Vary headers on resource files, such as JavaScript and css files by proxy's Pagespeed module. Disabled (i.e off) by default.</desc>
-</attr>
-
-<attr id="1967" name="zimbraReverseProxyPageSpeedDisallowedURLs" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
-  <desc>URL patterns that need to be excluded from the rewriting processs of proxy's Pagespeed module</desc>
-</attr>
-
 <attr id="1968" name="zimbraReverseProxySSLDHParam" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <desc>Specifies a file with DH parameters for EDH ciphers to be used by the proxy</desc>
 </attr>
