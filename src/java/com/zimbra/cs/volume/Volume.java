@@ -22,6 +22,8 @@ import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.store.IncomingDirectory;
@@ -45,6 +47,9 @@ public final class Volume {
     public static final short TYPE_MESSAGE =  1;
     public static final short TYPE_MESSAGE_SECONDARY = 2;
     public static final short TYPE_INDEX = 10;
+    public static final short TYPE_BACKUP = 20;
+    public static final short TYPE_REDOLOG = 30;
+    public static final short TYPE_OTHER = 40;
 
     private static final String SUBDIR_MESSAGE = "msg";
     private static final String SUBDIR_INDEX = "index";
@@ -71,16 +76,19 @@ public final class Volume {
         private long lastSyncDate;
         private long currentSyncDate;
         private int groupId;
+        private String mountCommand;
 
         private static final String FN_DATE_LASTSYNC = "lsd";
         private static final String FN_DATE_CURRENTSYNC = "csd";
         private static final String FN_LAST_GROUP_ID = "gid";
+        private static final String FN_MOUNT_COMMAND = "mc";
 
         Metadata serialize() {
             Metadata meta = new Metadata();
             meta.put(FN_DATE_LASTSYNC, lastSyncDate);
             meta.put(FN_DATE_CURRENTSYNC, currentSyncDate);
             meta.put(FN_LAST_GROUP_ID, groupId);
+            meta.put(FN_MOUNT_COMMAND, mountCommand);
             return meta;
         }
 
@@ -88,6 +96,7 @@ public final class Volume {
             this.lastSyncDate = meta.getLong(FN_DATE_LASTSYNC, 0);
             this.currentSyncDate = meta.getLong(FN_DATE_CURRENTSYNC, 0);
             this.groupId = meta.getInt(FN_LAST_GROUP_ID, 0);
+            this.mountCommand = meta.get(FN_MOUNT_COMMAND, null);
 
             //to handle pre-9.0 serialized metadata
             if(this.lastSyncDate > 0 && this.lastSyncDate < Integer.MAX_VALUE) {
@@ -102,6 +111,10 @@ public final class Volume {
             this.lastSyncDate = lastSyncDate;
             this.currentSyncDate = currentSyncDate;
             this.groupId = groupId;
+        }
+
+        public VolumeMetadata(String mountCommand) {
+            this.mountCommand = mountCommand;
         }
 
         public long getLastSyncDate() {
@@ -126,6 +139,14 @@ public final class Volume {
 
         public void setGroupId(int id) {
             this.groupId = id;
+        }
+
+        public String getMountCommand() {
+            return mountCommand;
+        }
+
+        public void setMountCommand(String mountCommand) {
+            this.mountCommand = mountCommand;
         }
 
         @Override
@@ -181,12 +202,47 @@ public final class Volume {
             return this;
         }
 
-        public Builder setPath(String path, boolean normalize) throws VolumeServiceException, ServiceException {
+        /**
+         * Set the path
+         * @param path - root directory for this volume
+         * @param normalize - whether to normalize the path
+         * @param mountIfNonExistent - whether to attempt to mount non-existent paths. When this automatic mounting is desired; setMountCommand() must be called prior to setPath().
+         * @return reference to Builder for chained calls.
+         * @throws VolumeServiceException
+         * @throws ServiceException
+         */
+        public Builder setPath(String path, boolean normalize, boolean mountIfNonExistent) throws VolumeServiceException, ServiceException {
             if (normalize) {
+                VolumeManager volMgr = VolumeManager.getInstance();
                 path = volume.normalizePath(path);
-                VolumeManager.getInstance().validatePath(path);
+                try {
+                    volMgr.validatePath(path);
+                } catch (VolumeServiceException vse) {
+                    boolean mounted = false;
+                    if (mountIfNonExistent && VolumeServiceException.NO_SUCH_PATH.equals(vse.getCode())) {
+                        VolumeMetadata meta = volume.getMetadata();
+                        if (!StringUtil.isNullOrEmpty(meta.getMountCommand())) {
+                            File volumeDir = new File(path);
+                            if (!volumeDir.exists()) {
+                                volumeDir.mkdirs();
+                            }
+                            ZimbraLog.store.info("path %s does not exist; attempting to mount", path);
+                            try {
+                                volMgr.invokeMountCommand(meta.getMountCommand());
+                                volMgr.validatePath(path);
+                            } catch(ServiceException se) {
+                                //delete the directory we just created
+                                volumeDir.delete();
+                                throw se;
+                            }
+                            mounted = true;//validate succeeded, so we're good
+                        }
+                    }
+                    if (!mounted) {
+                        throw vse;
+                    }
+                }
             }
-            //volume.rootPath = getConfiguredRootPath(path);
             volume.rootPath = path;
             return this;
         }
@@ -226,6 +282,24 @@ public final class Volume {
             return this;
         }
 
+        public Builder setMountCommand(String mountCommand) throws ServiceException {
+            if (volume.metadata == null) {
+                volume.metadata = new VolumeMetadata(mountCommand).serialize();
+            } else {
+                VolumeMetadata volMetadata = null;
+                try {
+                    volMetadata = volume.getMetadata();
+                    volMetadata.setMountCommand(mountCommand);
+                    volume.metadata = volMetadata.serialize();
+                } catch (ServiceException se) {
+                    ZimbraLog.store.warn("exception getting volume metadata", se);
+                    volume.metadata = new VolumeMetadata(mountCommand).serialize();
+                }
+            }
+            return this;
+        }
+
+
         public Volume build() throws VolumeServiceException {
             switch (volume.id) {
                 case Volume.ID_AUTO_INCREMENT:
@@ -242,6 +316,9 @@ public final class Volume {
                 case Volume.TYPE_MESSAGE:
                 case Volume.TYPE_MESSAGE_SECONDARY:
                 case Volume.TYPE_INDEX:
+                case Volume.TYPE_REDOLOG:
+                case Volume.TYPE_BACKUP:
+                case Volume.TYPE_OTHER:
                     break;
                 default:
                     throw VolumeServiceException.INVALID_REQUEST("Invalid volume type: " + volume.type);
@@ -282,6 +359,18 @@ public final class Volume {
             }
             return volume;
         }
+    }
+
+    public boolean isMsgType() {
+        return isMsgType(getType());
+    }
+
+    public static boolean isMsgType(short type) {
+        return type == TYPE_MESSAGE || type == TYPE_MESSAGE_SECONDARY;
+    }
+
+    public static boolean isCurrentApplicable(short type) {
+        return isMsgType(type) || type == TYPE_INDEX;
     }
 
     public short getId() {
@@ -336,6 +425,13 @@ public final class Volume {
         return compressionThreshold;
     }
 
+    /**
+     * Obtain a snapshot view of the current metadata encapsulated in VolumeMetadata convenience class
+     * Changes to this object do not write through to the underlying metadata
+     * i.e. must call volume.metadata = serialize();
+     * @return
+     * @throws ServiceException
+     */
     public VolumeMetadata getMetadata() throws ServiceException {
         return new VolumeMetadata(metadata);
     }
@@ -488,7 +584,7 @@ public final class Volume {
                 .toString();
     }
 
-    public VolumeInfo toJAXB() {
+    public VolumeInfo toJAXB() throws ServiceException {
         VolumeInfo jaxb = new VolumeInfo();
         jaxb.setId(id);
         jaxb.setType(type);
@@ -501,6 +597,7 @@ public final class Volume {
         jaxb.setCompressBlobs(compressBlobs);
         jaxb.setCompressionThreshold(compressionThreshold);
         jaxb.setCurrent(VolumeManager.getInstance().isCurrent(this));
+        jaxb.setMountCommand(getMetadata().getMountCommand());
         return jaxb;
     }
 }

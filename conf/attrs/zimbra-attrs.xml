@@ -10291,4 +10291,9 @@ TODO: delete them permanently from here
   <desc>Waitset sweeper thread interval.</desc>
 </attr>
 
+<attr id="2040" name="zimbraMailboxdVolumeMountEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" requiresRestart="mailbox" since="9.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether to invoke mount commands during startup, if any have been configured in zmvolume.</desc>
+</attr>
+
 </attrs>

@@ -35,7 +35,9 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbVolume;
@@ -46,6 +48,7 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.op.SetCurrentVolume;
 import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.volume.Volume.VolumeMetadata;
 
 public final class VolumeManager {
 
@@ -111,7 +114,27 @@ public final class VolumeManager {
         List<Volume> volumes = getAllVolumes();
         if (volumes != null) {
             for (Volume volume : volumes) {
-                if (volume.getType() == Volume.TYPE_INDEX) {
+                VolumeMetadata meta = volume.getMetadata();
+                File volumeDir = new File(Volume.getAbsolutePath(volume.getRootPath()));
+                if (!StringUtil.isNullOrEmpty(meta.getMountCommand())) {
+                    if (!volumeDir.exists()) {
+                        volumeDir.mkdirs();
+                    }
+                    ZimbraLog.store.info("attempting to mount volume %s", volume);
+                    try {
+                        invokeMountCommand(meta.getMountCommand());
+                        initializeFsTypes();
+                    } catch(ServiceException se) {
+                        //delete the directory we just created
+                        volumeDir.delete();
+                        throw se;
+                    }
+                }
+                if (!volumeDir.exists()) {
+                    //debug config for non-fatal
+                    ZimbraLog.store.warn("volume %s path not found? files in this volume may be missing, inconsistent, or invalid.", volume);
+                }
+                if (!volume.isMsgType()) {
                     continue;
                 }
                 String type = validateFilesystemType(Volume.getAbsolutePath(volume.getRootPath()));
@@ -543,5 +566,40 @@ public final class VolumeManager {
 
     public boolean isUsingNfs() {
         return usingNfs;
+    }
+
+    public void invokeMountCommand(String command) throws ServiceException {
+        if (Provisioning.getInstance().getLocalServer().isMailboxdVolumeMountEnabled()) {
+            String[] args = command == null ? new String[0] : command.split(" ");
+            if (args.length > 0 && args[0].trim().length() > 0) {
+                ZimbraLog.store.info("running command [" + command +"]");
+                ProcessBuilder mountProcBuilder = new ProcessBuilder(args);
+                Process mountProc;
+                try {
+                    mountProc = mountProcBuilder.start();
+                    int exitCode;
+                    try {
+                        exitCode = mountProc.waitFor();
+                    } catch (InterruptedException e) {
+                        exitCode = mountProc.exitValue();
+                    }
+                    if (ZimbraLog.store.isDebugEnabled()) {
+                        ZimbraLog.store.debug("mount output follows");
+                        BufferedReader mountReader = new BufferedReader(new InputStreamReader(mountProc.getInputStream()));
+                        String line = null;
+                        while ((line = mountReader.readLine()) != null) {
+                            ZimbraLog.store.debug(line);
+                        }
+                    }
+                    if (exitCode != 0) {
+                        throw ServiceException.FAILURE("failed to run [" + command + "] exit code " + exitCode, null);
+                    }
+                } catch (IOException ioe) {
+                    throw ServiceException.FAILURE("ioexception running mount command", ioe);
+                }
+            }
+        } else {
+            ZimbraLog.store.debug("automount disabled, not attempting to mount volume");
+        }
     }
 }

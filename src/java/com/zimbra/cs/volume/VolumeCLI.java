@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.auth.ZAuthToken;
@@ -59,6 +60,7 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_P = "p";
     private static final String O_C = "c";
     private static final String O_CT = "ct";
+    private static final String O_MOUNT_COMMAND = "mc";
 
     private VolumeCLI() throws ServiceException {
         super();
@@ -72,6 +74,7 @@ public final class VolumeCLI extends SoapCLI {
     private String path;
     private String compress;
     private String compressThreshold;
+    private String mountCommand;
 
     private void setArgs(CommandLine cl) throws ServiceException, ParseException, IOException {
         auth = getZAuthToken(cl);
@@ -81,6 +84,7 @@ public final class VolumeCLI extends SoapCLI {
         path = cl.getOptionValue(O_P);
         compress = cl.getOptionValue(O_C);
         compressThreshold = cl.getOptionValue(O_CT);
+        mountCommand = cl.getOptionValue(O_MOUNT_COMMAND);
     }
 
     public static void main(String[] args) {
@@ -135,6 +139,9 @@ public final class VolumeCLI extends SoapCLI {
         GetVolumeResponse resp = JaxbUtil.elementToJaxb(getTransport().invokeWithoutSession(
                 JaxbUtil.jaxbToElement(new GetVolumeRequest(Short.valueOf(id)))));
         VolumeInfo vol = resp.getVolume();
+        if (!Volume.isCurrentApplicable(vol.getType())) {
+            throw ServiceException.FAILURE("cannot set current flag for volume type " + vol.getType(), null);
+        }
         SetCurrentVolumeRequest req = new SetCurrentVolumeRequest(vol.getId(), vol.getType());
         getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(req));
 
@@ -179,17 +186,22 @@ public final class VolumeCLI extends SoapCLI {
     }
 
     private void print(VolumeInfo vol) {
-        System.out.println("   Volume id: " + vol.getId());
-        System.out.println("        name: " + vol.getName());
-        System.out.println("        type: " + toTypeName(vol.getType()));
-        System.out.println("        path: " + vol.getRootPath());
-        System.out.print("  compressed: " + vol.isCompressBlobs());
+        System.out.println(StringUtils.repeat(" ", 4) + "Volume id: " + vol.getId());
+        System.out.println(StringUtils.repeat(" ", 8) + "name: " + vol.getName());
+        System.out.println(StringUtils.repeat(" ", 8) + "type: " + toTypeName(vol.getType()));
+        System.out.println(StringUtils.repeat(" ", 8) + "path: " + vol.getRootPath());
+        System.out.print(StringUtils.repeat(" ", 8) + "compressed: " + vol.isCompressBlobs());
         if (vol.isCompressBlobs()) {
-            System.out.println("\t         threshold: " + vol.getCompressionThreshold() + " bytes");
+            System.out.println(StringUtils.repeat(" ", 12) + "threshold: " + vol.getCompressionThreshold() + " bytes");
         } else {
             System.out.println();
         }
-        System.out.println("     current: " + vol.isCurrent());
+        if (vol.getMountCommand() != null) {
+            System.out.println(StringUtils.repeat(" ", 8) + "mount command: " + vol.getMountCommand());
+        }
+        if (Volume.isCurrentApplicable(vol.getType())) {
+            System.out.println(StringUtils.repeat(" ", 8) + "current: " + vol.isCurrent());
+        }
         System.out.println();
     }
 
@@ -225,6 +237,9 @@ public final class VolumeCLI extends SoapCLI {
         if (!Strings.isNullOrEmpty(compressThreshold)) {
             vol.setCompressionThreshold(Long.parseLong(compressThreshold));
         }
+        if (mountCommand != null) {
+            vol.setMountCommand(mountCommand);
+        }
         ModifyVolumeRequest req = new ModifyVolumeRequest(Short.parseShort(id), vol);
         auth(auth);
         getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(req));
@@ -251,6 +266,9 @@ public final class VolumeCLI extends SoapCLI {
         vol.setRootPath(path);
         vol.setCompressBlobs(compress != null ? Boolean.parseBoolean(compress) : false);
         vol.setCompressionThreshold(compressThreshold != null ? Long.parseLong(compressThreshold) : 4096L);
+        if (!Strings.isNullOrEmpty(mountCommand)) {
+            vol.setMountCommand(mountCommand);
+        }
         CreateVolumeRequest req = new CreateVolumeRequest(vol);
         auth();
         CreateVolumeResponse resp = JaxbUtil.elementToJaxb(getTransport().invokeWithoutSession(
@@ -260,7 +278,7 @@ public final class VolumeCLI extends SoapCLI {
 
     @Override
     protected String getCommandUsage() {
-        return "zmvolume {-a | -d | -l | -e | -dc | -sc } <options>";
+        return "zmvolume {-a | -d | -l | -e | -dc | -sc} <options>";
     }
 
     @Override
@@ -273,16 +291,17 @@ public final class VolumeCLI extends SoapCLI {
         og.addOption(new Option(O_L, "list", false, "Lists volumes."));
         og.addOption(new Option(O_E, "edit", false, "Edits a volume."));
         og.addOption(new Option(O_DC, "displayCurrent", false, "Displays the current volumes."));
-        og.addOption(new Option(O_SC, "setCurrent", false, "Sets the current volume."));
+        og.addOption(new Option(O_SC, "setCurrent", false, "Sets the current volume. (only applicable to message and index volumes)"));
         og.addOption(new Option(O_TS, "turnOffSecondary", false, "Turns off the current secondary message volume"));
         og.setRequired(true);
         options.addOptionGroup(og);
         options.addOption(O_ID, "id", true, "Volume ID");
-        options.addOption(O_T, "type", true, "Volume type (primaryMessage, secondaryMessage, or index)");
+        options.addOption(O_T, "type", true, "Volume type (primaryMessage, secondaryMessage, index, backup, redolog, or other)");
         options.addOption(O_N, "name", true, "volume name");
         options.addOption(O_P, "path", true, "Root path");
         options.addOption(O_C, "compress", true, "Compress blobs; \"true\" or \"false\"");
         options.addOption(O_CT, "compressionThreshold", true, "Compression threshold; default 4KB");
+        options.addOption(new Option(O_MOUNT_COMMAND, "mountCommand", true, "optional command invoked on startup to mount the volume"));
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
     }
@@ -300,6 +319,7 @@ public final class VolumeCLI extends SoapCLI {
         printOpt(O_P, 2);
         printOpt(O_C, 2);
         printOpt(O_CT, 2);
+        printOpt(O_MOUNT_COMMAND, 2);
         printOpt(O_E, 0);
         printOpt(O_ID, 2);
         System.err.println("  any of the options listed under -a can also be specified " );
@@ -344,6 +364,18 @@ public final class VolumeCLI extends SoapCLI {
         if ("index".equalsIgnoreCase(name)) {
             return Volume.TYPE_INDEX;
         }
+        if ("backup".equalsIgnoreCase(name)) {
+            System.out.println("*Note the " + name + " type may not be used directly in code yet. This entry can be used to mount the directory, but will not cause it to be used. See zmprov for further configuration.");
+            return Volume.TYPE_BACKUP;
+        }
+        if ("redolog".equalsIgnoreCase(name)) {
+            System.out.println("*Note the " + name + " type may not be used directly in code yet. This entry can be used to mount the directory, but will not cause it to be used. See zmprov for further configuration.");
+            return Volume.TYPE_REDOLOG;
+        }
+        if ("other".equalsIgnoreCase(name)) {
+            System.out.println("*Note the " + name + " type is not used directly in code, and exists for convenience only. This entry can be used to mount the directory, but will not cause it to be used.");
+            return Volume.TYPE_OTHER;
+        }
         throw new ParseException("invalid volume type: " + name);
     }
 
@@ -358,6 +390,12 @@ public final class VolumeCLI extends SoapCLI {
                 return "secondaryMessage";
             case Volume.TYPE_INDEX:
                 return "index";
+            case Volume.TYPE_BACKUP:
+                return "backup";
+            case Volume.TYPE_REDOLOG:
+                return "redolog";
+            case Volume.TYPE_OTHER:
+                return "other";
         }
         return "Unrecognized type " + type;
     }

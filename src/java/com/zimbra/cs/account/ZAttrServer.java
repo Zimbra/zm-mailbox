@@ -33273,6 +33273,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Whether to invoke mount commands during startup, if any have been
+     * configured in zmvolume.
+     *
+     * @return zimbraMailboxdVolumeMountEnabled, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2040)
+    public boolean isMailboxdVolumeMountEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMailboxdVolumeMountEnabled, true);
+    }
+
+    /**
+     * Whether to invoke mount commands during startup, if any have been
+     * configured in zmvolume.
+     *
+     * @param zimbraMailboxdVolumeMountEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2040)
+    public void setMailboxdVolumeMountEnabled(boolean zimbraMailboxdVolumeMountEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdVolumeMountEnabled, zimbraMailboxdVolumeMountEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to invoke mount commands during startup, if any have been
+     * configured in zmvolume.
+     *
+     * @param zimbraMailboxdVolumeMountEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2040)
+    public Map<String,Object> setMailboxdVolumeMountEnabled(boolean zimbraMailboxdVolumeMountEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdVolumeMountEnabled, zimbraMailboxdVolumeMountEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to invoke mount commands during startup, if any have been
+     * configured in zmvolume.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2040)
+    public void unsetMailboxdVolumeMountEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdVolumeMountEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to invoke mount commands during startup, if any have been
+     * configured in zmvolume.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2040)
+    public Map<String,Object> unsetMailboxdVolumeMountEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdVolumeMountEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Maximum number of times a server will re-attempt to send a document to
      * an indexing service. When value is higher than 0 and an attempt to
      * index a document fails, server will put the document into the indexing

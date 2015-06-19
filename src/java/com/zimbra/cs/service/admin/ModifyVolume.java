@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -46,7 +46,9 @@ public final class ModifyVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         VolumeManager mgr = VolumeManager.getInstance();
-        Volume.Builder builder = Volume.builder(mgr.getVolume(req.getId()));
+        Volume origVolume = mgr.getVolume(req.getId());
+
+        Volume.Builder builder = Volume.builder(origVolume);
         VolumeInfo vol = req.getVolume();
         if (vol == null) {
             throw ServiceException.INVALID_REQUEST("must specify a volume Element", null);
@@ -57,8 +59,11 @@ public final class ModifyVolume extends AdminDocumentHandler {
         if (vol.getName() != null) {
             builder.setName(vol.getName());
         }
+        if (vol.getMountCommand() != null) {
+            builder.setMountCommand(vol.getMountCommand());
+        }
         if (vol.getRootPath() != null) {
-            builder.setPath(vol.getRootPath(), true);
+            builder.setPath(vol.getRootPath(), true, true);
         }
         if (vol.getCompressBlobs() != null) {
             builder.setCompressBlobs(vol.getCompressBlobs());
