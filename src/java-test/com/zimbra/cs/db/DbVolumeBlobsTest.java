@@ -68,11 +68,11 @@ public class DbVolumeBlobsTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        
+
         /** overwrite index URL. It gets reset by MailboxTestUtil.initServer() */
         Provisioning.getInstance().getLocalServer().setIndexURL("mock:local");
         IndexStore.setFactory(MockSolrIndex.Factory.class.getName());
-        
+
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         System.setProperty("zimbra.native.required", "false");
@@ -446,7 +446,7 @@ public class DbVolumeBlobsTest {
         File volFile = new File(volPath);
         volFile.mkdirs();
 
-        Volume vol2 = Volume.builder().setPath(volFile.getAbsolutePath(), true)
+        Volume vol2 = Volume.builder().setPath(volFile.getAbsolutePath(), true, false)
             .setType(Volume.TYPE_MESSAGE).setName("volume2").build();
 
         vol2 = VolumeManager.getInstance().create(vol2);
