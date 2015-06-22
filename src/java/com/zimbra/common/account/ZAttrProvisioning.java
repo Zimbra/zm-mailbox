@@ -14858,6 +14858,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSpamTagPercent = "zimbraSpamTagPercent";
 
     /**
+     * Subject prefix for the spam training messages used to sent to the
+     * zimbraSpamIsSpamAccount/zimbraSpamIsNotSpamAccount account.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2020)
+    public static final String A_zimbraSpamTrainingSubjectPrefix = "zimbraSpamTrainingSubjectPrefix";
+
+    /**
      * Aliases of Trash folder. In case some IMAP clients use different
      * folder names other than Trash, the spam filter still special-cases
      * those folders as if they are Trash.
