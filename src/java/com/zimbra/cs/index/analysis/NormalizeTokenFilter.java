@@ -53,10 +53,16 @@ public final class NormalizeTokenFilter extends CharFilter {
         return result;
     }
 
+    public static int normalize(int c) {
+        return normalize(c, 0);
+    }
+
     /**
      * Other {@code TokenFilter}s may directly use this method without chaining this filter.
+     * @param c the character which we are focusing on.
+     * @param p the character which follows the param c.
      */
-    public static int normalize(int c) {
+    public static int normalize(int c, int p) {
         switch (c) {
             case '\u00C0': // [LATIN CAPITAL LETTER A WITH GRAVE]
             case '\u00C1': // [LATIN CAPITAL LETTER A WITH ACUTE]
@@ -1119,6 +1125,9 @@ public final class NormalizeTokenFilter extends CharFilter {
             case '\u30A4': // [KATAKANA LETTER I]
                 return '\u3044';
             case '\uFF73': // [HALFWIDTH KATAKANA LETTER U]
+                if (p == '\uFF9E') {
+                    return '\u3094'; // [HALFWIDTH KATAKANA LETTER U + HALFWIDTH VOICED SOUND MARK] => VU
+                }
             case '\u30A6': // [KATAKANA LETTER U]
                 return '\u3046';
             case '\uFF74': // [HALFWIDTH KATAKANA LETTER E]
@@ -1128,48 +1137,93 @@ public final class NormalizeTokenFilter extends CharFilter {
             case '\u30AA': // [KATAKANA LETTER O]
                 return '\u304A';
             case '\uFF76': // [HALFWIDTH KATAKANA LETTER KA]
+                if (p == '\uFF9E') {
+                    return '\u304C'; // [HALFWIDTH KATAKANA LETTER KA + HALFWIDTH VOICED SOUND MARK] => GA
+                }
             case '\u30AB': // [KATAKANA LETTER KA]
                 return '\u304B';
             case '\uFF77': // [HALFWIDTH KATAKANA LETTER KI]
+                if (p == '\uFF9E') {
+                    return '\u304E'; // [HALFWIDTH KATAKANA LETTER KI + HALFWIDTH VOICED SOUND MARK] => GI
+                }
             case '\u30AD': // [KATAKANA LETTER KI]
                 return '\u304D';
             case '\uFF78': // [HALFWIDTH KATAKANA LETTER KU]
+                if (p == '\uFF9E') {
+                    return '\u3050'; // [HALFWIDTH KATAKANA LETTER KU + HALFWIDTH VOICED SOUND MARK] => GU
+                }
             case '\u30AF': // [KATAKANA LETTER KU]
                 return '\u304F';
             case '\uFF79': // [HALFWIDTH KATAKANA LETTER KE]
+                if (p == '\uFF9E') {
+                    return '\u3052'; // [HALFWIDTH KATAKANA LETTER KE + HALFWIDTH VOICED SOUND MARK] => GE
+                }
             case '\u30B1': // [KATAKANA LETTER KE]
                 return '\u3051';
             case '\uFF7A': // [HALFWIDTH KATAKANA LETTER KO]
+                if (p == '\uFF9E') {
+                    return '\u3054'; // [HALFWIDTH KATAKANA LETTER KO + HALFWIDTH VOICED SOUND MARK] => GO
+                }
             case '\u30B3': // [KATAKANA LETTER KO]
                 return '\u3053';
             case '\uFF7B': // [HALFWIDTH KATAKANA LETTER SA]
+                if (p == '\uFF9E') {
+                    return '\u3056'; // [HALFWIDTH KATAKANA LETTER SA + HALFWIDTH VOICED SOUND MARK] => ZA
+                }
             case '\u30B5': // [KATAKANA LETTER SA]
                 return '\u3055';
             case '\uFF7C': // [HALFWIDTH KATAKANA LETTER SI]
+                if (p == '\uFF9E') {
+                    return '\u3058'; // [HALFWIDTH KATAKANA LETTER SI + HALFWIDTH VOICED SOUND MARK] => ZI
+                }
             case '\u30B7': // [KATAKANA LETTER SI]
                 return '\u3057';
             case '\uFF7D': // [HALFWIDTH KATAKANA LETTER SU]
+                if (p == '\uFF9E') {
+                    return '\u305A'; // [HALFWIDTH KATAKANA LETTER SU + HALFWIDTH VOICED SOUND MARK] => ZU
+                }
             case '\u30B9': // [KATAKANA LETTER SU]
                 return '\u3059';
             case '\uFF7E': // [HALFWIDTH KATAKANA LETTER SE]
+                if (p == '\uFF9E') {
+                    return '\u305C'; // [HALFWIDTH KATAKANA LETTER SE + HALFWIDTH VOICED SOUND MARK] => ZE
+                }
             case '\u30BB': // [KATAKANA LETTER SE]
                 return '\u305B';
             case '\uFF7F': // [HALFWIDTH KATAKANA LETTER SO]
+                if (p == '\uFF9E') {
+                    return '\u305E'; // [HALFWIDTH KATAKANA LETTER SO + HALFWIDTH VOICED SOUND MARK] => ZO
+                }
             case '\u30BD': // [KATAKANA LETTER SO]
                 return '\u305D';
             case '\uFF80': // [HALFWIDTH KATAKANA LETTER TA]
+                if (p == '\uFF9E') {
+                    return '\u3060'; // [HALFWIDTH KATAKANA LETTER TA + HALFWIDTH VOICED SOUND MARK] => DA
+                }
             case '\u30BF': // [KATAKANA LETTER TA]
                 return '\u305F';
             case '\uFF81': // [HALFWIDTH KATAKANA LETTER TI]
+                if (p == '\uFF9E') {
+                    return '\u3062'; // [HALFWIDTH KATAKANA LETTER TI + HALFWIDTH VOICED SOUND MARK] => DI
+                }
             case '\u30C1': // [KATAKANA LETTER TI]
                 return '\u3061';
             case '\uFF82': // [HALFWIDTH KATAKANA LETTER TU]
+                if (p == '\uFF9E') {
+                    return '\u3065'; // [HALFWIDTH KATAKANA LETTER TU + HALFWIDTH VOICED SOUND MARK] => DU
+                }
             case '\u30C4': // [KATAKANA LETTER TU]
                 return '\u3064';
             case '\uFF83': // [HALFWIDTH KATAKANA LETTER TE]
+                if (p == '\uFF9E') {
+                    return '\u3067'; // [HALFWIDTH KATAKANA LETTER TE + HALFWIDTH VOICED SOUND MARK] => DE
+                }
             case '\u30C6': // [KATAKANA LETTER TE]
                 return '\u3066';
             case '\uFF84': // [HALFWIDTH KATAKANA LETTER TO]
+                if (p == '\uFF9E') {
+                    return '\u3069'; // [HALFWIDTH KATAKANA LETTER TO + HALFWIDTH VOICED SOUND MARK] => DO
+                }
             case '\u30C8': // [KATAKANA LETTER TO]
                 return '\u3068';
             case '\uFF85': // [HALFWIDTH KATAKANA LETTER NA]
@@ -1188,18 +1242,48 @@ public final class NormalizeTokenFilter extends CharFilter {
             case '\u30CE': // [KATAKANA LETTER NO]
                 return '\u306E';
             case '\uFF8A': // [HALFWIDTH KATAKANA LETTER HA]
+                switch (p) {
+                case '\uFF9E': // HALFWIDTH KATAKANA VOICED SOUND MARK
+                    return '\u3070'; // [BA]
+                case '\uFF9F': // HALFWIDTH KATAKANA SEMI-VOICED SOUND MARK
+                    return '\u3071'; // [PA]
+                }
             case '\u30CF': // [KATAKANA LETTER HA]
                 return '\u306F';
             case '\uFF8B': // [HALFWIDTH KATAKANA LETTER HI]
+                switch (p) {
+                case '\uFF9E': // HALFWIDTH KATAKANA VOICED SOUND MARK
+                    return '\u3073'; // [BI]
+                case '\uFF9F': // HALFWIDTH KATAKANA SEMI-VOICED SOUND MARK
+                    return '\u3074'; // [PI]
+                }
             case '\u30D2': // [KATAKANA LETTER HI]
                 return '\u3072';
             case '\uFF8C': // [HALFWIDTH KATAKANA LETTER HU]
+                switch (p) {
+                case '\uFF9E': // HALFWIDTH KATAKANA VOICED SOUND MARK
+                    return '\u3076'; // [BU]
+                case '\uFF9F': // HALFWIDTH KATAKANA SEMI-VOICED SOUND MARK
+                    return '\u3077'; // [PU]
+                }
             case '\u30D5': // [KATAKANA LETTER HU]
                 return '\u3075';
             case '\uFF8D': // [HALFWIDTH KATAKANA LETTER HE]
+                switch (p) {
+                case '\uFF9E': // HALFWIDTH KATAKANA VOICED SOUND MARK
+                    return '\u3079'; // [BE]
+                case '\uFF9F': // HALFWIDTH KATAKANA SEMI-VOICED SOUND MARK
+                    return '\u307A'; // [PE]
+                }
             case '\u30D8': // [KATAKANA LETTER HE]
                 return '\u3078';
             case '\uFF8E': // [HALFWIDTH KATAKANA LETTER HO]
+                switch (p) {
+                case '\uFF9E': // HALFWIDTH KATAKANA VOICED SOUND MARK
+                    return '\u307C'; // [BO]
+                case '\uFF9F': // HALFWIDTH KATAKANA SEMI-VOICED SOUND MARK
+                    return '\u307D'; // [PO]
+                }
             case '\u30DB': // [KATAKANA LETTER HO]
                 return '\u307B';
             case '\uFF8F': // [HALFWIDTH KATAKANA LETTER MA]
@@ -1255,6 +1339,8 @@ public final class NormalizeTokenFilter extends CharFilter {
                 return '\u304C';
             case '\u30AE': // [KATAKANA LETTER GI]
                 return '\u304E';
+            case '\u30B0': // [KATAKANA LETTER GU]
+                return '\u3050';
             case '\u30B2': // [KATAKANA LETTER GE]
                 return '\u3052';
             case '\u30B4': // [KATAKANA LETTER GO]
@@ -1269,6 +1355,8 @@ public final class NormalizeTokenFilter extends CharFilter {
                 return '\u305C';
             case '\u30BE': // [KATAKANA LETTER ZO]
                 return '\u305E';
+            case '\u30C0': // [KATAKANA LETTER DA]
+                return '\u3060';
             case '\u30C2': // [KATAKANA LETTER DI]
                 return '\u3062';
             case '\u30C5': // [KATAKANA LETTER DU]
@@ -1277,6 +1365,8 @@ public final class NormalizeTokenFilter extends CharFilter {
                 return '\u3067';
             case '\u30C9': // [KATAKANA LETTER DO]
                 return '\u3069';
+            case '\u30D0': // [KATAKANA LETTER BA]
+                return '\u3070';
             case '\u30D1': // [KATAKANA LETTER PA]
                 return '\u3071';
             case '\u30D3': // [KATAKANA LETTER BI]
@@ -1308,11 +1398,11 @@ public final class NormalizeTokenFilter extends CharFilter {
         }
         return Character.toLowerCase(c);
     }
-    
+
     public static String normalize(String value) {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < value.length(); i++)
-            result.append((char) NormalizeTokenFilter.normalize(value.charAt(i)));
+            result.append((char) NormalizeTokenFilter.normalize(value.charAt(i), i + 1 < value.length() ? value.charAt(i + 1) : 0));
 
         return result.toString();
     }

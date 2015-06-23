@@ -37,6 +37,7 @@ import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.index.analysis.AddrCharTokenizer;
 import com.zimbra.cs.index.analysis.ContactTokenFilter;
+import com.zimbra.cs.index.analysis.HalfwidthKanaVoicedMappingFilter;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -48,7 +49,7 @@ public final class ContactQuery extends Query {
     private final List<String> tokens = new ArrayList<String>();
 
     public ContactQuery(String text) {
-        TokenStream stream = new ContactTokenFilter(new AddrCharTokenizer(new StringReader(text)));
+        TokenStream stream = new ContactTokenFilter(new AddrCharTokenizer(new HalfwidthKanaVoicedMappingFilter(new StringReader(text))));
         CharTermAttribute termAttr = stream.addAttribute(CharTermAttribute.class);
         try {
             stream.reset();

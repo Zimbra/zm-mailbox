@@ -34,6 +34,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.analysis.AddrCharTokenizer;
 import com.zimbra.cs.index.analysis.ContactTokenFilter;
 import com.zimbra.cs.index.analysis.FilenameTokenizer;
+import com.zimbra.cs.index.analysis.HalfwidthKanaVoicedMappingFilter;
 import com.zimbra.cs.index.analysis.NumberTokenizer;
 import com.zimbra.cs.index.analysis.UniversalAnalyzer;
 
@@ -159,7 +160,7 @@ public final class ZimbraAnalyzer extends Analyzer {
         } else if (field.equals(LuceneFields.L_FILENAME)) {
             return new FilenameTokenizer(reader);
         } else {
-            return analyzer.tokenStream(field, reader);
+            return analyzer.tokenStream(field, new HalfwidthKanaVoicedMappingFilter((reader)));
         }
     }
 
