@@ -32,6 +32,7 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Group;
@@ -66,6 +67,8 @@ public final class MilterHandler implements NioHandler {
     /* macro keys */
     private static final String MACRO_MAIL_ADDR = "{mail_addr}";
     private static final String MACRO_RCPT_ADDR = "{rcpt_addr}";
+    private static final String TO_HEADER = "to";
+    private static final String CC_HEADER = "cc";
 
     /* option masks */
     //private static final int SMFIP_NOCONNECT = 0x01; // Skip SMFIC_CONNECT
@@ -73,7 +76,7 @@ public final class MilterHandler implements NioHandler {
     private static final int SMFIP_NOMAIL = 0x04; // Skip SMFIC_MAIL
     //private static final int SMFIP_NORCPT = 0x08; // Skip SMFIC_RCPT
     private static final int SMFIP_NOBODY = 0x10; // Skip SMFIC_BODY
-    private static final int SMFIP_NOHDRS = 0x20; // Skip SMFIC_HEADER
+ //   private static final int SMFIP_NOHDRS = 0x20; // Skip SMFIC_HEADER
     private static final int SMFIP_NOEOH  = 0x40; // Skip SMFIC_EOH
 
     // action masks
@@ -104,6 +107,7 @@ public final class MilterHandler implements NioHandler {
 
     private final Map<Context, String> context = new EnumMap<Context, String>(Context.class);
     private final Set<Group> lists = Sets.newHashSetWithExpectedSize(0);
+    private final Set<String> visibleAddresses = Sets.newHashSetWithExpectedSize(0);
     private final Provisioning prov;
     private final AccessManager accessMgr;
     private final NioConnection connection;
@@ -185,7 +189,7 @@ public final class MilterHandler implements NioHandler {
                 SMFIC_Rcpt();
                 break;
             case 'L':
-                SMFIC_Header();
+                SMFIC_Header(command);
                 break;
             case 'E':
                 SMFIC_BodyEOB();
@@ -229,6 +233,22 @@ public final class MilterHandler implements NioHandler {
             String value = normalizeAddr(addr);
             context.put(attr, value);
             ZimbraLog.milter.debug("For macro '%s' %s=%s", macro, attr, value);
+        }
+    }
+
+    private void getAddrListsFromHeaders(MilterPacket command) throws IOException {
+        IoBuffer data = getDataBuffer(command);
+        Map<String, String> macros = parseMacros(data);
+        for (String header : macros.keySet()) {
+            if (TO_HEADER.equals(header.toLowerCase()) || CC_HEADER.equals(header.toLowerCase())) {
+                String addr = macros.get(header);
+                if (!StringUtil.isNullOrEmpty(addr)) {
+                    for (InternetAddress address : InternetAddress.parseHeader(addr)) {
+                        visibleAddresses.add(address.getAddress().toLowerCase());
+                        ZimbraLog.milter.debug("Visible '%s' value %s", header, address.getAddress());
+                    }
+                }
+            }
         }
     }
 
@@ -343,15 +363,16 @@ public final class MilterHandler implements NioHandler {
         IoBuffer data = IoBuffer.allocate(12, false);
         data.putInt(2); // version
         data.putInt(SMFIF_ADDHDRS | SMFIF_CHGHDRS); // actions
-        data.putInt(SMFIP_NOHELO | SMFIP_NOMAIL | SMFIP_NOHDRS | SMFIP_NOEOH | SMFIP_NOBODY); // protocol
+        data.putInt(SMFIP_NOHELO | SMFIP_NOMAIL | SMFIP_NOEOH | SMFIP_NOBODY); // protocol
         byte[] dataArray = new byte[12];
         System.arraycopy(data.array(), 0, dataArray, 0, 12);
         connection.send(new MilterPacket(13, SMFIC_OPTNEG, dataArray));
     }
 
-    private void SMFIC_Header() {
+    private void SMFIC_Header(MilterPacket command) throws IOException {
         ZimbraLog.milter.debug("SMFIC_Header");
-        connection.send(new MilterPacket(SMFIR_ACCEPT)); // stop processing when we hit headers
+        getAddrListsFromHeaders(command);
+        connection.send(new MilterPacket(SMFIR_CONTINUE));
     }
 
     private void SMFIC_BodyEOB() throws IOException {
@@ -363,17 +384,19 @@ public final class MilterHandler implements NioHandler {
                 ZimbraLog.milter.warn("null group in group list!?!");
                 continue;
             }
-            listAddrs.add(group.getMail());
-            if (group.isPrefReplyToEnabled()) {
-                String addr = group.getPrefReplyToAddress();
-                if (Strings.isNullOrEmpty(addr)) {
-                    addr = group.getMail(); // fallback to the default email address
+            if (visibleAddresses.contains(group.getMail().toLowerCase())) {
+                listAddrs.add(group.getMail());
+                if (group.isPrefReplyToEnabled()) {
+                    String addr = group.getPrefReplyToAddress();
+                    if (Strings.isNullOrEmpty(addr)) {
+                        addr = group.getMail(); // fallback to the default email address
+                    }
+                    String disp = group.getPrefReplyToDisplay();
+                    if (Strings.isNullOrEmpty(disp)) {
+                        disp = group.getDisplayName(); // fallback to the default display name
+                    }
+                    replyToAddrs.add(new InternetAddress(disp, addr).toString());
                 }
-                String disp = group.getPrefReplyToDisplay();
-                if (Strings.isNullOrEmpty(disp)) {
-                    disp = group.getDisplayName(); // fallback to the default display name
-                }
-                replyToAddrs.add(new InternetAddress(disp, addr).toString());
             }
         }
         if (!listAddrs.isEmpty()) {
