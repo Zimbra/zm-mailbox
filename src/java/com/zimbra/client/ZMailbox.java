@@ -553,8 +553,10 @@ public class ZMailbox implements ToZJSONObject {
             if (options.getAuthAuthToken()) {
                 mAuthResult = authByAuthToken(options);
                 initCsrfToken(mAuthResult.getCsrfToken());
+                initAuthToken(mAuthResult.getAuthToken());
+            } else {
+                initAuthToken(options.getAuthToken());
             }
-            initAuthToken(options.getAuthToken());
         } else if (options.getAccount() != null) {
             String password;
             if (options.getNewPassword() != null) {
@@ -698,6 +700,7 @@ public class ZMailbox implements ToZJSONObject {
         AuthRequest req = new AuthRequest();
         ZAuthToken zat = options.getAuthToken(); // cannot be null here
         req.setAuthToken(new AuthToken(zat.getValue(), false));
+        req.setTwoFactorCode(options.getTwoFactorCode());
         req.setRequestedSkin(options.getRequestedSkin());
         req.setCsrfSupported(options.getCsrfSupported());
         addAttrsAndPrefs(req, options);
