@@ -22482,45 +22482,45 @@ javax.mail.glassfish-1.4.1.v201005082020.jar
 javax.transaction-api-1.2.jar
 javax.annotation-api-1.2.jar
 javax.websocket-api-1.0.jar
-javax-websocket-client-impl-9.1.5.v20140505
-javax-websocket-server-impl-9.1.5.v20140505
-websocket-api-9.1.5.v20140505
-websocket-client-9.1.5.v20140505
-websocket-common-9.1.5.v20140505
-websocket-server-9.1.5.v20140505
-websocket-servlet-9.1.5.v20140505
-spdy-core-9.1.5.v20140505
-spdy-client-9.1.5.v20140505
-spdy-http-server-9.1.5.v20140505
-spdy-server-9.1.5.v20140505
-spdy-http-common-9.1.5.v20140505
+javax-websocket-client-impl-9.3.0.v20150612
+javax-websocket-server-impl-9.3.0.v20150612
+websocket-api-9.3.0.v20150612
+websocket-client-9.3.0.v20150612
+websocket-common-9.3.0.v20150612
+websocket-server-9.3.0.v20150612
+websocket-servlet-9.3.0.v20150612
+spdy-core-9.3.0.v20150612
+spdy-client-9.3.0.v20150612
+spdy-http-server-9.3.0.v20150612
+spdy-server-9.3.0.v20150612
+spdy-http-common-9.3.0.v20150612
 servlet-api-3.1.jar
-jetty-annotations-9.1.5.v20140505
-jetty-client-9.1.5.v20140505
-jetty-continuation-9.1.5.v20140505
-jetty-deploy-9.1.5.v20140505
-jetty-http-9.1.5.v20140505
-jetty-io-9.1.5.v20140505
-jetty-jaas-9.1.5.v20140505
-jetty-jaspi-9.1.5.v20140505
-jetty-jmx-9.1.5.v20140505
-jetty-jndi-9.1.5.v20140505
-jetty-monitor-9.1.5.v20140505
-jetty-plus-9.1.5.v20140505
-jetty-proxy-9.1.5.v20140505
-jetty-rewrite-9.1.5.v20140505
+jetty-annotations-9.3.0.v20150612
+jetty-client-9.3.0.v20150612
+jetty-continuation-9.3.0.v20150612
+jetty-deploy-9.3.0.v20150612
+jetty-http-9.3.0.v20150612
+jetty-io-9.3.0.v20150612
+jetty-jaas-9.3.0.v20150612
+jetty-jaspi-9.3.0.v20150612
+jetty-jmx-9.3.0.v20150612
+jetty-jndi-9.3.0.v20150612
+jetty-monitor-9.3.0.v20150612
+jetty-plus-9.3.0.v20150612
+jetty-proxy-9.3.0.v20150612
+jetty-rewrite-9.3.0.v20150612
 jetty-schemas-3.1.jar
-jetty-security-9.1.5.v20140505
-jetty-server-9.1.5.v20140505
-jetty-servlet-9.1.5.v20140505
-jetty-servlets-9.1.5.v20140505
-jetty-util-9.1.5.v20140505
-jetty-webapp-9.1.5.v20140505
-jetty-xml-9.1.5.v20140505
+jetty-security-9.3.0.v20150612
+jetty-server-9.3.0.v20150612
+jetty-servlet-9.3.0.v20150612
+jetty-servlets-9.3.0.v20150612
+jetty-util-9.3.0.v20150612
+jetty-webapp-9.3.0.v20150612
+jetty-xml-9.3.0.v20150612
 
 > EPL 1.0
 
-jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jta\javax.transaction-1.1.1.v201105210645.jar\about.html
+jetty-distribution-9.3.0.v20150612.tar.gz\jetty-distribution-9.3.0.v20150612.tar\jetty-distribution-9.3.0.v20150612\lib\jta\javax.transaction-1.1.1.v201105210645.jar\about.html
 
 The Eclipse Foundation makes available all content in this plug-in unless otherwise indicated below, the Content is provided to you under the terms and conditions of the Eclipse Public License Version 1.0.
 
@@ -22549,7 +22549,7 @@ servlet-api-3.1.jar
 
 > MIT
 
-jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\monitor\jetty-monitor-9.1.5.v20140505\about.html
+jetty-distribution-9.3.0.v20150612.tar.gz\jetty-distribution-9.3.0.v20150612.tar\jetty-distribution-9.3.0.v20150612\lib\monitor\jetty-monitor-9.3.0.v20150612\about.html
 
 Copyright 1996 Aki Yoshida,
 
@@ -22562,7 +22562,7 @@ granted provided that the copyright notice appears in all copies.
 
 > Apache 2.0
 
-jetty-distribution-9.1.5.v20140505.tar.gz\jetty-istribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jta\javax.transaction-1.1.1.v201105210645.jar\META-INF\maven\org.apache.geronimo.specs\geronimo-jta_1.1_spec\pom.xml
+jetty-distribution-9.3.0.v20150612.tar.gz\jetty-istribution-9.3.0.v20150612.tar\jetty-distribution-9.3.0.v20150612\lib\jta\javax.transaction-1.1.1.v201105210645.jar\META-INF\maven\org.apache.geronimo.specs\geronimo-jta_1.1_spec\pom.xml
 
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -22591,7 +22591,7 @@ javax.activation-1.1.0.v201105071233.jar
 
 > CDDL 1.0
 
-jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jsp\org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar\org\apache\taglibs\standard\resources\Resources.properties
+jetty-distribution-9.3.0.v20150612.tar.gz\jetty-distribution-9.3.0.v20150612.tar\jetty-distribution-9.3.0.v20150612\lib\jsp\org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar\org\apache\taglibs\standard\resources\Resources.properties
 
 
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
@@ -22639,7 +22639,7 @@ javax.mail.glassfish-1.4.1.v201005082020.jar
 
 > 3RD-PARTY-LICENSE.txt
 
-jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jndi\javax.mail.glassfish-1.4.1.v201005082020.jar\about_files\ 3RD-PARTY-LICENSE.txt
+jetty-distribution-9.3.0.v20150612.tar.gz\jetty-distribution-9.3.0.v20150612.tar\jetty-distribution-9.3.0.v20150612\lib\jndi\javax.mail.glassfish-1.4.1.v201005082020.jar\about_files\ 3RD-PARTY-LICENSE.txt
 
 DO NOT TRANSLATE OR LOCALIZE.
 
