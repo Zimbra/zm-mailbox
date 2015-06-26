@@ -558,6 +558,7 @@
 		<Item>org.eclipse.jetty.webapp.FragmentConfiguration</Item>
 		<Item>org.eclipse.jetty.plus.webapp.EnvConfiguration</Item>
 		<Item>org.eclipse.jetty.plus.webapp.PlusConfiguration</Item>
+		<Item>org.eclipse.jetty.annotations.AnnotationConfiguration</Item>
 		<Item>org.eclipse.jetty.webapp.JettyWebXmlConfiguration</Item>
 	</Array>
 
@@ -577,8 +578,7 @@
 		<Set name="compactPath">true</Set>
 		<Call name="setAttribute">
 			<Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
-			<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$
-			</Arg>
+			<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
 		</Call>
 	</New>
 
@@ -611,8 +611,7 @@
         </Get> 
 		<Call name="setAttribute">
 			<Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
-			<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$
-			</Arg>
+			<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
 		</Call>
 	</New>
 
@@ -638,8 +637,7 @@
         </Get> 
 		<Call name="setAttribute">
 			<Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
-			<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$
-			</Arg>
+			<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
 		</Call>
 	</New>
 
@@ -670,8 +668,7 @@
 		</Set>
 		<Call name="setAttribute">
 			<Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
-			<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$
-			</Arg>
+			<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
 		</Call>
 	</New>
 
@@ -816,6 +813,7 @@
 				<Item>-org.eclipse.jetty.http.</Item>
 				<Item>-org.eclipse.jetty.security.</Item>
 				<Item>-org.eclipse.jetty.util.</Item>
+				<Item>-org.eclipse.jetty.apache.</Item>
 				<Item>org.eclipse.jetty.</Item>
 			</Array>
 		</Arg>

@@ -3,5 +3,5 @@
 #
 
 [lib]
-regex:common/lib/.*\.jar$
+common/lib/*.jar
 

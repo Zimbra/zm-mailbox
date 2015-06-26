@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -143,7 +143,7 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
             // skip over "Negotiate "
             String token = header.substring(10);
 
-            UserIdentity identity = realm.login(null, token);
+            UserIdentity identity = realm.login(null, token, request);
             if (identity == null) {
                 throw AuthFailedServiceException.AUTH_FAILED("SpengoAuthenticator: unable to login", (Throwable)null);
             }
