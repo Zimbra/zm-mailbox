@@ -4586,6 +4586,66 @@ public class DbMailItem {
     }
 
     /**
+     * Find the oldest date of any mail item in this mailbox
+     * @param mbox
+     * @param conn
+     * @return
+     * @throws ServiceException
+     */
+    public static long getOldestSearchableItemDate(Mailbox mbox, DbConnection conn) throws ServiceException {
+        return getOldNewSarchableItemDate(mbox, conn, true);
+    }
+
+    /**
+     * Find the newest date of any mail item in this mailbox
+     * @param mbox
+     * @param conn
+     * @return
+     * @throws ServiceException
+     */
+    public static long getMostRecentSearchableItemDate(Mailbox mbox, DbConnection conn) throws ServiceException {
+        return getOldNewSarchableItemDate(mbox, conn, false);
+    }
+
+    public static Long getOldNewSarchableItemDate(Mailbox mbox, DbConnection conn, Boolean oldest) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        StringBuilder buf = new StringBuilder();
+        buf.append("SELECT date FROM ");
+        buf.append(getMailItemTableName(mbox, false));
+        buf.append(" WHERE ");
+        buf.append(IN_THIS_MAILBOX_AND);
+        buf.append("type NOT IN " + NON_SEARCHABLE_TYPES);
+        buf.append(" ORDER by date ");
+        if(oldest) {
+            buf.append(" asc ");
+        } else {
+            buf.append(" desc ");
+        }
+        if (Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+            buf.append(Db.getInstance().limit(1));
+        }
+        try {
+            stmt = conn.prepareStatement(buf.toString());
+            setMailboxId(stmt, mbox, 1);
+            rs = stmt.executeQuery();
+            if(rs.next()) {
+                return rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting (change_date,id)s in order", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+        if(oldest) {
+            return Long.MAX_VALUE;
+        } else {
+            return 0L;
+        }
+    }
+
+    /**
      * Returns the ordered ids of items that match the given query parameters
      *
      * @return the matching ids in order, or an empty <tt>List</tt>

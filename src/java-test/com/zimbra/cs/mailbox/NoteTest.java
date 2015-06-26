@@ -64,25 +64,6 @@ public class NoteTest {
     }
 
     @Test
-    public void testGenerateIndexData() throws Exception {
-        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        account.setPrefMailDefaultCharset("ISO-2022-JP");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
-        Note note = mbox.createNote(null, "this is a note", null, Note.DEFAULT_COLOR, Mailbox.ID_FOLDER_COMMENTS);
-
-        List<IndexDocument> docs = note.generateIndexData();
-        Assert.assertEquals(1, docs.size());
-        String subject = (String) docs.get(0).toDocument().getFieldValue(LuceneFields.L_H_SUBJECT);
-        String filename = (String) docs.get(0).toDocument().getFieldValue(LuceneFields.L_FILENAME);
-        String body = (String) docs.get(0).toDocument().getFieldValue(LuceneFields.L_CONTENT);
-        assertNotNull("note content is null", body);
-        Assert.assertEquals("this is a note", subject);
-        Assert.assertNull("note's filename should be null", filename);
-        Assert.assertEquals("this is a note", body);
-    }
-
-    @Test
     public void testGenerateIndexDataAsync() throws Exception {
         Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         account.setPrefMailDefaultCharset("ISO-2022-JP");

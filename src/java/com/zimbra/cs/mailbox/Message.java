@@ -1399,33 +1399,6 @@ public class Message extends MailItem {
 
     @Override
     /**
-     * holds mailbox lock while retrieving message content
-     */
-    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
-        try {
-            Mailbox mbox = getMailbox();
-            ParsedMessage pm = getParsedMessage();
-            pm.setDefaultCharset(getAccount().getPrefMailDefaultCharset());
-
-            if (mbox.index.isReIndexInProgress()) {
-                mbox.reanalyze(getId(), getType(), pm, getSize());
-            }
-
-            // don't hold the lock while extracting text!
-            pm.analyzeFully();
-
-            if (pm.hasTemporaryAnalysisFailure()) {
-                throw new TemporaryIndexingException();
-            }
-            return pm.getLuceneDocuments();
-        } catch (ServiceException e) {
-            ZimbraLog.index.warn("Unable to generate index data for Message %d. Item will not be indexed.", getId(), e);
-            return Collections.emptyList();
-        }
-    }
-
-    @Override
-    /**
      * Does not hold mailbox lock while retrieving message content
      */
     public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {

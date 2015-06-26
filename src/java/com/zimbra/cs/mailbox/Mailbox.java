@@ -225,7 +225,6 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 import com.zimbra.cs.session.AllAccountsRedoCommitCallback;
-import com.zimbra.cs.session.PendingModificationsJavaSerializer;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
@@ -4544,7 +4543,7 @@ public class Mailbox {
     public List<Integer> getItemIdList(OperationContext octxt, QueryParams params) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("getItemIdList", octxt);
+            beginReadTransaction("getItemIdList", octxt);
             List<Integer> msgIds = DbMailItem.getIdsInOrder(this, this.getOperationConnection(), params, false);
             success = true;
             return msgIds;
@@ -4557,11 +4556,26 @@ public class Mailbox {
             throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("getDateAndItemIdList", octxt);
+            beginReadTransaction("getDateAndItemIdList", octxt);
             List<Pair<Long, Long>> result =
                     DbMailItem.getDatesAndIdsInOrder(this, this.getOperationConnection(), params, false);
             success = true;
             return result;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public Pair<Long, Long> getSearchableItemDateBoundaries(OperationContext octxt)
+            throws ServiceException {
+        boolean success = false;
+        try {
+            beginReadTransaction("getSearchableItemDateBoundaries", octxt);
+            Long oldDate = DbMailItem.getOldestSearchableItemDate(this, this.getOperationConnection());
+            Long recentDate = DbMailItem.getMostRecentSearchableItemDate(this, this.getOperationConnection());
+
+            success = true;
+            return new Pair<Long,Long>(oldDate,recentDate);
         } finally {
             endTransaction(success);
         }

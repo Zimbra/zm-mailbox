@@ -311,23 +311,6 @@ public final class ContactTest {
     }
 
     @Test
-    public void testGenerateIndexData() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Contact contact = mbox.createContact(null, new ParsedContact(Collections.singletonMap(
-                ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        List<IndexDocument> docs = contact.generateIndexData();
-        Assert.assertEquals(1, docs.size());
-        IndexDocument doc = docs.get(0);
-        assertNotNull("generated IndexDocument is null", doc);
-        Collection<String> docFields = doc.toDocument().getFieldNames();
-        assertNotNull("generated IndexDocument has NULL fields", docFields);
-        assertFalse("generated IndexDocument has no fields", docFields.isEmpty());
-        assertEquals("wrong value in l.field of generated IndexDocument", "email:test1@zimbra.com", doc.toDocument().getFieldValue(LuceneFields.L_FIELD));
-        assertEquals("wrong value in 'to' field of generated IndexDocument","test1@zimbra.com,", doc.toDocument().getFieldValue(LuceneFields.L_H_TO));
-        assertEquals("wrong value in l.partname of generated IndexDocument","CONTACT", doc.toDocument().getFieldValue(LuceneFields.L_PARTNAME));
-    }
-
-    @Test
     public void testGenerateIndexDataAsync() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Contact contact = mbox.createContact(null, new ParsedContact(Collections.singletonMap(

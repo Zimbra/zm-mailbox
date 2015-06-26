@@ -104,31 +104,6 @@ public class AppointmentTest {
     }
 
     @Test
-    public void testGenerateIndexData() throws Exception {
-        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        account.setPrefMailDefaultCharset("ISO-2022-JP");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
-        AddInviteData inviteData = createCalendarItem("come over tomorrow", "to hangout", "in Palo Alto");
-        CalendarItem calItem = mbox.getCalendarItemById(null, inviteData.calItemId);
-
-        List<IndexDocument> docs = calItem.generateIndexData();
-        Assert.assertEquals(1, docs.size());
-        IndexDocument doc = docs.get(0);
-        assertNotNull("generated IndexDocument is null", doc);
-        Collection<String> docFields = doc.toDocument().getFieldNames();
-        assertNotNull("generated IndexDocument has NULL fields", docFields);
-        assertFalse("generated IndexDocument has no fields", docFields.isEmpty());
-        String subject = (String) doc.toDocument().getFieldValue(LuceneFields.L_H_SUBJECT);
-        String body = (String) doc.toDocument().getFieldValue(LuceneFields.L_CONTENT);
-        assertNotNull("appointment content is null", body);
-        Assert.assertEquals("come over tomorrow", subject);
-        Assert.assertEquals("come over tomorrow  in Palo Alto to hangout ", body);
-        Assert.assertEquals("_calendaritemclass:public", doc.toDocument().getFieldValue(LuceneFields.L_FIELD));
-        Assert.assertEquals("index document has wrong l.partname", "top", doc.toDocument().getFieldValue(LuceneFields.L_PARTNAME));
-    }
-
-    @Test
     public void testGenerateIndexDataAsync() throws Exception {
         Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         account.setPrefMailDefaultCharset("ISO-2022-JP");

@@ -163,10 +163,10 @@ public abstract class AbstractIndexStoreTest {
         IndexStore index = mbox.index.getIndexStore();
         index.deleteIndex();
         Indexer indexer = index.openIndexer();
-        indexer.addDocument( contact1, contact1.generateIndexData());
-        indexer.addDocument( contact2, contact2.generateIndexData());
-        indexer.addDocument( contact3, contact3.generateIndexData());
-        indexer.addDocument( contact4, contact4.generateIndexData());
+        indexer.addDocument( contact1, contact1.generateIndexDataAsync(false));
+        indexer.addDocument( contact2, contact2.generateIndexDataAsync(false));
+        indexer.addDocument( contact3, contact3.generateIndexDataAsync(false));
+        indexer.addDocument( contact4, contact4.generateIndexDataAsync(false));
         // Note: NOT indexed contact5
         indexer.close();
 
@@ -209,10 +209,10 @@ public abstract class AbstractIndexStoreTest {
         IndexStore index = mbox.index.getIndexStore();
         index.deleteIndex();
         Indexer indexer = index.openIndexer();
-        indexer.addDocument( con1, con1.generateIndexData());
-        indexer.addDocument( con2, con2.generateIndexData());
-        indexer.addDocument( con3, con3.generateIndexData());
-        indexer.addDocument( con4, con4.generateIndexData());
+        indexer.addDocument( con1, con1.generateIndexDataAsync(false));
+        indexer.addDocument( con2, con2.generateIndexDataAsync(false));
+        indexer.addDocument( con3, con3.generateIndexDataAsync(false));
+        indexer.addDocument( con4, con4.generateIndexDataAsync(false));
         // Note: NOT indexed contact5
         indexer.close();
 

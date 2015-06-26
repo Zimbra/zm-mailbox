@@ -1089,13 +1089,8 @@ public class SoapProvisioning extends Provisioning {
     }
 
     public static final class ReIndexInfo {
-        private final Integer statusCode;
         private final String status;
         private final Progress progress;
-
-        public Integer getStatusCode() {
-            return statusCode;
-        }
 
         public String getStatus() {
             return status;
@@ -1105,20 +1100,21 @@ public class SoapProvisioning extends Provisioning {
             return progress;
         }
 
-        ReIndexInfo(Integer statusCode, String status, Progress progress) {
-            this.statusCode = statusCode;
+        ReIndexInfo(String status, Progress progress) {
             this.status = status;
             this.progress = progress;
         }
 
         public static final class Progress {
+            private int statusCode;
             private long numSucceeded;
             private long numFailed;
             private long numRemaining;
+            private String accountId;
 
             public long getNumSucceeded() {
                 return numSucceeded;
-        }
+            }
 
             public long getNumFailed() {
                 return numFailed;
@@ -1131,19 +1127,59 @@ public class SoapProvisioning extends Provisioning {
             Progress() {
             }
 
-            Progress(long succeeded, long failed, long remaining) {
+            public int getStatusCode() {
+                return statusCode;
+            }
+
+            Progress(int status, long succeeded, long failed, long remaining, String account) {
+                statusCode = status;
                 numSucceeded = succeeded;
                 numFailed = failed;
                 numRemaining = remaining;
+                accountId = account;
+            }
+
+            public String getAccountId() {
+                return accountId;
             }
         }
     }
 
-    public ReIndexInfo reIndex(Account acct, String action, ReIndexBy by,
+    //start re-indexing multiple accounts chronologically
+    public List<ReIndexInfo.Progress> reIndex(List<Account> accts, String action)
+    throws ServiceException {
+        //when more then one mailbox is present in the request, the server will proxy the requests,
+        //so we just pick the server for the first account
+        Account account = accts.get(0);
+        Server server = getServer(account);
+        List<ReindexMailboxInfo> mailboxes = Lists.newArrayList();
+        for(Account acct : accts) {
+            mailboxes.add(new ReindexMailboxInfo(acct.getId()));
+        }
+
+        ReIndexRequest req = new ReIndexRequest(action, mailboxes);
+        ReIndexResponse resp = this.invokeJaxb(req,
+                server.getAttr(A_zimbraServiceHostname));
+        List<ReindexProgressInfo> progInfo = resp.getMbox();
+        List<ReIndexInfo.Progress> retVal = Lists.newArrayList();
+        if (progInfo != null) {
+            for(ReindexProgressInfo pInfo : progInfo) {
+                retVal.add(new ReIndexInfo.Progress(pInfo.getStatusCode(),
+                        pInfo.getNumSucceeded(),
+                        pInfo.getNumFailed(),
+                        pInfo.getNumRemaining(), pInfo.getAccountId()));
+            }
+        }
+        return retVal;
+    }
+
+    //re-index one mailbox by item id, item type or chronologically
+    public ReIndexInfo reIndex(Account account, String action, ReIndexBy by,
             String[] values)
     throws ServiceException {
-        Server server = getServer(acct);
-        ReindexMailboxInfo mbox = new ReindexMailboxInfo(acct.getId());
+        Server server = getServer(account);
+        List<ReindexMailboxInfo> mailboxes = Lists.newArrayList();
+        ReindexMailboxInfo mbox = new ReindexMailboxInfo(account.getId());
         if (by != null) {
             String vals = StringUtil.join(",", values);
             if (by == ReIndexBy.types) {
@@ -1152,17 +1188,21 @@ public class SoapProvisioning extends Provisioning {
                 mbox.setIds(vals);
             }
         }
-        ReIndexRequest req = new ReIndexRequest(action, mbox);
+        mailboxes.add(mbox);
+
+        ReIndexRequest req = new ReIndexRequest(action, mailboxes);
         ReIndexResponse resp = this.invokeJaxb(req,
                 server.getAttr(A_zimbraServiceHostname));
         ReIndexInfo.Progress progress = null;
-        ReindexProgressInfo progInfo = resp.getProgress();
+        List<ReindexProgressInfo> progInfo = resp.getMbox();
         if (progInfo != null) {
-            progress = new ReIndexInfo.Progress(progInfo.getNumSucceeded(),
-                    progInfo.getNumFailed(),
-                    progInfo.getNumRemaining());
+            ReindexProgressInfo pInfo = progInfo.get(0);
+            progress = new ReIndexInfo.Progress(pInfo.getStatusCode(),
+                    pInfo.getNumSucceeded(),
+                    pInfo.getNumFailed(),
+                    pInfo.getNumRemaining(), pInfo.getAccountId());
         }
-        return new ReIndexInfo(resp.getStatusCode(), resp.getStatus(), progress);
+        return new ReIndexInfo(resp.getStatus(), progress);
     }
 
     public String compactIndex(Account acct, String action)

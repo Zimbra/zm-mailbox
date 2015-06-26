@@ -184,8 +184,7 @@ public class Note extends MailItem {
         return note;
     }
 
-    @Override
-    public List<IndexDocument> generateIndexData() {
+    private List<IndexDocument> generateIndexData() {
         String toIndex = getText();
         IndexDocument doc = new IndexDocument();
         doc.addContent(toIndex);

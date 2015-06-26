@@ -32,9 +32,11 @@ import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrResponse;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.QueryRequest;
+import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
@@ -444,7 +446,7 @@ public abstract class SolrIndexBase extends IndexStore {
                             document.add(new Field(fieldName, solrDoc.getFieldValue(fieldName).toString(), StoredField.TYPE));
                         }
                         return document;
-                    } catch (SolrServerException e) {
+                    } catch (SolrException | SolrServerException e) {
                         ZimbraLog.index.error("Solr problem geting document %s, from mailbox %s",docID.toString(), accountId,e);
                     }
                     return null;
@@ -475,7 +477,7 @@ public abstract class SolrIndexBase extends IndexStore {
                 }
                 QueryResponse resp = (QueryResponse) processRequest(solrServer, req);
                 return (int) resp.getResults().getNumFound();
-            } catch (SolrServerException e) {
+            } catch (SolrException | SolrServerException e) {
                 ZimbraLog.index.error("Solr search problem getting docFreq for mailbox %s", accountId,e);
             }  finally {
                 shutdown(solrServer);
@@ -558,7 +560,7 @@ public abstract class SolrIndexBase extends IndexStore {
                     indexDocs.add(toIndexDocument(solrDoc));
                     scoreDocs.add(ZimbraScoreDoc.create(new ZimbraSolrDocumentID(solrDoc.getFieldValue(LuceneFields.L_MAILBOX_BLOB_ID).toString()),((Float)solrDoc.getFieldValue("score")).longValue()));
                 }
-            } catch (SolrServerException e) {
+            } catch (SolrException | SolrServerException e) {
                 ZimbraLog.index.error("Solr search problem mailbox %s, query %s", accountId,query.toString(),e);
                 return ZimbraTopDocs.create(totalHits, scoreDocs, maxScore, indexDocs);
             } finally {
@@ -618,10 +620,8 @@ public abstract class SolrIndexBase extends IndexStore {
                 QueryResponse resp = (QueryResponse) processRequest(solrServer, req);
                 SolrDocumentList solrDocList = resp.getResults();
                 return (int)solrDocList.getNumFound();
-            } catch (SolrServerException e) {
-                ZimbraLog.index.error("Caught SolrServerException retrieving number of documents in mailbox %s", accountId,e);
-            }  catch (IOException e) {
-                ZimbraLog.index.error("Caught SolrServerException retrieving number of documents in mailbox %s", accountId,e);
+            } catch (SolrException | SolrServerException | IOException e) {
+                ZimbraLog.index.error("Caught Exception retrieving number of documents in mailbox %s", accountId,e);
             } finally {
                 shutdown(solrServer);
             }
@@ -633,7 +633,7 @@ public abstract class SolrIndexBase extends IndexStore {
                 String firstTermValue) throws IOException, ServiceException {
             try {
                 return new SolrTermValueEnumeration(field, firstTermValue);
-            } catch (SolrServerException e) {
+            } catch (SolrException | SolrServerException e) {
                 throw ServiceException.FAILURE(e.getMessage(),e);
             }
         }
@@ -690,7 +690,7 @@ public abstract class SolrIndexBase extends IndexStore {
                     try {
                         primeTermsComponent(last, false);
                         return (termEnumeration.peek() != null);
-                    } catch (IOException | ServiceException | SolrServerException e) {
+                    } catch (IOException | ServiceException | SolrException | SolrServerException e) {
                         ZimbraLog.index.error("Solr problem enumerating terms for field %s", fieldName,e);
                         return false;
                     }
@@ -714,7 +714,7 @@ public abstract class SolrIndexBase extends IndexStore {
                     if(term != null) {
                         return new BrowseTerm(term.getTerm(), (int)term.getFrequency());
                     }
-                } catch (IOException | ServiceException | SolrServerException e) {
+                } catch (IOException | ServiceException | SolrServerException | SolrException e) {
                     ZimbraLog.index.error("Solr problem enumerating terms for field %s", fieldName,e);
                     throw new NoSuchElementException("No more values");
                 }
@@ -740,12 +740,13 @@ public abstract class SolrIndexBase extends IndexStore {
                 if(!indexExists()) {
                     return;
                 }
-                SolrQuery q = new SolrQuery().setParam("action", " increment");
-                setupRequest(q, solrServer);
-                LeaderQueryRequest req = new LeaderQueryRequest(q);
+                SolrQuery params = new SolrQuery().setParam("action", " increment");
+                setupRequest(params, solrServer);
+                UpdateRequest req = new UpdateRequest();
+                req.setParams(params);
                 req.setPath("/commitcount");
                 req.process(solrServer);
-            } catch (SolrServerException | IOException e) {
+            } catch (SolrException | SolrServerException | IOException e) {
                 ZimbraLog.index.error("Problem increasing commit counter for Core %s", accountId,e);
             }
         }
@@ -753,7 +754,6 @@ public abstract class SolrIndexBase extends IndexStore {
         @Override
         public void compact() {
             // TODO Auto-generated method stub
-
         }
     }
 
@@ -795,7 +795,7 @@ public abstract class SolrIndexBase extends IndexStore {
                         }
                         maxWaitTimeMillis = maxWaitTimeMillis - waitIncrement;
                     }
-                } catch (SolrServerException | IOException e) {
+                } catch (SolrException | SolrServerException | IOException e) {
                     ZimbraLog.index.error("Problem waiting for index commit count to go to zero for Core: %s", accountId,e);
                     break;
                 }
@@ -830,7 +830,7 @@ public abstract class SolrIndexBase extends IndexStore {
        try {
            rsp = solrServer.request(req);
            version = (Long) rsp.get(GENERATION);
-       } catch (SolrServerException | IOException e) {
+       } catch (SolrException | SolrServerException | IOException e) {
          throw ServiceException.FAILURE(e.getMessage(),e);
        } finally {
            shutdown(solrServer);

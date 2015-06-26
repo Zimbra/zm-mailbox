@@ -245,34 +245,6 @@ public final class DocumentTest {
     }
 
     @Test
-    public void testGenerateIndexData() throws Exception {
-        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        account.setPrefMailDefaultCharset("ISO-2022-JP");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
-        Document doc = createDocument(mbox, "doc.txt", "This is a document", "test document", false);
-
-        List<IndexDocument> docs = doc.generateIndexData();
-        assertEquals(1, docs.size());
-        IndexDocument indexDoc = docs.get(0);
-        assertNotNull("generated IndexDocument is null", doc);
-        Collection<String> docFields = indexDoc.toDocument().getFieldNames();
-        assertNotNull("generated IndexDocument has NULL fields", docFields);
-        assertFalse("generated IndexDocument has no fields", docFields.isEmpty());
-        String subject = (String) indexDoc.toDocument().getFieldValue(LuceneFields.L_H_SUBJECT);
-        String filename = (String) indexDoc.toDocument().getFieldValue(LuceneFields.L_FILENAME);
-        ArrayList<String> bodyparts = (ArrayList<String>) indexDoc.toDocument().getFieldValue(LuceneFields.L_CONTENT);
-        assertNotNull("document content is null", bodyparts);
-        assertEquals("document should have 2 parts of content", 2, bodyparts.size());
-        assertEquals("doc.txt", subject);
-        assertEquals("doc.txt", filename);
-        assertEquals("This is a document", bodyparts.get(0));
-        assertEquals("This is a document test document", bodyparts.get(1));
-        assertEquals("index document has wrong l.partname", "top", indexDoc.toDocument().getFieldValue(LuceneFields.L_PARTNAME));
-        assertEquals("index document has wrong content type", "text/plain", indexDoc.toDocument().getFieldValue(LuceneFields.L_MIMETYPE));
-    }
-
-    @Test
     public void testGenerateIndexDataAsync() throws Exception {
         Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         account.setPrefMailDefaultCharset("ISO-2022-JP");

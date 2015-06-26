@@ -282,24 +282,6 @@ public abstract class CalendarItem extends MailItem {
     }
 
     @Override
-    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
-        try {
-            List<IndexDocument> docs = null;
-            getMailbox().lock.lock();
-            try {
-                docs = getIndexDocuments(getMailbox().attachmentsIndexingEnabled());
-            } finally {
-                getMailbox().lock.release();
-            }
-
-            return docs;
-        } catch (ServiceException e) {
-            ZimbraLog.index.warn("Unable to generate index data for Calendar Item %d. Item will not be indexed.", getId(), e);
-            return Collections.emptyList();
-        }
-    }
-
-    @Override
     public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {
         List<IndexDocument> docs = null;
         docs = getIndexDocuments(indexAttachments);

@@ -10277,9 +10277,44 @@ TODO: delete them permanently from here
   <desc>Waitset sweeper thread interval.</desc>
 </attr>
 
-<attr id="2040" name="zimbraMailboxdVolumeMountEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" requiresRestart="mailbox" since="9.0.0">
+<attr id="2040" name= "zimbraZKClientTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>Timeout for ZooKeeper requests</desc>
+</attr>
+
+<attr id="2041" name= "zimbraZKConnectTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>Timeout for establishing ZooKeeper connection</desc>
+</attr>
+
+<attr id="2042" name= "zimbraIndexReplicationTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>20000</globalConfigValue>
+  <desc>Time in milliseconds that mailstore will wait for an external indexing service to fully replicate an index for a single mailbox.
+  When using SolrCloud, this is the time that a mailstore will wait for all replicas of a solr collection to go live and sync up to the leader.</desc>
+</attr>
+
+<attr id="2043" name= "zimbraIndexBackupTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>Time in milliseconds that mailstore will wait for an external indexing service to back up a single mailbox index.</desc>
+</attr>
+
+<attr id="2044" name= "zimbraIndexRestoreTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>30000</globalConfigValue>
+  <desc>Time in milliseconds that mailstore will wait for an external indexing service to restore a single mailbox index.</desc>
+</attr>
+
+<attr id="2045" name="zimbraIndexPollingInterval" type="integer" cardinality="single" min="100" max="60000" optionalIn="globalConfig,server,alwaysOnCluster" since="9.0.0">
+    <globalConfigValue>500</globalConfigValue>
+    <desc>Time in milliseconds that mailstore will wait between attempts to request status from an external indexing service (Solr or SolrCloud).</desc>
+</attr>
+
+<attr id="2046" name="zimbraIndexingQueueTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" since="9.0.0">
+    <globalConfigValue>30000</globalConfigValue>
+    <desc>Time in milliseconds that mailstore will wait for space to free up in the shared indexing queue. Increase this value if you are reindexing several large mailboxes simultaneously.</desc>
+</attr>
+
+<attr id="2047" name="zimbraMailboxdVolumeMountEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" requiresRestart="mailbox" since="9.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to invoke mount commands during startup, if any have been configured in zmvolume.</desc>
 </attr>
-
 </attrs>

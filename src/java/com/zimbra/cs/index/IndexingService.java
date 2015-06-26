@@ -44,9 +44,14 @@ public class IndexingService {
     public synchronized void startUp() {
         queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         running = true;
-        INDEX_EXECUTOR = new ThreadPoolExecutor(ProvisioningUtil.getServerAttribute(
-                ZAttrProvisioning.A_zimbraIndexThreads, 10), ProvisioningUtil.getServerAttribute(
-                ZAttrProvisioning.A_zimbraIndexThreads, 10), Long.MAX_VALUE, TimeUnit.NANOSECONDS,
+        int numThreads = 1;
+        String indexURL = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexURL, null);
+        String[] urlParts = indexURL.split(":", 2);
+        String indexURLPrefix = urlParts[0];
+        if (indexURLPrefix.equalsIgnoreCase("solrcloud")) {
+            numThreads = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexThreads, 10);
+        }
+        INDEX_EXECUTOR = new ThreadPoolExecutor(numThreads, numThreads, Long.MAX_VALUE, TimeUnit.NANOSECONDS,
                 new ArrayBlockingQueue<Runnable>(10000), new ThreadFactoryBuilder().setNameFormat("IndexExecutor-%d")
                         .setDaemon(true).build());
         INDEX_EXECUTOR.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());

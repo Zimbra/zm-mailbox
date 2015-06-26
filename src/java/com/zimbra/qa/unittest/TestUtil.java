@@ -90,6 +90,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig.CodeLength;
@@ -146,6 +147,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -522,6 +524,7 @@ extends Assert {
     public static List<ZMessage> waitForMessages(ZMailbox mbox, String query, int numMsgsExpected, int timeout_millis)
     throws ServiceException {
         int orig_timeout_millis = TestUtil.getMailbox(mbox.getName()).index.waitForIndexing(timeout_millis);
+        int pollInterval = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexPollingInterval, 500);
         List<ZMessage> msgs = Lists.newArrayListWithExpectedSize(0);
         while (timeout_millis > 0) {
             msgs = search(mbox, query);
@@ -532,9 +535,9 @@ extends Assert {
                 Assert.fail("Unexpected number of messages (" + msgs.size() + ") returned by query '" + query + "'");
             }
             try {
-                if (timeout_millis > 500) {
-                    Thread.sleep(500);
-                    timeout_millis = timeout_millis - 500;
+                if (timeout_millis > pollInterval) {
+                    Thread.sleep(pollInterval);
+                    timeout_millis = timeout_millis - pollInterval;
                 } else {
                     Thread.sleep(timeout_millis);
                     timeout_millis = 0;
@@ -554,7 +557,11 @@ extends Assert {
 
     public static ZMessage waitForMessage(ZMailbox mbox, String query)
     throws Exception {
-        List<ZMessage> msgs = waitForMessages(mbox, query, 1, 10000);
+        int timeout_millis = LC.zimbra_index_commit_wait.intValue();
+        if(Provisioning.getInstance().getLocalServer().getIndexURL().indexOf("solrcloud:")>-1) {
+            timeout_millis = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexReplicationTimeout, 10000);
+        }
+        List<ZMessage> msgs = waitForMessages(mbox, query, 1, timeout_millis);
         return msgs.get(0);
     }
 

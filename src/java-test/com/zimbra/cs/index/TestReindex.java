@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.MockMailItem;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ReIndexStatus;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedContact;
@@ -115,7 +116,7 @@ public class TestReindex {
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals("Search should not return anything at this point", 0, ids.size());
 
-        mbox.index.startReIndex();
+        mbox.index.startReIndex(new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("at this point total count should be 4", 4,
@@ -160,7 +161,7 @@ public class TestReindex {
 
         // disable manual commit for re-indexing
         // kick off re-indexing of Contacts only
-        mbox.index.startReIndexByType(EnumSet.of(MailItem.Type.CONTACT));
+        mbox.index.startReIndexByType(EnumSet.of(MailItem.Type.CONTACT),  new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("at this point total count should be 1", 1,
@@ -216,7 +217,7 @@ public class TestReindex {
 
         // disable manual commit for re-indexing
         // Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
-        mbox.index.startReIndexByType(EnumSet.of(MailItem.Type.MESSAGE));
+        mbox.index.startReIndexByType(EnumSet.of(MailItem.Type.MESSAGE),  new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("at this point succeeded count should be 0", 0,
@@ -281,7 +282,7 @@ public class TestReindex {
 
         // disable manual commit for re-indexing
         // Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
-        mbox.index.startReIndexByType(EnumSet.of(MailItem.Type.APPOINTMENT));
+        mbox.index.startReIndexByType(EnumSet.of(MailItem.Type.APPOINTMENT), new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("at this point 'succeeded' count should be 0", 0,
@@ -348,7 +349,7 @@ public class TestReindex {
 
         // disable manual commit for re-indexing
         // Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
-        mbox.index.startReIndex();
+        mbox.index.startReIndex(new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("at this point total count should be 6", 6,
@@ -415,7 +416,7 @@ public class TestReindex {
 
         // disable manual commit for re-indexing
         // Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
-        mbox.index.startReIndex();
+        mbox.index.startReIndex(new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("at this point total count should be 6", 6,
@@ -482,7 +483,7 @@ public class TestReindex {
 
         // disable manual commit for re-indexing
         // Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
-        mbox.index.startReIndex();
+        mbox.index.startReIndex(new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("at this point total count should be 6", 6,
@@ -549,7 +550,7 @@ public class TestReindex {
 
         // disable manual commit for re-indexing
         // Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
-        mbox.index.startReIndex();
+        mbox.index.startReIndex(new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("at this point total count should be 6", 6,
@@ -618,7 +619,7 @@ public class TestReindex {
         ids = TestUtil.search(mbox, "dance", MailItem.Type.APPOINTMENT);
         Assert.assertEquals("should not be able to find an appointment at this point", 0, ids.size());
 
-        mbox.index.startReIndex();
+        mbox.index.startReIndex(new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("at this point total count should be 7", 7,
@@ -725,7 +726,7 @@ public class TestReindex {
                     .getSchemaGroupId(), false));
         }
 
-        mbox.index.startReIndex();
+        mbox.index.startReIndex(new OperationContext(mbox));
 
         assertEquals("at this point total count should be 7", 7,
                 queueAdapter.getTotalMailboxTaskCount(MockProvisioning.DEFAULT_ACCOUNT_ID));
@@ -796,7 +797,7 @@ public class TestReindex {
 
         // disable manual commit for re-indexing
         // Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
-        mbox.index.startReIndex();
+        mbox.index.startReIndex(new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("at this point total count should be 6", 6,
@@ -889,7 +890,7 @@ public class TestReindex {
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals("Search should not return anything at this point", 0, ids.size());
 
-        mbox.index.startReIndex();
+        mbox.index.startReIndex(new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("'total' queue should have 4 items before re-index starts", 4,
@@ -940,7 +941,7 @@ public class TestReindex {
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals("Search should not return anything at this point", 0, ids.size());
 
-        mbox.index.startReIndex();
+        mbox.index.startReIndex( new OperationContext(mbox));
 
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("'total' queue should have 4 items before re-index starts", 4,

@@ -34,9 +34,9 @@ import java.util.TreeSet;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -1612,19 +1612,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return null;
     }
 
-    /**
-     * Returns the indexable data to be passed into index. Subclasses that support indexing must override.
-     * <p>
-     * This API is generally to be called WITHOUT the Mailbox lock is held -- it is the implementation's responsibility
-     * to lock the mailbox if that is necessary to get a consistent snapshot.
-     *
-     * @return a list of IndexDocument to be added to the index for this item
-     * @throws TemporaryIndexingException recoverable index error
-     * @throws ServiceException
-     */
-    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException, ServiceException {
-        return null;
-    }
     /** Returns the item's parent.  Returns <tt>null</tt> if the item
      *  does not have a parent.
      *

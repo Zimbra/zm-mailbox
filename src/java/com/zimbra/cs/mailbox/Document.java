@@ -121,8 +121,7 @@ public class Document extends MailItem {
         return getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxRevisions, 0);
     }
 
-    @Override
-    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
+    private List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         try {
             MailboxBlob mblob = getBlob();
             if (mblob == null) {

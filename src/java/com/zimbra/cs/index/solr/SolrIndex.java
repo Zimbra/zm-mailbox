@@ -115,6 +115,22 @@ public class SolrIndex extends SolrIndexBase {
                 solrCoreProvisioned = true;
                 return;
             }
+            if(e.getMessage() != null && e.getMessage().indexOf("Lock obtain timed out") > -1) {
+                //another thread is trying to provision the same core on a single-node Solr server
+                int maxWait = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexReplicationTimeout, 30000);
+                int pollInterval = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexPollingInterval, 500);
+                while (!indexExists() && maxWait > 0) {
+                    try {
+                        Thread.sleep(pollInterval);
+                        maxWait-=pollInterval;
+                    } catch (InterruptedException e1) {
+                        break;
+                    }
+                }
+                if(solrCoreProvisioned) {
+                    return; //all good the core was provisioned by another thread
+                }
+            }
             String errorMsg = String.format("Problem creating new Solr Core for account %s",accountId);
             ZimbraLog.index.error(errorMsg, e);
             throw ServiceException.FAILURE(errorMsg,e);

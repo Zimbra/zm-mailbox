@@ -18470,6 +18470,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to back up a single mailbox index.
+     *
+     * @return zimbraIndexBackupTimeout, or 10000 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2043)
+    public int getIndexBackupTimeout() {
+        return getIntAttr(Provisioning.A_zimbraIndexBackupTimeout, 10000);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to back up a single mailbox index.
+     *
+     * @param zimbraIndexBackupTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2043)
+    public void setIndexBackupTimeout(int zimbraIndexBackupTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexBackupTimeout, Integer.toString(zimbraIndexBackupTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to back up a single mailbox index.
+     *
+     * @param zimbraIndexBackupTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2043)
+    public Map<String,Object> setIndexBackupTimeout(int zimbraIndexBackupTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexBackupTimeout, Integer.toString(zimbraIndexBackupTimeout));
+        return attrs;
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to back up a single mailbox index.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2043)
+    public void unsetIndexBackupTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexBackupTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to back up a single mailbox index.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2043)
+    public Map<String,Object> unsetIndexBackupTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexBackupTimeout, "");
+        return attrs;
+    }
+
+    /**
      * Zimbra index db first term cutoff percentage
      *
      * @return zimbraIndexDbFirstTermCutOffPercentage, or 80 if unset
@@ -19237,6 +19314,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Time in milliseconds that mailstore will wait between attempts to
+     * request status from an external indexing service (Solr or SolrCloud).
+     *
+     * @return zimbraIndexPollingInterval, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2045)
+    public int getIndexPollingInterval() {
+        return getIntAttr(Provisioning.A_zimbraIndexPollingInterval, -1);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait between attempts to
+     * request status from an external indexing service (Solr or SolrCloud).
+     *
+     * @param zimbraIndexPollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2045)
+    public void setIndexPollingInterval(int zimbraIndexPollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexPollingInterval, Integer.toString(zimbraIndexPollingInterval));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait between attempts to
+     * request status from an external indexing service (Solr or SolrCloud).
+     *
+     * @param zimbraIndexPollingInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2045)
+    public Map<String,Object> setIndexPollingInterval(int zimbraIndexPollingInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexPollingInterval, Integer.toString(zimbraIndexPollingInterval));
+        return attrs;
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait between attempts to
+     * request status from an external indexing service (Solr or SolrCloud).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2045)
+    public void unsetIndexPollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexPollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait between attempts to
+     * request status from an external indexing service (Solr or SolrCloud).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2045)
+    public Map<String,Object> unsetIndexPollingInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexPollingInterval, "");
+        return attrs;
+    }
+
+    /**
      * Maximum number of threads for re-index. Re-index threads are not
      * pooled.
      *
@@ -19582,6 +19736,170 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetIndexReaderGalSyncCacheSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexReaderGalSyncCacheSize, "");
+        return attrs;
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to fully replicate an index for a single mailbox. When using
+     * SolrCloud, this is the time that mailstore will wait for all replicas
+     * a solr collection to go live and sync up to the leader.
+     *
+     * @return zimbraIndexReplicationTimeout, or 20000 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2042)
+    public int getIndexReplicationTimeout() {
+        return getIntAttr(Provisioning.A_zimbraIndexReplicationTimeout, 20000);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to fully replicate an index for a single mailbox. When using
+     * SolrCloud, this is the time that mailstore will wait for all replicas
+     * a solr collection to go live and sync up to the leader.
+     *
+     * @param zimbraIndexReplicationTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2042)
+    public void setIndexReplicationTimeout(int zimbraIndexReplicationTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReplicationTimeout, Integer.toString(zimbraIndexReplicationTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to fully replicate an index for a single mailbox. When using
+     * SolrCloud, this is the time that mailstore will wait for all replicas
+     * a solr collection to go live and sync up to the leader.
+     *
+     * @param zimbraIndexReplicationTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2042)
+    public Map<String,Object> setIndexReplicationTimeout(int zimbraIndexReplicationTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReplicationTimeout, Integer.toString(zimbraIndexReplicationTimeout));
+        return attrs;
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to fully replicate an index for a single mailbox. When using
+     * SolrCloud, this is the time that mailstore will wait for all replicas
+     * a solr collection to go live and sync up to the leader.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2042)
+    public void unsetIndexReplicationTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReplicationTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to fully replicate an index for a single mailbox. When using
+     * SolrCloud, this is the time that mailstore will wait for all replicas
+     * a solr collection to go live and sync up to the leader.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2042)
+    public Map<String,Object> unsetIndexReplicationTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReplicationTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to restore a single mailbox index.
+     *
+     * @return zimbraIndexRestoreTimeout, or 30000 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2044)
+    public int getIndexRestoreTimeout() {
+        return getIntAttr(Provisioning.A_zimbraIndexRestoreTimeout, 30000);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to restore a single mailbox index.
+     *
+     * @param zimbraIndexRestoreTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2044)
+    public void setIndexRestoreTimeout(int zimbraIndexRestoreTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexRestoreTimeout, Integer.toString(zimbraIndexRestoreTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to restore a single mailbox index.
+     *
+     * @param zimbraIndexRestoreTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2044)
+    public Map<String,Object> setIndexRestoreTimeout(int zimbraIndexRestoreTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexRestoreTimeout, Integer.toString(zimbraIndexRestoreTimeout));
+        return attrs;
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to restore a single mailbox index.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2044)
+    public void unsetIndexRestoreTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexRestoreTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for an external indexing
+     * service to restore a single mailbox index.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2044)
+    public Map<String,Object> unsetIndexRestoreTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexRestoreTimeout, "");
         return attrs;
     }
 
@@ -20203,6 +20521,83 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetIndexingQueueProvider(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueueProvider, "");
+        return attrs;
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for space to free up in
+     * the shared indexing queue.
+     *
+     * @return zimbraIndexingQueueTimeout, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2046)
+    public int getIndexingQueueTimeout() {
+        return getIntAttr(Provisioning.A_zimbraIndexingQueueTimeout, -1);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for space to free up in
+     * the shared indexing queue.
+     *
+     * @param zimbraIndexingQueueTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2046)
+    public void setIndexingQueueTimeout(int zimbraIndexingQueueTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueTimeout, Integer.toString(zimbraIndexingQueueTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for space to free up in
+     * the shared indexing queue.
+     *
+     * @param zimbraIndexingQueueTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2046)
+    public Map<String,Object> setIndexingQueueTimeout(int zimbraIndexingQueueTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueTimeout, Integer.toString(zimbraIndexingQueueTimeout));
+        return attrs;
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for space to free up in
+     * the shared indexing queue.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2046)
+    public void unsetIndexingQueueTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds that mailstore will wait for space to free up in
+     * the shared indexing queue.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2046)
+    public Map<String,Object> unsetIndexingQueueTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueTimeout, "");
         return attrs;
     }
 
@@ -33280,7 +33675,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=2040)
+    @ZAttr(id=2047)
     public boolean isMailboxdVolumeMountEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraMailboxdVolumeMountEnabled, true);
     }
@@ -33294,7 +33689,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=2040)
+    @ZAttr(id=2047)
     public void setMailboxdVolumeMountEnabled(boolean zimbraMailboxdVolumeMountEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxdVolumeMountEnabled, zimbraMailboxdVolumeMountEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -33311,7 +33706,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=2040)
+    @ZAttr(id=2047)
     public Map<String,Object> setMailboxdVolumeMountEnabled(boolean zimbraMailboxdVolumeMountEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxdVolumeMountEnabled, zimbraMailboxdVolumeMountEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -33326,7 +33721,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=2040)
+    @ZAttr(id=2047)
     public void unsetMailboxdVolumeMountEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxdVolumeMountEnabled, "");
@@ -33342,7 +33737,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=2040)
+    @ZAttr(id=2047)
     public Map<String,Object> unsetMailboxdVolumeMountEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxdVolumeMountEnabled, "");
@@ -67152,6 +67547,150 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetXMPPEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraXMPPEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Timeout for ZooKeeper requests
+     *
+     * @return zimbraZKClientTimeout, or 10000 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2040)
+    public int getZKClientTimeout() {
+        return getIntAttr(Provisioning.A_zimbraZKClientTimeout, 10000);
+    }
+
+    /**
+     * Timeout for ZooKeeper requests
+     *
+     * @param zimbraZKClientTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2040)
+    public void setZKClientTimeout(int zimbraZKClientTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZKClientTimeout, Integer.toString(zimbraZKClientTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout for ZooKeeper requests
+     *
+     * @param zimbraZKClientTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2040)
+    public Map<String,Object> setZKClientTimeout(int zimbraZKClientTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZKClientTimeout, Integer.toString(zimbraZKClientTimeout));
+        return attrs;
+    }
+
+    /**
+     * Timeout for ZooKeeper requests
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2040)
+    public void unsetZKClientTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZKClientTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout for ZooKeeper requests
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2040)
+    public Map<String,Object> unsetZKClientTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZKClientTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Timeout for establishing ZooKeeper connection
+     *
+     * @return zimbraZKConnectTimeout, or 10000 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2041)
+    public int getZKConnectTimeout() {
+        return getIntAttr(Provisioning.A_zimbraZKConnectTimeout, 10000);
+    }
+
+    /**
+     * Timeout for establishing ZooKeeper connection
+     *
+     * @param zimbraZKConnectTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2041)
+    public void setZKConnectTimeout(int zimbraZKConnectTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZKConnectTimeout, Integer.toString(zimbraZKConnectTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout for establishing ZooKeeper connection
+     *
+     * @param zimbraZKConnectTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2041)
+    public Map<String,Object> setZKConnectTimeout(int zimbraZKConnectTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZKConnectTimeout, Integer.toString(zimbraZKConnectTimeout));
+        return attrs;
+    }
+
+    /**
+     * Timeout for establishing ZooKeeper connection
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2041)
+    public void unsetZKConnectTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZKConnectTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout for establishing ZooKeeper connection
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2041)
+    public Map<String,Object> unsetZKConnectTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZKConnectTimeout, "");
         return attrs;
     }
 

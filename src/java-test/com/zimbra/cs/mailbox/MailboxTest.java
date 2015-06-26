@@ -44,7 +44,6 @@ import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
@@ -736,30 +735,10 @@ public final class MailboxTest {
         assertEquals("wrong major version after downgrading version",2,updatedVersion.getMajor());
         assertEquals("wrong minor version after downgrading version",7,updatedVersion.getMinor());
 
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        mbox.addMessage(null, new ParsedMessage(
-                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Shall I compare thee to a summer's day".getBytes(), false), dopt, null);
-        mbox.addMessage(null, new ParsedMessage(
-                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Thou art more lovely and more temperate".getBytes(), false), dopt, null);
-
-        IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
-        assertEquals("at this point total count should be 0", 0, queueAdapter.getTotalMailboxTaskCount(acc.getId()));
-        assertEquals("at this point succeeded count should be 0", 0, queueAdapter.getSucceededMailboxTaskCount(acc.getId()));
-
-        mbox.index.deleteIndex();
         mbox.migrate();
 
-        assertEquals("at this point total count should be 2", 2, queueAdapter.getTotalMailboxTaskCount(acc.getId()));
-        assertEquals("at this point succeeded count should be 0", 0, queueAdapter.getSucceededMailboxTaskCount(acc.getId()));
-        //start indexing service
-        Zimbra.getAppContext().getBean(IndexingService.class).startUp();
-
-        MailboxTestUtil.waitForIndexing(mbox);
-        assertEquals("at this point total count should be 2", 2, queueAdapter.getTotalMailboxTaskCount(acc.getId()));
-        assertEquals("at this point succeeded count should be 2", 2, queueAdapter.getSucceededMailboxTaskCount(acc.getId()));
-
-        assertEquals("wrong major version after downgrading version",MailboxVersion.CURRENT.getMajor(),mbox.getVersion().getMajor());
-        assertEquals("wrong minor version after downgrading version",MailboxVersion.CURRENT.getMinor(),mbox.getVersion().getMinor());
+        assertEquals("wrong major version after upgrading version",MailboxVersion.CURRENT.getMajor(),mbox.getVersion().getMajor());
+        assertEquals("wrong minor version after upgrading version",MailboxVersion.CURRENT.getMinor(),mbox.getVersion().getMinor());
     }
     /**
      * @throws java.lang.Exception

@@ -93,7 +93,7 @@ public final class MessageTest {
         Message message = mbox.addMessage(null, pm, dopt, null);
 
         Assert.assertEquals("\u65e5\u672c\u8a9e", pm.getFragment(null));
-        List<IndexDocument> docs = message.generateIndexData();
+        List<IndexDocument> docs = message.generateIndexDataAsync(true);
         Assert.assertEquals(2, docs.size());
         String subject = (String) docs.get(0).toDocument().getFieldValue(LuceneFields.L_H_SUBJECT);
         String body = (String) docs.get(0).toDocument().getFieldValue(LuceneFields.L_CONTENT);
@@ -219,26 +219,6 @@ public final class MessageTest {
         Assert.assertEquals(2, docs.size());
         subject = (String) docs.get(0).toDocument().getFieldValue(LuceneFields.L_H_SUBJECT);
         body = (String) docs.get(0).toDocument().getFieldValue(LuceneFields.L_CONTENT);
-        Assert.assertEquals("\u65e5\u672c\u8a9e", subject);
-        Assert.assertEquals("\u65e5\u672c\u8a9e", body.trim());
-    }
-
-    @Test
-    public void testGenerateIndexData() throws Exception {
-        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        account.setPrefMailDefaultCharset("ISO-2022-JP");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        byte[] raw = ByteStreams.toByteArray(getClass().getResourceAsStream("raw-jis-msg.txt"));
-        ParsedMessage pm = new ParsedMessage(raw, false);
-        Message message = mbox.addMessage(null, pm, dopt, null);
-
-        Assert.assertEquals("\u65e5\u672c\u8a9e", pm.getFragment(null));
-        List<IndexDocument> docs = message.generateIndexData();
-        Assert.assertEquals(2, docs.size());
-        String subject = (String) docs.get(0).toDocument().getFieldValue(LuceneFields.L_H_SUBJECT);
-        String body = (String) docs.get(0).toDocument().getFieldValue(LuceneFields.L_CONTENT);
         Assert.assertEquals("\u65e5\u672c\u8a9e", subject);
         Assert.assertEquals("\u65e5\u672c\u8a9e", body.trim());
     }

@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -57,9 +58,10 @@ import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.solr.SolrCloudIndex;
 import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
 import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.redolog.op.ReindexMailbox;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -227,27 +229,28 @@ public final class MailboxIndex {
     }
 
     /**
-     * Kick off the requested re-index of the entire mailbox
+     * Add all mail items of this mailbox to re-indexing queue
+     * @throws ServiceException
      */
-    public synchronized void startReIndex() throws ServiceException {
+    public synchronized void startReIndex(OperationContext ctxt) throws ServiceException {
         if(isReIndexInProgress()) {
-            throw ServiceException.ALREADY_IN_PROGRESS("An active re-indexing tasks is already running for this mailbox. You need to cancel the current task or wait for it to finish before starting a new one");
+            throw ServiceException.ALREADY_IN_PROGRESS("One or more active re-indexing tasks are already running for this mailbox. You need to cancel current tasks or wait for them to finish before starting a full reindex.");
         }
-        startReIndexByType(EnumSet.of(MailItem.Type.APPOINTMENT, MailItem.Type.INVITE, MailItem.Type.CHAT, 
-                MailItem.Type.MESSAGE, MailItem.Type.NOTE, MailItem.Type.CONTACT, MailItem.Type.DOCUMENT, 
-                MailItem.Type.CONTACT, MailItem.Type.TASK));
+        startReIndexByType(EnumSet.of(MailItem.Type.APPOINTMENT, MailItem.Type.INVITE, MailItem.Type.CHAT,
+                MailItem.Type.MESSAGE, MailItem.Type.NOTE, MailItem.Type.CONTACT, MailItem.Type.DOCUMENT,
+                MailItem.Type.CONTACT, MailItem.Type.TASK), ctxt);
     }
 
-    public synchronized void startReIndexById(Set<Integer> itemIds) throws ServiceException {
-        if(isReIndexInProgress()) {
-            throw ServiceException.ALREADY_IN_PROGRESS("An active re-indexing tasks is already running for this mailbox. You need to cancel the current task or wait for it to finish before starting a new one");
-        }
-        ReindexMailbox reindexOp = new ReindexMailbox(mailbox.getId(), null, itemIds);
+    /**
+     * Add mail items with specified IDs to re-indexing queue
+     * @param types
+     * @throws ServiceException
+     */
+    public synchronized boolean startReIndexById(Collection<Integer> itemIds) throws ServiceException {
         boolean success = false;
-        mailbox.beginTransaction("IndexItemList", reindexOp.getOperationContext(),reindexOp,null,true);
         //Step 1: get items (does not matter whether we get these from cache or DB at this step
-        MailItem[] items = mailbox.getItemById(reindexOp.getOperationContext(), itemIds, MailItem.Type.UNKNOWN);
-        
+        MailItem[] items = mailbox.getItemById(null, itemIds, MailItem.Type.UNKNOWN);
+
         //Step 2: set task counters for reporting
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         if(queueAdapter == null) {
@@ -280,25 +283,24 @@ public final class MailboxIndex {
                         ZimbraLog.index.warn("Aborting reindexing for account %s,  because indexing queue is full. Added %d items out of %d.",mailbox.getAccount(),numAdded,items.length);
                         break;
                     }
-                    numAdded+=batch.size();            
+                    numAdded+=batch.size();
                 }
             }
         }
-        mailbox.endTransaction(success);
+        return success;
     }
 
-    public synchronized void startReIndexByType(Set<MailItem.Type> types) throws ServiceException {
-        if(isReIndexInProgress()) {
-            throw ServiceException.ALREADY_IN_PROGRESS("An active re-indexing tasks is already running for this mailbox. You need to cancel the current task or wait for it to finish before starting a new one");
-        }
-        ReindexMailbox reindexOp = new ReindexMailbox(mailbox.getId(), types, null);
+    /**
+     * Add mail items of specified type to re-indexing queue
+     * @param types
+     * @throws ServiceException
+     */
+    public synchronized boolean startReIndexByType(Set<MailItem.Type> types, OperationContext ctxt) throws ServiceException {
         boolean success = false;
-        mailbox.beginTransaction("IndexItemList", reindexOp.getOperationContext(),reindexOp,null,true);
-        
         //Step 1: get items (does not matter whether we get these from cache or DB at this step)
         List<MailItem> items = new ArrayList<MailItem>();
         for(MailItem.Type type : types) {
-            List<MailItem> itemsOfType = mailbox.getItemList(reindexOp.getOperationContext(), type);
+            List<MailItem> itemsOfType = mailbox.getItemList(ctxt, type);
             if(itemsOfType != null && !itemsOfType.isEmpty()) {
                 items.addAll(itemsOfType);
             }
@@ -340,7 +342,7 @@ public final class MailboxIndex {
                 }
             }
         }
-        mailbox.endTransaction(success);
+        return success;
     }
 
     public synchronized ReIndexStatus abortReIndex() throws ServiceException {
@@ -371,7 +373,6 @@ public final class MailboxIndex {
      * Mailbox version (1.0,1.1)->1.2 Re-Index all contacts.
      */
     void upgradeMailboxTo1_2() throws ServiceException {
-        startReIndex();
         mailbox.lock.lock();
         try {
             if (!mailbox.getVersion().atLeast(1, 2)) {
@@ -392,7 +393,6 @@ public final class MailboxIndex {
      */
     @SuppressWarnings("deprecation")
     void indexAllDeferredFlagItems() throws ServiceException {
-        startReIndex();
         try {
             mailbox.lock.lock();
             try {
@@ -438,11 +438,10 @@ public final class MailboxIndex {
 
 
     /**
-     * Mailbox version 2.7->3.0 Re-Index everything. 
-     * Calls {@link #startReIndex()} to queue all items for re-indexing
+     * Mailbox version 2.7->3.0
+     * Note that mailboxes upgraded from 2.7 to 3.0 require re-indexing and this method does not initiate re-indexing
      */
     void upgradeMailboxTo3_0() throws ServiceException {
-        startReIndex();
         mailbox.lock.lock();
         try {
             if (!mailbox.getVersion().atLeast(3, 0)) {
@@ -821,9 +820,19 @@ public final class MailboxIndex {
     }
 
     @VisibleForTesting
+    /**
+     * this method is to be used only when zimbraIndexManualCommit is set to true and only for testing
+     * @param maxWaitTimeMillis
+     * @return
+     * @throws ServiceException
+     */
     public int waitForIndexing(int maxWaitTimeMillis) throws ServiceException {
         if(maxWaitTimeMillis == 0) {
-            maxWaitTimeMillis = LC.zimbra_index_commit_wait.intValue();
+            if(IndexStore.getFactory() instanceof SolrCloudIndex.Factory) {
+                maxWaitTimeMillis = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexReplicationTimeout, 10000);
+            } else {
+                maxWaitTimeMillis = LC.zimbra_index_commit_wait.intValue();
+            }
         }
         int timeWaited = 0;
         int waitIncrement  = Math.max(maxWaitTimeMillis/3,500);

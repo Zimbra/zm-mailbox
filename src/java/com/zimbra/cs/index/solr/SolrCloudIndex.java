@@ -21,6 +21,7 @@ import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.cloud.ClusterState;
+import org.apache.solr.common.cloud.ClusterStateUtil;
 import org.apache.solr.common.cloud.Slice;
 import org.apache.solr.common.cloud.ZkCoreNodeProps;
 import org.apache.solr.common.cloud.ZkStateReader;
@@ -54,7 +55,7 @@ import com.zimbra.cs.util.Zimbra;
  */
 public class SolrCloudIndex extends SolrIndexBase {
 
-    private boolean solrCollectionProvisioned = false;
+    private Boolean solrCollectionProvisioned = false;
     private CloudSolrClient solrClient = null;
     private SolrCloudIndex(String accountId, CloudSolrClient cloudSolrServer) {
         this.accountId = accountId;
@@ -73,11 +74,12 @@ public class SolrCloudIndex extends SolrIndexBase {
                     if(collectionsObj != null && collectionsObj instanceof Iterable) {
                         for(String name : (Iterable<String>)collectionsObj) {
                             if(accountId.equalsIgnoreCase(name)) {
-                                solrCollectionProvisioned = true; 
+                                solrCollectionProvisioned = true;
+                                ZimbraLog.index.debug("Index for account %s is found", accountId);
                                 break;
                             }
                         }
-                    } 
+                    }
                 }
             } catch (SolrServerException e) {
                 if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
@@ -96,47 +98,43 @@ public class SolrCloudIndex extends SolrIndexBase {
 
     @Override
     public void initIndex() throws IOException, ServiceException {
-        if (!indexExists()) {
-            try {
-                Server server = Provisioning.getInstance().getLocalServer();
-                CollectionAdminRequest.Create createCollectionRequest = new CollectionAdminRequest.Create();
-                createCollectionRequest.setCollectionName(accountId);
-                createCollectionRequest.setNumShards(1);
-                createCollectionRequest.setReplicationFactor(server.getSolrReplicationFactor());
-                createCollectionRequest.setMaxShardsPerNode(server.getSolrMaxShardsPerNode());
-                createCollectionRequest.setConfigName("zimbra");
-                createCollectionRequest.process(solrClient);
-            } catch (SolrServerException e) {
-                if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
-                    solrCollectionProvisioned = false;
-                }
-                String errorMsg = String.format("Problem creating new Solr collection for account %s",accountId);
-                ZimbraLog.index.error(errorMsg, e);
-                throw new IOException(errorMsg,e);
-            } catch (SolrException e) {
-                String errorMsg = String.format("Problem creating new Solr collection for account %s",accountId);
-                ZimbraLog.index.error(errorMsg, e);
-                throw new IOException(errorMsg,e);
-            } catch (IOException e) {
-                String errorMsg = String.format("Problem creating new Solr collection for account %s",accountId);
-                ZimbraLog.index.error(errorMsg, e);
-                throw new IOException(errorMsg,e);
+        ZimbraLog.index.debug("Initializing index for account %s ", accountId);
+        Server server = Provisioning.getInstance().getLocalServer();
+        int replicationFactor = server.getSolrReplicationFactor();
+        try {
+            CollectionAdminRequest.Create createCollectionRequest = new CollectionAdminRequest.Create();
+            createCollectionRequest.setCollectionName(accountId);
+            createCollectionRequest.setNumShards(1);
+            createCollectionRequest.setReplicationFactor(replicationFactor);
+            createCollectionRequest.setMaxShardsPerNode(server.getSolrMaxShardsPerNode());
+            createCollectionRequest.setConfigName("zimbra");
+            createCollectionRequest.process(solrClient);
+        } catch (SolrServerException e) {
+            if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
+                solrCollectionProvisioned = false;
             }
-
-            //TODO: remove this test code. Added, to give ZooKeeper time to update cluster state when running multiple Solr instances on one laptop
-            //wait for index to get created
-            try {
-                for(int i=0;i<5;i++) {
-                    if(indexExists()) {
-                        return;
-                    }
-                    Thread.sleep(1000);
-                }
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            String errorMsg = String.format("Problem creating new Solr collection for account %s",accountId);
+            ZimbraLog.index.error(errorMsg, e);
+            throw ServiceException.FAILURE(errorMsg,e);
+        } catch (SolrException e) {
+            if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("collection already exists") > -1) {
+                //it is possible that another mailstore has initialized this collection at ths same time
+                ZimbraLog.index.debug("Index for account %s already exists. Will not attempt to recreate it.", accountId);
+            } else  {
+                String errorMsg = String.format("Problem creating new Solr collection for account %s",accountId);
+                ZimbraLog.index.error(errorMsg, e);
+                throw ServiceException.FAILURE(errorMsg,e);
             }
+        } catch (IOException e) {
+            String errorMsg = String.format("Problem creating new Solr collection for account %s",accountId);
+            ZimbraLog.index.error(errorMsg, e);
+            throw new IOException(errorMsg,e);
+        }
 
+        //wait for index to get propagated (effectively polls clusterstatus.json)
+        solrCollectionProvisioned = ClusterStateUtil.waitForLiveAndActiveReplicaCount(solrClient.getZkStateReader(), accountId, replicationFactor, server.getIndexReplicationTimeout());
+        if(!solrCollectionProvisioned) {
+            ZimbraLog.index.error("Could not confirm that all nodes for collection %s are provisioned", accountId);
         }
     }
 
@@ -425,7 +423,9 @@ public class SolrCloudIndex extends SolrIndexBase {
         ZkStateReader zkStateReader = null;
         String leaderURL = null;
         try {
-            zkStateReader = new ZkStateReader(zkList,15000,15000);
+            zkStateReader = new ZkStateReader(zkList,
+                    ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraZKClientTimeout, 15000),
+                        ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraZKClientTimeout, 15000));
             zkStateReader.createClusterStateWatchersAndUpdate();
             ClusterState clusterState = zkStateReader.getClusterState();
             Collection<Slice> shards = clusterState.getCollection(accountID).getSlices();

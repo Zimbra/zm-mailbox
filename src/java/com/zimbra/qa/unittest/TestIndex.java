@@ -60,10 +60,10 @@ public class TestIndex  {
     protected static final String BASE_DOMAIN_NAME = TestLdap.baseDomainName(TestSolrCloud.class);
     protected static final String USER_NAME = "TestSolrCloud-user1@" + BASE_DOMAIN_NAME;
     private Account acct = null;
-    
+
     @Before
-	public void setUp() throws Exception {
-    	originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+    public void setUp() throws Exception {
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         mOriginalTextLimit = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraAttachmentsIndexedTextLimit));
         mOriginalSolrURLBase = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexURL, "solr:http://localhost:7983/solr");
@@ -73,7 +73,7 @@ public class TestIndex  {
         TestUtil.createDomain(BASE_DOMAIN_NAME);
         acct = TestUtil.createAccount(USER_NAME);
     }
-    
+
     @After
     public void tearDown() throws Exception {
         setTextLimit(mOriginalTextLimit);
@@ -89,7 +89,7 @@ public class TestIndex  {
         TestUtil.deleteDomain(BASE_DOMAIN_NAME);
     }
 
-    @Test 
+    @Test
     public void testDeleteIndex() throws Exception {
         Factory indexStoreFactory = IndexStore.getFactory();
         //create an account
@@ -110,7 +110,7 @@ public class TestIndex  {
         assertFalse("failed to delete an index", indexStore.indexExists());
     }
 
-    @Test 
+    @Test
     public void testDeleteDeletedIndex() throws Exception {
         Factory indexStoreFactory = IndexStore.getFactory();
 
@@ -135,19 +135,19 @@ public class TestIndex  {
         } catch (Exception e) {
             fail("should not be getting an exception ");
         }
-        
+
         indexStore = indexStoreFactory.getIndexStore(acct.getId());
-        
+
         try {
             indexStore.deleteIndex();
         } catch (Exception e) {
             fail("should not be getting an exception ");
         }
-        
+
         assertFalse("failed to delete an index", indexStore.indexExists());
     }
-    
-    @Test 
+
+    @Test
     public void testRecoverLostIndex() throws Exception {
         Factory indexStoreFactory = IndexStore.getFactory();
 
@@ -167,18 +167,17 @@ public class TestIndex  {
         }
         indexStore = indexStoreFactory.getIndexStore(acct.getId());
         assertFalse("failed to delete an index", indexStore.indexExists());
-        
+
         TestUtil.addMessage(TestUtil.getMailbox(acct.getName()), "We found the enemy and he is us");
         if(!(indexStoreFactory instanceof SolrCloudIndex.Factory)) {
             assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "enemy", MailItem.Type.MESSAGE).size());
             assertEquals("Should not be finding message added before index was deleted", 0,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
         }
     }
-    
-    @Test 
+
+    @Test
     public void testDeleteMailbox() throws Exception {
         Factory indexStoreFactory = IndexStore.getFactory();
-
         //create an account
         assertTrue("failed to create an account", TestUtil.accountExists(acct.getName()));
         TestUtil.addMessage(TestUtil.getMailbox(acct.getName()), "chorus at end by pupils from the Fourth Form Music Class Islington Green School, London");
@@ -187,28 +186,27 @@ public class TestIndex  {
         }
         IndexStore indexStore = indexStoreFactory.getIndexStore(acct.getId());
         assertTrue("failed to create an index", indexStore.indexExists());
-        
+
         Mailbox mbox = TestUtil.getMailbox(acct.getName());
         mbox.deleteMailbox();
         if(indexStoreFactory instanceof SolrCloudIndex.Factory) {
             Thread.sleep(5000); //let ZK update clusterstate.json
         }
-        
+
         indexStore = indexStoreFactory.getIndexStore(acct.getId());
         assertFalse("Index should not exist after mailbox " + acct.getId() + " is deleted", indexStore.indexExists());
-        
+
         try {
             indexStore.deleteIndex();
         } catch (Exception e) {
             fail("should not be getting an exception ");
         }
-        
+
         assertFalse("Index should not exist for account " + acct.getId(), indexStore.indexExists());
     }
-    
-    @Test 
+
+    @Test
     public void testIndexedTextLimit() throws Exception {
-        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(IndexStore.getFactory().getClass().getName()));
         // Test text attachment
         StringBuilder body = new StringBuilder();
         for (int i = 1; i < 100; i++) {
@@ -256,10 +254,9 @@ public class TestIndex  {
     /**
      * Verifies the fix to bug 54613.
      */
-    @Test 
-    
+    @Test
     public void testFilenameSearch() throws Exception {
-        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(IndexStore.getFactory().getClass().getName()));
+        //Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(IndexStore.getFactory().getClass().getName()));
         ZMailbox mbox = TestUtil.getZMailbox(acct.getName());
         String filename = NAME_PREFIX + " testFilenameSearch.txt";
         TestUtil.createDocument(mbox, Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE),
@@ -280,8 +277,10 @@ public class TestIndex  {
         Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
         TestUtil.addMessage(mbox, "chorus at end by pupils from the Fourth Form Music Class Islington Green School, London");
         try {
-            mbox.index.waitForIndexing(3000);
-            fail("should throw an exception");
+            mbox.index.waitForIndexing(0);
+            if("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(IndexStore.getFactory().getClass().getName())) {
+                fail("should throw an exception");
+            }
         } catch (ServiceException e) {
             //this should throw an exception
             assertNotNull(e);
@@ -290,7 +289,7 @@ public class TestIndex  {
         Provisioning.getInstance().getLocalServer().setIndexURL(mOriginalSolrURLBase);
         Zimbra.getAppContext().getBean(IndexingService.class).startUp();
         try {
-            mbox.index.waitForIndexing(5000);
+            mbox.index.waitForIndexing(0);
         } catch (ServiceException e) {
             //this should not throw an exception
             ZimbraLog.test.error("Caught an exception while waiting for indexing to complete", e);
@@ -299,7 +298,7 @@ public class TestIndex  {
         assertNull("should have no tasks queued for indexing", Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).peek());
         assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
     }
-    
+
     @Test
     public void testFailIndexing() throws Exception {
         Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(IndexStore.getFactory().getClass().getName()));
@@ -313,7 +312,7 @@ public class TestIndex  {
         }
         TestUtil.addMessage(mbox, "chorus at end by pupils from the Fourth Form Music Class Islington Green School, London");
         try {
-            mbox.index.waitForIndexing(3000);
+            mbox.index.waitForIndexing(0);
             fail("should throw an exception");
         } catch (ServiceException e) {
             //this should throw an exception
@@ -321,18 +320,18 @@ public class TestIndex  {
         }
         Provisioning.getInstance().getLocalServer().setIndexURL(mOriginalSolrURLBase);
         try {
-            mbox.index.waitForIndexing(5000);
+            mbox.index.waitForIndexing(0);
             fail("should throw an exception");
         } catch (ServiceException e) {
             //this should throw an exception
             assertNotNull(e);
         }
         assertEquals("should not be able to find injected message",0,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
-        
+
         //indexing queue should be empty
         assertNull("should have no tasks queued for indexing", Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).peek());
     }
-    
+
     /**
      * Sends a message with the specified attachment, waits for the message to
      * arrives, and runs a query.
