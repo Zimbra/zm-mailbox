@@ -20,6 +20,7 @@ package com.zimbra.cs.servlet;
 import java.security.Principal;
 
 import javax.security.auth.Subject;
+import javax.servlet.ServletRequest;
 
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
@@ -77,7 +78,7 @@ public class ZimbraLoginService implements LoginService {
     }
 
     @Override
-    public UserIdentity login(String username, Object credentials) {
+    public UserIdentity login(String username, Object credentials, ServletRequest req) {
         Account account;
         try {
             Provisioning prov = Provisioning.getInstance();

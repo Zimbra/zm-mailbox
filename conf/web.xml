@@ -701,7 +701,7 @@
 
   <servlet id="jsp">
     <servlet-name>jsp</servlet-name>
-    <servlet-class>org.apache.jasper.servlet.JspServlet</servlet-class>
+    <servlet-class>org.eclipse.jetty.jsp.JettyJspServlet</servlet-class>
     <async-supported>true</async-supported>
     <init-param>
         <param-name>fork</param-name>
