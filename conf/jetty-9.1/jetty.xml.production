@@ -776,6 +776,7 @@
               <Item>-org.eclipse.jetty.http.</Item>
               <Item>-org.eclipse.jetty.security.</Item>
               <Item>-org.eclipse.jetty.util.</Item>
+              <Item>-org.eclipse.jetty.apache.</Item>
               <Item>org.eclipse.jetty.</Item>
            </Array>    
         </Arg>
