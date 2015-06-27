@@ -71,10 +71,10 @@
         <isset property="solr-standalone"/>
     </condition>
     <property name="war.web.xml" location="${war.web.xml}${production.suffix}"/>
-    <property name="jetty.xml.file" location='${config.dir}/jetty-9.1/jetty.xml${nosolr.suffix}' />
-    <property name="jetty.policy.file" location="${config.dir}/jetty-9.1/zimbra.policy.example"/>
+    <property name="jetty.xml.file" location='${config.dir}/jetty/jetty.xml${nosolr.suffix}' />
+    <property name="jetty.policy.file" location="${config.dir}/jetty/zimbra.policy.example"/>
 
-    <property name="spnego.dir" location="${config.dir}/jetty-9.1/spnego"/>
+    <property name="spnego.dir" location="${config.dir}/jetty/spnego"/>
 
     <property name="deploy.war" value="${warfile}"/>
     <property name="deploy.host" value="127.0.0.1"/>
@@ -1141,13 +1141,13 @@
 
   <target name="dev-dist-jetty">
     <copy todir="${dist.jetty.dir}/webapps" file="${warfile}" overwrite="true"/>
-    <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-9.1/jettyrc" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty/jettyrc" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/zimbra.policy.example" file="${jetty.policy.file}" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/webdefault.xml"
-          file="${config.dir}/jetty-9.1/webdefault.xml${production.suffix}" overwrite="true"/>
+          file="${config.dir}/jetty/webdefault.xml${production.suffix}" overwrite="true"/>
       <copy todir="${dist.jetty.dir}/modules" overwrite="true">
-        <fileset dir="${config.dir}/jetty-9.1/modules"/> 
+        <fileset dir="${config.dir}/jetty/modules"/> 
       </copy>
     <if>
       <isset property="is-windows"/>
@@ -1156,7 +1156,7 @@
       </then>
     </if>
     <copy tofile="${dist.jetty.dir}/resources/log4j.properties"
-          file="${config.dir}/jetty-9.1/log4j.properties${production.suffix}" overwrite="true"/>
+          file="${config.dir}/jetty/log4j.properties${production.suffix}" overwrite="true"/>
     <copy todir="${dist.jetty.dir}/common/lib" overwrite="true">
       <fileset file="${jettycommon.jarfile}"/>
     </copy>
