@@ -49,6 +49,37 @@ public class ZmgDeviceSpec {
     private String pushProvider;
 
     /**
+     * @zm-api-field-tag os-name
+     * @zm-api-field-description osName is the name of the operating system
+     *                           installed on the device. Example - ios, android
+     */
+    @XmlAttribute(name = AccountConstants.A_OS_NAME /* OS name */, required = false)
+    private String osName;
+
+    /**
+     * @zm-api-field-tag os-version
+     * @zm-api-field-description The osVersion should be specified in the
+     *                           following formats - a)
+     *                           majorVersion.minorVersion.microVersion b)
+     *                           majorVersion.minorVersion Example - iOS having
+     *                           versions like 7.0, 8.0.3, 8.1 etc. Android has
+     *                           OS version like 2.0, 3.1, 4.4, 5.0 etc
+     */
+    @XmlAttribute(name = AccountConstants.A_OS_VERSION /* OS version */, required = false)
+    private String osVersion;
+
+    /**
+     * @zm-api-field-tag max-payload-size
+     * @zm-api-field-description maxPayloadSize is the maximum number of bytes
+     *                           allowed for the push notification payload
+     *                           Example - iOS 7.0 maxPayloadSize is 256 bytes
+     *                           iOS 8.0 onwards maxPayloadSize is 2048 bytes
+     *                           Android maxPayloadSize is 4096 bytes
+     */
+    @XmlAttribute(name = AccountConstants.A_MAX_PAYLOAD_SIZE /* max payload size */, required = false)
+    private Integer maxPayloadSize;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -68,6 +99,18 @@ public class ZmgDeviceSpec {
         this.pushProvider = pushProvider;
     }
 
+    public void setOSName(String osName) {
+        this.osName = osName;
+    }
+
+    public void setOSVersion(String osVersion) {
+        this.osVersion = osVersion;
+    }
+
+    public void setMaxPayloadSize(int maxPayloadSize) {
+        this.maxPayloadSize = maxPayloadSize;
+    }
+
     public String getAppId() {
         return appId;
     }
@@ -80,9 +123,22 @@ public class ZmgDeviceSpec {
         return pushProvider;
     }
 
+    public String getOSName() {
+        return osName;
+    }
+
+    public String getOSVersion() {
+        return osVersion;
+    }
+
+    public int getMaxPayloadSize() {
+        return maxPayloadSize;
+    }
+
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper.add("appId", appId).add("registrationId", registrationId)
-            .add("pushProvider", pushProvider);
+            .add("pushProvider", pushProvider).add("osName", osName).add("osVersion", osVersion)
+            .add("maxPayloadSize", maxPayloadSize);
     }
 
     @Override
