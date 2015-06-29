@@ -44,6 +44,9 @@ public class TestRegisterMobileGatewayAppRequest extends TestCase {
         ZmgDeviceSpec zmgDevice = new ZmgDeviceSpec("1234");
         zmgDevice.setRegistrationId("124h67");
         zmgDevice.setPushProvider("gcm");
+        zmgDevice.setOSName("os_name");
+        zmgDevice.setOSVersion("7.0");
+        zmgDevice.setMaxPayloadSize(512);
         RegisterMobileGatewayAppRequest request = new RegisterMobileGatewayAppRequest(zmgDevice);
         mbox.invokeJaxb(request);
     }

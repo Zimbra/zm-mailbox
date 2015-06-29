@@ -34,11 +34,17 @@ public class DbZmgDevices {
     public static final String DEVICE_ID = "device_id";
     public static final String REG_ID = "reg_id";
     public static final String PUSH_PROVIDER = "push_provider";
+    public static final String OS_NAME = "os_name";
+    public static final String OS_VERSION = "os_version";
+    public static final String MAX_PAYLOAD_SIZE = "max_payload_size";
 
     public static final int CI_MAILBOX_ID = 1;
     public static final int CI_DEVICE_ID = 2;
     public static final int CI_REG_ID = 3;
     public static final int CI_PUSH_PROVIDER = 4;
+    public static final int CI_OS_NAME = 5;
+    public static final int CI_OS_VERSION = 6;
+    public static final int CI_MAX_PAYLOAD_SIZE = 7;
 
     public static int addDevice(ZmgDevice device) throws ServiceException {
         DbConnection conn = null;
@@ -48,13 +54,16 @@ public class DbZmgDevices {
         try {
             conn = DbPool.getConnection();
             stmt = conn
-                .prepareStatement("REPLACE INTO zmg_devices (mailbox_id, device_id, reg_id, push_provider) VALUES (?,?,?,?)");
+                .prepareStatement("REPLACE INTO zmg_devices (mailbox_id, device_id, reg_id, push_provider, os_name, os_version, max_payload_size) VALUES (?,?,?,?,?,?,?)");
 
             int pos = 1;
             stmt.setInt(pos++, device.getMailboxId());
             stmt.setString(pos++, device.getDeviceId());
             stmt.setString(pos++, device.getRegistrationId());
             stmt.setString(pos++, device.getPushProvider());
+            stmt.setString(pos++, device.getOSName());
+            stmt.setString(pos++, device.getOSVersion());
+            stmt.setInt(pos++, device.getMaxPayloadSize());
             result = stmt.executeUpdate();
             stmt.close();
             conn.commit();
@@ -76,7 +85,7 @@ public class DbZmgDevices {
         try {
             conn = DbPool.getConnection(mbox);
             stmt = conn
-                .prepareStatement("SELECT mailbox_id, device_id, reg_id, push_provider  FROM zmg_devices WHERE mailbox_id = ?");
+                .prepareStatement("SELECT mailbox_id, device_id, reg_id, push_provider, os_name, os_version, max_payload_size  FROM zmg_devices WHERE mailbox_id = ?");
 
             int pos = 1;
             stmt.setInt(pos++, mbox.getId());
@@ -84,7 +93,8 @@ public class DbZmgDevices {
             while (rs.next()) {
                 ZmgDevice device = new ZmgDevice(rs.getInt(CI_MAILBOX_ID),
                     rs.getString(CI_DEVICE_ID), rs.getString(CI_REG_ID),
-                    rs.getString(CI_PUSH_PROVIDER));
+                    rs.getString(CI_PUSH_PROVIDER), rs.getString(CI_OS_NAME),
+                    rs.getString(CI_OS_VERSION), rs.getInt(CI_MAX_PAYLOAD_SIZE));
                 devices.add(device);
             }
             return devices;
