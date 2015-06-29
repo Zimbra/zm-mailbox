@@ -23,9 +23,12 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
@@ -35,6 +38,8 @@ public class GcmPushProvider implements PushProvider {
 
     private String gcmUrl = null;
     private String gcmAuthorizationKey = null;
+
+    private static final int DEFAULT_MAX_PAYLOAD_SIZE = 4096;
 
     public GcmPushProvider() {
         init();
@@ -66,17 +71,39 @@ public class GcmPushProvider implements PushProvider {
         }
 
         String payload = notification.getPayload();
-        if (payload.isEmpty()) {
+        int maxPayloadSize = notification.getDevice().getMaxPayloadSize() == 0 ? DEFAULT_MAX_PAYLOAD_SIZE
+            : notification.getDevice().getMaxPayloadSize();
+        int payloadSize;
+        try {
+            payloadSize = payload.getBytes(PushNotification.CHARCTER_ENCODING).length;
+            ZimbraLog.mailbox.info("ZMG: GCM payload size -  %d", payloadSize);
+            if (payload.isEmpty()) {
+                return;
+            }
+            if (payloadSize > maxPayloadSize) {
+                payload = truncatePayload(payload, payloadSize, maxPayloadSize);
+                payloadSize = payload.getBytes(PushNotification.CHARCTER_ENCODING).length;
+                ZimbraLog.mailbox.info("ZMG: GCM truncated payload size -  %d", payloadSize);
+                if (payloadSize > maxPayloadSize) {
+                    ZimbraLog.mailbox
+                        .info("ZMG: GCM Paylaod size is greater than the maximum supported payload size");
+                    return;
+                }
+            }
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.mailbox.warn("ZMG: unsupported encoding", e);
             return;
         }
 
         PostMethod post = new PostMethod(gcmUrl);
         post.addRequestHeader("Authorization", "key=" + gcmAuthorizationKey);
-        post.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        post.setRequestHeader("Content-Type", "application/json;charset=" + PushNotification.CHARCTER_ENCODING);
         try {
-            post.setRequestEntity(new StringRequestEntity(payload, "application/json", "UTF-8"));
+            post.setRequestEntity(new StringRequestEntity(payload, "application/json",
+                PushNotification.CHARCTER_ENCODING));
         } catch (UnsupportedEncodingException e) {
             ZimbraLog.mailbox.warn("ZMG: Exception in forming GCM request", e);
+            return;
         }
 
         try {
@@ -84,13 +111,11 @@ public class GcmPushProvider implements PushProvider {
                 .getDefaultHttpClient();
             int status = httpClient.executeMethod(post);
             if (status == HttpStatus.SC_OK) {
-                String resp = post.getResponseBodyAsString();
-                ZimbraLog.mailbox.debug("ZMG: GCM push completed: device=%s status=%d response=%s",
-                    notification.getDevice().getRegistrationId(), status, resp);
+                ZimbraLog.mailbox.info("ZMG: GCM push completed: status=%d", status);
             } else {
-                ZimbraLog.mailbox.debug("ZMG: GCM push failed: status=%d, payload= %s", status,
+                ZimbraLog.mailbox.info("ZMG: GCM push failed: status=%d, payload= %s", status,
                     notification.getPayload());
-                ZimbraLog.mailbox.debug("ZMG: GCM push failed: response = %s",
+                ZimbraLog.mailbox.info("ZMG: GCM push failed: response = %s",
                     post.getResponseBodyAsString());
             }
         } catch (HttpException e) {
@@ -99,6 +124,31 @@ public class GcmPushProvider implements PushProvider {
             ZimbraLog.mailbox.warn("ZMG: GCM IO failed", e);
         } finally {
             post.releaseConnection();
+        }
+    }
+
+    public String truncatePayload(String jsonString, int payloadSize, int maxPayloadSize) {
+        try {
+            JSONObject jsonObject = new JSONObject(jsonString);
+            JSONObject gcmData = jsonObject.getJSONObject(PushNotification.GCM_DATA);
+            String subject = gcmData.getString(PushNotification.SUBJECT);
+            int maxSubjectLength = subject.getBytes(PushNotification.CHARCTER_ENCODING).length
+                - (payloadSize - maxPayloadSize);
+            if (maxSubjectLength < 0) {
+                return jsonString;
+            }
+            subject = StringUtil.truncateIfRequired(subject, maxSubjectLength);
+            gcmData.put(PushNotification.SUBJECT, subject);
+            return jsonObject.toString();
+        } catch (JSONException e) {
+            ZimbraLog.mailbox.warn("ZMG: JSON Exception in truncating payload", e);
+            return jsonString;
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.mailbox.warn("ZMG: Encoding Exception in truncating payload", e);
+            return jsonString;
+        } catch (Exception e) {
+            ZimbraLog.mailbox.warn("ZMG: Exception in truncating payload", e);
+            return jsonString;
         }
     }
 }

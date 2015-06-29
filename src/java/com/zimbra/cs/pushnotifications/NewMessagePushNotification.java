@@ -187,26 +187,31 @@ public class NewMessagePushNotification implements PushNotification {
     private String getPayloadForApns() {
         JSONObject aps = new JSONObject();
         JSONObject payload = new JSONObject();
+        double osVersion = device.getOSVersionAsDouble();
+        String apsSender = (senderDisplayName == null || senderDisplayName.isEmpty()) ? sender : senderDisplayName;
         try {
             aps.put(APNS_SOUND, "default");
             aps.put(APNS_BADGE, unreadCount);
-            aps.put(APNS_ALERT, "From: " + sender + "\n" + subject);
+            aps.put(CONTENT_AVAILABLE, 1);
+            aps.put(APNS_ALERT, apsSender + "\n" + subject);
 
             payload.put(APNS_APS, aps);
             payload.put(CID, conversationId);
             payload.put(ID, messageId);
-            payload.put(SENDER_ADDRESS, sender);
-            payload.put(SENDER_DISPLAY_NAME, senderDisplayName);
-            payload.put(RECIPIENT_ADDRESS, recipient);
-            payload.put(FRAGMENT, fragment);
-            payload.put(TYPE, type);
-            payload.put(ACTION, action);
+            if (osVersion >= 8.0) {
+                payload.put(SENDER_ADDRESS, sender);
+                payload.put(RECIPIENT_ADDRESS, recipient);
+                payload.put(FRAGMENT, fragment);
+                payload.put(TYPE, type);
+                payload.put(ACTION, action);
+            }
         } catch (JSONException e) {
             ZimbraLog.mailbox.warn(
                 "ZMG: Exception in creating APNS payload for new message notification", e);
             return "";
         }
 
+        ZimbraLog.mailbox.debug("ZMG: APNS payload - %s", payload.toString());
         return payload.toString();
     }
 
@@ -235,6 +240,7 @@ public class NewMessagePushNotification implements PushNotification {
             return "";
         }
 
+        ZimbraLog.mailbox.debug("ZMG: GCM payload - %s", payload.toString());
         return payload.toString();
     }
 
@@ -278,4 +284,5 @@ public class NewMessagePushNotification implements PushNotification {
     public void setDevice(ZmgDevice device) {
         this.device = device;
     }
+
 }
