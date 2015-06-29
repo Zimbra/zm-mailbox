@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,8 +16,6 @@
  */
 
 package com.zimbra.soap.admin.message;
-
-import com.google.common.collect.Lists;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,6 +28,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -59,12 +58,13 @@ public final class GetCurrentVolumesResponse {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraAdmin")
     public static final class CurrentVolumeInfo {
         @XmlAttribute(name=AdminConstants.A_ID, required=true)
-        private short id;
+        private final short id;
 
         @XmlAttribute(name=AdminConstants.A_VOLUME_TYPE, required=true)
-        private short type;
+        private final short type;
 
         /**
          * no-argument constructor wanted by JAXB

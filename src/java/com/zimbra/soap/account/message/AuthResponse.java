@@ -43,7 +43,7 @@ import com.zimbra.soap.type.ZmBoolean;
 /*
 <AuthResponse">
    <authToken>...</authToken>
-   <lifetime>...</lifetime>
+   <lifetime>{lifetime-in-milliseconds}</lifetime>
    <session .../>
    <refer>{mail-host}</refer>
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
@@ -64,7 +64,7 @@ public class AuthResponse {
     @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=true)
     private String authToken;
     /**
-     * @zm-api-field-description Life time for the authorization
+     * @zm-api-field-description Life time for the authorization - given in milliseconds
      */
     @ZimbraJsonAttribute
     @XmlElement(name=AccountConstants.E_LIFETIME /* lifetime */, required=true)
@@ -75,7 +75,7 @@ public class AuthResponse {
      */
     @ZimbraJsonAttribute
     @XmlElement(name=AccountConstants.E_TRUST_LIFETIME /* trustLifetime */, required=false)
-    private Long trustLifetime;
+    private long trustLifetime;
 
     /**
      * @zm-api-field-description Session information
@@ -128,7 +128,7 @@ public class AuthResponse {
     @ZimbraKeyValuePairs
     @XmlElementWrapper(name=AccountConstants.E_PREFS /* prefs */)
     @XmlElement(name=AccountConstants.E_PREF /* pref */)
-    private final List<Pref> prefs = new ArrayList<Pref>();
+    private List<Pref> prefs = new ArrayList<Pref>();
 
     /**
      * @zm-api-field-description Requested attribute settings.  Only attributes that are allowed to be returned by
@@ -137,7 +137,7 @@ public class AuthResponse {
     @ZimbraKeyValuePairs
     @XmlElementWrapper(name=AccountConstants.E_ATTRS /* attrs */)
     @XmlElement(name=AccountConstants.E_ATTR /* attr */)
-    private final List<Attr> attrs = new ArrayList<Attr>();
+    private List<Attr> attrs = new ArrayList<Attr>();
 
     @XmlElement(name=AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED, required =false)
     private ZmBoolean twoFactorAuthRequired;
