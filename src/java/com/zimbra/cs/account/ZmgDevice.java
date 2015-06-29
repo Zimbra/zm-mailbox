@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbZmgDevices;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.soap.account.type.ZmgDeviceSpec;
 
 public class ZmgDevice {
 
@@ -29,12 +30,19 @@ public class ZmgDevice {
     private String deviceId;
     private String registrationId;
     private String pushProvider;
+    private String osName;
+    private String osVersion;
+    private int maxPayloadSize;
 
-    public ZmgDevice(int mailboxId, String deviceId, String registrationId, String pushProvider) {
+    public ZmgDevice(int mailboxId, String deviceId, String registrationId, String pushProvider,
+                     String osName, String osVersion, int maxPayloadSize) {
         this.mailboxId = mailboxId;
         this.deviceId = deviceId;
         this.registrationId = registrationId;
         this.pushProvider = pushProvider;
+        this.osName = osName;
+        this.osVersion = osVersion;
+        this.maxPayloadSize = maxPayloadSize;
     }
 
     /**
@@ -97,9 +105,59 @@ public class ZmgDevice {
         this.pushProvider = pushProvider;
     }
 
-    public static int add(int mailboxId, String deviceId, String registrationId, String pushProvider)
-            throws ServiceException {
-        ZmgDevice device = new ZmgDevice(mailboxId, deviceId, registrationId, pushProvider);
+    /**
+     * @return the osName
+     */
+    public String getOSName() {
+        return osName;
+    }
+
+    /**
+     * @param osName
+     *            the osName to set
+     */
+    public void setOSName(String osName) {
+        this.osName = osName;
+    }
+
+    /**
+     * @return the osVersion
+     */
+    public String getOSVersion() {
+        return osVersion;
+    }
+
+    public double getOSVersionAsDouble() {
+        return parseOSVersion(osVersion);
+    }
+
+    /**
+     * @param osVersion
+     *            the osVersion to set
+     */
+    public void setOSVersion(String osVersion) {
+        this.osVersion = osVersion;
+    }
+
+    /**
+     * @return the maxPayloadSize
+     */
+    public int getMaxPayloadSize() {
+        return maxPayloadSize;
+    }
+
+    /**
+     * @param maxPayloadSize
+     *            the maxPayloadSize to set
+     */
+    public void setMaxPayloadSize(int maxPayloadSize) {
+        this.maxPayloadSize = maxPayloadSize;
+    }
+
+    public static int add(int mailboxId, ZmgDeviceSpec deviceSpec) throws ServiceException {
+        ZmgDevice device = new ZmgDevice(mailboxId, deviceSpec.getAppId(),
+            deviceSpec.getRegistrationId(), deviceSpec.getPushProvider(), deviceSpec.getOSName(),
+            deviceSpec.getOSVersion(), deviceSpec.getMaxPayloadSize());
         return DbZmgDevices.addDevice(device);
     }
 
@@ -110,5 +168,21 @@ public class ZmgDevice {
             ZimbraLog.misc.warn("Error in getting registered ZMG devices from db", e);
             return Collections.<ZmgDevice> emptyList();
         }
+    }
+
+    public static double parseOSVersion(String version) {
+        double osVersion;
+        if (version == null) {
+            return 0;
+        }
+
+        try {
+            int endIndex = version.indexOf(".") + 2;
+            osVersion = Double.valueOf(version.substring(0, endIndex).intern());
+        } catch (Exception e) {
+            ZimbraLog.mailbox.info("ZMG: Exception in parsing OS Version", e);
+            return 0;
+        }
+        return osVersion;
     }
 }

@@ -50,11 +50,8 @@ public class RegisterMobileGatewayApp extends AccountDocumentHandler {
 
         RegisterMobileGatewayAppRequest req = JaxbUtil.elementToJaxb(request);
         ZmgDeviceSpec device = req.getZmgDevice();
-        String deviceId = device.getAppId();
-        String regId = device.getRegistrationId();
-        String pushProvider = device.getPushProvider();
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        int result = ZmgDevice.add(mbox.getId(), deviceId, regId, pushProvider);
+        int result = ZmgDevice.add(mbox.getId(), device);
 
         if (result == 1 && !account.isPrefZmgPushNotificationEnabled()) {
             account.setPrefZmgPushNotificationEnabled(true);

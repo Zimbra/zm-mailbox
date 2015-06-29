@@ -17,7 +17,6 @@
 package com.zimbra.cs.filter;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -449,7 +448,7 @@ public final class FilterUtil {
         }
 
         String body = StringUtil.fillTemplate(bodyTemplate, vars);
-        body = truncateBodyIfRequired(body, maxBodyBytes);
+        body = StringUtil.truncateIfRequired(body, maxBodyBytes);
         notification.setText(body, getCharset(account, body));
         notification.saveChanges();
 
@@ -479,25 +478,6 @@ public final class FilterUtil {
         } else {
             return CharsetUtil.checkCharset(data, account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8));
         }
-    }
-
-    static String truncateBodyIfRequired(String body, int maxBodyBytes) {
-        try {
-            byte[] bodyBytes = body.getBytes(MimeConstants.P_CHARSET_UTF8);
-            if (maxBodyBytes > -1 && bodyBytes.length > maxBodyBytes) {
-                // During truncation make sure that we don't end up with a partial char at the end of the body.
-                // Start from index maxBodyBytes and going backwards determine the first byte that is a starting
-                // byte for a character. Such a byte is one whose top bit is 0 or whose top 2 bits are 11.
-                int indexToExclude = maxBodyBytes;
-                while (indexToExclude > 0 && bodyBytes[indexToExclude] < -64) {
-                    indexToExclude--;
-                }
-                return new String(bodyBytes, 0, indexToExclude, MimeConstants.P_CHARSET_UTF8);
-            }
-        } catch (UnsupportedEncodingException e) {
-            ZimbraLog.filter.error("Error while truncating body", e);
-        }
-        return body;
     }
 
     @VisibleForTesting

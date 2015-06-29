@@ -57,11 +57,21 @@ Push notifications for Android Apps using Google Cloud Messaging -
 
 For push notifications using GCM, a project needs to be created using Google APIs console page. 
 The “Project Number” aka sender id of this project is used by android client to register itself 
-for GCM. After registering itself, the android client receives a registration Id. 
-The android client uploads this registration id with its messaging server. The server will use 
-the registration id to send notifications to that device. Along with registration id, the server also needs a 
-Server API key for sending notifications, the server API key is also created while creating the project 
+for GCM. After registering itself, the android client receives a registration Id.
+The android client uploads this registration id with its messaging server. The server will use
+the registration id to send notifications to that device. Along with registration id, the server also needs a
+Server API key for sending notifications, the server API key is also created while creating the project
 on Google APIs console
+Following attributes have been introduced for configuring the server for sending Push Notifications to
+Android devices
+
+1. zimbraGCMSenderId
+Value can be set using the following command -
+zmprov mcf zimbraGCMSenderId <GCM Sender Id>
+
+2. zimbraGcmAuthorizationKey
+Value can be set using the following command -
+zmprov mcf zimbraGcmAuthorizationKey <GCM Authorization Key>
 
 Please refer the following links for detailed information about Google Cloud Messaging - 
 
@@ -85,11 +95,25 @@ Registering app/device to receive push notifications:
 Android clients using Google Cloud messaging should specify "gcm" as pushProvider.
 
 <RegisterMobileGatewayAppRequest xmlns="urn:zimbraAccount">
-  <zmgDevice appId="{appId}" registrationId="{registrationId}" pushProvider="gcm"/>
+  <zmgDevice appId="{appId}" registrationId="{registrationId}" pushProvider="gcm"
+  osName="{ios | android}" osVersion="{osVersion number}" maxPayloadSize={maxPayloadSize in bytes}/>
 </RegisterMobileGatewayAppRequest>
 
-<RegisterMobileGatewayAppResponse xmlns="urn:zimbraAccount"/>
+Note:
+1. osName is the name of the operating system installed on the device. Example - ios, android
+2. osVersion should be specified in the following formats -
+    a) majorVersion.minorVersion.microVersion
+    b) majorVersion.minorVersion
 
+    Example - iOS having versions like 7.0, 8.0.3, 8.1 etc
+              android has OS version like 2.0, 3.1, 4.4, 5.0 etc
+
+3. maxPayloadSize is the maximum number of bytes allowed for the push notification payload
+   Example - iOS 7.0 maxPayloadSize is 256 bytes
+             iOS 8.0 onwards maxPayloadSize is 2048 bytes
+             Android maxPayloadSize is 4096 bytes
+
+<RegisterMobileGatewayAppResponse xmlns="urn:zimbraAccount"/>
 
 ------ Push Notifications for iOS apps -----
 
@@ -146,14 +170,19 @@ Notifications are sent in json format. Following are sample json notifications -
 GCM -
 
 {"data":{"su":"afadfadfgdg","ac":"CreateMessage","ty":"MESSAGE","id":291,
-"sdn":"Rohan Ambasta","fr":"asdfdsgdg","sa":"rambasta@zimbra.com","uc":26,"cid":-291,
-"ra":"zimbrasoap@gmail.com"},"registration_ids":["..."]}
+"sdn":"<sender name>","fr":"asdfdsgdg","sa":"<sender address>","uc":26,"cid":-291,
+"ra":"<recipient address>"},"registration_ids":["..."]}
 
 APNS -
 
-{"ac":"CreateMessage","aps":{"badge":26,"alert":"From: rambasta@zimbra.com\nafadfadfgdg","sound":"default"},
-"ty":"MESSAGE","id":291,"sdn":"Rohan Ambasta","fr":"asdfdsgdg","sa":"rambasta@zimbra.com",
-"cid":-291,"ra":"zimbrasoap@gmail.com"}
+{"ac":"CreateMessage","aps":{"badge":26,"alert":"From: <sender name>\n<subject>","sound":"default"},
+"ty":"MESSAGE","id":291,"sdn":"<sender name>","fr":"asdfdsgdg","sa":"<sender address>",
+"cid":-291,"ra":"<recipient address>"}
+
+In case of iOS versions below 8.0, payload is - 
+
+{"aps":{"badge":26,"alert":"From: <sender name>\n<subject>","sound":"default"},
+"id":291,"cid":-291}
 
 
 ------ ZMG "Proxy" mode -----

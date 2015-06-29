@@ -23,6 +23,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -45,7 +46,7 @@ public class FilterUtilTest {
     @Test
     public void truncateBody() throws Exception {
         // truncate a body containing a multi-byte char
-        String body = FilterUtil.truncateBodyIfRequired("Andr\u00e9", 5);
+        String body = StringUtil.truncateIfRequired("Andr\u00e9", 5);
 
         Assert.assertTrue("truncated body should not have a partial char at the end", "Andr".equals(body));
     }
