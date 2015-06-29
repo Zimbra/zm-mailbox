@@ -52,6 +52,8 @@ public interface PushNotification {
     String PROVIDER_IDENTIFIER_GCM = "gcm";
     String PROVIDER_IDENTIFIER_APNS = "apns";
 
+    String CHARCTER_ENCODING = "UTF-8";
+
     int MAX_PUSH_NOTIFICATIONS = 10;
     long OLD_MESSAGE_TIME = 24 * 60 * 60 * 1000;
 

@@ -15,22 +15,29 @@
 
 package com.zimbra.cs.pushnotifications;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import javapns.Push;
 import javapns.communication.exceptions.CommunicationException;
 import javapns.communication.exceptions.KeystoreException;
-import javapns.notification.PushNotificationPayload;
 import javapns.notification.PushedNotification;
 import javapns.notification.ResponsePacket;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ZmgDevice;
 
 public class ApnsPushProvider implements PushProvider {
 
+    private static final int LEGACY_DEFAULT_MAX_PAYLOAD_SIZE = 256;
+    private static final int DEFAULT_MAX_PAYLOAD_SIZE = 2048;
     private String certificatePassword;
     private boolean production = true;
     private byte[] certificate = null;
@@ -65,25 +72,46 @@ public class ApnsPushProvider implements PushProvider {
                 return;
             }
             String jsonString = zmgNotification.getPayload();
+            ZmgDevice zmgDevice = zmgNotification.getDevice();
+
+            int payloadSize = jsonString.getBytes(PushNotification.CHARCTER_ENCODING).length;
+            int maxPayloadSize = zmgDevice.getMaxPayloadSize();
+            if (maxPayloadSize == 0 && zmgDevice.getOSVersionAsDouble() < 8.0) {
+                maxPayloadSize = LEGACY_DEFAULT_MAX_PAYLOAD_SIZE;
+            } else if (maxPayloadSize == 0 && zmgDevice.getOSVersionAsDouble() >= 8.0) {
+                maxPayloadSize = DEFAULT_MAX_PAYLOAD_SIZE;
+            }
+
+            ZimbraLog.mailbox.info("ZMG: APNS payload size -  %d", payloadSize);
             if (jsonString.isEmpty()) {
                 return;
             }
+            if (payloadSize > maxPayloadSize) {
+                jsonString = truncatePayload(jsonString, payloadSize, maxPayloadSize);
+                payloadSize = jsonString.getBytes(PushNotification.CHARCTER_ENCODING).length;
+                ZimbraLog.mailbox.info("ZMG: APNS truncated payload size -  %d", payloadSize);
+                if (payloadSize > maxPayloadSize) {
+                    ZimbraLog.mailbox
+                        .info("ZMG: APNS Paylaod size is greater than the maximum supported payload size");
+                    return;
+                }
+            }
 
-            PushNotificationPayload payload = PushNotificationPayload.fromJSON(jsonString);
+            CustomApnsPayload payload = new CustomApnsPayload(jsonString, maxPayloadSize);
 
             List<PushedNotification> notifications = Push.payload(payload, certificate,
-                certificatePassword, production, zmgNotification.getDevice().getRegistrationId());
+                certificatePassword, production, zmgDevice.getRegistrationId());
             ResponsePacket response = null;
             for (PushedNotification notification : notifications) {
                 response = notification.getResponse();
                 if (response != null) {
-                    ZimbraLog.mailbox.debug("ZMG: APNS push response = %s", response.getMessage());
+                    ZimbraLog.mailbox.info("ZMG: APNS push response = %s", response.getMessage());
                 }
                 if (notification.isSuccessful()) {
-                    ZimbraLog.mailbox.debug("ZMG: APNS push notification sent successfully");
+                    ZimbraLog.mailbox.info("ZMG: APNS push notification sent successfully");
                 } else {
                     String invalidToken = notification.getDevice().getToken();
-                    ZimbraLog.mailbox.debug("ZMG: APNS push invalid token to: %s", invalidToken);
+                    ZimbraLog.mailbox.info("ZMG: APNS push invalid token to: %s", invalidToken);
                 }
             }
         } catch (CommunicationException e) {
@@ -95,6 +123,32 @@ public class ApnsPushProvider implements PushProvider {
         } catch (Exception e) {
             ZimbraLog.mailbox.warn("ZMG: APNS push failed", e);
             return;
+        }
+    }
+
+    public String truncatePayload(String jsonString, int payloadSize, int maxPayloadSize) {
+        try {
+            JSONObject jsonObject = new JSONObject(jsonString);
+            JSONObject aps = jsonObject.getJSONObject(PushNotification.APNS_APS);
+            String[] apsValues = aps.getString(PushNotification.APNS_ALERT).split("\n");
+            String subject = apsValues[1];
+            int maxSubjectLength = subject.getBytes(PushNotification.CHARCTER_ENCODING).length
+                - (payloadSize - maxPayloadSize);
+            if (maxSubjectLength < 0) {
+                return jsonString;
+            }
+            subject = StringUtil.truncateIfRequired(subject, maxSubjectLength);
+            aps.put(PushNotification.APNS_ALERT, apsValues[0] + "\n" + subject);
+            return jsonObject.toString();
+        } catch (JSONException e) {
+            ZimbraLog.mailbox.warn("ZMG: JSON Exception in truncating payload", e);
+            return jsonString;
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.mailbox.warn("ZMG: Encoding Exception in truncating payload", e);
+            return jsonString;
+        } catch (Exception e) {
+            ZimbraLog.mailbox.warn("ZMG: Exception in truncating payload", e);
+            return jsonString;
         }
     }
 
