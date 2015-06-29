@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,6 +40,7 @@ import java.util.regex.Pattern;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 
 /**
@@ -987,5 +989,24 @@ public class StringUtil {
 
     public static String nonNull(String s) {
         return s == null ? "" : s;
+    }
+
+    public static String truncateIfRequired(String body, int maxBodyBytes) {
+        try {
+            byte[] bodyBytes = body.getBytes(MimeConstants.P_CHARSET_UTF8);
+            if (maxBodyBytes > -1 && bodyBytes.length > maxBodyBytes) {
+                // During truncation make sure that we don't end up with a partial char at the end of the body.
+                // Start from index maxBodyBytes and going backwards determine the first byte that is a starting
+                // byte for a character. Such a byte is one whose top bit is 0 or whose top 2 bits are 11.
+                int indexToExclude = maxBodyBytes;
+                while (indexToExclude > 0 && bodyBytes[indexToExclude] < -64) {
+                    indexToExclude--;
+                }
+                return new String(bodyBytes, 0, indexToExclude, MimeConstants.P_CHARSET_UTF8);
+            }
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.filter.error("Error while truncating body", e);
+        }
+        return body;
     }
 }

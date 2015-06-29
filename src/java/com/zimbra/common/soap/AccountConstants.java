@@ -505,6 +505,9 @@ public class AccountConstants {
     public static final String A_DEVICE_ID = "appId";
     public static final String A_REGISTRATION_ID = "registrationId";
     public static final String A_PUSH_PROVIDER = "pushProvider";
+    public static final String A_OS_NAME = "osName";
+    public static final String A_OS_VERSION = "osVersion";
+    public static final String A_MAX_PAYLOAD_SIZE = "maxPayloadSize";
     public static final String E_GCM_SENDER_ID = "gcmSenderId";
     public static final String A_ZMG_PROXY = "zmgProxy";
 
