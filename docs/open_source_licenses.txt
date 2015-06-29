@@ -35112,7 +35112,7 @@ Boston, MA 02111-1307, USA.
 IBM Public License, V1.0 is applicable to the following component(s).
 
 
->>> postfix-2.11.3
+>>> postfix-2.11.5
 
 License: IBM Public License 1.0
 
@@ -35120,7 +35120,7 @@ Additional license information:
 
 >BSD
 
-postfix_2.11.3.orig.tar.gz\postfix_2.11.3.orig.tar\postfix-2.11.3\COPYRIGHT
+postfix_2.11.5.orig.tar.gz\postfix_2.11.5.orig.tar\postfix-2.11.5\COPYRIGHT
 
 Copyright (c) 1987, 1993
 The Regents of the University of California.  All rights reserved.
