@@ -550,6 +550,9 @@ public class DataSource extends AccountProperty {
             .add("connectionType", getConnectionType())
             .add("username", getUsername())
             .add("folderId", getFolderId())
+            .add("smtpEnabled", isSmtpEnabled())
+            .add("smtpHost", getSmtpHost())
+            .add("smtpPort", getSmtpPort())
             .toString();
     }
 
