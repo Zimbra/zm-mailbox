@@ -8967,4 +8967,9 @@ TODO: delete them permanently from here
   <desc>whether this data source corresponds to an account on the Zimbra system being proxied</desc>
 </attr>
 
+<attr id="2048" name="zimbraDisableCrossAccountConversationThreading" type="boolean" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0.0">
+  <desc>Whether conversations are allowed to span multiple accounts. Every time this attribute is changed, new messages that continue existing conversation threads in imported accounts will no longer thread with those conversations, and will instead start new ones.</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr>
+
 </attrs>

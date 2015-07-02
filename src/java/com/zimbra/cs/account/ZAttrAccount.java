@@ -9703,6 +9703,93 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether conversations are allowed to span multiple accounts. Every
+     * time this attribute is changed, new messages that continue existing
+     * conversation threads in imported accounts will no longer thread with
+     * those conversations, and will instead start new ones.
+     *
+     * @return zimbraDisableCrossAccountConversationThreading, or true if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2048)
+    public boolean isDisableCrossAccountConversationThreading() {
+        return getBooleanAttr(Provisioning.A_zimbraDisableCrossAccountConversationThreading, true);
+    }
+
+    /**
+     * Whether conversations are allowed to span multiple accounts. Every
+     * time this attribute is changed, new messages that continue existing
+     * conversation threads in imported accounts will no longer thread with
+     * those conversations, and will instead start new ones.
+     *
+     * @param zimbraDisableCrossAccountConversationThreading new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2048)
+    public void setDisableCrossAccountConversationThreading(boolean zimbraDisableCrossAccountConversationThreading) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisableCrossAccountConversationThreading, zimbraDisableCrossAccountConversationThreading ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether conversations are allowed to span multiple accounts. Every
+     * time this attribute is changed, new messages that continue existing
+     * conversation threads in imported accounts will no longer thread with
+     * those conversations, and will instead start new ones.
+     *
+     * @param zimbraDisableCrossAccountConversationThreading new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2048)
+    public Map<String,Object> setDisableCrossAccountConversationThreading(boolean zimbraDisableCrossAccountConversationThreading, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisableCrossAccountConversationThreading, zimbraDisableCrossAccountConversationThreading ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether conversations are allowed to span multiple accounts. Every
+     * time this attribute is changed, new messages that continue existing
+     * conversation threads in imported accounts will no longer thread with
+     * those conversations, and will instead start new ones.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2048)
+    public void unsetDisableCrossAccountConversationThreading() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisableCrossAccountConversationThreading, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether conversations are allowed to span multiple accounts. Every
+     * time this attribute is changed, new messages that continue existing
+     * conversation threads in imported accounts will no longer thread with
+     * those conversations, and will instead start new ones.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2048)
+    public Map<String,Object> unsetDisableCrossAccountConversationThreading(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisableCrossAccountConversationThreading, "");
+        return attrs;
+    }
+
+    /**
      * maximum amount of mail quota a domain admin can set on a user
      *
      * @return zimbraDomainAdminMaxMailQuota, or -1 if unset

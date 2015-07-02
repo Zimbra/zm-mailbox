@@ -90,7 +90,7 @@ public final class Threader {
         this.mbox = mbox;
         this.pm = pm;
         this.mode = getThreadingAlgorithm(mbox.getAccount());
-        this.subjHash = isEnabled() ? Mailbox.getHash(pm.getNormalizedSubject()) : null;
+        this.subjHash = isEnabled() ? getSubjectHash() : null;
         this.refHashes = isEnabled() && !mode.isSubject() ? getReferenceHashes(true) : null;
     }
 
@@ -111,6 +111,11 @@ public final class Threader {
         return tmode == null ? MailThreadingAlgorithm.references : tmode;
     }
 
+    private String getSubjectHash() throws ServiceException {
+        String subjToHash = prependDataSource(pm.getNormalizedSubject());
+        return Mailbox.getHash(subjToHash);
+    }
+
     /** Returns the SHA-1 hashes for all of the {@code Threader}'s message's
      *  threading header values.  This always includes the contents of its
      *  standard threading headers (the message-ids from {@code Messsage-ID},
@@ -120,6 +125,8 @@ public final class Threader {
      *  interoperability with Microsoft Outlook and siblings.  We prepend two
      *  control characters to these values before generating the hashes to
      *  avoid OPEN_CONVERSATION conflicts with hashed normalized subjects.
+     *  If cross-account threading is disabled, we also prepend the data source ID
+     *  of the message.
      * @param includeParents  If {@code true}, includes the hashes for all
      *                        threading headers in the returned {@code List}.
      *                        If {@code false}, hashes only the {@code
@@ -127,13 +134,13 @@ public final class Threader {
      *                        Thread-Index}.
      * @see Mailbox#getHash(String)
      * @see #getThreadIndexHashes(boolean)
-     * @return a mutable {@code List} containing the base64-encoded hashes. */
-    private List<String> getReferenceHashes(boolean includeParents) {
+     * @return a mutable {@code List} containing the base64-encoded hashes.
+     * @throws ServiceException */
+    private List<String> getReferenceHashes(boolean includeParents) throws ServiceException {
         List<String> hashes = new ArrayList<String>();
-
         Collection<String> references = includeParents ? pm.getAllReferences() : Mime.getReferences(pm.getMimeMessage(), "Message-ID");
         for (String reference : references) {
-            hashes.add(Mailbox.getHash("\u0001\u0002" + Strings.nullToEmpty(reference)));
+            hashes.add(Mailbox.getHash("\u0001\u0002" + prependDataSource(Strings.nullToEmpty(reference))));
         }
 
         // in "strict" mode, we ignore the Thread-Index header
@@ -142,6 +149,19 @@ public final class Threader {
         }
 
         return hashes;
+    }
+
+    private String prependDataSource(String toHash) throws ServiceException {
+        if (!mbox.getAccount().isDisableCrossAccountConversationThreading()) {
+            String dsId = pm.getDataSourceId();
+            if (Strings.isNullOrEmpty(dsId)) {
+                return toHash;
+            } else {
+                return dsId + "\u0001\u0002" + toHash;
+            }
+        } else {
+            return toHash;
+        }
     }
 
     static final String IGNORE_THREAD_INDEX = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
