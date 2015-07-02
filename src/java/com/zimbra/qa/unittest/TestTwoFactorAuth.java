@@ -174,8 +174,14 @@ public class TestTwoFactorAuth extends TestCase {
         ZAuthResult res = mbox.authByPassword(options, PASSWORD);
         assertTrue(res.getTwoFactorAuthRequired());
         options = new ZMailbox.Options();
-        options.setTwoFactorCode(scratchCodes.remove(0));
         options.setAuthToken(res.getAuthToken());
+        options.setTwoFactorCode("badcode");
+        try {
+            mbox.authByPassword(options, null);
+            fail("should not be able to authenticate with a bad code");
+        } catch (ServiceException e) {
+        }
+        options.setTwoFactorCode(scratchCodes.remove(0));
         try {
             mbox.authByPassword(options, null);
         } catch (ServiceException e2) {
