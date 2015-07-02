@@ -5175,6 +5175,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDevicePasscodeLockoutDuration = "zimbraDevicePasscodeLockoutDuration";
 
     /**
+     * Whether conversations are allowed to span multiple accounts. Every
+     * time this attribute is changed, new messages that continue existing
+     * conversation threads in imported accounts will no longer thread with
+     * those conversations, and will instead start new ones.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2048)
+    public static final String A_zimbraDisableCrossAccountConversationThreading = "zimbraDisableCrossAccountConversationThreading";
+
+    /**
      * Email address to put in from header for the share info email. If not
      * set, email address of the authenticated admin account will be used.
      *
