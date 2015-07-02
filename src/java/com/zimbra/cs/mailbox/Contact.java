@@ -684,7 +684,8 @@ public class Contact extends MailItem {
      *        permissions</ul>
      * @see #canContain(byte)
      */
-    static Contact create(int id, Folder folder, MailboxBlob mblob, ParsedContact pc, int flags, Tag.NormalizedTags ntags, CustomMetadata custom)
+    static Contact create(int id, Folder folder, MailboxBlob mblob, ParsedContact pc, int flags,
+            Tag.NormalizedTags ntags, CustomMetadata custom, String davBaseName)
     throws ServiceException {
         if (folder == null || !folder.canContain(Type.CONTACT)) {
             throw MailServiceException.CANNOT_CONTAIN();
@@ -710,6 +711,7 @@ public class Contact extends MailItem {
         data.setFlags(flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0));
         data.setTags(ntags);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, pc.getFields(), pc.getAttachments());
+        data.setDavBaseName(davBaseName);
         data.contentChanged(mbox);
 
         if (ZimbraLog.mailop.isInfoEnabled()) {

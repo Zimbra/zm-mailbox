@@ -29,7 +29,6 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
-import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -113,13 +112,7 @@ public class AddressbookCollection extends Collection {
             }
 
             VCard vcard = AddressObject.uploadToVCard(ctxt);
-            String baseName = new StringBuilder(vcard.uid).append(AddressObject.VCARD_EXTENSION).toString();
-            rs = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), relativeUrlForChild(ctxt.getUser(), baseName));
-            if (rs != null) {
-                // name based on uid already taken - choose another.
-                baseName = new StringBuilder(UUIDUtil.generateUUID()).append(AddressObject.VCARD_EXTENSION).toString();
-            }
-            rs = AddressObject.create(ctxt, baseName, this, vcard, false);
+            rs = AddressObject.create(ctxt, (String) null /* client chosen baseName */, this, vcard, false);
             if (rs.isNewlyCreated()) {
                 ctxt.getResponse().setHeader("Location", rs.getHref());
                 ctxt.setStatus(HttpServletResponse.SC_CREATED);
@@ -157,5 +150,4 @@ public class AddressbookCollection extends Collection {
         }
         return children;
     }
-
 }

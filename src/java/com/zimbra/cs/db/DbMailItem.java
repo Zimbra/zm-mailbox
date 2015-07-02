@@ -100,12 +100,14 @@ public class DbMailItem {
     public static final String TABLE_APPOINTMENT_DUMPSTER = "appointment_dumpster";
     public static final String TABLE_OPEN_CONVERSATION = "open_conversation";
     public static final String TABLE_TOMBSTONE = "tombstone";
+    public static final String TABLE_DAV_NAME = "dav_name";
 
     public static final int MAX_SENDER_LENGTH  = 128;
     public static final int MAX_RECIPIENTS_LENGTH = 128;
     public static final int MAX_SUBJECT_LENGTH = 1024;
     public static final int MAX_TEXT_LENGTH    = 65534;
     public static final int MAX_MEDIUMTEXT_LENGTH = 16777216;
+    public static final int MAX_DAV_BASENAME_LENGTH  = 255;  /* utf8 encoded length? */
 
     public static final String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ";
     public static final String MAILBOX_ID = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
@@ -209,6 +211,43 @@ public class DbMailItem {
         } finally {
             DbPool.closeStatement(stmt);
         }
+
+        stmt = null;
+        if (null != data.getDavBaseName()) {
+            try {
+                StringBuilder sb = new StringBuilder();
+                sb.append("INSERT INTO ").append(getDavNameTableName(mailbox))
+                .append(" (").append(MAILBOX_ID).append("item_id, folder_id, dav_base_name) VALUES (")
+                .append(MAILBOX_ID_VALUE).append("?, ?, ?)");
+                stmt = conn.prepareStatement(sb.toString());
+                int pos = 1;
+                pos = setMailboxId(stmt, mailbox, pos);
+                stmt.setInt(pos++, data.id);
+                stmt.setInt(pos++, data.folderId);
+                stmt.setString(pos++, data.getDavBaseName());
+                ZimbraLog.dav.info("DbMailItem create\n%s", ZimbraLog.getStackTrace(6));
+                int num = stmt.executeUpdate();
+                if (num != 1) {
+                    throw ServiceException.FAILURE(String.format(
+                            "failed to create object - problem storing DAV basename '%s' for item %s type=%s folder %s",
+                            data.getDavBaseName(), data.id, data.type, data.folderId), null);
+                }
+            } catch (SQLException e) {
+                // catch dav basename uniqueness constraint violation and return failure
+                if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                    throw MailServiceException.ALREADY_EXISTS(
+                            String.format("Item with WebDAV basename %s exists already in folder %d",
+                                    data.getDavBaseName(), data.folderId), e);
+                } else {
+                    throw ServiceException.FAILURE(
+                            String.format("Failed to create item with WebDAV basename %s in folder %d",
+                                    data.getDavBaseName(), data.folderId), e);
+                }
+            } finally {
+                DbPool.closeStatement(stmt);
+            }
+        }
+
     }
 
     private static void checkNamingConstraint(Mailbox mbox, int folderId, String name, int modifiedItemId) throws ServiceException {
@@ -3940,28 +3979,213 @@ public class DbMailItem {
     //////////////////////////////////////
 
     public static UnderlyingData getCalendarItem(Mailbox mbox, String uid) throws ServiceException {
+        return getCalendarItem(mbox, uid, false);
+    }
+
+    public static UnderlyingData getCalendarItem(Mailbox mbox, String uid, boolean needDavBaseName)
+    throws ServiceException {
+        StringBuilder sb = new StringBuilder("SELECT ").append(DB_FIELDS).append(" FROM ")
+                .append(getCalendarItemTableName(mbox, "ci")).append(", ").append(getMailItemTableName(mbox, "mi"))
+                .append(" WHERE ci.uid = ? AND mi.id = ci.item_id AND mi.type IN ").append(CALENDAR_TYPES);
+        if (!DebugConfig.disableMailboxGroups) {
+            sb.append(" AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id");
+        }
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
+        UnderlyingData underlyingData = null;
         try {
-            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
-                    " WHERE ci.uid = ? AND mi.id = ci.item_id AND mi.type IN " + CALENDAR_TYPES +
-                    (DebugConfig.disableMailboxGroups ? "" : " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id"));
-
+            stmt = conn.prepareStatement(sb.toString());
             int pos = 1;
             stmt.setString(pos++, uid);
             pos = setMailboxId(stmt, mbox, pos);
             rs = stmt.executeQuery();
 
             if (rs.next()) {
-                return constructItem(rs);
+                underlyingData = constructItem(rs);
             }
-            return null;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching calendar items for mailbox " + mbox.getId(), e);
         } finally {
             DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        if ((underlyingData == null) || !needDavBaseName) {
+            return underlyingData;
+        }
+        underlyingData.setDavBaseName(getStoredDavBaseName(mbox, underlyingData.id));
+        return underlyingData;
+    }
+
+    public static UnderlyingData getCalendarItemWithUidInFolder(Mailbox mbox, String uid, int folderId,
+            boolean needDavBaseName)
+    throws ServiceException {
+        StringBuilder sb = new StringBuilder("SELECT ").append(DB_FIELDS).append(" FROM ")
+                .append(getCalendarItemTableName(mbox, "ci")).append(", ").append(getMailItemTableName(mbox, "mi"))
+                .append(" WHERE ci.uid = ? AND mi.id = ci.item_id AND mi.folder_id = ? AND mi.type IN ")
+                .append(CALENDAR_TYPES);
+        if (!DebugConfig.disableMailboxGroups) {
+            sb.append(" AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id");
+        }
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        UnderlyingData underlyingData = null;
+        try {
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            stmt.setString(pos++, uid);
+            stmt.setInt(pos++, folderId);
+            pos = setMailboxId(stmt, mbox, pos);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                underlyingData = constructItem(rs);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching calendar items for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        if ((underlyingData == null) || !needDavBaseName) {
+            return underlyingData;
+        }
+        underlyingData.setDavBaseName(getStoredDavBaseName(mbox, underlyingData.id));
+        return underlyingData;
+    }
+
+    /**
+     * @return stored DavBaseName associated with this item, otherwise null
+     */
+    public static String getStoredDavBaseName(Mailbox mbox, int itemId)
+    throws ServiceException {
+        StringBuilder sb = new StringBuilder("SELECT dav_base_name FROM ").append(getDavNameTableName(mbox))
+                    .append(" WHERE ").append(IN_THIS_MAILBOX_AND).append("item_id = ?");
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, itemId);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString(1);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format(
+                    "fetching DAV basename for mailbox %s item_id %s", mbox.getId(), itemId), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+        return null;
+    }
+
+    /**
+     * @return stored DavBaseName associated with this item, otherwise null
+     */
+    public static Integer getItemIdWithDavBaseName(Mailbox mbox, int folderId, String davBaseName)
+    throws ServiceException {
+        if (Strings.isNullOrEmpty(davBaseName)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder("SELECT item_id FROM ").append(getDavNameTableName(mbox))
+                    .append(" WHERE ").append(IN_THIS_MAILBOX_AND).append("folder_id = ? AND dav_base_name = ?");
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, folderId);
+            stmt.setString(pos++, davBaseName);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("fetching item id for mailbox %s folder %s DAV basename '%s'",
+                    mbox.getId(), folderId, davBaseName), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+        return null;
+    }
+
+    public static UnderlyingData getItemWithStoredDavBaseName(Mailbox mbox, int folderId, String davBaseName)
+    throws ServiceException {
+        if (Strings.isNullOrEmpty(davBaseName)) {
+            return null;
+        }
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        UnderlyingData underlyingData = null;
+        try {
+            StringBuilder sb = new StringBuilder("SELECT ").append(DB_FIELDS).append(" FROM ")
+                    .append(getDavNameTableName(mbox, "dn")).append(", ").append(getMailItemTableName(mbox, "mi"))
+                    .append(" WHERE dn.folder_id = ? AND mi.folder_id = dn.folder_id AND dn.dav_base_name = ?");
+            if (!DebugConfig.disableMailboxGroups) {
+                sb.append(" AND dn.mailbox_id = ? AND mi.mailbox_id = dn.mailbox_id AND mi.id = dn.item_id");
+            }
+            stmt = conn.prepareStatement(sb.toString());
+
+            int pos = 1;
+            stmt.setInt(pos++, folderId);
+            stmt.setString(pos++, davBaseName);
+            pos = setMailboxId(stmt, mbox, pos);
+            ZimbraLog.dav.info("DbMailItem getItemWithStoredDavBaseName name '%s'\n%s", davBaseName, ZimbraLog.getStackTrace(7));
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                underlyingData = constructItem(rs);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("fetching item for mailbox %s folder %s DAV basename '%s'",
+                    mbox.getId(), folderId, davBaseName), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        if (underlyingData != null) {
+            ZimbraLog.dav.info("DbMailItem getItemWithStoredDavBaseName GOT id=%s bn='%s'", underlyingData.id, davBaseName);
+            underlyingData.setDavBaseName(davBaseName);
+        }
+        return underlyingData;
+    }
+
+    public static void deleteStoredDavBaseName(MailItem item)
+    throws ServiceException {
+        if (item == null) {
+            return;
+        }
+        Mailbox mbox = item.getMailbox();
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        StringBuilder sb = new StringBuilder("DELETE FROM ").append(getDavNameTableName(mbox))
+                .append(" WHERE ").append(IN_THIS_MAILBOX_AND).append("item_id = ? AND folder_id = ?");
+        try {
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, item.getId());
+            stmt.setInt(pos++, item.getFolderId());
+            int result = stmt.executeUpdate();
+            ZimbraLog.dav.info("DbMailItem deleteStoredDavBaseName cmd '%s' result=%d\n%s", sb, result, ZimbraLog.getStackTrace(7));
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format(
+                    "Deleting stored DAV basename for itemId=%s mboxId=%s folderId=%s",
+                    item.getId(), mbox.getId(), item.getFolderId()), e);
+        } finally {
             DbPool.closeStatement(stmt);
         }
     }
@@ -4911,6 +5135,15 @@ public class DbMailItem {
     public static String getMailItemTableName(int groupId, String alias, boolean dumpster) {
         return String.format("%s AS %s", DbMailbox.qualifyTableName(groupId, !dumpster ? TABLE_MAIL_ITEM : TABLE_MAIL_ITEM_DUMPSTER), alias);
     }
+
+    public static String getDavNameTableName(Mailbox mbox) {
+        return DbMailbox.qualifyTableName(mbox, TABLE_DAV_NAME);
+    }
+
+    public static String getDavNameTableName(Mailbox mbox, String alias) {
+        return String.format("%s AS %s", DbMailbox.qualifyTableName(mbox, TABLE_DAV_NAME), alias);
+    }
+
     /**
      * Returns the name of the table that stores data on old revisions of {@link MailItem}s.
      * The table name is qualified by the name of the database (e.g. <tt>mailbox1.revision</tt>).

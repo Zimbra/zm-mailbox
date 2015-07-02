@@ -250,3 +250,16 @@ CREATE TABLE *{DATABASE_NAME}.data_source_item (
    CONSTRAINT i_remote_id UNIQUE (mailbox_id, data_source_id, remote_id),
    CONSTRAINT fk_data_source_item_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE
 );
+
+CREATE TABLE *{DATABASE_NAME}.dav_name (
+   mailbox_id       INTEGER NOT NULL,
+   item_id          INTEGER NOT NULL,
+   folder_id        INTEGER NOT NULL,
+   dav_base_name    VARCHAR(255) NOT NULL,
+
+   CONSTRAINT pk_dav_name PRIMARY KEY (mailbox_id, item_id),
+   CONSTRAINT i_folder_id_dav_base_name UNIQUE (mailbox_id, folder_id, dav_base_name),
+   CONSTRAINT fk_dav_name_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE,
+   CONSTRAINT fk_dav_name_item_id FOREIGN KEY (mailbox_id, item_id)
+      REFERENCES *{DATABASE_NAME}.mail_item(mailbox_id, id) ON DELETE CASCADE
+);

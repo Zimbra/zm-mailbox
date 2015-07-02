@@ -129,11 +129,19 @@ public class DavException extends Exception {
     }
 
     public static class UidConflict extends DavExceptionWithErrorMessage {
+        /** An item elsewhere in the collection uses the same UID.  That item has the supplied <b>href</b> */
         public UidConflict(String msg, String href) {
             super(msg, HttpServletResponse.SC_PRECONDITION_FAILED);
             Element errElem = org.dom4j.DocumentHelper.createElement(DavElements.E_NO_UID_CONFLICT);
             Element hrefE= errElem.addElement(DavElements.E_HREF);
             hrefE.setText(href);
+            setError(errElem);
+        }
+
+        /** the item with this DAV base name uses a different UID to that supplied in the data */
+        public UidConflict(String msg) {
+            super(msg, HttpServletResponse.SC_PRECONDITION_FAILED);
+            Element errElem = org.dom4j.DocumentHelper.createElement(DavElements.E_NO_UID_CONFLICT);
             setError(errElem);
         }
     }
@@ -144,6 +152,12 @@ public class DavException extends Exception {
             Element errElem = org.dom4j.DocumentHelper.createElement(DavElements.CardDav.E_NO_UID_CONFLICT);
             Element hrefE= errElem.addElement(DavElements.E_HREF);
             hrefE.setText(href);
+            setError(errElem);
+        }
+
+        public CardDavUidConflict(String msg) {
+            super(msg, HttpServletResponse.SC_PRECONDITION_FAILED);
+            Element errElem = org.dom4j.DocumentHelper.createElement(DavElements.CardDav.E_NO_UID_CONFLICT);
             setError(errElem);
         }
     }

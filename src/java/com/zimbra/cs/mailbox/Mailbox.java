@@ -3158,6 +3158,11 @@ public class Mailbox {
         MailItem item = getCachedItem(data.id, MailItem.Type.of(data.type));
         // XXX: should we sanity-check the cached version to make sure all the data matches?
         if (item != null) {
+            String davBaseName = data.getDavBaseName();
+            if (davBaseName != null) {
+                // previous get may not have requested the davbasename
+                item.getUnderlyingData().setDavBaseName(davBaseName);
+            }
             return item;
         }
         return MailItem.constructItem(this, data);
@@ -4955,6 +4960,17 @@ public class Mailbox {
     public CalendarItem setCalendarItem(OperationContext octxt, int folderId, int flags, String[] tags,
             SetCalendarItemData defaultInv, SetCalendarItemData[] exceptions, List<ReplyInfo> replies, long nextAlarm)
     throws ServiceException {
+        return setCalendarItem(octxt, folderId, flags, tags, defaultInv, exceptions, replies, nextAlarm, null);
+    }
+
+    /**
+     * @param exceptions can be NULL
+     * @return calendar item ID
+     */
+    public CalendarItem setCalendarItem(OperationContext octxt, int folderId, int flags, String[] tags,
+            SetCalendarItemData defaultInv, SetCalendarItemData[] exceptions, List<ReplyInfo> replies, long nextAlarm,
+            String davBaseName)
+    throws ServiceException {
         flags = (flags & ~Flag.FLAGS_SYSTEM);
         SetCalendarItem redoRecorder = new SetCalendarItem(getId(), attachmentsIndexingEnabled(), flags, tags);
 
@@ -5066,7 +5082,8 @@ public class Mailbox {
                     String method = scid.invite.getMethod();
                     if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
                         try {
-                            calItem = createCalendarItem(folderId, flags, ntags, scid.invite.getUid(), scid.message, scid.invite, null);
+                            calItem = createCalendarItem(folderId, flags, ntags, scid.invite.getUid(), scid.message,
+                                    scid.invite, (CustomMetadata) null, davBaseName);
                         } catch (MailServiceException e) {
                             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                                 //bug 49106 - did not find the appointment above in getCalendarItemByUid(), but the mail_item exists
@@ -5431,11 +5448,53 @@ public class Mailbox {
         }
     }
 
+    public String getStoredDavBaseName(OperationContext octxt, int item_id)
+    throws ServiceException {
+        String davBaseName = null;
+        boolean success = false;
+        try {
+            beginReadTransaction("getStoredDavBaseName", octxt);
+            davBaseName = DbMailItem.getStoredDavBaseName(this, item_id);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+        return davBaseName;
+    }
+
+    public MailItem getItemWithStoredDavBaseName(OperationContext octxt, int folderId, String davBaseName)
+    throws ServiceException {
+        boolean success = false;
+        try {
+            beginReadTransaction("getItemWithStoredDavBaseName", octxt);
+            MailItem.UnderlyingData data = DbMailItem.getItemWithStoredDavBaseName(this, folderId, davBaseName);
+            MailItem mailItem = getItem(data);
+            success = true;
+            return mailItem;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     public CalendarItem getCalendarItemByUid(OperationContext octxt, String uid) throws ServiceException {
         boolean success = false;
         try {
             beginReadTransaction("getCalendarItemByUid", octxt);
-            MailItem.UnderlyingData data = DbMailItem.getCalendarItem(this, uid);
+            MailItem.UnderlyingData data = DbMailItem.getCalendarItem(this, uid, true);
+            CalendarItem calItem = (CalendarItem) getItem(data);
+            success = true;
+            return calItem;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public CalendarItem getCalendarItemWithUidInFolder(OperationContext octxt, String uid, int folderId)
+    throws ServiceException {
+        boolean success = false;
+        try {
+            beginReadTransaction("getCalendarItemWithUidInFolder", octxt);
+            MailItem.UnderlyingData data = DbMailItem.getCalendarItemWithUidInFolder(this, uid, folderId, true);
             CalendarItem calItem = (CalendarItem) getItem(data);
             success = true;
             return calItem;
@@ -7421,6 +7480,12 @@ public class Mailbox {
     CalendarItem createCalendarItem(int folderId, int flags, Tag.NormalizedTags ntags, String uid,
                                     ParsedMessage pm, Invite invite, CustomMetadata custom)
     throws ServiceException {
+        return createCalendarItem(folderId, flags, ntags, uid, pm, invite, custom, null);
+    }
+
+    CalendarItem createCalendarItem(int folderId, int flags, Tag.NormalizedTags ntags, String uid,
+                                    ParsedMessage pm, Invite invite, CustomMetadata custom, String davBaseName)
+    throws ServiceException {
         // FIXME: assuming that we're in the middle of a AddInvite op
         CreateCalendarItemPlayer redoPlayer = (CreateCalendarItemPlayer) currentChange().getRedoPlayer();
         CreateCalendarItemRecorder redoRecorder = (CreateCalendarItemRecorder) currentChange().getRedoRecorder();
@@ -7429,7 +7494,7 @@ public class Mailbox {
         int createId = getNextItemId(newCalItemId);
 
         CalendarItem calItem = CalendarItem.create(createId, getFolderById(folderId), flags, ntags,
-                                                   uid, pm, invite, CalendarItem.NEXT_ALARM_FROM_NOW, custom);
+                                           uid, pm, invite, CalendarItem.NEXT_ALARM_FROM_NOW, custom, davBaseName);
 
         if (redoRecorder != null) {
             redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
@@ -7438,6 +7503,12 @@ public class Mailbox {
     }
 
     public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String[] tags)
+    throws ServiceException {
+        return createContact(octxt, pc, folderId, tags, (String) null /* davBaseName */);
+    }
+
+    public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String[] tags,
+            String davBaseName)
     throws ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = null;
@@ -7476,7 +7547,8 @@ public class Mailbox {
             }
 
             int flags = 0;
-            Contact con = Contact.create(contactId, getFolderById(folderId), mblob, pc, flags, ntags, null);
+            Contact con = Contact.create(contactId, getFolderById(folderId), mblob, pc, flags, ntags,
+                    (CustomMetadata) null, davBaseName);
             redoRecorder.setContactId(contactId);
 
             indexItem(con);

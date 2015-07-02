@@ -63,6 +63,7 @@ public abstract class AutoScheduler {
     // newInvites is a convenient collection of invites from scidDefault/scidExceptions
     protected final List<Invite> newInvites = Lists.newArrayList();
     protected final int calendarMailItemId;
+    protected final String davBaseName;
     protected final int flags;
     protected final String[] tags;
     protected final List<ReplyInfo> replies;
@@ -79,7 +80,7 @@ public abstract class AutoScheduler {
      * @param ctxt
      */
     protected AutoScheduler(Mailbox userMailbox, Mailbox calendarMailbox,
-            Invite origInvites[], int calendarMailItemId, int flags,
+            Invite origInvites[], int calendarMailItemId, String davBaseName, int flags,
             String[] tags, SetCalendarItemData scidDefault, SetCalendarItemData scidExceptions[],
             List<ReplyInfo> replies, DavContext ctxt)
     throws ServiceException {
@@ -100,6 +101,7 @@ public abstract class AutoScheduler {
         }
         this.origInvites = (origInvites == null) ? new Invite[0] : origInvites;
         this.calendarMailItemId = calendarMailItemId;
+        this.davBaseName = davBaseName;
         this.flags = flags;
         this.tags = tags;
         this.scidDefault = scidDefault;
@@ -147,12 +149,12 @@ public abstract class AutoScheduler {
      */
     public static AutoScheduler getAutoScheduler(Mailbox userMailbox, Mailbox calendarMailbox,
             Invite origInvites[], int calendarMailItemId, DavContext context) {
-        return getAutoScheduler(userMailbox, calendarMailbox,
-            origInvites, calendarMailItemId, 0, null /* tags */, null, null, null, context);
+        return getAutoScheduler(userMailbox, calendarMailbox, origInvites, calendarMailItemId,
+                (String) null /* davBaseName */, 0 /* flags */, null /* tags */, null, null, null, context);
     }
 
-    public static AutoScheduler getAutoScheduler(Mailbox userMailbox, Mailbox calendarMailbox,
-            Invite origInvites[], int calendarMailItemId, int flags, String[] tags, SetCalendarItemData scidDefault,
+    public static AutoScheduler getAutoScheduler(Mailbox userMailbox, Mailbox calendarMailbox, Invite origInvites[],
+            int calendarMailItemId, String davBaseName, int flags, String[] tags, SetCalendarItemData scidDefault,
             SetCalendarItemData scidExceptions[], List<ReplyInfo> replies, DavContext context) {
         if (!DavResource.isCalendarAutoSchedulingEnabled()) {
             return null;
@@ -179,10 +181,10 @@ public abstract class AutoScheduler {
             // TODO:  Does the auth user have scheduling capability for the calendar
             if (calendarMailbox.getAccount().equals(organizerAcct)) {
                 return new OrganizerAutoScheduler(userMailbox, calendarMailbox, origInvites,
-                        calendarMailItemId, flags, tags, scidDefault, scidExceptions, replies, context);
+                        calendarMailItemId, davBaseName, flags, tags, scidDefault, scidExceptions, replies, context);
             } else {
                 return new AttendeeAutoScheduler(userMailbox, calendarMailbox, origInvites,
-                        calendarMailItemId, flags, tags, scidDefault, scidExceptions, replies, context);
+                        calendarMailItemId, davBaseName, flags, tags, scidDefault, scidExceptions, replies, context);
             }
         } catch (ServiceException e) {
             ZimbraLog.dav.debug("Hit this whilst getting AutoScheduler", e);
@@ -195,7 +197,7 @@ public abstract class AutoScheduler {
             return null;  // Presumably a DELETE
         }
         return userMailbox.setCalendarItem(ctxt.getOperationContext(), calendarMailItemId, flags, tags,
-                    scidDefault, scidExceptions, replies, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
+                    scidDefault, scidExceptions, replies, CalendarItem.NEXT_ALARM_KEEP_CURRENT, davBaseName);
     }
 
     protected CalendarItem processSchedulingMessages(List<AutoScheduleMsg> msgs) throws ServiceException {
@@ -304,12 +306,12 @@ public abstract class AutoScheduler {
 
     public static class OrganizerAutoScheduler extends AutoScheduler {
         protected OrganizerAutoScheduler(Mailbox userMailbox, Mailbox calendarMailbox, Invite origInvites[],
-                int calendarMailItemId, int flags, String[] tags,
+                int calendarMailItemId, String davBaseName, int flags, String[] tags,
                 SetCalendarItemData scidDefault, SetCalendarItemData scidExceptions[],
                 List<ReplyInfo> replies, DavContext ctxt)
         throws ServiceException {
             super(userMailbox, calendarMailbox, origInvites,
-                    calendarMailItemId, flags, tags, scidDefault, scidExceptions, replies, ctxt);
+                    calendarMailItemId, davBaseName, flags, tags, scidDefault, scidExceptions, replies, ctxt);
         }
 
         @Override
@@ -512,12 +514,13 @@ public abstract class AutoScheduler {
 
     public static class AttendeeAutoScheduler extends AutoScheduler {
         private boolean scheduleReplyWanted = true;
-        protected AttendeeAutoScheduler(Mailbox userMailbox, Mailbox calendarMailbox, Invite origInvites[], int calendarMailItemId,
-                int flags, String[] tags, SetCalendarItemData scidDefault, SetCalendarItemData scidExceptions[],
+        protected AttendeeAutoScheduler(Mailbox userMailbox, Mailbox calendarMailbox, Invite origInvites[],
+                int calendarMailItemId, String davBaseName, int flags, String[] tags,
+                SetCalendarItemData scidDefault, SetCalendarItemData scidExceptions[],
                 List<ReplyInfo> replies, DavContext ctxt)
         throws ServiceException {
             super(userMailbox, calendarMailbox, origInvites,
-                    calendarMailItemId, flags, tags, scidDefault, scidExceptions, replies, ctxt);
+                    calendarMailItemId, davBaseName, flags, tags, scidDefault, scidExceptions, replies, ctxt);
             HttpServletRequest httpRequest = ctxt.getRequest();
             if ((httpRequest != null) && ("DELETE".equalsIgnoreCase(httpRequest.getMethod()))) {
                 String hdrScheduleReply = httpRequest.getHeader(DavProtocol.HEADER_SCHEDULE_REPLY);

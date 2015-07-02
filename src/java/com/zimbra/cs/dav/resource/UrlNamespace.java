@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
@@ -40,7 +39,6 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.DavNames;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -413,14 +411,7 @@ public class UrlNamespace {
         return rsc;
     }
 
-    /**
-     *
-     * @param ctxt
-     * @param user
-     * @param path - May contain parameters
-     * @return
-     */
-    private static DavResource getMailItemResource(DavContext ctxt, String user, String path)
+    protected static DavResource getMailItemResource(DavContext ctxt, String user, String path)
     throws ServiceException, DavException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, user);
@@ -429,6 +420,24 @@ public class UrlNamespace {
             ZimbraLog.dav.info("Failing GET of mail item resource - no such account '%s' path '%s'", user, path);
             throw new DavException("Request denied", HttpServletResponse.SC_NOT_FOUND, null);
         }
+        return getMailItemResource(ctxt, account, path);
+    }
+
+    /**
+     *
+     * @param ctxt
+     * @param user
+     * @param path - May contain parameters
+     * @return
+     */
+    protected static DavResource getMailItemResource(DavContext ctxt, Account account, String path)
+    throws ServiceException, DavException {
+        if (account == null) {
+            // Anti-account name harvesting.
+            ZimbraLog.dav.info("Failing GET of mail item resource - no account path '%s'", path);
+            throw new DavException("Request denied", HttpServletResponse.SC_NOT_FOUND, null);
+        }
+        String user = account.getName();
 
         if (ctxt.getUser().compareTo(user) != 0 || !Provisioning.onLocalServer(account)) {
             try {
@@ -492,20 +501,11 @@ public class UrlNamespace {
         if (f != null) {
             /* First check whether the default name has been over-ridden - perhaps because the name was
              * chosen by a DAV client via PUT to a URL when creating the item. */
-            DavNames.DavName davName = null;
-            if (DebugConfig.enableDAVclientCanChooseResourceBaseName) {
-                davName = DavNames.DavName.create(mbox.getId(), f.getId(), baseName);
+            item = mbox.getItemWithStoredDavBaseName(octxt, f.getId(), baseName);
+            if ((item != null) && (f.getId() == item.getFolderId())) {
+                return getResourceFromMailItem(ctxt, item);
             }
-            if (davName != null) {
-                Integer itemId = DavNames.get(davName);
-                if (itemId != null) {
-                    item = mbox.getItemById(octxt, itemId, MailItem.Type.UNKNOWN);
-                    if ((item != null) && (f.getId() == item.getFolderId())) {
-                        return getResourceFromMailItem(ctxt, item);
-                    }
-                    item = null;
-                }
-            }
+            item = null;
             if (baseName.toLowerCase().endsWith(CalendarObject.CAL_EXTENSION)) {
                 String uid = baseName.substring(0, baseName.length() - CalendarObject.CAL_EXTENSION.length());
                 // Unescape the name (It was encoded in DavContext intentionally)

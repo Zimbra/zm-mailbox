@@ -454,7 +454,8 @@ public abstract class CalendarItem extends MailItem {
     }
 
     static CalendarItem create(int id, Folder folder, int flags, Tag.NormalizedTags ntags, String uid,
-            ParsedMessage pm, Invite firstInvite, long nextAlarm, CustomMetadata custom) throws ServiceException {
+            ParsedMessage pm, Invite firstInvite, long nextAlarm, CustomMetadata custom, String davBaseName)
+    throws ServiceException {
         firstInvite.sanitize(false);
 
         if (!folder.canAccess(ACL.RIGHT_INSERT)) {
@@ -529,6 +530,7 @@ public abstract class CalendarItem extends MailItem {
         data.setFlags(flags & (Flag.FLAGS_CALITEM | Flag.FLAGS_GENERIC));
         data.setTags(ntags);
         data.setSubject(subject);
+        data.setDavBaseName(davBaseName);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
         data.contentChanged(mbox, false);

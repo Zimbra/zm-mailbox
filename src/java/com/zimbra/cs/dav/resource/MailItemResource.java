@@ -37,7 +37,6 @@ import org.dom4j.io.XMLWriter;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
@@ -58,7 +57,6 @@ import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.DavNames;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
@@ -212,9 +210,6 @@ public abstract class MailItemResource extends DavResource {
         }
         try {
             Mailbox mbox = getMailbox(ctxt);
-            if (DebugConfig.enableDAVclientCanChooseResourceBaseName) {
-                DavNames.remove(mbox.getId(), mId);
-            }
             // hard delete if the item is in Trash.
             if (getMailItem(ctxt).inTrash()) {
                 hardDelete(ctxt);
@@ -234,8 +229,9 @@ public abstract class MailItemResource extends DavResource {
 
     /* hard delete */
     public void hardDelete(DavContext ctxt) throws DavException {
-        if (mId == 0)
+        if (mId == 0) {
             throw new DavException("cannot hard delete resource", HttpServletResponse.SC_FORBIDDEN, null);
+        }
         try {
             Mailbox mbox = getMailbox(ctxt);
             mbox.delete(ctxt.getOperationContext(), mId, MailItem.Type.UNKNOWN);

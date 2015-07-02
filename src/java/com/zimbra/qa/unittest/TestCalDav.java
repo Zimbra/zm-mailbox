@@ -57,9 +57,13 @@ import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.lang.StringUtils;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -84,7 +88,6 @@ import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.httpclient.HttpClientUtil;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -99,6 +102,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.resource.AddressObject;
+import com.zimbra.cs.dav.resource.CalendarObject;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.MailItem;
@@ -117,6 +122,8 @@ import com.zimbra.soap.type.SearchHit;
 
 
 public class TestCalDav  {
+
+    @Rule public TestName testName = new TestName();
 
     static final TimeZoneRegistry tzRegistry = TimeZoneRegistryFactory.getInstance().createRegistry();
     private static String NAME_PREFIX = "TestCalDav";
@@ -278,6 +285,20 @@ public class TestCalDav  {
         return icalString;
     }
 
+    public String getLocationResponseHeader(HttpMethodExecutor exe) {
+        String location = null;
+        for (Header hdr : exe.respHeaders) {
+            if ("Location".equals(hdr.getName())) {
+                location = hdr.getValue();
+            }
+        }
+        ZimbraLog.test.debug("Test '%s' Location from response header '%s'", testName.getMethodName(), location);
+        assertNotNull(String.format(
+                "Test '%s' Location from response header '%s'", testName.getMethodName(), location), location);
+        return location;
+    }
+
+
     public static class HttpMethodExecutor {
         public int respCode;
         public int statusCode;
@@ -327,7 +348,8 @@ public class TestCalDav  {
         }
     }
 
-    public void testBadBasicAuth() throws Exception {
+    @Test
+    public void badBasicAuth() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         String calFolderUrl = getFolderUrl(dav1, "Calendar").replaceAll("@", "%40");
         HttpClient client = new HttpClient();
@@ -336,7 +358,8 @@ public class TestCalDav  {
         HttpMethodExecutor.execute(client, method, HttpStatus.SC_UNAUTHORIZED);
     }
 
-    public void testPostToSchedulingOutbox() throws Exception {
+    @Test
+    public void postToSchedulingOutbox() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         Account dav2 = TestUtil.createAccount(DAV2);
         Account dav3 = TestUtil.createAccount(DAV3);
@@ -355,7 +378,8 @@ public class TestCalDav  {
         HttpMethodExecutor.execute(client, method, HttpStatus.SC_OK);
     }
 
-    public void testBadPostToSchedulingOutbox() throws Exception {
+    @Test
+    public void badPostToSchedulingOutbox() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         Account dav2 = TestUtil.createAccount(DAV2);
         Account dav3 = TestUtil.createAccount(DAV3);
@@ -406,7 +430,7 @@ public class TestCalDav  {
     public static String getFolderUrl(Account auth, String folderName) throws ServiceException {
         StringBuilder sb = getLocalServerRoot();
         sb.append(UrlNamespace.getFolderUrl(auth.getName(), folderName));
-        return sb.toString();
+        return sb.toString().replaceAll("@", "%40");
     }
 
     public static String getPrincipalUrl(Account auth) throws ServiceException {
@@ -466,7 +490,12 @@ public class TestCalDav  {
     public static String waitForItemInCalendarCollectionByUID(String url, Account acct, String UID, boolean expected,
             int timeout_millis)
     throws ServiceException, IOException {
-        int orig_timeout_millis = TestUtil.getMailbox(acct.getName()).index.waitForIndexing(timeout_millis);
+        int orig_timeout_millis;
+        if (TestUtil.fromRunUnitTests) {
+            orig_timeout_millis = TestUtil.getMailbox(acct.getName()).index.waitForIndexing(timeout_millis);
+        } else {
+            orig_timeout_millis = 2000;
+        }
         while (timeout_millis > 0) {
             Document doc = calendarQuery(url, acct);
             XPath xpath = XPathFactory.newInstance().newXPath();
@@ -529,7 +558,7 @@ public class TestCalDav  {
     }
 
     @Test
-    public void testCalendarQueryOnInbox() throws Exception {
+    public void calendarQueryOnInbox() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         String url = getSchedulingInboxUrl(dav1, dav1);
         Document doc = calendarQuery(url, dav1);
@@ -548,8 +577,9 @@ public class TestCalDav  {
         rootElem = doc.getDocumentElement();
         assertTrue("response should have child elements", rootElem.hasChildNodes());
     }
+
     @Test
-    public void testCalendarQueryOnOutbox() throws Exception {
+    public void calendarQueryOnOutbox() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         ZMailbox dav1mbox = TestUtil.getZMailbox(USER_NAME);
         String url = getSchedulingOutboxUrl(dav1, dav1);
@@ -571,14 +601,16 @@ public class TestCalDav  {
         assertFalse("response for items in outbox should have no child elements, even though we sent an invite",
         rootElem.hasChildNodes());
     }
+
     @Test
-    public void testPropFindSupportedReportSetOnInbox() throws Exception {
+    public void propFindSupportedReportSetOnInbox() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedReportSet(user1, getSchedulingInboxUrl(user1, user1),
                 UrlNamespace.getSchedulingInboxUrl(user1.getName(), user1.getName()));
     }
+
     @Test
-    public void testPropFindSupportedReportSetOnOutbox() throws Exception {
+    public void propFindSupportedReportSetOnOutbox() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedReportSet(user1, getSchedulingOutboxUrl(user1, user1),
                 UrlNamespace.getSchedulingOutboxUrl(user1.getName(), user1.getName()));
@@ -702,30 +734,126 @@ public class TestCalDav  {
     private final String[] componentsForBothTasksAndEvents = {"VEVENT", "VTODO", "VFREEBUSY"};
     private final String[] eventComponents = {"VEVENT", "VFREEBUSY"};
     private final String[] todoComponents = {"VTODO", "VFREEBUSY"};
+
     @Test
-    public void testPropFindSupportedCalendarComponentSetOnInbox() throws Exception {
+    public void propFindSupportedCalendarComponentSetOnInbox() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedCalendarComponentSet(user1, getSchedulingInboxUrl(user1, user1),
                 UrlNamespace.getSchedulingInboxUrl(user1.getName(), user1.getName()), componentsForBothTasksAndEvents);
     }
+
     @Test
-    public void testPropFindSupportedCalendarComponentSetOnOutbox() throws Exception {
+    public void propFindSupportedCalendarComponentSetOnOutbox() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedCalendarComponentSet(user1, getSchedulingOutboxUrl(user1, user1),
                 UrlNamespace.getSchedulingOutboxUrl(user1.getName(), user1.getName()), componentsForBothTasksAndEvents);
     }
+
     @Test
-    public void testPropFindSupportedCalendarComponentSetOnCalendar() throws Exception {
+    public void propFindSupportedCalendarComponentSetOnCalendar() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedCalendarComponentSet(user1, getFolderUrl(user1, "Calendar"),
                 UrlNamespace.getFolderUrl(user1.getName(), "Calendar"), eventComponents);
     }
+
     @Test
-    public void testPropFindSupportedCalendarComponentSetOnTasks() throws Exception {
+    public void propFindSupportedCalendarComponentSetOnTasks() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedCalendarComponentSet(user1, getFolderUrl(user1, "Tasks"),
                 UrlNamespace.getFolderUrl(user1.getName(), "Tasks"), todoComponents);
     }
+
+    /** We try to avoid basenames with '@' symbols in them */
+    @Test
+    public void apptPUTUsingDislikedClientChosenName() throws ServiceException, IOException {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String davBaseName = "foo@thisWouldBeBad.ics";
+        String calFolderUrl = getFolderUrl(dav1, "Calendar");
+        String url = String.format("%s%s", calFolderUrl, davBaseName);
+        HttpClient client = new HttpClient();
+        PutMethod putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/calendar");
+
+        String UID = "d1102-42a7-4283-b025-3376dabe53b3";
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1, UID).getBytes(),
+                MimeConstants.CT_TEXT_CALENDAR));
+        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_MOVED_TEMPORARILY);
+        String location = getLocationResponseHeader(exe);
+        // Expect the redirect URL to be based on UID
+        String ending = new StringBuilder("/").append(UID).append(CalendarObject.CAL_EXTENSION).toString();
+        assertTrue(String.format("Redirect Location '%s' should end with '%s'", location, ending),
+                location.endsWith(ending));
+    }
+
+    /** We try to avoid basenames with '@' symbols in them - so we redirect from that.  Normally base on UID
+     *  but that also contains an '@' so just generate a name. */
+    @Test
+    public void apptPUTUsingDislikedClientChosenNameAndUid() throws ServiceException, IOException {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String davBaseName = "fred@thisWouldBeBad.ics";
+        String calFolderUrl = getFolderUrl(dav1, "Calendar");
+        String url = String.format("%s%s", calFolderUrl, davBaseName);
+        HttpClient client = new HttpClient();
+        PutMethod putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/calendar");
+
+        String UID = "foo@bar-b025-3376dabe53b3";
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1, UID).getBytes(),
+                MimeConstants.CT_TEXT_CALENDAR));
+        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_MOVED_TEMPORARILY);
+        String location = getLocationResponseHeader(exe);
+        String ending = new StringBuilder("/").append(UID).append(CalendarObject.CAL_EXTENSION).toString();
+        assertTrue(String.format("Redirect Location '%s' should NOT end with '%s'", location, ending),
+                !location.endsWith(ending));
+        assertTrue(String.format("Redirect Location '%s' should end with '%s'", location, CalendarObject.CAL_EXTENSION),
+                location.endsWith(CalendarObject.CAL_EXTENSION));
+    }
+
+    @Test
+    public void apptPUTUsingLongClientChosenName() throws ServiceException, IOException {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String davBaseName = StringUtils.repeat("a", 255 - 4) + ".ics";
+        String calFolderUrl = getFolderUrl(dav1, "Calendar");
+        String url = String.format("%s%s", calFolderUrl, davBaseName);
+        HttpClient client = new HttpClient();
+        PutMethod putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/calendar");
+
+        String UID = "for-long-name";
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1, UID).getBytes(),
+                MimeConstants.CT_TEXT_CALENDAR));
+        HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
+
+        GetMethod getMethod = new GetMethod(url);
+        addBasicAuthHeaderForUser(getMethod, dav1);
+        HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
+    }
+
+    @Test
+    public void apptPUTUsingTooLongClientChosenName() throws ServiceException, IOException {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String davBaseName = StringUtils.repeat("b", 255 - 4 + 1) + ".ics";
+        String calFolderUrl = getFolderUrl(dav1, "Calendar");
+        String url = String.format("%s%s", calFolderUrl, davBaseName);
+        HttpClient client = new HttpClient();
+        PutMethod putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/calendar");
+
+        String UID = "for-long-name";
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1, UID).getBytes(),
+                MimeConstants.CT_TEXT_CALENDAR));
+        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_MOVED_TEMPORARILY);
+        String location = getLocationResponseHeader(exe);
+        // Expect the redirect URL to be based on UID
+        String ending = new StringBuilder("/").append(UID).append(CalendarObject.CAL_EXTENSION).toString();
+        assertTrue(String.format("Redirect Location '%s' should end with '%s'", location, ending),
+                location.endsWith(ending));
+    }
+
 
     /**
      *  dav - sending http error 302 because: wrong url - redirecting to:
@@ -737,7 +865,7 @@ public class TestCalDav  {
      *      at com.zimbra.cs.dav.service.DavServlet.service(DavServlet.java:322)
      */
     @Test
-    public void testCreateUsingClientChosenName() throws ServiceException, IOException {
+    public void apptCreateUsingPUTtoClientChosenName() throws ServiceException, IOException {
         Account dav1 = TestUtil.createAccount(DAV1);
         String davBaseName = "clientInvented.now";
         String calFolderUrl = getFolderUrl(dav1, "Calendar");
@@ -749,13 +877,7 @@ public class TestCalDav  {
 
         putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1).getBytes(),
                 MimeConstants.CT_TEXT_CALENDAR));
-        if (DebugConfig.enableDAVclientCanChooseResourceBaseName) {
-            HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
-        } else {
-            HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_MOVED_TEMPORARILY);
-            // Not testing much in this mode but...
-            return;
-        }
+        HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
 
         GetMethod getMethod = new GetMethod(url);
         addBasicAuthHeaderForUser(getMethod, dav1);
@@ -790,9 +912,124 @@ public class TestCalDav  {
                 }
             }
         }
-        assertTrue("propfind response contained entry for calendar", hasCalendarHref);
-        assertTrue("propfind response contained entry for calendar entry ", hasCalItemHref);
+        assertTrue(String.format("propfind response %s contained entry for calendar", respElem), hasCalendarHref);
+        assertTrue(String.format("propfind response %s contained entry for calendar entry", respElem), hasCalItemHref);
         DeleteMethod deleteMethod = new DeleteMethod(url);
+        addBasicAuthHeaderForUser(deleteMethod, dav1);
+        HttpMethodExecutor.execute(client, deleteMethod, HttpStatus.SC_NO_CONTENT);
+    }
+
+    @Test
+    public void apptPUTtoDavBaseNameWhereDiffUIDisUsed() throws ServiceException, IOException {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String davBaseName = "alreadyUsed.ics";
+        String calFolderUrl = getFolderUrl(dav1, "Calendar");
+        String url = String.format("%s%s", calFolderUrl, davBaseName);
+        HttpClient client = new HttpClient();
+        PutMethod putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/calendar");
+
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1, "d1102-first-UID").getBytes(),
+                MimeConstants.CT_TEXT_CALENDAR));
+        HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
+
+        putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/calendar");
+
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1, "d1102-clashing-UID").getBytes(),
+                MimeConstants.CT_TEXT_CALENDAR));
+        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_PRECONDITION_FAILED);
+        // <D:error xmlns:D="DAV:"><C:no-uid-conflict xmlns:C="urn:ietf:params:xml:ns:caldav"/></D:error>
+        String response = exe.getResponseAsString();
+        String expected = "no-uid-conflict";
+        assertTrue(String.format("Expect '%s' in Response '%s'", expected, response), response.contains(expected));
+    }
+
+    @Test
+    public void apptPUTwhereUIDusedElsewhere() throws ServiceException, IOException {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String davBaseName = "originalLocation.ics";
+        String calFolderUrl = getFolderUrl(dav1, "Calendar");
+        String url = String.format("%s%s", calFolderUrl, davBaseName);
+        HttpClient client = new HttpClient();
+        PutMethod putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/calendar");
+
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1, "d1102-same-UID").getBytes(),
+                MimeConstants.CT_TEXT_CALENDAR));
+        HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
+
+        url = String.format("%s%s", calFolderUrl, "diffLocation.ics");
+        putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/calendar");
+
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1, "d1102-same-UID").getBytes(),
+                MimeConstants.CT_TEXT_CALENDAR));
+        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_PRECONDITION_FAILED);
+        // <D:error xmlns:D="DAV:"><C:no-uid-conflict xmlns:C="urn:ietf:params:xml:ns:caldav">
+        //     <D:href>/dav/dav1%40pan.local/Calendar/originalLocation.ics</D:href>
+        // </C:no-uid-conflict></D:error>
+
+        String response = exe.getResponseAsString();
+        String expected = "no-uid-conflict";
+        assertTrue(String.format("Expect '%s' in Response '%s'", expected, response), response.contains(expected));
+        assertTrue(String.format("Expect '%s' in Response '%s'", davBaseName, response), response.contains(davBaseName));
+    }
+
+    @Test
+    public void apptCreateUsingPostToCalendarURL() throws ServiceException, IOException {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String calFolderUrl = getFolderUrl(dav1, "Calendar");
+        HttpClient client = new HttpClient();
+        PostMethod postMethod = new PostMethod(calFolderUrl);
+        addBasicAuthHeaderForUser(postMethod, dav1);
+        postMethod.addRequestHeader("Content-Type", "text/calendar");
+
+        postMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1).getBytes(),
+                MimeConstants.CT_TEXT_CALENDAR));
+        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
+        String location = getLocationResponseHeader(exe);
+        String newHref = getLocalServerRoot().append(location).toString();
+        GetMethod getMethod = new GetMethod(newHref);
+        addBasicAuthHeaderForUser(getMethod, dav1);
+        HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
+
+        PropFindMethod propFindMethod = new PropFindMethod(getFolderUrl(dav1, "Calendar"));
+        addBasicAuthHeaderForUser(propFindMethod, dav1);
+        TestCalDav.HttpMethodExecutor executor;
+        String respBody;
+        Element respElem;
+        propFindMethod.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        propFindMethod.addRequestHeader("Depth", "1");
+        propFindMethod.setRequestEntity(new ByteArrayRequestEntity(propFindEtagResType.getBytes(),
+                MimeConstants.CT_TEXT_XML));
+        executor = new TestCalDav.HttpMethodExecutor(client, propFindMethod, HttpStatus.SC_MULTI_STATUS);
+        respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        respElem = Element.XMLElement.parseXML(respBody);
+        assertEquals("name of top element in propfind response", DavElements.P_MULTISTATUS, respElem.getName());
+        assertTrue("propfind response should have child elements", respElem.hasChildren());
+        Iterator<Element> iter = respElem.elementIterator();
+        boolean hasCalendarHref = false;
+        boolean hasCalItemHref = false;
+        while (iter.hasNext()) {
+            Element child = iter.next();
+            if (DavElements.P_RESPONSE.equals(child.getName())) {
+                Iterator<Element> hrefIter = child.elementIterator(DavElements.P_HREF);
+                while (hrefIter.hasNext()) {
+                    Element href = hrefIter.next();
+                    calFolderUrl.endsWith(href.getText());
+                    hasCalendarHref = hasCalendarHref || calFolderUrl.endsWith(href.getText());
+                    hasCalItemHref = hasCalItemHref || location.endsWith(href.getText());
+                }
+            }
+        }
+        assertTrue(String.format("propfind response %s contained entry for calendar", respElem), hasCalendarHref);
+        assertTrue(String.format("propfind response %s contained entry for calendar entry", respElem), hasCalItemHref);
+        DeleteMethod deleteMethod = new DeleteMethod(newHref);
         addBasicAuthHeaderForUser(deleteMethod, dav1);
         HttpMethodExecutor.execute(client, deleteMethod, HttpStatus.SC_NO_CONTENT);
     }
@@ -844,8 +1081,9 @@ public class TestCalDav  {
             "END:VEVENT\n" +
             "END:VCALENDAR\n";
             public String androidSeriesMeetingUid = "6db50587-d283-49a1-9cf4-63aa27406829";
+
     @Test
-    public void testAndroidMeetingSeries() throws Exception {
+    public void androidMeetingSeries() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         Account dav2 = TestUtil.createAccount(DAV2);
         ZMailbox dav2MB = TestUtil.getZMailbox(DAV2); // Force creation of mailbox - shouldn't be needed
@@ -928,7 +1166,7 @@ public class TestCalDav  {
                                " </x0:prop>" +
                                "</x0:propfind>";
 
-    public String simpleEvent(Account organizer) throws IOException {
+    public String simpleEvent(Account organizer, String UID) throws IOException {
         ZVCalendar vcal = new ZVCalendar();
         vcal.addVersionAndProdId();
 
@@ -942,7 +1180,7 @@ public class TestCalDav  {
         vevent.addProperty(dtend.toProperty(ICalTok.DTEND, false));
         vevent.addProperty(new ZProperty(ICalTok.DTSTAMP, "20140108T224700Z"));
         vevent.addProperty(new ZProperty(ICalTok.SUMMARY, "Simple Event"));
-        vevent.addProperty(new ZProperty(ICalTok.UID, "d1102-42a7-4283-b025-3376dabe53b3"));
+        vevent.addProperty(new ZProperty(ICalTok.UID, UID));
         vevent.addProperty(new ZProperty(ICalTok.STATUS, ICalTok.CONFIRMED.toString()));
         vevent.addProperty(new ZProperty(ICalTok.SEQUENCE, "1"));
         // vevent.addProperty(organizer(organizer));
@@ -954,8 +1192,12 @@ public class TestCalDav  {
         return icalString;
     }
 
+    public String simpleEvent(Account organizer) throws IOException {
+        return simpleEvent(organizer, "d1102-42a7-4283-b025-3376dabe53b3");
+    }
+
     @Test
-    public void testSimpleMkcol() throws Exception {
+    public void simpleMkcol() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         StringBuilder url = getLocalServerRoot();
         url.append(DavServlet.DAV_PATH).append("/").append(dav1.getName()).append("/simpleMkcol/");
@@ -966,7 +1208,7 @@ public class TestCalDav  {
     }
 
     @Test
-    public void testMkcol4addressBook() throws Exception {
+    public void mkcol4addressBook() throws Exception {
         String xml = "<D:mkcol xmlns:D=\"DAV:\" xmlns:C=\"urn:ietf:params:xml:ns:carddav\">" +
                 "     <D:set>" +
                 "       <D:prop>" +
@@ -1067,7 +1309,7 @@ public class TestCalDav  {
      * Bug 85275 - Apple Calendar specifies URLs with "@" encoded as %40 - causing us to drop all calendar from FB set
      */
     @Test
-    public void testPropPatchCalendarFreeBusySetSettingUsingEscapedUrls() throws Exception {
+    public void propPatchCalendarFreeBusySetSettingUsingEscapedUrls() throws Exception {
         String disableFreeBusyXml =
                 "<A:propertyupdate xmlns:A=\"DAV:\">" +
                 "  <A:set>" +
@@ -1156,7 +1398,7 @@ public class TestCalDav  {
             "END:VTIMEZONE\n" +
             "END:VCALENDAR\n";
     @Test
-    public void testFuzzyTimeZoneMatchNotesWEurope() throws Exception {
+    public void fuzzyTimeZoneMatchNotesWEurope() throws Exception {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneLotusNotesWEurope.getBytes())) {
             ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
             assertNotNull("tzcal", tzcal);
@@ -1187,7 +1429,7 @@ public class TestCalDav  {
             "END:VTIMEZONE\n" +
             "END:VCALENDAR\n";
     @Test
-    public void testFuzzyTimeZoneMatchGMT_06() throws Exception {
+    public void fuzzyTimeZoneMatchGMT_06() throws Exception {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneGMT_0600_0500.getBytes())) {
             ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
             assertNotNull("tzcal", tzcal);
@@ -1218,7 +1460,7 @@ public class TestCalDav  {
             "END:VTIMEZONE\n" +
             "END:VCALENDAR\n";
     @Test
-    public void testFuzzyTimeZoneMatchGMT_08() throws Exception {
+    public void fuzzyTimeZoneMatchGMT_08() throws Exception {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneGMT_0800_0700.getBytes())) {
             ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
             assertNotNull("tzcal", tzcal);
@@ -1231,6 +1473,11 @@ public class TestCalDav  {
     }
 
     private void attendeeDeleteFromCalendar(boolean suppressReply) throws Exception {
+        if (!TestUtil.fromRunUnitTests) {
+            ZimbraLog.test.info(
+                    "Skipping test '%s' - can't use TestUtil.waitForMessages outside Zimbra", testName.getMethodName());
+            Assume.assumeTrue(TestUtil.fromRunUnitTests);
+        }
         Account dav1 = TestUtil.createAccount(DAV1);
         Account dav2 = TestUtil.createAccount(DAV2);
         String url = getSchedulingInboxUrl(dav1, dav1);
@@ -1275,12 +1522,14 @@ public class TestCalDav  {
             assertNotNull("inbox DECLINE reply msg invite", msgs.get(0).getInvite());
         }
     }
+
     @Test
-    public void testAttendeeAutoDecline() throws Exception {
+    public void attendeeAutoDecline() throws Exception {
         attendeeDeleteFromCalendar(false /* suppressReply */);
     }
+
     @Test
-    public void testAttendeeSuppressedAutoDecline() throws Exception {
+    public void attendeeSuppressedAutoDecline() throws Exception {
         attendeeDeleteFromCalendar(true /* suppressReply */);
     }
 
@@ -1293,7 +1542,7 @@ public class TestCalDav  {
                                         "UID:SCRUFF1\r\n" +
                                         "END:VCARD\r\n";
     @Test
-    public void testCreateContactWithIfNoneMatchTesting() throws ServiceException, IOException {
+    public void createContactWithIfNoneMatchTesting() throws ServiceException, IOException {
         Account dav1 = TestUtil.createAccount(DAV1);
         String davBaseName = "SCRUFF1.vcf";  // Based on UID
         String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
@@ -1331,6 +1580,8 @@ public class TestCalDav  {
             "X-CREATED:2015-04-04T13:55:25Z\n" +
             "END:VCARD\n";
 
+    private static String uidForRachelVcard = "07139DE2-EA7B-46CB-A970-C4DF7F72D9AE";
+
     private static String blueGroupCreate =
             "BEGIN:VCARD\n" +
             "VERSION:3.0\n" +
@@ -1343,6 +1594,8 @@ public class TestCalDav  {
             "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:07139DE2-EA7B-46CB-A970-C4DF7F72D9AE\n" +
             "END:VCARD\n";
 
+    private static String uidForBlueGroup = "F53A6F96-566F-46CC-8D48-A5263FAB5E38";
+
     private static String parisVcard =
             "BEGIN:VCARD\n" +
             "VERSION:3.0\n" +
@@ -1353,6 +1606,8 @@ public class TestCalDav  {
             "REV:2015-04-04T13:56:50Z\n" +
             "UID:BE43F16D-336E-4C3E-BAE6-22B8F245A986\n" +
             "END:VCARD\n";
+
+    private static String uidForParisVcard = "BE43F16D-336E-4C3E-BAE6-22B8F245A986";
 
     private static String blueGroupModify =
             "BEGIN:VCARD\n" +
@@ -1368,7 +1623,7 @@ public class TestCalDav  {
             "END:VCARD\n";
 
     @Test
-    public void testAppleStyleGroup() throws ServiceException, IOException {
+    public void appleStyleGroup() throws ServiceException, IOException {
         Account dav1 = TestUtil.createAccount(DAV1);
         String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
         HttpClient client = new HttpClient();
@@ -1377,26 +1632,31 @@ public class TestCalDav  {
         addBasicAuthHeaderForUser(postMethod, dav1);
         postMethod.addRequestHeader("Content-Type", "text/vcard");
         postMethod.setRequestEntity(new ByteArrayRequestEntity(rachelVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
-        HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
+        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
+        String grpLoc = getLocationResponseHeader(exe);
+        String expectedLocationEnd = "/" + uidForRachelVcard + AddressObject.VCARD_EXTENSION;
+        assertTrue(String.format("Location from response header '%s' should end with '%s'",
+                grpLoc, expectedLocationEnd), grpLoc.endsWith(expectedLocationEnd));
 
         postMethod = new PostMethod(contactsFolderUrl);
         addBasicAuthHeaderForUser(postMethod, dav1);
         postMethod.addRequestHeader("Content-Type", "text/vcard");
         postMethod.setRequestEntity(new ByteArrayRequestEntity(blueGroupCreate.getBytes(), MimeConstants.CT_TEXT_VCARD));
-        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
-        String groupLocation = null;
-        for (Header hdr : exe.respHeaders) {
-            if ("Location".equals(hdr.getName())) {
-                groupLocation = hdr.getValue();
-            }
-        }
-        assertNotNull("Location Header returned when creating Group", groupLocation);
+        exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
+        grpLoc = getLocationResponseHeader(exe);
+        expectedLocationEnd = "/" + uidForBlueGroup + AddressObject.VCARD_EXTENSION;
+        assertTrue(String.format("Location from response header '%s' should end with '%s'",
+                grpLoc, expectedLocationEnd), grpLoc.endsWith(expectedLocationEnd));
 
         postMethod = new PostMethod(contactsFolderUrl);
         addBasicAuthHeaderForUser(postMethod, dav1);
         postMethod.addRequestHeader("Content-Type", "text/vcard");
         postMethod.setRequestEntity(new ByteArrayRequestEntity(parisVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
-        HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
+        exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
+        grpLoc = getLocationResponseHeader(exe);
+        expectedLocationEnd = "/" + uidForParisVcard + AddressObject.VCARD_EXTENSION;
+        assertTrue(String.format("Location from response header '%s' should end with '%s'",
+                grpLoc, expectedLocationEnd), grpLoc.endsWith(expectedLocationEnd));
 
         String url = String.format("%s%s", contactsFolderUrl, "F53A6F96-566F-46CC-8D48-A5263FAB5E38.vcf");
         PutMethod putMethod = new PutMethod(url);
@@ -1440,7 +1700,7 @@ public class TestCalDav  {
                 seenGroup = true;
                 assertEquals("Number of members of group in search hit", 2, contactInfo.getContactGroupMembers().size());
             }
-            ZimbraLog.test.info("Hit %s class=%s", hit, hit.getClass().getName());
+            ZimbraLog.test.debug("Hit %s class=%s", hit, hit.getClass().getName());
         }
         assertTrue("Seen group", seenGroup);
     }
@@ -1486,7 +1746,7 @@ public class TestCalDav  {
 
 
     @Test
-    public void testXBusyMacAttach() throws ServiceException, IOException {
+    public void xBusyMacAttach() throws ServiceException, IOException {
         Account dav1 = TestUtil.createAccount(DAV1);
         String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
         HttpClient client = new HttpClient();
@@ -1497,13 +1757,7 @@ public class TestCalDav  {
         postMethod.setRequestEntity(new ByteArrayRequestEntity(smallBusyMacAttach.getBytes(),
                 MimeConstants.CT_TEXT_VCARD));
         HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
-        String location = null;
-        for (Header hdr : exe.respHeaders) {
-            if ("Location".equals(hdr.getName())) {
-                location = hdr.getValue();
-            }
-        }
-        assertNotNull("Location Header returned when creating", location);
+        String location = getLocationResponseHeader(exe);
         String url = String.format("%s%s", contactsFolderUrl, location.substring(location.lastIndexOf('/') + 1));
         GetMethod getMethod = new GetMethod(url);
         addBasicAuthHeaderForUser(getMethod, dav1);
@@ -1593,7 +1847,12 @@ public class TestCalDav  {
      * for instance Zimbra requires the proposed delegate to accept shares.
      */
     @Test
-    public void testAppleCaldavProxyFunctions() throws ServiceException, IOException {
+    public void appleCaldavProxyFunctions() throws ServiceException, IOException {
+        if (!TestUtil.fromRunUnitTests) {
+            ZimbraLog.test.info(
+                    "Skipping test '%s' - can't use TestUtil.waitForMessages outside Zimbra", testName.getMethodName());
+            Assume.assumeTrue(TestUtil.fromRunUnitTests);
+        }
         Account sharer = TestUtil.createAccount(DAV3);
         Account sharee1 = TestUtil.createAccount(DAV1);
         Account sharee2 = TestUtil.createAccount(DAV2);

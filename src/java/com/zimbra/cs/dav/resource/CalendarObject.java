@@ -42,7 +42,6 @@ import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -57,8 +56,6 @@ import com.zimbra.cs.dav.caldav.Range.ExpandRange;
 import com.zimbra.cs.dav.caldav.Range.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.DavNames;
-import com.zimbra.cs.mailbox.DavNames.DavName;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -138,15 +135,18 @@ public interface CalendarObject {
         public static String generate(DavContext ctxt, String itemPath, String uid,
                 Integer mailbox_id, Integer item_id, int extra) {
             StringBuilder path = new StringBuilder(parentCollectionPath(ctxt, itemPath));
-            DavName davName = null;
-            if (DebugConfig.enableDAVclientCanChooseResourceBaseName && mailbox_id != null && item_id != null) {
-                davName = DavNames.get(mailbox_id, item_id);
+            String davBaseName = null;
+            try {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailbox_id);
+                davBaseName = mbox.getStoredDavBaseName(ctxt.getOperationContext(), item_id);
+            } catch (ServiceException se) {
+                ZimbraLog.dav.debug("Problem getting stored davBaseName", se);
             }
-            if (davName != null) {
+            if (davBaseName != null) {
                 if (path.charAt(path.length()-1) != '/') {
                     path.append("/");
                 }
-                path.append(davName.davBaseName);
+                path.append(davBaseName);
             } else {
                 addBaseNameBasedOnEscapedUID(path, uid, extra);
             }
@@ -263,8 +263,9 @@ public interface CalendarObject {
         private final long mStart;
         private final long mEnd;
 
-        public LightWeightCalendarObject(String path, String owner, CalendarItem.CalendarMetadata data) {
-            super(CalendarPath.generate(null, path, data.uid, data.mailboxId, data.itemId, -1), owner);
+        public LightWeightCalendarObject(DavContext ctxt, String path, String owner,
+                CalendarItem.CalendarMetadata data) {
+            super(CalendarPath.generate(ctxt, path, data.uid, data.mailboxId, data.itemId, -1), owner);
             mMailboxId = data.mailboxId;
             mId = data.itemId;
             mUid = data.uid;

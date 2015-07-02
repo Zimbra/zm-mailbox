@@ -272,6 +272,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public long dateChanged; /* Seconds since 1970-01-01 00:00:00 UTC */
         public int modContent;
         public String uuid;
+        private String davBaseName = null;
 
         public String getSubject() {
             return subject;
@@ -345,6 +346,15 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
         public String[] getTags() {
             return tags;
+        }
+
+        public String getDavBaseName() {
+            return davBaseName;
+        }
+
+        public UnderlyingData setDavBaseName(String davBaseName) {
+            this.davBaseName = davBaseName;
+            return this;
         }
 
         UnderlyingData duplicate(int newId, String newUuid, int newFolder, String newLocator) {
@@ -3008,6 +3018,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
 
         ZimbraLog.mailop.info("moving " + getMailopContext(this) + " to " + getMailopContext(target));
+        DbMailItem.deleteStoredDavBaseName(this);
         DbMailItem.setFolder(this, target);
         folderChanged(target, 0);
         return true;
