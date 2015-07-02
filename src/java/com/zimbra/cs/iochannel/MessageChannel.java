@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,10 +24,12 @@ import com.zimbra.common.iochannel.Client.PeerServer;
 import com.zimbra.common.iochannel.IOChannelException;
 import com.zimbra.common.iochannel.Server;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.servicelocator.ServiceLocator;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * MessageChannel is a service in ZCS that allows a message to be sent
@@ -53,8 +55,8 @@ public class MessageChannel {
 
     public synchronized void startup() throws ServiceException, IOException {
         if (!running) {
-            ZcsConfig config = new ZcsConfig();
-            server = Server.start(config);
+            ProvisioningConfig config = new ProvisioningConfig();
+            server = Server.start(config, Zimbra.getAppContext().getBean(ServiceLocator.class));
             client = Client.start(config);
             server.registerCallback(new MessageChannelCallback());
             running = true;
@@ -104,7 +106,7 @@ public class MessageChannel {
             peer.sendMessage(message.serialize());
         } catch (IOChannelException e) {
             log.warn("MessageChannel: " + e.getMessage());
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("can't send notification", e);
         }
     }

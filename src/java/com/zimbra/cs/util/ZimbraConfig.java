@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
@@ -67,6 +68,7 @@ import com.zimbra.cs.mailbox.AmqpMailboxListenerTransport;
 import com.zimbra.cs.mailbox.CacheManager;
 import com.zimbra.cs.mailbox.ConversationIdCache;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
+import com.zimbra.cs.mailbox.IOChannelMailboxListenerTransport;
 import com.zimbra.cs.mailbox.LocalMailboxDataCache;
 import com.zimbra.cs.mailbox.LocalMailboxLockFactory;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
@@ -274,12 +276,17 @@ public class ZimbraConfig {
                 result.add(new AmqpMailboxListenerTransport(amqpAdmin, amqpTemplate));
                 ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
 
+            } else if (uri.startsWith("iochannel:")) {
+                result.add(new IOChannelMailboxListenerTransport(serviceLocator()));
+                ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
+
             } else {
                 ZimbraLog.misc.error("Ignoring unsupported URI scheme for external mailbox listener: %s", uri);
             }
         }
         for (MailboxListenerTransport transport: result) {
             Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(transport);
+            Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(transport, "" + new Random().nextInt());
         }
         return result;
     }

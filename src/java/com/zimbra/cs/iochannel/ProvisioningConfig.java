@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,9 +25,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
-public class ZcsConfig extends Config {
+/** iochannel configuration that sources the list of peer servers from LDAP */
+public class ProvisioningConfig extends Config {
 
-    public ZcsConfig() throws ServiceException {
+    public ProvisioningConfig() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Server localServer = prov.getLocalServer();
         peerServers = new HashSet<ServerConfig>();
