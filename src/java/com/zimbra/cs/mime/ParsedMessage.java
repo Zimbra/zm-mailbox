@@ -143,6 +143,7 @@ public final class ParsedMessage {
     private boolean wasMutated;
     private InputStream sharedStream;
     private final Map<Mailbox, Threader> threaders = new HashMap<Mailbox, Threader>();
+    private String dataSourceId = null;
 
     public ParsedMessage(MimeMessage msg, boolean indexAttachments) throws ServiceException {
         this(msg, getZimbraDateHeader(msg), indexAttachments);
@@ -1360,4 +1361,11 @@ public final class ParsedMessage {
         return threader;
     }
 
+    public void setDataSourceId(String dsId) {
+        dataSourceId = dsId;
+    }
+
+    public String getDataSourceId() {
+        return dataSourceId;
+    }
 }

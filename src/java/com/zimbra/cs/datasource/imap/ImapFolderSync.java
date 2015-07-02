@@ -999,6 +999,7 @@ class ImapFolderSync {
                 remoteFolder.warn("Empty message body for UID %d. Must be ignored.", uid);
                 return;
             }
+            pm.setDataSourceId(ds.getId());
             if (restorePurged) {
                 try {
                     refetchPurgedMsgsInConversation(pm);
