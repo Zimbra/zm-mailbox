@@ -288,21 +288,18 @@ public class Auth extends AccountDocumentHandler {
                             try {
                                 twoFactorToken = AuthProvider.getAuthToken(authTokenEl, acct);
                                 Account twoFactorTokenAcct = AuthProvider.validateAuthToken(prov, twoFactorToken, false, Usage.TWO_FACTOR_AUTH);
+                                try {
+                                    twoFactorToken.deRegister();
+                                } catch (AuthTokenException e) {
+                                    throw ServiceException.FAILURE("cannot de-register two-factor auth token", e);
+                                }
                                 boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
                                 if (verifyAccount && !twoFactorTokenAcct.getId().equalsIgnoreCase(acct.getId())) {
                                     throw new AuthTokenException("two-factor auth token doesn't match the named account");
                                 }
                             } catch (AuthTokenException e) {
                                 throw AuthFailedServiceException.AUTH_FAILED("bad auth token");
-                           } finally {
-                               if (twoFactorToken != null) {
-                                   try {
-                                    twoFactorToken.deRegister();
-                                } catch (AuthTokenException e) {
-                                    throw ServiceException.FAILURE("cannot de-register two-factor auth token", e);
-                                }
-                               }
-                           }
+                            }
                         }
                         TwoFactorManager manager = new TwoFactorManager(acct);
                         if (twoFactorCode != null) {
