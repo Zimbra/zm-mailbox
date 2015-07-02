@@ -225,7 +225,6 @@ public class DbMailItem {
                 stmt.setInt(pos++, data.id);
                 stmt.setInt(pos++, data.folderId);
                 stmt.setString(pos++, data.getDavBaseName());
-                ZimbraLog.dav.info("DbMailItem create\n%s", ZimbraLog.getStackTrace(6));
                 int num = stmt.executeUpdate();
                 if (num != 1) {
                     throw ServiceException.FAILURE(String.format(
@@ -4142,7 +4141,6 @@ public class DbMailItem {
             stmt.setInt(pos++, folderId);
             stmt.setString(pos++, davBaseName);
             pos = setMailboxId(stmt, mbox, pos);
-            ZimbraLog.dav.info("DbMailItem getItemWithStoredDavBaseName name '%s'\n%s", davBaseName, ZimbraLog.getStackTrace(7));
             rs = stmt.executeQuery();
 
             if (rs.next()) {
@@ -4157,7 +4155,8 @@ public class DbMailItem {
         }
 
         if (underlyingData != null) {
-            ZimbraLog.dav.info("DbMailItem getItemWithStoredDavBaseName GOT id=%s bn='%s'", underlyingData.id, davBaseName);
+            ZimbraLog.dav.debug("DbMailItem getItemWithStoredDavBaseName GOT id=%s bn='%s'",
+                    underlyingData.id, davBaseName);
             underlyingData.setDavBaseName(davBaseName);
         }
         return underlyingData;
@@ -4180,7 +4179,6 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getId());
             stmt.setInt(pos++, item.getFolderId());
             int result = stmt.executeUpdate();
-            ZimbraLog.dav.info("DbMailItem deleteStoredDavBaseName cmd '%s' result=%d\n%s", sb, result, ZimbraLog.getStackTrace(7));
         } catch (SQLException e) {
             throw ServiceException.FAILURE(String.format(
                     "Deleting stored DAV basename for itemId=%s mboxId=%s folderId=%s",
