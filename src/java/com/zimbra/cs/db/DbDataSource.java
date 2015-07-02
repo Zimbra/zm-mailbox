@@ -1057,7 +1057,7 @@ public class DbDataSource {
             stmt.close();
             return exists;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to move conversation to purged_conversations table", e);
+            throw ServiceException.FAILURE("Unable to determine if UID is purged", e);
         } finally {
             DbPool.closeStatement(stmt);
         }
