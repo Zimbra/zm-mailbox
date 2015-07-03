@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,9 +17,6 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -28,6 +25,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
@@ -43,11 +42,18 @@ import com.zimbra.common.soap.AdminConstants;
 public class RunUnitTestsRequest {
 
     /**
-     * @zm-api-field-tag classname super junit.framework.Test
-     * @zm-api-field-description Test Names
+     * @zm-api-field-tag test
+     * @zm-api-field-description Test names - each entry of form: className[#testName[+testName]*]
+     * <p>
+     * Example test names:
+     * <pre>
+     * com.zimbra.qa.unittest.TestCalDav
+     * com.zimbra.qa.unittest.TestUtilCode#testGzip
+     * com.zimbra.qa.unittest.TestUtilCode#testGzip+testLruMap
+     * </pre>
      */
     @XmlElement(name=AdminConstants.E_TEST, required=false)
-    private List<String> tests = Lists.newArrayList();
+    private final List<String> tests = Lists.newArrayList();
 
     public RunUnitTestsRequest() {
     }
