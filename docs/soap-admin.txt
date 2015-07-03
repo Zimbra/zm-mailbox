@@ -1070,10 +1070,10 @@ If <test>'s are specified, then run the requested tests (instead of
 the standard test suite).  Otherwise the standard test suite is run.
 
 <RunUnitTestsRequest>
-   [<test>classname super junit.framework.Test</test>]*
+   [<test>className[#testName[+testName]*]</test>]*
 </RunUnitTestsRequest>
 
-<RunUnitTestsResponse numExecuted="{n}" numFailed="{n}">
+<RunUnitTestsResponse numFailed="{n}" numSkipped="{n}" numExecuted="{n}" execSeconds="{n}">
     { Summary of test execution times and success/failure status }
 </RunUnitTestsResponse>
 

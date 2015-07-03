@@ -21,11 +21,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.junit.runner.JUnitCore;
+import org.junit.runner.Request;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionManager;
@@ -155,14 +157,18 @@ public class ZimbraSuite extends TestSuite
 
     public static TestResults runUserTests(List<String> testNames) throws ServiceException {
         List<Class> tests = new ArrayList<Class>();
+        List<Request> requests = new ArrayList<Request>();
 
-        for (String testName : testNames) {
+        for (String testNameAndMethod : testNames) {
+            List<String> testAndMethods = Lists.newArrayList(Splitter.on('#').split(testNameAndMethod));
+            String testName = testAndMethods.get(0);
+            Class<?> testClass = null;
             if (testName.indexOf('.') < 0) {
                 // short name...check the suite
                 boolean found = false;
-                for (Class<? extends TestCase> c : ZimbraSuite.sClasses) {
+                for (Class c : ZimbraSuite.sClasses) {
                     if (testName.equals(c.getSimpleName())) {
-                        tests.add(c);
+                        testClass = c;
                         found = true;
                     }
                 }
@@ -171,7 +177,6 @@ public class ZimbraSuite extends TestSuite
                         testName, ZimbraSuite.class.getName());
                 }
             } else {
-                Class<?> testClass;
                 try {
                     testClass = Class.forName(testName);
                 } catch (ClassNotFoundException e) {
@@ -181,11 +186,17 @@ public class ZimbraSuite extends TestSuite
                         throw ServiceException.FAILURE("Error instantiating test " + testName, e2);
                     }
                 }
+            }
+            if (testAndMethods.size() > 1) {
+                for (String method : Lists.newArrayList(Splitter.on('+').split(testAndMethods.get(1)))) {
+                    requests.add(Request.method(testClass, method));
+                }
+            } else {
                 tests.add(testClass);
             }
         }
 
-        return runTestsInternal(tests);
+        return runTestsInternal(tests, requests);
     }
 
     /**
@@ -193,18 +204,25 @@ public class ZimbraSuite extends TestSuite
      * <code>OutputStream</code>.
      */
     public static TestResults runTestSuite() {
-        return runTestsInternal(sClasses);
+        return runTestsInternal(sClasses, null);
     }
 
-    private static TestResults runTestsInternal(Collection<Class> testClasses) {
+    private static TestResults runTestsInternal(Collection<Class> testClasses, Iterable<Request> requests) {
         JUnitCore junit = new JUnitCore();
         junit.addListener(new TestLogger());
         TestResults results = new TestResults();
         junit.addListener(results);
 
-        Class<?>[] classArray = new Class<?>[testClasses.size()];
-        testClasses.toArray(classArray);
-        junit.run(classArray);
+        if (testClasses != null && testClasses.size() > 0) {
+            Class<?>[] classArray = new Class<?>[testClasses.size()];
+            testClasses.toArray(classArray);
+            junit.run(classArray);
+        }
+        if (requests != null) {
+            for (Request request : requests) {
+                junit.run(request);
+            }
+        }
         return results;
     }
 }
