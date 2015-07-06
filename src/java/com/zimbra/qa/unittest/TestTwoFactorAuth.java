@@ -1,6 +1,8 @@
 package com.zimbra.qa.unittest;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -24,6 +26,8 @@ import com.zimbra.soap.account.message.EnableTwoFactorAuthRequest;
 import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
 import com.zimbra.soap.account.message.GenerateScratchCodesRequest;
 import com.zimbra.soap.account.message.GenerateScratchCodesResponse;
+import com.zimbra.soap.account.message.GetScratchCodesRequest;
+import com.zimbra.soap.account.message.GetScratchCodesResponse;
 
 /**
  *
@@ -155,6 +159,16 @@ public class TestTwoFactorAuth extends TestCase {
         tryCode(PASSWORD, newCodes.remove(0), true);
         //store remaining in case some other test wants to use them
         this.scratchCodes = newCodes;
+    }
+
+    @Test
+    public void testGetScratchCodes() throws ServiceException {
+        GetScratchCodesResponse resp = mbox.invokeJaxb(new GetScratchCodesRequest());
+        List<String> codes = resp.getScratchCodes();
+        Collections.sort(codes);
+        List<String> curCodes = new ArrayList<String>(scratchCodes);
+        Collections.sort(curCodes);
+        assertEquals(curCodes, codes);
     }
 
     @Test
