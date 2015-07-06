@@ -44,6 +44,8 @@ public class AccountConstants {
     public static final String E_REVOKE_APP_SPECIFIC_PASSWORD_RESPONSE = "RevokeAppSpecificPasswordResponse";
     public static final String E_GET_APP_SPECIFIC_PASSWORDS_REQUEST = "GetAppSpecificPasswordsRequest";
     public static final String E_GET_APP_SPECIFIC_PASSWORDS_RESPONSE = "GetAppSpecificPasswordsResponse";
+    public static final String E_GET_SCRATCH_CODES_REQUEST = "GetScratchCodesRequest";
+    public static final String E_GET_SCRATCH_CODES_RESPONSE = "GetScratchCodesResponse";
     public static final String E_GENERATE_SCRATCH_CODES_REQUEST = "GenerateScratchCodesRequest";
     public static final String E_GENERATE_SCRATCH_CODES_RESPONSE = "GenerateScratchCodesResponse";
     public static final String E_GET_TRUSTED_DEVICES_REQUEST = "GetTrustedDevicesRequest";
@@ -174,6 +176,8 @@ public class AccountConstants {
     public static final QName REVOKE_APP_SPECIFIC_PASSWORD_RESPONSE = QName.get(E_REVOKE_APP_SPECIFIC_PASSWORD_RESPONSE, NAMESPACE);
     public static final QName GET_APP_SPECIFIC_PASSWORDS_REQUEST = QName.get(E_GET_APP_SPECIFIC_PASSWORDS_REQUEST, NAMESPACE);
     public static final QName GET_APP_SPECIFIC_PASSWORDS_RESPONSE = QName.get(E_GET_APP_SPECIFIC_PASSWORDS_RESPONSE, NAMESPACE);
+    public static final QName GET_SCRATCH_CODES_REQUEST = QName.get(E_GET_SCRATCH_CODES_REQUEST, NAMESPACE);
+    public static final QName GET_SCRATCH_CODES_RESPONSE = QName.get(E_GET_SCRATCH_CODES_RESPONSE, NAMESPACE);
     public static final QName GENERATE_SCRATCH_CODES_REQUEST = QName.get(E_GENERATE_SCRATCH_CODES_REQUEST, NAMESPACE);
     public static final QName GENERATE_SCRATCH_CODES_RESPONSE = QName.get(E_GENERATE_SCRATCH_CODES_RESPONSE, NAMESPACE);
     public static final QName GET_TRUSTED_DEVICES_REQUEST = QName.get(E_GET_TRUSTED_DEVICES_REQUEST, NAMESPACE);
