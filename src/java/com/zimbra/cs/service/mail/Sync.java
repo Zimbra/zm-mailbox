@@ -86,6 +86,7 @@ public class Sync extends MailDocumentHandler {
             syncToken = new SyncToken(0);
         }
         int deleleLimit = syncRequest.getDeleteLimit();
+        int changeLimit = syncRequest.getChangeLimit();
 
         // In case client like ZCO does not send @deleteLimit in soap call/request,
         // server can apply delete pagination through debugconfig/localconfig.
@@ -93,11 +94,17 @@ public class Sync extends MailDocumentHandler {
             deleleLimit = DebugConfig.syncMaximumDeleteCount;
         }
 
+        // Client can specify change page limit. If unspecified by client or 
+        // client specify more than DebugConfig.syncMaximumChangeCount It will use DebugConfig.syncMaximumChangeCount
+        if (changeLimit <= 0 || changeLimit > DebugConfig.syncMaximumChangeCount) {
+            changeLimit = DebugConfig.syncMaximumChangeCount;
+        }
+
         boolean initialSync = tokenInt <= 0;
 
         // permit the caller to restrict initial sync only to calendar items with a recurrence after a given date
-        long calendarStart = request.getAttributeLong(MailConstants.A_CALENDAR_CUTOFF, -1);
-        long messageSyncStart  = request.getAttributeLong(MailConstants.A_MSG_CUTOFF, -1);
+        long calendarStart = syncRequest.getCalendarCutoff();
+        long messageSyncStart  = syncRequest.getMsgCutoff();
 
         // if the sync is constrained to a folder subset, we need to first figure out what can be seen
         Folder root = null;
@@ -136,7 +143,7 @@ public class Sync extends MailDocumentHandler {
                 }
             } else {
                 boolean typedDeletes = request.getAttributeBool(MailConstants.A_TYPED_DELETES, false);
-                String newToken = deltaSync(response, octxt, ifmt, mbox, syncToken, deleleLimit,typedDeletes, root, visible, messageSyncStart);
+                String newToken = deltaSync(response, octxt, ifmt, mbox, syncToken, deleleLimit, changeLimit, typedDeletes, root, visible, messageSyncStart);
                 response.addAttribute(MailConstants.A_TOKEN, newToken);
             }
         } finally {
@@ -182,7 +189,7 @@ public class Sync extends MailDocumentHandler {
                 initialCalendarSync(f, idlist, octxt, mbox, folder, calendarStart);
                 initialItemSync(f, MailConstants.E_DOC, idlist.getIds(MailItem.Type.DOCUMENT));
                 initialItemSync(f, MailConstants.E_WIKIWORD, idlist.getIds(MailItem.Type.WIKI));
-                initialItemSync(f, MailConstants.E_CONV, idlist.getIds(MailItem.Type.CONVERSATION));
+                initialCovSync(f, idlist, octxt, mbox, folder, messageSyncStart);
             }
         }
 
@@ -210,6 +217,13 @@ public class Sync extends MailDocumentHandler {
         }
 
         initialItemSync(f, MailConstants.E_MSG, idlist.getIds(MailItem.Type.MESSAGE));
+    }
+
+    private static void initialCovSync(Element f, TypedIdList idlist, OperationContext octxt, Mailbox mbox, Folder folder, long messageSyncStart) throws ServiceException {
+        if (messageSyncStart > 0 && !Collections.disjoint(idlist.types(), EnumSet.of(MailItem.Type.CONVERSATION))) {
+            idlist = mbox.listConvItemsForSync(octxt, folder.getId(), MailItem.Type.CONVERSATION, messageSyncStart);
+        }
+        initialItemSync(f, MailConstants.E_CONV, idlist.getIds(MailItem.Type.CONVERSATION));
     }
 
     private static void initialTagSync(Element f, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox) throws ServiceException {
@@ -242,7 +256,6 @@ public class Sync extends MailDocumentHandler {
     }
 
     private static final int FETCH_BATCH_SIZE = 200;
-    private static int MAXIMUM_CHANGE_COUNT = DebugConfig.syncMaximumChangeCount;
 
     private static final int MUTABLE_FIELDS = Change.FLAGS  | Change.TAGS | Change.FOLDER | Change.PARENT |
             Change.NAME | Change.CONFLICT | Change.COLOR  | Change.POSITION | Change.DATE;
@@ -250,12 +263,8 @@ public class Sync extends MailDocumentHandler {
     private static final Set<MailItem.Type> FOLDER_TYPES = EnumSet.of(MailItem.Type.FOLDER,
             MailItem.Type.SEARCHFOLDER, MailItem.Type.MOUNTPOINT);
 
-    // For Test purpose.
-    static void setMaximumChangeCount(int maximumChangeCount) {
-        MAXIMUM_CHANGE_COUNT = maximumChangeCount;
-    }
 
-    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, SyncToken syncToken, int deleteLimit, boolean typedDeletes, Folder root, Set<Folder> visible, long messageSyncStart)
+    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, SyncToken syncToken, int deleteLimit, int changeLimit, boolean typedDeletes, Folder root, Set<Folder> visible, long messageSyncStart)
     throws ServiceException {
         int begin = syncToken.getChangeId();
         int deleteModSeqCutoff = syncToken.getDeleteModSeq();
@@ -329,7 +338,7 @@ public class Sync extends MailDocumentHandler {
                 }
 
                 // if we've overflowed this sync response, set things up so that a subsequent sync starts from where we're cutting off
-                if (itemCount >= MAXIMUM_CHANGE_COUNT) {
+                if (itemCount >= changeLimit) {
                     response.addAttribute(MailConstants.A_QUERY_MORE, true);
                     newSyncToken.setChangeModSeq((item.getModifiedSequence() - 1));
                     newSyncToken.setChangeItemId(item.getId());
