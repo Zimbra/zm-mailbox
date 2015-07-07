@@ -10326,7 +10326,7 @@ TODO: delete them permanently from here
   <desc>Credentials associated with a successfully authorized OAuth Consumer</desc>
 </attr>
 
-<attr id="2050" name="zimbraFeatureTwoFactorAuthAvailable" type="boolean" cardinality="single" optionalIn="account,cos" callback="TwoFactorAuthStatus" flags="domainAdminModifiable,accountInfo" since="8.7.0,9.0.0">
+<attr id="2050" name="zimbraFeatureTwoFactorAuthAvailable" type="boolean" cardinality="single" optionalIn="account,cos" callback="TwoFactorAuthStatus" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.7.0,9.0.0">
   <desc>Whether the option of enabling two-factor authentication is available on the account</desc>
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
