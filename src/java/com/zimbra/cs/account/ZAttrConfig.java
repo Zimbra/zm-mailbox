@@ -29286,13 +29286,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [ssl, cleartext]
      *
-     * @return zimbraMobileGatewayProxySmtpConnectionType, or ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl if unset and/or has invalid value
+     * @return zimbraMobileGatewayProxySmtpConnectionType, or null if unset and/or has invalid value
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2035)
     public ZAttrProvisioning.MobileGatewayProxySmtpConnectionType getMobileGatewayProxySmtpConnectionType() {
-        try { String v = getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType); return v == null ? ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl : ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl; }
+        try { String v = getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType); return v == null ? null : ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -29300,13 +29300,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [ssl, cleartext]
      *
-     * @return zimbraMobileGatewayProxySmtpConnectionType, or "ssl" if unset
+     * @return zimbraMobileGatewayProxySmtpConnectionType, or null if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2035)
     public String getMobileGatewayProxySmtpConnectionTypeAsString() {
-        return getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, "ssl");
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, null);
     }
 
     /**
@@ -44832,8 +44832,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @return zimbraOAuthConsumerCredentials, or empty array if unset
      *
@@ -44845,8 +44845,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -44861,8 +44861,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new value
      * @param attrs existing map to populate, or null to create a new map
@@ -44878,8 +44878,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -44894,8 +44894,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -44911,8 +44911,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -44927,8 +44927,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -44944,8 +44944,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -44959,8 +44959,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

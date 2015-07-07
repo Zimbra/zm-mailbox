@@ -31882,6 +31882,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Credentials associated with a successfully authorized OAuth Consumer
+     *
+     * @return zimbraOAuthAccessor, or empty array if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2049)
+    public String[] getOAuthAccessor() {
+        return getMultiAttr(Provisioning.A_zimbraOAuthAccessor);
+    }
+
+    /**
+     * Credentials associated with a successfully authorized OAuth Consumer
+     *
+     * @param zimbraOAuthAccessor new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2049)
+    public void setOAuthAccessor(String[] zimbraOAuthAccessor) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthAccessor, zimbraOAuthAccessor);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Credentials associated with a successfully authorized OAuth Consumer
+     *
+     * @param zimbraOAuthAccessor new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2049)
+    public Map<String,Object> setOAuthAccessor(String[] zimbraOAuthAccessor, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthAccessor, zimbraOAuthAccessor);
+        return attrs;
+    }
+
+    /**
+     * Credentials associated with a successfully authorized OAuth Consumer
+     *
+     * @param zimbraOAuthAccessor new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2049)
+    public void addOAuthAccessor(String zimbraOAuthAccessor) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthAccessor, zimbraOAuthAccessor);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Credentials associated with a successfully authorized OAuth Consumer
+     *
+     * @param zimbraOAuthAccessor new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2049)
+    public Map<String,Object> addOAuthAccessor(String zimbraOAuthAccessor, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthAccessor, zimbraOAuthAccessor);
+        return attrs;
+    }
+
+    /**
+     * Credentials associated with a successfully authorized OAuth Consumer
+     *
+     * @param zimbraOAuthAccessor existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2049)
+    public void removeOAuthAccessor(String zimbraOAuthAccessor) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthAccessor, zimbraOAuthAccessor);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Credentials associated with a successfully authorized OAuth Consumer
+     *
+     * @param zimbraOAuthAccessor existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2049)
+    public Map<String,Object> removeOAuthAccessor(String zimbraOAuthAccessor, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthAccessor, zimbraOAuthAccessor);
+        return attrs;
+    }
+
+    /**
+     * Credentials associated with a successfully authorized OAuth Consumer
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2049)
+    public void unsetOAuthAccessor() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthAccessor, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Credentials associated with a successfully authorized OAuth Consumer
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2049)
+    public Map<String,Object> unsetOAuthAccessor(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthAccessor, "");
+        return attrs;
+    }
+
+    /**
      * regex of allowed characters in password
      *
      * @return zimbraPasswordAllowedChars, or null if unset

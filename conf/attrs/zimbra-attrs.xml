@@ -5217,7 +5217,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1131" name="zimbraOAuthConsumerCredentials" type="string" max="1024" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
-  <desc>OAuth consumer ids and secrets.  It is in the format of {consumer-id]:{secrets}</desc>
+  <desc>OAuth Consumer id and secret.  It is in the format of {consumer-id}:{secret}</desc>
 </attr>
 
 <attr id="1132" name="zimbraReverseProxyUseExternalRouteIfAccountNotExist" type="boolean" cardinality="single" optionalIn="domain" flags="domainAdminModifiable" since="7.0.0">
@@ -8955,7 +8955,6 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="2035" name="zimbraMobileGatewayProxySmtpConnectionType" type="enum" value="cleartext,ssl" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
-  <globalConfigValue>ssl</globalConfigValue>
   <desc>SMTP connection type of the Zimbra system being proxied</desc>
 </attr>
 
@@ -8970,6 +8969,10 @@ TODO: delete them permanently from here
 <attr id="2048" name="zimbraDisableCrossAccountConversationThreading" type="boolean" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0.0">
   <desc>Whether conversations are allowed to span multiple accounts. Every time this attribute is changed, new messages that continue existing conversation threads in imported accounts will no longer thread with those conversations, and will instead start new ones.</desc>
   <defaultCOSValue>TRUE</defaultCOSValue>
+</attr>
+
+<attr id="2049" name="zimbraOAuthAccessor" type="string" cardinality="multi" optionalIn="account" since="8.7.0,9.0.0">
+  <desc>Credentials associated with a successfully authorized OAuth Consumer</desc>
 </attr>
 
 </attrs>
