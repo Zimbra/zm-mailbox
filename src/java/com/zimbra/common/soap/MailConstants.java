@@ -862,6 +862,8 @@ public final class MailConstants {
     public static final String A_GALSYNC_THROTTLED = "throttled";
     public static final String A_GALSYNC_FULLSYNC_RECOMMENDED = "fullSyncRecommended";
     public static final String A_DELETE_LIMIT = "deleteLimit";
+    public static final String A_CHANGE_LIMIT = "changeLimit";
+
     // filter rules
     public static final String A_LHS = "k0";
     public static final String A_RHS = "k1";
