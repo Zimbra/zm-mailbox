@@ -36,6 +36,9 @@ public class EnableTwoFactorAuth extends AccountDocumentHandler {
         if (account == null) {
             throw AuthFailedServiceException.AUTH_FAILED("no such account");
         }
+        if (!account.isFeatureTwoFactorAuthAvailable()) {
+            throw ServiceException.CANNOT_ENABLE_TWO_FACTOR_AUTH();
+        }
         TwoFactorManager manager = new TwoFactorManager(account);
         EnableTwoFactorAuthResponse response = new EnableTwoFactorAuthResponse();
         Element passwordEl = request.getOptionalElement(AccountConstants.E_PASSWORD);
