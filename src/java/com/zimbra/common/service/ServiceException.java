@@ -44,6 +44,7 @@ public class ServiceException extends Exception {
     public static final String PERM_DENIED = "service.PERM_DENIED";
     public static final String AUTH_REQUIRED = "service.AUTH_REQUIRED";
     public static final String CANNOT_DISABLE_TWO_FACTOR_AUTH = "account.CANNOT_DISABLE_TWO_FACTOR_AUTH";
+    public static final String CANNOT_ENABLE_TWO_FACTOR_AUTH = "account.CANNOT_ENABLE_TWO_FACTOR_AUTH";
     public static final String AUTH_EXPIRED = "service.AUTH_EXPIRED";
     public static final String WRONG_HOST = "service.WRONG_HOST";
     public static final String NON_READONLY_OPERATION_DENIED = "service.NON_READONLY_OPERATION_DENIED";
@@ -326,6 +327,10 @@ public class ServiceException extends Exception {
 
     public static ServiceException CANNOT_DISABLE_TWO_FACTOR_AUTH() {
         return new ServiceException("cannot disable two-factor authentication", CANNOT_DISABLE_TWO_FACTOR_AUTH, SENDERS_FAULT);
+    }
+
+    public static ServiceException CANNOT_ENABLE_TWO_FACTOR_AUTH() {
+        return new ServiceException("cannot enable two-factor authentication", CANNOT_ENABLE_TWO_FACTOR_AUTH, SENDERS_FAULT);
     }
 
     public static ServiceException WRONG_HOST(String target, Throwable cause) {

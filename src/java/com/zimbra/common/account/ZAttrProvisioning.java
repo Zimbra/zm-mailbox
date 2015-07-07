@@ -6374,6 +6374,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureTouchClientEnabled = "zimbraFeatureTouchClientEnabled";
 
     /**
+     * Whether the option of enabling two-factor authentication is available
+     * on the account
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2050)
+    public static final String A_zimbraFeatureTwoFactorAuthAvailable = "zimbraFeatureTwoFactorAuthAvailable";
+
+    /**
      * whether two-factor authentication is required
      *
      * @since ZCS 8.7.0,9.0.0
