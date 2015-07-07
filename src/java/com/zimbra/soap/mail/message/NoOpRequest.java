@@ -52,7 +52,7 @@ import com.zimbra.soap.type.ZmBoolean;
  * <br />
  * The client may specify a custom timeout-length for their request if they know something about the particular
  * underlying network.  The server may or may not honor this request (depending on server configured max/min values:
- * see LocalConfig variables <b>zimbra_noop_default_timeout, zimbra_noop_min_timeout and zimbra_noop_max_timeout</b>)
+ * see Ldap Server attributes <b>zimbraMailboxNoopDefaultTimeout, zimbraMailboxNoopMinTimeout and zimbraMailboxNoopMaxTimeout</b>)
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_NO_OP_REQUEST)
@@ -87,8 +87,8 @@ public class NoOpRequest {
      * @zm-api-field-tag timeout-millis-to-wait
      * @zm-api-field-description The client may specify a custom timeout-length for their request if they know
      * something about the particular underlying network.
-     * The server may or may not honor this request (depending on server configured max/min values: see LocalConfig
-     * variables <b>zimbra_noop_default_timeout, zimbra_noop_min_timeout and zimbra_noop_max_timeout</b>)
+     * The server may or may not honor this request (depending on server configured max/min values: see Server attributes
+     * variables <b>zimbraMailboxNoopDefaultTimeout, zimbraMailboxNoopMinTimeout and zimbraMailboxNoopMaxTimeout</b>)
      */
     @XmlAttribute(name=MailConstants.A_TIMEOUT /* timeout */, required=false)
     private Long timeout;

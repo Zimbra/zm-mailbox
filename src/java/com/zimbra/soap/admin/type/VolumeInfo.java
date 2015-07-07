@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -105,6 +105,12 @@ public final class VolumeInfo {
     @XmlAttribute(name=AdminConstants.A_VOLUME_IS_CURRENT /* isCurrent */, required=false)
     private ZmBoolean current;
 
+    /**
+     * @zm-api-field-description optional command to invoke on startup to mount the volume
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_MOUNT_COMMAND /* mountCommand */, required=false)
+    private String mountCommand;
+
     public void setId(short value) {
         id = value;
     }
@@ -195,5 +201,13 @@ public final class VolumeInfo {
 
     public Boolean isCurrent() {
         return ZmBoolean.toBool(current);
+    }
+
+    public String getMountCommand() {
+        return mountCommand;
+    }
+
+    public void setMountCommand(String mountCommand) {
+        this.mountCommand = mountCommand;
     }
 }

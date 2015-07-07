@@ -40,6 +40,7 @@ import junit.framework.Assert;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.custommonkey.xmlunit.XMLAssert;
 import org.dom4j.QName;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -109,6 +110,7 @@ import com.zimbra.soap.util.JaxbNodeInfo;
  *
  * @author Gren Elliot
  */
+
 public class JaxbToElementTest {
     private static final Logger LOG = Logger.getLogger(JaxbToElementTest.class);
     private static Unmarshaller unmarshaller;
@@ -215,13 +217,8 @@ public class JaxbToElementTest {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
             String actual = el.prettyPrint();
-            // TODO: At present some stuff is wrong/missing
-            // so just check the first part.
-            Assert.assertEquals(getInfoResponseXml.substring(0, 1000),
-                    actual.substring(0, 1000));
-            // validateLongString("XML response differs from expected\n",
-            //     getInfoResponseXml, actual,
-            //             "GetInfoResponse.xml", "/tmp/GetInfoResponse.xml");
+            String expected = getInfoResponseXml;
+            XMLAssert.assertXMLEqual(expected, actual);
         }
     }
 
@@ -234,7 +231,7 @@ public class JaxbToElementTest {
                 out.write(actual);
                 out.close();
             }catch (Exception e){//Catch exception if any
-              System.err.println("validateLongString:Error writing to " + actualFile + " : " + e.getMessage());
+              LOG.error("validateLongString:Error writing to " + actualFile, e);
             }
             Assert.fail(message + "\nexpected=" + expectedFile + "\nactual=" + actualFile);
         }
@@ -256,8 +253,7 @@ public class JaxbToElementTest {
     public void elementToJaxbTest() throws Exception {
         Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
         org.w3c.dom.Document doc = el.toW3cDom();
-        if (LOG.isDebugEnabled())
-            LOG.debug("(XML)elementToJaxbTest toW3cDom() Xml:\n" + W3cDomUtil.asXML(doc));
+        LOG.debug("(XML)elementToJaxbTest toW3cDom() Xml:\n" + W3cDomUtil.asXML(doc));
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(getInfoRespElem);
             Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
@@ -441,8 +437,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         Element env = Element.parseJSON(getInfoResponseJSONwithEnv);
         Element el = env.listElements().get(0);
         org.w3c.dom.Document doc = el.toW3cDom();
-        if (LOG.isDebugEnabled())
-            LOG.debug("JSONelementToJaxbTest toW3cDom Xml:\n" + W3cDomUtil.asXML(doc));
+        LOG.debug("JSONelementToJaxbTest toW3cDom Xml:\n" + W3cDomUtil.asXML(doc));
         GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(el);
         Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
     }
@@ -727,7 +722,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         ConvActionRequest car = new ConvActionRequest(actionSelector);
         Element carE = JaxbUtil.jaxbToElement(car);
         String eXml = carE.toString();
-        LOG.info("ConvActionRequestJaxbSubclassHandling: marshalled XML=" +
+        LOG.debug("ConvActionRequestJaxbSubclassHandling: marshalled XML=" +
                 eXml);
         Assert.assertTrue("Xml should contain acctRelPath attribute",
                 eXml.contains("acctRelPath=\"folder\""));
@@ -738,12 +733,12 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         actionE.addAttribute(MailConstants.A_OPERATION, "op");
         actionE.addAttribute(MailConstants.A_ID, "ids");
         actionE.addAttribute(MailConstants.A_ACCT_RELATIVE_PATH, "folder");
-        LOG.info("ConvActionRequestJaxbSubclassHandling: half baked XML=" +
+        LOG.debug("ConvActionRequestJaxbSubclassHandling: half baked XML=" +
                 carE.toString());
         car = JaxbUtil.elementToJaxb(carE);
         carE = JaxbUtil.jaxbToElement(car);
         eXml = carE.toString();
-        LOG.info("ConvActionRequestJaxbSubclassHandling: round tripped XML=" +
+        LOG.debug("ConvActionRequestJaxbSubclassHandling: round tripped XML=" +
                 eXml);
         ConvActionSelector as = car.getAction();
         Assert.assertEquals("acctRelPath attr value",
@@ -778,17 +773,17 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         InputStream is = getClass().getResourceAsStream("retentionPolicy.xml");
         Element elem = Element.parseXML(is);
         String eXml = elem.toString();
-        LOG.info("retentionPolicy.xml from Element:\n" + eXml);
+        LOG.debug("retentionPolicy.xml from Element:\n" + eXml);
         RetentionPolicy rp = JaxbUtil.elementToJaxb(elem, RetentionPolicy.class);
         Assert.assertNotNull("elementToJaxb RetentionPolicy returned object", rp);
         Element elem2 = JaxbUtil.jaxbToElement(rp, XMLElement.mFactory);
         String eXml2 = elem2.toString();
-        LOG.info("Round tripped retentionPolicy.xml from Element:\n" + eXml2);
-        Assert.assertEquals("elementToJaxb RetentionPolicy Xml after", eXml, eXml2);
+        LOG.debug("Round tripped retentionPolicy.xml from Element:\n" + eXml2);
+        XMLAssert.assertXMLEqual(eXml, eXml2);
     }
 
     @Test
-    public void IdentityToStringTest () throws Exception {
+    public void IdentityToStringTest() throws Exception {
         com.zimbra.soap.account.type.Identity id =
                 new com.zimbra.soap.account.type.Identity("hello", null);
         Map<String, String> attrs = Maps.newHashMap();
@@ -796,9 +791,12 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         attrs.put("key2", "value2 wonderful");
         id.setAttrs(attrs);
         CreateIdentityRequest request = new CreateIdentityRequest(id);
-        Assert.assertEquals("toString output",
-            "CreateIdentityRequest{identity=Identity{a=[Attr{name=key2, value=value2 wonderful}, Attr{name=key1, value=value1}], name=hello, id=null}}",
-            request.toString());
+        String toString = request.toString();
+        Assert.assertTrue("toString start chars", toString.startsWith("CreateIdentityRequest{identity=Identity{a="));
+        Assert.assertTrue("toString key1", toString.contains("Attr{name=key1, value=value1}"));
+        Assert.assertTrue("toString key2", toString.contains("Attr{name=key2, value=value2 wonderful}"));
+        Assert.assertTrue("toString name", toString.contains("name=hello"));
+        Assert.assertTrue("toString id", toString.contains("id=null"));
     }
 
     /*
@@ -927,14 +925,14 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         encodeAttr(identEjson, "keyAllowed", "valueAllowed", AccountConstants.E_A, AccountConstants.A_NAME, true);
         encodeAttr(identEjson, "keyDenied", "valueDenied", AccountConstants.E_A, AccountConstants.A_NAME, false);
         // <identity><a name="keyAllowed">valueAllowed</a><a pd="1" name="keyDenied"/></identity>
-        LOG.info("encodeAttrsWithDenied xml\n" + identExml.toString());
+        LOG.debug("encodeAttrsWithDenied xml\n" + identExml.toString());
         // {"_attrs":{"keyAllowed":"valueAllowed","keyDenied":{"_content":"","pd":true}}}
-        LOG.info("encodeAttrsWithDenied json\n" + identEjson.toString());
+        LOG.debug("encodeAttrsWithDenied json\n" + identEjson.toString());
         com.zimbra.soap.account.type.Attr deniedAttr = com.zimbra.soap.account.type.Attr.forNameWithPermDenied("keyDenied");
         Element elem2 = JaxbUtil.jaxbToNamedElement(AccountConstants.E_A, AccountConstants.NAMESPACE_STR,
                 deniedAttr, XMLElement.mFactory);
         String eXml2 = elem2.toString();
-        LOG.info("XML from JAXB denied attr\n" + eXml2);
+        LOG.debug("XML from JAXB denied attr\n" + eXml2);
         Assert.assertEquals("XML from JAXB Attr top name", AccountConstants.E_A, elem2.getName());
         Assert.assertEquals("XML from JAXB Attr pd", "1", elem2.getAttribute("pd"));
         Assert.assertEquals("XML from JAXB Attr name", "keyDenied", elem2.getAttribute("name"));

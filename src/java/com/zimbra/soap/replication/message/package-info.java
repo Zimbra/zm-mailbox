@@ -16,9 +16,6 @@
  */
 
 @XmlSchema(
-    xmlns = {
-        @XmlNs(prefix="repl", namespaceURI = "urn:zimbraRepl")
-    },
     namespace = "urn:zimbraRepl",
     elementFormDefault = XmlNsForm.QUALIFIED
 )
