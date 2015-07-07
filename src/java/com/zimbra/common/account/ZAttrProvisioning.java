@@ -10996,8 +10996,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNotifySSLServerEnabled = "zimbraNotifySSLServerEnabled";
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * Credentials associated with a successfully authorized OAuth Consumer
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2049)
+    public static final String A_zimbraOAuthAccessor = "zimbraOAuthAccessor";
+
+    /**
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @since ZCS 7.0.0
      */
