@@ -29,6 +29,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Flag;
@@ -104,7 +105,7 @@ public class Sync extends MailDocumentHandler {
 
         // permit the caller to restrict initial sync only to calendar items with a recurrence after a given date
         long calendarStart = syncRequest.getCalendarCutoff();
-        long messageSyncStart  = syncRequest.getMsgCutoff();
+        long messageSyncStart  = syncRequest.getMsgCutoff() * Constants.MILLIS_PER_SECOND;
 
         // if the sync is constrained to a folder subset, we need to first figure out what can be seen
         Folder root = null;
