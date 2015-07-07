@@ -15160,8 +15160,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @return zimbraOAuthConsumerCredentials, or empty array if unset
      *
@@ -15173,8 +15173,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15189,8 +15189,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15206,8 +15206,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15222,8 +15222,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -15239,8 +15239,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15255,8 +15255,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -15272,8 +15272,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -15287,8 +15287,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

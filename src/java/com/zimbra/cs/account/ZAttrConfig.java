@@ -29312,8 +29312,8 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Time in milliseconds that mailstore will wait for an external indexing
      * service to fully replicate an index for a single mailbox. When using
-     * SolrCloud, this is the time that mailstore will wait for all replicas
-     * a solr collection to go live and sync up to the leader.
+     * SolrCloud, this is the time that a mailstore will wait for all
+     * replicas of a solr collection to go live and sync up to the leader.
      *
      * @return zimbraIndexReplicationTimeout, or 20000 if unset
      *
@@ -29327,8 +29327,8 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Time in milliseconds that mailstore will wait for an external indexing
      * service to fully replicate an index for a single mailbox. When using
-     * SolrCloud, this is the time that mailstore will wait for all replicas
-     * a solr collection to go live and sync up to the leader.
+     * SolrCloud, this is the time that a mailstore will wait for all
+     * replicas of a solr collection to go live and sync up to the leader.
      *
      * @param zimbraIndexReplicationTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29345,8 +29345,8 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Time in milliseconds that mailstore will wait for an external indexing
      * service to fully replicate an index for a single mailbox. When using
-     * SolrCloud, this is the time that mailstore will wait for all replicas
-     * a solr collection to go live and sync up to the leader.
+     * SolrCloud, this is the time that a mailstore will wait for all
+     * replicas of a solr collection to go live and sync up to the leader.
      *
      * @param zimbraIndexReplicationTimeout new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29364,8 +29364,8 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Time in milliseconds that mailstore will wait for an external indexing
      * service to fully replicate an index for a single mailbox. When using
-     * SolrCloud, this is the time that mailstore will wait for all replicas
-     * a solr collection to go live and sync up to the leader.
+     * SolrCloud, this is the time that a mailstore will wait for all
+     * replicas of a solr collection to go live and sync up to the leader.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -29381,8 +29381,8 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Time in milliseconds that mailstore will wait for an external indexing
      * service to fully replicate an index for a single mailbox. When using
-     * SolrCloud, this is the time that mailstore will wait for all replicas
-     * a solr collection to go live and sync up to the leader.
+     * SolrCloud, this is the time that a mailstore will wait for all
+     * replicas of a solr collection to go live and sync up to the leader.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -30096,7 +30096,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Time in milliseconds that mailstore will wait for space to free up in
-     * the shared indexing queue.
+     * the shared indexing queue. Increase this value if you are reindexing
+     * several large mailboxes simultaneously.
      *
      * @return zimbraIndexingQueueTimeout, or 30000 if unset
      *
@@ -30109,7 +30110,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Time in milliseconds that mailstore will wait for space to free up in
-     * the shared indexing queue.
+     * the shared indexing queue. Increase this value if you are reindexing
+     * several large mailboxes simultaneously.
      *
      * @param zimbraIndexingQueueTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -30125,7 +30127,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Time in milliseconds that mailstore will wait for space to free up in
-     * the shared indexing queue.
+     * the shared indexing queue. Increase this value if you are reindexing
+     * several large mailboxes simultaneously.
      *
      * @param zimbraIndexingQueueTimeout new value
      * @param attrs existing map to populate, or null to create a new map
@@ -30142,7 +30145,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Time in milliseconds that mailstore will wait for space to free up in
-     * the shared indexing queue.
+     * the shared indexing queue. Increase this value if you are reindexing
+     * several large mailboxes simultaneously.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -30157,7 +30161,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Time in milliseconds that mailstore will wait for space to free up in
-     * the shared indexing queue.
+     * the shared indexing queue. Increase this value if you are reindexing
+     * several large mailboxes simultaneously.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -46743,13 +46748,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [cleartext, ssl]
      *
-     * @return zimbraMobileGatewayProxySmtpConnectionType, or ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl if unset and/or has invalid value
+     * @return zimbraMobileGatewayProxySmtpConnectionType, or null if unset and/or has invalid value
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2035)
     public ZAttrProvisioning.MobileGatewayProxySmtpConnectionType getMobileGatewayProxySmtpConnectionType() {
-        try { String v = getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType); return v == null ? ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl : ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.ssl; }
+        try { String v = getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType); return v == null ? null : ZAttrProvisioning.MobileGatewayProxySmtpConnectionType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -46757,13 +46762,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [cleartext, ssl]
      *
-     * @return zimbraMobileGatewayProxySmtpConnectionType, or "ssl" if unset
+     * @return zimbraMobileGatewayProxySmtpConnectionType, or null if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2035)
     public String getMobileGatewayProxySmtpConnectionTypeAsString() {
-        return getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, "ssl");
+        return getAttr(Provisioning.A_zimbraMobileGatewayProxySmtpConnectionType, null);
     }
 
     /**
@@ -62433,8 +62438,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @return zimbraOAuthConsumerCredentials, or empty array if unset
      *
@@ -62446,8 +62451,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -62462,8 +62467,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new value
      * @param attrs existing map to populate, or null to create a new map
@@ -62479,8 +62484,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -62495,8 +62500,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -62512,8 +62517,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -62528,8 +62533,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param zimbraOAuthConsumerCredentials existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -62545,8 +62550,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -62560,8 +62565,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer ids and secrets. It is in the format of
-     * {consumer-id]:{secrets}
+     * OAuth Consumer id and secret. It is in the format of
+     * {consumer-id}:{secret}
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

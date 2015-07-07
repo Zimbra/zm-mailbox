@@ -19742,8 +19742,8 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Time in milliseconds that mailstore will wait for an external indexing
      * service to fully replicate an index for a single mailbox. When using
-     * SolrCloud, this is the time that mailstore will wait for all replicas
-     * a solr collection to go live and sync up to the leader.
+     * SolrCloud, this is the time that a mailstore will wait for all
+     * replicas of a solr collection to go live and sync up to the leader.
      *
      * @return zimbraIndexReplicationTimeout, or 20000 if unset
      *
@@ -19757,8 +19757,8 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Time in milliseconds that mailstore will wait for an external indexing
      * service to fully replicate an index for a single mailbox. When using
-     * SolrCloud, this is the time that mailstore will wait for all replicas
-     * a solr collection to go live and sync up to the leader.
+     * SolrCloud, this is the time that a mailstore will wait for all
+     * replicas of a solr collection to go live and sync up to the leader.
      *
      * @param zimbraIndexReplicationTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19775,8 +19775,8 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Time in milliseconds that mailstore will wait for an external indexing
      * service to fully replicate an index for a single mailbox. When using
-     * SolrCloud, this is the time that mailstore will wait for all replicas
-     * a solr collection to go live and sync up to the leader.
+     * SolrCloud, this is the time that a mailstore will wait for all
+     * replicas of a solr collection to go live and sync up to the leader.
      *
      * @param zimbraIndexReplicationTimeout new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19794,8 +19794,8 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Time in milliseconds that mailstore will wait for an external indexing
      * service to fully replicate an index for a single mailbox. When using
-     * SolrCloud, this is the time that mailstore will wait for all replicas
-     * a solr collection to go live and sync up to the leader.
+     * SolrCloud, this is the time that a mailstore will wait for all
+     * replicas of a solr collection to go live and sync up to the leader.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -19811,8 +19811,8 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Time in milliseconds that mailstore will wait for an external indexing
      * service to fully replicate an index for a single mailbox. When using
-     * SolrCloud, this is the time that mailstore will wait for all replicas
-     * a solr collection to go live and sync up to the leader.
+     * SolrCloud, this is the time that a mailstore will wait for all
+     * replicas of a solr collection to go live and sync up to the leader.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -20526,7 +20526,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Time in milliseconds that mailstore will wait for space to free up in
-     * the shared indexing queue.
+     * the shared indexing queue. Increase this value if you are reindexing
+     * several large mailboxes simultaneously.
      *
      * @return zimbraIndexingQueueTimeout, or -1 if unset
      *
@@ -20539,7 +20540,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Time in milliseconds that mailstore will wait for space to free up in
-     * the shared indexing queue.
+     * the shared indexing queue. Increase this value if you are reindexing
+     * several large mailboxes simultaneously.
      *
      * @param zimbraIndexingQueueTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20555,7 +20557,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Time in milliseconds that mailstore will wait for space to free up in
-     * the shared indexing queue.
+     * the shared indexing queue. Increase this value if you are reindexing
+     * several large mailboxes simultaneously.
      *
      * @param zimbraIndexingQueueTimeout new value
      * @param attrs existing map to populate, or null to create a new map
@@ -20572,7 +20575,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Time in milliseconds that mailstore will wait for space to free up in
-     * the shared indexing queue.
+     * the shared indexing queue. Increase this value if you are reindexing
+     * several large mailboxes simultaneously.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -20587,7 +20591,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Time in milliseconds that mailstore will wait for space to free up in
-     * the shared indexing queue.
+     * the shared indexing queue. Increase this value if you are reindexing
+     * several large mailboxes simultaneously.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
