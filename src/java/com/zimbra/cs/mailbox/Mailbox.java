@@ -9853,6 +9853,26 @@ public class Mailbox {
         }
     }
 
+
+    public TypedIdList listConvItemsForSync(OperationContext octxt, int folderId, MailItem.Type type, long messageSyncStart) throws ServiceException {
+        if (folderId == ID_AUTO_INCREMENT) {
+            return new TypedIdList();
+        }
+
+        boolean success = false;
+        try {
+            beginTransaction("listMessageItemsforgivenDate", octxt);
+
+            // if they specified a folder, make sure it actually exists
+            Folder folder = getFolderById(folderId);
+            TypedIdList ids = DbMailItem.listConvItems(folder, messageSyncStart, type, true, false);
+            success = true;
+            return ids;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     /**
      * @param octxt
      * @param i

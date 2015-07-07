@@ -1,12 +1,21 @@
 <-- initial sync request -->
 
-<SyncRequest [l="{root-folder-id}"] [calCutoff="{earliest-calendar-date}"] [deleteLimit="max number of deleted items"]/>
+<SyncRequest [l="{root-folder-id}"] [msgCutoff="{earliest-message-date}"] [calCutoff="{earliest-calendar-date}"] [deleteLimit="max-number-of-deleted-items"] [changeLimit="max-number-of-modified-items"]/>
 
    <-- no token = initial sync -->
    <--  if {root-folder-id} present, we start sync there rather than at folder 11 -->
-   <--  if {earliest-calendar-date} present, omit all appointments and tasks that don't have a recurrence ending after that time (specified in ms) -->
-   <--  if {max number of deleted items} present and it is greater than 0, then response will limit to the number of deleted items to the value and
-        if there are more delete queued, and another SyncRequest (using the new returned token) is necessary. -->
+   <--  if {earliest-message-date} present, omit all messages and respective conversation before the specified date in second(specified in s)
+        This parameter honored in initial sync only -->
+   <--  if {earliest-calendar-date} present, omit all appointments and tasks that don't have a recurrence ending after that time (specified in ms)
+        This parameter honored in initial sync only -->
+   <--  if {max-number-of-deleted-items} present and it is greater than 0, then response will limit to the number of deleted items to the value and
+        if there are more delete queued, and another SyncRequest (using the returned token) is necessary.
+        This attribute honored in delta sync only  -->
+   <--  if {max-number-of-modified-items} present and it is greater than 0, then response will limit to the number of modified items to the value and
+        if there are more modified items queued, and another SyncRequest (using the  returned token) is necessary.
+        maximum value for changeLimit = 3990 if client send greater value in soap call, It will restricted to 3990 by server.
+        This attribute honored in delta sync only  -->
+
 
 <SyncResponse token="403" md="1077924283" s="78624627">
   <folder id="11">
@@ -122,11 +131,11 @@
     <m ids="904"/>
     <c ids="905"/>
   </deleted>
-</SyncResponse>    
+</SyncResponse>
 
 <SyncRequest token="500" typed="1" deleteLimit="5"/>
 
-<SyncResponse token="540" md="1078054298" more="1">
+<SyncResponse token="540" md="1078054298">
   <-- handle deletes first -->
   <deleted ids="900,1000>
     <m ids="900"/>

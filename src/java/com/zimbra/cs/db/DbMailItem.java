@@ -4905,6 +4905,53 @@ public class DbMailItem {
         }
     }
 
+    /**
+     * Return the conversation ids corresponds to messages with given cutoff time.
+     * @param folder
+     * @param messageSyncStart
+     * @param type
+     * @param descending
+     * @param older
+     * @return
+     * @throws ServiceException
+     */
+    public static TypedIdList listConvItems(Folder folder, long messageSyncStart, MailItem.Type type, boolean descending, boolean older) throws ServiceException {
+        Mailbox mbox = folder.getMailbox();
+        assert Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox);
+        TypedIdList result = new TypedIdList();
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            if (older) {
+                stmt = conn.prepareStatement("SELECT parent_id  FROM " + getMailItemTableName(folder) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + " type = ? AND date < ?" +
+                        " ORDER BY date" + (descending ? " DESC" : ""));
+            } else {
+                stmt = conn.prepareStatement("SELECT parent_id  FROM " + getMailItemTableName(folder) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + " type = ? AND date >= ?" +
+                        " ORDER BY date" + (descending ? " DESC" : ""));
+            }
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setByte(pos++, MailItem.Type.MESSAGE.toByte()); //message's parent_id is always conversation..
+            stmt.setLong(pos++, messageSyncStart);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                if (!result.contains(rs.getInt(1))) {
+                    result.add(MailItem.Type.CONVERSATION, rs.getInt(1), "");
+                }
+            }
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching item list for folder " + folder.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     private final Mailbox mailbox;
     // The following data are only used for INSERT/UPDATE, not loaded by SELECT.
     private String sender;

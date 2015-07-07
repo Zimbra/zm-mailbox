@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,13 +30,18 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.DeliveryOptions;
@@ -49,6 +56,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.SyncToken;
+import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -63,12 +71,13 @@ public class SyncTest {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("test1@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("test2@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
-        Sync.setMaximumChangeCount(1000);
     }
 
     @Test
@@ -120,12 +129,145 @@ public class SyncTest {
     }
 
     @Test
+    public void msgConversationsCutoff() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        mbox.beginTrackingSync();
+        acct.setMailThreadingAlgorithm(MailThreadingAlgorithm.subject);
+        long currTime = System.currentTimeMillis() / 1000;
+        long before60min = currTime - (60 * Constants.SECONDS_PER_MINUTE);
+        long before45min = currTime - (45 * Constants.SECONDS_PER_MINUTE);
+        long before30min = currTime - (30 * Constants.SECONDS_PER_MINUTE);
+        long before15min = currTime - (15 * Constants.SECONDS_PER_MINUTE);
+
+        Message msg60minbefore = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "test1 x", before60min * 1000);
+        Message msg45minbefore = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "Re: test1 x", before45min * 1000);
+        Message msg30minbefore = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "test2 x", before30min * 1000);
+        Message msg15minbefore = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "Re: test2 x", before15min * 1000);
+        int convId1 = msg60minbefore.getConversationId();
+        int convId2 = msg30minbefore.getConversationId();
+        List<Integer> expectedConvIds = new ArrayList<Integer>();
+        List<Integer> expectedMsgIds = new ArrayList<Integer>();
+
+        // No message no conversation should be returned if msgCutOff is current time.
+        SyncRequest request = new SyncRequest();
+        request.setMsgCutoff(currTime);
+        request.setFolderId("" + Mailbox.ID_FOLDER_ROOT);
+        Map<String, Object> context = new HashMap<String, Object>();
+        context.put(SoapEngine.ZIMBRA_CONTEXT, new ZimbraSoapContext(AuthProvider.getAuthToken(acct), acct.getId(), SoapProtocol.Soap12, SoapProtocol.Soap12));
+        Element response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
+        Pair<Integer, Element> pairFolderIdElement = new Pair<Integer, Element>(Mailbox.ID_FOLDER_CONVERSATIONS, null);
+        getFolderElement(response, pairFolderIdElement);
+        Assert.assertNotNull(pairFolderIdElement.getSecond());
+        Assert.assertNull(pairFolderIdElement.getSecond().getOptionalElement(MailConstants.E_CONV));
+        pairFolderIdElement = new Pair<Integer, Element>(Mailbox.ID_FOLDER_INBOX, null);
+        getFolderElement(response, pairFolderIdElement);
+        Assert.assertNotNull(pairFolderIdElement.getSecond());
+        Assert.assertNull(pairFolderIdElement.getSecond().getOptionalElement(MailConstants.E_MSG));
+
+        // 4 messages 2 conversation should be returned if msgCutOff is current time - 61 mins.
+        request = new SyncRequest();
+        request.setMsgCutoff(currTime - 61 * Constants.SECONDS_PER_MINUTE);
+        request.setFolderId("" + Mailbox.ID_FOLDER_ROOT);
+        response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
+        expectedConvIds.add(convId1);
+        expectedConvIds.add(convId2);
+        Assert.assertTrue(verifyItemsPresentInResponse(response, Mailbox.ID_FOLDER_CONVERSATIONS, expectedConvIds, Type.CONVERSATION));
+        expectedConvIds.clear();
+        expectedMsgIds.add(msg60minbefore.getId());
+        expectedMsgIds.add(msg45minbefore.getId());
+        expectedMsgIds.add(msg30minbefore.getId());
+        expectedMsgIds.add(msg15minbefore.getId());
+        Assert.assertTrue(verifyItemsPresentInResponse(response, Mailbox.ID_FOLDER_INBOX, expectedMsgIds, Type.MESSAGE));
+        expectedMsgIds.clear();
+
+        // 2 messages 1 conversation should be returned if msgCutOff is current time - 31 mins.
+        request = new SyncRequest();
+        request.setMsgCutoff(currTime - 31 * Constants.SECONDS_PER_MINUTE);
+        request.setFolderId("" + Mailbox.ID_FOLDER_ROOT);
+        response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
+        expectedConvIds.add(convId2);
+        Assert.assertTrue(verifyItemsPresentInResponse(response, Mailbox.ID_FOLDER_CONVERSATIONS, expectedConvIds, Type.CONVERSATION));
+        expectedConvIds.clear();
+        expectedMsgIds.add(msg30minbefore.getId());
+        expectedMsgIds.add(msg15minbefore.getId());
+        Assert.assertTrue(verifyItemsPresentInResponse(response, Mailbox.ID_FOLDER_INBOX, expectedMsgIds, Type.MESSAGE));
+        expectedMsgIds.clear();
+
+        // 1 messages 1 conversation should be returned if msgCutOff is current time - 16 mins.
+        request = new SyncRequest();
+        request.setMsgCutoff(currTime - 16 * Constants.SECONDS_PER_MINUTE);
+        request.setFolderId("" + Mailbox.ID_FOLDER_ROOT);
+        response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
+        expectedConvIds.add(convId2);
+        Assert.assertTrue(verifyItemsPresentInResponse(response, Mailbox.ID_FOLDER_CONVERSATIONS, expectedConvIds, Type.CONVERSATION));
+        expectedConvIds.clear();
+        expectedMsgIds.add(msg15minbefore.getId());
+        Assert.assertTrue(verifyItemsPresentInResponse(response, Mailbox.ID_FOLDER_INBOX, expectedMsgIds, Type.MESSAGE));
+        expectedMsgIds.clear();
+
+        //Delete message before 15mins no messages no conversation should be returned if msgCutOff is current time - 16 mins.
+        mbox.delete(null, msg15minbefore.getId(), Type.MESSAGE);
+        request = new SyncRequest();
+        request.setMsgCutoff(currTime - 16 * Constants.SECONDS_PER_MINUTE);
+        request.setFolderId("" + Mailbox.ID_FOLDER_ROOT);
+        response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
+        pairFolderIdElement = new Pair<Integer, Element>(Mailbox.ID_FOLDER_CONVERSATIONS, null);
+        getFolderElement(response, pairFolderIdElement);
+        Assert.assertNotNull(pairFolderIdElement.getSecond());
+        Assert.assertNull(pairFolderIdElement.getSecond().getOptionalElement(MailConstants.E_CONV));
+        pairFolderIdElement = new Pair<Integer, Element>(Mailbox.ID_FOLDER_INBOX, null);
+        getFolderElement(response, pairFolderIdElement);
+        Assert.assertNotNull(pairFolderIdElement.getSecond());
+        Assert.assertNull(pairFolderIdElement.getSecond().getOptionalElement(MailConstants.E_MSG));
+    }
+
+    static boolean verifyItemsPresentInResponse(Element response, int folderId, List<Integer> expectedIds, Type type) throws ServiceException {
+        Pair<Integer, Element> pairFolderIdElement = new Pair<Integer, Element>(folderId, null);
+        getFolderElement(response, pairFolderIdElement);
+        Assert.assertNotNull(pairFolderIdElement.getSecond());
+        Element folder = pairFolderIdElement.getSecond();
+        Element item = null;
+        if (type == Type.MESSAGE) {
+            item = folder.getElement(MailConstants.E_MSG);
+        } else if (type == Type.CONVERSATION) {
+            item = folder.getElement(MailConstants.E_CONV);
+        }
+        Assert.assertNotNull(item);
+        String ids = item.getAttribute(MailConstants.A_IDS);
+        List<String> actualMsgIds = Arrays.asList(ids.split(","));
+        Assert.assertEquals(expectedIds.size(), actualMsgIds.size());
+        for (Integer id : expectedIds) {
+            Assert.assertTrue(actualMsgIds.contains("" + id));
+         }
+        return true;
+     }
+
+   static boolean getFolderElement(Element response, Pair<Integer, Element> pairFolderIdElement)  throws ServiceException {
+       if (pairFolderIdElement.getSecond() != null) {
+           return true;
+       }
+       if (pairFolderIdElement.getFirst() == response.getAttributeInt(MailConstants.A_ID, 0)) {
+           pairFolderIdElement.setSecond(response);
+           return true;
+       } else if (response.hasChildren()) {
+           List<Element> subFolders = response.listElements(MailConstants.E_FOLDER);
+           for (Element subFolder : subFolders) {
+               if (getFolderElement(subFolder, pairFolderIdElement)) {
+                   return true;
+               }
+           }
+       }
+       return false;
+   }
+
+     @Test
     public void conversations() throws Exception {
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         mbox.beginTrackingSync();
-
 
         // message and reply in inbox
         int msgId = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
@@ -194,7 +336,7 @@ public class SyncTest {
      */
     @Test
     public void detaSyncTest() throws Exception {
-        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
         mbox.beginTrackingSync();
         SyncRequest request = new SyncRequest();
@@ -213,7 +355,6 @@ public class SyncTest {
         token = syncRes.getToken();
 
         //delta set setMaximumChangeCount=2 Add 3 message and delete 2 message.
-        Sync.setMaximumChangeCount(2);
         int msgId3 = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
         mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
         mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
@@ -221,6 +362,7 @@ public class SyncTest {
         mbox.delete(null, msgId2, Type.MESSAGE);
         request = new SyncRequest();
         request.setToken(token);
+        request.setChangeLimit(2);
         response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
         syncRes = JaxbUtil.elementToJaxb(response);
         token = syncRes.getToken();
@@ -234,6 +376,7 @@ public class SyncTest {
         mbox.delete(null, msgId3, Type.MESSAGE);
         request = new SyncRequest();
         request.setToken(token);
+        request.setChangeLimit(2);
         response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
         syncRes = JaxbUtil.elementToJaxb(response);
 
@@ -272,7 +415,6 @@ public class SyncTest {
         token = syncRes.getToken();
 
         //delta set setMaximumChangeCount=2 Add 3 message and delete 2 message.
-        Sync.setMaximumChangeCount(2);
         int msgId3 = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
         mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
         mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
@@ -281,6 +423,7 @@ public class SyncTest {
         deleted.add(msgId1);
         deleted.add(msgId2);
         request = new SyncRequest();
+        request.setChangeLimit(2);
         request.setToken(token);
         request.setFolderId("2");
         response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
@@ -333,7 +476,6 @@ public class SyncTest {
         Set<Integer> itemsDeleted = new HashSet<Integer>();
         Set<Integer> itemsAddedOrModified = new HashSet<Integer>();
 
-        Sync.setMaximumChangeCount(100);
         String token = syncRes.getToken();
         int msgId1 = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
         int msgId2 = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
@@ -349,6 +491,7 @@ public class SyncTest {
         itemsAddedOrModified.add(msgId5);
         itemsAddedOrModified.add(msgId6);
         request = new SyncRequest();
+        request.setChangeLimit(100);
         request.setFolderId("2");
         request.setToken(token);
         response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
@@ -358,8 +501,7 @@ public class SyncTest {
         Assert.assertTrue(itemsAddedOrModified.isEmpty());
         token = syncRes.getToken();
 
-        // Modified paged , delete paged (del cutoff modseq < modified cutoff mod Seq)
-        Sync.setMaximumChangeCount(2);
+        // Modified paged , delete paged (del cutoff modseq < modified cutoff mod Seq);
         mbox.move(null, msgId1, Type.MESSAGE, 5);
         mbox.move(null, msgId2, Type.MESSAGE, 5);
         mbox.delete(null, msgId3, Type.MESSAGE);
@@ -374,6 +516,7 @@ public class SyncTest {
         request = new SyncRequest();
         request.setToken(token);
         request.setFolderId("2");
+        request.setChangeLimit(2);
         request.setDeleteLimit(2);
         response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
         syncRes = JaxbUtil.elementToJaxb(response);
@@ -405,6 +548,7 @@ public class SyncTest {
         request.setToken(token);
         request.setFolderId("2");
         request.setDeleteLimit(2);
+        request.setChangeLimit(2);
         response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
         syncRes = JaxbUtil.elementToJaxb(response);
         token = syncRes.getToken();
@@ -439,6 +583,7 @@ public class SyncTest {
         request = new SyncRequest();
         request.setToken(token);
         request.setFolderId("2");
+        request.setChangeLimit(2);
         request.setDeleteLimit(1);
         response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
         syncRes = JaxbUtil.elementToJaxb(response);
@@ -476,6 +621,7 @@ public class SyncTest {
         request.setToken(token);
         request.setFolderId("2");
         request.setDeleteLimit(2);
+        request.setChangeLimit(2);
         response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
         syncRes = JaxbUtil.elementToJaxb(response);
         token = syncRes.getToken();
@@ -506,11 +652,12 @@ public class SyncTest {
         itemsAddedOrModified.add(msgId11);
         itemsDeleted.add(msgId10);
 
-        Sync.setMaximumChangeCount(10);
+
         request = new SyncRequest();
         request.setToken(token);
         request.setFolderId("2");
         request.setDeleteLimit(0);
+        request.setChangeLimit(10);
         response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
         syncRes = JaxbUtil.elementToJaxb(response);
         token = syncRes.getToken();
