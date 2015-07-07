@@ -55,11 +55,19 @@ public class SyncRequest {
 
     /**
      * @zm-api-field-tag earliest-calendar-date
-     * @zm-api-field-description Earliest Calendar date.  If present, omit all appointments and tasks that don't have
+     * @zm-api-field-description Earliest Calendar date. If present, omit all appointments and tasks that don't have
      * a recurrence ending after that time (specified in ms)
      */
     @XmlAttribute(name=MailConstants.A_CALENDAR_CUTOFF /* calCutoff */, required=false)
-    private Long calendarCutoff;
+    private Long calendarCutoff = -1L;
+
+    /**
+     * @zm-api-field-tag earliest-message-date
+     * @zm-api-field-description Earliest Message date.  If present, omit all Messages and conversations that
+     *  are older than time (specified in seconds)
+     */
+    @XmlAttribute(name=MailConstants.A_MSG_CUTOFF /* msgCutoff */, required=false)
+    private Long msgCutoff = -1L;
 
     /**
      * @zm-api-field-tag root-folder-id
@@ -82,12 +90,22 @@ public class SyncRequest {
     @XmlAttribute(name=MailConstants.A_DELETE_LIMIT /* deleteLimit */, required=false)
     private int deleteLimit;
 
+    /**
+     * @zm-api-field-tag delete-page-size
+     * @zm-api-field-description maximum number of modified item ids returned in a response.
+     */
+    @XmlAttribute(name=MailConstants.A_CHANGE_LIMIT /* changeLimit */, required=false)
+    private int changeLimit;
+
     public SyncRequest() {
     }
 
     public void setToken(String token) { this.token = token; }
     public void setCalendarCutoff(Long calendarCutoff) {
         this.calendarCutoff = calendarCutoff;
+    }
+    public void setMsgCutoff(Long msgCutoff) {
+        this.msgCutoff = msgCutoff;
     }
     public void setFolderId(String folderId) { this.folderId = folderId; }
     public void setTypedDeletes(Boolean typedDeletes) {
@@ -96,19 +114,26 @@ public class SyncRequest {
     public void setDeleteLimit(int deleteLimit) {
         this.deleteLimit = deleteLimit;
     }
+    public void setChangeLimit(int changeLimit) {
+        this.changeLimit = changeLimit;
+    }
     public String getToken() { return token; }
     public Long getCalendarCutoff() { return calendarCutoff; }
+    public Long getMsgCutoff() { return msgCutoff; }
     public String getFolderId() { return folderId; }
     public Boolean getTypedDeletes() { return ZmBoolean.toBool(typedDeletes); }
     public int getDeleteLimit() { return deleteLimit; }
+    public int getChangeLimit() { return changeLimit; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("token", token)
             .add("calendarCutoff", calendarCutoff)
+            .add("msgCutOff", msgCutoff)
             .add("folderId", folderId)
             .add("typedDeletes", typedDeletes)
-            .add("deleteLimit", deleteLimit);
+            .add("deleteLimit", deleteLimit)
+            .add("changeLimit", changeLimit);
     }
 
     @Override
