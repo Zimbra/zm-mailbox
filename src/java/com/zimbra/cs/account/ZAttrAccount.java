@@ -17524,6 +17524,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether the option of enabling two-factor authentication is available
+     * on the account
+     *
+     * @return zimbraFeatureTwoFactorAuthAvailable, or true if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2050)
+    public boolean isFeatureTwoFactorAuthAvailable() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable, true);
+    }
+
+    /**
+     * Whether the option of enabling two-factor authentication is available
+     * on the account
+     *
+     * @param zimbraFeatureTwoFactorAuthAvailable new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2050)
+    public void setFeatureTwoFactorAuthAvailable(boolean zimbraFeatureTwoFactorAuthAvailable) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable, zimbraFeatureTwoFactorAuthAvailable ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the option of enabling two-factor authentication is available
+     * on the account
+     *
+     * @param zimbraFeatureTwoFactorAuthAvailable new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2050)
+    public Map<String,Object> setFeatureTwoFactorAuthAvailable(boolean zimbraFeatureTwoFactorAuthAvailable, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable, zimbraFeatureTwoFactorAuthAvailable ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether the option of enabling two-factor authentication is available
+     * on the account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2050)
+    public void unsetFeatureTwoFactorAuthAvailable() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the option of enabling two-factor authentication is available
+     * on the account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2050)
+    public Map<String,Object> unsetFeatureTwoFactorAuthAvailable(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable, "");
+        return attrs;
+    }
+
+    /**
      * whether two-factor authentication is required
      *
      * @return zimbraFeatureTwoFactorAuthRequired, or false if unset
