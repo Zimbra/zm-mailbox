@@ -6,8 +6,6 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
@@ -36,7 +34,6 @@ public class TestTwoFactorAuthAdmin extends TestCase {
     private static SoapTransport transport;
     private static Cos cos;
 
-    @BeforeClass
     @Override
     public void setUp() throws Exception {
         transport = TestUtil.getAdminSoapTransport();
@@ -51,9 +48,9 @@ public class TestTwoFactorAuthAdmin extends TestCase {
         return cosResponse.getCos().getId();
     }
 
-    private static void setTwoFactorStatus(String value) throws Exception {
+    private static void setAttr(String attr, String value) throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraFeatureTwoFactorAuthRequired, value);
+        attrs.put(attr, value);
 
         ModifyCosRequest modifyRequest = new ModifyCosRequest();
         modifyRequest.setId(getCosId());
@@ -62,15 +59,22 @@ public class TestTwoFactorAuthAdmin extends TestCase {
     }
 
     private static void enableTwoFactorAuthRequired() throws Exception {
-        setTwoFactorStatus(ProvisioningConstants.TRUE);
+        setAttr(Provisioning.A_zimbraFeatureTwoFactorAuthRequired, ProvisioningConstants.TRUE);
     }
 
     private static void disableTwoFactorAuthRequired() throws Exception {
-        setTwoFactorStatus(ProvisioningConstants.FALSE);
+        setAttr(Provisioning.A_zimbraFeatureTwoFactorAuthRequired, ProvisioningConstants.FALSE);
         mbox.disableTwoFactorAuth(PASSWORD);
     }
 
-    @AfterClass
+    private static void setTwoFactorAuthAvailable() throws Exception {
+        setAttr(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable, ProvisioningConstants.TRUE);
+    }
+
+    private static void setTwoFactorAuthUnavailable() throws Exception {
+        setAttr(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable, ProvisioningConstants.FALSE);
+    }
+
     @Override
     public void tearDown() throws Exception {
         disableTwoFactorAuthRequired();
@@ -110,6 +114,21 @@ public class TestTwoFactorAuthAdmin extends TestCase {
             fail("should not be able to disable two-factor auth");
         } catch (ServiceException e) {
             assertEquals(ServiceException.CANNOT_DISABLE_TWO_FACTOR_AUTH, e.getCode());
+        }
+    }
+
+    @Test
+    public void testTwoFactorAuthNotAvailable() throws Exception {
+        disableTwoFactorAuthRequired();
+        mbox.disableTwoFactorAuth(PASSWORD);
+        setTwoFactorAuthUnavailable();
+        try {
+            mbox.enableTwoFactorAuth(PASSWORD, TestUtil.getDefaultAuthenticator());
+            fail("should not be able to enable two-factor auth");
+        } catch (ServiceException e) {
+            assertEquals(ServiceException.CANNOT_ENABLE_TWO_FACTOR_AUTH, e.getCode());
+        } finally {
+            setTwoFactorAuthAvailable();
         }
     }
 }
