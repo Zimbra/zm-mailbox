@@ -35945,7 +35945,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * number of minutes (-1 = never) before appt to show reminder dialog
+     * number of minutes (0 = never and -1 = At the time of event) before
+     * appt to show reminder dialog. Note:&quot;0&quot; was chosen to mean
+     * &quot;never&quot; before reminders &quot;at the time of event&quot;
+     * were supported, hence the need to use &quot;-1&quot; to mean &quot;At
+     * the time of event&quot; (instead of &quot;0&quot; which would be more
+     * intuitive) to avoid breaking backwards compatibility
      *
      * @return zimbraPrefCalendarApptReminderWarningTime, or 5 if unset
      */
@@ -35955,7 +35960,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * number of minutes (-1 = never) before appt to show reminder dialog
+     * number of minutes (0 = never and -1 = At the time of event) before
+     * appt to show reminder dialog. Note:&quot;0&quot; was chosen to mean
+     * &quot;never&quot; before reminders &quot;at the time of event&quot;
+     * were supported, hence the need to use &quot;-1&quot; to mean &quot;At
+     * the time of event&quot; (instead of &quot;0&quot; which would be more
+     * intuitive) to avoid breaking backwards compatibility
      *
      * @param zimbraPrefCalendarApptReminderWarningTime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35968,7 +35978,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * number of minutes (-1 = never) before appt to show reminder dialog
+     * number of minutes (0 = never and -1 = At the time of event) before
+     * appt to show reminder dialog. Note:&quot;0&quot; was chosen to mean
+     * &quot;never&quot; before reminders &quot;at the time of event&quot;
+     * were supported, hence the need to use &quot;-1&quot; to mean &quot;At
+     * the time of event&quot; (instead of &quot;0&quot; which would be more
+     * intuitive) to avoid breaking backwards compatibility
      *
      * @param zimbraPrefCalendarApptReminderWarningTime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35982,7 +35997,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * number of minutes (-1 = never) before appt to show reminder dialog
+     * number of minutes (0 = never and -1 = At the time of event) before
+     * appt to show reminder dialog. Note:&quot;0&quot; was chosen to mean
+     * &quot;never&quot; before reminders &quot;at the time of event&quot;
+     * were supported, hence the need to use &quot;-1&quot; to mean &quot;At
+     * the time of event&quot; (instead of &quot;0&quot; which would be more
+     * intuitive) to avoid breaking backwards compatibility
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -35994,7 +36014,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * number of minutes (-1 = never) before appt to show reminder dialog
+     * number of minutes (0 = never and -1 = At the time of event) before
+     * appt to show reminder dialog. Note:&quot;0&quot; was chosen to mean
+     * &quot;never&quot; before reminders &quot;at the time of event&quot;
+     * were supported, hence the need to use &quot;-1&quot; to mean &quot;At
+     * the time of event&quot; (instead of &quot;0&quot; which would be more
+     * intuitive) to avoid breaking backwards compatibility
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
