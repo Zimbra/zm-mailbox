@@ -587,7 +587,26 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>email_has:(mail=*%s*)</globalConfigValue>
   <globalConfigValue>email2_has:(mail=*%s*)</globalConfigValue>
   <globalConfigValue>email3_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email4_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email5_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email6_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email7_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email8_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email9_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email10_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email11_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email12_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email13_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email14_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email15_has:(mail=*%s*)</globalConfigValue>
+  <globalConfigValue>email16_has:(mail=*%s*)</globalConfigValue>
   <globalConfigValue>department_has:(ou=*%s*)</globalConfigValue>
+  <globalConfigValue>firstName_has:(gn=*%s*)</globalConfigValue>
+  <globalConfigValue>lastName_has:(sn=*%s*)</globalConfigValue>
+  <globalConfigValue>middleName_has:(initials=*%s*)</globalConfigValue>
+  <globalConfigValue>nickname_has:(|(displayName=*%s*)(cn=*%s*))</globalConfigValue>
+  <globalConfigValue>phoneticFirstName_has:(zimbraPhoneticFirstName=*%s*)</globalConfigValue>
+  <globalConfigValue>phoneticLastName_has:(zimbraPhoneticLastName=*%s*)</globalConfigValue>
   <desc>LDAP search filter definitions for GAL queries</desc>
 </attr>
 
