@@ -59,15 +59,15 @@ public class SyncRequest {
      * a recurrence ending after that time (specified in ms)
      */
     @XmlAttribute(name=MailConstants.A_CALENDAR_CUTOFF /* calCutoff */, required=false)
-    private Long calendarCutoff = -1L;
+    private Long calendarCutoff;
 
     /**
      * @zm-api-field-tag earliest-message-date
      * @zm-api-field-description Earliest Message date.  If present, omit all Messages and conversations that
-     *  are older than time (specified in seconds)
+     *  are older than time (specified in seconds) "Note:value in seconds, unlike calCutoff which is in milliseconds"
      */
     @XmlAttribute(name=MailConstants.A_MSG_CUTOFF /* msgCutoff */, required=false)
-    private Long msgCutoff = -1L;
+    private Long msgCutoff;
 
     /**
      * @zm-api-field-tag root-folder-id
@@ -84,14 +84,14 @@ public class SyncRequest {
     private ZmBoolean typedDeletes;
 
     /**
-     * @zm-api-field-tag delete-page-size
+     * @zm-api-field-tag delete-limit
      * @zm-api-field-description maximum number of deleted item ids returned in a response.
      */
     @XmlAttribute(name=MailConstants.A_DELETE_LIMIT /* deleteLimit */, required=false)
     private int deleteLimit;
 
     /**
-     * @zm-api-field-tag delete-page-size
+     * @zm-api-field-tag change-limit
      * @zm-api-field-description maximum number of modified item ids returned in a response.
      */
     @XmlAttribute(name=MailConstants.A_CHANGE_LIMIT /* changeLimit */, required=false)
