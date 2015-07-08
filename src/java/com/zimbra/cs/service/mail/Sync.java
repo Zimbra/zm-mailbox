@@ -104,8 +104,11 @@ public class Sync extends MailDocumentHandler {
         boolean initialSync = tokenInt <= 0;
 
         // permit the caller to restrict initial sync only to calendar items with a recurrence after a given date
-        long calendarStart = syncRequest.getCalendarCutoff();
-        long messageSyncStart  = syncRequest.getMsgCutoff() * Constants.MILLIS_PER_SECOND;
+        long calendarStart = (syncRequest.getCalendarCutoff() != null) ? syncRequest.getCalendarCutoff() : -1;
+        long messageSyncStart  = (syncRequest.getMsgCutoff() != null) ? syncRequest.getMsgCutoff() : -1;
+        if (messageSyncStart > 0) {
+            messageSyncStart = messageSyncStart * Constants.MILLIS_PER_SECOND;
+        }
 
         // if the sync is constrained to a folder subset, we need to first figure out what can be seen
         Folder root = null;
