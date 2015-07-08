@@ -72,6 +72,7 @@ public final class XMbxSearchConstants {
     public static final String A_accounts = "accounts";
     public static final String A_targetFolder = "targetFolder";
     public static final String A_limit = "limit";
+    public static final String A_pmLimit = "permailbox";
     public static final String A_numMsgs = "numMsgs";
     public static final String A_inDumpster = "inDumpster";
 
