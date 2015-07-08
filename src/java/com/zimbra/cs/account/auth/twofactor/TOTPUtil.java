@@ -1,8 +1,11 @@
 package com.zimbra.cs.account.auth.twofactor;
 
+import java.io.PrintWriter;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -19,8 +22,9 @@ public class TOTPUtil {
     private static Options OPTIONS = new Options();
 
     static {
-        OPTIONS.addOption("s", "secret", true,  "shared secret");
-        OPTIONS.addOption("a", "account", true, "account name, defaults to user1");
+        OPTIONS.addOption("s", "secret", true,  "Shared secret");
+        OPTIONS.addOption("a", "account", true, "Account name");
+        OPTIONS.addOption("h", "help", false, "Display this help message");
     }
 
     public static void main(String[] args) throws ParseException, ServiceException {
@@ -28,20 +32,12 @@ public class TOTPUtil {
         CommandLineParser parser = new GnuParser();
         CommandLine cl = parser.parse(OPTIONS, args);
         Provisioning prov = Provisioning.getInstance();
-        String acctName;
-        String secret;
-        if (cl.hasOption("a")) {
-            acctName = cl.getOptionValue("a");
-        } else {
-            System.err.println("please specify a user name");
+        if (cl.hasOption("h") || !cl.hasOption("a") || !cl.hasOption("s")) {
+            usage();
             return;
         }
-        if (cl.hasOption("s")) {
-            secret = cl.getOptionValue("s");
-        } else {
-            System.err.println("please specify a shared secret");
-            return;
-        }
+        String acctName = cl.getOptionValue("a");
+        String secret = cl.getOptionValue("s");;
         Account acct = prov.getAccountByName(acctName);
         TwoFactorManager manager = new TwoFactorManager(acct);
         AuthenticatorConfig config = manager.getAuthenticatorConfig();
@@ -50,5 +46,12 @@ public class TOTPUtil {
         Long timestamp = System.currentTimeMillis() / 1000;
         String code = authenticator.generateCode(secret, timestamp, encoding);
         System.out.println("Current TOTP code is: " + code);
+    }
+
+    private static void usage() {
+        HelpFormatter format = new HelpFormatter();
+        format.printHelp(new PrintWriter(System.err, true), 80,
+            "zmtotp [account] [secret]", null, OPTIONS, 2, 2, null);
+            System.exit(0);
     }
 }
