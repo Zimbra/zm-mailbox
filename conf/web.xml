@@ -126,64 +126,6 @@
     <filter-name>SpnegoFilter</filter-name>
     <url-pattern>/spnego/*</url-pattern>
   </filter-mapping>
-  
- <filter>
-    <filter-name>GzipFilter</filter-name>
-    <filter-class>org.eclipse.jetty.servlets.IncludableGzipFilter</filter-class>
-    <async-supported>true</async-supported>
-
-    <init-param>
-      <param-name>mimeTypes</param-name>
-      <param-value>application/soap+xml,
-      text/javascript,
-      application/x-javascript,
-      application/javascript,
-      text/html,
-      text/plain,
-      text/css,
-      text/xml,
-      image/png,
-      image/jpeg,
-      image/jpg,
-      image/gif,
-      text/x-zimbra-delimitted-fields,
-      text/calendar,
-      application/vnd.ms-sync.wbxml,
-      application/vnd.ms-sync.multipart,
-      application/pdf,
-      application/msword,
-      application/vnd.ms-excel,
-      application/vnd.ms-powerpoint,
-      application/vnd.openxmlformats-officedocument.wordprocessingml.document,
-      application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
-      application/vnd.openxmlformats-officedocument.presentationml.presentation
-      </param-value>
-    </init-param>
-    <init-param>
-      <param-name>userAgent</param-name>
-      <param-value>(?:Mozilla[^\(]*\(compatible;\s*+([^;]*);.*)|(?:.*?([^\s]+/[^\s]+).*)</param-value>
-    </init-param>
-    <init-param>
-      <param-name>excludedAgents</param-name>
-      <param-value>MSIE 6.0</param-value>
-    </init-param>
-    <init-param>
-      <param-name>methods</param-name>
-      <param-value>GET,POST</param-value>
-    </init-param>
-    <init-param>
-      <param-name>minGzipSize</param-name>
-      <param-value>2048</param-value>
-    </init-param>
-    <init-param>
-      <param-name>uncheckedPrintWriter</param-name>
-      <param-value>true</param-value>
-    </init-param>
-  </filter>
-  <filter-mapping>
-    <filter-name>GzipFilter</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
 
   <filter>
     <filter-name>SetHeaderFilter</filter-name>
