@@ -63,27 +63,27 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
         super.init(filterConfig);
         Provisioning prov = Provisioning.getInstance();
         try {
-            this.maxFailedLogin = prov.getConfig().getInvalidLoginFilterMaxFailedLogin();
+            this.maxFailedLogin = prov.getLocalServer().getInvalidLoginFilterMaxFailedLogin();
         } catch (ServiceException e) {
             this.maxFailedLogin = DEFAULT_MAX_FAILED_LOGIN;
         }
 
         try {
-            this.reinstateIpTaskIntervalInMin = prov.getConfig()
+            this.reinstateIpTaskIntervalInMin = prov.getLocalServer()
                 .getInvalidLoginFilterReinstateIpTaskIntervalInMin();
         } catch (ServiceException e) {
             this.reinstateIpTaskIntervalInMin = DEFAULT_REINSTATE_IP_TASK_INTERVAL_IN_MIN;
         }
 
         try {
-            this.delayInMinBetwnReqBeforeReinstating = prov.getConfig()
+            this.delayInMinBetwnReqBeforeReinstating = prov.getLocalServer()
                 .getInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating();
         } catch (ServiceException e) {
             this.delayInMinBetwnReqBeforeReinstating = DEFAULT_DELAY_IN_MIN_BETWEEN_REQ_BEFORE_REINSTATING;
         }
 
         try {
-            this.maxSizeOfFailedIpDb = prov.getConfig().getInvalidLoginFilterMaxSizeOfFailedIpDb();
+            this.maxSizeOfFailedIpDb = prov.getLocalServer().getInvalidLoginFilterMaxSizeOfFailedIpDb();
         } catch (ServiceException e) {
             this.maxSizeOfFailedIpDb = this.DEFAULT_SIZE_OF_FAILED_IP_DB;
         }
@@ -111,7 +111,7 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
         HttpServletResponse res = (HttpServletResponse) response;
         RemoteIP remoteIp = new RemoteIP(req, ZimbraServlet.getTrustedIPs());
         String clientIp = remoteIp.getOrigIP();
-        if (clientIp == null || this.getWhitelist().contains(clientIp)) {
+        if (clientIp == null || checkWhitelist(clientIp)) {
             // Bug: 89930 Account for request coming from local server
             // or case where the proxy server has not been added to zimbraMailTrustedIP
             chain.doFilter(request, response);
