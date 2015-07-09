@@ -5853,6 +5853,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureChangePasswordEnabled = "zimbraFeatureChangePasswordEnabled";
 
     /**
+     * Whether to enable Chat feture
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2053)
+    public static final String A_zimbraFeatureChatEnabled = "zimbraFeatureChatEnabled";
+
+    /**
      * whether or not compose messages in a new windows is allowed
      *
      * @since ZCS 5.0.1
@@ -11824,6 +11832,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1103)
     public static final String A_zimbraPrefCalendarWorkingHours = "zimbraPrefCalendarWorkingHours";
+
+    /**
+     * Whether to enable Chat Audible notification
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2052)
+    public static final String A_zimbraPrefChatPlaySound = "zimbraPrefChatPlaySound";
 
     /**
      * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
