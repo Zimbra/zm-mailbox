@@ -1671,7 +1671,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether this zimlet is an extension</desc>
 </attr>
 
-<attr id="305" name="zimbraFeatureIMEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" deprecatedSince="8.7.0">
+<attr id="305" name="zimbraFeatureIMEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>IM features</desc>
 </attr>
@@ -2988,7 +2988,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mail priority feature</desc>
 </attr>
 
-<attr id="567" name="zimbraIMBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox" since="5.0.0" deprecatedSince="8.7.0">
+<attr id="567" name="zimbraIMBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox" since="5.0.0">
   <desc>interface address on which IM server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
