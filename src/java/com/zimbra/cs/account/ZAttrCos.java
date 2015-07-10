@@ -7531,6 +7531,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether to enable chat feature
+     *
+     * @return zimbraFeatureChatEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2052)
+    public boolean isFeatureChatEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureChatEnabled, false);
+    }
+
+    /**
+     * Whether to enable chat feature
+     *
+     * @param zimbraFeatureChatEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2052)
+    public void setFeatureChatEnabled(boolean zimbraFeatureChatEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureChatEnabled, zimbraFeatureChatEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable chat feature
+     *
+     * @param zimbraFeatureChatEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2052)
+    public Map<String,Object> setFeatureChatEnabled(boolean zimbraFeatureChatEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureChatEnabled, zimbraFeatureChatEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable chat feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2052)
+    public void unsetFeatureChatEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureChatEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable chat feature
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2052)
+    public Map<String,Object> unsetFeatureChatEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureChatEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether or not compose messages in a new windows is allowed
      *
      * @return zimbraFeatureComposeInNewWindowEnabled, or true if unset
@@ -29549,6 +29621,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefCalendarWorkingHours(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarWorkingHours, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to enable audible notifications for Chat
+     *
+     * @return zimbraPrefChatPlaySound, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=20521)
+    public boolean isPrefChatPlaySound() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefChatPlaySound, false);
+    }
+
+    /**
+     * Whether to enable audible notifications for Chat
+     *
+     * @param zimbraPrefChatPlaySound new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=20521)
+    public void setPrefChatPlaySound(boolean zimbraPrefChatPlaySound) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefChatPlaySound, zimbraPrefChatPlaySound ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable audible notifications for Chat
+     *
+     * @param zimbraPrefChatPlaySound new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=20521)
+    public Map<String,Object> setPrefChatPlaySound(boolean zimbraPrefChatPlaySound, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefChatPlaySound, zimbraPrefChatPlaySound ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable audible notifications for Chat
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=20521)
+    public void unsetPrefChatPlaySound() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefChatPlaySound, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable audible notifications for Chat
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=20521)
+    public Map<String,Object> unsetPrefChatPlaySound(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefChatPlaySound, "");
         return attrs;
     }
 
