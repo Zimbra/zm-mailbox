@@ -6382,6 +6382,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureTouchClientEnabled = "zimbraFeatureTouchClientEnabled";
 
     /**
+     * Whether the option of specifying trusted devices when using two-factor
+     * authentication is available on the account
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2054)
+    public static final String A_zimbraFeatureTrustedDevicesEnabled = "zimbraFeatureTrustedDevicesEnabled";
+
+    /**
      * Whether the option of enabling two-factor authentication is available
      * on the account
      *
