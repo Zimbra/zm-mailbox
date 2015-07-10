@@ -17,8 +17,10 @@
 
 package com.zimbra.cs.util;
 
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -30,6 +32,7 @@ import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.common.account.ZAttrProvisioning.ShareNotificationMtaConnectionType;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
@@ -43,6 +46,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailclient.auth.OAuth2Provider;
 import com.zimbra.cs.mailclient.smtp.SmtpTransport;
 import com.zimbra.cs.mailclient.smtp.SmtpsTransport;
 
@@ -61,6 +65,14 @@ public final class JMSession {
         // Assume that most malformed base64 errors occur due to incorrect delimiters,
         // as opposed to errors in the data itself.  See bug 11213 for more details.
         System.setProperty("mail.mime.base64.ignoreerrors", "true");
+
+        try {
+            Security.addProvider(new OAuth2Provider(Provisioning.getInstance().getLocalServer()
+                .getServerVersionMajor()));
+        } catch (ServiceException e) {
+            ZimbraLog.smtp.warn("Exception in getting zimbra server version", e);
+            Security.addProvider(new OAuth2Provider(1));
+        }
 
         Properties props = new Properties();
         props.setProperty("mail.mime.address.strict", "false");
@@ -127,6 +139,10 @@ public final class JMSession {
         boolean isAuthRequired = ds.isSmtpAuthRequired();
         String smtpUser = ds.getSmtpUsername();
         String smtpPass = ds.getDecryptedSmtpPassword();
+        if (DataSourceAuthMechanism.XOAUTH2.name().equalsIgnoreCase(ds.getAuthMechanism())) {
+            smtpPass = ds.getDecryptedOAuthToken();
+        }
+
         boolean useSSL = ds.isSmtpConnectionSecure();
 
         if (smtpHost == null || smtpHost.length() == 0) {
@@ -165,6 +181,9 @@ public final class JMSession {
                 props.setProperty("mail.smtps.auth", "true");
                 props.setProperty("mail.smtps.user", smtpUser);
                 props.setProperty("mail.smtps.password", smtpPass);
+                if (DataSourceAuthMechanism.XOAUTH2.name().equalsIgnoreCase(ds.getAuthMechanism())) {
+                    addOAuth2Properties(smtpPass, props, "smtps");
+                }
                 session = Session.getInstance(props, new SmtpAuthenticator(smtpUser, smtpPass));
             } else {
                 session = Session.getInstance(props);
@@ -186,6 +205,9 @@ public final class JMSession {
                 props.setProperty("mail.smtp.auth", "true");
                 props.setProperty("mail.smtp.user", smtpUser);
                 props.setProperty("mail.smtp.password", smtpPass);
+                if (DataSourceAuthMechanism.XOAUTH2.name().equalsIgnoreCase(ds.getAuthMechanism())) {
+                    addOAuth2Properties(smtpPass, props, "smtp");
+                }
                 session = Session.getInstance(props, new SmtpAuthenticator(smtpUser, smtpPass));
             } else {
                 session = Session.getInstance(props);
@@ -328,6 +350,27 @@ public final class JMSession {
         }
 
         return props;
+    }
+
+    /**
+     * Add OAuth2 properties to a JAVA Mail Session
+     * @param oauthToken
+     * @param props
+     */
+    public static void addOAuth2Properties(String oauthToken, Properties props, String protocol) {
+        Map<String, String> map = new HashMap<String, String>();
+        addOAuth2Properties(oauthToken, map, protocol);
+        props.putAll(map);
+    }
+
+    public static void addOAuth2Properties(String oauthToken, Map<String, String> map,
+        String protocol) {
+        map.put("mail." + protocol + ".ssl.enable", "true");
+        map.put("mail." + protocol + ".sasl.enable", "true");
+        map.put("mail." + protocol + ".sasl.mechanisms", "XOAUTH2");
+        map.put("mail." + protocol + ".auth.login.disable", "true");
+        map.put("mail." + protocol + ".auth.plain.disable", "true");
+        map.put("mail." + protocol + ".sasl.mechanisms.oauth2.oauthToken", oauthToken);
     }
 
     /**

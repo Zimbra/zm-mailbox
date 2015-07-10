@@ -326,6 +326,8 @@ public final class SmtpConnection extends MailConnection {
                 config.setMechanism(SaslAuthenticator.CRAM_MD5);
             } else if (serverAuthMechanisms.contains(SaslAuthenticator.DIGEST_MD5)) {
                 config.setMechanism(SaslAuthenticator.DIGEST_MD5);
+            } else if (serverAuthMechanisms.contains(SaslAuthenticator.XOAUTH2)) {
+                config.setMechanism(SaslAuthenticator.XOAUTH2);
             } else {
                 throw new MailException("No auth mechanism supported: " + serverAuthMechanisms);
             }

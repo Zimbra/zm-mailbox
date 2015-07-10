@@ -35,12 +35,18 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.json.JSONObject;
+
 import com.sun.mail.smtp.SMTPTransport;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -66,6 +72,12 @@ import com.zimbra.soap.admin.type.DataSourceType;
 public class DataSourceManager {
 
     private static DataSourceManager sInstance;
+
+    public static final String CLIENT_ID = "client_id";
+    public static final String CLIENT_SECRET = "client_secret";
+    public static final String GRANT_TYPE = "grant_type";
+    public static final String REFRESH_TOKEN = "refresh_token";
+    public static final String ACCESS_TOKEN = "access_token";
 
     // accountId -> dataSourceId -> ImportStatus
     private static final Map<String, Map<String, ImportStatus>> sImportStatus =
@@ -515,6 +527,40 @@ public class DataSourceManager {
             DbPool.quietRollback(conn);
         } finally {
             DbPool.quietClose(conn);
+        }
+    }
+
+    public static void refreshOAuthToken(DataSource ds) {
+        PostMethod postMethod = null;
+        try {
+            postMethod = new PostMethod(ds.getOauthRefreshTokenUrl());
+            postMethod.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            postMethod.addParameter(CLIENT_ID, ds.getOauthClientId());
+            postMethod.addParameter(CLIENT_SECRET, ds.getDecryptedOAuthClientSecret());
+            postMethod.addParameter(REFRESH_TOKEN, ds.getOauthRefreshToken());
+            postMethod.addParameter(GRANT_TYPE, REFRESH_TOKEN);
+
+            HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr()
+                .getDefaultHttpClient();
+            int status = httpClient.executeMethod(postMethod);
+            if (status == HttpStatus.SC_OK) {
+                ZimbraLog.datasource.info("Refreshed oauth token status=%d", status);
+                JSONObject response = new JSONObject(postMethod.getResponseBodyAsString());
+                String oauthToken = response.getString(ACCESS_TOKEN);
+                Map<String, Object> attrs = new HashMap<String, Object>();
+                attrs.put(Provisioning.A_zimbraDataSourceOAuthToken,
+                    DataSource.encryptData(ds.getId(), oauthToken));
+                Provisioning provisioning = Provisioning.getInstance();
+                provisioning.modifyAttrs(ds, attrs);
+            } else {
+                ZimbraLog.datasource.info("Could not refresh oauth token status=%d", status);
+            }
+        } catch (Exception e) {
+            ZimbraLog.datasource.warn("Exception while refreshing oauth token", e);
+        } finally {
+            if (postMethod != null) {
+                postMethod.releaseConnection();
+            }
         }
     }
 }

@@ -54,6 +54,7 @@ public final class SaslAuthenticator extends Authenticator {
     public static final String PLAIN = "PLAIN";
     public static final String CRAM_MD5 = "CRAM-MD5";
     public static final String DIGEST_MD5 = "DIGEST-MD5";
+    public static final String XOAUTH2 = "XOAUTH2";
 
     public static final String QOP_AUTH = "auth";
     public static final String QOP_AUTH_CONF = "auth-conf";
@@ -157,7 +158,11 @@ public final class SaslAuthenticator extends Authenticator {
     @Override
     public byte[] evaluateChallenge(final byte[] challenge) throws SaslException {
         if (isComplete()) {
-            throw new IllegalStateException("Authentication already completed");
+            if (XOAUTH2.equalsIgnoreCase(config.getMechanism())) {
+                return saslClient.evaluateChallenge(challenge);
+            } else {
+                throw new IllegalStateException("Authentication already completed");
+            }
         }
         return subject != null ?
             evaluateGssChallenge(challenge) : saslClient.evaluateChallenge(challenge);

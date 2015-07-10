@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.security.auth.login.LoginException;
 
 import com.zimbra.common.account.ZAttrProvisioning;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -37,6 +39,7 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.datasource.MessageContent;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -44,6 +47,7 @@ import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.MailConfig.Security;
 import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.auth.SaslAuthenticator;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.DataHandler;
 import com.zimbra.cs.mailclient.imap.IDInfo;
@@ -54,6 +58,7 @@ import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.type.DataSource.ConnectionType;
@@ -76,12 +81,6 @@ final class ConnectionManager {
     private static final int IDLE_READ_TIMEOUT = 30 * 60; // 30 minutes
 
     private static final Log LOG = ZimbraLog.datasource;
-
-    public static final String CLIENT_ID = "client_id";
-    public static final String CLIENT_SECRET = "client_secret";
-    public static final String GRANT_TYPE = "grant_type";
-    public static final String REFRESH_TOKEN = "refresh_token";
-    public static final String ACCESS_TOKEN = "access_token";
 
     public static ConnectionManager getInstance() {
         return INSTANCE;
@@ -172,7 +171,8 @@ final class ConnectionManager {
                     if (DataSourceAuthMechanism.XOAUTH2.name().equals(config.getMechanism())) {
                         auth = AuthenticatorFactory.getDefault().newAuthenticator(config, ds.getDecryptedOAuthToken());
                     } else {
-                        auth = AuthenticatorFactory.getDefault().newAuthenticator(config, ds.getDecryptedPassword());
+                        auth = AuthenticatorFactory.getDefault().newAuthenticator(config,
+                            ds.getDecryptedPassword());
                     }
                 }
                 if (auth == null) {
@@ -181,9 +181,12 @@ final class ConnectionManager {
                     ic.authenticate(auth);
                 }
             } catch (CommandFailedException e) {
-                if (DataSourceAuthMechanism.XOAUTH2.name().equals(config.getMechanism())) {
+                if (SaslAuthenticator.XOAUTH2.equalsIgnoreCase(config.getMechanism())) {
                     try {
-                        refreshOAuthToken(ds);
+                        DataSourceManager.refreshOAuthToken(ds);
+                        config.getSaslProperties().put(
+                            "mail." + config.getProtocol() + ".sasl.mechanisms.oauth2.oauthToken",
+                            ds.getDecryptedOAuthToken());
                         auth = AuthenticatorFactory.getDefault().newAuthenticator(config,
                             ds.getDecryptedOAuthToken());
                         ic.authenticate(auth);
@@ -209,40 +212,6 @@ final class ConnectionManager {
         }
         LOG.debug("Created new connection: " + ic);
         return ic;
-    }
-
-    private static void refreshOAuthToken(DataSource ds) {
-        PostMethod postMethod = null;
-        try {
-            postMethod = new PostMethod(ds.getOauthRefreshTokenUrl());
-            postMethod.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            postMethod.addParameter(CLIENT_ID, ds.getOauthClientId());
-            postMethod.addParameter(CLIENT_SECRET, ds.getDecryptedOAuthClientSecret());
-            postMethod.addParameter(REFRESH_TOKEN, ds.getOauthRefreshToken());
-            postMethod.addParameter(GRANT_TYPE, REFRESH_TOKEN);
-
-            HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr()
-                .getDefaultHttpClient();
-            int status = httpClient.executeMethod(postMethod);
-            if (status == HttpStatus.SC_OK) {
-                ZimbraLog.datasource.debug("Refreshed oauth token status=%d", status);
-                JSONObject response = new JSONObject(postMethod.getResponseBodyAsString());
-                String oauthToken = response.getString(ACCESS_TOKEN);
-                Map<String, Object> attrs = new HashMap<String, Object>();
-                attrs.put(Provisioning.A_zimbraDataSourceOAuthToken,
-                    DataSource.encryptData(ds.getId(), oauthToken));
-                Provisioning provisioning = Provisioning.getInstance();
-                provisioning.modifyAttrs(ds, attrs);
-            } else {
-                ZimbraLog.datasource.debug("Could not refresh oauth token status=%d", status);
-            }
-        } catch (Exception e) {
-            ZimbraLog.datasource.warn("Exception while refreshing oauth token", e);
-        } finally {
-            if (postMethod != null) {
-                postMethod.releaseConnection();
-            }
-        }
     }
 
     private static boolean isImportingSelf(DataSource ds, ImapConnection ic)
@@ -283,12 +252,22 @@ final class ConnectionManager {
 
     public static ImapConfig newImapConfig(DataSource ds) {
         ImapConfig config = new ImapConfig();
+        Map<String, String> props = new HashMap<String, String>();
         config.setHost(ds.getHost());
         config.setPort(ds.getPort());
         config.setAuthenticationId(ds.getUsername());
         config.setSecurity(getSecurity(ds));
         config.setMechanism(ds.getAuthMechanism());
         config.setAuthorizationId(ds.getAuthId());
+        if (SaslAuthenticator.XOAUTH2.equalsIgnoreCase(ds.getAuthMechanism())) {
+            try {
+                JMSession.addOAuth2Properties(ds.getDecryptedOAuthToken(), props,
+                    config.getProtocol());
+                config.setSaslProperties(props);
+            } catch (ServiceException e) {
+                ZimbraLog.datasource.warn("Exception in decrypting the oauth token", e);
+            }
+        }
         // bug 37982: Disable use of LITERAL+ due to problems with Yahoo IMAP.
         // Avoiding LITERAL+ also gives servers a chance to reject uploaded
         // messages that are too big, since the server must send a continuation

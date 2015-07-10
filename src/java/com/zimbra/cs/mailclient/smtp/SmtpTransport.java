@@ -18,6 +18,7 @@ package com.zimbra.cs.mailclient.smtp;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -43,8 +44,11 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.sun.mail.smtp.SMTPMessage;
 import com.sun.mail.util.PropUtil;
+import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailclient.auth.SaslAuthenticator;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.JMSession;
 
 /**
  * A custom SMTP {@link Transport} implementation using {@link SmtpConnection}.
@@ -137,6 +141,11 @@ public class SmtpTransport extends Transport {
     protected boolean protocolConnect(String host, int port, String user, String passwd) throws MessagingException {
 
         boolean auth = PropUtil.getBooleanSessionProperty(session, "mail." + protocol + ".auth", false);
+        String authMechanism = session.getProperty("mail." + protocol + ".sasl.mechanisms");
+        if (authMechanism != null && SaslAuthenticator.XOAUTH2.equalsIgnoreCase(authMechanism)) {
+            passwd = session.getProperty("mail." + protocol + ".sasl.mechanisms.oauth2.oauthToken");
+        }
+
         if (auth && (user == null || passwd == null)) {
             return false;
         }
@@ -174,6 +183,13 @@ public class SmtpTransport extends Transport {
         Object sslSocketFactory = props.get("mail." + protocol + ".ssl.socketFactory");
         if (sslSocketFactory instanceof SSLSocketFactory) {
             config.setSSLSocketFactory((SSLSocketFactory) sslSocketFactory);
+        }
+
+        if (authMechanism != null && SaslAuthenticator.XOAUTH2.equalsIgnoreCase(authMechanism)) {
+            config.setMechanism(SaslAuthenticator.XOAUTH2);
+            HashMap<String, String> map = new HashMap<String, String>();
+            JMSession.addOAuth2Properties(passwd, map, config.getProtocol());
+            config.setSaslProperties(map);
         }
 
         if (user != null && passwd != null) {
