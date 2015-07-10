@@ -11838,7 +11838,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=20521)
+    @ZAttr(id=2051)
     public static final String A_zimbraPrefChatPlaySound = "zimbraPrefChatPlaySound";
 
     /**
