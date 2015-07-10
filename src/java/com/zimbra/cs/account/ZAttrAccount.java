@@ -38612,7 +38612,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=20521)
+    @ZAttr(id=2051)
     public boolean isPrefChatPlaySound() {
         return getBooleanAttr(Provisioning.A_zimbraPrefChatPlaySound, false);
     }
@@ -38625,7 +38625,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=20521)
+    @ZAttr(id=2051)
     public void setPrefChatPlaySound(boolean zimbraPrefChatPlaySound) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefChatPlaySound, zimbraPrefChatPlaySound ? Provisioning.TRUE : Provisioning.FALSE);
@@ -38641,7 +38641,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=20521)
+    @ZAttr(id=2051)
     public Map<String,Object> setPrefChatPlaySound(boolean zimbraPrefChatPlaySound, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefChatPlaySound, zimbraPrefChatPlaySound ? Provisioning.TRUE : Provisioning.FALSE);
@@ -38655,7 +38655,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=20521)
+    @ZAttr(id=2051)
     public void unsetPrefChatPlaySound() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefChatPlaySound, "");
@@ -38670,7 +38670,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=20521)
+    @ZAttr(id=2051)
     public Map<String,Object> unsetPrefChatPlaySound(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefChatPlaySound, "");

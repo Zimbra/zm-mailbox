@@ -10353,13 +10353,13 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
 
-<attr id="20521" name="zimbraPrefChatPlaySound" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.7.0,9.0.0">
+<attr id="2051" name="zimbraPrefChatPlaySound" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.7.0,9.0.0">
   <desc>Whether to enable audible notifications for Chat</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
 <attr id="2052" name="zimbraFeatureChatEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.7.0,9.0.0">
-  <desc>Whether to enable Chat feature</desc>
+  <desc>Whether to enable chat feature</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 </attrs>
