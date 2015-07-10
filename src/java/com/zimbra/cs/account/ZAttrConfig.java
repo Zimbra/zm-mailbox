@@ -42575,6 +42575,118 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Time in milliseconds between IMAP/POP/LMTP rate limiter stale entry
+     * cleanup cycle.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getMailboxThrottleReapIntervalAsString to access value as a string.
+     *
+     * @see #getMailboxThrottleReapIntervalAsString()
+     *
+     * @return zimbraMailboxThrottleReapInterval in millseconds, or 60000 (60s)  if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2053)
+    public long getMailboxThrottleReapInterval() {
+        return getTimeInterval(Provisioning.A_zimbraMailboxThrottleReapInterval, 60000L);
+    }
+
+    /**
+     * Time in milliseconds between IMAP/POP/LMTP rate limiter stale entry
+     * cleanup cycle.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraMailboxThrottleReapInterval, or "60s" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2053)
+    public String getMailboxThrottleReapIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraMailboxThrottleReapInterval, "60s");
+    }
+
+    /**
+     * Time in milliseconds between IMAP/POP/LMTP rate limiter stale entry
+     * cleanup cycle.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraMailboxThrottleReapInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2053)
+    public void setMailboxThrottleReapInterval(String zimbraMailboxThrottleReapInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxThrottleReapInterval, zimbraMailboxThrottleReapInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds between IMAP/POP/LMTP rate limiter stale entry
+     * cleanup cycle.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraMailboxThrottleReapInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2053)
+    public Map<String,Object> setMailboxThrottleReapInterval(String zimbraMailboxThrottleReapInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxThrottleReapInterval, zimbraMailboxThrottleReapInterval);
+        return attrs;
+    }
+
+    /**
+     * Time in milliseconds between IMAP/POP/LMTP rate limiter stale entry
+     * cleanup cycle.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2053)
+    public void unsetMailboxThrottleReapInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxThrottleReapInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time in milliseconds between IMAP/POP/LMTP rate limiter stale entry
+     * cleanup cycle.. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2053)
+    public Map<String,Object> unsetMailboxThrottleReapInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxThrottleReapInterval, "");
+        return attrs;
+    }
+
+    /**
      * Max age in millis used for purging the items in tombstone. Default is
      * 3 months. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
