@@ -9011,4 +9011,10 @@ TODO: delete them permanently from here
   <desc>Whether to enable chat feature</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
+
+<attr id="2053" name="zimbraMailboxThrottleReapInterval" type="duration" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
+    <globalConfigValue>60s</globalConfigValue>
+    <desc>Time in milliseconds between IMAP/POP/LMTP rate limiter stale entry cleanup cycle.</desc>
+</attr>
+
 </attrs>
