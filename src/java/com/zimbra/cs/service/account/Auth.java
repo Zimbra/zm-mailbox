@@ -176,22 +176,6 @@ public class Auth extends AccountDocumentHandler {
         authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
 
         boolean acctAutoProvisioned = false;
-        boolean trustedDeviceOverride = false;
-        if (trustedToken != null) {
-            if (trustedToken.isExpired()) {
-                ZimbraLog.account.debug("trusted token is expired");
-                registerTrustedDevice = false;
-            } else {
-                Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, deviceId);
-                try {
-                    verifyTrustedDevice(acct, trustedToken, attrs);
-                    trustedDeviceOverride = true;
-                } catch (AuthFailedServiceException e) {
-                    ZimbraLog.account.info("trusted device not verified");
-                }
-            }
-        }
-        boolean usingTwoFactorAuth = acct != null && TwoFactorManager.twoFactorAuthRequired(acct) && !trustedDeviceOverride;
 
         if (acct == null) {
             // try LAZY auto provision if it is enabled
@@ -257,6 +241,22 @@ public class Auth extends AccountDocumentHandler {
 
         // if account was auto provisioned, we had already authenticated the principal
         if (!acctAutoProvisioned) {
+            boolean trustedDeviceOverride = false;
+            if (trustedToken != null && acct.isFeatureTrustedDevicesEnabled()) {
+                if (trustedToken.isExpired()) {
+                    ZimbraLog.account.debug("trusted token is expired");
+                    registerTrustedDevice = false;
+                } else {
+                    Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, deviceId);
+                    try {
+                        verifyTrustedDevice(acct, trustedToken, attrs);
+                        trustedDeviceOverride = true;
+                    } catch (AuthFailedServiceException e) {
+                        ZimbraLog.account.info("trusted device not verified");
+                    }
+                }
+            }
+            boolean usingTwoFactorAuth = acct != null && TwoFactorManager.twoFactorAuthRequired(acct) && !trustedDeviceOverride;
             boolean twoFactorAuthWithToken = usingTwoFactorAuth && authTokenEl != null;
             if (password != null || twoFactorAuthWithToken) {
                 // authentication logic can be reached with either a password, or a 2FA auth token

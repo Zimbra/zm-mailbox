@@ -9017,4 +9017,9 @@ TODO: delete them permanently from here
     <desc>Time in milliseconds between IMAP/POP/LMTP rate limiter stale entry cleanup cycle.</desc>
 </attr>
 
+<attr id="2054" name="zimbraFeatureTrustedDevicesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.7.0,9.0.0">
+  <desc>Whether the option of specifying trusted devices when using two-factor authentication is available on the account</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr>
+
 </attrs>

@@ -405,6 +405,10 @@ public class TwoFactorManager {
     }
 
     public TrustedDeviceToken registerTrustedDevice(Map<String, Object> deviceAttrs) throws ServiceException {
+        if (!account.isFeatureTrustedDevicesEnabled()) {
+            ZimbraLog.account.warn("attempting to register a trusted device when this feature is not enabled");
+            return null;
+        }
         TrustedDevice td = new TrustedDevice(account, deviceAttrs);
         ZimbraLog.account.debug("registering new trusted device");
         td.register();
