@@ -26,6 +26,7 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
