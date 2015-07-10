@@ -19,6 +19,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ZmgDevice;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -53,8 +54,11 @@ public class RegisterMobileGatewayApp extends AccountDocumentHandler {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         int result = ZmgDevice.add(mbox.getId(), device);
 
-        if (result == 1 && !account.isPrefZmgPushNotificationEnabled()) {
+        if (result >= 1 && !account.isPrefZmgPushNotificationEnabled()) {
             account.setPrefZmgPushNotificationEnabled(true);
+            ZimbraLog.mailbox
+                .info("ZMG: Device added and Push Notification enabled for account %s",
+                    account.getName());
         }
 
         RegisterMobileGatewayAppResponse resp = new RegisterMobileGatewayAppResponse();
