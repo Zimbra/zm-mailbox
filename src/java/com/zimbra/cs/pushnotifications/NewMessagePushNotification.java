@@ -246,7 +246,7 @@ public class NewMessagePushNotification implements PushNotification {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see com.zimbra.cs.pushnotifications.PushNotification#getPayload()
      */
     @Override
@@ -265,7 +265,7 @@ public class NewMessagePushNotification implements PushNotification {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see com.zimbra.cs.pushnotifications.PushNotification#getDevice()
      */
     @Override
@@ -275,7 +275,7 @@ public class NewMessagePushNotification implements PushNotification {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see
      * com.zimbra.cs.pushnotifications.PushNotification#setDevice(com.zimbra
      * .cs.account.ZmgDevice)
