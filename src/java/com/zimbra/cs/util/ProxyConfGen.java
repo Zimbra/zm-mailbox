@@ -48,11 +48,12 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang.StringUtils;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.servicelocator.ServiceLocator;
+import com.zimbra.common.servicelocator.ZimbraServiceNames;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Log;
@@ -64,10 +65,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
-
-import com.zimbra.common.servicelocator.ServiceLocator;
-import com.zimbra.common.servicelocator.ZimbraServiceNames;
-import com.zimbra.cs.util.Zimbra;
 
 enum ProxyConfOverride {
     NONE,
@@ -650,34 +647,7 @@ abstract class ServersVar extends ProxyConfVar {
     }
 
     @Override
-    public void update() throws ServiceException {
-        ArrayList<String> directives = new ArrayList<String>();
-        String portName = configSource.getAttr(mPortAttrName, "");
-
-        String[] upstreams = serverSource.getMultiAttr("zimbraReverseProxyUpstreamServers");
-        if (upstreams.length > 0) {
-            for (String serverName: upstreams) {
-                Server server = mProv.getServerByName(serverName);
-                if (isValidUpstream(server, serverName)) {
-                    directives.add(generateServerDirective(server, serverName, portName));
-                    mLog.debug("Added server to HTTP upstream: " + serverName);
-                }
-            }
-        } else {
-            /* $(zmprov garpb) */
-            List<Server> servers = mProv.getAllServers();
-
-            for (Server server: servers) {
-               String serverName = server.getAttr(
-                        Provisioning.A_zimbraServiceHostname, "");
-                if (isValidUpstream(server, serverName)) {
-                    directives.add(generateServerDirective(server, serverName, portName));
-                    mLog.debug("Added server to HTTP upstream: " + serverName);
-                }
-            }
-        }
-        mValue = directives;
-    }
+    public abstract void update() throws ServiceException;
 
     @Override
     public String format(Object o) {
@@ -1197,13 +1167,13 @@ class AddHeadersVar extends ProxyConfVar {
         headers = new KeyValue[rhdr.size()];
         i = 0;
 
-        for (String hdr: rhdr) {      
+        for (String hdr: rhdr) {
             Matcher matcher = RE_HEADER.matcher(hdr);
             if (matcher.matches()) {
                 headers[i] = new KeyValue(matcher.group(1), matcher.group(2));
             } else {
                 headers[i] = new KeyValue(hdr);
-            } 
+            }
             directives.add(headers[i]);
             i++;
         }

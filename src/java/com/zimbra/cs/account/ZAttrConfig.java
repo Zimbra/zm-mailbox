@@ -75540,10 +75540,14 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;upstream&quot; block in the
-     * nginx web proxy config file. The servers configured here will only
-     * affect the proxy of pre-login requests. Leaving empty means using all
-     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     * Deprecated since: 8.5.0. Configuration for pre-login upstream is now
+     * handled via zimbraReverseProxyUpstreamLoginServers. Post-login
+     * upstreams are now automatically configured per-webapp based on what is
+     * present in zimbraServiceEnabled.. Orig desc: The servers to be
+     * included in the &quot;upstream&quot; block in the nginx web proxy
+     * config file. The servers configured here will only affect the proxy of
+     * pre-login requests. Leaving empty means using all the servers whose
+     * zimbraReverseProxyLookupTarget is TRUE.
      *
      * @return zimbraReverseProxyUpstreamServers, or empty array if unset
      *
@@ -75555,10 +75559,14 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;upstream&quot; block in the
-     * nginx web proxy config file. The servers configured here will only
-     * affect the proxy of pre-login requests. Leaving empty means using all
-     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     * Deprecated since: 8.5.0. Configuration for pre-login upstream is now
+     * handled via zimbraReverseProxyUpstreamLoginServers. Post-login
+     * upstreams are now automatically configured per-webapp based on what is
+     * present in zimbraServiceEnabled.. Orig desc: The servers to be
+     * included in the &quot;upstream&quot; block in the nginx web proxy
+     * config file. The servers configured here will only affect the proxy of
+     * pre-login requests. Leaving empty means using all the servers whose
+     * zimbraReverseProxyLookupTarget is TRUE.
      *
      * @param zimbraReverseProxyUpstreamServers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -75573,10 +75581,14 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;upstream&quot; block in the
-     * nginx web proxy config file. The servers configured here will only
-     * affect the proxy of pre-login requests. Leaving empty means using all
-     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     * Deprecated since: 8.5.0. Configuration for pre-login upstream is now
+     * handled via zimbraReverseProxyUpstreamLoginServers. Post-login
+     * upstreams are now automatically configured per-webapp based on what is
+     * present in zimbraServiceEnabled.. Orig desc: The servers to be
+     * included in the &quot;upstream&quot; block in the nginx web proxy
+     * config file. The servers configured here will only affect the proxy of
+     * pre-login requests. Leaving empty means using all the servers whose
+     * zimbraReverseProxyLookupTarget is TRUE.
      *
      * @param zimbraReverseProxyUpstreamServers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -75592,10 +75604,14 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;upstream&quot; block in the
-     * nginx web proxy config file. The servers configured here will only
-     * affect the proxy of pre-login requests. Leaving empty means using all
-     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     * Deprecated since: 8.5.0. Configuration for pre-login upstream is now
+     * handled via zimbraReverseProxyUpstreamLoginServers. Post-login
+     * upstreams are now automatically configured per-webapp based on what is
+     * present in zimbraServiceEnabled.. Orig desc: The servers to be
+     * included in the &quot;upstream&quot; block in the nginx web proxy
+     * config file. The servers configured here will only affect the proxy of
+     * pre-login requests. Leaving empty means using all the servers whose
+     * zimbraReverseProxyLookupTarget is TRUE.
      *
      * @param zimbraReverseProxyUpstreamServers new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -75610,10 +75626,14 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;upstream&quot; block in the
-     * nginx web proxy config file. The servers configured here will only
-     * affect the proxy of pre-login requests. Leaving empty means using all
-     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     * Deprecated since: 8.5.0. Configuration for pre-login upstream is now
+     * handled via zimbraReverseProxyUpstreamLoginServers. Post-login
+     * upstreams are now automatically configured per-webapp based on what is
+     * present in zimbraServiceEnabled.. Orig desc: The servers to be
+     * included in the &quot;upstream&quot; block in the nginx web proxy
+     * config file. The servers configured here will only affect the proxy of
+     * pre-login requests. Leaving empty means using all the servers whose
+     * zimbraReverseProxyLookupTarget is TRUE.
      *
      * @param zimbraReverseProxyUpstreamServers new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -75629,10 +75649,14 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;upstream&quot; block in the
-     * nginx web proxy config file. The servers configured here will only
-     * affect the proxy of pre-login requests. Leaving empty means using all
-     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     * Deprecated since: 8.5.0. Configuration for pre-login upstream is now
+     * handled via zimbraReverseProxyUpstreamLoginServers. Post-login
+     * upstreams are now automatically configured per-webapp based on what is
+     * present in zimbraServiceEnabled.. Orig desc: The servers to be
+     * included in the &quot;upstream&quot; block in the nginx web proxy
+     * config file. The servers configured here will only affect the proxy of
+     * pre-login requests. Leaving empty means using all the servers whose
+     * zimbraReverseProxyLookupTarget is TRUE.
      *
      * @param zimbraReverseProxyUpstreamServers existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -75647,10 +75671,14 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;upstream&quot; block in the
-     * nginx web proxy config file. The servers configured here will only
-     * affect the proxy of pre-login requests. Leaving empty means using all
-     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     * Deprecated since: 8.5.0. Configuration for pre-login upstream is now
+     * handled via zimbraReverseProxyUpstreamLoginServers. Post-login
+     * upstreams are now automatically configured per-webapp based on what is
+     * present in zimbraServiceEnabled.. Orig desc: The servers to be
+     * included in the &quot;upstream&quot; block in the nginx web proxy
+     * config file. The servers configured here will only affect the proxy of
+     * pre-login requests. Leaving empty means using all the servers whose
+     * zimbraReverseProxyLookupTarget is TRUE.
      *
      * @param zimbraReverseProxyUpstreamServers existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -75666,10 +75694,14 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;upstream&quot; block in the
-     * nginx web proxy config file. The servers configured here will only
-     * affect the proxy of pre-login requests. Leaving empty means using all
-     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     * Deprecated since: 8.5.0. Configuration for pre-login upstream is now
+     * handled via zimbraReverseProxyUpstreamLoginServers. Post-login
+     * upstreams are now automatically configured per-webapp based on what is
+     * present in zimbraServiceEnabled.. Orig desc: The servers to be
+     * included in the &quot;upstream&quot; block in the nginx web proxy
+     * config file. The servers configured here will only affect the proxy of
+     * pre-login requests. Leaving empty means using all the servers whose
+     * zimbraReverseProxyLookupTarget is TRUE.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -75683,10 +75715,14 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;upstream&quot; block in the
-     * nginx web proxy config file. The servers configured here will only
-     * affect the proxy of pre-login requests. Leaving empty means using all
-     * the servers whose zimbraReverseProxyLookupTarget is TRUE.
+     * Deprecated since: 8.5.0. Configuration for pre-login upstream is now
+     * handled via zimbraReverseProxyUpstreamLoginServers. Post-login
+     * upstreams are now automatically configured per-webapp based on what is
+     * present in zimbraServiceEnabled.. Orig desc: The servers to be
+     * included in the &quot;upstream&quot; block in the nginx web proxy
+     * config file. The servers configured here will only affect the proxy of
+     * pre-login requests. Leaving empty means using all the servers whose
+     * zimbraReverseProxyLookupTarget is TRUE.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

@@ -6939,7 +6939,8 @@ TODO: delete them permanently from here
   <desc>Specifies whether the admin server should bound to localhost or not. This is an immutable property and is generated based on zimbraAdminBindAddress.</desc>
 </attr>
 
-<attr id="1378" name="zimbraReverseProxyUpstreamServers" type="string" cardinality="multi" optionalIn="server,globalConfig,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.0.0">
+<attr id="1378" name="zimbraReverseProxyUpstreamServers" type="string" cardinality="multi" optionalIn="server,globalConfig,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.0.0" deprecatedSince="8.5.0">
+  <deprecateDesc>Configuration for pre-login upstream is now handled via zimbraReverseProxyUpstreamLoginServers. Post-login upstreams are now automatically configured per-webapp based on what is present in zimbraServiceEnabled.</deprecateDesc>
   <desc>The servers to be included in the "upstream" block in the nginx web proxy config file. The servers configured here will only affect the proxy of pre-login requests. Leaving empty means using all the servers whose zimbraReverseProxyLookupTarget is TRUE.</desc>
 </attr>
 
