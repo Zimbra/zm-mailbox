@@ -128,9 +128,9 @@ public abstract class ServerConfig {
 
     private String[] getConfigAttr(String key) {
         try {
-            return Provisioning.getInstance().getConfig().getMultiAttr(key);
+            return Provisioning.getInstance().getLocalServer().getMultiAttr(key);
         } catch (ServiceException e) {
-            getLog().warn("Unable to get global attribute: " + key, e);
+            getLog().warn("Unable to get attribute: " + key, e);
             return null;
         }
     }
