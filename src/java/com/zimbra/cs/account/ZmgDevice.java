@@ -27,17 +27,17 @@ import com.zimbra.soap.account.type.ZmgDeviceSpec;
 public class ZmgDevice {
 
     private int mailboxId;
-    private String deviceId;
+    private String appId;
     private String registrationId;
     private String pushProvider;
     private String osName;
     private String osVersion;
     private int maxPayloadSize;
 
-    public ZmgDevice(int mailboxId, String deviceId, String registrationId, String pushProvider,
+    public ZmgDevice(int mailboxId, String appId, String registrationId, String pushProvider,
                      String osName, String osVersion, int maxPayloadSize) {
         this.mailboxId = mailboxId;
-        this.deviceId = deviceId;
+        this.appId = appId;
         this.registrationId = registrationId;
         this.pushProvider = pushProvider;
         this.osName = osName;
@@ -61,18 +61,18 @@ public class ZmgDevice {
     }
 
     /**
-     * @return the deviceId
+     * @return the appId
      */
-    public String getDeviceId() {
-        return deviceId;
+    public String getAppId() {
+        return appId;
     }
 
     /**
-     * @param deviceId
+     * @param appId
      *            the deviceId to set
      */
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
+    public void setAppId(String appId) {
+        this.appId = appId;
     }
 
     /**
