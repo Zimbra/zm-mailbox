@@ -48,7 +48,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang.StringUtils;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
@@ -743,35 +742,7 @@ abstract class ServersVar extends ProxyConfVar {
     }
 
     @Override
-    public void update() throws ServiceException {
-        ArrayList<String> directives = new ArrayList<String>();
-        String portName = configSource.getAttr(mPortAttrName, "");
-
-        String[] upstreams = serverSource.getMultiAttr("zimbraReverseProxyUpstreamServers");
-        if (upstreams.length > 0) {
-            for (String serverName: upstreams) {
-                Server server = mProv.getServerByName(serverName);
-                if (isValidUpstream(server, serverName)) {
-                    directives.add(generateServerDirective(server, serverName, portName));
-                    mLog.debug("Added server to HTTP upstream: " + serverName);
-                }
-            }
-        } else {
-            /* $(zmprov garpb) */
-            List<Server> servers = mProv.getAllServers();
-
-            for (Server server: servers) {
-               String serverName = server.getAttr(
-                        Provisioning.A_zimbraServiceHostname, "");
-                if (isValidUpstream(server, serverName)) {
-                    directives.add(generateServerDirective(server, serverName, portName));
-                    mLog.debug("Added server to HTTP upstream: " + serverName);
-                }
-            }
-        }
-
-        mValue = directives;
-    }
+    public abstract void update() throws ServiceException;
 
     @Override
     public String format(Object o) {
