@@ -37,7 +37,7 @@ public class ZmgDeviceSpec {
      * @zm-api-field-description The registration id of the device for push
      *                           notifications.
      */
-    @XmlAttribute(name = AccountConstants.A_REGISTRATION_ID /* registration id */, required = false)
+    @XmlAttribute(name = AccountConstants.A_REGISTRATION_ID /* registration id */, required = true)
     private String registrationId;
 
     /**
@@ -45,7 +45,7 @@ public class ZmgDeviceSpec {
      * @zm-api-field-description the provider for pushing notifications to the
      *                           device
      */
-    @XmlAttribute(name = AccountConstants.A_PUSH_PROVIDER /* push provider */, required = false)
+    @XmlAttribute(name = AccountConstants.A_PUSH_PROVIDER /* push provider */, required = true)
     private String pushProvider;
 
     /**
@@ -72,9 +72,12 @@ public class ZmgDeviceSpec {
      * @zm-api-field-tag max-payload-size
      * @zm-api-field-description maxPayloadSize is the maximum number of bytes
      *                           allowed for the push notification payload
-     *                           Example - iOS 7.0 maxPayloadSize is 256 bytes
-     *                           iOS 8.0 onwards maxPayloadSize is 2048 bytes
-     *                           Android maxPayloadSize is 4096 bytes
+     *                           Example - iOS 7.0 default maxPayloadSize is 256 bytes
+     *                           iOS 8.0 onwards default maxPayloadSize is 2048 bytes
+     *                           Android default maxPayloadSize is 4096 bytes
+     *                           In case, the maxPayloadSize is not specified
+     *                           the default payload size defined in the above examples will be used
+     *                           while sending push notifications
      */
     @XmlAttribute(name = AccountConstants.A_MAX_PAYLOAD_SIZE /* max payload size */, required = false)
     private Integer maxPayloadSize;
@@ -116,23 +119,39 @@ public class ZmgDeviceSpec {
     }
 
     public String getRegistrationId() {
-        return registrationId;
+        if (registrationId != null) {
+            return registrationId;
+        }
+        return "";
     }
 
     public String getPushProvider() {
-        return pushProvider;
+        if (pushProvider != null) {
+            return pushProvider;
+        }
+        return "";
     }
 
     public String getOSName() {
-        return osName;
+        if (osName != null) {
+            return osName;
+        }
+        return "";
     }
 
     public String getOSVersion() {
-        return osVersion;
+        if (osVersion != null) {
+            return osVersion;
+        }
+        return "";
     }
 
     public int getMaxPayloadSize() {
-        return maxPayloadSize;
+        if (maxPayloadSize != null) {
+            return maxPayloadSize;
+        }
+        //0 is just a place holder to avoid null pointer exception
+        return 0;
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
