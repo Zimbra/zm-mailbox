@@ -2,10 +2,14 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
@@ -17,6 +21,7 @@ import com.zimbra.cs.account.auth.AuthContext.Protocol;
 import com.zimbra.cs.account.auth.twofactor.TOTPCredentials;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
 
@@ -95,6 +100,15 @@ public class EnableTwoFactorAuth extends AccountDocumentHandler {
             response.setScratchCodes(manager.getScratchCodes());
             int tokenValidityValue = account.getAuthTokenValidityValue();
             account.setAuthTokenValidityValue(tokenValidityValue == Integer.MAX_VALUE ? 0 : tokenValidityValue + 1);
+            HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
+            HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
+            try {
+                AuthToken at = AuthProvider.getAuthToken(account);
+                response.setAuthToken(new com.zimbra.soap.account.type.AuthToken(at.getEncoded(), false));
+                at.encode(httpResp, false, ZimbraCookie.secureCookie(httpReq), false);
+            } catch (AuthTokenException e) {
+                throw ServiceException.FAILURE("cannot generate auth token", e);
+            }
         }
         return zsc.jaxbToElement(response);
     }
