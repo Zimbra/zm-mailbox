@@ -81,6 +81,9 @@ public class ModifyAccount extends AdminDocumentHandler {
         ModifyAccountRequest req = JaxbUtil.elementToJaxb(request);
         AuthToken authToken = zsc.getAuthToken();
         String id = req.getId();
+        if (null == id) {
+            throw ServiceException.INVALID_REQUEST("missing required attribute: " + AdminConstants.E_ID, null);
+        }
 
         Account account = prov.get(AccountBy.id, id, authToken);
 

@@ -69,6 +69,9 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         DeleteCalendarResourceRequest req = JaxbUtil.elementToJaxb(request);
         String id = req.getId();
+        if (null == id) {
+            throw ServiceException.INVALID_REQUEST("missing required attribute: " + AdminConstants.E_ID, null);
+        }
 
         // Confirm that the account exists and that the mailbox is located on the current host
         CalendarResource resource = prov.get(CalendarResourceBy.id, id);

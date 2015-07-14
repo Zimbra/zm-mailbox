@@ -75,6 +75,9 @@ public class DeleteAccount extends AdminDocumentHandler {
 
         DeleteAccountRequest req = JaxbUtil.elementToJaxb(request);
         String id = req.getId();
+        if (null == id) {
+            throw ServiceException.INVALID_REQUEST("missing required attribute: " + AdminConstants.E_ID, null);
+        }
 
         // Confirm that the account exists and that the mailbox is located on the current host
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());

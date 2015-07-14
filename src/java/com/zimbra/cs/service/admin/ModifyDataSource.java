@@ -66,6 +66,9 @@ public class ModifyDataSource extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         ModifyDataSourceRequest req = JaxbUtil.elementToJaxb(request);
         String id = req.getId();
+        if (null == id) {
+            throw ServiceException.INVALID_REQUEST("missing required attribute: " + AdminConstants.E_ID, null);
+        }
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         defendAgainstAccountOrCalendarResourceHarvesting(account, AccountBy.id, id, zsc,
                 Admin.R_adminLoginAs, Admin.R_adminLoginCalendarResourceAs);
