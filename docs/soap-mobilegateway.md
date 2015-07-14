@@ -96,7 +96,7 @@ Android clients using Google Cloud messaging should specify "gcm" as pushProvide
 
 <RegisterMobileGatewayAppRequest xmlns="urn:zimbraAccount">
   <zmgDevice appId="{appId}" registrationId="{registrationId}" pushProvider="gcm"
-  osName="{ios | android}" osVersion="{osVersion number}" maxPayloadSize={maxPayloadSize in bytes}/>
+  [osName="{ios | android}"] [osVersion="{osVersion number}"] [maxPayloadSize={maxPayloadSize in bytes}]/>
 </RegisterMobileGatewayAppRequest>
 
 Note:
@@ -109,9 +109,10 @@ Note:
               android has OS version like 2.0, 3.1, 4.4, 5.0 etc
 
 3. maxPayloadSize is the maximum number of bytes allowed for the push notification payload
-   Example - iOS 7.0 maxPayloadSize is 256 bytes
-             iOS 8.0 onwards maxPayloadSize is 2048 bytes
-             Android maxPayloadSize is 4096 bytes
+   Example - iOS 7.0 default maxPayloadSize is 256 bytes
+             iOS 8.0 onwards default maxPayloadSize is 2048 bytes
+             Android default maxPayloadSize is 4096 bytes
+             The default maxPayloadSize will be used if not specified in the request
 
 <RegisterMobileGatewayAppResponse xmlns="urn:zimbraAccount"/>
 
@@ -121,7 +122,8 @@ iOS clients should specify "apns" as pushProvider.
 RegisterMobileGatewayAppRequest can be used to register an iOS device token.
 
 <RegisterMobileGatewayAppRequest xmlns="urn:zimbraAccount">
-  <zmgDevice appId="{appId}" registrationId={device-token} pushProvider="apns"/>
+  <zmgDevice appId="{appId}" registrationId={device-token} pushProvider="apns"
+  [osName="{ios | android}"] [osVersion="{osVersion number}"] [maxPayloadSize={maxPayloadSize in bytes}]/>
 </RegisterMobileGatewayAppRequest>
 
 Following attributes have been introduced for configuring the server for sending Push Notifications to
@@ -183,6 +185,12 @@ In case of iOS versions below 8.0, payload is -
 
 {"aps":{"badge":26,"alert":"From: <sender name>\n<subject>","sound":"default"},
 "id":291,"cid":-291}
+
+Following links are useful in case the mobile devices are not able to recieve push notifications
+
+1. https://support.apple.com/en-in/HT203609
+
+2. http://serverfault.com/questions/535936/configuring-firewall-for-google-cloud-messaging-asn-15169
 
 
 ------ ZMG "Proxy" mode -----
