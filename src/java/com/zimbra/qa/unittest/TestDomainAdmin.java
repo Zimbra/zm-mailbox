@@ -304,8 +304,17 @@ public class TestDomainAdmin extends TestCase {
         renAResp = domAdminSoapProv.invokeJaxb(new RenameAccountRequest(acctId, TARGET_ACCT));
         assertNotNull("RenameAccountResponse for " + TARGET_ACCT + " as domAdmin specifying target acct", renAResp);
 
-        DeleteAccountRequest delAcctReq = new DeleteAccountRequest(acctId);
-        DeleteAccountResponse delAcctResp = domAdminSoapProv.invokeJaxbOnTargetAccount(delAcctReq, acctId);
+        DeleteAccountRequest delAcctReq;
+        DeleteAccountResponse delAcctResp;
+        delAcctReq = new DeleteAccountRequest(null);
+        try {
+            delAcctResp = domAdminSoapProv.invokeJaxbOnTargetAccount(delAcctReq, acctId);
+            fail("DeleteAccountRequest succeeded in spite of having no 'id' specified!!");
+        } catch (SoapFaultException sfe) {
+            checkSoapReason(sfe, "invalid request: missing required attribute: id");
+        }
+        delAcctReq = new DeleteAccountRequest(acctId);
+        delAcctResp = domAdminSoapProv.invokeJaxbOnTargetAccount(delAcctReq, acctId);
         assertNotNull("DeleteAccountResponse for " + TARGET_ACCT + " as domAdmin specifying target acct", delAcctResp);
         try {
             getAcctResp = domAdminSoapProv.invokeJaxb(getAcctReq);
@@ -430,9 +439,20 @@ public class TestDomainAdmin extends TestCase {
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
 
         SoapProvisioning domAdminSoapProv = getSoapProvisioning(DOMADMIN, TestUtil.DEFAULT_PASSWORD);
-        ModifyAccountRequest modAcctReq = new ModifyAccountRequest(acctId);
+        ModifyAccountRequest modAcctReq;
+        ModifyAccountResponse modAcctResp;
+        modAcctReq = new ModifyAccountRequest(null);
         modAcctReq.addAttr(new Attr(Provisioning.A_description, "dummy description"));
-        ModifyAccountResponse modAcctResp = domAdminSoapProv.invokeJaxb(modAcctReq);
+        try {
+            modAcctResp = domAdminSoapProv.invokeJaxb(modAcctReq);
+            fail("ModifyAccountRequest succeeded without 'id'!");
+        } catch (SoapFaultException sfe) {
+            checkSoapReason(sfe, "invalid request: missing required attribute: id");
+        }
+
+        modAcctReq = new ModifyAccountRequest(acctId);
+        modAcctReq.addAttr(new Attr(Provisioning.A_description, "dummy description"));
+        modAcctResp = domAdminSoapProv.invokeJaxb(modAcctReq);
         assertNotNull("ModifyAccountResponse for " + TARGET_ACCT + " simple as domAdmin", modAcctResp);
         modAcctReq = new ModifyAccountRequest(acctId);
         modAcctReq.addAttr(new Attr(Provisioning.A_description, "another dummy description"));
@@ -537,8 +557,17 @@ public class TestDomainAdmin extends TestCase {
         assertNotNull("RenameCalendarResourceResponse for " + TARGET_CALRES + " as domAdmin specifying target acct",
                 renAResp);
 
-        DeleteCalendarResourceRequest delAcctReq = new DeleteCalendarResourceRequest(acctId);
-        DeleteCalendarResourceResponse delAcctResp = domAdminSoapProv.invokeJaxbOnTargetAccount(delAcctReq, acctId);
+        DeleteCalendarResourceRequest delAcctReq;
+        DeleteCalendarResourceResponse delAcctResp;
+        delAcctReq = new DeleteCalendarResourceRequest(null);
+        try {
+            domAdminSoapProv.invokeJaxbOnTargetAccount(delAcctReq, acctId);
+            fail("DeleteCalendarResouceRequest succeeded in spite of having no 'id' specified!!");
+        } catch (SoapFaultException sfe) {
+            checkSoapReason(sfe, "invalid request: missing required attribute: id");
+        }
+        delAcctReq = new DeleteCalendarResourceRequest(acctId);
+        delAcctResp = domAdminSoapProv.invokeJaxbOnTargetAccount(delAcctReq, acctId);
         assertNotNull("DeleteCalendarResourceResponse for " + TARGET_CALRES + " as domAdmin specifying target acct",
                 delAcctResp);
         try {
@@ -641,9 +670,19 @@ public class TestDomainAdmin extends TestCase {
         assertNotNull("CreateCalendarResourceResponse for " + TARGET_CALRES + " simple as domAdmin", caResp);
         String acctId = caResp.getCalResource().getId();
 
-        ModifyCalendarResourceRequest modAcctReq = new ModifyCalendarResourceRequest(acctId);
+        ModifyCalendarResourceRequest modAcctReq;
+        ModifyCalendarResourceResponse modAcctResp;
+        modAcctReq = new ModifyCalendarResourceRequest(null);
         modAcctReq.addAttr(new Attr(Provisioning.A_description, "dummy description"));
-        ModifyCalendarResourceResponse modAcctResp = domAdminSoapProv.invokeJaxb(modAcctReq);
+        try {
+            modAcctResp = domAdminSoapProv.invokeJaxb(modAcctReq);
+            fail("ModifyCalendarResourceRequest succeeded without 'id'!");
+        } catch (SoapFaultException sfe) {
+            checkSoapReason(sfe, "invalid request: missing required attribute: id");
+        }
+        modAcctReq = new ModifyCalendarResourceRequest(acctId);
+        modAcctReq.addAttr(new Attr(Provisioning.A_description, "dummy description"));
+        modAcctResp = domAdminSoapProv.invokeJaxb(modAcctReq);
         assertNotNull("ModifyCalendarResourceResponse for " + TARGET_CALRES2 + " simple as domAdmin", modAcctResp);
         modAcctReq = new ModifyCalendarResourceRequest(acctId);
         modAcctReq.addAttr(new Attr(Provisioning.A_description, "another dummy description"));
@@ -752,9 +791,18 @@ public class TestDomainAdmin extends TestCase {
         renAResp = domAdminSoapProv.invokeJaxb(new RenameDistributionListRequest(dlId, TARGET_DL_RENAMED));
         assertNotNull("RenameDistributionListResponse for " + TARGET_DL + " simple as domAdmin", renAResp);
 
-        DeleteDistributionListRequest delAcctReq = new DeleteDistributionListRequest(dlId);
-        DeleteDistributionListResponse delAcctResp = domAdminSoapProv.invokeJaxb(delAcctReq);
-        assertNotNull("DeleteDistributionListResponse for " + TARGET_DL + " as domAdmin", delAcctResp);
+        DeleteDistributionListRequest delDLReq;
+        DeleteDistributionListResponse delDlResp;
+        delDLReq = new DeleteDistributionListRequest(null);
+        try {
+            delDlResp = domAdminSoapProv.invokeJaxb(delDLReq);
+            fail("DeleteDistributionListRequest succeeded in spite of having no 'id' specified!!");
+        } catch (SoapFaultException sfe) {
+            checkSoapReason(sfe, "invalid request: missing required attribute: id");
+        }
+        delDLReq = new DeleteDistributionListRequest(dlId);
+        delDlResp = domAdminSoapProv.invokeJaxb(delDLReq);
+        assertNotNull("DeleteDistributionListResponse for " + TARGET_DL + " as domAdmin", delDlResp);
         try {
             getDlResp = domAdminSoapProv.invokeJaxb(getDlReq);
             fail("GetDistributionListRequest succeeded after delete!");
@@ -840,9 +888,19 @@ public class TestDomainAdmin extends TestCase {
         assertNotNull("CreateDistributionListResponse for " + TARGET_DL + " simple as domAdmin", caResp);
         String dlId = caResp.getDl().getId();
 
-        ModifyDistributionListRequest modDlReq = new ModifyDistributionListRequest(dlId);
+        ModifyDistributionListRequest modDlReq;
+        ModifyDistributionListResponse modDlResp;
+        modDlReq = new ModifyDistributionListRequest(null);
         modDlReq.addAttr(new Attr(Provisioning.A_description, "dummy description"));
-        ModifyDistributionListResponse modDlResp = domAdminSoapProv.invokeJaxb(modDlReq);
+        try {
+            modDlResp = domAdminSoapProv.invokeJaxb(modDlReq);
+            fail("ModifyDistributionListRequest succeeded without specifying id!");
+        } catch (SoapFaultException sfe) {
+            checkSoapReason(sfe, "invalid request: missing required attribute: id");
+        }
+        modDlReq = new ModifyDistributionListRequest(dlId);
+        modDlReq.addAttr(new Attr(Provisioning.A_description, "dummy description"));
+        modDlResp = domAdminSoapProv.invokeJaxb(modDlReq);
         assertNotNull("ModifyDistributionListResponse for " + TARGET_DL2 + " simple as domAdmin", modDlResp);
         DeleteDistributionListRequest delDlReq = new DeleteDistributionListRequest(dlId);
         DeleteDistributionListResponse delDlResp = domAdminSoapProv.invokeJaxb(delDlReq);

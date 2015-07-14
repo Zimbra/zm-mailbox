@@ -65,6 +65,9 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         ModifyCalendarResourceRequest req = JaxbUtil.elementToJaxb(request);
         String id = req.getId();
+        if (null == id) {
+            throw ServiceException.INVALID_REQUEST("missing required attribute: " + AdminConstants.E_ID, null);
+        }
         Map<String, Object> attrs = req.getAttrsAsOldMultimap();
 
         CalendarResource resource = prov.get(CalendarResourceBy.id, id);
@@ -74,8 +77,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
         prov.modifyAttrs(resource, attrs, true);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "ModifyCalendarResource", "name",
-                        resource.getName()}, attrs));
+                new String[] {"cmd", "ModifyCalendarResource", "name", resource.getName()}, attrs));
 
         Element response = zsc.createElement(AdminConstants.MODIFY_CALENDAR_RESOURCE_RESPONSE);
         ToXML.encodeCalendarResource(response, resource, true);
