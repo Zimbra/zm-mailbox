@@ -1,11 +1,11 @@
 Zimbra Mobile Gateway SOAP API Extensions
------------------------------------------
+=========================================
 
 The very first request that an app needs to send to ZMG is the BootstrapMobileGatewayAppRequest.
 The response would include a unique app ID, an app key (or a secret) to enable the app to authenticate itself in the
 future, as well as an "app auth token".
 
-
+```
 <BootstrapMobileGatewayAppRequest xmlns="urn:zimbraAccount" [wantAppToken="0|1"]>
 </BootstrapMobileGatewayAppRequest>
 
@@ -14,7 +14,7 @@ future, as well as an "app auth token".
   <appKey>{app-key}</appKey>
   [<authToken lifetime="{auth-token-lifetime}">{app-auth-token}</authToken>]
 </BootstrapMobileGatewayAppResponse>
-
+```
 
 The app should persist the app uuid and the app key on the device in a secure manner.
 
@@ -25,6 +25,7 @@ using the CreateDataSourceRequest API (refer base SOAP API) and passing its app 
 The app is allowed to specify the folder id as "-1" to indicate that the server should auto-create the folder into
 which the external data would be imported. The created folder's id would be returned in the response.
 
+```
 <CreateDataSourceRequest/>
   <imap ... [l="-1"] .../>
 </CreateDataSourceRequest>
@@ -32,6 +33,7 @@ which the external data would be imported. The created folder's id would be retu
 <CreateDataSourceResponse>
   <imap id="{id}" [l="{folder-id}"]/>
 </CreateDataSourceResponse>
+```
 
 The client may also need to send ImportDataRequest (refer base SOAP API) to trigger sync with the external data source.
 By default the server does not initiate the data sync on its own (there's a server setting to specify an automatic
@@ -41,6 +43,7 @@ sync interval though). The sync can be triggered anytime on-demand by invoking I
 
 If the app auth token expires, the app can request a new auth token.
 
+```
 <RenewMobileGatewayAppTokenRequest xmlns="urn:zimbraAccount">
   <appId>{app-uuid}</appId>
   <appKey>{app-key}</appKey>
@@ -49,9 +52,10 @@ If the app auth token expires, the app can request a new auth token.
 <RenewMobileGatewayAppTokenResponse xmlns="urn:zimbraAc count">
   <authToken lifetime="{auth-token-lifetime}">{app-auth-token}</authToken>
 </RenewMobileGatewayAppTokenResponse>
+```
 
-
------- Push Notifications for Android apps -----
+Push Notifications for Android apps
+-----------------------------------
 
 Push notifications for Android Apps using Google Cloud Messaging - 
 
@@ -82,22 +86,25 @@ http://developer.android.com/google/gcm/gs.html
 
 Android client can get GCM sender id by using the following request/response:
 
+```
 <GetGcmSenderIdRequest xmlns="urn:zimbraAccount">
 </GetGcmSenderIdRequest>
 
 <GetGcmSenderIdResponse xmlns="urn:zimbraAccount">
   <gcmSenderId>{sender-id}<gcmSenderId/>
 </GetGcmSenderIdResponse>
-
+```
 
 Registering app/device to receive push notifications:
 
 Android clients using Google Cloud messaging should specify "gcm" as pushProvider.
 
+```
 <RegisterMobileGatewayAppRequest xmlns="urn:zimbraAccount">
   <zmgDevice appId="{appId}" registrationId="{registrationId}" pushProvider="gcm"
   [osName="{ios | android}"] [osVersion="{osVersion number}"] [maxPayloadSize={maxPayloadSize in bytes}]/>
 </RegisterMobileGatewayAppRequest>
+```
 
 Note:
 1. osName is the name of the operating system installed on the device. Example - ios, android
@@ -116,15 +123,18 @@ Note:
 
 <RegisterMobileGatewayAppResponse xmlns="urn:zimbraAccount"/>
 
------- Push Notifications for iOS apps -----
+Push Notifications for iOS apps
+-------------------------------
 
 iOS clients should specify "apns" as pushProvider.
 RegisterMobileGatewayAppRequest can be used to register an iOS device token.
 
+```
 <RegisterMobileGatewayAppRequest xmlns="urn:zimbraAccount">
   <zmgDevice appId="{appId}" registrationId={device-token} pushProvider="apns"
   [osName="{ios | android}"] [osVersion="{osVersion number}"] [maxPayloadSize={maxPayloadSize in bytes}]/>
 </RegisterMobileGatewayAppRequest>
+```
 
 Following attributes have been introduced for configuring the server for sending Push Notifications to
 iOS devices -
@@ -151,7 +161,8 @@ http://www.raywenderlich.com/32960/apple-push-notification-services-in-ios-6-tut
 https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/ConfiguringPushNotifications/ConfiguringPushNotifications.html
 
 
----- New message push notification ----
+New message push notification
+-----------------------------
 
 Payload of a new message GCM push notification contains -
 
@@ -171,20 +182,26 @@ Notifications are sent in json format. Following are sample json notifications -
 
 GCM -
 
+```
 {"data":{"su":"afadfadfgdg","ac":"CreateMessage","ty":"MESSAGE","id":291,
 "sdn":"<sender name>","fr":"asdfdsgdg","sa":"<sender address>","uc":26,"cid":-291,
 "ra":"<recipient address>"},"registration_ids":["..."]}
+```
 
 APNS -
 
+```
 {"ac":"CreateMessage","aps":{"badge":26,"alert":"From: <sender name>\n<subject>","sound":"default"},
 "ty":"MESSAGE","id":291,"sdn":"<sender name>","fr":"asdfdsgdg","sa":"<sender address>",
 "cid":-291,"ra":"<recipient address>"}
+```
 
 In case of iOS versions below 8.0, payload is - 
 
+```
 {"aps":{"badge":26,"alert":"From: <sender name>\n<subject>","sound":"default"},
 "id":291,"cid":-291}
+```
 
 Following links are useful in case the mobile devices are not able to recieve push notifications
 
@@ -193,7 +210,8 @@ Following links are useful in case the mobile devices are not able to recieve pu
 2. http://serverfault.com/questions/535936/configuring-firewall-for-google-cloud-messaging-asn-15169
 
 
------- ZMG "Proxy" mode -----
+ZMG "Proxy" mode
+----------------
 
 ZMG can be configured to act as a "Proxy" to another Zimbra system. In the Proxy mode, some accounts in the ZMG could
 be syncing email data from a Zimbra account hosted on a different Zimbra system into a data source.
@@ -201,12 +219,12 @@ be syncing email data from a Zimbra account hosted on a different Zimbra system 
 The client can send user credentials on the target system inside the <AuthRequest>. The <AuthResponse> would contain an
 additional flag to indicate that the authenticated account corresponds to a Proxy one:
 
+```
 <AuthResponse zmgProxy="0|1">
   ...
 </AuthResponse>
+```
 
 In this scenario there would be a data source object that is part of the authenticated account and where the proxied
 account data is synced. The data source would have an additional "zimbraDataSourceIsProxy" provisioning attribute set
 on it with value TRUE.
-
-

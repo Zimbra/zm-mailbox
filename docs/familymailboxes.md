@@ -1,0 +1,76 @@
+Provisioning
+============
+
+There is no SOAP or zmprov API for creating family accounts.  Provisioning-wise, family accounts are just regular accounts with two additional multi-valued LDAP attributes: `zimbraChildAccount` and `zimbraPrefChildVisibleAccount`, which link a primary(parent) account to its secondary(child) accounts.
+
+`zimbraChildAccount` contains zimbra ids of all secondary accounts of the primary account.  It is not settable by end-users. 
+
+`zimbraPrefChildVisibleAccount` contains zimbra ids o visible secondary accounts.  It is a user preference and is settable by 
+end-users.   
+
+When ids are removed from `zimbraChildAccount`, and if `zimbraPrefChildVisibleAccount` is not also being modified in the same request, 
+server will remove all ids from `zimbraPrefChildVisibleAccount` that are being removed from `zimbraChildAccount`.
+
+In all other cases when `zimbraChildAccount` and/or `zimbraPrefChildVisibleAccount` are modified(added/removed/replaced), if the resulting `zimbraPrefChildVisibleAccount` contains ids that are not in `zimbraChildAccount`, server will throw a `ServiceException.INVALID_REQUEST`.
+
+There are two types of secondary accounts: visible and invisible.  Visible secondary accounts are those shown in the account accordion UI when a primary logs in.  Invisible secondary accounts are not shown in the accordion, 
+but they work the same in all other aspects as visible secondary accounts.
+
+A primary account can see and manage preferences and mail items on all its secondary accounts.  
+
+Attribute `zimbraFeatureOptionsEnabled` controls if an account can see and change any account preferences.
+
+Attribute `zimbraFeatureOptionsEnabled` should be set to FALSE on secondary accounts if secondary accounts are not allowed 
+to see/manage their preferences.
+
+Examples:
+=========
+
+Create secondary accounts:
+--------------------------
+
+    zmprov createAccount child-1@zimbra.com test123 zimbraFeatureOptionsEnabled FALSE {other attr/value pairs}
+    zmprov createAccount child-2@zimbra.com test123 zimbraFeatureOptionsEnabled FALSE {other attr/value pairs}
+
+Create a primary account and link secondary accounts to it:
+----
+    zmprov createAccount parent@zimbra.com test123 zimbraChildAccount {id-of-child-1} zimbraChildAccount {id-of-child-2} zimbraPrefChildVisibleAccount {id-of-child-1}
+    (or 
+    zmprov createAccount parent@zimbra.com test123 +zimbraChildAccount {id-of-child-1} +zimbraChildAccount {id-of-child-2} +zimbraPrefChildVisibleAccount {id-of-child-1}
+    )
+    
+or can do in two steps:
+
+    zmprov createAccount parent@zimbra.com test123
+    zmprov modifyAccount parent@zimbra.com zimbraChildAccount {id-of-child-1} zimbraChildAccount {id-of-child-2} zimbraPrefChildVisibleAccount {id-of-child-1}
+
+or:
+
+     zmprov modifyAccount parent@zimbra.com +zimbraChildAccount {id-of-child-1} +zimbraChildAccount {id-of-child-2} +zimbraPrefChildVisibleAccount {id-of-child-1}
+    
+The above example adds child-1@zimbra.com and child-2@zimbra.com as secondary accounts of parent@zimbra.com; 
+child-1@zimbra.com is visible, child-2@zimbra.com is not visible.
+
+Note: for visible secondary accounts, they have to appear in both `zimbraChildAccount`
+and `zimbraPrefChildVisibleAccount` attributes.
+
+Add secondary accounts under a primary account
+----
+
+    zmprov modifyAccount parent@zimbra.com \
+        +zimbraChildAccount {id-of-visible-child-1} +zimbraPrefChildVisibleAccount {id-of-visible-child-1} \
+        +zimbraChildAccount {id-of-invisible-child-2}
+
+Remove secondary accounts from a primary account
+----
+
+    zmprov modifyAccount parent@zimbra.com \
+        -zimbraChildAccount {id-of-visible-child-1} -zimbraPrefChildVisibleAccount {id-of-visible-child-1}
+        -zimbraChildAccount {id-of-invisible-child-2}
+
+Replace secondary accounts under a primary account
+----
+
+    zmprov modifyAccount parent@zimbra.com \
+        zimbraChildAccount {id-of-visible-child-1} zimbraPrefChildVisibleAccount {id-of-visible-child-1} \
+        zimbraChildAccount {id-of-invisible-child-2}

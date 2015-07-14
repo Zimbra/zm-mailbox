@@ -1,30 +1,23 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html; charset=ISO-8859-1"
- http-equiv="content-type">
-  <title>Notification</title>
-</head>
-<body>
-<h3>Email notification options</h3>
-<p>After a good amount of deliberation, we've finally decided on the
-approach we will take for addressing notification systems.&nbsp; This
+Email notification options
+---
+After a good amount of deliberation, we've finally decided on the
+approach we will take for addressing notification systems. This
 document attempts to capture the discussions we've had, to avoid
-rehashing this issue in the future.</p>
-<p>Ultimately the goal is to support notification while making mail
-loops unlikely.&nbsp; Here are some of the approaches we use to avoid
-mail loops:<br>
-</p>
-<ul>
-  <li>Set sender envelope to &lt;&gt;, which tells the receiving mail
-system to not bounce an invalid address.</li>
-  <li>Set the Auto-Submitted header to allow us to detect mail loops.</li>
-  <li>Limit out-of-office notifications to once per week.</li>
-  <li>Send new message notifications from postmaster, so that a second
-notification isn't sent in response to a bounced notification.<br>
-  </li>
-</ul>
-<h3>Out-of-office: from=user, envelope=&lt;&gt;</h3>
+rehashing this issue in the future.
+
+Ultimately the goal is to support notification while making mail
+loops unlikely. Here are some of the approaches we use to avoid
+mail loops:
+
+* Set sender envelope to <>, which tells the receiving mail
+system to not bounce an invalid address.
+* Set the Auto-Submitted header to allow us to detect mail loops.
+* Limit out-of-office notifications to once per week.
+* Send new message notifications from postmaster, so that a second
+notification isn't sent in response to a bounced notification.
+
+Out-of-office: from=user, envelope=<>
+---
 <table style="text-align: left;" border="1" cellpadding="2"
  cellspacing="2">
   <tbody>
@@ -104,12 +97,14 @@ accounts which notify each other)<br>
     </tr>
   </tbody>
 </table>
-<h3>New message notification: from=postmaster, envelope=&lt;&gt;</h3>
-<p>New mail notification is more sensitive than out-of-office, since
-there's no once-per-week limit.&nbsp; As a result, we set the "from"
-header to postmaster.&nbsp; If a notification bounces, it gets returned
-to postmaster rather than the user.<br>
-</p>
+
+New message notification: from=postmaster, envelope=<>
+---
+New mail notification is more sensitive than out-of-office, since
+there's no once-per-week limit. As a result, we set the "from"
+header to postmaster. If a notification bounces, it gets returned
+to postmaster rather than the user.
+
 <table style="text-align: left;" border="1" cellpadding="2"
  cellspacing="2">
   <tbody>

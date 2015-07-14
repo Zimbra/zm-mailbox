@@ -56,6 +56,7 @@ So an xml/x-zimbra-share part will take the following form:
 
 Notes:
 
+````
   {action}   = The share action. Allowed values: "new", "edit",
                "delete", "accept", or "decline".
   {zid}      = Zimbra id of the account. If the folder is shared with
@@ -65,6 +66,7 @@ Notes:
   {folderId} = The local id of the folder in the grantor's mailbox.
   {view}     = The default folder view. Defined in soap.txt.
   {perms}    = The permissions being granted. Defined in soap.txt.
+````
 
 Here is an example of a new share notification document for a
 shared calendar:

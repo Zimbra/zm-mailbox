@@ -11,7 +11,7 @@ This has a number of benefits:
 
   - get to re-use the existing DL infrastructure, including all the admin UI
     support.
-  
+     
   - users (admin and end-users) don't have to learn two different concepts,
     they just know and understand a single concept, which is a named group
     of users that they can send mail to and/or use in ACLs.
@@ -25,18 +25,17 @@ This has a number of benefits:
 
 IMPLEMENTATION
 ==============
-What makes a distribution list a group?
----------------------------------------
+
+## What makes a distribution list a group?
 All distribution lists are groups.
 
-GROUPS OF GROUPS
-================
+## GROUPS OF GROUPS
 DLs can contain other DLs, and thus groups can contain other groups. If a user
 is in DL A, and DL A is also in DL B, then the user will be in both groups. For
 example, lets consider the case where all@test.com and engineering@test.com are both
 DLs that are groups, and engineering is a member of "all".
 
-
+```
 prov> cd test.com 
 d76cc24c-9bd6-4ef2-90c2-88bebabb208b
 prov> cdl all@test.com
@@ -45,9 +44,11 @@ prov> cdl engineering@test.com
 ae18f02a-efd0-4066-b8f3-f14b8629a6b6
 prov> adlm all@test.com engineering@test.com
 prov> adlm engineering@test.com user1@test.com
+```
 
-If we look at "all@test.com", we see that it has one member, engineering@test.com:
+If we look at `all@test.com`, we see that it has one member, `engineering@test.com`:
 
+```
 prov> gdlm all@test.com
 # distributionList all@test.com memberCount=1
 mail: all@test.com
@@ -58,10 +59,11 @@ zimbraId: 711ccbd1-86c9-494a-b561-dca40a864b1b
 zimbraMailAlias: all@test.com
 zimbraMailForwardingAddress: engineering@test.com
 zimbraMailStatus: enabled
+```
 
+If we look at `engineering@etst.com`, we see that is has one member, `user1@test.com`:
 
-If we look at engineering@etst.com, we see that is has one member, user1@test.com:
-
+```
 prov> gdl engineering@test.com
 # distributionList engineering@test.com memberCount=1
 mail: engineering@test.com
@@ -72,16 +74,18 @@ zimbraId: ae18f02a-efd0-4066-b8f3-f14b8629a6b6
 zimbraMailAlias: engineering@test.com
 zimbraMailForwardingAddress: user1@test.com
 zimbraMailStatus: enabled
+```
 
-If we look at all the DLs that user1 belongs to, we get both all@test.com and
-engineering@test.com:
+If we look at all the DLs that user1 belongs to, we get both `all@test.com` and
+`engineering@test.com`:
 
+```
 prov> gam user1@test.com
 all@test.com (via engineering@test.com)
 engineering@test.com
+```
 
-CALCULATING A USER'S GROUP MEMBERSHIP LIST
-==========================================
+## CALCULATING A USER'S GROUP MEMBERSHIP LIST
 When calculating all the groups a user belongs to, we don't just stop at all the
 Dls that a user belongs to. If we did, then user1 wouldn't be a member of the all@test.com group,
 even though logically they should be.
@@ -93,10 +97,11 @@ that those group's belong to, and so on.
 This algorithm is actually fairly trivial to implement, and is described (implemented 
 slightly differently) here:
 
-http://middleware.internet2.edu/dir/groups/rpr-nmi-edit-mace_dir-groups_best_practices-1.0.html
+<http://middleware.internet2.edu/dir/groups/rpr-nmi-edit-mace_dir-groups_best_practices-1.0.html>
 
 The algorithm is:
 
+````
 Step 1: Initialize the set "groups" to the empty set. When we are done, this set will
         contain all groups the user belongs to.
 
@@ -108,21 +113,21 @@ Step 3: while group in  "groupsToCheck":
                  for all groups that group is a member of add to "groupsToCheck" 
             end
         end
+````
 
-groups: {}
-groupsToCheck: {ae18f02a-efd0-4066-b8f3-f14b8629a6b6}
+    groups: {}
+    groupsToCheck: {ae18f02a-efd0-4066-b8f3-f14b8629a6b6}
 
 After checking the group, we'd see that it is a member of a group, and we'd then have:
 
-groups: {ae18f02a-efd0-4066-b8f3-f14b8629a6b6}
-groupsToCheck: {711ccbd1-86c9-494a-b561-dca40a864b1b}
+    groups: {ae18f02a-efd0-4066-b8f3-f14b8629a6b6}
+    groupsToCheck: {711ccbd1-86c9-494a-b561-dca40a864b1b}
 
-We'd then see that the all@test.com group isn't a member of any other groups and end
+We'd then see that the `all@test.com` group isn't a member of any other groups and end
 up with:
 
-groups: {ae18f02a-efd0-4066-b8f3-f14b8629a6b6, 711ccbd1-86c9-494a-b561-dca40a864b1b}
-         
-groupsToCheck: {}
+    groups: {ae18f02a-efd0-4066-b8f3-f14b8629a6b6, 711ccbd1-86c9-494a-b561-dca40a864b1b}     
+    groupsToCheck: {}
 
 And we'd stop with user1 belonging to two groups.
    
@@ -138,10 +143,9 @@ due to DLs being included in DLs):
 NOTES
 =======================
 
-Remote Users
-------------
+## Remote Users
 Only local users (a user that Zimbra is authoritative for) get access rights when
-added to a DL. For example, adding joe.random@yahoo.com a DL that is used in an ACL 
+added to a DL. For example, adding `joe.random@yahoo.com` a DL that is used in an ACL 
 doesn't grant them access.
 
 In the future, it will be possible for two Zimbra installations to set up a trust
@@ -152,9 +156,7 @@ One could also imagine a scenario where adding a remote user to a DL that is a g
 said user some information that the user can use to remotely access protected data.
 
 
-----------------------------------
-
-issues:
+## issues:
 
 - privacy. need to be able to make DL membership private, this will probably require
            postfix to auth. This is for HIPPA/FERPA compliance.

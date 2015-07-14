@@ -1,13 +1,13 @@
 Zimbra supports server side extensions, in order to solve two
 problems:
 
-       - have a generic mechanism to add things to the server that
-         doesn't require modifying web.xml and other jetty config
-         files.
+1. have a generic mechanism to add things to the server that
+  doesn't require modifying web.xml and other jetty config
+  files.
 
-       - be able to add classes than can subclass from the server
-         classes without doing incestuous things to an installed
-         webapp.
+2. be able to add classes than can subclass from the server
+   classes without doing incestuous things to an installed
+   webapp.
 
 The latter requires that the Zimbra server code create a classloader
 to load the classes, and set the parent of this classloader to be the
@@ -67,68 +67,71 @@ each other.
 
 For now there are no conventions for the following two items.
 
- - What server code is an extension allowed to link against?
+* What server code is an extension allowed to link against?
 
-      No restrictions for now.  We reserve the right to enforce
-      something in the future.  eg, a com.zimbra.cs.serverapi (or
-      similar) package which defines well known entry points into the
-      server.
+  No restrictions for now.  We reserve the right to enforce
+  something in the future.  eg, a com.zimbra.cs.serverapi (or
+  similar) package which defines well known entry points into the
+  server.
 
- - Preferred way for the extension to register for events in the
-   server.
+* Preferred way for the extension to register for events in the server.
 
-      ClamScanner extension, on init(), registers itself to a static
-      data list in UploadScanner.  A generic event mechanism, would be
-      nice, but seems like a overkill - but for simple extensions
-      programming we probably should have a generic event mechanism,
-      listener registration etc.
+  ClamScanner extension, on init(), registers itself to a static
+  data list in UploadScanner.  A generic event mechanism, would be
+  nice, but seems like a overkill - but for simple extensions
+  programming we probably should have a generic event mechanism,
+  listener registration etc.
 
 
-Extensions with servlets
+# Extensions with servlets
 
 If an extension needs to process HTTP GET/POST/OPTIONS requests, it can do so as follows:
 
-	- implement com.zimbra.cs.extension.ExtensionHttpHandler interface
-	
-	  public class MyHandler implements ExtensionHttpHandler {
-	      
-	      // the path under which MyHandler is registered
-	      public String getPath() {
-	          return super.getPath() + "/myhandler";
-	      }
-	      
-	      // override doGet or doPost or both as needed
-	      // it's your responsibility to authenticate/authorize the requests
-	      // sent to the handler
-	      
-	      public void init(ZimbraExtension ext) ... {
-	          super.init(ext);    // make sure you call superclass's init method.
-	          // your initialization
-	      }
-	  }      
-	  
-	- register the handler in your extension
-	
-	  public class MyExtension implements ZimbraExtension {
-	      public void init() ... {
-	          ExtensionDispatcherServlet.register(this, new MyHandler());
-	      }
-	      
-	      public void destroy() {
-	          ExtensionDispatcherServlet.unregister(this);
-	      }
-	      
-	      public String getName() {
-	          return "myext";
-	      }
-	  }  
-	  
-Your handler will process requests at URI: /service/extension/myext/myhandler.
-You can create any number of handlers. They will be available at: /service/extension/myext/<handler path>.
-If you choose not to override getPath in your handler, it will be processing requests
-at /service/extension/myext.
+* implement com.zimbra.cs.extension.ExtensionHttpHandler interface
 
-If two handlers A and B, A registers at /myext/myhandler, B registers at /myext/myhandler/foo, then the
+````	
+public class MyHandler implements ExtensionHttpHandler {
+	      
+	// the path under which MyHandler is registered
+	public String getPath() {
+		return super.getPath() + "/myhandler";
+	}
+	
+	// override doGet or doPost or both as needed
+	// it's your responsibility to authenticate/authorize the requests
+	// sent to the handler
+	
+	public void init(ZimbraExtension ext) ... {
+		super.init(ext);    // make sure you call superclass's init method.
+	    // your initialization
+	}
+}      
+````
+	  
+* register the handler in your extension
+
+````	
+public class MyExtension implements ZimbraExtension {
+	public void init() ... {
+		ExtensionDispatcherServlet.register(this, new MyHandler());
+	}
+	
+	public void destroy() {
+		ExtensionDispatcherServlet.unregister(this);
+	}
+	
+	public String getName() {
+		return "myext";
+	}
+}
+````
+  
+Your handler will process requests at URI: `/service/extension/myext/myhandler`.
+You can create any number of handlers. They will be available at: `/service/extension/myext/<handler path>`.
+If you choose not to override getPath in your handler, it will be processing requests
+at `/service/extension/myext`.
+
+If two handlers A and B, A registers at `/myext/myhandler`, B registers at `/myext/myhandler/foo`, then the
 following shows what happens:
 
     request path            handler invoked
@@ -141,7 +144,7 @@ ExtensionHttpHandlers are not servlets. They live in the service.war's servlet c
 No change should be made to ZimbraServer's web.xml for any extension HTTP handlers that are added.
 
 
-Customizing HTTP handlers
+# Customizing HTTP handlers
 
 Sometimes it is necessary to allow third party to customize responses from HTTP handlers
 at runtime. For example, customer may want error pages to have a different look and feel than
@@ -149,9 +152,9 @@ the boilerplate one.
 
 You can try the following technique using the error page example:
 
-  - choose a name under your handler's namespace, say, /myext/myhandler/error
+  - choose a name under your handler's namespace, say, `/myext/myhandler/error`
   - in your handler code, when error happens, dispatch to
-    /extension/myext/myhandler/error
+    `/extension/myext/myhandler/error`
     
         RequestDispatcher dispatcher = req.getRequestDispatcher("/extension/myext/myhandler/error");
         dispatcher.forward(req, resp);
@@ -160,11 +163,11 @@ You can try the following technique using the error page example:
     display the boilerplate error page
 
 If a third party wants to customize the error page, he only needs to code and register another handler
-explicitly at /myext/myhandler/error (in another jar file). When that happens, the boilerplate error page
+explicitly at `/myext/myhandler/error` (in another jar file). When that happens, the boilerplate error page
 will be bypassed and new handler invoked to display the customized error page.
 
     
-Loading classes dynamically
+# Loading classes dynamically
 
 It is useful to define "plugins" by providing their class names in configuration.
 The Zimbra server core then loads them using
@@ -182,7 +185,7 @@ from Zimbra server core. Instead, try the following:
     Object instance = cls.newInstance();
   
   
-Extension with SOAP services
+# Extension with SOAP services
 
 If an extension needs to support extra SOAP requests, it can do so as follows:
     

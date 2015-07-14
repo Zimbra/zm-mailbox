@@ -1,40 +1,38 @@
 Various special URLs/servlets
 
-------------------------------------------------------------
 
-# no longer supported
-Calendar   http://{server}/service/ical/cal.ics  
+# Calendar
 
-# new form
-Calendar   http://{server}/home/{username}/{calendar-folder}
+New form:
 
-------------------------------------------------------------
+    http://{server}/home/{username}/{calendar-folder}
+
+No longer supported:
+
+    http://{server}/service/ical/cal.ics
 
 Spits out a "text/calendar" file, consisting of appointments in the calendar.
 
-to test (on a system with curl installed):
+To test (on a system with curl installed):
 
-curl -L -u user1:test123 http://localhost:7070/zimbra/user/user1/calendar
+    $ curl -L -u user1:test123 http://localhost:7070/zimbra/user/user1/calendar
 
 Should look something like:
 
+````
 BEGIN:VCALENDAR
 PRODID:Zimbra-Calendar-Provider
 VERSION:2.0
 METHOD:PUBLISH
 BEGIN:VEVENT
 DTSTAMP:20050526T012647Z
-DTSTART;TZID="GMT -0800 (Standard) / GMT -0700 (Daylight)":20050523T04000
- 0
+DTSTART;TZID="GMT -0800 (Standard) / GMT -0700 (Daylight)":20050523T040000
 SUMMARY:Recurring every Monday 4am - 5am
-UID:040000008200E00074C5B7101A82E00800000000F0BC424F5761C5010000000000000
- 000100000002C10E79C9140CF41B7E18816DF121033
-ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN="tim@cur
- ple.com":MAILTO:tim@curple.com
+UID:040000008200E00074C5B7101A82E00800000000F0BC424F5761C5010000000000000000100000002C10E79C9140CF41B7E18816DF121033
+ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN="tim@curple.com":MAILTO:tim@curple.com
 ORGANIZER;CN="Tom":MAILTO:tom@example.zimbra.com
 LOCATION:Loc
 DTEND;TZID="GMT -0800 (Standard) / GMT -0700 (Daylight)":20050523T050000
- 
 RRULE:FREQ=WEEKLY;WKST=SU;INTERVAL=1;BYDAY=MO
 DESCRIPTION:This is a test recurring appointment\n
 SEQUENCE:2
@@ -60,21 +58,25 @@ END:VEVENT
 ... more VEVENTS ...
 ...
 END:VCALENDAR
+````
 
-------------------------------------------------------------
-# no longer supported
-RSS  http://{server}/service/rss/index.rss[?query=...]
+# RSS
 
-# new form
-RSS  http://{server}/home/{user}/{folder}.rss[?query=...]
+New form:
 
-------------------------------------------------------------
+    http://{server}/home/{user}/{folder}.rss[?query=...]
+
+No longer supported:
+
+    http://{server}/service/rss/index.rss[?query=...])
+
 Spits out a "application/rss+xml" file, consisting of an RSS feed of email messages in the specified folder. 
 
 For example. Assuming there are two unread messages in the inbox:
 
-curl -L -u user1:test123 http://localhost:7070/zimbra/user/user1/inbox.rss?query=is:unread
+    $ curl -L -u user1:test123 http://localhost:7070/zimbra/user/user1/inbox.rss?query=is:unread
 
+````
 <?xml version="1.0"?>
 <rss version="2.0">
   <channel>
@@ -95,25 +97,26 @@ curl -L -u user1:test123 http://localhost:7070/zimbra/user/user1/inbox.rss?query
     </item>
   </channel>
 </rss>
+````
 
 You can also specify a search query, such as:
 
-curl -u user1:test123 http://localhost:7070/home/{user}/index.rss?query=tag:foobar
+    $ curl -u user1:test123 http://localhost:7070/home/{user}/index.rss?query=tag:foobar
 
 Notes:
 
- (1) ideally you should be able to get feeds of contacts and appts in a useful fashion.
+1. ideally you should be able to get feeds of contacts and appts in a useful fashion.
+2. ideally, we should send back links to the items that when clicked on by an RSS client, open the application to that particular item.
 
- (2) ideally, we should send back links to the items that when clicked on by an RSS client, open the 
-     application to that particular item.
+# Contacts
 
-------------------------------------------------------------
-# soon to be unsupported
-Contacts   http://{server}/service/csv/contacts.csv
+New form:
 
-# new form
-Contacts   http://{server}/home/{user}/contacts
-------------------------------------------------------------
+    http://{server}/home/{user}/contacts
+
+Soon to be unsupported:
+
+    http://{server}/service/csv/contacts.csv
 
 Spits out a "text/plain" file, consisting of all the contacts an account has, in CSV (comma-separated values)
 format. Should be suitable for importing into outlook, excel, Yahoo, gmail, etc.
@@ -123,6 +126,5 @@ the web app. It is available from within the options/contacts tab as "export".
 
 Notes:
 
-(1) probably would be nice to be able to use with basic auth as well
-
-(2) would be nice to be able to search for contacts to export instead of all of them
+1. probably would be nice to be able to use with basic auth as well
+2. would be nice to be able to search for contacts to export instead of all of them

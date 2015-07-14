@@ -23,7 +23,7 @@ When updating multiple attributes, you need to specify all the old values at the
 
  <AuthResponse>
    <authToken>...</authToken>
-   <lifetime>...</lifetime>
+   <lifetime>{lifetime-in-milliseconds}</lifetime>
  </AuthResponse>
 
   {persistAuthTokenCookie} = controls whether the auth token cookie in the response should 
@@ -958,7 +958,7 @@ Access: domain admin sufficient
   <mbox id="{account-id}" [types={types} | ids={ids}]/>
 </ReIndexRequest>
 
-<ReIndexResponse status="started|running|cancelled|idle">
+<ReIndexResponse status="started|running|cancelled|idle" statusCode="-3,-2,-1,0,1,2">
   [<progress numSucceeded="SUCCEEDED" numFailed="FAILED" numRemaining="REMAINING">]
 </ReIndexResponse>
 
@@ -1057,7 +1057,7 @@ the standard test suite).  Otherwise the standard test suite is run.
    [<test>className[#testName[+testName]*]</test>]*
 </RunUnitTestsRequest>
 
-<RunUnitTestsResponse numExecuted="{n}" numFailed="{n}">
+<RunUnitTestsResponse numFailed="{n}" numSkipped="{n}" numExecuted="{n}" execSeconds="{n}">
     { Summary of test execution times and success/failure status }
 </RunUnitTestsResponse>
 
@@ -2891,3 +2891,15 @@ deleteTime - time (ms) for the delete operation
 </DedupeBlobsResponse>
 
 -----------------------------
+
+-----------------------------
+<ResetLdapClientRequest allServers="1|0"/>
+
+allServers:
+      0 (default) = reset ldap client only on the local server
+      1           = reset ldap client all servers (this can take on systems with lots of servers)
+
+
+<ResetLdapClientResponse/>
+-----------------------------
+

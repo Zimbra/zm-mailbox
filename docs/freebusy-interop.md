@@ -1,6 +1,5 @@
-
---------------------------
 Requirement
+-----------
 
 In many cases ZCS is deployed in an environment where there is a mix of
 Zimbra server and 3rd party servers.  In such environment, typically the users
@@ -20,9 +19,8 @@ or Domino server, the same way they would query the Zimbra users.
 Zimbra should also support pushing free/busy schedule of Zimbra users to the 
 3rd party server, if the 3rd party server supports such features.
 
-
---------------------------
 Free/busy Provider Framework
+----------------------------
 
 Zimbra provides a framework where the interop with any 3rd party system
 can be added via an extension.  Through the extension, Zimbra server can
@@ -30,9 +28,8 @@ query the free/busy schedule of users on 3rd party system, and also
 propagate free/busy schedule of a Zimbra user to the 3rd party system.
 The mechanism is described later in the document.
 
-
---------------------------
 Interop with Exchange 2003
+--------------------------
 
 Zimbra server has a default implementation of Exchange free busy provider.
 Zimbra server can pull the free/busy schedule of a user on Exchange, and
@@ -60,36 +57,37 @@ The condition #4 and #5 are required only for Zimbra -> Exchange free/busy
 replication.  With the first three condition met, Exchange -> Zimbra free/busy 
 lookup is still possible.
 
-After creating the contacts, legacyExchangeDN attribute can be verified by 
+After creating the contacts, `legacyExchangeDN` attribute can be verified by 
 running ADSI Edit tool, open the contact object.  Search for the attribute 
-legacyExchangeDN for the contact.  For example the attribute value would be
+`legacyExchangeDN` for the contact.  For example the attribute value would be
 
-legacyExchangeDN : /o=First Organization/ou=First Administrative Group/cn=Recipients/cn=james
+    legacyExchangeDN : /o=First Organization/ou=First Administrative Group/cn=Recipients/cn=james
 
-The substring left and right of /cn=Recipients are important, and need to
+The substring left and right of `/cn=Recipients` are important, and need to
 be consistent across the Zimbra contacts.  The left part 
-"/o=First Organization/ou=First Administrative Group" corresponds to the domain
-attribute zimbraFreebusyExchangeUserOrg.  The value of "cn" corresponds to the
+`/o=First Organization/ou=First Administrative Group` corresponds to the domain
+attribute `zimbraFreebusyExchangeUserOrg`.  The value of "cn" corresponds to the
 Exchange account name specified in zimbraForeignPrincipal.
 
 There are five global config attributes to enable the interop with Exchange server.
 
 globalConfig:
-zimbraFreebusyExchangeAuthUsername
-zimbraFreebusyExchangeAuthPassword
-zimbraFreebusyExchangeAuthScheme
-zimbraFreebusyExchangeURL
-zimbraFreebusyExchangeUserOrg
 
-zimbraFreebusyExchangeAuthUsername and zimbraFreebusyExchangeAuthPassword are
+  - zimbraFreebusyExchangeAuthUsername
+  - zimbraFreebusyExchangeAuthPassword
+  - zimbraFreebusyExchangeAuthScheme
+  - zimbraFreebusyExchangeURL
+  - zimbraFreebusyExchangeUserOrg
+
+`zimbraFreebusyExchangeAuthUsername` and `zimbraFreebusyExchangeAuthPassword` are
 used to authenticate against Exchange server on REST and WebDAV interface.
 zimbraFreebusyExchangeAuthScheme can be set to 'basic' or 'form', depending
 on how Exchange server is configured.  When set to basic, Zimbra will
 attempt HTTP basic authentication.  When set to 'form', it will POST
 HTML form to /exchweb/bin/auth/owaauth.dll to get the auth Cookie set.
-zimbraFreebusyExchangeURL should be set to the URL of the Exchange server.
-zimbraFreebusyExchangeUserOrg is the first part of the administrative group.
-Typically they are set to "/o=First Organization/ou=First Administrative Group".
+`zimbraFreebusyExchangeURL` should be set to the URL of the Exchange server.
+`zimbraFreebusyExchangeUserOrg` is the first part of the administrative group.
+Typically they are set to `/o=First Organization/ou=First Administrative Group`.
 Note that the value Org is from legacyExchangeDN attribute of the user,
 not the DN of the user object.
 
@@ -97,27 +95,26 @@ Use zmprov tool to set the global config variables.  For example, assuming
 the user zimbra exists on the Exchange server on exchange.mycompany.com
 with password 'changeme' :
 
-# zmprov mcf zimbraFreebusyExchangeAuthUsername zimbra
-# zmprov mcf zimbraFreebusyExchangeAuthPassword changeme
-# zmprov mcf zimbraFreebusyExchangeAuthScheme basic
-# zmprov mcf zimbraFreebusyExchangeURL http://exchange.mycompany.com
-# zmprov mcf zimbraFreebusyExchangeUserOrg "/o=First Organization/ou=First Administrative Group"
+    zmprov mcf zimbraFreebusyExchangeAuthUsername zimbra
+    zmprov mcf zimbraFreebusyExchangeAuthPassword changeme
+    zmprov mcf zimbraFreebusyExchangeAuthScheme basic
+    zmprov mcf zimbraFreebusyExchangeURL http://exchange.mycompany.com
+    zmprov mcf zimbraFreebusyExchangeUserOrg "/o=First Organization/ou=First Administrative Group"
 
-Add the Zimbra account to Exchange account mapping to zimbraForeignPrincipal
-attribute.  Note that zimbraForeignPrincipal is a multi value attribute.  Be
+Add the Zimbra account to Exchange account mapping to `zimbraForeignPrincipal`
+attribute.  Note that `zimbraForeignPrincipal` is a multi value attribute.  Be
 careful not to wipe out the existing values when adding a new one.  Use the
 prefix "ad:" in front of the Exchange account username to indicate the usage
 for Active Directory.
 
-# zmprov ma james@mycompany.com zimbraForeignPrincipal ad:james
+    zmprov ma james@mycompany.com zimbraForeignPrincipal ad:james
 
 Each of the config variables above can be overridden in the domain level.
 
-# zmprov md anotherdomain.com zimbraFreebusyExchangeUserOrg "/o=AnotherOrg/ou=First Administrative Group"
+    zmprov md anotherdomain.com zimbraFreebusyExchangeUserOrg "/o=AnotherOrg/ou=First Administrative Group"
 
-
---------------------------
 Complex Exchange environment
+--------------------------
 
 If the Exchange environment does not meet the requirement for above, 
 the default Exchange provider needs to be extended to work in 
@@ -143,7 +140,7 @@ return null.  ServerInfo is defined as
     }
 
 Finally, the bootstrapping of the exchange provider can be done via
-ZimbraExtension.  Following is an example to illustrate how this
+`ZimbraExtension`.  Following is an example to illustrate how this
 can be implemented.
 
     public class FbExtension implements ZimbraExtension {
@@ -173,15 +170,17 @@ can be implemented.
     }
 
 
---------------------------
 Interop with other non-Exchange systems
+---------------------------------------
 
+````
 NOTE:
 
 THIS FEATURE IS NOT OFFICIALLY SUPPORTED.  THIS SECTION IS PRIMARILY FOR FYI.
 FREE/BUSY INTEROP HAS BEEN TESTED AGAINST EXCHANGE 2003 AND 2007 ONLY.
+````
 
-Zimbra can handle other 3rd party system by extending the FreeBusyProvider
+Zimbra can handle other 3rd party system by extending the `FreeBusyProvider`
 framework.  
 
     public abstract class FreeBusyProvider {
@@ -201,17 +200,17 @@ framework.
     }
 
 The API allows batching of lookup requests.  The framework invokes 
-addFreeBusyRequest() for each non-Zimbra users.  The provider implementation
-should throw FreeBusyUserNotFoundException when the user is not found.
-This allows for multiple FreeBusyProviders to co-exist in the system.
-The framework will then call getResults(), and at that point the provider
+`addFreeBusyRequest()` for each non-Zimbra users.  The provider implementation
+should throw `FreeBusyUserNotFoundException` when the user is not found.
+This allows for multiple `FreeBusyProvider`s to co-exist in the system.
+The framework will then call `getResults()`, and at that point the provider
 returns a set of FreeBusy for the batched requests.
 
 If the provider can handle propagation of Zimbra users free/busy,
-it should declare it so by returning true on registerForMailboxChanges().
-Then the framework will call handleMailboxChange() for each providers
+it should declare it so by returning true on `registerForMailboxChanges()`.
+Then the framework will call `handleMailboxChange()` for each providers
 when a change in the mailbox that could result in recalculation of free/busy
-is detected.  cachedFreeBusyStartTime() and cachedFreeBusyEndTime() are
+is detected. `cachedFreeBusyStartTime()` and `cachedFreeBusyEndTime()` are
 millis since epoch to indicate the interval of free/busy that can be cached 
 in the 3rd party system.  For example the basic exchange free/busy provider
 caches free/busy from the beginning of the month, for two months.

@@ -1,0 +1,78 @@
+initial set of field names...
+
+id/modified-date present in the data model but not listed here
+
+general
+-------
+* assistantPhone
+* callbackPhone
+* carPhone
+* company
+* phoneticCompany
+* companyPhone
+* email
+* email2
+* email3
+* fileAs (1 is default)
+  * 1 = Last, First
+  * 2 = First Last
+  * 3 = Company
+  * 4 = Last, First (Company)
+  * 5 = First Last (Company)
+  * 6 = Company (Last, First)
+  * 7 = Company (First Last)
+* firstName
+* phoneticFirstName
+* lastName
+* phoneticLastName
+* fullName
+* phoneticFullName
+* homeCity
+* homeCountry
+* homeFax
+* homePhone
+* homePhone2
+* homePostalCode
+* homeState
+* homeStreet
+* homeURL
+* jobTitle
+* middleName
+* mobilePhone
+* namePrefix
+* nameSuffix
+* notes
+* otherCity
+* otherCountry
+* otherFax
+* otherPhone
+* otherPostalCode
+* otherState
+* otherStreet
+* otherURL
+* pager
+* workCity
+* workCountry
+* workFax
+* workPhone
+* workPhone2
+* workPostalCode
+* workState
+* workStreet
+* workURL
+
+other details (may-or-may-not-implement all or some)
+---
+* anniversary ("yyyy-MM-dd" format or, if year isn't specified "--MM-dd" format)
+* assistantName
+* birthday ("yyyy-MM-dd" format or, if year isn't specified "--MM-dd" format)
+* children
+* customerId
+* department
+* gender
+* initials
+* office
+* managerName
+* nickname
+* profession
+* spouse

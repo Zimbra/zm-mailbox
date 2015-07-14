@@ -437,7 +437,7 @@ global soap/system errors used with zimbra:Error/Code:
  <AuthResponse>
    <authToken>...</authToken>
    [<csrfToken>...</csrfToken>]
-   <lifetime>...</lifetime>
+   <lifetime>{lifetime-in-millseconds}</lifetime>
    <session .../>
    <refer>{mail-host}</refer>
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
@@ -1997,7 +1997,7 @@ message-part result:
 
 wantContent = "full" to get the complete message along with the quoted content
 wantContent = "original" to get the message without quoted content
-wantContet = "both" to get complete message as well as the message without quoted content
+wantContent = "both" to get complete message as well as the message without quoted content
 By default wantContent = "full"
 
 Note: Quoted text identification is a best effort. It is not supported by any RFCs
@@ -2208,7 +2208,7 @@ needExp="1" to return group info (isGroup and exp flags) on <e> elements in the 
 
 wantContent = "full" to get the complete message along with the quoted content
 wantContent = "original" to get the message without quoted content
-wantContet = "both" to get complete message as well as the message without quoted content
+wantContent = "both" to get complete message as well as the message without quoted content
 By default wantContent = "full"
 
 Note: Quoted text identification is a best effort. It is not supported by any RFCs
@@ -3232,9 +3232,9 @@ the server right now, and the client should stop attempting them.
 The client may specifiy a custom timeout-length for their request if
 they know something about the particular underlying network.  The
 server may or may not honor this request (depending on server
-configured max/min values: see LocalConfig variables
-zimbra_noop_default_timeout, zimbra_noop_min_timeout and
-zimbra_noop_max_timeout)
+configured max/min values: see Server attributes
+zimbraMailboxNoopDefaultTimeout, zimbraMailboxNoopMinTimeout and
+zimbraMailboxNoopMaxTimeout)
 
 -----------------------
 
@@ -3761,6 +3761,8 @@ Changes attributes of the given data source.  Only the attributes specified in t
 are modified.  If the username, host or leaveOnServer settings are modified, the server
 wipes out saved state for this data source.  As a result, any previously downloaded
 messages that are still stored on the remote server will be downloaded again.
+
+---------------------------
 
 <DeleteDataSourceRequest>
   *[<dsrc [id="{data-source-id}" | name="{data-source-name}"]/>]
