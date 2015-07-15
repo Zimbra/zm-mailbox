@@ -457,7 +457,7 @@ public class TwoFactorManager {
         } else {
             ZimbraLog.account.debug("revoking other trusted devices");
             for (TrustedDevice td: getTrustedDevices()) {
-                if (td.getTokenId() != token.getId()) {
+                if (!td.getTokenId().equals(token.getId())) {
                     td.revoke();
                 }
             }
