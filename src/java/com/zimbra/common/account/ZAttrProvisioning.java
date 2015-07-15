@@ -3595,8 +3595,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAutoProvScheduledDomains = "zimbraAutoProvScheduledDomains";
 
     /**
-     * Use null return path for envelope MAIL FROM when sending out of office
-     * and new mail notifications. If false, use account address for envelope
+     * If TRUE, use a null return path for envelope MAIL FROM when sending
+     * out of office and new mail notifications. If FALSE, the account
+     * address is used for the return path. Note that setting the value to
+     * TRUE may cause failed delivery of some out of office or new mail
+     * notifications because some agents require a valid sender.
      */
     @ZAttr(id=502)
     public static final String A_zimbraAutoSubmittedNullReturnPath = "zimbraAutoSubmittedNullReturnPath";
