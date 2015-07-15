@@ -4273,19 +4273,25 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Use null return path for envelope MAIL FROM when sending out of office
-     * and new mail notifications. If false, use account address for envelope
+     * If TRUE, use a null return path for envelope MAIL FROM when sending
+     * out of office and new mail notifications. If FALSE, the account
+     * address is used for the return path. Note that setting the value to
+     * TRUE may cause failed delivery of some out of office or new mail
+     * notifications because some agents require a valid sender.
      *
-     * @return zimbraAutoSubmittedNullReturnPath, or true if unset
+     * @return zimbraAutoSubmittedNullReturnPath, or false if unset
      */
     @ZAttr(id=502)
     public boolean isAutoSubmittedNullReturnPath() {
-        return getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, true);
+        return getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, false);
     }
 
     /**
-     * Use null return path for envelope MAIL FROM when sending out of office
-     * and new mail notifications. If false, use account address for envelope
+     * If TRUE, use a null return path for envelope MAIL FROM when sending
+     * out of office and new mail notifications. If FALSE, the account
+     * address is used for the return path. Note that setting the value to
+     * TRUE may cause failed delivery of some out of office or new mail
+     * notifications because some agents require a valid sender.
      *
      * @param zimbraAutoSubmittedNullReturnPath new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4298,8 +4304,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Use null return path for envelope MAIL FROM when sending out of office
-     * and new mail notifications. If false, use account address for envelope
+     * If TRUE, use a null return path for envelope MAIL FROM when sending
+     * out of office and new mail notifications. If FALSE, the account
+     * address is used for the return path. Note that setting the value to
+     * TRUE may cause failed delivery of some out of office or new mail
+     * notifications because some agents require a valid sender.
      *
      * @param zimbraAutoSubmittedNullReturnPath new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4313,8 +4322,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Use null return path for envelope MAIL FROM when sending out of office
-     * and new mail notifications. If false, use account address for envelope
+     * If TRUE, use a null return path for envelope MAIL FROM when sending
+     * out of office and new mail notifications. If FALSE, the account
+     * address is used for the return path. Note that setting the value to
+     * TRUE may cause failed delivery of some out of office or new mail
+     * notifications because some agents require a valid sender.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -4326,8 +4338,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Use null return path for envelope MAIL FROM when sending out of office
-     * and new mail notifications. If false, use account address for envelope
+     * If TRUE, use a null return path for envelope MAIL FROM when sending
+     * out of office and new mail notifications. If FALSE, the account
+     * address is used for the return path. Note that setting the value to
+     * TRUE may cause failed delivery of some out of office or new mail
+     * notifications because some agents require a valid sender.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

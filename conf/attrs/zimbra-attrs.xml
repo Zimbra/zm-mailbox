@@ -2623,8 +2623,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="502" name="zimbraAutoSubmittedNullReturnPath" type="boolean" cardinality="single" optionalIn="globalConfig">
-  <globalConfigValue>TRUE</globalConfigValue>
-  <desc>Use null return path for envelope MAIL FROM when sending out of office and new mail notifications.  If false, use account address for envelope</desc>
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>If TRUE, use a null return path for envelope MAIL FROM when sending out of office and new mail notifications. If FALSE, the account address is used for the return path.
+        Note that setting the value to TRUE may cause failed delivery of some out of office or new mail notifications because some agents require a valid sender.</desc>
 </attr>
 
 <attr id="503" name="zimbraMimePriority" type="integer" min="0" cardinality="single" optionalIn="mimeEntry">
