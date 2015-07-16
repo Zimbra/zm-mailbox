@@ -50,7 +50,7 @@ public class ZAuthResult {
         data = res;
         expires = data.getLifetime() + System.currentTimeMillis();
         if (data.getTrustedToken() != null) {
-            trustExpires = data.getTrustLifetime() + System.currentTimeMillis();
+            trustExpires = data.getTrustLifetime() * 1000 + System.currentTimeMillis();
         }
         twoFactorAuthRequired = ZmBoolean.toBool(data.getTwoFactorAuthRequired(), false);
     }
