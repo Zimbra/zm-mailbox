@@ -457,7 +457,7 @@ public class TwoFactorManager {
         } else {
             ZimbraLog.account.debug("revoking other trusted devices");
             for (TrustedDevice td: getTrustedDevices()) {
-                if (td.getTokenId() != token.getId()) {
+                if (!td.getTokenId().equals(token.getId())) {
                     td.revoke();
                 }
             }
@@ -467,7 +467,7 @@ public class TwoFactorManager {
     public void verifyTrustedDevice(TrustedDeviceToken token, Map<String, Object> attrs) throws ServiceException {
         ZimbraLog.account.debug("verifying trusted device");
         TrustedDevice td = TrustedDevice.byTrustedToken(account, token);
-        if (!td.verify(attrs)) {
+        if (td == null || !td.verify(attrs)) {
             throw AuthFailedServiceException.TWO_FACTOR_AUTH_FAILED("trusted device cannot be verified");
         }
     }
