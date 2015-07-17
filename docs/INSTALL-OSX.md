@@ -101,7 +101,16 @@ $ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.memcached.plist
 
 ## Install JDK
 
-Install the JDK 1.7 from Oracle if not already present on your system.
+Install both JDK 1.7 and JDK 1.8 from Oracle if not already present on your system. JDK 1.7 is used for compilation while JDK 1.8 is used at runtime.
+
+Set the JDK 1.7 installation as your default using the JAVA_HOME environment variable.
+
+$ export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home
+
+Create a symlink from /opt/zimbra/java to the JDK 1.8 installation.
+
+$ sudo ln -s /Library/Java/JavaVirtualMachines/jdk1.8.0_51.jdk/Contents/Home/jre /opt/zimbra/java
+
 
 ## Configure OpenLDAP
 
