@@ -554,6 +554,7 @@ public class ZMailbox implements ToZJSONObject {
                 mAuthResult = authByAuthToken(options);
                 initCsrfToken(mAuthResult.getCsrfToken());
                 initAuthToken(mAuthResult.getAuthToken());
+                initTrustedToken(mAuthResult.getTrustedToken());
             } else {
                 initAuthToken(options.getAuthToken());
             }
@@ -669,6 +670,7 @@ public class ZMailbox implements ToZJSONObject {
         auth.setVirtualHost(options.getVirtualHost());
         auth.setRequestedSkin(options.getRequestedSkin());
         auth.setCsrfSupported(options.getCsrfSupported());
+        auth.setDeviceTrusted(options.getTrustedDevice());
         if (options.getTrustedDevice()) {
             auth.setDeviceTrusted(true);
         }
@@ -703,6 +705,7 @@ public class ZMailbox implements ToZJSONObject {
         req.setTwoFactorCode(options.getTwoFactorCode());
         req.setRequestedSkin(options.getRequestedSkin());
         req.setCsrfSupported(options.getCsrfSupported());
+        req.setDeviceTrusted(options.getTrustedDevice());
         addAttrsAndPrefs(req, options);
 
         AuthResponse res = invokeJaxb(req);
