@@ -23882,6 +23882,118 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Specifies whether MIME body parts are supported in search responses or
+     * not. Some devices, like Samsung S5 with Lollipop OS, specify a body
+     * preference for either MIME or HTML in search requests. However they do
+     * not handle the MIME sent in responses correctly, and are unable to
+     * display messages in search results.(Bugs - 99686, 100436) This is
+     * actually a device issue, but it breaks visibility of email in search
+     * results on the device. If devices are used which do correctly support
+     * MIME in search results, zimbraMobileSearchMimeSupportEnabled can be
+     * set to TRUE for users of those devices.
+     *
+     * @return zimbraMobileSearchMimeSupportEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2055)
+    public boolean isMobileSearchMimeSupportEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMobileSearchMimeSupportEnabled, false);
+    }
+
+    /**
+     * Specifies whether MIME body parts are supported in search responses or
+     * not. Some devices, like Samsung S5 with Lollipop OS, specify a body
+     * preference for either MIME or HTML in search requests. However they do
+     * not handle the MIME sent in responses correctly, and are unable to
+     * display messages in search results.(Bugs - 99686, 100436) This is
+     * actually a device issue, but it breaks visibility of email in search
+     * results on the device. If devices are used which do correctly support
+     * MIME in search results, zimbraMobileSearchMimeSupportEnabled can be
+     * set to TRUE for users of those devices.
+     *
+     * @param zimbraMobileSearchMimeSupportEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2055)
+    public void setMobileSearchMimeSupportEnabled(boolean zimbraMobileSearchMimeSupportEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSearchMimeSupportEnabled, zimbraMobileSearchMimeSupportEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies whether MIME body parts are supported in search responses or
+     * not. Some devices, like Samsung S5 with Lollipop OS, specify a body
+     * preference for either MIME or HTML in search requests. However they do
+     * not handle the MIME sent in responses correctly, and are unable to
+     * display messages in search results.(Bugs - 99686, 100436) This is
+     * actually a device issue, but it breaks visibility of email in search
+     * results on the device. If devices are used which do correctly support
+     * MIME in search results, zimbraMobileSearchMimeSupportEnabled can be
+     * set to TRUE for users of those devices.
+     *
+     * @param zimbraMobileSearchMimeSupportEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2055)
+    public Map<String,Object> setMobileSearchMimeSupportEnabled(boolean zimbraMobileSearchMimeSupportEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSearchMimeSupportEnabled, zimbraMobileSearchMimeSupportEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Specifies whether MIME body parts are supported in search responses or
+     * not. Some devices, like Samsung S5 with Lollipop OS, specify a body
+     * preference for either MIME or HTML in search requests. However they do
+     * not handle the MIME sent in responses correctly, and are unable to
+     * display messages in search results.(Bugs - 99686, 100436) This is
+     * actually a device issue, but it breaks visibility of email in search
+     * results on the device. If devices are used which do correctly support
+     * MIME in search results, zimbraMobileSearchMimeSupportEnabled can be
+     * set to TRUE for users of those devices.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2055)
+    public void unsetMobileSearchMimeSupportEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSearchMimeSupportEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies whether MIME body parts are supported in search responses or
+     * not. Some devices, like Samsung S5 with Lollipop OS, specify a body
+     * preference for either MIME or HTML in search requests. However they do
+     * not handle the MIME sent in responses correctly, and are unable to
+     * display messages in search results.(Bugs - 99686, 100436) This is
+     * actually a device issue, but it breaks visibility of email in search
+     * results on the device. If devices are used which do correctly support
+     * MIME in search results, zimbraMobileSearchMimeSupportEnabled can be
+     * set to TRUE for users of those devices.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2055)
+    public Map<String,Object> unsetMobileSearchMimeSupportEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSearchMimeSupportEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether to permit syncing shared contact folders
      *
      * @return zimbraMobileShareContactEnabled, or false if unset
