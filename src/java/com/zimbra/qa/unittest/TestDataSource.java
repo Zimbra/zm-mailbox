@@ -155,14 +155,16 @@ public class TestDataSource extends TestCase {
         attrs.clear();
         attrs.put(Provisioning.A_zimbraDataSourcePassword, "bogus");
         prov.modifyDataSource(account, ds.getId(), attrs);
+        Thread.sleep(500);
         zds = TestUtil.getDataSource(mbox, DS_NAME);
-        long startTimestamp = System.currentTimeMillis() - 1000; // timestamp is returned in seconds, not millis
+        long startTimestamp = System.currentTimeMillis() / 1000; // timestamp is returned in seconds, not millis
         TestUtil.importDataSource(zds, mbox, null, false);
         confirmErrorStatus(mbox, startTimestamp);
 
         // Fix password, make sure that error status is reset (bug 39050).
         attrs.put(Provisioning.A_zimbraDataSourcePassword, TestUtil.DEFAULT_PASSWORD);
         prov.modifyDataSource(account, ds.getId(), attrs);
+        Thread.sleep(500);
         confirmErrorStatus(mbox, null);
 
         // Do another sync, make sure error password is not set.
