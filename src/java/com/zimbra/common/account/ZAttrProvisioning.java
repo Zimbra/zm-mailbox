@@ -9639,6 +9639,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobilePolicyUnapprovedInROMApplication = "zimbraMobilePolicyUnapprovedInROMApplication";
 
     /**
+     * Specifies whether MIME body parts are supported in search responses or
+     * not. Some devices, like Samsung S5 with Lollipop OS, specify a body
+     * preference for either MIME or HTML in search requests. However they do
+     * not handle the MIME sent in responses correctly, and are unable to
+     * display messages in search results.(Bugs - 99686, 100436) This is
+     * actually a device issue, but it breaks visibility of email in search
+     * results on the device. If devices are used which do correctly support
+     * MIME in search results, zimbraMobileSearchMimeSupportEnabled can be
+     * set to TRUE for users of those devices.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2055)
+    public static final String A_zimbraMobileSearchMimeSupportEnabled = "zimbraMobileSearchMimeSupportEnabled";
+
+    /**
      * Whether to permit syncing shared contact folders
      *
      * @since ZCS 8.5.0
