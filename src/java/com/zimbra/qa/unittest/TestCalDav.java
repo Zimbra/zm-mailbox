@@ -87,12 +87,15 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.account.message.ModifyPrefsRequest;
@@ -114,6 +117,8 @@ public class TestCalDav extends TestCase {
     private static String DAV1 = "dav1";
     private static String DAV2 = "dav2";
     private static String DAV3 = "dav3";
+    private static String DAV4 = "dav4";
+    private static String DL1 = "davdistlist1";
 
     public static class MkColMethod extends EntityEnclosingMethod {
         @Override
@@ -217,11 +222,11 @@ public class TestCalDav extends TestCase {
         return ParsedDateTime.fromUTCTime(date.getTimeInMillis(), icalTimeZone);
     }
 
-    public static ZProperty attendee(Account acct, ICalTok role, ICalTok cutype, ICalTok partstat) {
-        ZProperty att = new ZProperty(ICalTok.ATTENDEE, "mailto:" + acct.getName());
-        String displayName = acct.getDisplayName();
+    public static ZProperty attendee(MailTarget mailTarget, ICalTok role, ICalTok cutype, ICalTok partstat) {
+        ZProperty att = new ZProperty(ICalTok.ATTENDEE, "mailto:" + mailTarget.getName());
+        String displayName = mailTarget.getAttr(Provisioning.A_displayName);
         if (Strings.isNullOrEmpty(displayName)) {
-            displayName = acct.getName().substring(0, acct.getName().indexOf("@"));
+            displayName = mailTarget.getName().substring(0, mailTarget.getName().indexOf("@"));
         }
         att.addParameter(new ZParameter(ICalTok.CN, displayName));
         att.addParameter(new ZParameter(ICalTok.ROLE,role.toString()));
@@ -733,8 +738,7 @@ public class TestCalDav extends TestCase {
         addBasicAuthHeaderForUser(putMethod, dav1);
         putMethod.addRequestHeader("Content-Type", "text/calendar");
 
-        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1).getBytes(),
-                MimeConstants.CT_TEXT_CALENDAR));
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1), MimeConstants.CT_TEXT_CALENDAR));
         if (DebugConfig.enableDAVclientCanChooseResourceBaseName) {
             HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
         } else {
@@ -743,9 +747,7 @@ public class TestCalDav extends TestCase {
             return;
         }
 
-        GetMethod getMethod = new GetMethod(url);
-        addBasicAuthHeaderForUser(getMethod, dav1);
-        HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
+        doGetMethod(url, dav1, HttpStatus.SC_OK);
 
         PropFindMethod propFindMethod = new PropFindMethod(getFolderUrl(dav1, "Calendar"));
         addBasicAuthHeaderForUser(propFindMethod, dav1);
@@ -778,9 +780,96 @@ public class TestCalDav extends TestCase {
         }
         assertTrue("propfind response contained entry for calendar", hasCalendarHref);
         assertTrue("propfind response contained entry for calendar entry ", hasCalItemHref);
+        doDeleteMethod(url, dav1, HttpStatus.SC_NO_CONTENT);
+    }
+
+    public HttpMethodExecutor doIcalPut(String url, Account authAcct, byte[] vcalendar, int expected)
+    throws IOException {
+        HttpClient client = new HttpClient();
+        PutMethod putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, authAcct);
+        putMethod.addRequestHeader("Content-Type", "text/calendar");
+
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(vcalendar, MimeConstants.CT_TEXT_CALENDAR));
+        return HttpMethodExecutor.execute(client, putMethod, expected);
+    }
+
+    public HttpMethodExecutor doGetMethod(String url, Account authAcct, int expected) throws IOException {
+        HttpClient client = new HttpClient();
+        GetMethod getMethod = new GetMethod(url);
+        addBasicAuthHeaderForUser(getMethod, authAcct);
+        return HttpMethodExecutor.execute(client, getMethod, expected);
+    }
+
+    public HttpMethodExecutor doDeleteMethod(String url, Account authAcct, int expected) throws IOException {
+        HttpClient client = new HttpClient();
         DeleteMethod deleteMethod = new DeleteMethod(url);
-        addBasicAuthHeaderForUser(deleteMethod, dav1);
-        HttpMethodExecutor.execute(client, deleteMethod, HttpStatus.SC_NO_CONTENT);
+        addBasicAuthHeaderForUser(deleteMethod, authAcct);
+        return HttpMethodExecutor.execute(client, deleteMethod, expected);
+    }
+
+    /** Mostly checking that if attendees cease to exist (even via DLs) then modification and cancel iTip
+     * messages still work to the remaining attendees.
+     */
+    public void testCreateModifyDeleteAttendeeModifyAndCancel() throws ServiceException, IOException {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        Account dav2 = TestUtil.createAccount(DAV2);
+        Account dav3 = TestUtil.createAccount(DAV3);
+        Account dav4 = TestUtil.createAccount(DAV4);
+        DistributionList dl = TestUtil.createDistributionList(DL1);
+        Provisioning prov = Provisioning.getInstance();
+        String[] members = { dav4.getName() };
+        prov.addMembers(dl, members);
+        List<MailTarget> attendees = Lists.newArrayList();
+        attendees.add(dav1);
+        attendees.add(dav2);
+        attendees.add(dav3);
+        attendees.add(dl);
+        ZVCalendar vCal = simpleMeeting(dav1, attendees, "1", 8);
+        ZProperty uidProp = vCal.getComponent(ICalTok.VEVENT).getProperty(ICalTok.UID);
+        String uid = uidProp.getValue();
+        String davBaseName = uid + ".ics";
+        String url = String.format("%s%s", getFolderUrl(dav1, "Calendar"), davBaseName);
+        doIcalPut(url, dav1, zvcalendarToBytes(vCal), HttpStatus.SC_CREATED);
+        String inboxhref = TestCalDav.waitForNewSchedulingRequestByUID(dav2, uid);
+        assertTrue("Found meeting request for newly created item", inboxhref.contains(uid));
+        doDeleteMethod(getLocalServerRoot().append(inboxhref).toString(), dav2, HttpStatus.SC_NO_CONTENT);
+
+        // attendee via DL
+        inboxhref = TestCalDav.waitForNewSchedulingRequestByUID(dav4, uid);
+        assertTrue("Found meeting request for newly created item", inboxhref.contains(uid));
+        doDeleteMethod(getLocalServerRoot().append(inboxhref).toString(), dav4, HttpStatus.SC_NO_CONTENT);
+
+        vCal = simpleMeeting(dav1, attendees, uid, "2", 9);
+        doIcalPut(url, dav1, zvcalendarToBytes(vCal), HttpStatus.SC_CREATED);
+        inboxhref = TestCalDav.waitForNewSchedulingRequestByUID(dav2, uid);
+        assertTrue("Found meeting request for newly created item", inboxhref.contains(uid));
+        doDeleteMethod(getLocalServerRoot().append(inboxhref).toString(), dav2, HttpStatus.SC_NO_CONTENT);
+
+        // attendee via DL
+        inboxhref = TestCalDav.waitForNewSchedulingRequestByUID(dav4, uid);
+        assertTrue("Found meeting request for newly created item", inboxhref.contains(uid));
+        doDeleteMethod(getLocalServerRoot().append(inboxhref).toString(), dav4, HttpStatus.SC_NO_CONTENT);
+
+        // Test that iTip handling still happens when some of the attendees no longer exist.
+        TestUtil.deleteAccount(DAV3);
+        TestUtil.deleteAccount(DAV4); // attendee via DL
+        vCal = simpleMeeting(dav1, attendees, uid, "3", 10);
+        doIcalPut(url, dav1, zvcalendarToBytes(vCal), HttpStatus.SC_CREATED);
+        inboxhref = TestCalDav.waitForNewSchedulingRequestByUID(dav2, uid);
+        assertTrue("Found meeting request for newly created item", inboxhref.contains(uid));
+        doDeleteMethod(getLocalServerRoot().append(inboxhref).toString(), dav2, HttpStatus.SC_NO_CONTENT);
+        String dav2Url = String.format("%s%s", getFolderUrl(dav2, "Calendar"), davBaseName);
+        doGetMethod(dav2Url, dav2, HttpStatus.SC_OK);
+
+        // Cancel meeting by deleting it
+        doDeleteMethod(url, dav1, HttpStatus.SC_NO_CONTENT);
+
+        inboxhref = TestCalDav.waitForNewSchedulingRequestByUID(dav2, uid);
+        assertTrue("Found meeting request for newly created item", inboxhref.contains(uid));
+        doDeleteMethod(getLocalServerRoot().append(inboxhref).toString(), dav2, HttpStatus.SC_NO_CONTENT);
+        // The associated calendar item should have been deleted as a result of the Cancel
+        doGetMethod(dav2Url, dav2, HttpStatus.SC_NOT_FOUND);
     }
 
     private static String androidSeriesMeetingTemplate =
@@ -913,7 +1002,19 @@ public class TestCalDav extends TestCase {
                                " </x0:prop>" +
                                "</x0:propfind>";
 
-    public String simpleEvent(Account organizer) throws IOException {
+    public String zvcalendarToString(ZVCalendar vcal) throws IOException {
+        StringWriter calWriter = new StringWriter();
+        vcal.toICalendar(calWriter);
+        String icalString = calWriter.toString();
+        Closeables.closeQuietly(calWriter);
+        return icalString;
+    }
+
+    public byte[] zvcalendarToBytes(ZVCalendar vcal) throws IOException {
+        return zvcalendarToString(vcal).getBytes();
+    }
+
+    public byte[] simpleEvent(Account organizer) throws IOException {
         ZVCalendar vcal = new ZVCalendar();
         vcal.addVersionAndProdId();
 
@@ -932,11 +1033,41 @@ public class TestCalDav extends TestCase {
         vevent.addProperty(new ZProperty(ICalTok.SEQUENCE, "1"));
         // vevent.addProperty(organizer(organizer));
         vcal.addComponent(vevent);
-        StringWriter calWriter = new StringWriter();
-        vcal.toICalendar(calWriter);
-        String icalString = calWriter.toString();
-        Closeables.closeQuietly(calWriter);
-        return icalString;
+        return zvcalendarToBytes(vcal);
+    }
+
+    public ZVCalendar simpleMeeting(Account organizer, List<MailTarget> attendees, String seq, int startHour)
+    throws IOException {
+        return simpleMeeting(organizer, attendees, LdapUtil.generateUUID(), seq, startHour);
+    }
+
+    public ZVCalendar simpleMeeting(Account organizer, List<MailTarget> attendees, String uid, String seq, int startHour)
+    throws IOException {
+        ZVCalendar vcal = new ZVCalendar();
+        vcal.addVersionAndProdId();
+        vcal.addProperty(new ZProperty(ICalTok.METHOD, ICalTok.PUBLISH.toString()));
+        ICalTimeZone tz = ICalTimeZone.lookupByTZID("Africa/Harare");
+        vcal.addComponent(tz.newToVTimeZone());
+        ZComponent vevent = new ZComponent(ICalTok.VEVENT);
+        ParsedDateTime dtstart = parsedDateTime(2020, java.util.Calendar.APRIL, 1, startHour, 0, tz);
+        vevent.addProperty(dtstart.toProperty(ICalTok.DTSTART, false));
+        ParsedDateTime dtend = parsedDateTime(2020, java.util.Calendar.APRIL, 1, startHour + 4, 0, tz);
+        vevent.addProperty(dtend.toProperty(ICalTok.DTEND, false));
+        vevent.addProperty(new ZProperty(ICalTok.DTSTAMP, "20150108T224700Z"));
+        vevent.addProperty(new ZProperty(ICalTok.SUMMARY, "Simple Meeting"));
+        vevent.addProperty(new ZProperty(ICalTok.UID, uid));
+        vevent.addProperty(new ZProperty(ICalTok.STATUS, ICalTok.CONFIRMED.toString()));
+        vevent.addProperty(new ZProperty(ICalTok.SEQUENCE, seq));
+        vevent.addProperty(organizer(organizer));
+        for (MailTarget att: attendees) {
+            if (att.getId().equals(organizer.getId())) {
+                vevent.addProperty(attendee(att, ICalTok.REQ_PARTICIPANT, ICalTok.INDIVIDUAL, ICalTok.ACCEPTED));
+            } else {
+                vevent.addProperty(attendee(att, ICalTok.REQ_PARTICIPANT, ICalTok.INDIVIDUAL, ICalTok.NEEDS_ACTION));
+            }
+        }
+        vcal.addComponent(vevent);
+        return vcal;
     }
 
     public void testSimpleMkcol() throws Exception {
@@ -1701,7 +1832,9 @@ public class TestCalDav extends TestCase {
         TestUtil.deleteAccount(DAV1);
         TestUtil.deleteAccount(DAV2);
         TestUtil.deleteAccount(DAV3);
+        TestUtil.deleteAccount(DAV4);
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteDistributionList(DL1);
     }
 
     /**
