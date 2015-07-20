@@ -120,6 +120,10 @@ public class DavProtocol {
     public static final String HEADER_SCHEDULE_REPLY = "Schedule-Reply";  /* RFC 6638 section 8.1 */
 
     public static final String NO_CACHE = "no-cache";
+    public static final String HEADER_AUTHORIZATION = "Authorization";
+    public static final String HEADER_HOST = "Host";
+    public static final String HEADER_DATE = "Date";
+    public static final String HEADER_LOCATION = "Location";
 
     // dav extensions
     public static final String HEADER_DAV = "DAV";
