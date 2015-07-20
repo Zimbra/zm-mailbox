@@ -191,7 +191,6 @@ public class NewMessagePushNotification implements PushNotification {
         String apsSender = (senderDisplayName == null || senderDisplayName.isEmpty()) ? sender : senderDisplayName;
         try {
             aps.put(APNS_SOUND, "default");
-            aps.put(APNS_BADGE, unreadCount);
             aps.put(CONTENT_AVAILABLE, 1);
             aps.put(APNS_ALERT, apsSender + "\n" + subject);
 
