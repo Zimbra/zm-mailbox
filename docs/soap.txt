@@ -631,11 +631,12 @@ Only the app name, password creation time, and last used time is returned.
 
 
  <GetTrustedDevicesRequest xmlns=“urn:zimbraAccount”>
+  [<trustedToken>...</trustedToken>]
  </GetTrustedDevicesRequest>
 
  <GetTrustedDevicesResponse thisDeviceTrusted=[0|1] nOtherDevices={# other trusted devices}/>
 
-Returns a summary of trusted devices for this account: whether the current device is trusted (as defined by the provided auth token), and the number of other trusted devices.
+Returns a summary of trusted devices for this account: whether the current device is trusted (as defined by the provided trusted token), and the number of other trusted devices.
 
 
 ---------
