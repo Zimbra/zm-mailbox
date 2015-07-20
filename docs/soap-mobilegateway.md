@@ -96,7 +96,9 @@ Android clients using Google Cloud messaging should specify "gcm" as pushProvide
 
 <RegisterMobileGatewayAppRequest xmlns="urn:zimbraAccount">
   <zmgDevice appId="{appId}" registrationId="{registrationId}" pushProvider="gcm"
-  [osName="{ios | android}"] [osVersion="{osVersion number}"] [maxPayloadSize={maxPayloadSize in bytes}]/>
+  [osName="{ios | android}"] 
+  [osVersion="{osVersion number}"]
+  [maxPayloadSize={maxPayloadSize in bytes}]/>
 </RegisterMobileGatewayAppRequest>
 
 Note:
@@ -123,7 +125,9 @@ RegisterMobileGatewayAppRequest can be used to register an iOS device token.
 
 <RegisterMobileGatewayAppRequest xmlns="urn:zimbraAccount">
   <zmgDevice appId="{appId}" registrationId={device-token} pushProvider="apns"
-  [osName="{ios | android}"] [osVersion="{osVersion number}"] [maxPayloadSize={maxPayloadSize in bytes}]/>
+  [osName="{ios | android}"]
+  [osVersion="{osVersion number}"]
+  [maxPayloadSize={maxPayloadSize in bytes}]/>
 </RegisterMobileGatewayAppRequest>
 
 Following attributes have been introduced for configuring the server for sending Push Notifications to
@@ -177,13 +181,13 @@ GCM -
 
 APNS -
 
-{"ac":"CreateMessage","aps":{"badge":26,"alert":"From: <sender name>\n<subject>","sound":"default"},
+{"ac":"CreateMessage","aps":{"alert":"From: <sender name>\n<subject>","sound":"default"},
 "ty":"MESSAGE","id":291,"sdn":"<sender name>","fr":"asdfdsgdg","sa":"<sender address>",
 "cid":-291,"ra":"<recipient address>"}
 
 In case of iOS versions below 8.0, payload is - 
 
-{"aps":{"badge":26,"alert":"From: <sender name>\n<subject>","sound":"default"},
+{"aps":{"alert":"From: <sender name>\n<subject>","sound":"default"},
 "id":291,"cid":-291}
 
 Following links are useful in case the mobile devices are not able to recieve push notifications
