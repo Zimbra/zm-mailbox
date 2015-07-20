@@ -594,4 +594,57 @@ public final class DateUtil {
         }
         return now.getTime().getTime()/Constants.MILLIS_PER_SECOND;
     }
+
+    /**
+     * from LDAP generalized time string (see bug #90820)
+     * Format: yyyyMMddHHmmss + optional millis, micros and time zone
+     * 
+     * Examples: 
+     * 20150527191216GMT
+     * 20150527191216.000040Z
+     * 20150610215759.659Z
+     */
+    public static Date parseGeneralizedTime(String time) {
+        //first 14 are mandatory. the rest are optional.
+        if (time.length() < 14) {
+            return null;
+        }
+        TimeZone tz;
+        boolean trailingZ = false;
+        if (time.endsWith("Z")) {
+            trailingZ = true;
+            tz = TimeZone.getTimeZone("GMT");
+        } else {
+            tz = TimeZone.getDefault();
+        }
+        int year = Integer.parseInt(time.substring(0, 4));
+        int month = Integer.parseInt(time.substring(4, 6)) - 1;  // months are 0 base
+        int date = Integer.parseInt(time.substring(6, 8));
+        int hour = Integer.parseInt(time.substring(8, 10));
+        int min = Integer.parseInt(time.substring(10, 12));
+        int sec = Integer.parseInt(time.substring(12, 14));
+        Calendar calendar = new GregorianCalendar(tz);
+        calendar.clear();
+        calendar.set(year, month, date, hour, min, sec);
+        if (time.length() >= 16 + trailLen(trailingZ) && time.charAt(14) == '.') {
+            int fractionLen = time.length() - 15 - trailLen(trailingZ);
+            if (fractionLen > 3) {
+                //java Date object is only millisecond precision; drop the micros if present
+                fractionLen = 3;
+            }
+            assert(fractionLen > 0);
+            int fractionRaw = Integer.parseInt(time.substring(15, 15 + fractionLen));
+            int factor = 1;
+            for (int i = fractionLen; i < 3; i++) {
+                factor *= 10;
+            }
+            int millis = fractionRaw * factor;
+            calendar.set(Calendar.MILLISECOND, millis);
+        }
+        return calendar.getTime();
+    }
+
+    public static int trailLen(boolean trailingChar) {
+        return trailingChar ? 1 : 0;
+    }
 }
