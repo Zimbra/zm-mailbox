@@ -147,6 +147,10 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.soap.admin.message.GetAccountRequest;
+import com.zimbra.soap.admin.message.GetAccountResponse;
+import com.zimbra.soap.admin.type.Attr;
+import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
@@ -818,7 +822,7 @@ extends Assert {
         }
     }
 
-    /**
+    /*
      * Deletes the account for the given username.
      */
     public static void deleteAccount(String username)
@@ -830,9 +834,28 @@ extends Assert {
         if (!(prov instanceof SoapProvisioning)) {
             prov = newSoapProvisioning();
         }
-        Account account = prov.get(AccountBy.name, getAddress(username));
-        if (account != null) {
-            prov.deleteAccount(account.getId());
+        SoapProvisioning soapProv = (SoapProvisioning) prov;
+        GetAccountRequest gaReq = new GetAccountRequest(AccountSelector.fromName(username), false,
+                Lists.newArrayList(Provisioning.A_zimbraId));
+        try {
+            GetAccountResponse resp = soapProv.invokeJaxb(gaReq);
+            if (resp != null) {
+                String id = null;
+                for (Attr attr : resp.getAccount().getAttrList()) {
+                    if (Provisioning.A_zimbraId.equals(attr.getKey())) {
+                        id = attr.getValue();
+                        break;
+                    }
+                }
+                if (null == id) {
+                    ZimbraLog.test.error("GetAccountResponse for '%s' did not contain the zimbraId", username);
+                }
+                prov.deleteAccount(id);
+            }
+        } catch (SoapFaultException sfe) {
+            if (!sfe.getMessage().contains("no such account")) {
+                ZimbraLog.test.error("GetAccountResponse for '%s' hit unexpected problem", username, sfe);
+            }
         }
     }
 
