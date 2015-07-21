@@ -2035,6 +2035,21 @@ public class TestCalDav  {
         doc = groupMemberSetExpandProperty(sharer, sharee1, true);
         // Check that proxy read has sharee2 in it
         doc = groupMemberSetExpandProperty(sharer, sharee2, false);
+        String davBaseName = "notAllowed@There";
+        String url = String.format("%s%s",
+                getFolderUrl(sharee1, "Shared Calendar").replaceAll(" ", "%20").replaceAll("@", "%40"), davBaseName);
+        HttpMethodExecutor exe = doIcalPut(url, sharee1, simpleEvent(sharer), HttpStatus.SC_MOVED_TEMPORARILY);
+        String location = null;
+        for (Header hdr : exe.respHeaders) {
+            if ("Location".equals(hdr.getName())) {
+                location = hdr.getValue();
+            }
+        }
+        assertNotNull("Location Header not returned when creating", location);
+        url = String.format("%s%s",
+                getFolderUrl(sharee1, "Shared Calendar").replaceAll(" ", "%20").replaceAll("@", "%40"),
+                location.substring(location.lastIndexOf('/') + 1));
+        doIcalPut(url, sharee1, simpleEvent(sharer), HttpStatus.SC_CREATED);
     }
 
     public static Document groupMemberSetExpandProperty(Account acct, Account member, boolean proxyWrite)

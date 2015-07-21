@@ -41,6 +41,7 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.net.HttpHeaders;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -630,22 +631,32 @@ public class DavServlet extends ZimbraServlet {
         }
     }
 
-    private static String[] PROXY_REQUEST_HEADERS = {
+    private static final Set<String> PROXY_REQUEST_HEADERS = ImmutableSet.of(
         DavProtocol.HEADER_DAV,
         DavProtocol.HEADER_DEPTH,
         DavProtocol.HEADER_CONTENT_TYPE,
         DavProtocol.HEADER_ETAG,
         DavProtocol.HEADER_IF_MATCH,
         DavProtocol.HEADER_OVERWRITE,
-        DavProtocol.HEADER_DESTINATION
-    };
+        DavProtocol.HEADER_DESTINATION);
 
-    private static String[] PROXY_RESPONSE_HEADERS = {
-        DavProtocol.HEADER_DAV,
-        DavProtocol.HEADER_ALLOW,
-        DavProtocol.HEADER_CONTENT_TYPE,
-        DavProtocol.HEADER_ETAG
-    };
+    private static final Set<String> IGNORABLE_PROXY_REQUEST_HEADERS = ImmutableSet.of(
+        DavProtocol.HEADER_AUTHORIZATION,
+        DavProtocol.HEADER_HOST,
+        DavProtocol.HEADER_USER_AGENT,
+        DavProtocol.HEADER_CONTENT_LENGTH);
+
+    private static final Set<String> PROXY_RESPONSE_HEADERS = ImmutableSet.of(
+                    DavProtocol.HEADER_DAV,
+                    DavProtocol.HEADER_ALLOW,
+                    DavProtocol.HEADER_CONTENT_TYPE,
+                    DavProtocol.HEADER_ETAG,
+                    DavProtocol.HEADER_LOCATION);
+
+    private static final Set<String> IGNORABLE_PROXY_RESPONSE_HEADERS = ImmutableSet.of(
+        DavProtocol.HEADER_DATE,
+        DavProtocol.HEADER_CONTENT_LENGTH);
+
 
     private boolean isProxyRequest(DavContext ctxt, DavMethod m) throws IOException, DavException, ServiceException {
         Provisioning prov = Provisioning.getInstance();
@@ -743,7 +754,18 @@ public class DavServlet extends ZimbraServlet {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         client.setState(state);
         HttpMethod method = m.toHttpMethod(ctxt, url);
-        method.setRequestHeader(new Header("User-Agent", "Zimbra-DAV/" + BuildInfo.VERSION));
+        method.setRequestHeader(new Header(DavProtocol.HEADER_USER_AGENT, "Zimbra-DAV/" + BuildInfo.VERSION));
+        if (ZimbraLog.dav.isDebugEnabled()) {
+            Enumeration<String> headers = ctxt.getRequest().getHeaderNames();
+            while (headers.hasMoreElements()) {
+                String hdr = headers.nextElement();
+                if (!PROXY_REQUEST_HEADERS.contains(hdr) && !IGNORABLE_PROXY_REQUEST_HEADERS.contains(hdr)) {
+                    ZimbraLog.dav.debug(
+                            "Dropping header(s) with name [%s] from proxy request (not in PROXY_REQUEST_HEADERS)", hdr);
+                }
+            }
+        }
+
         for (String h : PROXY_REQUEST_HEADERS) {
             String hval = ctxt.getRequest().getHeader(h);
             if (hval != null) {
@@ -751,11 +773,31 @@ public class DavServlet extends ZimbraServlet {
             }
         }
         int statusCode = HttpClientUtil.executeMethod(client, method);
-        for (String h : PROXY_RESPONSE_HEADERS) {
-            for (Header hval : method.getResponseHeaders(h)) {
-                ctxt.getResponse().addHeader(h, hval.getValue());
+        if (ZimbraLog.dav.isDebugEnabled()) {
+            for (Header hval : method.getResponseHeaders()) {
+                String hdrName = hval.getName();
+                if (!PROXY_RESPONSE_HEADERS.contains(hdrName) && !IGNORABLE_PROXY_RESPONSE_HEADERS.contains(hdrName)) {
+                    ZimbraLog.dav.debug(
+                            "Dropping header [%s] from proxy response (not in PROXY_RESPONSE_HEADERS)", hval);
+                }
             }
         }
+
+        for (String h : PROXY_RESPONSE_HEADERS) {
+            for (Header hval : method.getResponseHeaders(h)) {
+                String hdrValue = hval.getValue();
+                if (DavProtocol.HEADER_LOCATION.equals(h)) {
+                    int pfxLastSlashPos = prefix.lastIndexOf('/');
+                    int lastSlashPos = hdrValue.lastIndexOf('/');
+                    if ((lastSlashPos > 0) && (pfxLastSlashPos > 0)) {
+                        hdrValue = prefix.substring(0, pfxLastSlashPos) + hdrValue.substring(lastSlashPos);
+                        ZimbraLog.dav.debug("Original [%s] from proxy response new value '%s'", hval, hdrValue);
+                    }
+                }
+                ctxt.getResponse().addHeader(h, hdrValue);
+            }
+        }
+
         ctxt.getResponse().setStatus(statusCode);
         ctxt.setStatus(statusCode);
         try (InputStream in = method.getResponseBodyAsStream()) {
