@@ -237,8 +237,11 @@ public class UserServletContext {
 
         if (this.format != null) {
             this.formatter = UserServlet.getFormatter(this.format);
-            if (this.formatter == null)
+            if (this.formatter == null) {
                 throw new UserServletException(HttpServletResponse.SC_NOT_IMPLEMENTED, L10nUtil.getMessage(MsgKey.errNotImplemented, request));
+            } else {
+                formatter.parseParams(this);
+            }
         }
 
         // see if we can get target account or not
@@ -372,7 +375,7 @@ public class UserServletContext {
     public String getQueryString() {
         return params.get(UserServlet.QP_QUERY);
     }
-    
+
     private SortBy getSortBy() throws UserServletException {
         String sort = params.get(UserServlet.QP_SORT);
         if (sort == null) {
@@ -386,7 +389,7 @@ public class UserServletContext {
             }
         }
     }
-    
+
     /**
      * Shortcut to {@code params.get("charset")}.
      *
