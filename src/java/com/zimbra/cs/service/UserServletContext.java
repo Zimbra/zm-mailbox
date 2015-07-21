@@ -234,8 +234,11 @@ public class UserServletContext {
 
         if (this.format != null) {
             this.formatter = UserServlet.getFormatter(this.format);
-            if (this.formatter == null)
+            if (this.formatter == null) {
                 throw new UserServletException(HttpServletResponse.SC_NOT_IMPLEMENTED, L10nUtil.getMessage(MsgKey.errNotImplemented, request));
+            } else {
+                formatter.parseParams(this);
+            }
         }
 
         // see if we can get target account or not
