@@ -61,7 +61,6 @@ import org.apache.commons.lang.StringUtils;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -944,7 +943,7 @@ public class TestCalDav  {
     /** Mostly checking that if attendees cease to exist (even via DLs) then modification and cancel iTip
      * messages still work to the remaining attendees.
      */
-    @Ignore("See Bug 100503 - Organizer CANCEL mistaken for ATTENDEE REPLY")
+    @Test
     public void createModifyDeleteAttendeeModifyAndCancel() throws ServiceException, IOException {
         Account dav1 = TestUtil.createAccount(DAV1);
         Account dav2 = TestUtil.createAccount(DAV2);
