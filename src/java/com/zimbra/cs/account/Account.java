@@ -47,6 +47,13 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         return EntryType.ACCOUNT;
     }
 
+    public boolean sameAccount(Account other) {
+        if (null == other) {
+            return false;
+        }
+        return (other.getId().equals(getId()));
+    }
+
     public void deleteAccount() throws ServiceException {
         getProvisioning().deleteAccount(this.getId());
     }

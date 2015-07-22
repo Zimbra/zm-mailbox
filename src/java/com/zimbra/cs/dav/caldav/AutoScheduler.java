@@ -177,7 +177,7 @@ public abstract class AutoScheduler {
                 return null; // no organizer means no scheduling
             }
             // TODO:  Does the auth user have scheduling capability for the calendar
-            if (calendarMailbox.getAccount().equals(organizerAcct)) {
+            if (calendarMailbox.getAccount().sameAccount(organizerAcct)) {
                 return new OrganizerAutoScheduler(userMailbox, calendarMailbox, origInvites,
                         calendarMailItemId, flags, tags, scidDefault, scidExceptions, replies, context);
             } else {
