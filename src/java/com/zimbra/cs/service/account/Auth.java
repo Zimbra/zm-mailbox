@@ -267,7 +267,7 @@ public class Auth extends AccountDocumentHandler {
                         // if we are here, it means we are authenticating SMTP,
                         // so app-specific passwords are accepted. Other protocols (pop, imap)
                         // doesn't touch this code, so their authentication happens in ZimbraAuth.
-                        TwoFactorManager manager = new TwoFactorManager(acct);
+                        TwoFactorManager manager = new TwoFactorManager(acct, acctValuePassedIn);
                         manager.authenticateAppSpecificPassword(password);
                     } else {
                         prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);

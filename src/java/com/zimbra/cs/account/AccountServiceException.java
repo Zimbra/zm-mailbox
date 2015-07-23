@@ -399,8 +399,8 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException("invalid trusted device token", INVALID_TRUSTED_DEVICE_TOKEN, SENDERS_FAULT, null);
     }
 
-    public static AuthFailedServiceException TWO_FACTOR_AUTH_FAILED(String reason) {
-        return new AuthFailedServiceException("N/A", "N/A", reason, TWO_FACTOR_AUTH_FAILED, SENDERS_FAULT, null);
+    public static AuthFailedServiceException TWO_FACTOR_AUTH_FAILED(String acctName, String namePassedIn, String reason) {
+        return new AuthFailedServiceException(acctName, namePassedIn, reason, TWO_FACTOR_AUTH_FAILED, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException TWO_FACTOR_AUTH_REQUIRED() {

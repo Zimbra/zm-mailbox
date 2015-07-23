@@ -36,15 +36,15 @@ public class EnableTwoFactorAuth extends AccountDocumentHandler {
             throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        String acctName = request.getElement(AccountConstants.E_NAME).getText();
-        Account account = prov.get(AccountBy.name, acctName);
+        String acctNamePassedIn = request.getElement(AccountConstants.E_NAME).getText();
+        Account account = prov.get(AccountBy.name, acctNamePassedIn);
         if (account == null) {
             throw AuthFailedServiceException.AUTH_FAILED("no such account");
         }
         if (!account.isFeatureTwoFactorAuthAvailable()) {
             throw ServiceException.CANNOT_ENABLE_TWO_FACTOR_AUTH();
         }
-        TwoFactorManager manager = new TwoFactorManager(account);
+        TwoFactorManager manager = new TwoFactorManager(account, acctNamePassedIn);
         EnableTwoFactorAuthResponse response = new EnableTwoFactorAuthResponse();
         Element passwordEl = request.getOptionalElement(AccountConstants.E_PASSWORD);
         String password = null;
