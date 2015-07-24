@@ -32,6 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
+import java.util.regex.Pattern;
 
 import javax.mail.util.SharedByteArrayInputStream;
 import javax.servlet.ServletException;
@@ -99,6 +100,7 @@ public class FileUploadServlet extends ZimbraServlet {
     protected static final String PARAM_LIMIT_BY_FILE_UPLOAD_MAX_SIZE = "lbfums";
 
     protected static final String PARAM_CSRF_TOKEN = "csrfToken";
+    private final Pattern ALLOWED_REQUESTID_CHARS = Pattern.compile("^[a-zA-Z0-9_.-]+$");
 
     /** The character separating upload IDs in a list */
     public static final String UPLOAD_DELIMITER = ",";
@@ -414,7 +416,7 @@ public class FileUploadServlet extends ZimbraServlet {
          *  follows the {@link DefaultFileItem} naming convention
          *  (<code>upload_*.tmp</code>) and is older than
          *  {@link FileUploadServlet#UPLOAD_TIMEOUT_MSEC}. */
-    	@Override
+        @Override
         public boolean accept(File pathname) {
             // upload_ XYZ .tmp
             if (pathname == null)
@@ -616,6 +618,15 @@ public class FileUploadServlet extends ZimbraServlet {
             return Collections.emptyList();
         }
 
+        // restrict requestId value for safety due to later use in javascript
+        if (reqId != null && reqId.length() != 0) {
+            if (!ALLOWED_REQUESTID_CHARS.matcher(reqId).matches()) {
+                mLog.info("Rejecting upload with invalid chars in reqId: %s", reqId);
+                sendResponse(resp, HttpServletResponse.SC_BAD_REQUEST, fmt, null, null, items);
+                return Collections.emptyList();
+            }
+        }
+
         // cache the uploaded files in the hash and construct the list of upload IDs
         List<Upload> uploads = new ArrayList<Upload>(items.size());
         for (FileItem fi : items) {
@@ -803,7 +814,7 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     protected ServletFileUpload getUploader2(boolean limitByFileUploadMaxSize, Account acct) {
-    	return getUploader(getFileUploadMaxSize(limitByFileUploadMaxSize));
+        return getUploader(getFileUploadMaxSize(limitByFileUploadMaxSize));
     }
 
     private static ServletFileUpload getUploader(long maxSize) {

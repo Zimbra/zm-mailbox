@@ -29,7 +29,9 @@ If you were to submit an html form to upload to the zimbra server, it would look
 
 The name of the file parameter is of no consequence.  The requestId is an client token
 which the server will echo back with the response.  The response will map the client token
-to a server token.  The response looks something like this:
+to a server token. Note, requestId is limited to the [a-zA-Z0-9_.-] character class.
+
+The response looks something like this:
 
 	<html><head></head><body onload="window.parent._uploadManager.loaded(200,'client_token','server_token');"></body></html>
 
