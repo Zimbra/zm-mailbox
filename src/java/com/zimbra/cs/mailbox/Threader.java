@@ -152,7 +152,7 @@ public final class Threader {
     }
 
     private String prependDataSource(String toHash) throws ServiceException {
-        if (!mbox.getAccount().isDisableCrossAccountConversationThreading()) {
+        if (mbox.getAccount().isDisableCrossAccountConversationThreading()) {
             String dsId = pm.getDataSourceId();
             if (Strings.isNullOrEmpty(dsId)) {
                 return toHash;
@@ -174,8 +174,9 @@ public final class Threader {
      * @param includeParents  If {@code true}, includes the hashes for parent
      *                        messages in the returned {@code List}.  If {@code
      *                        false}, returns only this message's hash.
+     * @throws ServiceException
      * @see ThreadIndex */
-    private List<String> getThreadIndexHashes(boolean includeParents) {
+    private List<String> getThreadIndexHashes(boolean includeParents) throws ServiceException {
         byte[] tindex = null;
         try {
             String header = pm.getMimeMessage().getHeader("Thread-Index", null);
@@ -196,7 +197,8 @@ public final class Threader {
                 MessageDigest md = MessageDigest.getInstance("SHA1");
                 md.update((byte) 1);  md.update((byte) 3);
                 md.update(tindex, 0, length);
-                hashes.add(ByteUtil.encodeFSSafeBase64(md.digest()));
+                String hash = prependDataSource(ByteUtil.encodeFSSafeBase64(md.digest()));
+                hashes.add(hash);
             } catch (NoSuchAlgorithmException e) {
                 return Collections.emptyList();
             }
