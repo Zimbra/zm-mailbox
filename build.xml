@@ -222,6 +222,7 @@
         <mkdir dir="${base.dir}/db"/>
         <mkdir dir="${base.dir}/lib/ext"/>
         <mkdir dir="${base.dir}/lib/jars"/>
+        <mkdir dir="${base.dir}/lib/jars-ant"/>
         <mkdir dir="${base.dir}/libexec"/>
     </target>
 
@@ -987,6 +988,11 @@
         <copy todir="${dist.dir}/lib/jars" file="${client.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 
+        <!-- ant jar for JSP precompile CLI -->
+        <copy todir="${dist.dir}/lib/jars-ant">
+            <fileset dir="${web.client.dir}/jars/ant" includes="ant-1.*.jar"/>
+        </copy>
+    	
         <!-- jetty windows service wrapper -->
         <if>
             <isset property="is-windows"/>
