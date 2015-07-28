@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
@@ -451,11 +452,49 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     /**
      * Check for cases where the grantee has capabilities that automatically mean they should be able to perform
      * the grant.
-     * Initial only case is a domain admin assigning an owner to a DL.
+     * This is useful for allowing domain admins to do certain things
      * @return true if this grantee should be allowed the right.
      */
     private boolean checkOverridingRules(MailTarget grantee, boolean asAdmin, Entry target, Right rightNeeded) {
-        return checkForDomainAdminAssigningDLowner(grantee, asAdmin, target, rightNeeded);
+        return domainAdminAllowedToChangeUserRight(grantee, asAdmin, target, rightNeeded)
+                || checkForDomainAdminAssigningDLowner(grantee, asAdmin, target, rightNeeded);
+    }
+
+    /**
+     * Bug 88604
+     * This allows delegate admins to assign user rights without having to be given the right they want to assign.
+     * Currently restricted to just user rights as those seem to be what a delegate admin might want to assign
+     */
+    private boolean domainAdminAllowedToChangeUserRight(
+            MailTarget grantee, boolean asAdmin, Entry target, Right rightNeeded) {
+        if (!asAdmin || !rightNeeded.isUserRight() || !(grantee instanceof Account)
+                || !(target instanceof MailTarget)) {
+            return false;
+        }
+        Account authedAcct = (Account) grantee;
+        MailTarget mailTarget = (MailTarget) target;
+        if (!AccessControlUtil.isDelegatedAdmin(authedAcct, asAdmin)) {
+            return false;
+        }
+        try {
+            Domain domain = Provisioning.getInstance().getDomain(mailTarget);
+            if (domain == null) {
+                return false;
+            }
+            checkDomainStatus(domain);
+            Map<String, Object> attrsNeeded = Maps.newHashMap();
+            attrsNeeded.put(Provisioning.A_zimbraACE, rightNeeded.getName());
+            if (canSetAttrs(authedAcct, target, attrsNeeded, asAdmin)) {
+                ZimbraLog.acl.debug(
+                        "Right [%s] ALLOWED to '%s' for target '%s' because '%s' is allowed to set '%s' for '%s'",
+                        rightNeeded.getName(), authedAcct.getName(), mailTarget.getName(), authedAcct.getName(),
+                        Provisioning.A_zimbraACE, mailTarget.getName());
+                return true;
+            }
+        } catch (ServiceException e) {
+            return false;
+        }
+        return false;
     }
 
     /**

@@ -21,6 +21,10 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -35,6 +39,8 @@ import com.zimbra.soap.admin.message.AddAccountAliasRequest;
 import com.zimbra.soap.admin.message.AddAccountAliasResponse;
 import com.zimbra.soap.admin.message.AddDistributionListAliasRequest;
 import com.zimbra.soap.admin.message.AddDistributionListAliasResponse;
+import com.zimbra.soap.admin.message.AddDistributionListMemberRequest;
+import com.zimbra.soap.admin.message.AddDistributionListMemberResponse;
 import com.zimbra.soap.admin.message.CreateAccountRequest;
 import com.zimbra.soap.admin.message.CreateAccountResponse;
 import com.zimbra.soap.admin.message.CreateCalendarResourceRequest;
@@ -101,9 +107,11 @@ public class TestDomainAdmin extends TestCase {
     private final static String DOMADMIN = "domadmin@" + ADMINISTRATOR_DOMAIN;
     private final static String TARGET_ACCT = "targetacct@" + ADMINISTERED_DOMAIN;
     private final static String TARGET_ACCT_RENAMED = "targetacctrenamed@" + ADMINISTERED_DOMAIN;
+    private final static String TARGET_ACCT2 = "targetacct2@" + ADMINISTERED_DOMAIN;
     private final static String TARGET_CALRES = "targetroom@" + ADMINISTERED_DOMAIN;
     private final static String TARGET_CALRES2 = "targetroom2@" + ADMINISTERED_DOMAIN;
     private final static String TARGET_CALRES_RENAMED = "targetroomrenamed@" + ADMINISTERED_DOMAIN;
+    private final static String DOMADMINGROUP = "domadmingroup@" + ADMINISTERED_DOMAIN;
     private final static String TARGET_DL = "targetdl@" + ADMINISTERED_DOMAIN;
     private final static String TARGET_DL2 = "targetdl2@" + ADMINISTERED_DOMAIN;
     private final static String TARGET_DL_RENAMED = "targetdlrenamed@" + ADMINISTERED_DOMAIN;
@@ -126,6 +134,7 @@ public class TestDomainAdmin extends TestCase {
     }
 
     @Override
+    @Before
     public void setUp() throws Exception {
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
@@ -137,6 +146,7 @@ public class TestDomainAdmin extends TestCase {
     }
 
     @Override
+    @After
     public void tearDown() throws Exception {
         ZimbraLog.test.debug("in TestDomainAdmin tearDown");
         if (adminSoapProv == null) {
@@ -144,6 +154,7 @@ public class TestDomainAdmin extends TestCase {
         }
         TestUtil.deleteAccount(TARGET_ACCT);
         TestUtil.deleteAccount(TARGET_ACCT_RENAMED);
+        TestUtil.deleteAccount(TARGET_ACCT2);
         TestUtil.deleteAccount(TARGET_CALRES);
         TestUtil.deleteAccount(TARGET_CALRES2);
         TestUtil.deleteAccount(TARGET_CALRES_RENAMED);
@@ -156,11 +167,80 @@ public class TestDomainAdmin extends TestCase {
         TestUtil.deleteAccount(DIFF_ACCT2);
         TestUtil.deleteAccount(DIFF_CALRES);
         TestUtil.deleteAccount(DIFF_CALRES2);
+        TestJaxbProvisioning.deleteDlIfExists(DOMADMINGROUP);
         TestJaxbProvisioning.deleteDlIfExists(DIFF_DL);
         TestJaxbProvisioning.deleteDlIfExists(DIFF_DL2);
         TestJaxbProvisioning.deleteDomainIfExists(ADMINISTERED_DOMAIN);
         TestJaxbProvisioning.deleteDomainIfExists(ADMINISTRATOR_DOMAIN);
         TestJaxbProvisioning.deleteDomainIfExists(DIFFERENT_DOMAIN);
+    }
+
+    private void grantRight(SoapProvisioning soapProv, TargetType targetType, String targetName,
+            GranteeType granteeType, String granteeName, String rightName)
+    throws ServiceException {
+        GranteeSelector grantee;
+        EffectiveRightsTargetSelector target;
+        RightModifierInfo right;
+        GrantRightResponse grResp;
+
+        grantee = new GranteeSelector(granteeType, GranteeBy.name, granteeName);
+        target = new EffectiveRightsTargetSelector(targetType, TargetBy.name, targetName);
+        right = new RightModifierInfo(rightName);
+        grResp = soapProv.invokeJaxb(new GrantRightRequest(target, grantee, right));
+        assertNotNull("GrantRightResponse for " + right.getValue(), grResp);
+    }
+
+    private void grantRight(SoapProvisioning soapProv, TargetType targetType, String targetName, String granteeName,
+            String rightName)
+    throws ServiceException {
+        grantRight(soapProv, targetType, targetName, GranteeType.usr, granteeName, rightName);
+    }
+
+    private void failToGrantRight(SoapProvisioning soapProv, TargetType targetType, String targetName,
+            String granteeName, String rightName, String expectedFailureReason)
+    throws ServiceException {
+        GranteeSelector grantee;
+        EffectiveRightsTargetSelector target;
+        RightModifierInfo right;
+
+        grantee = new GranteeSelector(GranteeType.usr, GranteeBy.name, granteeName);
+        target = new EffectiveRightsTargetSelector(targetType, TargetBy.name, targetName);
+        right = new RightModifierInfo(rightName);
+        try {
+            soapProv.invokeJaxb(new GrantRightRequest(target, grantee, right));
+            fail(String.format("granting %s right succeeded when it shouldn't have", rightName));
+        } catch (SoapFaultException sfe) {
+            checkSoapReason(sfe, expectedFailureReason);
+        }
+    }
+
+    public String createAdminConsoleStyleDomainAdminGroup(String domAdminGrp) throws ServiceException {
+        CreateDistributionListResponse cdlResp;
+        CreateDistributionListRequest cdlReq = new CreateDistributionListRequest(domAdminGrp);
+        cdlReq.addAttr(new Attr(Provisioning.A_zimbraIsAdminGroup, "TRUE"));
+        cdlResp = adminSoapProv.invokeJaxb(cdlReq);
+        assertNotNull("CreateDistributionListResponse for " + cdlReq.getName() + " as Admin", cdlResp);
+        List<Attr> attrs = Lists.newArrayList();
+        attrs.add(new Attr(Provisioning.A_zimbraAdminConsoleUIComponents, "accountListView"));
+        attrs.add(new Attr(Provisioning.A_zimbraAdminConsoleUIComponents, "downloadsView"));
+        attrs.add(new Attr(Provisioning.A_zimbraAdminConsoleUIComponents, "DLListView"));
+        attrs.add(new Attr(Provisioning.A_zimbraAdminConsoleUIComponents, "aliasListView"));
+        attrs.add(new Attr(Provisioning.A_zimbraAdminConsoleUIComponents, "resourceListView"));
+        attrs.add(new Attr(Provisioning.A_zimbraAdminConsoleUIComponents, "saveSearch"));
+        ModifyDistributionListResponse mdlResp = adminSoapProv.invokeJaxb(
+                new ModifyDistributionListRequest(cdlResp.getDl().getId(), attrs));
+        assertNotNull("ModifyDistributionListResponse for " + cdlReq.getName() + " as Admin", mdlResp);
+
+
+        grantRight(adminSoapProv, TargetType.domain, ADMINISTERED_DOMAIN, GranteeType.grp, domAdminGrp,
+                RightConsts.RT_domainAdminConsoleRights);
+        grantRight(adminSoapProv, TargetType.global, "globalacltarget", GranteeType.grp, domAdminGrp,
+                RightConsts.RT_domainAdminZimletRights);
+        grantRight(adminSoapProv, TargetType.global, "globalacltarget", GranteeType.grp, domAdminGrp,
+                RightConsts.RT_adminLoginCalendarResourceAs);
+
+        adminSoapProv.flushCache(CacheEntryType.acl, null);
+        return cdlResp.getDl().getId();
     }
 
     public String createAdminConsoleStyleDomainAdmin(String domAdminName) throws ServiceException {
@@ -176,25 +256,12 @@ public class TestDomainAdmin extends TestCase {
         CreateAccountResponse caResp = adminSoapProv.invokeJaxb(caReq);
         assertNotNull("CreateAccountResponse for " + domAdminName, caResp);
 
-        GranteeSelector grantee;
-        EffectiveRightsTargetSelector target;
-        RightModifierInfo right;
-        GrantRightResponse grResp;
-
-        grantee = new GranteeSelector(GranteeType.usr, GranteeBy.name, domAdminName);
-        target = new EffectiveRightsTargetSelector(TargetType.domain, TargetBy.name, ADMINISTERED_DOMAIN);
-        right = new RightModifierInfo(RightConsts.RT_domainAdminConsoleRights);
-        grResp = adminSoapProv.invokeJaxb(new GrantRightRequest(target, grantee, right));
-        assertNotNull("GrantRightResponse for " + right.getValue(), grResp);
-
-        target = new EffectiveRightsTargetSelector(TargetType.global, TargetBy.name, "globalacltarget");
-        right = new RightModifierInfo(RightConsts.RT_domainAdminZimletRights);
-        grResp = adminSoapProv.invokeJaxb(new GrantRightRequest(target, grantee, right));
-        assertNotNull("GrantRightResponse for " + right.getValue(), grResp);
-
-        right = new RightModifierInfo(RightConsts.RT_adminLoginCalendarResourceAs);
-        grResp = adminSoapProv.invokeJaxb(new GrantRightRequest(target, grantee, right));
-        assertNotNull("GrantRightResponse for " + right.getValue(), grResp);
+        grantRight(adminSoapProv, TargetType.domain, ADMINISTERED_DOMAIN, domAdminName,
+                RightConsts.RT_domainAdminConsoleRights);
+        grantRight(adminSoapProv, TargetType.global, "globalacltarget", domAdminName,
+                RightConsts.RT_domainAdminZimletRights);
+        grantRight(adminSoapProv, TargetType.global, "globalacltarget", domAdminName,
+                RightConsts.RT_adminLoginCalendarResourceAs);
 
         adminSoapProv.flushCache(CacheEntryType.acl, null);
         return caResp.getAccount().getId();
@@ -237,6 +304,7 @@ public class TestDomainAdmin extends TestCase {
                 soapReason.contains(expectedSubstring));
     }
 
+    @Test
     public void testAccountPassword() throws Exception {
         Account acct = adminSoapProv.createAccount(TARGET_ACCT, TestUtil.DEFAULT_PASSWORD, null);
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
@@ -251,17 +319,100 @@ public class TestDomainAdmin extends TestCase {
         SoapProvisioning domAdminSoapProv = getSoapProvisioning(DOMADMIN, TestUtil.DEFAULT_PASSWORD);
         try {
             domAdminSoapProv.changePassword(acct, "DelTA4Pa555", TestUtil.DEFAULT_PASSWORD);
+            fail("changePassword succeeded when shouldn't");
         } catch (SoapFaultException sfe) {
             checkSoapReason(sfe, "authentication failed for");
         }
         try {
             domAdminSoapProv.checkPasswordStrength(acct, "2ndDelTA4Pa555");
+            fail("checkPasswordStrength succeeded in spite of not having checkPasswordStrength right!!");
         } catch (SoapFaultException sfe) {
             checkSoapReason(sfe, "permission denied: need right: checkPasswordStrength for account");
         }
         domAdminSoapProv.setPassword(acct, TestUtil.DEFAULT_PASSWORD);
     }
 
+    /**
+     * Test that delegated admin with adminConsoleDLACLTabRights can grant sendToDistList right
+     * @throws Exception
+     */
+    @Test
+    public void testDelegatedAdminAssignSendToDistList() throws Exception {
+        createAdminConsoleStyleDomainAdmin(DOMADMIN);
+        adminSoapProv.createAccount(TARGET_ACCT, TestUtil.DEFAULT_PASSWORD, null);
+        SoapProvisioning domAdminSoapProv = getSoapProvisioning(DOMADMIN, TestUtil.DEFAULT_PASSWORD);
+        CreateDistributionListResponse caResp;
+        caResp = domAdminSoapProv.invokeJaxb(new CreateDistributionListRequest(TARGET_DL));
+        assertNotNull("CreateDistributionListResponse for " + TARGET_DL + " simple as domAdmin", caResp);
+        caResp = adminSoapProv.invokeJaxb(new CreateDistributionListRequest(DIFF_DL));
+        assertNotNull("CreateDistributionListResponse for " + TARGET_DL + " simple as domAdmin", caResp);
+        failToGrantRight(domAdminSoapProv, TargetType.dl, TARGET_DL, TARGET_ACCT, RightConsts.RT_sendToDistList,
+            "permission denied: insufficient right to grant 'sendToDistList' right");
+        grantRight(adminSoapProv, TargetType.domain, ADMINISTERED_DOMAIN, DOMADMIN /* grantee */,
+                RightConsts.RT_adminConsoleDLACLTabRights);
+        grantRight(domAdminSoapProv, TargetType.dl, TARGET_DL, TARGET_ACCT, RightConsts.RT_sendToDistList);
+        /* Check that doesn't allow it for a dl in a different domain */
+        failToGrantRight(domAdminSoapProv, TargetType.dl, DIFF_DL, TARGET_ACCT, RightConsts.RT_sendToDistList,
+            "permission denied: insufficient right to grant 'sendToDistList' right");
+    }
+
+    /**
+     * Test that delegated admin with adminConsoleAccountsACLTabRights can grant sendAs right
+     * @throws Exception
+     */
+    @Test
+    public void testDelegatedAdminAssignSendAs() throws Exception {
+        createAdminConsoleStyleDomainAdmin(DOMADMIN);
+        adminSoapProv.createAccount(TARGET_ACCT, TestUtil.DEFAULT_PASSWORD, null);
+        adminSoapProv.createAccount(TARGET_ACCT2, TestUtil.DEFAULT_PASSWORD, null);
+        adminSoapProv.createAccount(DIFF_ACCT, TestUtil.DEFAULT_PASSWORD, null);
+        SoapProvisioning domAdminSoapProv = getSoapProvisioning(DOMADMIN, TestUtil.DEFAULT_PASSWORD);
+        failToGrantRight(domAdminSoapProv, TargetType.account, TARGET_ACCT2, TARGET_ACCT, RightConsts.RT_sendAs,
+            "permission denied: insufficient right to grant 'sendAs' right");
+        grantRight(adminSoapProv, TargetType.domain, ADMINISTERED_DOMAIN, DOMADMIN /* grantee */,
+                RightConsts.RT_adminConsoleAccountsACLTabRights);
+        grantRight(domAdminSoapProv, TargetType.account, TARGET_ACCT2, TARGET_ACCT, RightConsts.RT_sendAs);
+        /* Check that doesn't allow it for an account in a different domain */
+        failToGrantRight(domAdminSoapProv, TargetType.account, DIFF_ACCT, TARGET_ACCT, RightConsts.RT_sendAs,
+            "permission denied: insufficient right to grant 'sendAs' right");
+    }
+
+    /**
+     * Test that delegated admin with adminConsoleDLACLTabRights can grant sendToDistList right
+     * @throws Exception
+     */
+    @Test
+    public void testViaGroupDelegatedAdminAssignSendToDistList() throws Exception {
+        String domAdminGroupId = createAdminConsoleStyleDomainAdminGroup(DOMADMINGROUP);
+        CreateAccountResponse caResp;
+        List<Attr> attrs = Lists.newArrayList();
+        attrs.add(new Attr(Provisioning.A_zimbraIsDelegatedAdminAccount, "TRUE"));
+        CreateAccountRequest caReq = new CreateAccountRequest(DOMADMIN, TestUtil.DEFAULT_PASSWORD, attrs);
+        caResp = adminSoapProv.invokeJaxb(caReq);
+        assertNotNull("CreateAccountResponse for " + DOMADMIN + " Admin", caResp);
+        AddDistributionListMemberResponse adlmResp;
+        adlmResp = adminSoapProv.invokeJaxb(
+                new AddDistributionListMemberRequest(domAdminGroupId, Lists.newArrayList(DOMADMIN)));
+        assertNotNull("AddDistributionListMemberResponse for " + DOMADMIN + " Admin", adlmResp);
+        adminSoapProv.createAccount(TARGET_ACCT, TestUtil.DEFAULT_PASSWORD, null);
+        SoapProvisioning domAdminSoapProv = getSoapProvisioning(DOMADMIN, TestUtil.DEFAULT_PASSWORD);
+        CreateDistributionListResponse cdlResp;
+        cdlResp = domAdminSoapProv.invokeJaxb(new CreateDistributionListRequest(TARGET_DL));
+        assertNotNull("CreateDistributionListResponse for " + TARGET_DL + " simple as domAdmin", cdlResp);
+        cdlResp = adminSoapProv.invokeJaxb(new CreateDistributionListRequest(DIFF_DL));
+        assertNotNull("CreateDistributionListResponse for " + TARGET_DL + " simple as domAdmin", cdlResp);
+        failToGrantRight(domAdminSoapProv, TargetType.dl, TARGET_DL, TARGET_ACCT, RightConsts.RT_sendToDistList,
+            "permission denied: insufficient right to grant 'sendToDistList' right");
+        grantRight(adminSoapProv, TargetType.domain, ADMINISTERED_DOMAIN, GranteeType.grp, DOMADMINGROUP,
+                RightConsts.RT_adminConsoleDLACLTabRights);
+        grantRight(domAdminSoapProv, TargetType.dl, TARGET_DL, TARGET_ACCT, RightConsts.RT_sendToDistList);
+        /* Check that doesn't allow it for a dl in a different domain */
+        failToGrantRight(domAdminSoapProv, TargetType.dl, DIFF_DL, TARGET_ACCT, RightConsts.RT_sendToDistList,
+            "permission denied: insufficient right to grant 'sendToDistList' right");
+    }
+
+
+    @Test
     public void testGetAccountInDomAdminDomain() throws Exception {
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
 
@@ -350,6 +501,7 @@ public class TestDomainAdmin extends TestCase {
         }
     }
 
+    @Test
     public void testGetAccountInDiffDomain() throws Exception {
         Account acct = TestJaxbProvisioning.ensureAccountExists(DIFF_ACCT);
         String acctId = acct.getId();
@@ -433,6 +585,7 @@ public class TestDomainAdmin extends TestCase {
         }
     }
 
+    @Test
     public void testModifyAccountInDomAdminDomain() throws Exception {
         Account acct = TestJaxbProvisioning.ensureAccountExists(TARGET_ACCT);
         String acctId = acct.getId();
@@ -486,6 +639,7 @@ public class TestDomainAdmin extends TestCase {
         }
     }
 
+    @Test
     public void testModifyAccountInDiffDomain() throws Exception {
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
         Account acct = TestJaxbProvisioning.ensureAccountExists(DIFF_ACCT);
@@ -524,6 +678,7 @@ public class TestDomainAdmin extends TestCase {
         }
     }
 
+    @Test
     public void testGetCalendarResourceInDomAdminDomain() throws Exception {
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
 
@@ -594,6 +749,7 @@ public class TestDomainAdmin extends TestCase {
         }
     }
 
+    @Test
     public void testGetCalendarResourceInDiffDomain() throws Exception {
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
         SoapProvisioning domAdminSoapProv = getSoapProvisioning(DOMADMIN, TestUtil.DEFAULT_PASSWORD);
@@ -655,6 +811,7 @@ public class TestDomainAdmin extends TestCase {
         }
     }
 
+    @Test
     public void testModifyCalendarResourceInDomAdminDomain() throws Exception {
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
         SoapProvisioning domAdminSoapProv = getSoapProvisioning(DOMADMIN, TestUtil.DEFAULT_PASSWORD);
@@ -718,6 +875,7 @@ public class TestDomainAdmin extends TestCase {
         }
     }
 
+    @Test
     public void testModifyCalendarResourceInDiffDomain() throws Exception {
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
         SoapProvisioning domAdminSoapProv = getSoapProvisioning(DOMADMIN, TestUtil.DEFAULT_PASSWORD);
@@ -765,6 +923,7 @@ public class TestDomainAdmin extends TestCase {
         }
     }
 
+    @Test
     public void testGetDistributionListInDomAdminDomain() throws Exception {
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
 
@@ -818,6 +977,7 @@ public class TestDomainAdmin extends TestCase {
         }
     }
 
+    @Test
     public void testGetDistributionListInDiffDomain() throws Exception {
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
         CreateDistributionListResponse caResp;
@@ -877,6 +1037,7 @@ public class TestDomainAdmin extends TestCase {
         }
     }
 
+    @Test
     public void testModifyDistributionListInDomAdminDomain() throws Exception {
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
         SoapProvisioning domAdminSoapProv = getSoapProvisioning(DOMADMIN, TestUtil.DEFAULT_PASSWORD);
@@ -924,6 +1085,7 @@ public class TestDomainAdmin extends TestCase {
         }
     }
 
+    @Test
     public void testModifyDistributionListInDiffDomain() throws Exception {
         String domAdminId = createAdminConsoleStyleDomainAdmin(DOMADMIN);
         SoapProvisioning domAdminSoapProv = getSoapProvisioning(DOMADMIN, TestUtil.DEFAULT_PASSWORD);
