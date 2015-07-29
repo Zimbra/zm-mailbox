@@ -289,22 +289,20 @@ public abstract class AuthProvider {
     /**
      * The static getAuthToken methods go through all the providers, trying them in order
      * until one returns an AuthToken.
-     * Return null when there is no auth data for any of the enabled providers
-     * Throw AuthTokenException if any provider in the chain throws an AuthTokenException.
      *
-     * Note: 1. we proceed to try the next provider if the provider throws an
-     *          AuthProviderException that is ignorable (AuthProviderException.canIgnore()).
-     *          for example: AuthProviderException.NO_AUTH_TOKEN, AuthProviderException.NOT_SUPPORTED.
+     * If any provider in the chain throws AuthTokenException,
+     * it will be stored and re-thrown to caller at the end.
      *
-     *       2. in all other cases, we stop processing and throws an AuthTokenException
-     *          to our caller.
-     *             In particular, when a provider:
-     *             - returns null -> it should not.  Treat it as a provider error and
-     *               throws AuthTokenException
-     *             - throws AuthTokenException, this means auth data is present for a
-     *               provider but it cannot be resolved into a valid AuthToken.
-     *             - Any AuthProviderException that is not ignorable.
+     * If more than one provider throws AuthTokenException then exception reported
+     * by last provider will be thrown to caller.
      *
+     * If AuthProviderException is thrown by provider then-
+     *    - For AuthProviderException that is ignorable(AuthProviderException.NO_AUTH_TOKEN, AuthProviderException.NOT_SUPPORTED),
+     *      it will be logged and next provider will be tried.
+     *    - For AuthProviderExceptions that is not ignorable, AuthTokenException is generated and stored,
+     *      thrown at the end if all provider fails.
+     *
+     * Return null when all providers fails to get AuthToken and no exception thrown by any provider.
      */
 
     /**
@@ -316,11 +314,14 @@ public abstract class AuthProvider {
     throws AuthTokenException {
         AuthToken at = null;
         List<AuthProvider> providers = getProviders();
+
+        AuthTokenException authTokenExp = null;
+
         for (AuthProvider ap : providers) {
             try {
                 at = ap.authToken(req, isAdminReq);
                 if (at == null) {
-                    throw new AuthTokenException("auth provider " + ap.getName() + " returned null");
+                    authTokenExp = new AuthTokenException("auth provider " + ap.getName() + " returned null");
                 } else {
                     return at;
                 }
@@ -329,13 +330,19 @@ public abstract class AuthProvider {
                 if (e.canIgnore()) {
                     logger().debug(ap.getName() + ":" + e.getMessage());
                 } else {
-                    throw new AuthTokenException("auth provider error", e);
+                    authTokenExp = new AuthTokenException("auth provider error", e);
                 }
             } catch (AuthTokenException e) {
-                // log and rethrow
+                //log and store exception reference
+                authTokenExp = e;
                 logger().debug("getAuthToken error: provider=" + ap.getName() + ", err=" + e.getMessage(), e);
-                throw e;
             }
+        }
+
+        //If AuthTokenException has occurred while traversing Auth providers then it should be thrown.
+        //If multiple auth providers caused AuthTokenException, then last exception is rethrown from here.
+        if (null != authTokenExp) {
+            throw authTokenExp;
         }
 
         // there is no auth data for any of the enabled providers
@@ -349,6 +356,10 @@ public abstract class AuthProvider {
      * which has to be extracted from the body.  ZimbraAuthProvider always retrieves the
      * encoded auth token from the fixed tag, so does YahooYT auth.
      * This should be fine for now.
+     * If any provider in the chain throws AuthTokenException,
+     * it will be thrown at the end.
+     * If more than one provider throws AuthTokenException then exception reported
+     * by last provider will be thrown to caller.
      *
      * @param soapCtxt <context> element in SOAP header
      * @param engineCtxt soap engine context
@@ -359,11 +370,14 @@ public abstract class AuthProvider {
     throws AuthTokenException {
         AuthToken at = null;
         List<AuthProvider> providers = getProviders();
+
+        AuthTokenException authTokenExp = null;
+
         for (AuthProvider ap : providers) {
             try {
                 at = ap.authToken(soapCtxt, engineCtxt);
                 if (at == null) {
-                    throw new AuthTokenException("auth provider " + ap.getName() + " returned null");
+                    authTokenExp = new AuthTokenException("auth provider " + ap.getName() + " returned null");
                 } else {
                     return at;
                 }
@@ -372,13 +386,19 @@ public abstract class AuthProvider {
                 if (e.canIgnore()) {
                     logger().debug(ap.getName() + ":" + e.getMessage());
                 } else {
-                    throw new AuthTokenException("auth provider error", e);
+                    authTokenExp = new AuthTokenException("auth provider error", e);
                 }
             } catch (AuthTokenException e) {
-                // log and rethrow
+                //log and store exception reference
+                authTokenExp = e;
                 logger().debug("getAuthToken error: provider=" + ap.getName() + ", err=" + e.getMessage(), e);
-                throw e;
             }
+        }
+
+        //If AuthTokenException has occurred while traversing Auth providers then it should be thrown.
+        //If multiple auth providers caused AuthTokenException, then last exception is rethrown from here.
+        if (null != authTokenExp) {
+            throw authTokenExp;
         }
 
         // there is no auth data for any of the enabled providers
@@ -389,11 +409,13 @@ public abstract class AuthProvider {
     throws AuthTokenException {
         AuthToken at = null;
         List<AuthProvider> providers = getProviders();
+        AuthTokenException authTokenExp = null;
+
         for (AuthProvider ap : providers) {
             try {
                 at = ap.authToken(authTokenElem, acct);
                 if (at == null) {
-                    throw new AuthTokenException("auth provider " + ap.getName() + " returned null");
+                    authTokenExp = new AuthTokenException("auth provider " + ap.getName() + " returned null");
                 } else {
                     return at;
                 }
@@ -402,13 +424,19 @@ public abstract class AuthProvider {
                 if (e.canIgnore()) {
                     logger().debug(ap.getName() + ":" + e.getMessage());
                 } else {
-                    throw new AuthTokenException("auth provider error", e);
+                    authTokenExp = new AuthTokenException("auth provider error", e);
                 }
             } catch (AuthTokenException e) {
-                // log and rethrow
+                //log and store exception reference
+                authTokenExp = e;
                 logger().debug("getAuthToken error: provider=" + ap.getName() + ", err=" + e.getMessage(), e);
-                throw e;
             }
+        }
+
+        //If AuthTokenException has occurred while traversing Auth providers then it should be thrown.
+        //If multiple auth providers caused AuthTokenException, then last exception is rethrown from here.
+        if (null != authTokenExp) {
+            throw authTokenExp;
         }
 
         // there is no auth data for any of the enabled providers
@@ -426,11 +454,13 @@ public abstract class AuthProvider {
     public static AuthToken getAuthToken(String encoded) throws AuthTokenException {
         AuthToken at = null;
         List<AuthProvider> providers = getProviders();
+        AuthTokenException authTokenExp = null;
+
         for (AuthProvider ap : providers) {
             try {
                 at = ap.authToken(encoded);
                 if (at == null) {
-                    throw new AuthTokenException("auth provider " + ap.getName() + " returned null");
+                    authTokenExp = new AuthTokenException("auth provider " + ap.getName() + " returned null");
                 } else {
                     return at;
                 }
@@ -439,13 +469,19 @@ public abstract class AuthProvider {
                 if (e.canIgnore()) {
                     logger().warn(ap.getName() + ":" + e.getMessage());
                 } else {
-                    throw new AuthTokenException("auth provider error", e);
+                    authTokenExp = new AuthTokenException("auth provider error", e);
                 }
             } catch (AuthTokenException e) {
-                // log and rethrow
+                //log and store exception reference
+                authTokenExp = e;
                 logger().debug("getAuthToken error: provider=" + ap.getName() + ", err=" + e.getMessage(), e);
-                throw e;
             }
+        }
+
+        //If AuthTokenException has occurred while traversing Auth providers then it should be thrown.
+        //If multiple auth providers caused AuthTokenException, then last exception is rethrown from here.
+        if (null != authTokenExp) {
+            throw authTokenExp;
         }
 
         // there is no auth data for any of the enabled providers
@@ -455,11 +491,13 @@ public abstract class AuthProvider {
 
     public static AuthToken getAuthToken(Account acct) throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
         for (AuthProvider ap : providers) {
             try {
                 AuthToken at = ap.authToken(acct);
                 if (at == null) {
-                    throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
+                    authProviderExp = AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
                     return at;
                 }
@@ -467,11 +505,13 @@ public abstract class AuthProvider {
                 if (e.canIgnore()) {
                     logger().debug(ap.getName() + ":" + e.getMessage());
                 } else {
-                    throw e;
+                    authProviderExp = e;
                 }
             }
         }
-
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
 
@@ -483,11 +523,13 @@ public abstract class AuthProvider {
     public static AuthToken getAuthToken(Account acct, boolean isAdmin, AuthMech authMech)
     throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
         for (AuthProvider ap : providers) {
             try {
                 AuthToken at = ap.authToken(acct, isAdmin, authMech);
                 if (at == null) {
-                    throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
+                    authProviderExp = AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
                     return at;
                 }
@@ -495,12 +537,15 @@ public abstract class AuthProvider {
                 if (e.canIgnore()) {
                     logger().debug(ap.getName() + ":" + e.getMessage());
                 } else {
-                    throw e;
+                    authProviderExp = e;
                 }
             }
         }
 
         String acctName = acct != null ? acct.getName() : "null";
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acctName);
     }
 
@@ -511,11 +556,13 @@ public abstract class AuthProvider {
 
     public static AuthToken getAuthToken(Account acct, long expires) throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
         for (AuthProvider ap : providers) {
             try {
                 AuthToken at = ap.authToken(acct, expires);
                 if (at == null) {
-                    throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
+                    authProviderExp = AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
                     return at;
                 }
@@ -523,22 +570,26 @@ public abstract class AuthProvider {
                 if (e.canIgnore()) {
                     logger().debug(ap.getName() + ":" + e.getMessage());
                 } else {
-                    throw e;
+                    authProviderExp = e;
                 }
             }
         }
-
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
 
     public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct)
     throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
         for (AuthProvider ap : providers) {
             try {
                 AuthToken at = ap.authToken(acct, expires, isAdmin, adminAcct);
                 if (at == null) {
-                    throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
+                    authProviderExp = AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
                     return at;
                 }
@@ -546,21 +597,26 @@ public abstract class AuthProvider {
                 if (e.canIgnore()) {
                     logger().debug(ap.getName() + ":" + e.getMessage());
                 } else {
-                    throw e;
+                    authProviderExp = e;
                 }
             }
         }
 
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
 
     public static AuthToken getAuthToken(Account account, Usage usage) throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
         for (AuthProvider ap : providers) {
             try {
                 AuthToken at = ap.authToken(account, usage);
                 if (at == null) {
-                    throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
+                    authProviderExp = AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
                     return at;
                 }
@@ -568,11 +624,14 @@ public abstract class AuthProvider {
                 if (e.canIgnore()) {
                     logger().debug(ap.getName() + ":" + e.getMessage());
                 } else {
-                    throw e;
+                    authProviderExp = e;
                 }
             }
         }
 
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + account.getName());
     }
 
