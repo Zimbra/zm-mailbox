@@ -70,6 +70,9 @@ public class PushNotificationListener extends MailboxListener {
                 MailItem mailItem = entry.getValue();
                 if (DebugConfig.pushNotificationVerboseMode
                     && mailItem.getType() == MailItem.Type.FOLDER) {
+                    ZimbraLog.mailbox.info(
+                        "ZMG: start building notification for new folder with id=%d",
+                        mailItem.getId());
                     pushEvent(notification, account, mailItem);
 
                 } else if (mailItem.getType() == MailItem.Type.MESSAGE) {
@@ -80,13 +83,35 @@ public class PushNotificationListener extends MailboxListener {
                         DataSource dataSource = FilterManager.getDataSource(account, msg);
                         String recipient = dataSource != null ? dataSource.getEmailAddress()
                             : account.getName();
-                        if (FilterManager.executeNewMessageFilters(account, msg, dataSource)) {
-                            NotificationsManager.getInstance().pushNewMessageNotification(account,
-                                mbox, recipient, msg, notification.op);
+                        if (dataSource == null) {
+                            if (FilterManager.executeNewMessageFilters(account, msg, dataSource)) {
+                                ZimbraLog.mailbox
+                                    .info(
+                                        "ZMG: start building notification for new zimbra message with id=%d",
+                                        msg.getId());
+                                NotificationsManager.getInstance().pushNewMessageNotification(
+                                    account, mbox, recipient, msg, notification.op);
+                            }
+                        } else {
+                            if (FilterManager.executeNewMessageFilters(account, msg, dataSource)) {
+                                if (FilterManager.executeDataSourceNewMessageTimeFilter(msg)) {
+                                    ZimbraLog.mailbox
+                                        .info(
+                                            "ZMG: start building notification for new data source message with id=%d",
+                                            msg.getId());
+                                    NotificationsManager.getInstance().pushNewMessageNotification(
+                                        account, mbox, recipient, msg, notification.op);
+                                } else if (FilterManager.executeDataSourceInitialSyncFilter(
+                                    account, msg, dataSource)) {
+                                    ZimbraLog.mailbox
+                                        .info("ZMG: start building notification for data source initial sync");
+                                    pushEvent(account);
+                                }
+                            }
                         }
                     } catch (Exception e) {
                         ZimbraLog.mailbox.warn(
-                            "Exception in building notification from mailbox event", e);
+                            "ZMG: Exception in building notification from mailbox event", e);
                     }
                 }
             }
@@ -133,18 +158,21 @@ public class PushNotificationListener extends MailboxListener {
     private void pushEvent(ChangeNotification notification, Account account, MailItem mailItem) {
         Mailbox mbox;
         try {
+            ZimbraLog.mailbox.info("ZMG: start building notification for modified item with id=%d",
+                mailItem.getId());
             mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             NotificationsManager.getInstance().pushSyncDataNotification(mbox, mailItem, notification.op);
         } catch (Exception e) {
-            ZimbraLog.mailbox.warn("Exception in building notification from mailbox event", e);
+            ZimbraLog.mailbox.warn("ZMG: Exception in building notification from mailbox event", e);
         }
     }
 
     private void pushEvent(Account account) {
         try {
+            ZimbraLog.mailbox.info("ZMG: start building content available push notification");
             NotificationsManager.getInstance().pushContentAvailableNotification(account);
         } catch (Exception e) {
-            ZimbraLog.mailbox.warn("Exception in building notification from mailbox event", e);
+            ZimbraLog.mailbox.warn("ZMG: Exception in building notification from mailbox event", e);
         }
     }
 
