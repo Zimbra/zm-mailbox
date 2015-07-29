@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -69,6 +68,33 @@ public class FilterManager {
         FilterChain filterChain = new NewMessageFilterChain(account, message, getDataSource(
             account, message));
         return filterChain.execute();
+    }
+
+    /**
+     * Executes a filter to identify whether a new message has arrived for a
+     * data source
+     *
+     * @param message
+     * @return TRUE if filter passes else FALSE
+     */
+    public static boolean executeDataSourceNewMessageTimeFilter(Message message) {
+        DataSourceNewMessageTimeFilter filter = new DataSourceNewMessageTimeFilter(message);
+        return filter.apply();
+    }
+
+    /**
+     * Executes a filter to identify an initial data source sync
+     *
+     * @param account
+     * @param message
+     * @param datasource
+     * @return TRUE if filter passes else FALSE
+     */
+    public static boolean executeDataSourceInitialSyncFilter(Account account, Message message,
+        DataSource dataSource) {
+        DataSourceInitialSyncFilter filter = new DataSourceInitialSyncFilter(account, message,
+            dataSource);
+        return filter.apply();
     }
 
     public static DataSource getDataSource(Account account, Message msg) {
