@@ -24,7 +24,6 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.pushnotifications.PushNotification;
 
 public class MessageFileIntoFilter implements Filter {
 
@@ -52,7 +51,7 @@ public class MessageFileIntoFilter implements Filter {
         }
 
         if (!message.isUnread()) {
-            ZimbraLog.mailbox.debug("Message is read");
+            ZimbraLog.mailbox.debug("ZMG: Message is read");
             return false;
         }
 
@@ -60,8 +59,7 @@ public class MessageFileIntoFilter implements Filter {
         if (Mailbox.ID_FOLDER_INBOX == folderId) {
             return true;
         } else if (dataSource != null && isDataSourceInbox(folderId)
-            && dataSource.getEmailAddress() != null
-            && (System.currentTimeMillis() - message.getDate()) < PushNotification.OLD_MESSAGE_TIME) {
+            && dataSource.getEmailAddress() != null) {
             return true;
         }
         return false;
@@ -78,7 +76,7 @@ public class MessageFileIntoFilter implements Filter {
                 }
             }
         } catch (ServiceException e) {
-            ZimbraLog.mailbox.warn("Exception in processing MessageFileIntoFilter");
+            ZimbraLog.mailbox.warn("ZMG: Exception in processing MessageFileIntoFilter", e);
             return false;
         }
         return false;
