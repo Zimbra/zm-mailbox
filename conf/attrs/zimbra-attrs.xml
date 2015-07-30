@@ -9034,4 +9034,10 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
+<attr id="2056" name="zimbraExportMaxDays" type="integer" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountInfo,accountCosDomainInherited,domainInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>0</globalConfigValue>
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>Maximum period in days for export, including start and end date. No limit if set to non-positive integer or unset.</desc>
+</attr>
+
 </attrs>

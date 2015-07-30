@@ -82,6 +82,8 @@ public class MailServiceException extends ServiceException {
     public static final String UNABLE_TO_IMPORT_CONTACTS = "mail.UNABLE_TO_IMPORT_CONTACTS";
     public static final String UNABLE_TO_EXPORT_CONTACTS = "mail.UNABLE_TO_EXPORT_CONTACTS";
     public static final String UNABLE_TO_IMPORT_APPOINTMENTS = "mail.UNABLE_TO_IMPORT_APPOINTMENTS";
+    public static final String EXPORT_PERIOD_NOT_SPECIFIED = "mail.EXPORT_PERIOD_NOT_SPECIFIED";
+    public static final String EXPORT_PERIOD_TOO_LONG = "mail.EXPORT_PERIOD_TOO_LONG";
     public static final String QUOTA_EXCEEDED  = "mail.QUOTA_EXCEEDED";
     public static final String DOMAIN_QUOTA_EXCEEDED  = "mail.DOMAIN_QUOTA_EXCEEDED";
     public static final String QUERY_PARSE_ERROR = "mail.QUERY_PARSE_ERROR";
@@ -138,6 +140,26 @@ public class MailServiceException extends ServiceException {
         }
         NoSuchItemException(String message, String code, boolean isReceiversFault, Argument... args) {
             super(message, code, isReceiversFault, null, args);
+        }
+    }
+
+    public static class ExportPeriodNotSpecifiedException extends MailServiceException {
+        private static final long serialVersionUID = 6708296989977446334L;
+
+        public ExportPeriodNotSpecifiedException(int limit) {
+            super(
+                String.format("Export period not specified. A period no longer than zimbraExportMaxDays=%d days must be specified", limit),
+                EXPORT_PERIOD_NOT_SPECIFIED, SENDERS_FAULT, new Argument(LIMIT, limit, Argument.Type.NUM));
+        }
+    }
+
+    public static class ExportPeriodTooLongException extends MailServiceException {
+        private static final long serialVersionUID = -7358628120037236275L;
+
+        public ExportPeriodTooLongException(long actual, int limit){
+            super(
+                String.format("Specified export period is too long. Specified period is %d days but zimbraExportMaxDays is %d days", actual, limit),
+                EXPORT_PERIOD_TOO_LONG, SENDERS_FAULT, new Argument(LIMIT, limit, Argument.Type.NUM));
         }
     }
 

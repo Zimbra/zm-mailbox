@@ -60,10 +60,12 @@ import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.ACL;
@@ -79,6 +81,8 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.ExportPeriodNotSpecifiedException;
+import com.zimbra.cs.mailbox.MailServiceException.ExportPeriodTooLongException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
@@ -282,6 +286,18 @@ public abstract class ArchiveFormatter extends Formatter {
                     if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT) {
                         saveTargetFolder = true;
                         query = "under:\"" + f.getPath() + "\"" + (query == null ? "" : " " + query);
+                    }
+                }
+                int maxDays = context.targetAccount.getIntAttr(Provisioning.A_zimbraExportMaxDays, 0);
+                if (maxDays > 0) {
+                    if (context.getStartTime() == TIME_UNSPECIFIED || context.getEndTime() == TIME_UNSPECIFIED  || context.getEndTime() == 0) {
+                        ZimbraLog.misc.warn("Export rejected. start and end param must be set. end param must be non-zero");
+                        throw new ExportPeriodNotSpecifiedException(maxDays);
+                    }
+                    else if (context.getEndTime() - context.getStartTime() > maxDays * Constants.MILLIS_PER_DAY) {
+                        long requestDays = (long) Math.ceil((double)(context.getEndTime() - context.getStartTime()) / Constants.MILLIS_PER_DAY);
+                        ZimbraLog.misc.warn("Export rejected. Specified period %d days is longer than zimbraExportMaxDays %d days.", requestDays, maxDays);
+                        throw new ExportPeriodTooLongException(requestDays, maxDays);
                     }
                 }
                 String taskQuery = query;

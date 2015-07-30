@@ -6980,6 +6980,83 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Maximum period in days for export, including start and end date. No
+     * limit if set to non-positive integer or unset.
+     *
+     * @return zimbraExportMaxDays, or 0 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2056)
+    public int getExportMaxDays() {
+        return getIntAttr(Provisioning.A_zimbraExportMaxDays, 0);
+    }
+
+    /**
+     * Maximum period in days for export, including start and end date. No
+     * limit if set to non-positive integer or unset.
+     *
+     * @param zimbraExportMaxDays new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2056)
+    public void setExportMaxDays(int zimbraExportMaxDays) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExportMaxDays, Integer.toString(zimbraExportMaxDays));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum period in days for export, including start and end date. No
+     * limit if set to non-positive integer or unset.
+     *
+     * @param zimbraExportMaxDays new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2056)
+    public Map<String,Object> setExportMaxDays(int zimbraExportMaxDays, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExportMaxDays, Integer.toString(zimbraExportMaxDays));
+        return attrs;
+    }
+
+    /**
+     * Maximum period in days for export, including start and end date. No
+     * limit if set to non-positive integer or unset.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2056)
+    public void unsetExportMaxDays() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExportMaxDays, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum period in days for export, including start and end date. No
+     * limit if set to non-positive integer or unset.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2056)
+    public Map<String,Object> unsetExportMaxDays(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExportMaxDays, "");
+        return attrs;
+    }
+
+    /**
      * the handler class for getting all groups an account belongs to in the
      * external directory
      *
