@@ -626,6 +626,10 @@ public class Message extends MailItem {
             return false;
         }
         Account ownerAcct = Provisioning.getInstance().get(AccountBy.name, ownerEmail);
+        if (ownerAcct == null) {
+            ZimbraLog.account.info("Account = %s not present.", ownerEmail);
+            return false;
+        }
         AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ownerAcct);
         for (Mountpoint sharedCal : getMailbox().getCalendarMountpoints(getMailbox().getOperationContext(), SortBy.NONE)) {
             if (sharedCal.canAccess(ACL.RIGHT_ACTION)) {
