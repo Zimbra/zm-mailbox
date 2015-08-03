@@ -1157,7 +1157,7 @@
           <antcall target="stop-webserver"/>
           <antcall target="stop-ldap"/>
           <exec failonerror="true" executable="../ZimbraServer/src/perl/install-thirdparty">
-      <arg line="main"/>
+      <arg line="users/achhatre/JUDASPRIEST"/>
           </exec>
         </then>
       </if>
