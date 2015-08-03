@@ -668,19 +668,19 @@ public class DbMailItem {
 //                rs.close();
 //                stmt.close();
 //            }
-
+            int count = 0;
+            int batchSize = 500;
             String imapRenumber = mbox.isTrackingImap() ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE 0 END" : "";
-            for (int i = 0; i < msgs.size(); i += Db.getINClauseBatchSize()) {
-                int count = Math.min(Db.getINClauseBatchSize(), msgs.size() - i);
-                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
-                            " SET folder_id = ?, prev_folders=?, mod_metadata = ?, change_date = ?" + imapRenumber +
-                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
+                " SET folder_id = ?, prev_folders=?, mod_metadata = ?, change_date = ?" + imapRenumber +
+                " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+            int modseq = mbox.getOperationChangeID();
+            for(int j = 0; j < msgs.size(); j++) {
                 int pos = 1;
                 stmt.setInt(pos++, folder.getId());
-                int modseq = mbox.getOperationChangeID();
+                UnderlyingData ud = msgs.get(j).getUnderlyingData();
                 //prev folders ordered by modseq ascending, e.g. 100:2;200:101;300:5
-                if (msgs.get(i).getFolderId() != folder.getId()) {
-                    UnderlyingData ud = msgs.get(i).getUnderlyingData();
+                if (msgs.get(j).getFolderId() != folder.getId()) {
                     String prevFolders = ud.getPrevFolders();
                     if (!StringUtil.isNullOrEmpty(prevFolders)) {
                         String[] modseq2FolderId = prevFolders.split(";");
@@ -700,18 +700,20 @@ public class DbMailItem {
                     stmt.setString(pos++, prevFolders);
                     ud.setPrevFolders(prevFolders);
                 } else {
-                    stmt.setString(pos++, msgs.get(i).getUnderlyingData().getPrevFolders());
+                    stmt.setString(pos++, msgs.get(j).getUnderlyingData().getPrevFolders());
                 }
                 stmt.setInt(pos++, modseq);
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
                 pos = setMailboxId(stmt, mbox, pos);
-                for (int index = i; index < i + count; index++) {
-                    stmt.setInt(pos++, msgs.get(index).getId());
+                stmt.setInt(pos++, msgs.get(j).getId());
+                stmt.addBatch();
+                if (++count % batchSize == 0) {
+                    stmt.executeBatch();
                 }
-                stmt.executeUpdate();
-                stmt.close();
-                stmt = null;
             }
+            stmt.executeBatch();
+            stmt.close();
+            stmt = null;
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
 //            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))

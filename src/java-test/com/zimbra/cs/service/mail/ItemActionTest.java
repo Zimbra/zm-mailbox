@@ -196,6 +196,42 @@ public class ItemActionTest {
     }
 
     @Test
+    public void moveConversationPreviousFolderTest() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        acct.setMailThreadingAlgorithm(MailThreadingAlgorithm.subject);
+
+        // setup: add the root message
+        ParsedMessage pm = MailboxTestUtil.generateMessage("test subject");
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Message msg1 = mbox.addMessage(null, pm, dopt, null);
+        Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE);
+        int folder1Id = mbox.createFolder(null, "folder1", fopt).getId();
+        ItemId iid1 =  new ItemId(mbox, folder1Id);
+        int folder2Id = mbox.createFolder(null, "folder2", fopt).getId();
+        ItemId iid2 =  new ItemId(mbox, folder2Id);
+        int folder3Id = mbox.createFolder(null, "folder3", fopt).getId();
+        ItemId iid3 =  new ItemId(mbox, folder3Id);
+
+        ItemActionHelper.MOVE(null, mbox, SoapProtocol.Soap12, Arrays.asList(msg1.getId()), MailItem.Type.MESSAGE, null, iid1);
+        String msg1PrevFolder = mbox.getLastChangeID() + ":"+  Mailbox.ID_FOLDER_INBOX;
+        Assert.assertEquals(msg1PrevFolder, msg1.getPrevFolders());
+
+        dopt = new DeliveryOptions().setFolderId(folder2Id);
+        Message msg2 = mbox.addMessage(null, MailboxTestUtil.generateMessage("Re: test subject"), dopt, null);
+        Assert.assertNull(msg2.getPrevFolders());
+
+        Element request = new Element.XMLElement(MailConstants.CONV_ACTION_REQUEST);
+        request.addElement(MailConstants.E_ACTION).addAttribute(MailConstants.A_OPERATION, ItemAction.OP_MOVE).addAttribute(MailConstants.A_ID, msg1.getConversationId()).addAttribute("l", iid3.getId());
+        new ConvAction().handle(request, ServiceTestUtil.getRequestContext(acct));
+        msg1PrevFolder = msg1PrevFolder + ";" + mbox.getLastChangeID() + ":"+  folder1Id;
+        String msg2PrevFolder = mbox.getLastChangeID() + ":"+  folder2Id;
+        Assert.assertEquals(msg1PrevFolder, msg1.getPrevFolders());
+        Assert.assertEquals(msg2PrevFolder, msg2.getPrevFolders());
+  }
+
+    @Test
     public void mute() throws Exception {
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
