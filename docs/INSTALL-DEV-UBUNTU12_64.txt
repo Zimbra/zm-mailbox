@@ -121,7 +121,7 @@ change port from 3306 to 7306
 change datadir from /var/lib/mysql to /opt/zimbra/mysql/data
 
 15. copy contents of /var/lib/mysql to /opt/zimbra/mysql/data
-$ sudo su
+$ sudo su -
 $ cp -r /var/lib/mysql/* /opt/zimbra/mysql/data/
 
 16. chown new mysql data dir to mysql user and group
@@ -143,9 +143,10 @@ $ ln -s /var/run/mysqld/mysqld.sock /opt/zimbra/mysql/data/mysqld.sock
 
 19. restart mysql:
 
-$ sudo service mysql restart
+$ service mysql restart
 
 if it fails to start - trouble shoot :)
+Once mysql has started, go back to using your user account and not root (type "exit")
 
 16. Install the JDK 1.7 from Oracle if not already present on your system. add $JAVA_HOME to your environment and $JAVA_HOME/bin to your $PATH. 
 
