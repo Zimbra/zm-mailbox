@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,12 +24,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 
 public class ServerThrottle {
 
@@ -45,6 +47,7 @@ public class ServerThrottle {
         if (throttle == null) {
             throttle = new ServerThrottle(serverType);
             instances.put(serverType, throttle);
+            startReaper();
         }
         throttle.setIpReqsPerSecond(ipReqLimit);
         throttle.setAcctReqsPerSecond(acctReqLimit);
@@ -54,6 +57,54 @@ public class ServerThrottle {
         for (String hostname : whitelistHosts) {
             throttle.addToHostList(hostname, true);
         }
+    }
+
+    private static boolean reaping = false;
+
+    private static synchronized void startReaper() {
+        if (reaping) {
+            return;
+        } else {
+            reaping = true;
+        }
+        Thread t = new Thread("ServerThrottleReaper") {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        for(ServerThrottle throttle : instances.values()) {
+                            for (Entry<String, List<Long>> reqsEntry : throttle.ipReqs.entrySet()) {
+                                List<Long> reqs = reqsEntry.getValue();
+                                synchronized (reqs) {
+                                    throttle.pruneStaleRequests(reqs);
+                                    if (reqs.size() == 0) {
+                                        throttle.ipReqs.remove(reqsEntry.getKey());
+                                    }
+                                }
+                            }
+                            for (Entry<String, List<Long>> reqsEntry : throttle.acctReqs.entrySet()) {
+                                List<Long> reqs = reqsEntry.getValue();
+                                synchronized (reqs) {
+                                    throttle.pruneStaleRequests(reqs);
+                                    if (reqs.size() == 0) {
+                                        throttle.acctReqs.remove(reqsEntry.getKey());
+                                    }
+                                }
+                            }
+                        }
+                        try {
+                            Thread.sleep(Provisioning.getInstance().getLocalServer().getMailboxThrottleReapInterval());
+                        } catch (InterruptedException ie) {
+
+                        }
+                    } catch (Throwable t) {
+                        ZimbraLog.net.error("caught throwable during throttle reaping.", t);
+                    }
+                }
+            }
+        };
+        t.setDaemon(true);
+        t.start();
     }
 
     @VisibleForTesting
