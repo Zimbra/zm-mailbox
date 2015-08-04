@@ -20,27 +20,29 @@ import java.util.List;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Message;
 
 /**
- * Filter chain that can be executed before a new message push notification
+ * Filter chain that can be executed before a data source new message push
+ * notification
  */
-public class NewMessageFilterChain implements FilterChain {
+public class DataSourceNewMessageFilterChain implements FilterChain {
 
     List<Filter> filterChain = new ArrayList<Filter>();
 
-    public NewMessageFilterChain(Account account, Message message) {
-        init(account, message);
+    public DataSourceNewMessageFilterChain(Account account, Message message, DataSource dataSource) {
+        init(account, message, dataSource);
     }
 
-    private void init(Account account, Message message) {
+    private void init(Account account, Message message, DataSource dataSource) {
         addFilter(new UnreadMessageFilter(message));
-        addFilter(new MessageFileIntoFilter(account, message));
+        addFilter(new DataSourceNewMessageTimeFilter(message));
     }
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see
      * com.zimbra.cs.pushnotifications.filters.FilterChain#addFilter(com.zimbra
      * .cs.pushnotifications.filters.Filter)
@@ -51,14 +53,15 @@ public class NewMessageFilterChain implements FilterChain {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see com.zimbra.cs.pushnotifications.filters.FilterChain#execute()
      */
     @Override
     public boolean execute() {
         for (Filter filter : filterChain) {
             if (!filter.apply()) {
-                ZimbraLog.mailbox.debug("ZMG: Filter: %s is failing", filter.getClass().getSimpleName());
+                ZimbraLog.mailbox.debug("ZMG: Filter: %s is failing", filter.getClass()
+                    .getSimpleName());
                 return false;
             }
         }

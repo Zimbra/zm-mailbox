@@ -19,6 +19,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
@@ -28,6 +29,7 @@ public class DataSourceInitialSyncFilter implements Filter {
     private Message message;
     private Account account;
     private DataSource dataSource;
+    private Folder inboxFolder;
 
     public static final int MESSAGE_COUNT_FOR_INITIAL_SYNC = 20;
 
@@ -35,6 +37,20 @@ public class DataSourceInitialSyncFilter implements Filter {
         this.message = message;
         this.account = account;
         this.dataSource = dataSource;
+    }
+
+    /**
+     * @return the inboxFolder
+     */
+    public Folder getInboxFolder() {
+        return inboxFolder;
+    }
+
+    /**
+     * @param inboxFolder the inboxFolder to set
+     */
+    public void setInboxFolder(Folder inboxFolder) {
+        this.inboxFolder = inboxFolder;
     }
 
     /*
@@ -50,7 +66,7 @@ public class DataSourceInitialSyncFilter implements Filter {
                 return false;
             }
 
-            if (mbox.getFolderById(null, message.getFolderId()).getItemCount() == MESSAGE_COUNT_FOR_INITIAL_SYNC) {
+            if (inboxFolder != null && inboxFolder.getItemCount() == MESSAGE_COUNT_FOR_INITIAL_SYNC) {
                 return true;
             }
         } catch (ServiceException e) {
