@@ -31,6 +31,7 @@ import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.pushnotifications.filters.DataSourceInitialSyncFilter;
 import com.zimbra.cs.pushnotifications.filters.FilterManager;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -84,7 +85,7 @@ public class PushNotificationListener implements MailboxListener {
                         String recipient = dataSource != null ? dataSource.getEmailAddress()
                             : account.getName();
                         if (dataSource == null) {
-                            if (FilterManager.executeNewMessageFilters(account, msg, dataSource)) {
+                            if (FilterManager.executeNewMessageFilters(account, msg)) {
                                 ZimbraLog.mailbox
                                     .info(
                                         "ZMG: start building notification for new zimbra message with id=%d",
@@ -93,19 +94,23 @@ public class PushNotificationListener implements MailboxListener {
                                     account, mbox, recipient, msg, notification.op);
                             }
                         } else {
-                            if (FilterManager.executeNewMessageFilters(account, msg, dataSource)) {
-                                if (FilterManager.executeDataSourceNewMessageTimeFilter(msg)) {
+                            DataSourceInitialSyncFilter initialSyncfilter = new DataSourceInitialSyncFilter(
+                                account, msg, dataSource);
+                            if (FilterManager.executeMessageFileIntoFilter(account, msg,
+                                dataSource, initialSyncfilter)) {
+                                if (FilterManager
+                                    .executeNewMessageFilters(account, msg, dataSource)) {
                                     ZimbraLog.mailbox
                                         .info(
                                             "ZMG: start building notification for new data source message with id=%d",
                                             msg.getId());
                                     NotificationsManager.getInstance().pushNewMessageNotification(
                                         account, mbox, recipient, msg, notification.op);
-                                } else if (FilterManager.executeDataSourceInitialSyncFilter(
-                                    account, msg, dataSource)) {
+                                } else if (initialSyncfilter.apply()) {
                                     ZimbraLog.mailbox
                                         .info("ZMG: start building notification for data source initial sync");
-                                    pushEvent(account);
+                                    NotificationsManager.getInstance().pushSyncDataNotification(
+                                        account, dataSource, PushNotification.SYNC_DATASOURCE);
                                 }
                             }
                         }

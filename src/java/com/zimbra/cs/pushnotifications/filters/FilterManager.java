@@ -53,7 +53,7 @@ public class FilterManager {
      */
     public static boolean executeNewMessageFilters(Account account, Message message,
         DataSource dataSource) {
-        FilterChain filterChain = new NewMessageFilterChain(account, message, dataSource);
+        FilterChain filterChain = new DataSourceNewMessageFilterChain(account, message, dataSource);
         return filterChain.execute();
     }
 
@@ -65,8 +65,7 @@ public class FilterManager {
      * @return TRUE if filter chain passes else FALSE
      */
     public static boolean executeNewMessageFilters(Account account, Message message) {
-        FilterChain filterChain = new NewMessageFilterChain(account, message, getDataSource(
-            account, message));
+        FilterChain filterChain = new NewMessageFilterChain(account, message);
         return filterChain.execute();
     }
 
@@ -94,6 +93,22 @@ public class FilterManager {
         DataSource dataSource) {
         DataSourceInitialSyncFilter filter = new DataSourceInitialSyncFilter(account, message,
             dataSource);
+        return filter.apply();
+    }
+
+    /**
+     * Executes a filter to check that the message is in INBOX folder
+     *
+     * @param account
+     * @param message 
+     * @param datasource
+     * @param initialSyncfilter
+     * @return TRUE if filter passes else FALSE
+     */
+    public static boolean executeMessageFileIntoFilter(Account account, Message message,
+        DataSource dataSource, DataSourceInitialSyncFilter initialSyncfilter) {
+        MessageFileIntoFilter filter = new MessageFileIntoFilter(account, message, dataSource,
+            initialSyncfilter);
         return filter.apply();
     }
 
