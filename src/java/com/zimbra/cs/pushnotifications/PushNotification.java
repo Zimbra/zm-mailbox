@@ -47,6 +47,7 @@ public interface PushNotification {
     // Actions that can be performed on a data source
     String CREATE_DATASOURCE = "CreateDataSource";
     String DELETE_DATASOURCE = "DeleteDataSource";
+    String SYNC_DATASOURCE = "SyncDataSource";
 
     // push notification providers
     String PROVIDER_IDENTIFIER_GCM = "gcm";

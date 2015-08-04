@@ -199,13 +199,23 @@ APNS -
 "ty":"MESSAGE","id":291,"sdn":"<sender name>","fr":"asdfdsgdg","sa":"<sender address>",
 "cid":-291,"ra":"<recipient address>"}
 ```
-
 In case of iOS versions below 8.0, payload is - 
 
 ```
 {"aps":{"alert":"From: <sender name>\n<subject>","sound":"default"},
 "id":291,"cid":-291}
 ```
+Data Source initial sync push notification
+-----------------------------
+Mobile clients will receive this notification when a data source is created and is available for an initial sync
+
+APNS - 
+
+{"ac":"SyncDataSource","aps":{"content-available":1},"ty":"DATASOURCE","id":"d8a79eac-f70a-43af-8436-73066fd0b364"}
+
+GCM - 
+
+{"data":{"ac":"SyncDataSource","ty":"DATASOURCE","id":"d8a79eac-f70a-43af-8436-73066fd0b364"},"registration_ids":["..."]}
 
 Following links are useful in case the mobile devices are not able to recieve push notifications
 

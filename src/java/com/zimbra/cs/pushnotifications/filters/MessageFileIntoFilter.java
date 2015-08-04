@@ -30,13 +30,21 @@ public class MessageFileIntoFilter implements Filter {
     private Message message;
     private Account account;
     private DataSource dataSource;
+    private DataSourceInitialSyncFilter initialSyncFilter;
 
     public static final String DATA_SOURCE_INBOX = "Inbox";
 
-    public MessageFileIntoFilter(Account account, Message message, DataSource dataSource) {
+    public MessageFileIntoFilter(Account account, Message message) {
+        this.message = message;
+        this.account = account;
+    }
+
+    public MessageFileIntoFilter(Account account, Message message, DataSource dataSource,
+                                 DataSourceInitialSyncFilter intialSyncFilter) {
         this.message = message;
         this.account = account;
         this.dataSource = dataSource;
+        this.initialSyncFilter = intialSyncFilter;
     }
 
     /*
@@ -46,15 +54,6 @@ public class MessageFileIntoFilter implements Filter {
      */
     @Override
     public boolean apply() {
-        if (message == null) {
-            return false;
-        }
-
-        if (!message.isUnread()) {
-            ZimbraLog.mailbox.debug("ZMG: Message is read");
-            return false;
-        }
-
         int folderId = message.getFolderId();
         if (Mailbox.ID_FOLDER_INBOX == folderId) {
             return true;
@@ -71,7 +70,11 @@ public class MessageFileIntoFilter implements Filter {
             Folder dataSourceFolder = mbox.getFolderById(null, dataSource.getFolderId());
             List<Folder> subFolders = dataSourceFolder.getSubfolders(null);
             for (Folder folder : subFolders) {
-                if (DATA_SOURCE_INBOX.equalsIgnoreCase(folder.getName()) && folderId == folder.getId()) {
+                if (DATA_SOURCE_INBOX.equalsIgnoreCase(folder.getName())
+                    && folderId == folder.getId()) {
+                    if (initialSyncFilter != null) {
+                        initialSyncFilter.setInboxFolder(folder);
+                    }
                     return true;
                 }
             }
