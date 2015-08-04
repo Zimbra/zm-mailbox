@@ -18,6 +18,8 @@ package com.zimbra.qa.unittest;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -40,8 +42,7 @@ extends TestCase {
     private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = TestFileUpload.class.getSimpleName();
 
-    public void setUp()
-    throws Exception {
+    public void setUp() throws Exception {
         cleanUp();
     }
 
@@ -60,33 +61,6 @@ extends TestCase {
         assertTrue(responseContent, responseContent.startsWith("401,"));
     }
 
-    /**
-     * Confirms that &lt;script&gt; tags are JavaScript-encoded when passed
-     * to the <tt>requestId</tt> parameter.  See bug 40377.
-     * @throws Exception
-     */
-    public void testRequestId()
-    throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        URI uri = mbox.getUploadURI();
-        HttpClient client = mbox.getHttpClient(uri);
-
-        Part attachmentPart = mbox.createAttachmentPart("test.txt", new byte[10]);
-        Part requestIdPart = new StringPart("requestId", "<script></script>");
-        Part[] parts = new Part[] { attachmentPart, requestIdPart };
-
-        PostMethod post = new PostMethod(uri.toString());
-        post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
-        int statusCode = HttpClientUtil.executeMethod(client, post);
-        assertEquals(HttpServletResponse.SC_OK, statusCode);
-
-        String response = post.getResponseBodyAsString();
-        assertTrue("Response does not contain 'script': " + response, response.contains("script"));
-        assertFalse("Response contains '<script>': " + response, response.contains("<script>"));
-
-        post.releaseConnection();
-    }
-
     public void testRaw() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getUploadURI();
@@ -94,19 +68,54 @@ extends TestCase {
         assertTrue(responseContent, responseContent.startsWith("200,"));
     }
 
+    public void testRawEmpty() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        URI uri = mbox.getUploadURI();
+        String responseContent = postAndVerify(mbox, uri, false, "rawEmpty", null);
+        assertTrue(responseContent, responseContent.startsWith("204,"));
+    }
+
+    /**
+     * Confirms that <tt>requestId</tt> parameter values are restricted as desired.
+     * See bug 99914 and bug 40377.
+     * @throws Exception
+     */
+    public void testRequestIdScript() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        URI uri = mbox.getUploadURI();
+        String responseContent = postAndVerify(mbox, uri, false, "<script></script>", "anything");
+        assertFalse("Response does not contain 'script': " + responseContent, responseContent.contains("script"));
+        assertTrue(responseContent, responseContent.startsWith("400,"));
+    }
+
+    public void testRequestIdAlert() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        URI uri = mbox.getUploadURI();
+        String responseContent = postAndVerify(mbox, uri, false, "alert(1)", null);
+        assertFalse("Response does not contain 'alert': " + responseContent, responseContent.contains("alert"));
+        assertTrue(responseContent, responseContent.startsWith("400,"));
+    }
+
     private String postAndVerify(ZMailbox mbox, URI uri, boolean clearCookies)
+    throws IOException {
+        return postAndVerify(mbox, uri, clearCookies, "myReqId", "some data");
+    }
+
+    private String postAndVerify(ZMailbox mbox, URI uri, boolean clearCookies, String requestId, String attContent)
     throws IOException {
         HttpClient client = mbox.getHttpClient(uri);
         if (clearCookies) {
             client.getState().clearCookies();
         }
 
-        Part attachmentPart = mbox.createAttachmentPart("test.txt", new byte[10]);
-        Part requestIdPart = new StringPart("requestId", "<script></script>");
-        Part[] parts = new Part[] { attachmentPart, requestIdPart };
+        List<Part> parts = new ArrayList<Part>();
+        parts.add(new StringPart("requestId", requestId));
+        if (attContent != null) {
+            parts.add(mbox.createAttachmentPart("test.txt", attContent.getBytes()));
+        }
 
         PostMethod post = new PostMethod(uri.toString());
-        post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
+        post.setRequestEntity(new MultipartRequestEntity(parts.toArray(new Part[parts.size()]), post.getParams()));
         int status = HttpClientUtil.executeMethod(client, post);
         assertEquals(200, status);
 
@@ -121,23 +130,20 @@ extends TestCase {
         HeaderElement[] header = method.getResponseHeader(name).getElements();
         String value = null;
         if(header.length > 0) {
-         value = header[0].getName( );
+            value = header[0].getName();
         }
         return value;
     }
 
-    public void tearDown()
-    throws Exception {
+    public void tearDown() throws Exception {
         cleanUp();
     }
 
-    private void cleanUp()
-    throws Exception {
+    private void cleanUp() throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
 
-    public static void main(String[] args)
-    throws Exception {
+    public static void main(String[] args) throws Exception {
         TestUtil.cliSetup();
         TestUtil.runTest(TestFileUpload.class);
     }

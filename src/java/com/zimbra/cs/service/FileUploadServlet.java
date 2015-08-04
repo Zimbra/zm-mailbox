@@ -612,12 +612,6 @@ public class FileUploadServlet extends ZimbraServlet {
             }
         }
 
-        // empty upload is not a "success"
-        if (items == null || items.isEmpty()) {
-            sendResponse(resp, HttpServletResponse.SC_NO_CONTENT, fmt, reqId, null, items);
-            return Collections.emptyList();
-        }
-
         // restrict requestId value for safety due to later use in javascript
         if (reqId != null && reqId.length() != 0) {
             if (!ALLOWED_REQUESTID_CHARS.matcher(reqId).matches()) {
@@ -625,6 +619,13 @@ public class FileUploadServlet extends ZimbraServlet {
                 sendResponse(resp, HttpServletResponse.SC_BAD_REQUEST, fmt, null, null, items);
                 return Collections.emptyList();
             }
+        }
+
+        // empty upload is not a "success"
+        if (items == null || items.isEmpty()) {
+            mLog.info("No data in upload for reqId: %s", reqId);
+            sendResponse(resp, HttpServletResponse.SC_NO_CONTENT, fmt, reqId, null, items);
+            return Collections.emptyList();
         }
 
         // cache the uploaded files in the hash and construct the list of upload IDs
