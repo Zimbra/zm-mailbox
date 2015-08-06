@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 
@@ -93,7 +94,8 @@ public class ServerThrottle {
                             }
                         }
                         try {
-                            Thread.sleep(Provisioning.getInstance().getLocalServer().getMailboxThrottleReapInterval());
+                            ZimbraLog.net.debug("zimbra_mailbox_throttle_reap_interval = %s", LC.zimbra_mailbox_throttle_reap_interval.longValue());
+                            Thread.sleep(LC.zimbra_mailbox_throttle_reap_interval.longValue());
                         } catch (InterruptedException ie) {
 
                         }
