@@ -35,6 +35,7 @@ import com.zimbra.cs.service.account.GetShareInfo.ShareInfoVisitor;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.GetShareInfoRequest;
+import com.zimbra.soap.admin.message.GetShareInfoResponse;
 import com.zimbra.soap.type.GranteeChooser;
 
 public class GetShareInfo extends ShareInfoHandler {
@@ -80,14 +81,14 @@ public class GetShareInfo extends ShareInfoHandler {
         // unless the admin is a domain admin for a different domain...
         defendAgainstAccountOrCalendarResourceHarvesting(ownerAcct, acctBy, accountSelectorKey, zsc,
                 Admin.R_adminLoginAs, Admin.R_adminLoginCalendarResourceAs);
-        Element response = zsc.createElement(AdminConstants.GET_SHARE_INFO_RESPONSE);
+        GetShareInfoResponse response = new GetShareInfoResponse();
 
         ResultFilter resultFilter = new ResultFilterByTarget(granteeId, granteeName);
         ShareInfoVisitor visitor = new ShareInfoVisitor(prov, response, null, resultFilter);
         ShareInfo.Discover.discover(octxt, prov, null, granteeType, ownerAcct, visitor);
         visitor.finish();
 
-        return response;
+        return zsc.jaxbToElement(response);
     }
 
     @Override

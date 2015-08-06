@@ -39,6 +39,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import junit.framework.Assert;
 
+import org.dom4j.DocumentException;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
@@ -97,7 +98,10 @@ import com.zimbra.common.auth.twofactor.AuthenticatorConfig.CodeLength;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
 import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.lmtp.LmtpClient;
+import com.zimbra.common.localconfig.ConfigException;
+import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.localconfig.LocalConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -149,6 +153,8 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.admin.message.GetAccountRequest;
 import com.zimbra.soap.admin.message.GetAccountResponse;
+import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
+import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.cs.util.ProvisioningUtil;
@@ -1414,5 +1420,20 @@ extends Assert {
         config.setWindowSize(WINDOW_SIZE);
         TOTPAuthenticator auth = new TOTPAuthenticator(config);
         return auth;
+    }
+
+    protected static void setLCValue(KnownKey key, String newValue)
+            throws DocumentException, ConfigException, IOException, ServiceException {
+        LocalConfig lc = new LocalConfig(null);
+        if (newValue == null) {
+            lc.remove(key.key());
+        } else {
+            lc.set(key.key(), newValue);
+        }
+        lc.save();
+        SoapProvisioning prov = TestUtil.newSoapProvisioning();
+        ReloadLocalConfigRequest req = new ReloadLocalConfigRequest();
+        ReloadLocalConfigResponse resp = prov.invokeJaxb(req);
+        assertNotNull("ReloadLocalConfigResponse" , resp);
     }
 }

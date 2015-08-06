@@ -2623,12 +2623,10 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public void getShareInfo(Account ownerAcct,
-            PublishedShareInfoVisitor visitor)
+    public void getShareInfo(Account ownerAcct, PublishedShareInfoVisitor visitor)
     throws ServiceException {
-        GetShareInfoResponse rsp = invokeJaxb(
-                new GetShareInfoRequest(getSelector(ownerAcct)));
-        for (com.zimbra.soap.type.ShareInfo sInfo : rsp.getShareInfos()) {
+        GetShareInfoResponse rsp = invokeJaxb(new GetShareInfoRequest(getSelector(ownerAcct)));
+        for (com.zimbra.soap.type.ShareInfo sInfo : rsp.getShares()) {
             ShareInfoData sid = ShareInfoData.fromJaxbShareInfo(sInfo);
             visitor.visit(sid);
         }
