@@ -11883,6 +11883,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarWorkingHours = "zimbraPrefCalendarWorkingHours";
 
     /**
+     * If FALSE, chat features are disabled in the client and user presence
+     * is shown as offline to all other users.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2057)
+    public static final String A_zimbraPrefChatEnabled = "zimbraPrefChatEnabled";
+
+    /**
      * Whether to enable audible notifications for Chat
      *
      * @since ZCS 8.7.0,9.0.0
