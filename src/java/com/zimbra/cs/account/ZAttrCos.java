@@ -29717,6 +29717,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * If FALSE, chat features are disabled in the client and user presence
+     * is shown as offline to all other users.
+     *
+     * @return zimbraPrefChatEnabled, or true if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2057)
+    public boolean isPrefChatEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefChatEnabled, true);
+    }
+
+    /**
+     * If FALSE, chat features are disabled in the client and user presence
+     * is shown as offline to all other users.
+     *
+     * @param zimbraPrefChatEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2057)
+    public void setPrefChatEnabled(boolean zimbraPrefChatEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefChatEnabled, zimbraPrefChatEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If FALSE, chat features are disabled in the client and user presence
+     * is shown as offline to all other users.
+     *
+     * @param zimbraPrefChatEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2057)
+    public Map<String,Object> setPrefChatEnabled(boolean zimbraPrefChatEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefChatEnabled, zimbraPrefChatEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * If FALSE, chat features are disabled in the client and user presence
+     * is shown as offline to all other users.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2057)
+    public void unsetPrefChatEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefChatEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If FALSE, chat features are disabled in the client and user presence
+     * is shown as offline to all other users.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2057)
+    public Map<String,Object> unsetPrefChatEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefChatEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether to enable audible notifications for Chat
      *
      * @return zimbraPrefChatPlaySound, or false if unset

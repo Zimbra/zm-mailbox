@@ -9040,4 +9040,9 @@ TODO: delete them permanently from here
   <desc>Maximum period in days for export, including start and end date. No limit if set to non-positive integer or unset.</desc>
 </attr>
 
+<attr id="2057" name="zimbraPrefChatEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.0,9.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>If FALSE, chat features are disabled in the client and user presence is shown as offline to all other users.</desc>
+</attr>
+
 </attrs>
