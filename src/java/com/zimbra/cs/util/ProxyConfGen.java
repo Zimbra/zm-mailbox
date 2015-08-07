@@ -1694,26 +1694,6 @@ class MailSSLProtocolsVar extends ProxyConfVar {
     }
 }
 
-class WebZSSUpstreamEnablerVar extends WebEnablerVar {
-
-    public WebZSSUpstreamEnablerVar() {
-        super("web.zss.upstream.disable", "#",
-                "Indicates whether zss location block should be populated " +
-                "(false unless zimbraReverseProxyZSSHostname is set)");
-    }
-
-
-    @Override
-    public String format(Object o)  {
-        String hostname = serverSource.getAttr("zimbraReverseProxyZSSHostname");
-        if (hostname == null || ProxyConfUtil.isEmptyString(hostname)) {
-            return "#";
-        } else {
-            return "";
-        }
-    }
-}
-
 class WebSSLDhparamEnablerVar extends WebEnablerVar {
 
     public WebSSLDhparamEnablerVar() {
@@ -2531,10 +2511,7 @@ public class ProxyConfGen
 	    mConfVars.put("web.upstream.login.target", new WebProxyUpstreamLoginTargetVar());
 	    mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
 	    mConfVars.put("ssl.session.timeout", new TimeInSecVarWrapper(new ProxyConfVar("ssl.session.timeout", "zimbraReverseProxySSLSessionTimeout", new Long(600), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "SSL session timeout value for the proxy in secs")));
-	    mConfVars.put("web.zss.upstream.disable", new WebZSSUpstreamEnablerVar());
         mConfVars.put("ssl.session.cachesize", new WebSSLSessionCacheSizeVar());
-	    mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
-	    mConfVars.put("web.zss.resolver.file", new ProxyConfVar("web.zss.resolver.file", null, mResolverfile, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "File containing resolver directive with the nameservers from /etc/resolv.conf"));
 	    mConfVars.put("web.xmpp.bosh.upstream.disable", new WebXmppBoshEnablerVar());
         mConfVars.put("web.xmpp.local.bind.url", new ProxyConfVar("web.xmpp.local.bind.url", "zimbraReverseProxyXmppBoshLocalHttpBindURL", "/http-bind", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Local HTTP-BIND URL prefix where ZWC sends XMPP over BOSH requests"));
         mConfVars.put("web.xmpp.remote.bind.url", new ProxyConfVar("web.xmpp.remote.bind.url", "zimbraReverseProxyXmppBoshRemoteHttpBindURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Remote HTTP-BIND URL prefix for an external XMPP server where XMPP over BOSH requests need to be proxied"));
