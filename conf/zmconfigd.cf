@@ -394,7 +394,6 @@ SECTION proxy
 	VAR zimbraReverseProxySSLProtocols
 	VAR zimbraReverseProxySSLSessionTimeout
     VAR zimbraReverseProxySSLSessionCacheSize
-	VAR zimbraReverseProxyZSSHostname
 	VAR zimbraReverseProxyZmlookupCachingEnabled
 	VAR zimbraReverseProxyXmppBoshLocalHttpBindURL
     VAR zimbraReverseProxyXmppBoshRemoteHttpBindURL
