@@ -49,7 +49,7 @@ public class MessageFileIntoFilter implements Filter {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see com.zimbra.cs.pushnotifications.filters.Filter#apply()
      */
     @Override
