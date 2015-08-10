@@ -14244,14 +14244,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyZmlookupCachingEnabled = "zimbraReverseProxyZmlookupCachingEnabled";
 
     /**
-     * Hostname of the upstream ZSS server being reverse-proxied
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1722)
-    public static final String A_zimbraReverseProxyZSSHostname = "zimbraReverseProxyZSSHostname";
-
-    /**
      * whether or not to revoke app-specific passwords when the main password
      * is changed
      *
