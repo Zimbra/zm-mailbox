@@ -17,7 +17,8 @@ public class DisableTwoFactorAuth extends AccountDocumentHandler {
         Account account = getRequestedAccount(zsc);
         TwoFactorManager manager = new TwoFactorManager(account);
         DisableTwoFactorAuthResponse response = new DisableTwoFactorAuthResponse();
-        boolean disabled = manager.disableTwoFactorAuth();
+        manager.disableTwoFactorAuth(true);
+        manager.revokeAllAppSpecificPasswords();
         return zsc.jaxbToElement(response);
     }
 }
