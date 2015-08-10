@@ -214,6 +214,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
             }
             if ("DATA".equalsIgnoreCase(cmd)) {
                 doDATA();
+                ZimbraLog.removeAccountFromContext();
                 return true;
             }
             break;
