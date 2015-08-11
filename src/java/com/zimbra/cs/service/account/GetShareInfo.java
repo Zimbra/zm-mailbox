@@ -133,12 +133,10 @@ public class GetShareInfo  extends AccountDocumentHandler {
         }
 
         String filterDomain = null;
-        if (LC.PUBLIC_SHARE_VISIBILITY.samePrimaryDomain.equals(LC.getPublicShareAdvertisingScope()) &&
-                (owner == null)) {
+        if (LC.PUBLIC_SHARE_VISIBILITY.samePrimaryDomain.equals(LC.getPublicShareAdvertisingScope())) {
             filterDomain = targetAcct.getDomainName();
         }
-        // Only filter public shares when we don't already know the owner
-        ResultFilter resultFilter2 = (owner != null) ? null : new ResultFilterForPublicShares(filterDomain);
+        ResultFilter resultFilter2 = new ResultFilterForPublicShares(filterDomain);
 
         ShareInfoVisitor visitor = new ShareInfoVisitor(prov, response, mountedFolders,
                 resultFilter, resultFilter2);
@@ -265,15 +263,15 @@ public class GetShareInfo  extends AccountDocumentHandler {
 
         @Override
         public boolean check(ShareInfoData sid) {
+            if (ACL.GRANTEE_PUBLIC != sid.getGranteeTypeCode()) {
+                return true; // only interested in filtering out public shares
+            }
             if (hideAllPublicShares) {
                 ZimbraLog.misc.debug("Skipping unmounted public share '%s'", sid.getName());
                 return false;
             }
             if (ownerDomainFilter == null) {
                 return true; // nothing to filter by
-            }
-            if (ACL.GRANTEE_PUBLIC != sid.getGranteeTypeCode()) {
-                return true; // only interested in filtering out public shares
             }
             String ownerDomain;
             try {
