@@ -19,6 +19,7 @@ package com.zimbra.qa.unittest;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -28,6 +29,7 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
@@ -110,16 +112,21 @@ public class TestJaxbProvisioning {
 
     private SoapProvisioning prov = null;
 
-    private final static String testAcctDomainName = "jaxb.acct.domain.example.test";
-    private final static String domain2 = "jaxb.domain.test";
-    private final static String sharer = "sharer@" + domain2;
-    private final static String sharee = "sharee@" + domain2;
+    private final static String domain1 = "jaxb.domain1";
+    private final static String domain2 = "jaxb.domain2";
+    private final static String domain3 = "jaxb.domain3";
+    private final static String sharer = "sharer@" + domain1;
+    private final static String sharee = "sharee@" + domain1;
+    private final static String other = "other@" + domain1;
+    private final static String dom2acct = "dom2acct@" + domain2;
+    private final static String dom3acct = "dom3acct@" + domain3;
 
     private final static String testServer = "jaxb.server.example.test";
-    private final static String testAcctEmail = "jaxb1@" + testAcctDomainName;
-    private final static String testAcctAlias = "alias_4_jaxb1@" + testAcctDomainName;
-    private final static String testAcctIdentity = "identity_4_jaxb1@" + testAcctDomainName;
-    private final static String testNewAcctEmail = "new_jaxb1@" + testAcctDomainName;
+    private final static String testAcctEmail = "jaxb1@" + domain2;
+    private final static String dom1acct = "dom1acct@" + domain2;
+    private final static String testAcctAlias = "alias_4_jaxb1@" + domain2;
+    private final static String testAcctIdentity = "identity_4_jaxb1@" + domain2;
+    private final static String testNewAcctEmail = "new_jaxb1@" + domain2;
     private final static String testCalResDomain = "jaxb.calr.domain.example.test";
     private final static String testCalRes = "jaxb1@" + testCalResDomain;
     private final static String testNewCalRes = "new_jaxb1@" + testCalResDomain;
@@ -163,6 +170,10 @@ public class TestJaxbProvisioning {
         TestUtil.deleteAccount(testNewAcctEmail);
         TestUtil.deleteAccount(sharer);
         TestUtil.deleteAccount(sharee);
+        TestUtil.deleteAccount(other);
+        TestUtil.deleteAccount(dom1acct);
+        TestUtil.deleteAccount(dom2acct);
+        TestUtil.deleteAccount(dom3acct);
         deleteCalendarResourceIfExists(testCalRes);
         deleteDlIfExists(testDl);
         deleteDlIfExists(parentDl);
@@ -170,11 +181,12 @@ public class TestJaxbProvisioning {
         deleteCosIfExists(testCos);
         deleteCosIfExists(testNewCos);
         deleteCosIfExists(testCosCopy);
-        deleteDomainIfExists(testAcctDomainName);
+        deleteDomainIfExists(domain1);
         deleteDomainIfExists(testCalResDomain);
         deleteDomainIfExists(testDlDomain);
         deleteDomainIfExists(testCosDomain);
         deleteDomainIfExists(domain2);
+        deleteDomainIfExists(domain3);
         deleteServerIfExists(testServer);
         deleteAlwaysOnClusterIfExists(testAlwaysOnCluster);
     }
@@ -346,7 +358,7 @@ public class TestJaxbProvisioning {
     public void testServer() throws Exception {
         ZimbraLog.test.debug("Starting test %s", testName());
         Domain dom = ensureDomainExists(testServer);
-        Assert.assertNotNull("Domain for " + testAcctDomainName, dom);
+        Assert.assertNotNull("Domain for " + domain1, dom);
         Server svr = prov.createServer(testServer, null);
         Assert.assertNotNull("Server for " + testServer, svr);
         svr = prov.get(Key.ServerBy.id, svr.getId());
@@ -474,8 +486,8 @@ public class TestJaxbProvisioning {
     @Test
     public void testAccount() throws Exception {
         ZimbraLog.test.debug("Starting testAccount");
-        Domain dom = ensureDomainExists(testAcctDomainName);
-        Assert.assertNotNull("Domain for " + testAcctDomainName, dom);
+        Domain dom = ensureDomainExists(domain2);
+        Assert.assertNotNull("Domain for " + domain2, dom);
         Account acct = prov.createAccount(testAcctEmail,
                 TestUtil.DEFAULT_PASSWORD, null);
         prov.authAccount(acct, TestUtil.DEFAULT_PASSWORD,
@@ -515,77 +527,255 @@ public class TestJaxbProvisioning {
         prov.deleteAccount(acct.getId());
    }
 
+    public static class CutDownShareInfo {
+        String folderPath;
+        String ownerEmail;
+        String granteeType;
+        public CutDownShareInfo(String folderPath, String ownerEmail, String granteeType) {
+            this.folderPath = folderPath;
+            this.ownerEmail = ownerEmail;
+            this.granteeType = granteeType;
+        }
+        public CutDownShareInfo(ShareInfo sInfo) {
+            this.folderPath = sInfo.getFolderPath();
+            this.ownerEmail = sInfo.getOwnerEmail();
+            this.granteeType = sInfo.getGranteeType();
+        }
+
+        public boolean matches(ShareInfo shareInfo) {
+            return folderPath.equals(shareInfo.getFolderPath()) && ownerEmail.equals(shareInfo.getOwnerEmail())
+                    && granteeType.equals(shareInfo.getGranteeType());
+        }
+        @Override
+        public String toString() {
+            return String.format("path=%s ownerEmail=%s granteeType=%s", folderPath, ownerEmail, granteeType);
+        }
+    }
+
+    public static class ShareSet {
+        Set<CutDownShareInfo> shares = Sets.newHashSet();
+        public ShareSet() {
+        }
+
+        public ShareSet(CutDownShareInfo share) {
+            add(share);
+        }
+
+        public ShareSet(Set<CutDownShareInfo> shares) {
+            addAll(shares);
+        }
+
+        public ShareSet add(CutDownShareInfo share) {
+            this.shares.add(share);
+            return this;
+        }
+
+        public ShareSet addAll(Set<CutDownShareInfo> shars) {
+            this.shares.addAll(shars);
+            return this;
+        }
+
+        public ShareSet addAll(List<ShareInfo> shars) {
+            for (ShareInfo sInfo : shars) {
+                this.shares.add(new CutDownShareInfo(sInfo));
+            }
+            return this;
+        }
+    }
+
+    public CutDownShareInfo setupShare(Account sharerAccount, String sharerFolderName, byte color,
+            String granteeType, Account shareeAccount, Account mountingAccount, String mountFolderName) {
+        setupShare(sharerAccount, sharerFolderName, color, "appointment", granteeType, "r",
+                shareeAccount, mountingAccount, mountFolderName);
+        return new CutDownShareInfo("/" + sharerFolderName, sharerAccount.getName(), granteeType);
+    }
+
+    public void setupShare(Account sharerAccount, String sharerFolderName, byte color, String defaultView,
+            String granteeType, String perm, Account shareeAccount, Account mountingAccount, String mountFolderName) {
+        ShareInfo fred = new ShareInfo();
+        fred.getGranteeType();
+        String theSharee = (shareeAccount != null) ? shareeAccount.getName() : null;
+        String folderId = createFolder(sharerAccount, sharerFolderName, Byte.valueOf(color), defaultView);
+        grantAccess(sharerAccount, folderId, granteeType, theSharee, perm);
+        if (mountingAccount != null) {
+            createMountpoint(mountingAccount, mountFolderName, defaultView, sharerAccount.getId(), folderId);
+        }
+    }
+
+    /**
+     * Setup: no public shares in DomA; UserM@DomZ has a public share(s)
+    1. UserA@DomA w/GetShareInfoRequest (unqualified)
+    2. UserA@DomA w/GetShareInfoRequest owner by=name UserL@DomZ
+       - valid owner - *no* public shares
+    3. UserA@DomA w/GetShareInfoRequest owner by=name UserM@DomZ
+       - valid owner - with public shares ONLY
+    4. UserA@DomA w/GetShareInfoRequest owner by=name UserN@DomZ
+       - invalid owner (non-existent account)
+    5. UserA@DomA w/GetShareInfoRequest owner by=name UserB@DomA
+       - valid owner - *no* public shares (yet)
+
+    Setup: UserB@DomA creates a public share(s)...
+    - Rerun Tests 1-5
+
+    => I believe responses for 1-5 (both rounds) should be ~identical
+       if public_share_advertising_scope=none and there are no explicit
+       shares to UserA@DomA
+
+    # sanity tests on explicit sharing...
+
+    6. UserC@DomA w/GetShareInfoRequest owner by=name UserO@DomZ
+       - valid owner - with ONLY an *explicit* (non-public) share with UserB@DomA
+    7. UserC@DomA w/GetShareInfoRequest owner by=name UserP@DomB
+       - valid owner - with public shares AND an *explicit* (non-public) share with UserB@DomA
+
+    => I believe responses for 7-8 should be ~identical (different owners of course)
+       if public_share_advertising_scope=none and there are no explicit
+       shares to UserC@DomA
+
+    - for completeness, we should also repeat 2-7 with by=id, although the
+      likelihood of harvesting using by=id is probably quite a bit lower
+      than by=name.
+
+    I don't know how this aligns or overlaps with existing test cases
+    but hopefully we end up with a similar set of test cases for each of
+    none|all|samePrimaryDomain as makes sense.
+     */
     @Test
-    public void testPublicSharesInDiffDomains() throws Exception {
+    public void testVisibilityNonePublicSharesConsistentlyIgnored() throws Exception {
         ZimbraLog.test.debug("Starting test %s", testName());
-        ensureDomainExists(testAcctDomainName);
+
+        ensureDomainExists(domain1);  // DomA (sameDom) "jaxb.domain.test"
+        ensureDomainExists(domain2);  // DomZ (diffDom) "jaxb.acct.domain.example.test"
+        ensureDomainExists(domain3);  // DomB
+        Cos cos = prov.createCos(testCos, null);
+        Assert.assertNotNull("Cos for " + testCos, cos);
+        Account sameDomAcct = ensureMailboxExists(sharer); // UserB@DomA
+        Account shareeAcct = ensureMailboxExists(sharee); // UserA@DomA
+        Account diffDomAcct = ensureMailboxExists(testAcctEmail); // UserM@DomZ
+        Account diffDomAcct2 = ensureMailboxExists(testNewAcctEmail); // UserL@DomZ
+        Account sameDomAcct3 = ensureMailboxExists(dom1acct); // UserC@DomA
+        Account diffDomAcct3 = ensureMailboxExists(dom2acct); // UserO@DomZ
+        Account dom3acct1 = ensureMailboxExists(dom3acct); // UserP@DomB new_jaxb1@jaxb.server.example.test
+        // anticipate that LC.public_share_advertising_scope config will be done by account/cos/domain in the future.
+        shareeAcct.setCOSId(cos.getId());
+        TestUtil.setLCValue(LC.public_share_advertising_scope, LC.PUBLIC_SHARE_VISIBILITY.none.toString());
+        CutDownShareInfo pubDiffDom = setupShare(diffDomAcct, "PUB_DiffDomain", (byte) 5, "pub", null, null, null);
+        visibilityNoneRepeats(shareeAcct, diffDomAcct, diffDomAcct2, sameDomAcct);
+        CutDownShareInfo pubSameDom = setupShare(sameDomAcct, "PUB_SameDomain", (byte) 5, "pub", null, null, null);
+        visibilityNoneRepeats(shareeAcct, diffDomAcct, diffDomAcct2, sameDomAcct);
+
+        setupShare(diffDomAcct3, "USR_DiffDomain", (byte) 3, "usr", sameDomAcct, null, null);
+        accountGetShareInfo(sameDomAcct3, AccountSelector.fromName(diffDomAcct3.getName()), false, new ShareSet());
+        accountGetShareInfo(sameDomAcct3, AccountSelector.fromId(diffDomAcct3.getId()), false, new ShareSet());
+        setupShare(dom3acct1, "PUB_DiffDomain2", (byte) 3, "pub", null, null, null);
+        setupShare(dom3acct1, "USR_DiffDomain2", (byte) 3, "usr", sameDomAcct, null, null);
+        accountGetShareInfo(sameDomAcct3, AccountSelector.fromName(diffDomAcct3.getName()), false, new ShareSet());
+        accountGetShareInfo(sameDomAcct3, AccountSelector.fromId(diffDomAcct3.getId()), false, new ShareSet());
+        visibilityNoneRepeats(shareeAcct, diffDomAcct, diffDomAcct2, sameDomAcct);
+    }
+
+    private void visibilityNoneRepeats(Account shareeAcct, Account diffDomAcct, Account diffDomAcct2,
+            Account sameDomAcct) {
+        // unqualified
+        accountGetShareInfo(shareeAcct, null /* owner account */, false, new ShareSet());
+        // valid owner, diff domain - no public shares
+        accountGetShareInfo(shareeAcct, AccountSelector.fromName(diffDomAcct2.getName()), false, new ShareSet());
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(diffDomAcct2.getId()), false, new ShareSet());
+        // valid owner, diff domain - with public shares only
+        accountGetShareInfo(shareeAcct, AccountSelector.fromName(diffDomAcct.getName()), false, new ShareSet());
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(diffDomAcct.getId()), false, new ShareSet());
+        // invalid owner, diff domain - non-existent account
+        accountGetShareInfo(shareeAcct, AccountSelector.fromName("nonexistent@" + domain1),
+                false, new ShareSet());
+        // valid owner, same domain - no public shares 1st time , some the 2nd time
+        accountGetShareInfo(shareeAcct, AccountSelector.fromName(sameDomAcct.getName()), false, new ShareSet());
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(sameDomAcct.getId()), false, new ShareSet());
+    }
+
+    @Test
+    public void testPublicSharesVisibility() throws Exception {
+        ZimbraLog.test.debug("Starting test %s", testName());
+        ensureDomainExists(domain1);
         ensureDomainExists(domain2);
         Cos cos = prov.createCos(testCos, null);
         Assert.assertNotNull("Cos for " + testCos, cos);
-        Account sharerAcct = TestUtil.createAccount(sharer);
+        Account sameDomAcct = TestUtil.createAccount(sharer);
         Account shareeAcct = ensureMailboxExists(sharee);
-        Account otherDomainSharer = TestUtil.createAccount(testAcctEmail);
+        Account otherAcct = ensureMailboxExists(other);
+        Account diffDomAcct = TestUtil.createAccount(testAcctEmail);
         // anticipate that LC.public_share_advertising_scope config will be done by account/cos/domain in the future.
         shareeAcct.setCOSId(cos.getId());
         TestUtil.setLCValue(LC.public_share_advertising_scope, LC.PUBLIC_SHARE_VISIBILITY.all.toString());
         GetShareInfoResponse gsiResp = accountGetShareInfo(shareeAcct, null /* owner account */, false, null);
         // Remember how many baseline public shares there are before we start.
-        int basePublicShares = gsiResp.getShares().size();
-        String folder1Id = createFolder(sharerAcct, "SharedByUserToSharee", Byte.valueOf((byte) 3), "appointment");
-        String folder2Id = createFolder(sharerAcct, "SharedPubliclyAndMounted", Byte.valueOf((byte) 4), "appointment");
-        String folder3Id = createFolder(sharerAcct, "SharedPubliclyNotMounted", Byte.valueOf((byte) 5), "appointment");
-        grantAccess(sharerAcct, folder1Id, "usr", sharee, "r");
-        grantAccess(sharerAcct, folder2Id, "pub", null, "r");
-        grantAccess(sharerAcct, folder3Id, "pub", null, "r");
+        ShareSet baselinePublicShares = new ShareSet().addAll(gsiResp.getShares());
 
-        String folder4Id = createFolder(otherDomainSharer, "SharedByOtherDomainUserToSharee", Byte.valueOf((byte) 3),
-                "appointment");
-        String folder5Id = createFolder(otherDomainSharer, "SharedPubliclyOtherDomainAndMounted",
-                Byte.valueOf((byte) 4), "appointment");
-        String folder6Id = createFolder(otherDomainSharer, "SharedPubliclyOtherDomainNotMounted",
-                Byte.valueOf((byte) 5), "appointment");
-        grantAccess(otherDomainSharer, folder4Id, "usr", sharee, "r");
-        grantAccess(otherDomainSharer, folder5Id, "pub", null, "r");
-        grantAccess(otherDomainSharer, folder6Id, "pub", null, "r");
+        CutDownShareInfo mountedUsrSameDom =
+            setupShare(sameDomAcct, "USER_Mounted", (byte) 2, "usr", shareeAcct, shareeAcct, "USR_SAME_DOM");
+        CutDownShareInfo notMountedUsrSameDom =
+            setupShare(sameDomAcct, "USER_NOT_Mounted", (byte) 3, "usr", shareeAcct, null, null);
+        CutDownShareInfo mountedPubSameDom =
+            setupShare(sameDomAcct, "PUB_Mounted", (byte) 4, "pub", null, shareeAcct, "PUB_SAME_DOM");
+        CutDownShareInfo notMountedPubSameDom =
+            setupShare(sameDomAcct, "PUB_NOT_Mounted", (byte) 5, "pub", null, null, null);
+        /* never visible to sharee */
+        CutDownShareInfo usrUnrelatedSameDom =
+            setupShare(sameDomAcct, "USER_Unrelated", (byte) 2, "usr", otherAcct, null, null);
 
-        createMountpoint(shareeAcct, "sharedByUser", "appointment", sharerAcct.getId(), folder1Id);
-        createMountpoint(shareeAcct, "publiclyShared", "appointment", sharerAcct.getId(), folder2Id);
-        createMountpoint(otherDomainSharer, "publiclySharedOtherDom", "appointment",
-                otherDomainSharer.getId(), folder5Id);
-        int MOUNTED_DIRECT = 1;
-        int NOT_MOUNTED_DIRECT = 1;
-        int MOUNTED_PUBLIC = 2;
-        int NOTMOUNTED_PUBLIC_SAME_DOMAIN = 1;
-        int NOTMOUNTED_PUBLIC_DIFF_DOMAIN = 1;
-        int ALL_SHARES = MOUNTED_DIRECT + NOT_MOUNTED_DIRECT + MOUNTED_PUBLIC +
-                NOTMOUNTED_PUBLIC_SAME_DOMAIN + NOTMOUNTED_PUBLIC_DIFF_DOMAIN;
-        int ALL_SHARED_FROM_SHARER = 3;
-        int ALL_SHARED_FROM_DIFF_DOMAIN_SHARER = 3;
+        CutDownShareInfo mountedUsrDiffDom =
+            setupShare(diffDomAcct, "USER_MountedDiffDom", (byte) 2, "usr", shareeAcct, shareeAcct, "USR_DIFF_DOM");
+        CutDownShareInfo notMountedUsrDiffDom =
+            setupShare(diffDomAcct, "USER_NOT_MountedDiffDom", (byte) 3, "usr", shareeAcct, null, null);
+        CutDownShareInfo mountedPubDiffDom =
+            setupShare(diffDomAcct, "PUB_MountedDiffDom", (byte) 4, "pub", null, shareeAcct, "PUB_DIFF_DOM");
+        CutDownShareInfo notMountedPubDiffDom =
+            setupShare(diffDomAcct, "PUB_NOT_MountedDiffDom", (byte) 5, "pub", null, null, null);
+        /* never visible to sharee */
+        CutDownShareInfo usrUnrelatedDiffDom =
+            setupShare(diffDomAcct, "USER_UnrelatedDiffDom", (byte) 2, "usr", otherAcct, null, null);
+
+        ShareSet allMounted =
+                new ShareSet(mountedUsrSameDom).add(mountedPubSameDom).add(mountedUsrDiffDom).add(mountedPubDiffDom);
+        ShareSet allSharedSameDom =
+            new ShareSet(mountedUsrSameDom).add(mountedPubSameDom).add(notMountedUsrSameDom).add(notMountedPubSameDom);
+        ShareSet allSharedDiffDom =
+            new ShareSet(mountedUsrDiffDom).add(mountedPubDiffDom).add(notMountedUsrDiffDom).add(notMountedPubDiffDom);
+        ShareSet allShares = new ShareSet(allSharedSameDom.shares).addAll(allSharedDiffDom.shares);
 
         TestUtil.setLCValue(LC.public_share_advertising_scope, LC.PUBLIC_SHARE_VISIBILITY.samePrimaryDomain.toString());
         prov.flushCache(CacheEntryType.all, null);
         accountGetShareInfo(shareeAcct, null /* owner account */, false,
-            MOUNTED_DIRECT + MOUNTED_PUBLIC + NOTMOUNTED_PUBLIC_SAME_DOMAIN);
-        // If we specify the owner, then there is no value in trying to hide the owner's identity, so public
-        // shares should be included
-        accountGetShareInfo(shareeAcct, sharerAcct, false, ALL_SHARED_FROM_SHARER);
-        accountGetShareInfo(shareeAcct, otherDomainSharer, false, ALL_SHARED_FROM_DIFF_DOMAIN_SHARER);
-        adminGetShareInfo(sharerAcct, ALL_SHARED_FROM_SHARER);
+                new ShareSet(allMounted.shares)
+                    .add(notMountedUsrSameDom).add(notMountedPubSameDom).add(notMountedUsrDiffDom));
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(sameDomAcct.getId()), false,
+                new ShareSet(mountedUsrSameDom)
+                    .add(mountedPubSameDom).add(notMountedPubSameDom).add(notMountedUsrSameDom));
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(diffDomAcct.getId()), false,
+                new ShareSet(mountedUsrDiffDom).add(mountedPubDiffDom).add(notMountedUsrDiffDom));
+        ShareSet adminSet = new ShareSet(allSharedSameDom.shares).add(usrUnrelatedSameDom);
+        adminGetShareInfo(sameDomAcct, adminSet);
 
         TestUtil.setLCValue(LC.public_share_advertising_scope, LC.PUBLIC_SHARE_VISIBILITY.all.toString());
         prov.flushCache(CacheEntryType.account, null);
         accountGetShareInfo(shareeAcct, null /* owner account */, false,
-                basePublicShares + ALL_SHARES);
-        accountGetShareInfo(shareeAcct, sharerAcct, false, ALL_SHARED_FROM_SHARER);
-        accountGetShareInfo(shareeAcct, otherDomainSharer, false, ALL_SHARED_FROM_DIFF_DOMAIN_SHARER);
-        adminGetShareInfo(sharerAcct, ALL_SHARED_FROM_SHARER);
+                new ShareSet(baselinePublicShares.shares).addAll(allShares.shares));
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(sameDomAcct.getId()), false, allSharedSameDom);
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(diffDomAcct.getId()), false, allSharedDiffDom);
+        adminGetShareInfo(sameDomAcct, adminSet);
 
         TestUtil.setLCValue(LC.public_share_advertising_scope, LC.PUBLIC_SHARE_VISIBILITY.none.toString());
         prov.flushCache(CacheEntryType.account, null);
-        accountGetShareInfo(shareeAcct, null /* owner account */, false, MOUNTED_DIRECT + NOT_MOUNTED_DIRECT);
-        accountGetShareInfo(shareeAcct, sharerAcct, false, ALL_SHARED_FROM_SHARER);
-        accountGetShareInfo(shareeAcct, otherDomainSharer, false, ALL_SHARED_FROM_DIFF_DOMAIN_SHARER);
-        adminGetShareInfo(sharerAcct, ALL_SHARED_FROM_SHARER);
+        accountGetShareInfo(shareeAcct, null /* owner account */, false,
+                    new ShareSet(allMounted.shares).add(notMountedUsrSameDom).add(notMountedUsrDiffDom));
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(sameDomAcct.getId()), false,
+                    new ShareSet(mountedUsrSameDom).add(mountedPubSameDom).add(notMountedUsrSameDom));
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(diffDomAcct.getId()), false,
+                    new ShareSet(mountedUsrDiffDom).add(mountedPubDiffDom).add(notMountedUsrDiffDom));
+        adminGetShareInfo(sameDomAcct, adminSet);
+        // Confirm that can't use GetShareInfoRequest with self as owner.  If could, may want to alter things
+        // so that public shares are always included in results if owner==self...
+        accountGetShareInfoExpectFail(shareeAcct, AccountSelector.fromId(shareeAcct.getId()),
+                true, "invalid request: cannot discover shares on self");
     }
 
     public void modifyCos(Cos cos, String attr, String value) throws ServiceException {
@@ -598,36 +788,56 @@ public class TestJaxbProvisioning {
         Assert.assertNotNull(String.format("ModifyCosResponse object when setting %s to %s", attr, value), modCosResp);
     }
 
-    public com.zimbra.soap.admin.message.GetShareInfoResponse adminGetShareInfo(Account acct, Integer expected) {
+    public void checkGetShareInfo(ShareSet expected, List<ShareInfo> shares) {
+        if (expected != null) {
+            Assert.assertEquals("Number of shares", expected.shares.size(), shares.size());
+            for (CutDownShareInfo share : expected.shares) {
+                boolean found = false;
+                for (ShareInfo aShare : shares) {
+                    if (share.matches(aShare)) {
+                        found = true;
+                        break;
+                    }
+                }
+                Assert.assertTrue(String.format("no match for '%s' in: %s", share, shares), found);
+            }
+        }
+    }
+
+    public com.zimbra.soap.admin.message.GetShareInfoResponse adminGetShareInfo(Account acct, ShareSet shareSet) {
         com.zimbra.soap.admin.message.GetShareInfoRequest req =
                 new com.zimbra.soap.admin.message.GetShareInfoRequest(AccountSelector.fromId(acct.getId()));
         com.zimbra.soap.admin.message.GetShareInfoResponse resp = null;
         try {
             resp = prov.invokeJaxb(req);
             Assert.assertNotNull(String.format("GetShareInfoRequest for account %s", acct.getName()), resp);
-            List<ShareInfo> shares = resp.getShares();
-            if (expected != null) {
-                Assert.assertEquals("Number of shares", expected, Integer.valueOf(shares.size()));
-            }
+            checkGetShareInfo(shareSet, resp.getShares());
         } catch (ServiceException e) {
             Assert.fail("Unexpected exception while creating mountpoint " + e);
         }
         return resp;
     }
 
+    public void accountGetShareInfoExpectFail(Account acct, AccountSelector owner, Boolean includeSelf, String reason) {
+        GranteeChooser grantee = null;
+        try {
+            prov.invokeJaxbOnTargetAccount(GetShareInfoRequest.create(owner, grantee, includeSelf), acct.getId());
+            Assert.fail("Unexpected success for GetShareInfoRequest");
+        } catch (ServiceException e) {
+            Assert.assertTrue(String.format("Unexpected exception %s (expected msg '%s')", e.getMessage(), reason),
+                    e.getMessage().contains(reason));
+        }
+    }
+
     public GetShareInfoResponse accountGetShareInfo(
-            Account acct, Account ownerAccount, Boolean includeSelf, Integer expected) {
+            Account acct, AccountSelector owner, Boolean includeSelf, ShareSet shareSet) {
         GetShareInfoResponse resp = null;
-        AccountSelector owner = (ownerAccount != null) ? AccountSelector.fromId(ownerAccount.getId()) : null;
         GranteeChooser grantee = null;
         try {
             resp = prov.invokeJaxbOnTargetAccount(GetShareInfoRequest.create(owner, grantee, includeSelf),
                     acct.getId());
             Assert.assertNotNull(String.format("GetShareInfoRequest for account %s", acct.getName()), resp);
-            List<ShareInfo> shares = resp.getShares();
-            if (expected != null) {
-                Assert.assertEquals("Number of shares", expected, Integer.valueOf(shares.size()));
-            }
+            checkGetShareInfo(shareSet, resp.getShares());
         } catch (ServiceException e) {
             Assert.fail("Unexpected exception while creating mountpoint " + e);
         }
@@ -686,8 +896,8 @@ public class TestJaxbProvisioning {
     @Test
     public void testMailbox() throws Exception {
         ZimbraLog.test.debug("Starting test %s", testName());
-        Domain dom = ensureDomainExists(testAcctDomainName);
-        Assert.assertNotNull("Domain for " + testAcctDomainName, dom);
+        Domain dom = ensureDomainExists(domain2);
+        Assert.assertNotNull("Domain for " + domain2, dom);
         Account acct = prov.createAccount(testAcctEmail,
                 TestUtil.DEFAULT_PASSWORD, null);
         acct = ensureMailboxExists(testAcctEmail);
@@ -768,7 +978,7 @@ public class TestJaxbProvisioning {
         deleteCalendarResourceIfExists(testCalRes);
         deleteDomainIfExists(testCalResDomain);
         Domain dom = prov.createDomain(testCalResDomain, null);
-        Assert.assertNotNull("Domain for " + testAcctDomainName, dom);
+        Assert.assertNotNull("Domain for " + domain1, dom);
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put("displayName", testCalResDisplayName);
         attrs.put ("zimbraCalResType", "Location");
@@ -866,7 +1076,7 @@ public class TestJaxbProvisioning {
     @Test
     public void testFlushCache() throws Exception {
         ZimbraLog.test.debug("Starting test %s", testName());
-        ensureDomainExists(testAcctDomainName);
+        ensureDomainExists(domain1);
         prov.flushCache(CacheEntryType.domain, null);
     }
 
