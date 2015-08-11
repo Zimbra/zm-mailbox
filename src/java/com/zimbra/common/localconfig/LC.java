@@ -1250,11 +1250,10 @@ public final class LC {
      * in different domains.  If nothing else, it provided a means for harvesting details of accounts in other
      * domains which happen to have shared folders publicly.
      * This setting affects the behavior of the account namespace SOAP GetShareInfoRequest
-     * when an owner is not specified in the request.
      * Possible values:
      * "samePrimaryDomain" - Accounts can only see public shares advertised by accounts whose primary domain
      *                       name matches the primary domain name of the requesting account.
-     * "all"               - Accounts with this set can only see public shares advertised by any accounts.
+     * "all"               - Accounts with this set can see public shares advertised by any accounts.
      * "none"              - Accounts with this set cannot get details of any public shares.
      *  Note that this doesn't prevent mounting of shares which are discovered out of band (e.g. via invitation
      *  messages).  Shares which are already in use will also be reported.
