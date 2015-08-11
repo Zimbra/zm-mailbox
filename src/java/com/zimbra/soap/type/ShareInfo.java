@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 
@@ -195,4 +196,23 @@ public class ShareInfo {
     }
 
     public String getMountpointId() { return mountpointId; }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+            .add("ownerId", ownerId)
+            .add("ownerEmail", ownerEmail)
+            .add("ownerDisplayName", ownerDisplayName)
+            .add("folderId", folderId)
+            .add("folderUuid", folderUuid)
+            .add("folderPath", folderPath)
+            .add("defaultView", defaultView)
+            .add("rights", rights)
+            .add("granteeType", granteeType)
+            .add("granteeId", granteeId)
+            .add("granteeName", granteeName)
+            .add("granteeDisplayName", granteeDisplayName)
+            .add("mountpointId", mountpointId)
+            .toString();
+    }
 }
