@@ -4668,3 +4668,16 @@ Note: isOwner is returned only if ownerOf on the request is 1.
 
 
 -----------------------------
+GetOAuthConsumerRequest:
+This is OAuth related API used for fetching details of OAuth consumers/apps for an account.
+Response for this API include access token(this acts as a key), application name, device information, approved on date.
+
+```
+<GetOAuthConsumersRequest xmlns="urn:zimbraAccount"/>
+
+<GetOAuthConsumersResponse xmlns="urn:zimbraAccount">
+      <OauthConsumer approvedOn="{approved-on}" appName="{name-of-consumer}" accessToken="{access-token}" device="{device-name}"/>
+      <OauthConsumer .../>
+        ....
+    </GetOAuthConsumersResponse>
+```

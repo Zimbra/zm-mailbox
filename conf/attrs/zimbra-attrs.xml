@@ -5262,7 +5262,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1131" name="zimbraOAuthConsumerCredentials" type="string" max="1024" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
-  <desc>OAuth Consumer id and secret.  It is in the format of {consumer-id}:{secret}</desc>
+  <desc>OAuth Consumer id, secret, and application name.  It is in the format of {consumer-id}:{secret}:{consumer-app-name}</desc>
 </attr>
 
 <attr id="1132" name="zimbraReverseProxyUseExternalRouteIfAccountNotExist" type="boolean" cardinality="single" optionalIn="domain" flags="domainAdminModifiable" since="7.0.0">
