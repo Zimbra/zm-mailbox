@@ -22,17 +22,21 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ZmgDevice;
 
-public class ContentAvailablePushNotification implements PushNotification {
+public class ContentAvailablePushNotification extends AbstractPushNotification {
 
-    private ZmgDevice device;
-
-    public ContentAvailablePushNotification(ZmgDevice device) {
+    public ContentAvailablePushNotification(Account account, ZmgDevice device) {
+        this.accountName = account.getName();
         this.device = device;
     }
 
-    private String getPayloadForApns() {
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.pushnotifications.AbstractPushNotification#getPayloadForApns()
+     */
+    @Override
+    protected String getPayloadForApns() {
         JSONObject aps = new JSONObject();
         JSONObject payload = new JSONObject();
         try {
@@ -48,7 +52,11 @@ public class ContentAvailablePushNotification implements PushNotification {
         return payload.toString();
     }
 
-    private String getPayloadForGcm() {
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.pushnotifications.AbstractPushNotification#getPayloadForGcm()
+     */
+    @Override
+    protected String getPayloadForGcm() {
         JSONObject gcmData = new JSONObject();
         JSONObject payload = new JSONObject();
         try {
@@ -65,47 +73,6 @@ public class ContentAvailablePushNotification implements PushNotification {
             return "";
         }
         return payload.toString();
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see com.zimbra.cs.pushnotifications.PushNotification#getPayload()
-     */
-    @Override
-    public String getPayload() {
-        switch (device.getPushProvider()) {
-        case PROVIDER_IDENTIFIER_GCM:
-            return getPayloadForGcm();
-
-        case PROVIDER_IDENTIFIER_APNS:
-            return getPayloadForApns();
-
-        default:
-            return "";
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see com.zimbra.cs.pushnotifications.PushNotification#getDevice()
-     */
-    @Override
-    public ZmgDevice getDevice() {
-        return device;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * com.zimbra.cs.pushnotifications.PushNotification#setDevice(com.zimbra
-     * .cs.account.ZmgDevice)
-     */
-    @Override
-    public void setDevice(ZmgDevice device) {
-        this.device = device;
     }
 
 }

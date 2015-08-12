@@ -63,4 +63,28 @@ public interface PushNotification {
     public ZmgDevice getDevice();
 
     public void setDevice(ZmgDevice device);
+
+    /*
+     * Following three methods are useful for adding context information to logs
+     */
+
+    /**
+     * Any class implementing PushNotification interface can override this
+     * method to return the MailItem id. So that the id can be added in logging
+     *
+     * @return ID of the MailItem the push notification is dealing with. Return
+     *         -1 if it is not a mail item.
+     */
+    public int getItemId();
+
+    /**
+     * @return the account name for which the push notification will be sent
+     */
+    public String getAccountName();
+
+    /**
+     * @return the data source name of the account for which the push
+     *         notification will be sent
+     */
+    public String getDataSourceName();
 }

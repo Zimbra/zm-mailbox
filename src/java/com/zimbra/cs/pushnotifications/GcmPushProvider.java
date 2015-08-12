@@ -76,17 +76,22 @@ public class GcmPushProvider implements PushProvider {
         int payloadSize;
         try {
             payloadSize = payload.getBytes(PushNotification.CHARCTER_ENCODING).length;
-            ZimbraLog.mailbox.info("ZMG: GCM payload size -  %d", payloadSize);
+            ZimbraLog.mailbox.debug("ZMG: GCM payload size -  %d", payloadSize);
             if (payload.isEmpty()) {
                 return;
             }
             if (payloadSize > maxPayloadSize) {
+                int originalPayloadSize = payloadSize;
                 payload = truncatePayload(payload, payloadSize, maxPayloadSize);
                 payloadSize = payload.getBytes(PushNotification.CHARCTER_ENCODING).length;
-                ZimbraLog.mailbox.info("ZMG: GCM truncated payload size -  %d", payloadSize);
+                ZimbraLog.mailbox.debug("ZMG: GCM truncated payload size -  %d", payloadSize);
                 if (payloadSize > maxPayloadSize) {
                     ZimbraLog.mailbox
-                        .info("ZMG: GCM Paylaod size is greater than the maximum supported payload size");
+                        .info(
+                            "ZMG: GCM Paylaod size is greater than the maximum supported payload size "
+                                + "originalPayloadSize=%d ; truncatedPayloadSize=%d ; maxPayloadSize=%d",
+                            originalPayloadSize, payloadSize, maxPayloadSize);
+                    ZimbraLog.mailbox.info("ZMG: GCM Payload=%s", payload);
                     return;
                 }
             }
@@ -111,10 +116,12 @@ public class GcmPushProvider implements PushProvider {
                 .getDefaultHttpClient();
             int status = httpClient.executeMethod(post);
             if (status == HttpStatus.SC_OK) {
-                ZimbraLog.mailbox.info("ZMG: GCM push completed: status=%d", status);
+                ZimbraLog.mailbox.debug("ZMG: GCM payload - %s", payload);
+                ZimbraLog.mailbox.info("ZMG: GCM push completed: device token=%s", notification
+                    .getDevice().getRegistrationId());
             } else {
                 ZimbraLog.mailbox.info("ZMG: GCM push failed: status=%d, payload= %s", status,
-                    notification.getPayload());
+                    payload);
                 ZimbraLog.mailbox.info("ZMG: GCM push failed: response = %s",
                     post.getResponseBodyAsString());
             }

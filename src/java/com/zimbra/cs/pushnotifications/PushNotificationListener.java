@@ -105,7 +105,7 @@ public class PushNotificationListener implements MailboxListener {
                                             "ZMG: start building notification for new data source message with id=%d",
                                             msg.getId());
                                     NotificationsManager.getInstance().pushNewMessageNotification(
-                                        account, mbox, recipient, msg, notification.op);
+                                        account, mbox, dataSource, recipient, msg, notification.op);
                                 } else if (initialSyncfilter.apply()) {
                                     ZimbraLog.mailbox
                                         .info("ZMG: start building notification for data source initial sync");
