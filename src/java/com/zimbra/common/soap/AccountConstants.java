@@ -158,6 +158,9 @@ public class AccountConstants {
     public static final String E_REGISTER_MOBILE_GATEWAY_APP_RESPONSE = "RegisterMobileGatewayAppResponse";
     public static final String E_GET_GCM_SENDER_ID_REQUEST = "GetGcmSenderIdRequest";
     public static final String E_GET_GCM_SENDER_ID_RESPONSE = "GetGcmSenderIdResponse";
+    public static final String E_GET_OAUTH_CONSUMERS_REQUEST = "GetOAuthConsumersRequest";
+    public static final String E_GET_OAUTH_CONSUMERS_RESPONSE = "GetOAuthConsumersResponse";
+    public static final String E_OAUTH_CONSUMER = "OauthConsumer";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -292,6 +295,8 @@ public class AccountConstants {
     public static final QName REGISTER_MOBILE_GATEWAY_APP_RESPONSE = QName.get(E_REGISTER_MOBILE_GATEWAY_APP_RESPONSE, NAMESPACE);
     public static final QName GET_GCM_SENDER_ID_REQUEST = QName.get(E_GET_GCM_SENDER_ID_REQUEST, NAMESPACE);
     public static final QName GET_GCM_SENDER_ID_RESPONSE = QName.get(E_GET_GCM_SENDER_ID_RESPONSE, NAMESPACE);
+    public static final QName GET_OAUTH_CONSUMERS_REQUEST = QName.get(E_GET_OAUTH_CONSUMERS_REQUEST, NAMESPACE);
+    public static final QName GET_OAUTH_CONSUMERS_RESPONSE = QName.get(E_GET_OAUTH_CONSUMERS_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
@@ -533,4 +538,10 @@ public class AccountConstants {
     public static final String E_DEVICE_ID = "deviceId";
     public static final String A_GENERATE_DEVICE_ID = "generateDeviceId";
     public static final String E_TWO_FACTOR_AUTH_REQUIRED = "twoFactorAuthRequired";
+
+    //oauth consumer attributes
+    public static final String A_ACCESS_TOKEN = "accessToken";
+    public static final String A_CONSUMER_APP_NAME = "appName";
+    public static final String A_APPROVED_ON = "approvedOn";
+    public static final String A_CONSUMER_DEVICE = "device";
 }
