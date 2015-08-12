@@ -22,9 +22,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ZmgDevice;
 
-public class NewMessagePushNotification implements PushNotification {
+public class NewMessagePushNotification extends AbstractPushNotification {
 
     private int conversationId = 0;
     private int messageId = 0;
@@ -34,7 +35,6 @@ public class NewMessagePushNotification implements PushNotification {
     private String recipient = "";
     private String senderDisplayName = "";
     private int unreadCount = 0;
-    private ZmgDevice device = null;
     private String type;
     private String action;
 
@@ -47,10 +47,11 @@ public class NewMessagePushNotification implements PushNotification {
      * @param device
      * @param fragment
      */
-    public NewMessagePushNotification(int conversationId, int messageId, String message,
+    public NewMessagePushNotification(Account account, int conversationId, int messageId, String message,
                                       String sender, String senderDisplayName, String recipient,
                                       ZmgDevice device, String fragment, int unreadCount,
-                                      String type, String op) {
+                                      String type, String op, String dataSourceName) {
+        this.accountName = account.getName();
         this.conversationId = conversationId;
         this.messageId = messageId;
         this.subject = message;
@@ -62,6 +63,7 @@ public class NewMessagePushNotification implements PushNotification {
         this.unreadCount = unreadCount;
         this.type = type;
         this.action = op;
+        this.dataSourceName = dataSourceName;
     }
 
     /**
@@ -184,7 +186,11 @@ public class NewMessagePushNotification implements PushNotification {
         this.unreadCount = unreadCount;
     }
 
-    private String getPayloadForApns() {
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.pushnotifications.AbstractPushNotification#getPayloadForApns()
+     */
+    @Override
+    protected String getPayloadForApns() {
         JSONObject aps = new JSONObject();
         JSONObject payload = new JSONObject();
         double osVersion = device.getOSVersionAsDouble();
@@ -210,11 +216,14 @@ public class NewMessagePushNotification implements PushNotification {
             return "";
         }
 
-        ZimbraLog.mailbox.debug("ZMG: APNS payload - %s", payload.toString());
         return payload.toString();
     }
 
-    private String getPayloadForGcm() {
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.pushnotifications.AbstractPushNotification#getPayloadForGcm()
+     */
+    @Override
+    protected String getPayloadForGcm() {
         JSONObject gcmData = new JSONObject();
         JSONObject payload = new JSONObject();
         try {
@@ -239,49 +248,15 @@ public class NewMessagePushNotification implements PushNotification {
             return "";
         }
 
-        ZimbraLog.mailbox.debug("ZMG: GCM payload - %s", payload.toString());
         return payload.toString();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.zimbra.cs.pushnotifications.PushNotification#getPayload()
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.pushnotifications.PushNotification#getItemId()
      */
     @Override
-    public String getPayload() {
-        switch (device.getPushProvider()) {
-        case PROVIDER_IDENTIFIER_GCM:
-            return getPayloadForGcm();
-
-        case PROVIDER_IDENTIFIER_APNS:
-            return getPayloadForApns();
-
-        default:
-            return "";
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.zimbra.cs.pushnotifications.PushNotification#getDevice()
-     */
-    @Override
-    public ZmgDevice getDevice() {
-        return device;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * com.zimbra.cs.pushnotifications.PushNotification#setDevice(com.zimbra
-     * .cs.account.ZmgDevice)
-     */
-    @Override
-    public void setDevice(ZmgDevice device) {
-        this.device = device;
+    public int getItemId() {
+        return messageId;
     }
 
 }

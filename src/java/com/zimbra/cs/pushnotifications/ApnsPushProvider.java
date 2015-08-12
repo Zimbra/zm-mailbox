@@ -82,17 +82,22 @@ public class ApnsPushProvider implements PushProvider {
                 maxPayloadSize = DEFAULT_MAX_PAYLOAD_SIZE;
             }
 
-            ZimbraLog.mailbox.info("ZMG: APNS payload size -  %d", payloadSize);
+            ZimbraLog.mailbox.debug("ZMG: APNS payload size -  %d", payloadSize);
             if (jsonString.isEmpty()) {
                 return;
             }
             if (payloadSize > maxPayloadSize) {
+                int originalPayloadSize = payloadSize;
                 jsonString = truncatePayload(jsonString, payloadSize, maxPayloadSize);
                 payloadSize = jsonString.getBytes(PushNotification.CHARCTER_ENCODING).length;
-                ZimbraLog.mailbox.info("ZMG: APNS truncated payload size -  %d", payloadSize);
+                ZimbraLog.mailbox.debug("ZMG: APNS truncated payload size -  %d", payloadSize);
                 if (payloadSize > maxPayloadSize) {
                     ZimbraLog.mailbox
-                        .info("ZMG: APNS Paylaod size is greater than the maximum supported payload size");
+                        .info(
+                            "ZMG: APNS Paylaod size is greater than the maximum supported payload size "
+                                + "originalPayloadSize=%d ; truncatedPayloadSize=%d ; maxPayloadSize=%d",
+                            originalPayloadSize, payloadSize, maxPayloadSize);
+                    ZimbraLog.mailbox.info("ZMG: APNS Payload=%s", jsonString);
                     return;
                 }
             }
@@ -108,10 +113,14 @@ public class ApnsPushProvider implements PushProvider {
                     ZimbraLog.mailbox.info("ZMG: APNS push response = %s", response.getMessage());
                 }
                 if (notification.isSuccessful()) {
-                    ZimbraLog.mailbox.info("ZMG: APNS push notification sent successfully");
+                    ZimbraLog.mailbox.debug("ZMG: APNS payload - %s", jsonString);
+                    ZimbraLog.mailbox.info(
+                        "ZMG: APNS push notification sent successfully - device token=%s",
+                        notification.getDevice().getToken());
                 } else {
                     String invalidToken = notification.getDevice().getToken();
-                    ZimbraLog.mailbox.info("ZMG: APNS push invalid token to: %s", invalidToken);
+                    ZimbraLog.mailbox.info("ZMG: APNS Payload=%s push invalid token to: %s",
+                        jsonString, invalidToken);
                 }
             }
         } catch (CommunicationException e) {
