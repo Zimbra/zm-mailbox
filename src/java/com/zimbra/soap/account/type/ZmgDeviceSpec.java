@@ -38,7 +38,7 @@ public class ZmgDeviceSpec {
      *                           notifications.
      */
     @XmlAttribute(name = AccountConstants.A_REGISTRATION_ID /* registration id */, required = true)
-    private String registrationId;
+    private final String registrationId;
 
     /**
      * @zm-api-field-tag push-provider
@@ -46,7 +46,7 @@ public class ZmgDeviceSpec {
      *                           device
      */
     @XmlAttribute(name = AccountConstants.A_PUSH_PROVIDER /* push provider */, required = true)
-    private String pushProvider;
+    private final String pushProvider;
 
     /**
      * @zm-api-field-tag os-name
@@ -87,18 +87,12 @@ public class ZmgDeviceSpec {
      */
     @SuppressWarnings("unused")
     private ZmgDeviceSpec() {
-        this((String) null);
+        this((String) null, (String) null, (String) null);
     }
 
-    public ZmgDeviceSpec(String appId) {
+    public ZmgDeviceSpec(String appId, String registrationId, String pushProvider) {
         this.appId = appId;
-    }
-
-    public void setRegistrationId(String registrationId) {
         this.registrationId = registrationId;
-    }
-
-    public void setPushProvider(String pushProvider) {
         this.pushProvider = pushProvider;
     }
 
@@ -119,17 +113,11 @@ public class ZmgDeviceSpec {
     }
 
     public String getRegistrationId() {
-        if (registrationId != null) {
-            return registrationId;
-        }
-        return "";
+        return registrationId;
     }
 
     public String getPushProvider() {
-        if (pushProvider != null) {
-            return pushProvider;
-        }
-        return "";
+        return pushProvider;
     }
 
     public String getOSName() {
