@@ -22,32 +22,40 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.ZmgDevice;
+import com.zimbra.cs.account.Entry.EntryType;
 import com.zimbra.cs.mailbox.MailItem;
 
-public class SyncDataPushNotification implements PushNotification {
+public class SyncDataPushNotification extends AbstractPushNotification {
 
     private String itemId;
     private String itemType;
     private String itemAction;
-    private ZmgDevice device;
 
-    public SyncDataPushNotification(MailItem mailItem, String itemAction, ZmgDevice device) {
+    public SyncDataPushNotification(Account account, MailItem mailItem, String itemAction, ZmgDevice device) {
+        this.accountName = account.getName();
         this.itemId = String.valueOf(mailItem.getId());
         this.itemType = mailItem.getType().name();
         this.itemAction = itemAction;
         this.device = device;
     }
 
-    public SyncDataPushNotification(DataSource dataSource, String itemAction, ZmgDevice device) {
+    public SyncDataPushNotification(Account account, DataSource dataSource, String itemAction, ZmgDevice device) {
         this.itemId = dataSource.getId();
+        this.dataSourceName = dataSource.getName();
+        this.accountName = account.getName();
         this.itemType = dataSource.getEntryType().getName();
         this.itemAction = itemAction;
         this.device = device;
     }
 
-    private String getPayloadForApns() {
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.pushnotifications.AbstractPushNotification#getPayloadForApns()
+     */
+    @Override
+    protected String getPayloadForApns() {
         JSONObject aps = new JSONObject();
         JSONObject payload = new JSONObject();
         try {
@@ -65,7 +73,11 @@ public class SyncDataPushNotification implements PushNotification {
         return payload.toString();
     }
 
-    private String getPayloadForGcm() {
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.pushnotifications.AbstractPushNotification#getPayloadForGcm()
+     */
+    @Override
+    protected String getPayloadForGcm() {
         JSONObject gcmData = new JSONObject();
         JSONObject payload = new JSONObject();
         try {
@@ -88,42 +100,19 @@ public class SyncDataPushNotification implements PushNotification {
     /*
      * (non-Javadoc)
      *
-     * @see com.zimbra.cs.pushnotifications.PushNotification#getPayload()
+     * @see com.zimbra.cs.pushnotifications.PushNotification#getItemId()
      */
     @Override
-    public String getPayload() {
-        switch (device.getPushProvider()) {
-        case PROVIDER_IDENTIFIER_GCM:
-            return getPayloadForGcm();
-
-        case PROVIDER_IDENTIFIER_APNS:
-            return getPayloadForApns();
-
-        default:
-            return "";
+    public int getItemId() {
+        try {
+            if (EntryType.DATASOURCE.getName().equals(itemType)) {
+                return -1;
+            }
+            return Integer.parseInt(itemId);
+        } catch (NumberFormatException e) {
+            ZimbraLog.mailbox.warn("ZMG: Number Format exception while parsing item id", e);
+            return -1;
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see com.zimbra.cs.pushnotifications.PushNotification#getDevice()
-     */
-    @Override
-    public ZmgDevice getDevice() {
-        return device;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * com.zimbra.cs.pushnotifications.PushNotification#setDevice(com.zimbra
-     * .cs.account.ZmgDevice)
-     */
-    @Override
-    public void setDevice(ZmgDevice device) {
-        this.device = device;
     }
 
 }

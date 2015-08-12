@@ -65,10 +65,9 @@ public class DbZmgDevices {
             stmt.setString(pos++, device.getOSVersion());
             stmt.setInt(pos++, device.getMaxPayloadSize());
             result = stmt.executeUpdate();
-            stmt.close();
             conn.commit();
         } catch (ServiceException | SQLException e) {
-            throw ServiceException.FAILURE("failed to add device " + device.getAppId(), e);
+            throw ServiceException.FAILURE("ZMG: failed to add device " + device.getAppId(), e);
         } finally {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
@@ -99,7 +98,7 @@ public class DbZmgDevices {
             }
             return devices;
         } catch (ServiceException | SQLException e) {
-            throw ServiceException.FAILURE("failed to get device for mailbox" + mbox.getId(), e);
+            throw ServiceException.FAILURE("ZMG: failed to get device for mailbox" + mbox.getId(), e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);

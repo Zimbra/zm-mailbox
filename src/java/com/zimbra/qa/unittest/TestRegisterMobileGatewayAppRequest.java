@@ -21,6 +21,10 @@ import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.account.message.RegisterMobileGatewayAppRequest;
 import com.zimbra.soap.account.type.ZmgDeviceSpec;
 
@@ -28,10 +32,11 @@ public class TestRegisterMobileGatewayAppRequest extends TestCase {
 
     private static final String USER = "user2";
     private ZMailbox mbox;
+    private Account account;
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
@@ -41,19 +46,64 @@ public class TestRegisterMobileGatewayAppRequest extends TestCase {
 
     @Test
     public void testRegisterMobileGatewayAppRequest() throws ServiceException {
-        ZmgDeviceSpec zmgDevice = new ZmgDeviceSpec("1234");
-        zmgDevice.setRegistrationId("124h67");
-        zmgDevice.setPushProvider("gcm");
+        ZmgDeviceSpec zmgDevice = new ZmgDeviceSpec("1234", "124h67", "gcm");
         zmgDevice.setOSName("os_name");
         zmgDevice.setOSVersion("7.0");
         zmgDevice.setMaxPayloadSize(512);
         RegisterMobileGatewayAppRequest request = new RegisterMobileGatewayAppRequest(zmgDevice);
         mbox.invokeJaxb(request);
+        account = Provisioning.getInstance().getAccountByName(USER);
+        assertTrue(account.isPrefZmgPushNotificationEnabled());
+    }
+
+    @Test
+    public void testRegisterMobileGatewayAppRequestWithNoDevice() {
+        checkException(null);
+    }
+
+    @Test
+    public void testRegisterMobileGatewayAppRequestWithNoAppId() {
+        ZmgDeviceSpec zmgDevice = new ZmgDeviceSpec(null, "124h67", "gcm");
+        zmgDevice.setOSName("os_name");
+        zmgDevice.setOSVersion("7.0");
+        zmgDevice.setMaxPayloadSize(512);
+        checkException(zmgDevice);
+    }
+
+    @Test
+    public void testRegisterMobileGatewayAppRequestWithNoToken() {
+        ZmgDeviceSpec zmgDevice = new ZmgDeviceSpec("1234", null, "gcm");
+        zmgDevice.setOSName("os_name");
+        zmgDevice.setOSVersion("7.0");
+        zmgDevice.setMaxPayloadSize(512);
+        checkException(zmgDevice);
+    }
+
+    @Test
+    public void testRegisterMobileGatewayAppRequestWithNoProvider() {
+        ZmgDeviceSpec zmgDevice = new ZmgDeviceSpec("1234", "124h67", null);
+        zmgDevice.setOSName("os_name");
+        zmgDevice.setOSVersion("7.0");
+        zmgDevice.setMaxPayloadSize(512);
+        checkException(zmgDevice);
+    }
+
+    private void checkException(ZmgDeviceSpec zmgDevice) {
+        RegisterMobileGatewayAppRequest request = new RegisterMobileGatewayAppRequest(zmgDevice);
+        boolean caughtInvalidRequest = false;
+        try {
+            mbox.invokeJaxb(request);
+        } catch (ServiceException e) {
+            if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
+                caughtInvalidRequest = true;
+            }
+        }
+        assertTrue(caughtInvalidRequest);
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see junit.framework.TestCase#tearDown()
      */
     protected void tearDown() throws Exception {

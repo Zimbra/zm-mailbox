@@ -51,14 +51,27 @@ public class RegisterMobileGatewayApp extends AccountDocumentHandler {
 
         RegisterMobileGatewayAppRequest req = JaxbUtil.elementToJaxb(request);
         ZmgDeviceSpec device = req.getZmgDevice();
+        if (device == null || device.getAppId() == null || device.getRegistrationId() == null
+            || device.getPushProvider() == null) {
+            ZimbraLog.mailbox.info("ZMG: Missing required attributes for adding new device");
+            throw ServiceException.INVALID_REQUEST(
+                "Missing required attributes for adding new device", null);
+        }
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         int result = ZmgDevice.add(mbox.getId(), device);
 
-        if (result >= 1 && !account.isPrefZmgPushNotificationEnabled()) {
-            account.setPrefZmgPushNotificationEnabled(true);
-            ZimbraLog.mailbox
-                .info("ZMG: Device added and Push Notification enabled for account %s",
-                    account.getName());
+        if (result >= 1) {
+            if (!account.isPrefZmgPushNotificationEnabled()) {
+                account.setPrefZmgPushNotificationEnabled(true);
+                ZimbraLog.mailbox.info(
+                    "ZMG: New device added and Push Notification enabled. Token=%s",
+                    device.getRegistrationId());
+            } else {
+                ZimbraLog.mailbox.info("ZMG: New device added. Token=%s",
+                    device.getRegistrationId());
+            }
+        } else {
+            ZimbraLog.mailbox.info("ZMG: No new device added");
         }
 
         RegisterMobileGatewayAppResponse resp = new RegisterMobileGatewayAppResponse();

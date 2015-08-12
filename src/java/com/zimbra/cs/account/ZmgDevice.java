@@ -165,7 +165,7 @@ public class ZmgDevice {
         try {
             return DbZmgDevices.getDevices(mbox);
         } catch (ServiceException e) {
-            ZimbraLog.misc.warn("Error in getting registered ZMG devices from db", e);
+            ZimbraLog.misc.warn("ZMG: Error in getting registered ZMG devices from db", e);
             return Collections.<ZmgDevice> emptyList();
         }
     }
