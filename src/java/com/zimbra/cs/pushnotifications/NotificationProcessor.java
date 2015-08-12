@@ -15,6 +15,8 @@
 
 package com.zimbra.cs.pushnotifications;
 
+import com.zimbra.common.util.ZimbraLog;
+
 public class NotificationProcessor implements Runnable {
 
     private final PushNotification notification;
@@ -25,14 +27,31 @@ public class NotificationProcessor implements Runnable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Runnable#run()
      */
     @Override
     public void run() {
+        ZimbraLog.clearContext();
+        ZimbraLog.addMboxToContext(notification.getDevice().getMailboxId());
+        ZimbraLog.addAccountNameToContext(notification.getAccountName());
+        int itemId = notification.getItemId();
+        if (itemId != -1) {
+            ZimbraLog.addItemToContext(itemId);
+        }
+        if (!notification.getDataSourceName().isEmpty()) {
+            ZimbraLog.addDataSourceNameToContext(notification.getDataSourceName());
+        }
+
         PushProvider provider = ProviderFactory.createProvider(notification.getDevice());
         if (provider != null) {
+            ZimbraLog.mailbox.debug("ZMG: Process notification for device token=%s", notification
+                .getDevice().getRegistrationId());
             provider.push(notification);
+        } else {
+            ZimbraLog.mailbox.info("ZMG: No provider name=%s found for device token=%s",
+                notification.getDevice().getPushProvider(), notification.getDevice()
+                    .getRegistrationId());
         }
     }
 }

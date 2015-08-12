@@ -39,6 +39,7 @@ public class NotificationsManager {
     private NotificationsQueue queue = null;
 
     private NotificationsManager() {
+        init();
     }
 
     public static NotificationsManager getInstance() {
@@ -46,7 +47,6 @@ public class NotificationsManager {
             synchronized (NotificationsManager.class) {
                 if (INSTANCE == null) {
                     INSTANCE = new NotificationsManager();
-                    INSTANCE.init();
                 }
             }
         }
@@ -60,11 +60,15 @@ public class NotificationsManager {
     }
 
     public Collection<PushNotification> buildNewMessageNotification(Account account, Mailbox mbox,
-        String recipient, Message message, MailboxOperation op) {
+        String recipient, Message message, MailboxOperation op, DataSource dataSource) {
         Collection<PushNotification> notifications = new ArrayList<PushNotification>();
         Collection<ZmgDevice> devices = getDevices(mbox);
         for (ZmgDevice device : devices) {
-            PushNotification notification = createNotification(mbox, message, recipient, device, op);
+            PushNotification notification = createNotification(account, mbox, message, recipient,
+                device, op, dataSource);
+            ZimbraLog.mailbox.debug(
+                "ZMG: Add new message notification to queue - message id=%d, device token=%s",
+                message.getId(), device.getRegistrationId());
             notifications.add(notification);
         }
         return notifications;
@@ -76,6 +80,9 @@ public class NotificationsManager {
         Collection<ZmgDevice> devices = getDevices(mbox);
         for (ZmgDevice device : devices) {
             PushNotification notification = createNotification(mbox, mailItem, op, device);
+            ZimbraLog.mailbox.debug(
+                "ZMG: Add sync data notification to queue - item id=%d, device token=%s",
+                mailItem.getId(), device.getRegistrationId());
             notifications.add(notification);
         }
         return notifications;
@@ -89,7 +96,10 @@ public class NotificationsManager {
             Collection<PushNotification> notifications = new ArrayList<PushNotification>();
             Collection<ZmgDevice> devices = getDevices(mbox);
             for (ZmgDevice device : devices) {
-                PushNotification notification = createNotification(mbox, dataSource, action, device);
+                PushNotification notification = createNotification(account, mbox, dataSource, action, device);
+                ZimbraLog.mailbox.debug(
+                    "ZMG: Add sync data notification to queue - data source id=%s, device token=%s",
+                    dataSource.getId(), device.getRegistrationId());
                 notifications.add(notification);
             }
             return notifications;
@@ -106,7 +116,10 @@ public class NotificationsManager {
             Collection<PushNotification> notifications = new ArrayList<PushNotification>();
             Collection<ZmgDevice> devices = getDevices(mbox);
             for (ZmgDevice device : devices) {
-                PushNotification notification = createNotification(device);
+                PushNotification notification = createNotification(account, device);
+                ZimbraLog.mailbox.debug(
+                    "ZMG: Add content available notification to queue - device token=%s",
+                    device.getRegistrationId());
                 notifications.add(notification);
             }
             return notifications;
@@ -117,7 +130,13 @@ public class NotificationsManager {
 
     public void pushNewMessageNotification(Account account, Mailbox mbox, String recipient,
         Message message, MailboxOperation op) {
-        queue.putAll(buildNewMessageNotification(account, mbox, recipient, message, op));
+        queue.putAll(buildNewMessageNotification(account, mbox, recipient, message, op, null));
+    }
+
+    public void pushNewMessageNotification(Account account, Mailbox mbox, DataSource dataSource,
+        String recipient, Message message, MailboxOperation op) {
+        queue
+            .putAll(buildNewMessageNotification(account, mbox, recipient, message, op, dataSource));
     }
 
     public void pushSyncDataNotification(Mailbox mbox, MailItem mailItem, MailboxOperation op) {
@@ -136,8 +155,8 @@ public class NotificationsManager {
         queue.putAll(notifications);
     }
 
-    private PushNotification createNotification(Mailbox mbox, Message message, String recipient,
-        ZmgDevice device, MailboxOperation op) {
+    private PushNotification createNotification(Account account, Mailbox mbox, Message message, String recipient,
+        ZmgDevice device, MailboxOperation op, DataSource dataSource) {
         String fragment = message.getFragment();
         int unreadCount = 0;
         JavaMailInternetAddress sender = null;
@@ -155,23 +174,31 @@ public class NotificationsManager {
             senderEmailAddress = (sender.getAddress() != null) ? sender.getAddress() : "";
             senderDisplayName = (sender.getPersonal() != null) ? sender.getPersonal() : "";
         }
-        return new NewMessagePushNotification(message.getConversationId(), message.getId(),
+        String dataSourceName = "";
+        if (dataSource != null) {
+            dataSourceName = dataSource.getName();
+        }
+        return new NewMessagePushNotification(account, message.getConversationId(), message.getId(),
             message.getSubject(), senderEmailAddress, senderDisplayName, recipient, device,
-            fragment, unreadCount, message.getType().name(), op.name());
+            fragment, unreadCount, message.getType().name(), op.name(), dataSourceName);
     }
 
     private PushNotification createNotification(Mailbox mbox, MailItem mailItem,
         MailboxOperation op, ZmgDevice device) {
-        return new SyncDataPushNotification(mailItem, op.name(), device);
+        try {
+            return new SyncDataPushNotification(mbox.getAccount(), mailItem, op.name(), device);
+        } catch (ServiceException e) {
+            return null;
+        }
     }
 
-    private PushNotification createNotification(Mailbox mbox, DataSource dataSource, String action,
+    private PushNotification createNotification(Account account, Mailbox mbox, DataSource dataSource, String action,
         ZmgDevice device) {
-        return new SyncDataPushNotification(dataSource, action, device);
+        return new SyncDataPushNotification(account, dataSource, action, device);
     }
 
-    private PushNotification createNotification(ZmgDevice device) {
-        return new ContentAvailablePushNotification(device);
+    private PushNotification createNotification(Account account, ZmgDevice device) {
+        return new ContentAvailablePushNotification(account, device);
     }
 
     private Collection<ZmgDevice> getDevices(Mailbox mbox) {
