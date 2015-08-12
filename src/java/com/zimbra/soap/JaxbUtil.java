@@ -1035,7 +1035,11 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.RegisterMobileGatewayAppRequest.class,
             com.zimbra.soap.account.message.RegisterMobileGatewayAppResponse.class,
             com.zimbra.soap.account.message.GetGcmSenderIdRequest.class,
-            com.zimbra.soap.account.message.GetGcmSenderIdResponse.class
+            com.zimbra.soap.account.message.GetGcmSenderIdResponse.class,
+
+            //Oauth
+            com.zimbra.soap.account.message.GetOAuthConsumersRequest.class,
+            com.zimbra.soap.account.message.GetOAuthConsumersResponse.class
         };
 
         try {
