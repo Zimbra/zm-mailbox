@@ -10,6 +10,9 @@
     <condition property="zimbra.user" value="${env.ZIMBRA_USER}">
         <isset property="env.ZIMBRA_USER"/>
     </condition>
+    <condition property="zimbra.user" value="${user.name}">
+        <not><isset property="is.production"/></not>
+    </condition>
     <condition property="zimbra.user" value="zimbra">
         <not><isset property="zimbra.user"/></not>
     </condition>
@@ -1386,6 +1389,8 @@
         <antcall target="make-dirs">
             <param name="base.dir" value="${zimbra.home.dir}"/>
         </antcall>
+
+        <ant dir="${soap.dir}" target="zimbra-identity" inheritAll="false"/>
     </target>
 
   <target name="dir-init-jetty">
