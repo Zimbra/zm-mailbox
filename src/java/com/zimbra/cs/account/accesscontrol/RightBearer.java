@@ -222,6 +222,13 @@ public abstract class RightBearer {
             }
         }
 
+        public static void clearGranteeCache() {
+            if (null != GRANTEE_CACHE) {
+                ZimbraLog.acl.debug("Clearing short term grantee cache of %d items.", GRANTEE_CACHE.size());
+                GRANTEE_CACHE.invalidateAll();
+            }
+        }
+
         private final static class GranteeCacheKey {
             private final NamedEntry namedEntry;
             private final Set <Right> rights;

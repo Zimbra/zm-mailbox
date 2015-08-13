@@ -36,6 +36,7 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.GetAccountRequest;
+import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @author schemers
@@ -69,12 +70,15 @@ public class GetAccount extends AdminDocumentHandler {
 
         GetAccountRequest req = JaxbUtil.elementToJaxb(request);
 
-        String accountSelectorKey = req.getAccount().getKey();
-        AccountBy by = AccountBy.fromString(req.getAccount().getBy().toString());
+        AccountSelector acctSel = req.getAccount();
+        if (acctSel == null) {
+            throw ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_ACCOUNT), null);
+        }
+        String accountSelectorKey = acctSel.getKey();
+        AccountBy by = acctSel.getBy().toKeyAccountBy();
 
         Account account = prov.get(by, accountSelectorKey, zsc.getAuthToken());
-
-        defendAgainstAccountHarvesting(account, by, accountSelectorKey, zsc);
+        defendAgainstAccountHarvesting(account, by, accountSelectorKey, zsc, Admin.R_getAccountInfo);
 
         AdminAccessControl aac = checkAccountRight(zsc, account, AdminRight.PR_ALWAYS_ALLOW);
         Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_RESPONSE);

@@ -965,7 +965,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public Account get(AccountSelector acctSel)
     throws ServiceException {
-        return get(acctSel.getBy().toKeyDomainBy(), acctSel.getKey());
+        return get(acctSel.getBy().toKeyAccountBy(), acctSel.getKey());
     }
 
     public static interface EagerAutoProvisionScheduler {
@@ -1079,7 +1079,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public Account get(AccountSelector acctSel, AuthToken authToken)
     throws ServiceException {
-        return get(acctSel.getBy().toKeyDomainBy(), acctSel.getKey(), authToken);
+        return get(acctSel.getBy().toKeyAccountBy(), acctSel.getKey(), authToken);
     }
 
     public Account get(AccountBy keyType, String key, boolean loadFromMaster, AuthToken authToken) throws ServiceException {

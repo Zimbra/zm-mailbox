@@ -1026,6 +1026,14 @@ public class RightCommand {
         }
     }
 
+    public static void clearAllEffectiveRightsCache() {
+        if (null != ALL_EFFECTIVE_RIGHTS_CACHE) {
+            ZimbraLog.acl.debug("Clearing short term all effective rights cache of %d items.",
+                    ALL_EFFECTIVE_RIGHTS_CACHE.size());
+            ALL_EFFECTIVE_RIGHTS_CACHE.invalidateAll();
+        }
+    }
+
     private static AllEffectiveRights getAllEffectiveRights( AdminConsoleCapable acc, GranteeType granteeType,
             NamedEntry granteeEntry, RightBearer rightBearer, boolean expandSetAttrs, boolean expandGetAttrs)
     throws ServiceException {
@@ -1542,6 +1550,7 @@ public class RightCommand {
             }
             ACLUtil.revokeRight(prov, targetEntry, acesToRevoke);
         }
+        RightBearer.Grantee.clearGranteeCache();  // as a precaution in case a new account is created with same name
     }
 
     public static Element rightToXML(Element parent, Right right, boolean expandAllAtrts,

@@ -80,8 +80,6 @@ public class DeleteAccount extends AdminDocumentHandler {
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         defendAgainstAccountHarvesting(account, AccountBy.id, id, zsc, Admin.R_deleteAccount);
 
-        checkAccountRight(zsc, account, Admin.R_deleteAccount);
-
         /*
          * bug 69009
          *

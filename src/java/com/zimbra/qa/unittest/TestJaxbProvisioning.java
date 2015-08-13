@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -101,6 +101,9 @@ public class TestJaxbProvisioning extends TestCase {
 
     @Override
     public void setUp() throws Exception {
+        if (!TestUtil.fromRunUnitTests) {
+            TestUtil.cliSetup();
+        }
         prov = TestUtil.newSoapProvisioning();
         tearDown();
     }
@@ -108,8 +111,9 @@ public class TestJaxbProvisioning extends TestCase {
     @Override
     public void tearDown() throws Exception {
         ZimbraLog.test.debug("in TestJaxbProvisioning tearDown");
-        if (prov == null)
+        if (prov == null) {
             prov = TestUtil.newSoapProvisioning();
+        }
         TestUtil.deleteAccount(testAcctEmail);
         TestUtil.deleteAccount(testNewAcctEmail);
         deleteCalendarResourceIfExists(testCalRes);
@@ -126,98 +130,105 @@ public class TestJaxbProvisioning extends TestCase {
         deleteServerIfExists(testServer);
     }
 
-    public void deleteDomainIfExists(String name) {
+    public static void deleteDomainIfExists(String name) {
         try {
-            ZimbraLog.test.debug(
-                    "Deleting domain " + name);
+            ZimbraLog.test.debug("Deleting domain %s", name);
+            Provisioning prov = TestUtil.newSoapProvisioning();
             Domain res = prov.get(Key.DomainBy.name, name);
-            if (res != null)
+            if (res != null) {
                 prov.deleteDomain(res.getId());
+            }
         } catch (Exception ex) {
-            ZimbraLog.test.error("Problem deleting domain " + name, ex);
+            ZimbraLog.test.error("Problem deleting domain %s", name, ex);
         }
     }
 
-    public void deleteServerIfExists(String name) {
+    public static void deleteServerIfExists(String name) {
         try {
-            ZimbraLog.test.debug(
-                    "Deleting server " + name);
+            ZimbraLog.test.debug("Deleting server %s", name);
+            Provisioning prov = TestUtil.newSoapProvisioning();
             Server res = prov.get(Key.ServerBy.name, name);
-            if (res != null)
+            if (res != null) {
                 prov.deleteServer(res.getId());
+            }
         } catch (Exception ex) {
-            ZimbraLog.test.error("Problem deleting server " + name, ex);
+            ZimbraLog.test.error("Problem deleting server %s", name, ex);
         }
     }
 
-    public void deleteCalendarResourceIfExists(String name) {
+    public static void deleteCalendarResourceIfExists(String name) {
         try {
-            ZimbraLog.test.debug(
-                    "Deleting CalendarResource " + name);
+            ZimbraLog.test.debug("Deleting CalendarResource %s", name);
+            Provisioning prov = TestUtil.newSoapProvisioning();
             CalendarResource res = prov.get(Key.CalendarResourceBy.name, name);
-            if (res != null)
+            if (res != null) {
                 prov.deleteDomain(res.getId());
+            }
         } catch (Exception ex) {
-            ZimbraLog.test.error("Problem deleting Calendar Resource " +
-                    name, ex);
+            ZimbraLog.test.error("Problem deleting Calendar Resource %s", name, ex);
         }
     }
 
-    public void deleteDlIfExists(String name) {
+    public static void deleteDlIfExists(String name) {
         try {
-            ZimbraLog.test.debug(
-                    "Deleting DL " + name);
+            ZimbraLog.test.debug("Deleting DL %s", name);
+            Provisioning prov = TestUtil.newSoapProvisioning();
             DistributionList res = prov.get(Key.DistributionListBy.name, name);
-            if (res != null)
+            if (res != null) {
                 prov.deleteDistributionList(res.getId());
+            }
         } catch (Exception ex) {
-            ZimbraLog.test.error("Problem deleting Distribution List " + name, ex);
+            ZimbraLog.test.error("Problem deleting Distribution List %s", name, ex);
         }
     }
 
-    public void deleteCosIfExists(String name) {
+    public static void deleteCosIfExists(String name) {
         try {
-            ZimbraLog.test.debug("Deleting COS " + name);
+            ZimbraLog.test.debug("Deleting COS %s", name);
+            Provisioning prov = TestUtil.newSoapProvisioning();
             Cos res = prov.get(Key.CosBy.name, name);
             if (res != null)
                 prov.deleteCos(res.getId());
         } catch (Exception ex) {
-            ZimbraLog.test.error("Problem deleting Cos " + name, ex);
+            ZimbraLog.test.error("Problem deleting Cos %s", name, ex);
         }
     }
 
-    public Domain ensureDomainExists(String name)
+    public static Domain ensureDomainExists(String name)
     throws Exception {
+        Provisioning prov = TestUtil.newSoapProvisioning();
         Domain dom = prov.get(Key.DomainBy.name, name);
         if (dom == null) {
-            ZimbraLog.test.debug("ensureDomainExists didn't exist - creating new domain=" + name);
+            ZimbraLog.test.debug("ensureDomainExists didn't exist - creating new domain=%s", name);
             dom = prov.createDomain(name, null);
         }
         if (dom == null) {
             ZimbraLog.test.debug("ensureDomainExists returning null!!!");
         } else {
-            ZimbraLog.test.debug("ensureDomainExists Returning=" + dom.getName() + " Id=" + dom.getId());
+            ZimbraLog.test.debug("ensureDomainExists Returning=%s Id=%s", dom.getName(), dom.getId());
         }
         return dom;
     }
 
-    public Account ensureAccountExists(String name)
+    public static Account ensureAccountExists(String name)
     throws Exception {
         String domainName = name.substring(name.indexOf('@') + 1);
         ensureDomainExists(domainName);
+        Provisioning prov = TestUtil.newSoapProvisioning();
         Account acct = prov.get(AccountBy.name, name);
         if (acct == null)
             acct = TestUtil.createAccount(name);
         if (acct == null) {
             ZimbraLog.test.debug("ensureAccountExists returning null!!!");
         } else {
-            ZimbraLog.test.debug("ensureAccountExists Returning Account=" + acct.getName() + " Id=" + acct.getId());
+            ZimbraLog.test.debug("ensureAccountExists Returning Account=%s Id=%s", acct.getName(), acct.getId());
         }
         return acct;
     }
 
-    public Account ensureMailboxExists(String name)
+    public static Account ensureMailboxExists(String name)
     throws Exception {
+        SoapProvisioning prov = TestUtil.newSoapProvisioning();
         Account acct = ensureAccountExists(name);
         if (acct == null) {
             ZimbraLog.test.debug("ensureMailboxExists returning null!!!");
@@ -226,29 +237,33 @@ public class TestJaxbProvisioning extends TestCase {
             // Note that prov.getAccount() USED TO implicitly created a mailbox even though it was not really
             // supposed to and this routine used to rely on that.
             MailboxInfo mboxInfo = prov.getMailbox(acct);
-            ZimbraLog.test.debug("ensureMailboxExists Returning Mailbox=" + mboxInfo.getMailboxId() +
-                    " Account=" + acct.getName() + " Id=" + acct.getId());
+            ZimbraLog.test.debug("ensureMailboxExists Returning Mailbox=%s Account=%s Id=%s", mboxInfo.getMailboxId(),
+                    acct.getName(), acct.getId());
         }
         return acct;
     }
 
-    public DistributionList ensureDlExists(String name)
+    public static DistributionList ensureDlExists(String name)
     throws Exception {
+        Provisioning prov = TestUtil.newSoapProvisioning();
         String domainName = name.substring(name.indexOf('@') + 1);
         ensureDomainExists(domainName);
         DistributionList dl = prov.get(Key.DistributionListBy.name, name);
-        if (dl == null)
+        if (dl == null) {
             dl = prov.createDistributionList(name, null);
+        }
         return dl;
     }
 
-    public Cos ensureCosExists(String name)
+    public static Cos ensureCosExists(String name)
     throws Exception {
+        Provisioning prov = TestUtil.newSoapProvisioning();
         String domainName = name.substring(name.indexOf('@') + 1);
         ensureDomainExists(domainName);
         Cos cos = prov.get(Key.CosBy.name, name);
-        if (cos == null)
+        if (cos == null) {
             cos = prov.createCos(name, null);
+        }
         return cos;
     }
 
