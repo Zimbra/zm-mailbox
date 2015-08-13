@@ -619,6 +619,11 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     @Override
     public void setCsrfTokenEnabled(boolean csrfEnabled) {
         if (csrfEnabled != csrfTokenEnabled) {
+            synchronized (ZimbraAuthToken.class) {
+                if (encoded != null) {
+                    CACHE.remove(encoded);
+                }
+            }
             csrfTokenEnabled = csrfEnabled;
             // force re-encoding of the token
             encoded = null;
