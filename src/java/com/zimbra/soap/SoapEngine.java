@@ -340,9 +340,10 @@ public class SoapEngine {
         }
 
         ZimbraSoapContext zsc = null;
+        DocumentHandler handler = dispatcher.getHandler(doc);
         Element ectxt = soapProto.getHeader(envelope, HeaderConstants.CONTEXT);
         try {
-            zsc = new ZimbraSoapContext(ectxt, doc.getQName(), context, soapProto);
+            zsc = new ZimbraSoapContext(ectxt, doc.getQName(), handler, context, soapProto);
         } catch (ServiceException e) {
             return soapFaultEnv(soapProto, "unable to construct SOAP context", e);
         }
@@ -411,25 +412,27 @@ public class SoapEngine {
                 for (Element req : doc.listElements()) {
                     String id = req.getAttribute(A_REQUEST_CORRELATOR, null);
                     long start = System.currentTimeMillis();
-                    Element br = dispatchRequest(req, context, zsc);
+                    Element br = dispatchRequest(dispatcher.getHandler(req), req, context, zsc);
                     if (!isResumed) {
                         ZimbraLog.soap.info("(batch) %s elapsed=%d", req.getName(), System.currentTimeMillis() - start);
                     }
                     if (id != null) {
                         br.addAttribute(A_REQUEST_CORRELATOR, id);
                     }
-                    responseBody.addElement(br);
+                    responseBody.addNonUniqueElement(br);
                     if (!contOnError && responseProto.isFault(br)) {
                         break;
                     }
                     if (proxyAuthToken != null) {
-                        zsc.getAuthToken().setProxyAuthToken(proxyAuthToken); //requests will invalidate it when proxying locally; make sure it's set for each sub-request in batch
+                        // requests will invalidate it when proxying locally;
+                        // make sure it's set for each sub-request in batch
+                        zsc.getAuthToken().setProxyAuthToken(proxyAuthToken);
                     }
                 }
             } else {
                 String id = doc.getAttribute(A_REQUEST_CORRELATOR, null);
                 long start = System.currentTimeMillis();
-                responseBody = dispatchRequest(doc, context, zsc);
+                responseBody = dispatchRequest(handler, doc, context, zsc);
                 if (!isResumed) {
                     ZimbraLog.soap.info("%s elapsed=%d", doc.getName(), System.currentTimeMillis() - start);
                 }
@@ -438,15 +441,11 @@ public class SoapEngine {
                 }
             }
         } else {
-            // Proxy the request to target server.  Proxy dispatcher
-            // discards any session information with remote server.
-            // We stick to local server's session when talking to the
-            // client.
+            // Proxy request to target server.  Proxy dispatcher discards any session information with remote server.
+            // We stick to local server's session when talking to the client.
             try {
-                // Detach doc from its current parent, because it will be
-                // added as a child element of a new SOAP envelope in the
-                // proxy dispatcher.  IllegalAddException will be thrown
-                // if we don't detach it first.
+                // Detach doc from its current parent, because it will be added as a child element of a new SOAP
+                // envelope in the proxy dispatcher.  IllegalAddException will be thrown if we don't detach it first.
                 doc.detach();
                 ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, zsc.getRequestedAccountId()).disableNotifications();
                 long start = System.currentTimeMillis();
@@ -475,12 +474,10 @@ public class SoapEngine {
         return responseProto.soapEnvelope(responseBody, responseHeader);
     }
 
-
     /**
      * Handles individual requests, either direct or from a batch
      */
     Element dispatchRequest(Element request, Map<String, Object> context, ZimbraSoapContext zsc) {
-        long startTime = System.currentTimeMillis();
         SoapProtocol soapProto = zsc.getResponseProtocol();
 
         if (request == null) {
@@ -488,9 +485,24 @@ public class SoapEngine {
                     ServiceException.INVALID_REQUEST("no document specified", null));
         }
         DocumentHandler handler = dispatcher.getHandler(request);
+        return dispatchRequest(handler, request, context,zsc);
+    }
+
+    /**
+     * Handles individual requests, either direct or from a batch
+     */
+    Element dispatchRequest(DocumentHandler handler, Element soapReqElem,
+            Map<String, Object> context,ZimbraSoapContext zsc) {
+        long startTime = System.currentTimeMillis();
+        SoapProtocol soapProto = zsc.getResponseProtocol();
+
+        if (soapReqElem == null) {
+            return soapFault(soapProto, "cannot dispatch request",
+                    ServiceException.INVALID_REQUEST("no document specified", null));
+        }
         if (handler == null) {
             return soapFault(soapProto, "cannot dispatch request",
-                    ServiceException.UNKNOWN_DOCUMENT(request.getQualifiedName(), null));
+                    ServiceException.UNKNOWN_DOCUMENT(soapReqElem.getQualifiedName(), null));
         }
         if (RedoLogProvider.getInstance().isSlave() && !handler.isReadOnly()) {
             return soapFault(soapProto, "cannot dispatch request", ServiceException.NON_READONLY_OPERATION_DENIED());
@@ -557,7 +569,7 @@ public class SoapEngine {
 
                 // try to proxy the request if necessary (don't proxy commands that don't require auth)
                 if (needsAuth || needsAdminAuth) {
-                    response = handler.proxyIfNecessary(request, context);
+                    response = handler.proxyIfNecessary(soapReqElem, context);
                 }
             }
 
@@ -566,12 +578,12 @@ public class SoapEngine {
                 if (delegatedAuth) {
                     handler.logAuditAccess(at.getAdminAccountId(), acctId, acctId);
                 }
-                response = handler.handle(request, context);
-                ZimbraPerf.SOAP_TRACKER.addStat(getStatName(request), startTime);
+                response = handler.handle(soapReqElem, context);
+                ZimbraPerf.SOAP_TRACKER.addStat(getStatName(soapReqElem), startTime);
                 long duration = System.currentTimeMillis() - startTime;
                 if (LC.zimbra_slow_logging_enabled.booleanValue() && duration > LC.zimbra_slow_logging_threshold.longValue() &&
-                        !request.getQName().getName().equals(MailConstants.SYNC_REQUEST.getName())) {
-                    ZimbraLog.soap.warn("Slow SOAP request (start=" + startTime + "):\n" + request.prettyPrint(true));
+                        !soapReqElem.getQName().getName().equals(MailConstants.SYNC_REQUEST.getName())) {
+                    ZimbraLog.soap.warn("Slow SOAP request (start=" + startTime + "):\n" + soapReqElem.prettyPrint(true));
                     ZimbraLog.soap.warn("Slow SOAP response (time=" + duration + "):\n" + response.prettyPrint());
                 }
             }

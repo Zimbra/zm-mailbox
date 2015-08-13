@@ -31,7 +31,6 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
@@ -255,7 +254,7 @@ public final class ZimbraSoapContext {
      * @param requestName - The SOAP request name - may be null
      * @param context The engine context, which might contain the auth token
      * @param requestProtocol  The SOAP protocol used for the request */
-    public ZimbraSoapContext(Element ctxt, QName requestName, Map<String, Object> context,
+    public ZimbraSoapContext(Element ctxt, QName requestName, DocumentHandler handler, Map<String, Object> context,
             SoapProtocol requestProtocol) throws ServiceException {
 
         if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT))
@@ -327,7 +326,7 @@ public final class ZimbraSoapContext {
                 }
 
                 mRequestedAccountId = account.getId();
-                validateDelegatedAccess(account, requestName, value);
+                validateDelegatedAccess(account, handler, requestName, value);
             } else if (key.equals(HeaderConstants.BY_ID)) {
                 if (mAuthToken == null) {
                     throw ServiceException.AUTH_REQUIRED();
@@ -342,7 +341,7 @@ public final class ZimbraSoapContext {
                 }
 
                 mRequestedAccountId = value;
-                validateDelegatedAccess(account, requestName, value);
+                validateDelegatedAccess(account, handler, requestName, value);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
             }
@@ -449,38 +448,24 @@ public final class ZimbraSoapContext {
     }
 
     /**
-     * Some requests need to always return valid looking output in able to provide consistent behavior between
-     * requests against non-existent accounts and those which don't allow access to the requested data.
-     * For instance FreeBusy requests.
-     * Ideally, this would be a method in DocumentHandler; although would take a bit more plumbing since handler object
-     * isn't available until after soap context is created. Probably OK for now; but something to consider if we have
-     * to do this for other requests
-     * @param requestName - The SOAP request name - may be null
-     */
-    private boolean handlesAccountHarvesting(QName requestName) {
-        if (requestName == null) {
-            return false;
-        }
-        if (requestName.equals(MailConstants.GET_FREE_BUSY_REQUEST)) {
-            return true;
-        }
-        return false;
-    }
-    /**
-     * Validate delegation rights. Request for delegated access requires a grant on at least one object in the target account or admin login rights.
+     * Validate delegation rights. Request for delegated access requires a grant on at least one object in the target
+     * account or admin login rights.
      * @param targetAccount - Account which requested is targeted for
-     * @param requestedKey - The key sent in request which mapped to target account. Passed in so error only reports back what was requested (i.e. can't harvest accountId if you only know the email or vice-versa)
+     * @param requestedKey - The key sent in request which mapped to target account.
+     *                       Passed in so error only reports back what was requested (i.e. can't harvest accountId if
+     *                       you only know the email or vice-versa)
      * @param requestName - The SOAP request name - may be null
      * @throws ServiceException
      */
-    private void validateDelegatedAccess(Account targetAccount, QName requestName, String requestedKey)
+    private void validateDelegatedAccess(Account targetAccount, DocumentHandler handler,
+            QName requestName, String requestedKey)
     throws ServiceException {
 
         if (!isDelegatedRequest()) {
             return;
         }
 
-        if (handlesAccountHarvesting(requestName)) {
+        if ((handler != null) && handler.handlesAccountHarvesting()) {
             return;
         }
 
@@ -497,6 +482,10 @@ public final class ZimbraSoapContext {
             authAccount = mAuthToken.getAccount();
             if (isAdmin && AccessManager.getInstance().canAccessAccount(mAuthToken, targetAccount, true)) {
                 //case 1 - admin
+                return;
+            }
+
+            if (isAdmin && (handler != null) && handler.defendsAgainstDelegateAdminAccountHarvesting()) {
                 return;
             }
 
