@@ -308,6 +308,16 @@ public class ServiceException extends Exception {
         // return new ServiceException("permission denied: can not access account " + account, PERM_DENIED, SENDERS_FAULT);
     }
 
+    // to defend against harvest attacks throw PERM_DENIED instead of NO_SUCH_DISTRIBUTION_LIST
+    public static ServiceException DEFEND_DL_HARVEST(String group) {
+        return PERM_DENIED("can not access distribution list " + group);
+    }
+
+    // to defend against harvest attacks throw PERM_DENIED instead of NO_SUCH_CALENDAR_RESOURCE
+    public static ServiceException DEFEND_CALENDAR_RESOURCE_HARVEST(String calendarResource) {
+        return PERM_DENIED("can not access calendar resource " + calendarResource);
+    }
+
     public static ServiceException AUTH_REQUIRED() {
         return new ServiceException("no valid authtoken present", AUTH_REQUIRED, SENDERS_FAULT);
     }
