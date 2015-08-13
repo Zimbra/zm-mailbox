@@ -39,6 +39,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import junit.framework.Assert;
 
+import org.dom4j.DocumentException;
 import org.junit.runner.JUnitCore;
 
 import com.google.common.collect.Lists;
@@ -84,7 +85,10 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.lmtp.LmtpClient;
+import com.zimbra.common.localconfig.ConfigException;
+import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.localconfig.LocalConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -133,6 +137,8 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
+import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 
 /**
  * @author bburtin
@@ -1271,5 +1277,20 @@ extends Assert {
             conn.commit();
             conn.closeQuietly();
         }
+    }
+
+    protected static void setLCValue(KnownKey key, String newValue)
+            throws DocumentException, ConfigException, IOException, ServiceException {
+        LocalConfig lc = new LocalConfig(null);
+        if (newValue == null) {
+            lc.remove(key.key());
+        } else {
+            lc.set(key.key(), newValue);
+        }
+        lc.save();
+        SoapProvisioning prov = TestUtil.newSoapProvisioning();
+        ReloadLocalConfigRequest req = new ReloadLocalConfigRequest();
+        ReloadLocalConfigResponse resp = prov.invokeJaxb(req);
+        assertNotNull("ReloadLocalConfigResponse" , resp);
     }
 }

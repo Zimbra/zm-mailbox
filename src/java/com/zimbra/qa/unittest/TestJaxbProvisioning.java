@@ -22,9 +22,16 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
@@ -48,18 +55,36 @@ import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.VerifyIndexResult;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.soap.account.message.GetShareInfoRequest;
+import com.zimbra.soap.account.message.GetShareInfoResponse;
 import com.zimbra.soap.admin.message.GetLicenseInfoRequest;
 import com.zimbra.soap.admin.message.GetLicenseInfoResponse;
 import com.zimbra.soap.admin.message.GetServerNIfsRequest;
 import com.zimbra.soap.admin.message.GetServerNIfsResponse;
 import com.zimbra.soap.admin.message.GetVersionInfoRequest;
 import com.zimbra.soap.admin.message.GetVersionInfoResponse;
+import com.zimbra.soap.admin.message.ModifyCosRequest;
+import com.zimbra.soap.admin.message.ModifyCosResponse;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.admin.type.LicenseExpirationInfo;
 import com.zimbra.soap.admin.type.NetworkInformation;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.VersionInfo;
+import com.zimbra.soap.mail.message.CreateFolderRequest;
+import com.zimbra.soap.mail.message.CreateFolderResponse;
+import com.zimbra.soap.mail.message.CreateMountpointRequest;
+import com.zimbra.soap.mail.message.CreateMountpointResponse;
+import com.zimbra.soap.mail.message.FolderActionRequest;
+import com.zimbra.soap.mail.message.FolderActionResponse;
+import com.zimbra.soap.mail.type.ActionGrantSelector;
+import com.zimbra.soap.mail.type.FolderActionSelector;
+import com.zimbra.soap.mail.type.NewFolderSpec;
+import com.zimbra.soap.mail.type.NewMountpointSpec;
+import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.GranteeChooser;
+import com.zimbra.soap.type.ShareInfo;
 import com.zimbra.soap.type.TargetBy;
 
 /**
@@ -67,11 +92,15 @@ import com.zimbra.soap.type.TargetBy;
  * particular where SoapProvisioning uses them
  */
 public class TestJaxbProvisioning extends TestCase {
+    @Rule public TestName testName = new TestName();
 
     private SoapProvisioning prov = null;
 
-    private final static String testAcctDomainName =
-            "jaxb.acct.domain.example.test";
+    private final static String testAcctDomainName = "jaxb.acct.domain.example.test";
+    private final static String domain2 = "jaxb.domain.test";
+    private final static String sharer = "sharer@" + domain2;
+    private final static String sharee = "sharee@" + domain2;
+
     private final static String testServer = "jaxb.server.example.test";
     private final static String testAcctEmail = "jaxb1@" + testAcctDomainName;
     private final static String testAcctAlias = "alias_4_jaxb1@" + testAcctDomainName;
@@ -114,8 +143,11 @@ public class TestJaxbProvisioning extends TestCase {
         if (prov == null) {
             prov = TestUtil.newSoapProvisioning();
         }
+        TestUtil.setLCValue(LC.public_share_advertising_scope, null);
         TestUtil.deleteAccount(testAcctEmail);
         TestUtil.deleteAccount(testNewAcctEmail);
+        TestUtil.deleteAccount(sharer);
+        TestUtil.deleteAccount(sharee);
         deleteCalendarResourceIfExists(testCalRes);
         deleteDlIfExists(testDl);
         deleteDlIfExists(parentDl);
@@ -127,7 +159,12 @@ public class TestJaxbProvisioning extends TestCase {
         deleteDomainIfExists(testCalResDomain);
         deleteDomainIfExists(testDlDomain);
         deleteDomainIfExists(testCosDomain);
+        deleteDomainIfExists(domain2);
         deleteServerIfExists(testServer);
+    }
+
+    private String testName() {
+        return testName.getMethodName();
     }
 
     public static void deleteDomainIfExists(String name) {
@@ -195,7 +232,7 @@ public class TestJaxbProvisioning extends TestCase {
     }
 
     public static Domain ensureDomainExists(String name)
-    throws Exception {
+            throws Exception {
         Provisioning prov = TestUtil.newSoapProvisioning();
         Domain dom = prov.get(Key.DomainBy.name, name);
         if (dom == null) {
@@ -211,7 +248,7 @@ public class TestJaxbProvisioning extends TestCase {
     }
 
     public static Account ensureAccountExists(String name)
-    throws Exception {
+            throws Exception {
         String domainName = name.substring(name.indexOf('@') + 1);
         ensureDomainExists(domainName);
         Provisioning prov = TestUtil.newSoapProvisioning();
@@ -227,7 +264,7 @@ public class TestJaxbProvisioning extends TestCase {
     }
 
     public static Account ensureMailboxExists(String name)
-    throws Exception {
+            throws Exception {
         SoapProvisioning prov = TestUtil.newSoapProvisioning();
         Account acct = ensureAccountExists(name);
         if (acct == null) {
@@ -244,7 +281,7 @@ public class TestJaxbProvisioning extends TestCase {
     }
 
     public static DistributionList ensureDlExists(String name)
-    throws Exception {
+            throws Exception {
         Provisioning prov = TestUtil.newSoapProvisioning();
         String domainName = name.substring(name.indexOf('@') + 1);
         ensureDomainExists(domainName);
@@ -256,7 +293,7 @@ public class TestJaxbProvisioning extends TestCase {
     }
 
     public static Cos ensureCosExists(String name)
-    throws Exception {
+            throws Exception {
         Provisioning prov = TestUtil.newSoapProvisioning();
         String domainName = name.substring(name.indexOf('@') + 1);
         ensureDomainExists(domainName);
@@ -267,16 +304,18 @@ public class TestJaxbProvisioning extends TestCase {
         return cos;
     }
 
-    public void testConfig() throws Exception {
-        ZimbraLog.test.debug("Starting testConfig");
+    @Test
+    public void testGetConfig() throws Exception {
+        ZimbraLog.test.debug("Starting test %s", testName());
         Config cfg = prov.getConfig();
         assertNotNull("Config" , cfg);
         cfg = prov.getConfig("zimbra_user");
         assertNotNull("Config" , cfg);
     }
 
+    @Test
     public void testServer() throws Exception {
-        ZimbraLog.test.debug("Starting testServer");
+        ZimbraLog.test.debug("Starting test %s", testName());
         Domain dom = ensureDomainExists(testServer);
         assertNotNull("Domain for " + testAcctDomainName, dom);
         Server svr = prov.createServer(testServer, null);
@@ -289,6 +328,7 @@ public class TestJaxbProvisioning extends TestCase {
         prov.deleteServer(svr.getId());
    }
 
+    @Test
     public void testAccount() throws Exception {
         ZimbraLog.test.debug("Starting testAccount");
         Domain dom = ensureDomainExists(testAcctDomainName);
@@ -332,8 +372,177 @@ public class TestJaxbProvisioning extends TestCase {
         prov.deleteAccount(acct.getId());
    }
 
+    @Test
+    public void testPublicSharesInDiffDomains() throws Exception {
+        ZimbraLog.test.debug("Starting test %s", testName());
+        ensureDomainExists(testAcctDomainName);
+        ensureDomainExists(domain2);
+        Cos cos = prov.createCos(testCos, null);
+        Assert.assertNotNull("Cos for " + testCos, cos);
+        Account sharerAcct = TestUtil.createAccount(sharer);
+        Account shareeAcct = ensureMailboxExists(sharee);
+        Account otherDomainSharer = TestUtil.createAccount(testAcctEmail);
+        // anticipate that LC.public_share_advertising_scope config will be done by account/cos/domain in the future.
+        shareeAcct.setCOSId(cos.getId());
+        TestUtil.setLCValue(LC.public_share_advertising_scope, LC.PUBLIC_SHARE_VISIBILITY.all.toString());
+        GetShareInfoResponse gsiResp = accountGetShareInfo(shareeAcct, null /* owner account */, false, null);
+        // Remember how many baseline public shares there are before we start.
+        int basePublicShares = gsiResp.getShares().size();
+        String folder1Id = createFolder(sharerAcct, "SharedByUserToSharee", Byte.valueOf((byte) 3), "appointment");
+        String folder2Id = createFolder(sharerAcct, "SharedPubliclyAndMounted", Byte.valueOf((byte) 4), "appointment");
+        String folder3Id = createFolder(sharerAcct, "SharedPubliclyNotMounted", Byte.valueOf((byte) 5), "appointment");
+        grantAccess(sharerAcct, folder1Id, "usr", sharee, "r");
+        grantAccess(sharerAcct, folder2Id, "pub", null, "r");
+        grantAccess(sharerAcct, folder3Id, "pub", null, "r");
+
+        String folder4Id = createFolder(otherDomainSharer, "SharedByOtherDomainUserToSharee", Byte.valueOf((byte) 3),
+                "appointment");
+        String folder5Id = createFolder(otherDomainSharer, "SharedPubliclyOtherDomainAndMounted",
+                Byte.valueOf((byte) 4), "appointment");
+        String folder6Id = createFolder(otherDomainSharer, "SharedPubliclyOtherDomainNotMounted",
+                Byte.valueOf((byte) 5), "appointment");
+        grantAccess(otherDomainSharer, folder4Id, "usr", sharee, "r");
+        grantAccess(otherDomainSharer, folder5Id, "pub", null, "r");
+        grantAccess(otherDomainSharer, folder6Id, "pub", null, "r");
+
+        createMountpoint(shareeAcct, "sharedByUser", "appointment", sharerAcct.getId(), folder1Id);
+        createMountpoint(shareeAcct, "publiclyShared", "appointment", sharerAcct.getId(), folder2Id);
+        createMountpoint(otherDomainSharer, "publiclySharedOtherDom", "appointment",
+                otherDomainSharer.getId(), folder5Id);
+        int MOUNTED_DIRECT = 1;
+        int NOT_MOUNTED_DIRECT = 1;
+        int MOUNTED_PUBLIC = 2;
+        int NOTMOUNTED_PUBLIC_SAME_DOMAIN = 1;
+        int NOTMOUNTED_PUBLIC_DIFF_DOMAIN = 1;
+        int ALL_SHARES = MOUNTED_DIRECT + NOT_MOUNTED_DIRECT + MOUNTED_PUBLIC +
+                NOTMOUNTED_PUBLIC_SAME_DOMAIN + NOTMOUNTED_PUBLIC_DIFF_DOMAIN;
+        int ALL_SHARED_FROM_SHARER = 3;
+        int ALL_SHARED_FROM_DIFF_DOMAIN_SHARER = 3;
+
+        TestUtil.setLCValue(LC.public_share_advertising_scope, LC.PUBLIC_SHARE_VISIBILITY.samePrimaryDomain.toString());
+        prov.flushCache(CacheEntryType.all, null);
+        accountGetShareInfo(shareeAcct, null /* owner account */, false,
+            MOUNTED_DIRECT + MOUNTED_PUBLIC + NOTMOUNTED_PUBLIC_SAME_DOMAIN);
+        // If we specify the owner, then there is no value in trying to hide the owner's identity, so public
+        // shares should be included
+        accountGetShareInfo(shareeAcct, sharerAcct, false, ALL_SHARED_FROM_SHARER);
+        accountGetShareInfo(shareeAcct, otherDomainSharer, false, ALL_SHARED_FROM_DIFF_DOMAIN_SHARER);
+        adminGetShareInfo(sharerAcct, ALL_SHARED_FROM_SHARER);
+
+        TestUtil.setLCValue(LC.public_share_advertising_scope, LC.PUBLIC_SHARE_VISIBILITY.all.toString());
+        prov.flushCache(CacheEntryType.account, null);
+        accountGetShareInfo(shareeAcct, null /* owner account */, false,
+                basePublicShares + ALL_SHARES);
+        accountGetShareInfo(shareeAcct, sharerAcct, false, ALL_SHARED_FROM_SHARER);
+        accountGetShareInfo(shareeAcct, otherDomainSharer, false, ALL_SHARED_FROM_DIFF_DOMAIN_SHARER);
+        adminGetShareInfo(sharerAcct, ALL_SHARED_FROM_SHARER);
+
+        TestUtil.setLCValue(LC.public_share_advertising_scope, LC.PUBLIC_SHARE_VISIBILITY.none.toString());
+        prov.flushCache(CacheEntryType.account, null);
+        accountGetShareInfo(shareeAcct, null /* owner account */, false, MOUNTED_DIRECT + NOT_MOUNTED_DIRECT);
+        accountGetShareInfo(shareeAcct, sharerAcct, false, ALL_SHARED_FROM_SHARER);
+        accountGetShareInfo(shareeAcct, otherDomainSharer, false, ALL_SHARED_FROM_DIFF_DOMAIN_SHARER);
+        adminGetShareInfo(sharerAcct, ALL_SHARED_FROM_SHARER);
+    }
+
+    public void modifyCos(Cos cos, String attr, String value) throws ServiceException {
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(attr, value);
+        ModifyCosRequest modCosReq = new ModifyCosRequest();
+        modCosReq.setId(cos.getId());
+        modCosReq.setAttrs(attrs);
+        ModifyCosResponse modCosResp = prov.invokeJaxb(modCosReq);
+        Assert.assertNotNull(String.format("ModifyCosResponse object when setting %s to %s", attr, value), modCosResp);
+    }
+
+    public com.zimbra.soap.admin.message.GetShareInfoResponse adminGetShareInfo(Account acct, Integer expected) {
+        com.zimbra.soap.admin.message.GetShareInfoRequest req =
+                new com.zimbra.soap.admin.message.GetShareInfoRequest(AccountSelector.fromId(acct.getId()));
+        com.zimbra.soap.admin.message.GetShareInfoResponse resp = null;
+        try {
+            resp = prov.invokeJaxb(req);
+            Assert.assertNotNull(String.format("GetShareInfoRequest for account %s", acct.getName()), resp);
+            List<ShareInfo> shares = resp.getShares();
+            if (expected != null) {
+                Assert.assertEquals("Number of shares", expected, Integer.valueOf(shares.size()));
+            }
+        } catch (ServiceException e) {
+            Assert.fail("Unexpected exception while creating mountpoint " + e);
+        }
+        return resp;
+    }
+
+    public GetShareInfoResponse accountGetShareInfo(
+            Account acct, Account ownerAccount, Boolean includeSelf, Integer expected) {
+        GetShareInfoResponse resp = null;
+        AccountSelector owner = (ownerAccount != null) ? AccountSelector.fromId(ownerAccount.getId()) : null;
+        GranteeChooser grantee = null;
+        try {
+            resp = prov.invokeJaxbOnTargetAccount(GetShareInfoRequest.create(owner, grantee, includeSelf),
+                    acct.getId());
+            Assert.assertNotNull(String.format("GetShareInfoRequest for account %s", acct.getName()), resp);
+            List<ShareInfo> shares = resp.getShares();
+            if (expected != null) {
+                Assert.assertEquals("Number of shares", expected, Integer.valueOf(shares.size()));
+            }
+        } catch (ServiceException e) {
+            Assert.fail("Unexpected exception while creating mountpoint " + e);
+        }
+        return resp;
+    }
+
+    public void createMountpoint(Account acct, String localFolderName, String defaultView,
+            String remoteZimbraId, String remoteFolderId) {
+        NewMountpointSpec folderSpec = new NewMountpointSpec(localFolderName);
+        folderSpec.setFolderId("1");
+        folderSpec.setDefaultView(defaultView);
+        folderSpec.setOwnerId(remoteZimbraId);
+        folderSpec.setRemoteId(Integer.parseInt(remoteFolderId.substring(remoteFolderId.indexOf(':') + 1)));
+        CreateMountpointRequest req = new CreateMountpointRequest(folderSpec);
+        try {
+            CreateMountpointResponse resp = prov.invokeJaxbOnTargetAccount(req, acct.getId());
+            Assert.assertNotNull(String.format("CreateMountpointResponse for account %s folder %s",
+                    acct.getName(), localFolderName), resp);
+        } catch (ServiceException e) {
+            Assert.fail("Unexpected exception while creating mountpoint " + e);
+        }
+    }
+
+    public void grantAccess(Account acct, String id, String granteeType, String granteeName, String perm) {
+        FolderActionSelector selector = new FolderActionSelector(id, "grant");
+        ActionGrantSelector grant = new ActionGrantSelector(perm, granteeType);
+        grant.setDisplayName(granteeName);
+        selector.setGrant(grant);
+        FolderActionRequest req = new FolderActionRequest(selector);
+        try {
+            FolderActionResponse resp = prov.invokeJaxbOnTargetAccount(req, acct.getId());
+            Assert.assertNotNull(String.format("FolderActionResponse for account %s", acct.getName()), resp);
+        } catch (ServiceException e) {
+            Assert.fail("Unexpected exception while granting access " + e);
+        }
+    }
+
+    public String createFolder(Account acct, String name, Byte color, String defaultView) {
+        NewFolderSpec newFolderSpec = new NewFolderSpec(name);
+        newFolderSpec.setParentFolderId(Integer.toString(Mailbox.ID_FOLDER_USER_ROOT));
+        newFolderSpec.setColor(color);
+        newFolderSpec.setFlags("#");
+        newFolderSpec.setDefaultView(defaultView);
+        CreateFolderRequest createFolderReq = new CreateFolderRequest(newFolderSpec);
+        CreateFolderResponse createFolderResp;
+        try {
+            createFolderResp = prov.invokeJaxbOnTargetAccount(createFolderReq, acct.getId());
+            Assert.assertNotNull(String.format("CreateFolderResponse %s", newFolderSpec.getName()), createFolderResp);
+            return createFolderResp.getFolder().getId();
+        } catch (ServiceException e) {
+            Assert.fail("Unexpected exception while creating folder" + e);
+        }
+        return null;
+    }
+
+    @Test
     public void testMailbox() throws Exception {
-        ZimbraLog.test.debug("Starting testMailbox");
+        ZimbraLog.test.debug("Starting test %s", testName());
         Domain dom = ensureDomainExists(testAcctDomainName);
         assertNotNull("Domain for " + testAcctDomainName, dom);
         Account acct = prov.createAccount(testAcctEmail,
@@ -345,6 +554,7 @@ public class TestJaxbProvisioning extends TestCase {
         prov.deleteAccount(acct.getId());
    }
 
+    @Test
     public void testCos() throws Exception {
         ZimbraLog.test.debug("Starting testCos");
         Domain dom = ensureDomainExists(testCosDomain);

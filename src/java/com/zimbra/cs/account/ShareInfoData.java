@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -302,22 +302,24 @@ public class ShareInfoData {
         return sid;
     }
 
-    public void toXML(Element eShare, Integer mptId) {
-        eShare.addAttribute(AccountConstants.A_OWNER_ID,             getOwnerAcctId());
-        eShare.addAttribute(AccountConstants.A_OWNER_EMAIL,          getOwnerAcctEmail());
-        eShare.addAttribute(AccountConstants.A_OWNER_DISPLAY_NAME,   getOwnerAcctDisplayName());
-        eShare.addAttribute(AccountConstants.A_FOLDER_ID,            getItemId());
-        eShare.addAttribute(AccountConstants.A_FOLDER_UUID,          getItemUuid());
-        eShare.addAttribute(AccountConstants.A_FOLDER_PATH,          getPath());
-        eShare.addAttribute(MailConstants.A_DEFAULT_VIEW,            getFolderDefaultView());
-        eShare.addAttribute(AccountConstants.A_RIGHTS,               getRights());
-        eShare.addAttribute(AccountConstants.A_GRANTEE_TYPE,         getGranteeType());
-        eShare.addAttribute(AccountConstants.A_GRANTEE_ID,           getGranteeId());
-        eShare.addAttribute(AccountConstants.A_GRANTEE_NAME,         getGranteeName());
-        eShare.addAttribute(AccountConstants.A_GRANTEE_DISPLAY_NAME, getGranteeDisplayName());
-
-        if (mptId != null)
-            eShare.addAttribute(AccountConstants.A_MOUNTPOINT_ID, mptId.toString());
+    public com.zimbra.soap.type.ShareInfo toJAXB(Integer mptId) {
+        com.zimbra.soap.type.ShareInfo jaxb = new com.zimbra.soap.type.ShareInfo();
+        jaxb.setOwnerId(getOwnerAcctId());
+        jaxb.setOwnerEmail(getOwnerAcctEmail());
+        jaxb.setOwnerDisplayName(getOwnerAcctDisplayName());
+        jaxb.setFolderId(getItemId());
+        jaxb.setFolderUuid(getItemUuid());
+        jaxb.setFolderPath(getPath());
+        jaxb.setDefaultView(getFolderDefaultView());
+        jaxb.setRights(getRights());
+        jaxb.setGranteeType(getGranteeType());
+        jaxb.setGranteeId(getGranteeId());
+        jaxb.setGranteeName(getGranteeName());
+        jaxb.setGranteeDisplayName(getGranteeDisplayName());
+        if (mptId != null) {
+            jaxb.setMountpointId(mptId.toString());
+        }
+        return jaxb;
     }
 
     @Override
