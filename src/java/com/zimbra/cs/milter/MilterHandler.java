@@ -18,6 +18,8 @@ package com.zimbra.cs.milter;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.MalformedInputException;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +33,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.mime.InternetAddress;
+import com.zimbra.common.mime.MimeAddressHeader;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -236,32 +239,62 @@ public final class MilterHandler implements NioHandler {
         }
     }
 
-    private void getAddrListsFromHeaders(MilterPacket command) throws IOException {
-        IoBuffer data = getDataBuffer(command);
-        Map<String, String> macros = parseMacros(data);
-        for (String header : macros.keySet()) {
-            if (TO_HEADER.equals(header.toLowerCase()) || CC_HEADER.equals(header.toLowerCase())) {
-                String addr = macros.get(header);
-                if (!StringUtil.isNullOrEmpty(addr)) {
-                    for (InternetAddress address : InternetAddress.parseHeader(addr)) {
-                        visibleAddresses.add(address.getAddress().toLowerCase());
-                        ZimbraLog.milter.debug("Visible '%s' value %s", header, address.getAddress());
-                    }
+    static MimeAddressHeader getToCcAddressHeader(byte [] bytes) {
+        MimeAddressHeader mHeader = null;
+        try {
+            int i = 0;
+            String key = null;
+            if (bytes.length > 0) {
+                while (i < bytes.length && bytes[i] != 0x00) {
+                    i++;
+                }
+            }
+            key = new String(Arrays.copyOfRange(bytes, 0, i));
+            if (!StringUtil.isNullOrEmpty(key) &&
+                (key.toLowerCase().equals(TO_HEADER) || key.toLowerCase().equals(CC_HEADER))) {
+                if (bytes.length > i+1) {
+                    byte [] values = Arrays.copyOfRange(bytes, i+1, bytes.length);
+                    mHeader = new MimeAddressHeader(key, values);
+                }
+            }
+        } catch (Exception e) {
+            ZimbraLog.milter.warn("Error parsing header.", e);
+        }
+        return mHeader;
+    }
+
+    private void getAddrListsFromHeaders(MilterPacket command) {
+        MimeAddressHeader mHeader = getToCcAddressHeader(command.getData());
+        if(mHeader != null) {
+            for (InternetAddress address : mHeader.getAddresses()) {
+                if(address.getAddress() != null) {
+                    visibleAddresses.add(address.getAddress().toLowerCase());
+                    ZimbraLog.milter.debug("Visible value %s", address.getAddress());
                 }
             }
         }
     }
 
-    private Map<String, String> parseMacros(IoBuffer buf) throws IOException {
+    /**
+     * This method should only be used for ASCII data.
+     * @param buf
+     * @return
+     * @throws IOException
+     */
+    static Map<String, String> parseMacros(IoBuffer buf) throws IOException {
         Map<String, String> macros = new HashMap<String, String>();
-        while (buf.hasRemaining()) {
-            String key = buf.getString(CHARSET.newDecoder());
-            if (buf.hasRemaining()) {
-                String value = buf.getString(CHARSET.newDecoder());
-                if (key != null && value != null) {
-                    macros.put(key, value);
+        try {
+            while (buf.hasRemaining()) {
+                String key = buf.getString(CHARSET.newDecoder());
+                if (buf.hasRemaining()) {
+                    String value = buf.getString(CHARSET.newDecoder());
+                    if (key != null && value != null) {
+                        macros.put(key, value);
+                    }
                 }
             }
+        } catch (MalformedInputException e) {
+            ZimbraLog.milter.warn("Found non-ascii characters while parsing macros.", e);
         }
         return macros;
     }
