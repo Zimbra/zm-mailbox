@@ -380,6 +380,19 @@ public class ContactAutoComplete {
         mSearchType = type;
     }
 
+    public AutoCompleteResult resolveEmailAddr(String str) throws ServiceException {
+           AutoCompleteResult result = new AutoCompleteResult(1);
+           result.rankings = new ContactRankings(getRequestedAcctId());
+           for (String addr : mRequestedAcct.getAllAddrsSet()) {
+               if (addr.equals(str)) {
+                  ContactEntry entry = new ContactEntry();
+                  entry.mEmail = addr;
+                  result.addEntry(entry);
+                  break;
+               }
+             }
+           return result;
+    }
     public AutoCompleteResult query(String str, Collection<Integer> folders, int limit) throws ServiceException {
         ZimbraLog.gal.debug("AutoComplete querying: %s", str);
         str = str.toLowerCase();

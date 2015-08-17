@@ -34,6 +34,7 @@ import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.auth.AuthContext;
@@ -382,7 +383,9 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void addAlias(Account acct, String alias) {
-        throw new UnsupportedOperationException();
+        HashMap<String, Object> attrs = new HashMap<String, Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAlias, alias);
+        modifyAttrs(acct, attrs, false);
     }
 
     @Override
