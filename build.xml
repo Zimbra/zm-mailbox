@@ -1160,7 +1160,7 @@
           <antcall target="stop-webserver"/>
           <antcall target="stop-ldap"/>
           <exec failonerror="true" executable="../ZimbraServer/src/perl/install-thirdparty">
-      <arg line="users/achhatre/JUDASPRIEST"/>
+            <arg line="JUDASPRIEST"/>
           </exec>
         </then>
       </if>
@@ -1389,8 +1389,6 @@
         <antcall target="make-dirs">
             <param name="base.dir" value="${zimbra.home.dir}"/>
         </antcall>
-
-        <ant dir="${soap.dir}" target="zimbra-identity" inheritAll="false"/>
     </target>
 
   <target name="dir-init-jetty">
