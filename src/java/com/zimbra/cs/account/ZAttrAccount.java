@@ -14436,7 +14436,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM features
+     * Deprecated since: 8.7.0. deprecated in favor of
+     * zimbraFeatureChatEnabled. Orig desc: IM features
      *
      * @return zimbraFeatureIMEnabled, or false if unset
      */
@@ -14446,7 +14447,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM features
+     * Deprecated since: 8.7.0. deprecated in favor of
+     * zimbraFeatureChatEnabled. Orig desc: IM features
      *
      * @param zimbraFeatureIMEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14459,7 +14461,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM features
+     * Deprecated since: 8.7.0. deprecated in favor of
+     * zimbraFeatureChatEnabled. Orig desc: IM features
      *
      * @param zimbraFeatureIMEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14473,7 +14476,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM features
+     * Deprecated since: 8.7.0. deprecated in favor of
+     * zimbraFeatureChatEnabled. Orig desc: IM features
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -14485,7 +14489,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM features
+     * Deprecated since: 8.7.0. deprecated in favor of
+     * zimbraFeatureChatEnabled. Orig desc: IM features
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -21045,6 +21050,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * available IM interop gateways
      *
      * @return zimbraIMAvailableInteropGateways, or empty array if unset
@@ -21057,6 +21064,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * available IM interop gateways
      *
      * @param zimbraIMAvailableInteropGateways new value
@@ -21072,6 +21081,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * available IM interop gateways
      *
      * @param zimbraIMAvailableInteropGateways new value
@@ -21088,6 +21099,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * available IM interop gateways
      *
      * @param zimbraIMAvailableInteropGateways new to add to existing values
@@ -21103,6 +21116,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * available IM interop gateways
      *
      * @param zimbraIMAvailableInteropGateways new to add to existing values
@@ -21119,6 +21134,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * available IM interop gateways
      *
      * @param zimbraIMAvailableInteropGateways existing value to remove
@@ -21134,6 +21151,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * available IM interop gateways
      *
      * @param zimbraIMAvailableInteropGateways existing value to remove
@@ -21150,6 +21169,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * available IM interop gateways
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21164,6 +21185,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * available IM interop gateways
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -42718,6 +42741,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to login to the IM client automatically
      *
      * @return zimbraPrefIMAutoLogin, or false if unset
@@ -42728,6 +42753,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to login to the IM client automatically
      *
      * @param zimbraPrefIMAutoLogin new value
@@ -42741,6 +42768,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to login to the IM client automatically
      *
      * @param zimbraPrefIMAutoLogin new value
@@ -42755,6 +42784,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to login to the IM client automatically
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42767,6 +42798,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to login to the IM client automatically
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -42780,7 +42813,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM buddy list sort order
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * buddy list sort order
      *
      * @return zimbraPrefIMBuddyListSort, or null if unset
      *
@@ -42792,7 +42827,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM buddy list sort order
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * buddy list sort order
      *
      * @param zimbraPrefIMBuddyListSort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42807,7 +42844,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM buddy list sort order
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * buddy list sort order
      *
      * @param zimbraPrefIMBuddyListSort new value
      * @param attrs existing map to populate, or null to create a new map
@@ -42823,7 +42862,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM buddy list sort order
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * buddy list sort order
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -42837,7 +42878,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM buddy list sort order
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * buddy list sort order
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -42852,7 +42895,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Custom IM status messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Custom
+     * IM status messages
      *
      * @return zimbraPrefIMCustomStatusMessage, or empty array if unset
      *
@@ -42864,7 +42909,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Custom IM status messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Custom
+     * IM status messages
      *
      * @param zimbraPrefIMCustomStatusMessage new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42879,7 +42926,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Custom IM status messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Custom
+     * IM status messages
      *
      * @param zimbraPrefIMCustomStatusMessage new value
      * @param attrs existing map to populate, or null to create a new map
@@ -42895,7 +42944,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Custom IM status messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Custom
+     * IM status messages
      *
      * @param zimbraPrefIMCustomStatusMessage new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42910,7 +42961,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Custom IM status messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Custom
+     * IM status messages
      *
      * @param zimbraPrefIMCustomStatusMessage new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -42926,7 +42979,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Custom IM status messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Custom
+     * IM status messages
      *
      * @param zimbraPrefIMCustomStatusMessage existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42941,7 +42996,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Custom IM status messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Custom
+     * IM status messages
      *
      * @param zimbraPrefIMCustomStatusMessage existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -42957,7 +43014,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Custom IM status messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Custom
+     * IM status messages
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -42971,7 +43030,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Custom IM status messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Custom
+     * IM status messages
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -42986,7 +43047,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Flash IM icon on new messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * IM icon on new messages
      *
      * @return zimbraPrefIMFlashIcon, or true if unset
      */
@@ -42996,7 +43059,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Flash IM icon on new messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * IM icon on new messages
      *
      * @param zimbraPrefIMFlashIcon new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43009,7 +43074,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Flash IM icon on new messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * IM icon on new messages
      *
      * @param zimbraPrefIMFlashIcon new value
      * @param attrs existing map to populate, or null to create a new map
@@ -43023,7 +43090,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Flash IM icon on new messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * IM icon on new messages
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -43035,7 +43104,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Flash IM icon on new messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * IM icon on new messages
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -43048,7 +43119,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Flash title bar when a new IM arrives
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * title bar when a new IM arrives
      *
      * @return zimbraPrefIMFlashTitle, or true if unset
      *
@@ -43060,7 +43133,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Flash title bar when a new IM arrives
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * title bar when a new IM arrives
      *
      * @param zimbraPrefIMFlashTitle new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43075,7 +43150,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Flash title bar when a new IM arrives
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * title bar when a new IM arrives
      *
      * @param zimbraPrefIMFlashTitle new value
      * @param attrs existing map to populate, or null to create a new map
@@ -43091,7 +43168,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Flash title bar when a new IM arrives
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * title bar when a new IM arrives
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -43105,7 +43184,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Flash title bar when a new IM arrives
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * title bar when a new IM arrives
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -43120,6 +43201,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM blocked buddies
      *
      * @return zimbraPrefIMHideBlockedBuddies, or false if unset
@@ -43132,6 +43215,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM blocked buddies
      *
      * @param zimbraPrefIMHideBlockedBuddies new value
@@ -43147,6 +43232,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM blocked buddies
      *
      * @param zimbraPrefIMHideBlockedBuddies new value
@@ -43163,6 +43250,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM blocked buddies
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43177,6 +43266,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM blocked buddies
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -43192,6 +43283,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM offline buddies
      *
      * @return zimbraPrefIMHideOfflineBuddies, or false if unset
@@ -43204,6 +43297,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM offline buddies
      *
      * @param zimbraPrefIMHideOfflineBuddies new value
@@ -43219,6 +43314,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM offline buddies
      *
      * @param zimbraPrefIMHideOfflineBuddies new value
@@ -43235,6 +43332,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM offline buddies
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43249,6 +43348,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM offline buddies
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -43264,7 +43365,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM idle status
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * idle status
      *
      * <p>Valid values: [away, xa, offline, invisible]
      *
@@ -43278,7 +43381,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM idle status
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * idle status
      *
      * <p>Valid values: [away, xa, offline, invisible]
      *
@@ -43292,7 +43397,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM idle status
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * idle status
      *
      * <p>Valid values: [away, xa, offline, invisible]
      *
@@ -43309,7 +43416,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM idle status
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * idle status
      *
      * <p>Valid values: [away, xa, offline, invisible]
      *
@@ -43327,7 +43436,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM idle status
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * idle status
      *
      * <p>Valid values: [away, xa, offline, invisible]
      *
@@ -43344,7 +43455,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM idle status
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * idle status
      *
      * <p>Valid values: [away, xa, offline, invisible]
      *
@@ -43362,7 +43475,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM idle status
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * idle status
      *
      * <p>Valid values: [away, xa, offline, invisible]
      *
@@ -43378,7 +43493,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM idle status
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * idle status
      *
      * <p>Valid values: [away, xa, offline, invisible]
      *
@@ -43395,7 +43512,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM session idle timeout in minutes
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * session idle timeout in minutes
      *
      * @return zimbraPrefIMIdleTimeout, or 10 if unset
      *
@@ -43407,7 +43526,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM session idle timeout in minutes
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * session idle timeout in minutes
      *
      * @param zimbraPrefIMIdleTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43422,7 +43543,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM session idle timeout in minutes
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * session idle timeout in minutes
      *
      * @param zimbraPrefIMIdleTimeout new value
      * @param attrs existing map to populate, or null to create a new map
@@ -43438,7 +43561,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM session idle timeout in minutes
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * session idle timeout in minutes
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -43452,7 +43577,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * IM session idle timeout in minutes
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * session idle timeout in minutes
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -43467,7 +43594,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Enable instant notifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Enable
+     * instant notifications
      *
      * @return zimbraPrefIMInstantNotify, or true if unset
      */
@@ -43477,7 +43606,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Enable instant notifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Enable
+     * instant notifications
      *
      * @param zimbraPrefIMInstantNotify new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43490,7 +43621,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Enable instant notifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Enable
+     * instant notifications
      *
      * @param zimbraPrefIMInstantNotify new value
      * @param attrs existing map to populate, or null to create a new map
@@ -43504,7 +43637,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Enable instant notifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Enable
+     * instant notifications
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -43516,7 +43651,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Enable instant notifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Enable
+     * instant notifications
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -43529,6 +43666,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to log IM chats to the Chats folder
      *
      * @return zimbraPrefIMLogChats, or true if unset
@@ -43541,6 +43680,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to log IM chats to the Chats folder
      *
      * @param zimbraPrefIMLogChats new value
@@ -43556,6 +43697,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to log IM chats to the Chats folder
      *
      * @param zimbraPrefIMLogChats new value
@@ -43572,6 +43715,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to log IM chats to the Chats folder
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43586,6 +43731,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to log IM chats to the Chats folder
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -43601,6 +43748,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether IM log chats is enabled
      *
      * @return zimbraPrefIMLogChatsEnabled, or true if unset
@@ -43613,6 +43762,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether IM log chats is enabled
      *
      * @param zimbraPrefIMLogChatsEnabled new value
@@ -43628,6 +43779,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether IM log chats is enabled
      *
      * @param zimbraPrefIMLogChatsEnabled new value
@@ -43644,6 +43797,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether IM log chats is enabled
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43658,6 +43813,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether IM log chats is enabled
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -43673,7 +43830,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Notify for presence modifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for presence modifications
      *
      * @return zimbraPrefIMNotifyPresence, or true if unset
      */
@@ -43683,7 +43842,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Notify for presence modifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for presence modifications
      *
      * @param zimbraPrefIMNotifyPresence new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43696,7 +43857,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Notify for presence modifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for presence modifications
      *
      * @param zimbraPrefIMNotifyPresence new value
      * @param attrs existing map to populate, or null to create a new map
@@ -43710,7 +43873,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Notify for presence modifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for presence modifications
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -43722,7 +43887,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Notify for presence modifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for presence modifications
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -43735,7 +43902,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Notify for status change
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for status change
      *
      * @return zimbraPrefIMNotifyStatus, or true if unset
      */
@@ -43745,7 +43914,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Notify for status change
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for status change
      *
      * @param zimbraPrefIMNotifyStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43758,7 +43929,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Notify for status change
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for status change
      *
      * @param zimbraPrefIMNotifyStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -43772,7 +43945,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Notify for status change
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for status change
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -43784,7 +43959,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Notify for status change
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for status change
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -43797,6 +43974,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to report IM idle status
      *
      * @return zimbraPrefIMReportIdle, or true if unset
@@ -43809,6 +43988,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to report IM idle status
      *
      * @param zimbraPrefIMReportIdle new value
@@ -43824,6 +44005,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to report IM idle status
      *
      * @param zimbraPrefIMReportIdle new value
@@ -43840,6 +44023,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to report IM idle status
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43854,6 +44039,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to report IM idle status
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -43869,6 +44056,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether sounds is enabled in IM
      *
      * @return zimbraPrefIMSoundsEnabled, or true if unset
@@ -43881,6 +44070,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether sounds is enabled in IM
      *
      * @param zimbraPrefIMSoundsEnabled new value
@@ -43896,6 +44087,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether sounds is enabled in IM
      *
      * @param zimbraPrefIMSoundsEnabled new value
@@ -43912,6 +44105,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether sounds is enabled in IM
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43926,6 +44121,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether sounds is enabled in IM
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -44013,7 +44210,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * last used yahoo id
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: last
+     * used yahoo id
      *
      * @return zimbraPrefIMYahooId, or null if unset
      *
@@ -44025,7 +44224,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * last used yahoo id
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: last
+     * used yahoo id
      *
      * @param zimbraPrefIMYahooId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -44040,7 +44241,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * last used yahoo id
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: last
+     * used yahoo id
      *
      * @param zimbraPrefIMYahooId new value
      * @param attrs existing map to populate, or null to create a new map
@@ -44056,7 +44259,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * last used yahoo id
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: last
+     * used yahoo id
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -44070,7 +44275,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * last used yahoo id
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: last
+     * used yahoo id
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

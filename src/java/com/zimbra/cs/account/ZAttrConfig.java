@@ -45036,8 +45036,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth Consumer id and secret. It is in the format of
-     * {consumer-id}:{secret}
+     * OAuth Consumer id, secret, and application name. It is in the format
+     * of {consumer-id}:{secret}:{consumer-app-name}
      *
      * @return zimbraOAuthConsumerCredentials, or empty array if unset
      *
@@ -45049,8 +45049,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth Consumer id and secret. It is in the format of
-     * {consumer-id}:{secret}
+     * OAuth Consumer id, secret, and application name. It is in the format
+     * of {consumer-id}:{secret}:{consumer-app-name}
      *
      * @param zimbraOAuthConsumerCredentials new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -45065,8 +45065,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth Consumer id and secret. It is in the format of
-     * {consumer-id}:{secret}
+     * OAuth Consumer id, secret, and application name. It is in the format
+     * of {consumer-id}:{secret}:{consumer-app-name}
      *
      * @param zimbraOAuthConsumerCredentials new value
      * @param attrs existing map to populate, or null to create a new map
@@ -45082,8 +45082,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth Consumer id and secret. It is in the format of
-     * {consumer-id}:{secret}
+     * OAuth Consumer id, secret, and application name. It is in the format
+     * of {consumer-id}:{secret}:{consumer-app-name}
      *
      * @param zimbraOAuthConsumerCredentials new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -45098,8 +45098,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth Consumer id and secret. It is in the format of
-     * {consumer-id}:{secret}
+     * OAuth Consumer id, secret, and application name. It is in the format
+     * of {consumer-id}:{secret}:{consumer-app-name}
      *
      * @param zimbraOAuthConsumerCredentials new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -45115,8 +45115,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth Consumer id and secret. It is in the format of
-     * {consumer-id}:{secret}
+     * OAuth Consumer id, secret, and application name. It is in the format
+     * of {consumer-id}:{secret}:{consumer-app-name}
      *
      * @param zimbraOAuthConsumerCredentials existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -45131,8 +45131,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth Consumer id and secret. It is in the format of
-     * {consumer-id}:{secret}
+     * OAuth Consumer id, secret, and application name. It is in the format
+     * of {consumer-id}:{secret}:{consumer-app-name}
      *
      * @param zimbraOAuthConsumerCredentials existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -45148,8 +45148,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth Consumer id and secret. It is in the format of
-     * {consumer-id}:{secret}
+     * OAuth Consumer id, secret, and application name. It is in the format
+     * of {consumer-id}:{secret}:{consumer-app-name}
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -45163,8 +45163,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth Consumer id and secret. It is in the format of
-     * {consumer-id}:{secret}
+     * OAuth Consumer id, secret, and application name. It is in the format
+     * of {consumer-id}:{secret}:{consumer-app-name}
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -68295,7 +68295,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Enable XMPP support for IM
+     * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
+     * Orig desc: Enable XMPP support for IM
      *
      * @return zimbraXMPPEnabled, or true if unset
      */
@@ -68305,7 +68306,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Enable XMPP support for IM
+     * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
+     * Orig desc: Enable XMPP support for IM
      *
      * @param zimbraXMPPEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -68318,7 +68320,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Enable XMPP support for IM
+     * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
+     * Orig desc: Enable XMPP support for IM
      *
      * @param zimbraXMPPEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -68332,7 +68335,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Enable XMPP support for IM
+     * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
+     * Orig desc: Enable XMPP support for IM
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -68344,7 +68348,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Enable XMPP support for IM
+     * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
+     * Orig desc: Enable XMPP support for IM
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

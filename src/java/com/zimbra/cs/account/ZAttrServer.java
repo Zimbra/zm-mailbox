@@ -9648,6 +9648,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * interface address on which IM server should listen; if empty, binds to
      * all interfaces
      *
@@ -9661,6 +9663,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * interface address on which IM server should listen; if empty, binds to
      * all interfaces
      *
@@ -9677,6 +9681,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * interface address on which IM server should listen; if empty, binds to
      * all interfaces
      *
@@ -9694,6 +9700,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * interface address on which IM server should listen; if empty, binds to
      * all interfaces
      *
@@ -9710,6 +9718,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * interface address on which IM server should listen; if empty, binds to
      * all interfaces
      *
@@ -9727,6 +9737,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * interface address on which IM server should listen; if empty, binds to
      * all interfaces
      *
@@ -9743,6 +9755,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * interface address on which IM server should listen; if empty, binds to
      * all interfaces
      *
@@ -9760,6 +9774,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * interface address on which IM server should listen; if empty, binds to
      * all interfaces
      *
@@ -9775,6 +9791,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * interface address on which IM server should listen; if empty, binds to
      * all interfaces
      *
@@ -45748,7 +45766,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Enable XMPP support for IM
+     * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
+     * Orig desc: Enable XMPP support for IM
      *
      * @return zimbraXMPPEnabled, or true if unset
      */
@@ -45758,7 +45777,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Enable XMPP support for IM
+     * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
+     * Orig desc: Enable XMPP support for IM
      *
      * @param zimbraXMPPEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -45771,7 +45791,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Enable XMPP support for IM
+     * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
+     * Orig desc: Enable XMPP support for IM
      *
      * @param zimbraXMPPEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -45785,7 +45806,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Enable XMPP support for IM
+     * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
+     * Orig desc: Enable XMPP support for IM
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -45797,7 +45819,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Enable XMPP support for IM
+     * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
+     * Orig desc: Enable XMPP support for IM
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

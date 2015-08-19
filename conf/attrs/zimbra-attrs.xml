@@ -1671,9 +1671,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether this zimlet is an extension</desc>
 </attr>
 
-<attr id="305" name="zimbraFeatureIMEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="305" name="zimbraFeatureIMEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" deprecatedSince="8.7.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>IM features</desc>
+    <deprecateDesc>deprecated in favor of zimbraFeatureChatEnabled</deprecateDesc>
 </attr>
 
 <attr id="306" name="zimbraMtaRecipientDelimiter" type="astring" max="256" cardinality="multi" optionalIn="globalConfig" requiresRestart="mta">
@@ -2100,9 +2101,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>keyboard shortcuts</desc>
 </attr>
 
-<attr id="397" name="zimbraXMPPEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
+<attr id="397" name="zimbraXMPPEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" deprecatedSince="8.7.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Enable XMPP support for IM</desc>
+  <deprecateDesc>Zimbra no longer includes an XMPP server</deprecateDesc>
 </attr>
 
 <attr id="398" name="zimbraDomainAdminMaxMailQuota" type="long" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
@@ -2428,19 +2430,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Backup report email subject prefix</desc>
 </attr>
 
-<attr id="462" name="zimbraPrefIMFlashIcon" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="462" name="zimbraPrefIMFlashIcon" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="8.7.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Flash IM icon on new messages</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
-<attr id="463" name="zimbraPrefIMNotifyPresence" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="463" name="zimbraPrefIMNotifyPresence" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="8.7.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Notify for presence modifications</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
-<attr id="464" name="zimbraPrefIMNotifyStatus" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="464" name="zimbraPrefIMNotifyStatus" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="8.7.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Notify for status change</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
 <attr id="465" name="zimbraSpamReportSenderHeader" type="string" cardinality="single" optionalIn="globalConfig">
@@ -2554,9 +2559,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Locales available for this account</desc>
 </attr>
 
-<attr id="488" name="zimbraPrefIMAutoLogin" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="488" name="zimbraPrefIMAutoLogin" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="8.7.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether to login to the IM client automatically</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
 <attr id="489" name="zimbraFeatureMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
@@ -2698,9 +2704,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mail html signature</desc>
 </attr>
 
-<attr id="517" name="zimbraPrefIMInstantNotify" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="517" name="zimbraPrefIMInstantNotify" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="8.7.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Enable instant notifications</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
 <attr id="518" name="zimbraHttpNumThreads" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
@@ -2917,9 +2924,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>kerberos5 keytab file path for external GAL queries</desc>
 </attr>
 
-<attr id="552" name="zimbraPrefIMLogChatsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="552" name="zimbraPrefIMLogChatsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="8.7.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether IM log chats is enabled</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
 <attr id="553" name="zimbraPrefChildVisibleAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" callback="ChildAccount" since="5.0.0" deprecatedSince="8.5.0">
@@ -2937,29 +2945,33 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether IMAP SASL GSSAPI is enabled for a given server</desc>
 </attr>
 
-<attr id="556" name="zimbraPrefIMLogChats" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="556" name="zimbraPrefIMLogChats" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="8.7.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to log IM chats to the Chats folder</desc>
-</attr>  
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
+</attr>
 
 <attr id="557" name="zimbraSoapRequestMaxSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.0">
   <globalConfigValue>15360000</globalConfigValue>
   <desc>Maximum size in bytes for incoming SOAP requests.  0 means no limit.</desc>
 </attr>
 
-<attr id="558" name="zimbraPrefIMReportIdle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="558" name="zimbraPrefIMReportIdle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="8.7.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to report IM idle status</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
-<attr id="559" name="zimbraPrefIMIdleTimeout" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="559" name="zimbraPrefIMIdleTimeout" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="8.7.0">
   <defaultCOSValue>10</defaultCOSValue>
   <desc>IM session idle timeout in minutes</desc>
-</attr>   
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
+</attr>
 
-<attr id="560" name="zimbraPrefIMIdleStatus" type="enum" value="away,xa,invisible,offline" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="560" name="zimbraPrefIMIdleStatus" type="enum" value="away,xa,invisible,offline" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="8.7.0">
   <defaultCOSValue>away</defaultCOSValue>
   <desc>IM idle status</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
 <attr id="561" name="zimbraPrefAutoSaveDraftInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
@@ -2989,8 +3001,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mail priority feature</desc>
 </attr>
 
-<attr id="567" name="zimbraIMBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox" since="5.0.0">
+<attr id="567" name="zimbraIMBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox" since="5.0.0" deprecatedSince="8.7.0">
   <desc>interface address on which IM server should listen; if empty, binds to all interfaces</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
 <attr id="568" name="zimbraFeatureImapDataSourceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.0">
@@ -3004,13 +3017,15 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>wait duration before nginx sending back the NO response for failed imap/pop3 reverse proxy lookups</desc>
 </attr>
 
-<attr id="570" name="zimbraPrefIMSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="570" name="zimbraPrefIMSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="8.7.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether sounds is enabled in IM</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
-<attr id="571" name="zimbraIMAvailableInteropGateways" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="571" name="zimbraIMAvailableInteropGateways" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="8.7.0">
   <desc>available IM interop gateways</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
 <attr id="572" name="zimbraReverseProxyUserNameAttribute" type="string" cardinality="single" optionalIn="globalConfig" since="5.0.0">
@@ -3424,8 +3439,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether POP3 SASL GSSAPI is enabled for reverse proxy</desc>
 </attr>
 
-<attr id="645" name="zimbraPrefIMCustomStatusMessage" type="string" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" since="5.0.6">
+<attr id="645" name="zimbraPrefIMCustomStatusMessage" type="string" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" since="5.0.6" deprecatedSince="8.7.0">
   <desc>Custom IM status messages</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
 <attr id="646" name="zimbraNotebookSanitizeHtml" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="5.0.6">
@@ -3579,9 +3595,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>After login, whether the advanced client should enforce minimum display resolution</desc>
 </attr>
 
-<attr id="679" name="zimbraPrefIMFlashTitle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
+<attr id="679" name="zimbraPrefIMFlashTitle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7" deprecatedSince="8.7.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Flash title bar when a new IM arrives</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
 <attr id="680" name="zimbraPrefMailFlashTitle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
@@ -3693,18 +3710,21 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>enable end-user mail forwarding defined in mail filters features</desc>
 </attr>
 
-<attr id="705" name="zimbraPrefIMBuddyListSort" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.10">
+<attr id="705" name="zimbraPrefIMBuddyListSort" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.10" deprecatedSince="8.7.0">
   <desc>IM buddy list sort order</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
-<attr id="706" name="zimbraPrefIMHideOfflineBuddies" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.10">
+<attr id="706" name="zimbraPrefIMHideOfflineBuddies" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.10" deprecatedSince="8.7.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether to hide IM offline buddies</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
-<attr id="707" name="zimbraPrefIMHideBlockedBuddies" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.10">
+<attr id="707" name="zimbraPrefIMHideBlockedBuddies" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.10" deprecatedSince="8.7.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether to hide IM blocked buddies</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
 <attr id="708" name="zimbraSoapExposeVersion" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
@@ -3963,8 +3983,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="757" name="zimbraPrefIMYahooId" type="string" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="6.0.0_BETA1">
+<attr id="757" name="zimbraPrefIMYahooId" type="string" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="6.0.0_BETA1" deprecatedSince="8.7.0">
   <desc>last used yahoo id</desc>
+  <deprecateDesc>Zimbra IM has been discontinued. Zimbra Chat feature uses a new set of configuration attributes.</deprecateDesc>
 </attr>
 
 <attr id="758" name="zimbraContactRankingTableSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0_BETA1">
