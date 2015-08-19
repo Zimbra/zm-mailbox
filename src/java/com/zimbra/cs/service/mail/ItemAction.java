@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,10 +18,14 @@ package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMountpoint;
@@ -36,7 +40,11 @@ import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.datasource.imap.ImapFolder;
+import com.zimbra.cs.datasource.imap.ImapFolderCollection;
+import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -44,8 +52,10 @@ import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.VirtualConversation;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
@@ -53,6 +63,7 @@ import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.type.DataSourceType;
 
 /**
  * @since May 29, 2005
@@ -162,8 +173,106 @@ public class ItemAction extends MailDocumentHandler {
             } else if (opStr.equals(OP_DUMPSTER_DELETE)) {
                 localResults = ItemActionHelper.DUMPSTER_DELETE(octxt, mbox, responseProto, local, type, tcon).getResult();
             } else if (opStr.equals(OP_TRASH)) {
+                // determine if any of the items should be moved to an IMAP trash folder
+                Map<String, LinkedList<Integer>> remoteTrashIds = new HashMap<String, LinkedList<Integer>>();
+                LinkedList<Integer> localTrashIds = new LinkedList<Integer>();
+                Map<String, String> msgToConvId = new HashMap<String, String>();
+                MailItem[] items = mbox.getItemById(octxt, local, MailItem.Type.UNKNOWN);
+                for (MailItem item: items) {
+                    String dsId = null;
+                    boolean doneDistributingTrash = false;
+                    if (item instanceof Message) {
+                        dsId = getDataSourceOfItem(octxt, mbox, item);
+                    } else if (item instanceof VirtualConversation) {
+                        VirtualConversation vConv = (VirtualConversation) item;
+                        Message msg = mbox.getMessageById(octxt, vConv.getMessageId());
+                        dsId = getDataSourceOfItem(octxt, mbox, msg);
+                    } else if (item instanceof Conversation) {
+                        Set<String> dsIds = new HashSet<String>();
+                        boolean hasLocal = false;
+                        List<Message> messages = mbox.getMessagesByConversation(octxt, item.getId());
+                        for (Message msg: messages) {
+                            String msgDsId = getDataSourceOfItem(octxt, mbox, msg);
+                            if (msgDsId == null) {
+                                hasLocal = true;
+                            } else {
+                                dsIds.add(msgDsId);
+                            }
+                        }
+                        // If the conversation is all local or in one data source, delete it as a conversation.
+                        // If it spans multiple accounts, delete it message-by-message
+                        if (dsIds.isEmpty() && hasLocal) {
+                            dsId = null;
+                        } else if (!hasLocal && dsIds.size() == 1) {
+                            dsId = dsIds.iterator().next();
+                        } else {
+                            type = MailItem.Type.MESSAGE;
+                            for (Message msg: messages) {
+                                String msgDsId = getDataSourceOfItem(octxt, mbox, msg);
+                                msgToConvId.put(String.valueOf(msg.getId()), String.valueOf(item.getId()));
+                                if (msgDsId == null) {
+                                    localTrashIds.add(msg.getId());
+                                } else {
+                                    LinkedList<Integer> idsInDs = remoteTrashIds.get(dsId);
+                                    if (idsInDs == null) {
+                                        idsInDs = new LinkedList<Integer>();
+                                        remoteTrashIds.put(msgDsId, idsInDs);
+                                    }
+                                    idsInDs.add(msg.getId());
+                                }
+                            }
+                            doneDistributingTrash = true;
+                        }
+                    }
+                    if (!doneDistributingTrash) {
+                        if (dsId != null) {
+                            LinkedList<Integer> idsInDs = remoteTrashIds.get(dsId);
+                            if (idsInDs == null) {
+                                idsInDs = new LinkedList<Integer>();
+                                remoteTrashIds.put(dsId, idsInDs);
+                            }
+                            idsInDs.add(item.getId());
+                        } else {
+                            localTrashIds.add(item.getId());
+                        }
+                    }
+                }
+                // move non-IMAP items to local trash
                 ItemId iidTrash = new ItemId(mbox, Mailbox.ID_FOLDER_TRASH);
-                localResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, local, type, tcon, iidTrash).getResult();
+                List<String> trashResults = new LinkedList<String>();
+                String localTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, localTrashIds, type, tcon, iidTrash).getResult();
+                if (!Strings.isNullOrEmpty(localTrashResults)) {
+                    trashResults.add(localTrashResults);
+                }
+                for (String dataSourceId: remoteTrashIds.keySet()) {
+                    List<Integer> imapTrashIds = remoteTrashIds.get(dataSourceId);
+                    Integer imapTrashId = lookupImapTrashFolder(mbox, dataSourceId);
+                    ItemId iidImapTrash;
+                    if (imapTrashId != null) {
+                        iidImapTrash = new ItemId(mbox, imapTrashId);
+                    } else {
+                        iidImapTrash = iidTrash; //if IMAP trash folder cannot be found, move to local trash
+                    }
+                    String imapTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, imapTrashIds, type, tcon, iidImapTrash).getResult();
+                    if (!Strings.isNullOrEmpty(imapTrashResults)) {
+                        trashResults.add(imapTrashResults);
+                    }
+                }
+                localResults = Joiner.on(",").join(trashResults);
+                if (!msgToConvId.isEmpty()) {
+                    String[] ids = localResults.split(",");
+                    Set<String> reconstructedConvIds = new HashSet<String>();
+                    for (String id: ids) {
+                        String convId = msgToConvId.get(id);
+                        if (convId != null) {
+                            reconstructedConvIds.add(convId);
+                        } else {
+                            reconstructedConvIds.add(id);
+                        }
+                    }
+                    localResults = Joiner.on(",").join(reconstructedConvIds);
+                }
+
             } else if (opStr.equals(OP_MOVE)) {
                 String acctRelativePath = action.getAttribute(MailConstants.A_ACCT_RELATIVE_PATH, null);
                 if (acctRelativePath == null) {
@@ -241,6 +350,35 @@ public class ItemAction extends MailDocumentHandler {
         }
 
         return successes.toString();
+    }
+
+    private String getDataSourceOfItem(OperationContext octxt, Mailbox mbox, MailItem item) throws ServiceException {
+        Folder folder = mbox.getFolderById(octxt, item.getFolderId());
+        Map<Integer, String> dataSources = new HashMap<Integer, String>();
+        for (DataSource ds: mbox.getAccount().getAllDataSources()) {
+            dataSources.put(ds.getFolderId(), ds.getId());
+        }
+        while (folder.getId() != Mailbox.ID_FOLDER_ROOT) {
+            if (dataSources.containsKey(folder.getId())) {
+                return dataSources.get(folder.getId());
+            } else {
+                folder = (Folder) folder.getParent();
+            }
+        }
+        return null;
+    }
+    private Integer lookupImapTrashFolder(Mailbox mbox, String dsId) throws ServiceException {
+        DataSource ds = mbox.getAccount().getDataSourceById(dsId);
+        if (ds.getType() == DataSourceType.imap) {
+            ImapFolderCollection folders = ImapFolder.getFolders(ds);
+            for (ImapFolder folder: folders) {
+                String name = folder.getRemoteId();
+                if (name.equalsIgnoreCase("trash")) {
+                    return folder.getItemId();
+                }
+            }
+        }
+        return null;
     }
 
     public static Color getColor(Element action) throws ServiceException {
