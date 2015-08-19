@@ -6067,7 +6067,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureImapDataSourceEnabled = "zimbraFeatureImapDataSourceEnabled";
 
     /**
-     * IM features
+     * Deprecated since: 8.7.0. deprecated in favor of
+     * zimbraFeatureChatEnabled. Orig desc: IM features
      */
     @ZAttr(id=305)
     public static final String A_zimbraFeatureIMEnabled = "zimbraFeatureIMEnabled";
@@ -7599,6 +7600,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapSSLServerEnabled = "zimbraImapSSLServerEnabled";
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * available IM interop gateways
      *
      * @since ZCS 5.0.0
@@ -7607,6 +7610,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIMAvailableInteropGateways = "zimbraIMAvailableInteropGateways";
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * interface address on which IM server should listen; if empty, binds to
      * all interfaces
      *
@@ -11070,8 +11075,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraOAuthAccessor = "zimbraOAuthAccessor";
 
     /**
-     * OAuth Consumer id and secret. It is in the format of
-     * {consumer-id}:{secret}
+     * OAuth Consumer id, secret, and application name. It is in the format
+     * of {consumer-id}:{secret}:{consumer-app-name}
      *
      * @since ZCS 7.0.0
      */
@@ -12229,13 +12234,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefImapSearchFoldersEnabled = "zimbraPrefImapSearchFoldersEnabled";
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to login to the IM client automatically
      */
     @ZAttr(id=488)
     public static final String A_zimbraPrefIMAutoLogin = "zimbraPrefIMAutoLogin";
 
     /**
-     * IM buddy list sort order
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * buddy list sort order
      *
      * @since ZCS 5.0.10
      */
@@ -12243,7 +12252,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMBuddyListSort = "zimbraPrefIMBuddyListSort";
 
     /**
-     * Custom IM status messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Custom
+     * IM status messages
      *
      * @since ZCS 5.0.6
      */
@@ -12251,13 +12262,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMCustomStatusMessage = "zimbraPrefIMCustomStatusMessage";
 
     /**
-     * Flash IM icon on new messages
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * IM icon on new messages
      */
     @ZAttr(id=462)
     public static final String A_zimbraPrefIMFlashIcon = "zimbraPrefIMFlashIcon";
 
     /**
-     * Flash title bar when a new IM arrives
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Flash
+     * title bar when a new IM arrives
      *
      * @since ZCS 5.0.7
      */
@@ -12265,6 +12280,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMFlashTitle = "zimbraPrefIMFlashTitle";
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM blocked buddies
      *
      * @since ZCS 5.0.10
@@ -12273,6 +12290,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMHideBlockedBuddies = "zimbraPrefIMHideBlockedBuddies";
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to hide IM offline buddies
      *
      * @since ZCS 5.0.10
@@ -12281,7 +12300,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMHideOfflineBuddies = "zimbraPrefIMHideOfflineBuddies";
 
     /**
-     * IM idle status
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * idle status
      *
      * @since ZCS 5.0.0
      */
@@ -12289,7 +12310,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMIdleStatus = "zimbraPrefIMIdleStatus";
 
     /**
-     * IM session idle timeout in minutes
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: IM
+     * session idle timeout in minutes
      *
      * @since ZCS 5.0.0
      */
@@ -12297,12 +12320,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMIdleTimeout = "zimbraPrefIMIdleTimeout";
 
     /**
-     * Enable instant notifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Enable
+     * instant notifications
      */
     @ZAttr(id=517)
     public static final String A_zimbraPrefIMInstantNotify = "zimbraPrefIMInstantNotify";
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to log IM chats to the Chats folder
      *
      * @since ZCS 5.0.0
@@ -12311,6 +12338,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMLogChats = "zimbraPrefIMLogChats";
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether IM log chats is enabled
      *
      * @since ZCS 5.0.0
@@ -12319,18 +12348,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMLogChatsEnabled = "zimbraPrefIMLogChatsEnabled";
 
     /**
-     * Notify for presence modifications
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for presence modifications
      */
     @ZAttr(id=463)
     public static final String A_zimbraPrefIMNotifyPresence = "zimbraPrefIMNotifyPresence";
 
     /**
-     * Notify for status change
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: Notify
+     * for status change
      */
     @ZAttr(id=464)
     public static final String A_zimbraPrefIMNotifyStatus = "zimbraPrefIMNotifyStatus";
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether to report IM idle status
      *
      * @since ZCS 5.0.0
@@ -12339,6 +12374,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMReportIdle = "zimbraPrefIMReportIdle";
 
     /**
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc:
      * whether sounds is enabled in IM
      *
      * @since ZCS 5.0.0
@@ -12355,7 +12392,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIMToasterEnabled = "zimbraPrefIMToasterEnabled";
 
     /**
-     * last used yahoo id
+     * Deprecated since: 8.7.0. Zimbra IM has been discontinued. Zimbra Chat
+     * feature uses a new set of configuration attributes.. Orig desc: last
+     * used yahoo id
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -15867,7 +15906,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraXMPPComponentType = "zimbraXMPPComponentType";
 
     /**
-     * Enable XMPP support for IM
+     * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
+     * Orig desc: Enable XMPP support for IM
      */
     @ZAttr(id=397)
     public static final String A_zimbraXMPPEnabled = "zimbraXMPPEnabled";
