@@ -3639,7 +3639,7 @@ public class ProvUtil implements HttpDebugListener {
             pu.setForceDisplayAttrValue(true);
         }
 
-        args = cl.getArgs();
+        args = recombineDecapitatedAttrs(cl.getArgs(), options, args);
 
         try {
             if (args.length < 1) {
@@ -5188,6 +5188,51 @@ public class ProvUtil implements HttpDebugListener {
         if (prov instanceof LdapProv) {
             AttributeManager.loadLdapSchemaExtensionAttrs((LdapProv) prov);
         }
+    }
+
+    /** To remove a particular instance of an attribute, the prefix indicator '-' is used before the
+     * attribute name.  When the attribute name is started with one of the valid command arguments, such as
+     * -z or -a, the parser mistakenly divides it into two parts instead of treating as one parameter of
+     * the '-' and attribute name.<p>
+     * This method detects such decapitated attribute, and recombines those two into one attribute name with '-'.
+     * @param parsedArgs [cmd-args] which are parsed by PosixParser
+     * @param options set of valid [args]
+     * @param args 
+     * @throws ServiceException
+     */
+    static private String [] recombineDecapitatedAttrs(String [] parsedArgs, Options options, String[] orgArgs) throws ServiceException {
+        List<String> newArgs = new ArrayList<String>(parsedArgs.length);
+        String headStr = null;
+        for (int i = 0; i < parsedArgs.length; i++) {
+            String arg = parsedArgs[i];
+            if (arg.startsWith("-") && arg.length() == 2 && options.hasOption(arg)) {
+                // Detect legitimate POSIX style parameters even after operation command; 
+                // such as "zmprov describe -a <attr>"
+                if (i < parsedArgs.length - 1) {
+                	boolean missParsed = false;
+                	String tmpParam = arg + parsedArgs[i+1];
+                	for (String orgArg : orgArgs) {
+                		if (orgArg.equals(tmpParam)) {
+                			missParsed = true;
+                			break;
+                		}
+                	}
+                	if (missParsed) {
+                		headStr = arg;
+                	} else {
+                        newArgs.add(arg);                		
+                	}
+                } else {
+                    newArgs.add(arg);
+                }
+            } else if (headStr != null) {
+                newArgs.add(headStr + arg);
+                headStr = null;
+            } else {
+                newArgs.add(arg);
+            }
+        }
+        return (String[]) newArgs.toArray(new String[newArgs.size()]);
     }
 
     /**
