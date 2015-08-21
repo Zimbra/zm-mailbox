@@ -152,6 +152,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.SubscribeDistributionListResponse.class,
             com.zimbra.soap.account.message.SyncGalRequest.class,
             com.zimbra.soap.account.message.SyncGalResponse.class,
+
+            // two-factor auth
             com.zimbra.soap.account.message.EnableTwoFactorAuthRequest.class,
             com.zimbra.soap.account.message.EnableTwoFactorAuthResponse.class,
             com.zimbra.soap.account.message.DisableTwoFactorAuthRequest.class,
@@ -172,6 +174,10 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.RevokeTrustedDeviceResponse.class,
             com.zimbra.soap.account.message.RevokeOtherTrustedDevicesRequest.class,
             com.zimbra.soap.account.message.RevokeOtherTrustedDevicesResponse.class,
+            com.zimbra.soap.admin.message.ClearTwoFactorAuthDataRequest.class,
+            com.zimbra.soap.admin.message.ClearTwoFactorAuthDataResponse.class,
+            com.zimbra.soap.admin.message.GetClearTwoFactorAuthDataStatusRequest.class,
+            com.zimbra.soap.admin.message.GetClearTwoFactorAuthDataStatusResponse.class,
 
             // zimbraMail
             com.zimbra.soap.mail.message.AddAppointmentInviteRequest.class,
