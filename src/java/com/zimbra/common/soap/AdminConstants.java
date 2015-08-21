@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -513,6 +513,12 @@ public final class AdminConstants {
     public static final String E_VERIFY_STORE_MANAGER_REQUEST = "VerifyStoreManagerRequest";
     public static final String E_VERIFY_STORE_MANAGER_RESPONSE = "VerifyStoreManagerResponse";
 
+    // Two-Factor Authentication
+    public static final String E_CLEAR_TWO_FACTOR_AUTH_DATA_REQUEST = "ClearTwoFactorAuthDataRequest";
+    public static final String E_CLEAR_TWO_FACTOR_AUTH_DATA_RESPONSE = "ClearTwoFactorAuthDataResponse";
+    public static final String E_GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_REQUEST = "GetClearTwoFactorAuthDataStatusRequest";
+    public static final String E_GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_RESPONSE = "GetClearTwoFactorAuthDataStatusResponse";
+
     // Skins
     // Skins
     public static final String E_GET_ALL_SKINS_REQUEST = "GetAllSkinsRequest";
@@ -1008,6 +1014,12 @@ public final class AdminConstants {
     public static final QName GET_ALL_SKINS_REQUEST = QName.get(E_GET_ALL_SKINS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_SKINS_RESPONSE = QName.get(E_GET_ALL_SKINS_RESPONSE, NAMESPACE);
 
+    // Two-Factor Authentication
+    public static final QName CLEAR_TWO_FACTOR_AUTH_DATA_REQUEST = QName.get(E_CLEAR_TWO_FACTOR_AUTH_DATA_REQUEST, NAMESPACE);
+    public static final QName CLEAR_TWO_FACTOR_AUTH_DATA_RESPONSE = QName.get(E_CLEAR_TWO_FACTOR_AUTH_DATA_RESPONSE, NAMESPACE);
+    public static final QName GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_REQUEST = QName.get(E_GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_REQUEST, NAMESPACE);
+    public static final QName GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_RESPONSE = QName.get(E_GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_RESPONSE, NAMESPACE);
+
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -1427,4 +1439,7 @@ public final class AdminConstants {
     public static final String A_CHECK_BLOBS = "checkBlobs";
 
     public static final String A_COUNT_ONLY = "countOnly";
+
+    // Two-Factor Auth
+    public static final String A_LAZY_DELETE = "lazyDelete";
 }

@@ -15346,6 +15346,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTwoFactorAuthHashAlgorithm = "zimbraTwoFactorAuthHashAlgorithm";
 
     /**
+     * Timestamp of the last time that two-factor authentication data was
+     * cleared on the COS. When this timestamp exceeds the timestamp of the
+     * shared secret, the server knows to disable two-factor authentication
+     * on the account and delete all associated data.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2058)
+    public static final String A_zimbraTwoFactorAuthLastReset = "zimbraTwoFactorAuthLastReset";
+
+    /**
      * number of scratch codes to generate for two-factor auth
      *
      * @since ZCS 8.7.0,9.0.0
