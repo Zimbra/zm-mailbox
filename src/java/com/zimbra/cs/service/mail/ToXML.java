@@ -3002,7 +3002,7 @@ throws ServiceException {
         }
         try {
             if (ds.getPollingInterval() > 0) {
-                m.addAttribute(MailConstants.A_DS_POLLING_INTERVAL, ds.getPollingInterval());
+                m.addAttribute(MailConstants.A_DS_POLLING_INTERVAL, ds.getPollingInterval() + "ms");
             }
         } catch (ServiceException e) {
             LOG.warn("Unable to get polling interval from %s", ds, e);
