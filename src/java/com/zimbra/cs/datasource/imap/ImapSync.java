@@ -45,6 +45,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.auth.Authenticator;
+import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
 
@@ -427,6 +428,7 @@ public class ImapSync extends MailItemImport {
         String remotePath = ld.getMailbox();
         char localDelimiter = ld.getDelimiter();
         String relativePath = ld.getMailbox();
+        Flags flags = ld.getFlags();
 
         if (localDelimiter != '/' && (remotePath.indexOf(localDelimiter) >= 0 ||
                                  remotePath.indexOf('/') >= 0)) {
@@ -440,12 +442,12 @@ public class ImapSync extends MailItemImport {
         }
         relativePath = ILLEGAL_FOLDER_CHARS.matcher(relativePath).replaceAll("_");
 
-        if (dataSource.ignoreRemotePath(relativePath)) {
+        if (dataSource.ignoreRemotePath(relativePath, flags)) {
             return null; // Do not synchronize folder
         }
 
         String localPath = joinPath(localRootFolder.getPath(),
-                coalesce(dataSource.mapRemoteToLocalPath(relativePath), relativePath));
+                coalesce(dataSource.mapRemoteToLocalPath(relativePath, flags), relativePath));
 
         if (isUniqueLocalPathNeeded(localPath)) {
             int count = 1;
@@ -475,8 +477,7 @@ public class ImapSync extends MailItemImport {
     /*
      * When mapping a new remote folder, check if original local path can be
      * used or a new unique name must be generated. A unique name must be
-     * generated if the local path is already associated with a tracked
-     * folder, or the local path refers to a system folder that is not one
+     * generated if the local path refers to a system folder that is not one
      * of the known IMAP folders (e.g. INBOX, Sent). This ensures that a
      * remote folder named 'Contacts', for example, will get mapped to a unique
      * name since a local non-IMAP system folder already exists with the same
@@ -484,9 +485,7 @@ public class ImapSync extends MailItemImport {
      */
     private boolean isUniqueLocalPathNeeded(String localPath) throws ServiceException {
         LocalFolder lf = LocalFolder.fromPath(mbox, localPath);
-        return lf != null && (
-            trackedFolders.getByItemId(lf.getId()) != null ||
-            lf.isSystem() && !lf.isKnown());
+        return lf != null && lf.isSystem() && !lf.isKnown();
     }
 
     /*

@@ -41,6 +41,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
@@ -352,8 +353,8 @@ public class DataSource extends AccountProperty {
 
     //IMAP datasources can override these
 
-    protected DataSourceConfig.Folder getKnownFolderByRemotePath(String remotePath) {
-        return knownService != null ? knownService.getFolderByRemotePath(remotePath) : null;
+    protected DataSourceConfig.Folder getKnownFolderByRemotePath(String remotePath, Flags flags) {
+        return knownService != null ? knownService.getFolderByRemotePath(remotePath, flags) : null;
     }
 
     protected DataSourceConfig.Folder getKnownFolderByLocalPath(String localPath) {
@@ -366,8 +367,8 @@ public class DataSource extends AccountProperty {
      * @param remotePath remote path
      * @return local path if mapping exists; null if not
      */
-    public String mapRemoteToLocalPath(String remotePath) {
-        DataSourceConfig.Folder kf = getKnownFolderByRemotePath(remotePath);
+    public String mapRemoteToLocalPath(String remotePath, Flags flags) {
+        DataSourceConfig.Folder kf = getKnownFolderByRemotePath(remotePath, flags);
         return kf != null ? kf.getLocalPath() : null;
     }
 
@@ -385,8 +386,8 @@ public class DataSource extends AccountProperty {
     /**
      * Returns true if remote path should be ignored.
      */
-    public boolean ignoreRemotePath(String remotePath) {
-        DataSourceConfig.Folder kf = getKnownFolderByRemotePath(remotePath);
+    public boolean ignoreRemotePath(String remotePath, Flags flags) {
+        DataSourceConfig.Folder kf = getKnownFolderByRemotePath(remotePath, flags);
         if (kf != null) return kf.isIgnore();
         // Also ignore remote path that would conflict with known local path
         String localPath = "/" + remotePath;

@@ -22,6 +22,9 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Attribute;
 
+import com.zimbra.cs.mailclient.imap.Atom;
+import com.zimbra.cs.mailclient.imap.Flags;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.io.IOException;
@@ -139,9 +142,10 @@ public final class DataSourceConfig {
             return null;
         }
 
-        public Folder getFolderByRemotePath(String path) {
+        public Folder getFolderByRemotePath(String path, Flags flags) {
             for (Folder folder : folders) {
-                if (path.equalsIgnoreCase(folder.getRemotePath())) {
+                if (path.equalsIgnoreCase(folder.getRemotePath())
+                    || (flags != null && flags.contains(folder.getFolderNameFlag()))) {
                     return folder;
                 }
             }
@@ -185,11 +189,13 @@ public final class DataSourceConfig {
         private String remotePath;
         private boolean ignore;
         private boolean sync;
+        private Atom folderNameFlag;
 
         private static final String LOCAL_PATH = "localPath";
         private static final String REMOTE_PATH = "remotePath";
         private static final String IGNORE = "ignore";
         private static final String SYNC = "sync";
+        private static final String FOLDER_NAME = "folderName";
 
         public String getLocalPath() {
             return localPath;
@@ -207,6 +213,10 @@ public final class DataSourceConfig {
             return sync;
         }
 
+        public Atom getFolderNameFlag() {
+            return folderNameFlag;
+        }
+
         private Folder read(Element element) {
             for (Object obj : element.attributes()) {
                 Attribute attr = (Attribute) obj;
@@ -219,6 +229,9 @@ public final class DataSourceConfig {
                     ignore = Boolean.valueOf(attr.getValue());
                 } else if (name.equals(SYNC)) {
                     sync = Boolean.valueOf(attr.getValue());
+                } else if (name.equals(FOLDER_NAME)) {
+                    String value = attr.getValue() != null ? attr.getValue() : "";
+                    folderNameFlag = new Atom(value);
                 } else {
                     throw invalidConfig("Unrecognized folder attribute name: " + name);
                 }
