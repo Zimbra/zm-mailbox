@@ -42703,6 +42703,93 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Timestamp of the last time that two-factor authentication data was
+     * cleared on the COS. When this timestamp exceeds the timestamp of the
+     * shared secret, the server knows to disable two-factor authentication
+     * on the account and delete all associated data.
+     *
+     * @return zimbraTwoFactorAuthLastReset, or -1 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2058)
+    public int getTwoFactorAuthLastReset() {
+        return getIntAttr(Provisioning.A_zimbraTwoFactorAuthLastReset, -1);
+    }
+
+    /**
+     * Timestamp of the last time that two-factor authentication data was
+     * cleared on the COS. When this timestamp exceeds the timestamp of the
+     * shared secret, the server knows to disable two-factor authentication
+     * on the account and delete all associated data.
+     *
+     * @param zimbraTwoFactorAuthLastReset new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2058)
+    public void setTwoFactorAuthLastReset(int zimbraTwoFactorAuthLastReset) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthLastReset, Integer.toString(zimbraTwoFactorAuthLastReset));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timestamp of the last time that two-factor authentication data was
+     * cleared on the COS. When this timestamp exceeds the timestamp of the
+     * shared secret, the server knows to disable two-factor authentication
+     * on the account and delete all associated data.
+     *
+     * @param zimbraTwoFactorAuthLastReset new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2058)
+    public Map<String,Object> setTwoFactorAuthLastReset(int zimbraTwoFactorAuthLastReset, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthLastReset, Integer.toString(zimbraTwoFactorAuthLastReset));
+        return attrs;
+    }
+
+    /**
+     * Timestamp of the last time that two-factor authentication data was
+     * cleared on the COS. When this timestamp exceeds the timestamp of the
+     * shared secret, the server knows to disable two-factor authentication
+     * on the account and delete all associated data.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2058)
+    public void unsetTwoFactorAuthLastReset() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthLastReset, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timestamp of the last time that two-factor authentication data was
+     * cleared on the COS. When this timestamp exceeds the timestamp of the
+     * shared secret, the server knows to disable two-factor authentication
+     * on the account and delete all associated data.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2058)
+    public Map<String,Object> unsetTwoFactorAuthLastReset(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthLastReset, "");
+        return attrs;
+    }
+
+    /**
      * number of scratch codes to generate for two-factor auth
      *
      * @return zimbraTwoFactorAuthNumScratchCodes, or 10 if unset
