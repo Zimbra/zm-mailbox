@@ -17,7 +17,7 @@ public class GenerateScratchCodes extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
         TwoFactorManager manager = new TwoFactorManager(account);
-        if (!TwoFactorManager.twoFactorAuthEnabled(account)) {
+        if (!manager.twoFactorAuthEnabled()) {
             throw ServiceException.FAILURE("two-factor authentication is not enabled", new Throwable());
         }
         List<String> scratchCodes = manager.generateNewScratchCodes();

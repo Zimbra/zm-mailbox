@@ -22,9 +22,6 @@ public class TwoFactorAuthStatus extends AttributeCallback {
             } else if (attrName.equals(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable) && account.isFeatureTwoFactorAuthRequired()
                     && !setting) {
                 throw ServiceException.FAILURE("cannot make two-factor auth unavailable because it is currently required on the account", null);
-            } else if (attrName.equals(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable) && account.isTwoFactorAuthEnabled()
-                    && !setting) {
-                throw ServiceException.FAILURE("cannot make two-factor auth unavailable because it is currently enabled on the account", null);
             } else if (attrName.equals(Provisioning.A_zimbraTwoFactorAuthEnabled) && !account.isFeatureTwoFactorAuthAvailable() &&
                     setting) {
                 throw ServiceException.FAILURE("cannot enable two-factor auth because it is not available on this account", null);
@@ -37,6 +34,8 @@ public class TwoFactorAuthStatus extends AttributeCallback {
             } else if (attrName.equals(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable) && cos.isFeatureTwoFactorAuthRequired()
                     && !setting) {
                 throw ServiceException.FAILURE("cannot make two-factor auth unavailable because it is currently required on the COS", null);
+            } else if (attrName.equals(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable) && setting) {
+                cos.unsetTwoFactorAuthLastReset();
             }
         }
     }

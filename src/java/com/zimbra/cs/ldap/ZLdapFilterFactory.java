@@ -58,6 +58,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ADMIN_ACCOUNT_BY_RDN(SINGLETON.adminAccountByRDN("{NAMING-RDN-ATTR}", "{NAME}")),
         ALL_ACCOUNTS(SINGLETON.allAccounts()),
         ALL_ACCOUNTS_ONLY(SINGLETON.allAccountsOnly()),
+        ALL_ACCOUNTS_ONLY_BY_COS(SINGLETON.allAccountsOnlyByCos("{COS-ID}")),
         ALL_ADMIN_ACCOUNTS(SINGLETON.allAdminAccounts()),
         ALL_ALIASES(SINGLETON.allAliases()),
         ALL_CALENDAR_RESOURCES(SINGLETON.allCalendarResources()),
@@ -323,6 +324,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      */
     public abstract ZLdapFilter allAccounts();
     public abstract ZLdapFilter allAccountsOnly();
+    public abstract ZLdapFilter allAccountsOnlyByCos(String cosId);
     public abstract ZLdapFilter allAdminAccounts();
     public abstract ZLdapFilter allNonSystemAccounts();
     public abstract ZLdapFilter allNonSystemArchivingAccounts();

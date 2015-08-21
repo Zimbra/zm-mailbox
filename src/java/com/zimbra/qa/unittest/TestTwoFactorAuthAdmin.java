@@ -15,14 +15,21 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.twofactor.ClearTwoFactorAuthDataTask.TaskStatus;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.qa.unittest.prov.soap.SoapTest;
 import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
+import com.zimbra.soap.admin.message.ClearTwoFactorAuthDataRequest;
+import com.zimbra.soap.admin.message.GetClearTwoFactorAuthDataStatusRequest;
+import com.zimbra.soap.admin.message.GetClearTwoFactorAuthDataStatusResponse;
 import com.zimbra.soap.admin.message.GetCosRequest;
 import com.zimbra.soap.admin.message.GetCosResponse;
 import com.zimbra.soap.admin.message.ModifyCosRequest;
 import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.CosSelector.CosBy;
+import com.zimbra.soap.type.AccountBy;
+import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.ZmBoolean;
 
 public class TestTwoFactorAuthAdmin extends TestCase {
     private static final String USER_NAME = "user1";
@@ -38,7 +45,6 @@ public class TestTwoFactorAuthAdmin extends TestCase {
     public void setUp() throws Exception {
         transport = TestUtil.getAdminSoapTransport();
         mbox = TestUtil.getZMailbox(USER_NAME);
-        enableTwoFactorAuthRequired();
     }
 
     private static String getCosId() throws Exception {
@@ -78,10 +84,13 @@ public class TestTwoFactorAuthAdmin extends TestCase {
     @Override
     public void tearDown() throws Exception {
         disableTwoFactorAuthRequired();
+        mbox.disableTwoFactorAuth(PASSWORD);
+        setTwoFactorAuthAvailable();
     }
 
     @Test
-    public void testTwoFactorSetupRequired() {
+    public void testTwoFactorSetupRequired() throws Exception {
+        enableTwoFactorAuthRequired();
         try {
             TestUtil.testAuth(mbox, USER_NAME, PASSWORD);
             fail("should not be able to authenticate without a code");
@@ -91,7 +100,8 @@ public class TestTwoFactorAuthAdmin extends TestCase {
     }
 
     @Test
-    public void testEnableTwoFactorAuth() throws ServiceException {
+    public void testEnableTwoFactorAuth() throws Exception {
+        enableTwoFactorAuthRequired();
         try {
             EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD, TestUtil.getDefaultAuthenticator());
             //have to re-authenticate since the previous auth token was invalidated by enabling two-factor auth
@@ -108,7 +118,9 @@ public class TestTwoFactorAuthAdmin extends TestCase {
     }
 
     @Test
-    public void testCannotDisableTwoFactorAuth() {
+    public void testCannotDisableTwoFactorAuth() throws Exception {
+        enableTwoFactorAuthRequired();
+        mbox.enableTwoFactorAuth(PASSWORD, TestUtil.getDefaultAuthenticator());
         try {
             mbox.disableTwoFactorAuth(PASSWORD);
             fail("should not be able to disable two-factor auth");
@@ -130,5 +142,44 @@ public class TestTwoFactorAuthAdmin extends TestCase {
         } finally {
             setTwoFactorAuthAvailable();
         }
+    }
+
+    private void clearDataAndTest(ClearTwoFactorAuthDataRequest req, int sleep) throws Exception {
+        SoapTest.invokeJaxb(transport, req);
+        if (sleep > 0) {
+            Thread.sleep(sleep);
+        }
+        try {
+            TestUtil.testAuth(mbox, USER_NAME, PASSWORD);
+            fail("should not be able to authenticate without a code");
+        } catch (ServiceException e) {
+            assertEquals(AccountServiceException.TWO_FACTOR_SETUP_REQUIRED, e.getCode());
+        }
+    }
+
+    @Test
+    public void testClearTwoFactorAuthData() throws Exception {
+        enableTwoFactorAuthRequired();
+        mbox.enableTwoFactorAuth(PASSWORD, TestUtil.getDefaultAuthenticator());
+        ClearTwoFactorAuthDataRequest req = new ClearTwoFactorAuthDataRequest();
+        req.setCos(new CosSelector(CosBy.name, "default"));
+        clearDataAndTest(req, 0);
+        mbox.enableTwoFactorAuth(PASSWORD, TestUtil.getDefaultAuthenticator());
+        req = new ClearTwoFactorAuthDataRequest();
+        req.setAccount(new AccountSelector(AccountBy.name, USER_NAME));
+        clearDataAndTest(req, 0);
+    }
+
+    @Test
+    public void testImmediateClearTwoFactorAuthData() throws Exception {
+        enableTwoFactorAuthRequired();
+        mbox.enableTwoFactorAuth(PASSWORD, TestUtil.getDefaultAuthenticator());
+        ClearTwoFactorAuthDataRequest req = new ClearTwoFactorAuthDataRequest();
+        req.setCos(new CosSelector(CosBy.name, "default"));
+        req.setLazyDelete(ZmBoolean.FALSE);
+        clearDataAndTest(req, 100);
+        GetClearTwoFactorAuthDataStatusResponse resp = SoapTest.invokeJaxb(transport, new GetClearTwoFactorAuthDataStatusRequest(new CosSelector(CosBy.name, "default")));
+        String status = resp.getStatus();
+        assertEquals(TaskStatus.finished.toString(), status);
     }
 }

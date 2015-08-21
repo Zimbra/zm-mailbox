@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -298,6 +298,10 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_ALL_ACTIVE_SERVERS_REQUEST, new GetAllActiveServers());
         dispatcher.registerHandler(AdminConstants.SET_SERVER_OFFLINE_REQUEST, new SetServerOffline());
         dispatcher.registerHandler(AdminConstants.SET_LOCAL_SERVER_ONLINE_REQUEST, new SetLocalServerOnline());
+
+        //two-factor auth
+        dispatcher.registerHandler(AdminConstants.CLEAR_TWO_FACTOR_AUTH_DATA_REQUEST, new ClearTwoFactorAuthData());
+        dispatcher.registerHandler(AdminConstants.GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_REQUEST, new GetClearTwoFactorAuthDataStatus());
     }
 
     /**

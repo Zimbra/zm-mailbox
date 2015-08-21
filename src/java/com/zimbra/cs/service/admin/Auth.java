@@ -158,9 +158,9 @@ public class Auth extends AdminDocumentHandler {
                 authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
                 authCtxt.put(AuthContext.AC_AS_ADMIN, Boolean.TRUE);
                 prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
-                boolean usingTwoFactorAuth = TwoFactorManager.twoFactorAuthEnabled(acct);
+                TwoFactorManager manager = new TwoFactorManager(acct);
+                boolean usingTwoFactorAuth = manager.twoFactorAuthEnabled();
                 if (usingTwoFactorAuth) {
-                    TwoFactorManager manager = new TwoFactorManager(acct);
                     if (twoFactorCode != null) {
                         manager.authenticate(twoFactorCode);
                     }

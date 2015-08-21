@@ -1,6 +1,7 @@
 package com.zimbra.cs.account.auth.twofactor;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +31,7 @@ import com.zimbra.cs.account.TrustedDevice;
 import com.zimbra.cs.account.TrustedDeviceToken;
 import com.zimbra.cs.account.ldap.ChangePasswordListener;
 import com.zimbra.cs.account.ldap.LdapLockoutPolicy;
+import com.zimbra.cs.ldap.LdapDateUtil;
 
 /**
  * This class is the main entry point for two-factor authentication.
@@ -55,19 +57,61 @@ public class TwoFactorManager {
     public TwoFactorManager(Account account, String acctNamePassedIn) throws ServiceException {
         this.account = account;
         this.acctNamePassedIn = acctNamePassedIn;
-        loadCredentials();
+        if (account.isFeatureTwoFactorAuthAvailable()) {
+            loadCredentials();
+        }
+        disableTwoFactorAuthIfNecessary();
+    }
+
+    private void disableTwoFactorAuthIfNecessary() throws ServiceException {
+        String encryptedSecret = account.getTwoFactorAuthSecret();
+        if (!Strings.isNullOrEmpty(encryptedSecret)) {
+            String decrypted = decrypt(account, encryptedSecret);
+            String[] parts = decrypted.split("\\|");
+            Date timestamp;
+            if (parts.length == 1) {
+                // For backwards compatability with the server version
+                // that did not store a timestamp.
+                timestamp = null;
+            } else if (parts.length > 2) {
+                throw ServiceException.FAILURE("invalid shared secret format", null);
+            }
+            try {
+                timestamp = LdapDateUtil.parseGeneralizedTime(parts[1]);
+            } catch (NumberFormatException e) {
+                throw ServiceException.FAILURE("invalid shared secret timestamp", null);
+            }
+            Date lastDisabledDate = account.getCOS().getTwoFactorAuthLastReset();
+            if (lastDisabledDate == null) {
+                return;
+            }
+            if (timestamp == null || lastDisabledDate.after(timestamp)) {
+                clearData();
+            }
+        }
+    }
+
+    public void clearData() throws ServiceException {
+        account.setTwoFactorAuthEnabled(false);
+        deleteCredentials();
+        revokeAllAppSpecificPasswords();
+        revokeAllTrustedDevices();
     }
 
     /* Determine if a second factor is necessary for authenticating this account */
-    public static boolean twoFactorAuthRequired(Account account) throws ServiceException {
-        boolean isRequired = account.isFeatureTwoFactorAuthRequired();
-        boolean isUserEnabled = account.isTwoFactorAuthEnabled();
-        return isUserEnabled || isRequired;
+    public boolean twoFactorAuthRequired() throws ServiceException {
+        if (!account.isFeatureTwoFactorAuthAvailable()) {
+            return false;
+        } else {
+            boolean isRequired = account.isFeatureTwoFactorAuthRequired();
+            boolean isUserEnabled = account.isTwoFactorAuthEnabled();
+            return isUserEnabled || isRequired;
+        }
     }
 
     /* Determine if two-factor authentication is properly set up */
-    public static boolean twoFactorAuthEnabled(Account account) throws ServiceException {
-        if (twoFactorAuthRequired(account)) {
+    public boolean twoFactorAuthEnabled() throws ServiceException {
+        if (twoFactorAuthRequired()) {
             String secret = account.getTwoFactorAuthSecret();
             return !Strings.isNullOrEmpty(secret);
         } else {
@@ -78,8 +122,8 @@ public class TwoFactorManager {
     /* Determine if app-specific passwords are enabled for the account.
      * Two-factor auth is a prerequisite.
      */
-    public static boolean appSpecificPasswordsEnabled(Account account) throws ServiceException {
-        if (twoFactorAuthRequired(account)) {
+    public boolean appSpecificPasswordsEnabled() throws ServiceException {
+        if (twoFactorAuthRequired()) {
             Server server = account.getServer();
             if (server == null) {
                 return false;
@@ -96,17 +140,22 @@ public class TwoFactorManager {
     }
 
     private String loadSharedSecret() throws ServiceException {
-        String secret = account.getTwoFactorAuthSecret();
-        hasStoredSecret = secret != null;
-        if (secret != null) {
-            String decrypted = decrypt(secret);
-            return decrypted;
+        String encryptedSecret = account.getTwoFactorAuthSecret();
+        hasStoredSecret = encryptedSecret != null;
+        if (encryptedSecret != null) {
+            String decrypted = decrypt(account, encryptedSecret);
+            String[] parts = decrypted.split("\\|");
+            if (parts.length != 2) {
+                throw ServiceException.FAILURE("invalid shared secret format", null);
+            }
+            String secret = parts[0];
+            return secret;
         } else {
             return null;
         }
     }
 
-    private String decrypt(String encrypted) throws ServiceException {
+    private static String decrypt(Account account, String encrypted) throws ServiceException {
         return DataSource.decryptData(account.getId(), encrypted);
     }
 
@@ -124,7 +173,7 @@ public class TwoFactorManager {
         } else {
             hasStoredScratchCodes = true;
         }
-        String commaSeparatedCodes = decrypt(encryptedCodes);
+        String commaSeparatedCodes = decrypt(account, encryptedCodes);
         String[] codes = commaSeparatedCodes.split(",");
         List<String> codeList = new ArrayList<String>();
         for (int i = 0; i < codes.length; i++) {
@@ -165,8 +214,10 @@ public class TwoFactorManager {
         return scratchCodes;
 
     }
+
     private void storeCredentials(TOTPCredentials credentials) throws ServiceException {
-        storeSharedSecret(credentials.getSecret());
+        String secret = String.format("%s|%s", credentials.getSecret(), credentials.getTimestamp());
+        storeSharedSecret(secret);
         storeScratchCodes(credentials.getScratchCodes());
     }
 
@@ -331,8 +382,9 @@ public class TwoFactorManager {
         account.setTwoFactorAuthEnabled(true);
     }
 
-    public boolean disableTwoFactorAuth() throws ServiceException {
-        return disableTwoFactorAuth(true);
+    private void deleteCredentials() throws ServiceException {
+        account.setTwoFactorAuthSecret(null);
+        account.setTwoFactorAuthScratchCodes(null);
     }
 
     public boolean disableTwoFactorAuth(boolean deleteCredentials) throws ServiceException {
@@ -341,8 +393,7 @@ public class TwoFactorManager {
         } else if (account.isTwoFactorAuthEnabled()) {
             account.setTwoFactorAuthEnabled(false);
             if (deleteCredentials) {
-                account.setTwoFactorAuthSecret(null);
-                account.setTwoFactorAuthScratchCodes(null);
+                deleteCredentials();
             }
             revokeAllAppSpecificPasswords();
             return true;

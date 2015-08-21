@@ -20,10 +20,10 @@ public class GetTrustedDevices extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
         GetTrustedDevicesResponse response = new GetTrustedDevicesResponse();
-        if (!TwoFactorManager.twoFactorAuthEnabled(account)) {
+        TwoFactorManager manager = new TwoFactorManager(account);
+        if (!manager.twoFactorAuthEnabled()) {
             throw AccountServiceException.TWO_FACTOR_AUTH_REQUIRED();
         }
-        TwoFactorManager manager = new TwoFactorManager(account);
         List<TrustedDevice> devices = manager.getTrustedDevices();
         TrustedDeviceToken token = TrustedDeviceToken.fromRequest(account, request, context);
         boolean thisDeviceTrusted = false;
