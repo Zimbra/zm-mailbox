@@ -17,22 +17,22 @@
              calDavPrincipalPath="/calendar/dav/@USERNAME@/user">
         <folder remotePath="INBOX" localPath="/Inbox" sync="true"/>
         <folder remotePath="[Gmail]" ignore="true"/>
-        <folder remotePath="[Gmail]/Trash" localPath="/Trash" sync="false"/>
-        <folder remotePath="[Gmail]/All Mail" ignore="true"/>
-        <folder remotePath="[Gmail]/Drafts" ignore="true"/>
-        <folder remotePath="[Gmail]/Sent Mail" localPath="/Sent" sync="true"/>
-        <folder remotePath="[Gmail]/Spam" localPath="/Junk" sync="false"/>
-        <folder remotePath="[Gmail]/Starred" ignore="true"/>
-        <folder remotePath="[Gmail]/Important" ignore="true"/>
+        <folder remotePath="[Gmail]/Trash" folderName="\Trash" localPath="/Trash" sync="true"/>
+        <folder remotePath="[Gmail]/All Mail" folderName="\All" ignore="true"/>
+        <folder remotePath="[Gmail]/Drafts" folderName="\Drafts" ignore="true"/>
+        <folder remotePath="[Gmail]/Sent Mail" folderName="\Sent" localPath="/Sent" sync="true"/>
+        <folder remotePath="[Gmail]/Spam" folderName="\Junk" localPath="/Junk" sync="false"/>
+        <folder remotePath="[Gmail]/Starred" folderName="\Flagged" ignore="true"/>
+        <folder remotePath="[Gmail]/Important" folderName="\Important" ignore="true"/>
         <!-- below is for google app users -->
         <folder remotePath="[Google Mail]" ignore="true"/>
-        <folder remotePath="[Google Mail]/Trash" localPath="/Trash" sync="false"/>
-        <folder remotePath="[Google Mail]/All Mail" ignore="true"/>
-        <folder remotePath="[Google Mail]/Drafts" ignore="true"/>
-        <folder remotePath="[Google Mail]/Sent Mail" localPath="/Sent" sync="true"/>
-        <folder remotePath="[Google Mail]/Spam" localPath="/Junk" sync="false"/>
-        <folder remotePath="[Google Mail]/Starred" ignore="true"/>
-        <folder remotePath="[Google Mail]/Important" ignore="true"/>
+        <folder remotePath="[Google Mail]/Trash" folderName="\Trash" localPath="/Trash" sync="true"/>
+        <folder remotePath="[Google Mail]/All Mail" folderName="\All" ignore="true"/>
+        <folder remotePath="[Google Mail]/Drafts" folderName="\Drafts" ignore="true"/>
+        <folder remotePath="[Google Mail]/Sent Mail" folderName="\Sent" localPath="/Sent" sync="true"/>
+        <folder remotePath="[Google Mail]/Spam" folderName="\Junk" localPath="/Junk" sync="false"/>
+        <folder remotePath="[Google Mail]/Starred" folderName="\Flagged" ignore="true"/>
+        <folder remotePath="[Google Mail]/Important" folderName="\Important" ignore="true"/>
     </service>
 
     <service name="aol.com" saveToSent="true">
