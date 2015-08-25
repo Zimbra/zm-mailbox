@@ -592,6 +592,21 @@ Generate new scratch codes for this account. This invalidates any previous codes
 
 ---------
 
+ <GetScratchCodesRequest xmlns=“urn:zimbraAccount”>
+ </GetScratchCodesRequest>
+
+ <GetScratchCodesResponse>
+   <scratchCodes>
+     <scratchCode>...</scratchCode>
+     <scratchCode>...</scratchCode>
+     ...
+   </scratchCodes>
+ </GetScratchCodesResponse>
+
+Get the remaining scratch codes for this account.
+
+---------
+
  <CreateAppSpecificPasswordRequest xmlns="urn:zimbraAccount" appName="{name}">
  </CreateAppSpecificPasswordRequest>
 

@@ -29,9 +29,9 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.service.account.zmg.RegisterMobileGatewayApp;
 import com.zimbra.cs.service.account.zmg.BootstrapMobileGatewayApp;
 import com.zimbra.cs.service.account.zmg.GetGcmSenderId;
+import com.zimbra.cs.service.account.zmg.RegisterMobileGatewayApp;
 import com.zimbra.cs.service.account.zmg.RenewMobileGatewayAppToken;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
@@ -59,6 +59,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.CREATE_APP_SPECIFIC_PASSWORD_REQUEST, new CreateAppSpecificPassword());
         dispatcher.registerHandler(AccountConstants.REVOKE_APP_SPECIFIC_PASSWORD_REQUEST, new RevokeAppSpecificPassword());
         dispatcher.registerHandler(AccountConstants.GET_APP_SPECIFIC_PASSWORDS_REQUEST, new GetAppSpecificPasswords());
+        dispatcher.registerHandler(AccountConstants.GET_SCRATCH_CODES_REQUEST, new GetScratchCodes());
         dispatcher.registerHandler(AccountConstants.GENERATE_SCRATCH_CODES_REQUEST, new GenerateScratchCodes());
         dispatcher.registerHandler(AccountConstants.GET_TRUSTED_DEVICES_REQUEST, new GetTrustedDevices());
         dispatcher.registerHandler(AccountConstants.REVOKE_TRUSTED_DEVICE_REQUEST, new RevokeTrustedDevice());
