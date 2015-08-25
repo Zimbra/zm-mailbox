@@ -21,7 +21,7 @@ An example:
 
   1. **MemcachedMailboxDataCache.java** (1st choice)
   2. **RedisMailboxDataCache.java** (2nd choice - works well but could fail on a put if Redis is configured with a small memory cap like 4 MB that doesn't fit all the mailbox data; `memcached` would have never failed on a put, it would have expired something to make room)
-  3. **LocalMailboxDataCache.java** (the fallback legacy adapter that performs in-process based synchronization)
+  3. **LocalMailboxDataCache.java** (the fallback adapter that performs legacy in-process based caching)
   4. **RedisClusterMailboxDataCache.java** (experimental)
 
 The ZimbraConfig class performs auto-wiring of Redis, `memcached`, and Local adapters during Spring application context initialization during the server start-up.
