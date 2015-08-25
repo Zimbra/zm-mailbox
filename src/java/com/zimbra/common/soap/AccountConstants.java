@@ -158,9 +158,13 @@ public class AccountConstants {
     public static final String E_REGISTER_MOBILE_GATEWAY_APP_RESPONSE = "RegisterMobileGatewayAppResponse";
     public static final String E_GET_GCM_SENDER_ID_REQUEST = "GetGcmSenderIdRequest";
     public static final String E_GET_GCM_SENDER_ID_RESPONSE = "GetGcmSenderIdResponse";
+
+    //OAuth
+    public static final String E_OAUTH_CONSUMER = "OauthConsumer";
     public static final String E_GET_OAUTH_CONSUMERS_REQUEST = "GetOAuthConsumersRequest";
     public static final String E_GET_OAUTH_CONSUMERS_RESPONSE = "GetOAuthConsumersResponse";
-    public static final String E_OAUTH_CONSUMER = "OauthConsumer";
+    public static final String E_REVOKE_OAUTH_CONSUMER_REQUEST = "RevokeOAuthConsumerRequest";
+    public static final String E_REVOKE_OAUTH_CONSUMER_RESPONSE = "RevokeOAuthConsumerResponse";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -295,8 +299,12 @@ public class AccountConstants {
     public static final QName REGISTER_MOBILE_GATEWAY_APP_RESPONSE = QName.get(E_REGISTER_MOBILE_GATEWAY_APP_RESPONSE, NAMESPACE);
     public static final QName GET_GCM_SENDER_ID_REQUEST = QName.get(E_GET_GCM_SENDER_ID_REQUEST, NAMESPACE);
     public static final QName GET_GCM_SENDER_ID_RESPONSE = QName.get(E_GET_GCM_SENDER_ID_RESPONSE, NAMESPACE);
+
+    //OAuth
     public static final QName GET_OAUTH_CONSUMERS_REQUEST = QName.get(E_GET_OAUTH_CONSUMERS_REQUEST, NAMESPACE);
     public static final QName GET_OAUTH_CONSUMERS_RESPONSE = QName.get(E_GET_OAUTH_CONSUMERS_RESPONSE, NAMESPACE);
+    public static final QName REVOKE_OAUTH_CONSUMER_REQUEST = QName.get(E_REVOKE_OAUTH_CONSUMER_REQUEST, NAMESPACE);
+    public static final QName REVOKE_OAUTH_CONSUMER_RESPONSE = QName.get(E_REVOKE_OAUTH_CONSUMER_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
