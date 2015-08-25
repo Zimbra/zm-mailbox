@@ -81,7 +81,7 @@ $ jetty restart
 Disable use of Redis:
 
 ```
-$ zmprov ms `zmhostname` -zimbraRedisUrl
+$ zmprov ms `zmhostname` zimbraRedisUrl ""
 $ jetty restart
 ```
 
