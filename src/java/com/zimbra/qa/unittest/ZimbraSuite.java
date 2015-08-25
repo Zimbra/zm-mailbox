@@ -142,6 +142,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestTrustedToken.class);
         sClasses.add(TestPurgeDataSource.class);
         sClasses.add(TestDomainAdmin.class);
+        sClasses.add(TestTrashImapMessage.class);
     }
 
     /**
