@@ -10397,7 +10397,7 @@ TODO: delete them permanently from here
   <desc>If FALSE, chat features are disabled in the client and user presence is shown as offline to all other users.</desc>
 </attr>
 
-<attr id="2058" name="zimbraTwoFactorAuthLastReset" type="integer" cardinality="single" optionalIn="cos" since="8.7.0,9.0.0">
+<attr id="2058" name="zimbraTwoFactorAuthLastReset" type="gentime" cardinality="single" optionalIn="cos" since="8.7.0,9.0.0">
   <desc>Timestamp of the last time that two-factor authentication data was cleared on the COS. When this timestamp exceeds the timestamp of the shared secret, the server knows to disable two-factor authentication on the account and delete all associated data.</desc>
 </attr>
 
