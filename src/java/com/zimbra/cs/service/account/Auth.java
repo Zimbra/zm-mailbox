@@ -163,7 +163,8 @@ public class Auth extends AccountDocumentHandler {
 
         Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
         Boolean registerTrustedDevice = false;
-        if (acct != null && TwoFactorManager.twoFactorAuthEnabled(acct)) {
+        TwoFactorManager twoFactorManager = new TwoFactorManager(acct);
+        if (acct != null && twoFactorManager.twoFactorAuthEnabled()) {
             registerTrustedDevice = trustedToken == null && request.getAttributeBool(AccountConstants.A_TRUSTED_DEVICE, false);
         }
         String deviceId = request.getAttribute(AccountConstants.E_DEVICE_ID, null);
@@ -256,7 +257,7 @@ public class Auth extends AccountDocumentHandler {
                     }
                 }
             }
-            boolean usingTwoFactorAuth = acct != null && TwoFactorManager.twoFactorAuthRequired(acct) && !trustedDeviceOverride;
+            boolean usingTwoFactorAuth = acct != null && twoFactorManager.twoFactorAuthRequired() && !trustedDeviceOverride;
             boolean twoFactorAuthWithToken = usingTwoFactorAuth && authTokenEl != null;
             if (password != null || twoFactorAuthWithToken) {
                 // authentication logic can be reached with either a password, or a 2FA auth token
@@ -271,7 +272,7 @@ public class Auth extends AccountDocumentHandler {
                         manager.authenticateAppSpecificPassword(password);
                     } else {
                         prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
-                        return needTwoFactorAuth(acct, zsc);
+                        return needTwoFactorAuth(acct, twoFactorManager, zsc);
                     }
                 } else {
                     if (password != null) {
@@ -349,7 +350,7 @@ public class Auth extends AccountDocumentHandler {
         new TwoFactorManager(account).verifyTrustedDevice(td, attrs);
     }
 
-    private Element needTwoFactorAuth(Account account, ZimbraSoapContext zsc) throws ServiceException {
+    private Element needTwoFactorAuth(Account account, TwoFactorManager manager, ZimbraSoapContext zsc) throws ServiceException {
         /* two cases here:
          * 1) the user needs to provide a two-factor code.
          *    in this case, the server returns a two-factor auth token in the response header that the client
@@ -357,7 +358,7 @@ public class Auth extends AccountDocumentHandler {
          * 2) the user needs to set up two-factor auth.
          *    this can happen if it's required for the account but the user hasn't received a secret yet.
          */
-        if (!TwoFactorManager.twoFactorAuthEnabled(account)) {
+        if (!manager.twoFactorAuthEnabled()) {
             throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
         } else {
             Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);

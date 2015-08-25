@@ -383,6 +383,21 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     }
 
     @Override
+    public ZLdapFilter allAccountsOnlyByCos(String cosId) {
+        return new UBIDLdapFilter(
+                FilterId.ALL_ACCOUNTS_ONLY_BY_COS,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        Filter.createORFilter(
+                                // local account in default COS
+                                Filter.createANDFilter(
+                                        Filter.createNOTFilter(FILTER_IS_EXTERNAL_ACCOUNT),
+                                        Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId))
+                                        ),
+                                Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId))));
+    }
+
+    @Override
     public ZLdapFilter allAdminAccounts() {
         return new UBIDLdapFilter(
                 FilterId.ALL_ADMIN_ACCOUNTS,

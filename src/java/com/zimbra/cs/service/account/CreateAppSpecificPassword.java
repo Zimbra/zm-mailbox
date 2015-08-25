@@ -20,7 +20,7 @@ public class CreateAppSpecificPassword extends AccountDocumentHandler {
         Account account = getRequestedAccount(zsc);
         String appName = request.getAttribute(AccountConstants.A_APP_NAME);
         TwoFactorManager manager = new TwoFactorManager(account);
-        if (!TwoFactorManager.twoFactorAuthEnabled(account)) {
+        if (!manager.twoFactorAuthEnabled()) {
             throw AuthFailedServiceException.AUTH_FAILED("two-factor authentication must be enabled");
         }
         AppSpecificPassword password = manager.generateAppSpecificPassword(appName);

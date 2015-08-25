@@ -2917,3 +2917,23 @@ allServers:
 <ResetLdapClientResponse/>
 -----------------------------
 
+<ClearTwoFactorAuthDataRequest [lazyDelete="1|0"]>
+  [<cos id|name>...</cos>]
+  [<account id|name>...</account>]
+</ClearTwoFactorAuthDataRequest>
+
+<ClearTwoFactorAuthDataResponse [status="started|running"]/>
+
+Deletes two-factor auth data for the specified account or COS. If lazyDelete=1 (or unspecified), data will be deleted upon next account access.
+Otherwise, data will be deleted immediately. If specifying a COS with lazyDelete=0, data is deleted asynchronously.
+-----------------------------
+
+<GetClearTwoFactorAuthDataStatusRequest>
+  <cos id|name>...</cos>
+</GetClearTwoFactorAuthDataStatusRequest>
+
+<GetClearTwoFactorAuthDataStatusResponse status="not_started|running|finished"/>
+
+Retrieve the status of a two-factor auth data wipe task for a COS.
+-----------------------------
+

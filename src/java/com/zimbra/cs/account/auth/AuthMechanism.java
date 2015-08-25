@@ -201,7 +201,8 @@ public abstract class AuthMechanism {
                 Map<String, Object> authCtxt) throws ServiceException {
 
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
-            if (TwoFactorManager.twoFactorAuthRequired(acct) && authCtxt != null) {
+            TwoFactorManager manager = new TwoFactorManager(acct);
+            if (manager.twoFactorAuthRequired() && authCtxt != null) {
                 //if two-factor auth is enabled, check non-http protocols against app-specific passwords
                 Protocol proto = (Protocol) authCtxt.get("proto");
                 switch(proto) {
@@ -209,8 +210,7 @@ public abstract class AuthMechanism {
                 case http_basic:
                     break;
                 default:
-                    if (TwoFactorManager.appSpecificPasswordsEnabled(acct)) {
-                        TwoFactorManager manager = new TwoFactorManager(acct);
+                    if (manager.appSpecificPasswordsEnabled()) {
                         manager.authenticateAppSpecificPassword(password);
                         return;
                     } else {
