@@ -5606,6 +5606,7 @@ public class ZMailbox implements ToZJSONObject {
         req.setAuthToken(resp.getAuthToken());
         resp = invokeJaxb(req);
         resp.setSecret(secret);
+        initAuthToken(new ZAuthToken(resp.getAuthToken().getValue()));
         return resp;
     }
 
