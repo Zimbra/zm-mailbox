@@ -4696,3 +4696,12 @@ Response for this API include access token(this acts as a key), application name
         ....
     </GetOAuthConsumersResponse>
 ```
+
+-----------------------------
+RevokeOAuthConsumerRequest:
+This is OAuth related API used for revoking access for an OAuth consumer.
+<RevokeOAuthConsumerRequest
+    accessToken="9230ae1e4828b108e7696f66e2dc3c80"
+    xmlns="urn:zimbraAccount"/>
+```
+<RevokeOAuthConsumerResponse xmlns="urn:zimbraAccount"/>```
