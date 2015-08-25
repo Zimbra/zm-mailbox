@@ -9633,8 +9633,9 @@ TODO: delete them permanently from here
   <desc>Internal port used by saslauthd to authenticate over SOAP</desc>
 </attr>
 
-<attr id="1907" name="zimbraFeatureAppSpecificPasswordsEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn,accountInfo" requiresRestart="mta" since="8.7.0,9.0.0">
+<attr id="1907" name="zimbraFeatureAppSpecificPasswordsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInherited,accountInfo" since="8.7.0,9.0.0">
   <desc>Whether app-specific passwords are enabled when two-factor auth is enabled. If TRUE, the port specified by zimbraMtaAuthPort must be accessible by the MTA.</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
 
 <attr id="1908" name="zimbraMtaAuthBindAddress" type="string" max="128" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" requiresRestart="mta" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
