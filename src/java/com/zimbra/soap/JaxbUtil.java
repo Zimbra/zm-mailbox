@@ -1045,7 +1045,9 @@ public final class JaxbUtil {
 
             //Oauth
             com.zimbra.soap.account.message.GetOAuthConsumersRequest.class,
-            com.zimbra.soap.account.message.GetOAuthConsumersResponse.class
+            com.zimbra.soap.account.message.GetOAuthConsumersResponse.class,
+            com.zimbra.soap.account.message.RevokeOAuthConsumerRequest.class,
+            com.zimbra.soap.account.message.RevokeOAuthConsumerResponse.class
         };
 
         try {
