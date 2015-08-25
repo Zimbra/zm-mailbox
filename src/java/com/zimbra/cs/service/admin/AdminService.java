@@ -295,17 +295,10 @@ public class AdminService implements DocumentService {
         // Skins
         dispatcher.registerHandler(AdminConstants.GET_ALL_SKINS_REQUEST, new GetAllSkins());
 
-        dispatcher.registerHandler(AdminConstants.GET_ALL_ACTIVE_SERVERS_REQUEST, new GetAllActiveServers());
-        dispatcher.registerHandler(AdminConstants.SET_SERVER_OFFLINE_REQUEST, new SetServerOffline());
-        dispatcher.registerHandler(AdminConstants.SET_LOCAL_SERVER_ONLINE_REQUEST, new SetLocalServerOnline());
-
-        dispatcher.registerHandler(AdminConstants.GET_ALL_ACTIVE_SERVERS_REQUEST, new GetAllActiveServers());
-        dispatcher.registerHandler(AdminConstants.SET_SERVER_OFFLINE_REQUEST, new SetServerOffline());
-        dispatcher.registerHandler(AdminConstants.SET_LOCAL_SERVER_ONLINE_REQUEST, new SetLocalServerOnline());
-
         //two-factor auth
         dispatcher.registerHandler(AdminConstants.CLEAR_TWO_FACTOR_AUTH_DATA_REQUEST, new ClearTwoFactorAuthData());
         dispatcher.registerHandler(AdminConstants.GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_REQUEST, new GetClearTwoFactorAuthDataStatus());
+
         dispatcher.registerHandler(AdminConstants.RESET_LDAP_CLIENT_REQUEST, new ResetLdapClient());
     }
 
