@@ -162,6 +162,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.RevokeAppSpecificPasswordResponse.class,
             com.zimbra.soap.account.message.GetAppSpecificPasswordsRequest.class,
             com.zimbra.soap.account.message.GetAppSpecificPasswordsResponse.class,
+            com.zimbra.soap.account.message.GetScratchCodesRequest.class,
+            com.zimbra.soap.account.message.GetScratchCodesResponse.class,
             com.zimbra.soap.account.message.GenerateScratchCodesRequest.class,
             com.zimbra.soap.account.message.GenerateScratchCodesResponse.class,
             com.zimbra.soap.account.message.GetTrustedDevicesRequest.class,
