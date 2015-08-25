@@ -324,7 +324,7 @@ public class Sync extends MailDocumentHandler {
 
         // finally, handle created/modified "other items"
         int itemCount = 0;
-        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, Math.min(begin, deleteModSeqCutoff), MailItem.Type.UNKNOWN, targetIds, deleteModSeqCutoff);
+        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, Math.min(begin, deleteModSeqCutoff), messageSyncStart, MailItem.Type.UNKNOWN, targetIds, deleteModSeqCutoff);
         List<Integer> modified = changed.getFirst();
 
         // items that have been altered in non-visible folders will be returned as "deleted" in order to handle moves
