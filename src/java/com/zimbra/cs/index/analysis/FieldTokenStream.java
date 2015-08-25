@@ -100,7 +100,7 @@ public final class FieldTokenStream extends TokenStream {
         if (token.length() <= MAX_TOKEN_LEN && tokens.size() < MAX_TOKEN_COUNT) {
             tokens.add(token);
         } else {
-            ZimbraLog.index.warn("Unable to index: %.30s", token);
+            ZimbraLog.index.debug("Unable to index: %.30s", token);
         }
     }
 
