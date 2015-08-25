@@ -263,7 +263,7 @@ public class Auth extends AccountDocumentHandler {
                 // authentication logic can be reached with either a password, or a 2FA auth token
                 if (usingTwoFactorAuth && twoFactorCode == null && password != null) {
                     int mtaAuthPort = acct.getServer().getMtaAuthPort();
-                    boolean supportsAppSpecificPaswords =  acct.getServer().isFeatureAppSpecificPasswordsEnabled() && zsc.getPort() == mtaAuthPort;
+                    boolean supportsAppSpecificPaswords =  acct.isFeatureAppSpecificPasswordsEnabled() && zsc.getPort() == mtaAuthPort;
                     if (supportsAppSpecificPaswords && password != null) {
                         // if we are here, it means we are authenticating SMTP,
                         // so app-specific passwords are accepted. Other protocols (pop, imap)

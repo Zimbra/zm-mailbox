@@ -19,6 +19,7 @@ import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -36,15 +37,11 @@ import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
 import com.zimbra.soap.account.message.GetAppSpecificPasswordsRequest;
 import com.zimbra.soap.account.message.GetAppSpecificPasswordsResponse;
 import com.zimbra.soap.account.message.RevokeAppSpecificPasswordRequest;
-import com.zimbra.soap.admin.message.GetAllServersRequest;
-import com.zimbra.soap.admin.message.GetAllServersResponse;
 import com.zimbra.soap.admin.message.GetCosRequest;
 import com.zimbra.soap.admin.message.GetCosResponse;
 import com.zimbra.soap.admin.message.ModifyCosRequest;
-import com.zimbra.soap.admin.message.ModifyServerRequest;
 import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.CosSelector.CosBy;
-import com.zimbra.soap.admin.type.ServerInfo;
 import com.zimbra.soap.type.AccountBy;
 import com.zimbra.soap.type.AccountSelector;
 
@@ -61,40 +58,38 @@ public class TestAppSpecificPasswords extends TestCase {
     private static Boolean DEFAULT_REVOKE_ON_PASSWORD_CHANGE = true;
     private static String DEFAULT_APP_LIFETIME = "0";
     private static SoapTransport transport;
+    private static SoapProvisioning prov;
     private ZMailbox mbox;
 
     @BeforeClass
     @Override
-    public void setUp() throws ServiceException, IOException {
+    public void setUp() throws Exception {
         mbox = TestUtil.getZMailbox(USER);
         EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD, TestUtil.getDefaultAuthenticator());
         //reauthenticating to get new auth token
         mbox = TestUtil.getZMailbox(USER, resp.getScratchCodes().remove(0));
         transport = TestUtil.getAdminSoapTransport();
+        prov = new SoapProvisioning();
+        prov.soapSetURI(TestUtil.getAdminSoapUrl());
+        prov.soapZimbraAdminAuthenticate();
         enableAppSpecificPasswords();
         revokeAllAppPasswords();
     }
 
-    private void enableAppSpecificPasswords() throws ServiceException, IOException {
+    private void enableAppSpecificPasswords() throws Exception {
         toggleAppSpecificPasswords(true);
     }
 
-    private void disableAppSpecificPasswords() throws ServiceException, IOException {
+    private void disableAppSpecificPasswords() throws Exception {
         toggleAppSpecificPasswords(false);
     }
 
-    private void toggleAppSpecificPasswords(boolean bool) throws ServiceException, IOException {
-        GetAllServersRequest req = new GetAllServersRequest();
-        req.setService((String) null);
-        GetAllServersResponse resp = SoapTest.invokeJaxb(transport, req);
+    private void toggleAppSpecificPasswords(boolean bool) throws Exception {
+        ModifyCosRequest req = new ModifyCosRequest();
+        req.setId(getCosId());
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraFeatureAppSpecificPasswordsEnabled, bool ? ProvisioningConstants.TRUE : ProvisioningConstants.FALSE);
-        for (ServerInfo server: resp.getServerList()) {
-            ModifyServerRequest modifyRequest = new ModifyServerRequest();
-            modifyRequest.setId(server.getId());
-            modifyRequest.setAttrs(attrs);
-            SoapTest.invokeJaxb(transport, modifyRequest);
-        }
+        SoapTest.invokeJaxb(transport, req);
     }
 
     private String generatePassword(String name) throws ServiceException, IOException {
@@ -281,7 +276,7 @@ public class TestAppSpecificPasswords extends TestCase {
     }
 
     @Test
-    public void testAppSpecificPasswordsDisabled() throws ServiceException, IOException {
+    public void testAppSpecificPasswordsDisabled() throws Exception {
         disableAppSpecificPasswords();
         ZAuthResult res = TestUtil.testAuth(mbox, USER, PASSWORD);
         assertTrue(res.getTwoFactorAuthRequired());

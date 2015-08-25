@@ -26,7 +26,6 @@ import com.zimbra.cs.account.AppSpecificPassword.PasswordData;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TrustedDevice;
 import com.zimbra.cs.account.TrustedDeviceToken;
 import com.zimbra.cs.account.ldap.ChangePasswordListener;
@@ -118,12 +117,7 @@ public class TwoFactorManager {
      */
     public boolean appSpecificPasswordsEnabled() throws ServiceException {
         if (twoFactorAuthRequired()) {
-            Server server = account.getServer();
-            if (server == null) {
-                return false;
-            } else {
-                return server.isFeatureAppSpecificPasswordsEnabled();
-            }
+            return account.isFeatureAppSpecificPasswordsEnabled();
         } else {
             return false;
         }
@@ -398,7 +392,7 @@ public class TwoFactorManager {
     }
 
     public AppSpecificPassword generateAppSpecificPassword(String name) throws ServiceException {
-        if (!account.getServer().isFeatureAppSpecificPasswordsEnabled()) {
+        if (!account.isFeatureAppSpecificPasswordsEnabled()) {
             throw ServiceException.FAILURE("app-specific passwords are not enabled", new Throwable());
         }
         if (appPasswords.containsKey(name)) {
