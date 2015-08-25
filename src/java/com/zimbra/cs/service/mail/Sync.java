@@ -104,7 +104,7 @@ public class Sync extends MailDocumentHandler {
 
         // permit the caller to restrict initial sync only to calendar items with a recurrence after a given date
         long calendarStart = (syncRequest.getCalendarCutoff() != null) ? syncRequest.getCalendarCutoff() : -1;
-        long messageSyncStart  = (syncRequest.getMsgCutoff() != null) ? syncRequest.getMsgCutoff() : -1;
+        int messageSyncStart  = (syncRequest.getMsgCutoff() != null) ? syncRequest.getMsgCutoff() : -1;
 
         // if the sync is constrained to a folder subset, we need to first figure out what can be seen
         Folder root = null;
@@ -264,7 +264,7 @@ public class Sync extends MailDocumentHandler {
             MailItem.Type.SEARCHFOLDER, MailItem.Type.MOUNTPOINT);
 
 
-    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, SyncToken syncToken, int deleteLimit, int changeLimit, boolean typedDeletes, Folder root, Set<Folder> visible, long messageSyncStart)
+    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, SyncToken syncToken, int deleteLimit, int changeLimit, boolean typedDeletes, Folder root, Set<Folder> visible, int messageSyncStart)
     throws ServiceException {
         int begin = syncToken.getChangeId();
         int deleteModSeqCutoff = syncToken.getDeleteModSeq();
@@ -320,7 +320,7 @@ public class Sync extends MailDocumentHandler {
 
         // finally, handle created/modified "other items"
         int itemCount = 0;
-        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, Math.min(begin, deleteModSeqCutoff), MailItem.Type.UNKNOWN, targetIds, deleteModSeqCutoff);
+        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, Math.min(begin, deleteModSeqCutoff), messageSyncStart, MailItem.Type.UNKNOWN, targetIds, deleteModSeqCutoff);
         List<Integer> modified = changed.getFirst();
 
         // items that have been altered in non-visible folders will be returned as "deleted" in order to handle moves

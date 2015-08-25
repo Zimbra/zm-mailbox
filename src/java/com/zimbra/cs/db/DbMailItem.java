@@ -4939,8 +4939,9 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                if (!result.contains(rs.getInt(1))) {
-                    result.add(MailItem.Type.CONVERSATION, rs.getInt(1), "");
+                int id = rs.getInt(1);
+                if (id != 0 && !result.contains(id)) {
+                    result.add(MailItem.Type.CONVERSATION, id, "");
                 }
             }
             return result;

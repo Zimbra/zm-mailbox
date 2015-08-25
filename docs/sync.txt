@@ -5,7 +5,7 @@
    <-- no token = initial sync -->
    <--  if {root-folder-id} present, we start sync there rather than at folder 11 -->
    <--  if {earliest-message-date} present, omit all messages and respective conversation before the specified date in second(specified in s)
-        This parameter honored in initial sync only -->
+        This parameter honored in initial and delta sync as well-->
    <--  if {earliest-calendar-date} present, omit all appointments and tasks that don't have a recurrence ending after that time (specified in ms)
         This parameter honored in initial sync only -->
    <--  if {max-number-of-deleted-items} present and it is greater than 0, then response will limit to the number of deleted items to the value and

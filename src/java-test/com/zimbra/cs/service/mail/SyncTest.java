@@ -135,7 +135,7 @@ public class SyncTest {
 
         mbox.beginTrackingSync();
         acct.setMailThreadingAlgorithm(MailThreadingAlgorithm.subject);
-        long currTime = System.currentTimeMillis() / 1000;
+        int currTime = (int) System.currentTimeMillis() / 1000;
         long before60min = currTime - (60 * Constants.SECONDS_PER_MINUTE);
         long before45min = currTime - (45 * Constants.SECONDS_PER_MINUTE);
         long before30min = currTime - (30 * Constants.SECONDS_PER_MINUTE);
@@ -385,6 +385,42 @@ public class SyncTest {
         deletes = sdi2.getIds().split(",");
         Assert.assertEquals(1, syncRes.getItems().size());
         Assert.assertEquals(1, deletes.length);
+        token = syncRes.getToken();
+
+        // Add 3 messages 1 with current date and 2 past date.
+        int currTime = (int) System.currentTimeMillis() / 1000;
+        int before60min = currTime - (60 * Constants.SECONDS_PER_MINUTE);
+        int before45min = currTime - (45 * Constants.SECONDS_PER_MINUTE);
+        TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "test1 x", before60min * 1000);
+        TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "test2 x", before45min * 1000);
+        mbox.addMessage(null, MailboxTestUtil.generateMessage("test3 x"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
+
+        //Delta Sync without msgCutoff. should return all 3 added messages.
+        request = new SyncRequest();
+        request.setToken(token);
+        request.setChangeLimit(5);
+        response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
+        syncRes = JaxbUtil.elementToJaxb(response);
+        // It should return 3 modified.
+        Assert.assertEquals(3, syncRes.getItems().size());
+
+        //Delta Sync with msgCutoff before45min -1. should return only 2 of added messages.
+        request = new SyncRequest();
+        request.setToken(token);
+        request.setChangeLimit(5);
+        request.setMsgCutoff(before45min -1);
+        response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
+        syncRes = JaxbUtil.elementToJaxb(response);
+        Assert.assertEquals(2, syncRes.getItems().size());
+
+        //Delta Sync with msgCutoff currenttime -1. should return only 1 of added messages.
+        request = new SyncRequest();
+        request.setToken(token);
+        request.setChangeLimit(5);
+        request.setMsgCutoff(currTime -1);
+        response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
+        syncRes = JaxbUtil.elementToJaxb(response);
+        Assert.assertEquals(1, syncRes.getItems().size());
     }
 
     /**
