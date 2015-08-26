@@ -26,7 +26,7 @@ public class TestTOTPAuthenticator {
     private static long[] timestamps = {59L, 1111111109L, 1111111111L, 1234567890L, 2000000000L, 20000000000L};
 
     @BeforeClass
-    public void init() throws Exception {
+    public static void init() throws Exception {
         MailboxTestUtil.initProvisioning();
     }
 
