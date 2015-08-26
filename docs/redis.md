@@ -100,3 +100,17 @@ $ zmprov ms `zmhostname` +zimbraRedisUrl redis://localhost:7004
 $ zmprov ms `zmhostname` +zimbraRedisUrl redis://localhost:7005
 $ jetty restart
 ```
+
+# Configure for Redis Sentinel
+
+When Redis Sentinel is configued, `redis-sentinel.conf` is given a line such as the following:
+
+    sentinel monitor mymaster
+
+Once the backing service is configured & restarted, Zimbra can be configured to use it as follows:
+
+```
+$ zmprov ms `zmhostname zimbraRedisSentinelMaster mymaster
+$ zmprov ms `zmhostname zimbraRedisSentinelUris sentinelhost1
+$ zmprov ms `zmhostname +zimbraRedisSentinelUris sentinelhost2
+```
