@@ -5,15 +5,17 @@ import static org.junit.Assert.assertEquals;
 import java.math.BigInteger;
 import java.util.List;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig;
-import com.zimbra.common.auth.twofactor.CredentialConfig;
-import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig.CodeLength;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
+import com.zimbra.common.auth.twofactor.CredentialConfig;
 import com.zimbra.common.auth.twofactor.CredentialConfig.Encoding;
+import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /** Tests all test vectors listed at https://tools.ietf.org/html/rfc6238
  *
@@ -22,6 +24,11 @@ import com.zimbra.common.service.ServiceException;
  */
 public class TestTOTPAuthenticator {
     private static long[] timestamps = {59L, 1111111109L, 1111111111L, 1234567890L, 2000000000L, 20000000000L};
+
+    @BeforeClass
+    public void init() throws Exception {
+        MailboxTestUtil.initProvisioning();
+    }
 
     @Test
     public void testSHA1() throws ServiceException {
