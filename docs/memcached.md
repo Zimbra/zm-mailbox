@@ -49,7 +49,7 @@ Enable use of memcached:
 ```
 $ cd ZimbraServer
 $ ant reset-all
-$ zmprov ms `zmhostname` zimbraMemcachedClientServerList localhost
+$ zmprov ms `zmhostname` zimbraMemcachedClientServerList localhost:11211
 $ jetty restart
 ```
 
