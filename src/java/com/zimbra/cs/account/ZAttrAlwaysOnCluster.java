@@ -351,6 +351,78 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
+     * Timeout in milliseconds before retrying failed convert URLs.
+     *
+     * @return zimbraConvertPoolTimeout, or -1 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2059)
+    public int getConvertPoolTimeout() {
+        return getIntAttr(Provisioning.A_zimbraConvertPoolTimeout, -1);
+    }
+
+    /**
+     * Timeout in milliseconds before retrying failed convert URLs.
+     *
+     * @param zimbraConvertPoolTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2059)
+    public void setConvertPoolTimeout(int zimbraConvertPoolTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConvertPoolTimeout, Integer.toString(zimbraConvertPoolTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout in milliseconds before retrying failed convert URLs.
+     *
+     * @param zimbraConvertPoolTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2059)
+    public Map<String,Object> setConvertPoolTimeout(int zimbraConvertPoolTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConvertPoolTimeout, Integer.toString(zimbraConvertPoolTimeout));
+        return attrs;
+    }
+
+    /**
+     * Timeout in milliseconds before retrying failed convert URLs.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2059)
+    public void unsetConvertPoolTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConvertPoolTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout in milliseconds before retrying failed convert URLs.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2059)
+    public Map<String,Object> unsetConvertPoolTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConvertPoolTimeout, "");
+        return attrs;
+    }
+
+    /**
      * time object was created
      *
      * <p>Use getCreateTimestampAsString to access value as a string.
