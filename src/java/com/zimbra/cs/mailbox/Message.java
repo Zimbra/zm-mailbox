@@ -1188,14 +1188,21 @@ public class Message extends MailItem {
                             || (ICalTok.PUBLISH.equals(methodTok) && getAccount().getBooleanAttr(
                                     Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, false))) {
                         if (status.autoAddNew) {
-                            int flags = 0;
-                            // int flags = Flag.BITMASK_INDEXING_DEFERRED;
-                            // getMailbox().incrementIndexDeferredCount(1);
-                            int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
-                            status.calItem = getMailbox().createCalendarItem(defaultFolder, flags, null, cur.getUid(), pm,
-                                    cur, null);
-                            calItemIsNew = true;
-                            status.calItemFolderId = status.calItem.getFolderId();
+                            if (getMailbox().getAccount().sameAccount(cur.getOrganizerAccount())) {
+                                // Bug 100456 ZCO sends out invites before adding a calendar entry.  If server adds
+                                // Calendar entry and ZCO sees that before creating its entry, ZCO gets confused.
+                                LOG.info("Mailbox %d Msg %d Don't create ORGANIZER calendar item for Invite %s",
+                                        getMailboxId(), getId(), method);
+                            } else {
+                                int flags = 0;
+                                // int flags = Flag.BITMASK_INDEXING_DEFERRED;
+                                // getMailbox().incrementIndexDeferredCount(1);
+                                int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
+                                status.calItem = getMailbox().createCalendarItem(
+                                        defaultFolder, flags, null, cur.getUid(), pm, cur, null);
+                                calItemIsNew = true;
+                                status.calItemFolderId = status.calItem.getFolderId();
+                            }
                         }
                     } else {
                         LOG.info("Mailbox %d Message %d SKIPPING Invite %s b/c no CalendarItem could be found",
