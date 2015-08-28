@@ -42928,6 +42928,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * number of consecutive failed second factor login attempts until an
+     * account is locked out
+     *
+     * @return zimbraTwoFactorAuthLockoutMaxFailures, or 10 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2060)
+    public int getTwoFactorAuthLockoutMaxFailures() {
+        return getIntAttr(Provisioning.A_zimbraTwoFactorAuthLockoutMaxFailures, 10);
+    }
+
+    /**
+     * number of consecutive failed second factor login attempts until an
+     * account is locked out
+     *
+     * @param zimbraTwoFactorAuthLockoutMaxFailures new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2060)
+    public void setTwoFactorAuthLockoutMaxFailures(int zimbraTwoFactorAuthLockoutMaxFailures) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthLockoutMaxFailures, Integer.toString(zimbraTwoFactorAuthLockoutMaxFailures));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of consecutive failed second factor login attempts until an
+     * account is locked out
+     *
+     * @param zimbraTwoFactorAuthLockoutMaxFailures new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2060)
+    public Map<String,Object> setTwoFactorAuthLockoutMaxFailures(int zimbraTwoFactorAuthLockoutMaxFailures, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthLockoutMaxFailures, Integer.toString(zimbraTwoFactorAuthLockoutMaxFailures));
+        return attrs;
+    }
+
+    /**
+     * number of consecutive failed second factor login attempts until an
+     * account is locked out
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2060)
+    public void unsetTwoFactorAuthLockoutMaxFailures() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthLockoutMaxFailures, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of consecutive failed second factor login attempts until an
+     * account is locked out
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2060)
+    public Map<String,Object> unsetTwoFactorAuthLockoutMaxFailures(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthLockoutMaxFailures, "");
+        return attrs;
+    }
+
+    /**
      * number of scratch codes to generate for two-factor auth
      *
      * @return zimbraTwoFactorAuthNumScratchCodes, or 10 if unset
