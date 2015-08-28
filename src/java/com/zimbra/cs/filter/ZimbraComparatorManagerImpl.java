@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2015 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -15,11 +15,6 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.filter;
-import java.util.Map;
-import org.apache.jsieve.comparators.Comparator;
-import org.apache.jsieve.ComparatorManager;
-import org.apache.jsieve.exception.LookupException;
-
 import static org.apache.jsieve.Constants.COMPARATOR_ASCII_CASEMAP_NAME;
 import static org.apache.jsieve.Constants.COMPARATOR_OCTET_NAME;
 
@@ -28,15 +23,19 @@ import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import com.zimbra.common.util.ZimbraLog;
+import org.apache.jsieve.ComparatorManager;
+import org.apache.jsieve.comparators.Comparator;
+import org.apache.jsieve.exception.LookupException;
+
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 
 public class ZimbraComparatorManagerImpl implements ComparatorManager {
 
-    /** 
-     * Constructs a set containing the names of those comparisons for which <code>require</code> 
+    /**
+     * Constructs a set containing the names of those comparisons for which <code>require</code>
      * is not necessary before usage, according to RFC5228.
-     * See <a href='http://tools.ietf.org/html/rfc5228#section-2.7.3'>RFC5228, 2.7.3 Comparators</a>. 
+     * See <a href='http://tools.ietf.org/html/rfc5228#section-2.7.3'>RFC5228, 2.7.3 Comparators</a>.
      */
     public static CopyOnWriteArraySet<String> standardDefinedComparators() {
         final CopyOnWriteArraySet<String> results = new CopyOnWriteArraySet<String>();
@@ -44,11 +43,11 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
         results.add(COMPARATOR_ASCII_CASEMAP_NAME);
         return results;
     }
-    
+
     private final ConcurrentMap<String, String> classNameMap;
-    /** 
+    /**
      * The names of those comparisons for which <code>require</code> is not necessary before usage.
-     * See <a href='http://tools.ietf.org/html/rfc5228#section-2.7.3'>RFC5228, 2.7.3 Comparators</a>. 
+     * See <a href='http://tools.ietf.org/html/rfc5228#section-2.7.3'>RFC5228, 2.7.3 Comparators</a>.
      */
     private final CopyOnWriteArraySet<String> implicitlyDeclared;
 
@@ -59,7 +58,7 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
     public ZimbraComparatorManagerImpl(final ConcurrentMap<String, String> classNameMap) {
         this(classNameMap, standardDefinedComparators());
     }
-    
+
     /**
      * Constructor for ComparatorManager.
      * @param classNameMap indexes names of implementation classes against logical names, not null
@@ -75,13 +74,13 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
             if (className != null && !className.equals("")) {
                 this.classNameMap.put(COMPARATOR_ASCII_CASEMAP_NAME, className);
             }
-	    ZimbraLog.filter.info("[%s] = [%s]", 
+	    ZimbraLog.filter.info("[%s] = [%s]",
                 COMPARATOR_ASCII_CASEMAP_NAME, getClassName(COMPARATOR_ASCII_CASEMAP_NAME));
 	} catch (Exception e) {
 	    ZimbraLog.webclient.warn("exception classname: [%s] not found", COMPARATOR_ASCII_CASEMAP_NAME);
 	}
     }
-    
+
     /**
      * Is an explicit declaration in a <code>require</code> statement
      * unnecessary for this comparator?
@@ -89,6 +88,7 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
      * @return true when this comparator need not be declared by <core>require</code>,
      * false when any usage of this comparator must be declared in a <code>require</code> statement
      */
+    @Override
     public boolean isImplicitlyDeclared(final String comparatorName) {
         return implicitlyDeclared.contains(comparatorName);
     }
@@ -97,7 +97,7 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
      * <p>
      * Method lookup answers the class to which a Comparator name is mapped.
      * </p>
-     * 
+     *
      * @param name -
      *            The name of the Comparator
      * @return Class - The class of the Comparator
@@ -123,12 +123,13 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
      * Method newInstance answers an instance of the class to which a Comparator
      * name is mapped.
      * </p>
-     * 
+     *
      * @param name -
      *            The name of the Comparator
      * @return Class - The class of the Comparator
      * @throws LookupException
      */
+    @Override
     public Comparator getComparator(String name) throws LookupException {
         try {
             return (Comparator) lookup(name).newInstance();
@@ -144,7 +145,7 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
      * Method getClassName answers the name of the class to which a Comparator
      * name is mapped.
      * </p>
-     * 
+     *
      * @param name -
      *            The name of the Comparator
      * @return String - The name of the class
@@ -161,6 +162,7 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
     /**
      * @see ComparatorManager#isSupported(String)
      */
+    @Override
     public boolean isSupported(String name) {
         try {
             getComparator(name);
@@ -168,5 +170,21 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
         } catch (LookupException e) {
             return false;
         }
+    }
+
+    /**
+     * @see org.apache.jsieve.ComparatorManager#getExtensions()
+     */
+    @Override
+    public List<String> getExtensions() {
+        List<String> extensions = new ArrayList<String>(classNameMap.size());
+        for (String key : classNameMap.keySet())
+        {
+            if (!isImplicitlyDeclared(key))
+            {
+                extensions.add(key);
+            }
+        }
+        return extensions;
     }
 }

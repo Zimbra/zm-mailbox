@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.filter;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.jsieve.CommandManager;
@@ -32,6 +35,13 @@ import com.zimbra.cs.extension.ExtensionUtil;
  * </p>
  */
 public class ZimbraCommandManagerImpl implements CommandManager {
+
+    private static List<String> IMPLICITLY_DECLARED = Arrays.asList("if", "else", "elsif",
+            "require", "stop", "keep", "discard", "redirect");
+
+    private static boolean isImplicitlyDeclared(String name) {
+        return IMPLICITLY_DECLARED.contains(name);
+    }
 
     private final ConcurrentMap<String, String> classNameMap;
 
@@ -83,6 +93,7 @@ public class ZimbraCommandManagerImpl implements CommandManager {
      * @return Class - The class of the Command
      * @throws LookupException
      */
+    @Override
     public ExecutableCommand getCommand(String name) throws LookupException {
         try {
             return (ExecutableCommand) lookup(name).newInstance();
@@ -101,6 +112,7 @@ public class ZimbraCommandManagerImpl implements CommandManager {
      *            The Command name
      * @return boolean - True if the Command name is configured.
      */
+    @Override
     public boolean isCommandSupported(String name) {
         boolean isSupported = false;
         try {
@@ -128,6 +140,22 @@ public class ZimbraCommandManagerImpl implements CommandManager {
             throw new LookupException("Command named '" + name
                     + "' not mapped.");
         return className;
+    }
+
+    /**
+     * @see org.apache.jsieve.CommandManager#getExtensions()
+     */
+    @Override
+    public List<String> getExtensions() {
+        List<String> extensions = new ArrayList<String>(classNameMap.size());
+        for (String key : classNameMap.keySet())
+        {
+            if (!isImplicitlyDeclared(key))
+            {
+                extensions.add(key);
+            }
+        }
+        return extensions;
     }
 
 }
