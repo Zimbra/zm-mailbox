@@ -9053,7 +9053,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="2056" name="zimbraExportMaxDays" type="integer" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountInfo,accountCosDomainInherited,domainInherited" since="8.7.0,9.0.0">
-  <globalConfigValue>0</globalConfigValue>
+  <globalConfigValue>0</globalConfigValue>s
   <defaultCOSValue>0</defaultCOSValue>
   <desc>Maximum period in days for export, including start and end date. No limit if set to non-positive integer or unset.</desc>
 </attr>
@@ -9070,6 +9070,15 @@ TODO: delete them permanently from here
 <attr id="2059" name="zimbraConvertPoolTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.7.0,9.0.0">
   <globalConfigValue>60000</globalConfigValue>
   <desc>Timeout in milliseconds before retrying failed convert URLs.</desc>
+</attr>
+
+<attr id="2060" name="zimbraTwoFactorAuthLockoutMaxFailures" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.7.0,9.0.0">
+  <defaultCOSValue>10</defaultCOSValue>
+  <desc>number of consecutive failed second factor login attempts until an account is locked out</desc>
+</attr>
+
+<attr id="2061" name="zimbraTwoFactorAuthLockoutFailureTime" type="gentime" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" since="8.7.0,9.0.0">
+  <desc>this attribute contains the timestamps of each of the consecutive second factor authentication failures made on an account</desc>
 </attr>
 
 </attrs>

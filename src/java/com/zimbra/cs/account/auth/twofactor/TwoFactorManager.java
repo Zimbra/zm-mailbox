@@ -525,7 +525,7 @@ public class TwoFactorManager {
 
     private void failedLogin() throws ServiceException {
         LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(Provisioning.getInstance(), account);
-        lockoutPolicy.failedLogin();
+        lockoutPolicy.failedSecondFactorLogin();
     }
 
     public static class TwoFactorPasswordChange extends ChangePasswordListener {
