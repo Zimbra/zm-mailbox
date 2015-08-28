@@ -15365,6 +15365,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTwoFactorAuthLastReset = "zimbraTwoFactorAuthLastReset";
 
     /**
+     * this attribute contains the timestamps of each of the consecutive
+     * second factor authentication failures made on an account
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2061)
+    public static final String A_zimbraTwoFactorAuthLockoutFailureTime = "zimbraTwoFactorAuthLockoutFailureTime";
+
+    /**
+     * number of consecutive failed second factor login attempts until an
+     * account is locked out
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2060)
+    public static final String A_zimbraTwoFactorAuthLockoutMaxFailures = "zimbraTwoFactorAuthLockoutMaxFailures";
+
+    /**
      * number of scratch codes to generate for two-factor auth
      *
      * @since ZCS 8.7.0,9.0.0
