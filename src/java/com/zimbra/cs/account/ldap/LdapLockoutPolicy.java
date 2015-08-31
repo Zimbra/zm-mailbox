@@ -194,17 +194,17 @@ public class LdapLockoutPolicy {
 
             String currentFailure = LdapDateUtil.toGeneralizedTime(new Date());
             // need to toss out the oldest if we are at our limit.
-            boolean removeOldest = mFailures.length == mMaxFailures && mFailuresToRemove == null;
+            boolean removeOldest = mFailures.length >= mMaxFailures && mFailuresToRemove == null;
             if (removeOldest) {
                 int i, j = 0;
-                for (i=1; i < mFailures.length; i++) {
+                for (i=0; i < mFailures.length; i++) {
                     // remove oldest iif the one we are adding isn't already in, otherwise we
                     // are effectively removing one without adding another
                     if (mFailures[i].equalsIgnoreCase(currentFailure)) {
                         removeOldest = false;
                         break;
                     }
-                    if (mFailures[i].compareTo(mFailures[j]) < 0) {
+                    if (i > 0 && mFailures[i].compareTo(mFailures[j]) < 0) {
                         j = i;
                     }
                 }
