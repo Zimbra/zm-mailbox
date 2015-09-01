@@ -1,56 +1,54 @@
-------------------------------------------------------------
-GOALS/CONCEPTS
-------------------------------------------------------------
-0) we have too many ways of getting at data (content, ical, rss, etc), we have:
+## GOALS/CONCEPTS
 
-  get an attachment: 
+1. we have too many ways of getting at data (content, ical, rss, etc), we have:
 
-    http://{server}/service/content/get?id=544&part=2
+   get an attachment:
 
-  get the calendar as ical: 
+       http://{server}/service/content/get?id=544&part=2
 
-    http://{server}/service/ical/cal.ics  
+   get the calendar as ical:
 
-  get an RSS feed ("is:unread inbox" by default):
+       http://{server}/service/ical/cal.ics
 
-    http://{server}/service/rss/index.rss[?query=...]
+   get an RSS feed ("is:unread inbox" by default):
 
-  get the contacts (all contacts not in trash):
+       http://{server}/service/rss/index.rss[?query=...]
 
-    http://{server}/service/csv/contacts.csv
+   get the contacts (all contacts not in trash):
 
-  We'll also be adding calendar free/busy and public folders/documents.
+       http://{server}/service/csv/contacts.csv
 
-  We should unify all these into a single access mechanism with consistent naming.
+   We'll also be adding calendar free/busy and public folders/documents.
 
-  When you toss in the ability to request that for another account as well things
+   We should unify all these into a single access mechanism with consistent naming.
+
+   When you toss in the ability to request that for another account as well things
   get ugly.
 
-1) everything item should be addressable using a clean, REST URL format
+2. everything item should be addressable using a clean, REST URL format
 
-2) Should have user-friendly URLs for humans consumption, as well 
+3. Should have user-friendly URLs for humans consumption, as well
    as low-level ID-driven URLs for use within programs (web client references to
    attachemnts, etc).
 
-3) Should be able to request different "flavors" for content. i.e., XML, JSON,
-   ICS, RSS/ATOM, RDF, HTML, CSV, microformats, etc. The flavor will be based 
-   on the "fmt" query param. "flavor" is a term used in articles on REST, 
+4. Should be able to request different "flavors" for content. i.e., XML, JSON,
+   ICS, RSS/ATOM, RDF, HTML, CSV, microformats, etc. The flavor will be based
+   on the "fmt" query param. "flavor" is a term used in articles on REST,
    and basically means MIME content-type. If an explicit flavor is not requested,
    then the default for a given type will be used.
 
    folders in our system have a "hint" for which view to use to display the folder's
    contents. We should use that hint to determine the default flavor for a folder.
 
-4) all items should minimally have an XML and JSON repsentation, ideally using 
+5. all items should minimally have an XML and JSON repsentation, ideally using
    our existing formats, though we might want to re-examine them and/or have different
    views for those types.
 
-5) we should design this with "publishing" and "public" folders/wiki in mind
+6. we should design this with "publishing" and "public" folders/wiki in mind
 
-------------------------------------------------------------
-URL
-------------------------------------------------------------
+## URL
 
+```
    http://server/home/[~][{username}]/[{folder}]?[{query-params}]
           fmt={ics, csv, etc}
           id={item-id}
@@ -174,61 +172,58 @@ URL
 
               timeout=mscec update brower client with a text newline to prevent
                   upload timeouts
-                 
-              nohierarchy=1 do not include the target folder's parent hierarchy 
 
-------------------------------------------------------------
-EXAMPLES
-------------------------------------------------------------
+              nohierarchy=1 do not include the target folder's parent hierarchy
+```
+
+## EXAMPLES
 
 There are two primary formats, one using a folder, and one using a mail item id.
 
-http://server/home/[~]{account-name}/{folder-path}    // path to a folder 
-http://server/home/[~]{account-name}/?id={item-id}    // a mail item id
+    http://server/home/[~]{account-name}/{folder-path}    // path to a folder
+    http://server/home/[~]{account-name}/?id={item-id}    // a mail item id
 
-A single ~ is allowed and references the authenticated user accessing the data. 
+A single `~` is allowed and references the authenticated user accessing the data.
 
 Some examples:
 
-/home/roland/inbox.rss                    // RSS feed of inbox
-/home/roland/inbox.xml                    // Zimbra XML representation of inbox
-/home/roland/inbox.zip                    // A ZIP file of all messages in the inbox folder
-
-/home/roland/contacts                     // CSV view of contacts folder
-/home/roland/contacts?fmt=json            // JSON view of contacts folder
-
-/home/roland/calendars                    // ICS view of calendar
-/home/janie/holidays                      // Janie's holidays calendar
-/home/roland/calendar/project.html        // html view of calendar/projects calendar
-/home/roland/calendar.atom                // atom feed of calendar  (-7/+7 days by default)
-/home/roland/calendar.atom?start=0day&end=+2weeks    // atom feed of calendar for next two weeks
+  * /home/roland/inbox.rss                    // RSS feed of inbox
+  * /home/roland/inbox.xml                    // Zimbra XML representation of inbox
+  * /home/roland/inbox.zip                    // A ZIP file of all messages in the inbox folder
+  * /home/roland/contacts                     // CSV view of contacts folder
+  * /home/roland/contacts?fmt=json            // JSON view of contacts folder
+  * /home/roland/calendars                    // ICS view of calendar
+  * /home/janie/holidays                      // Janie's holidays calendar
+  * /home/roland/calendar/project.html        // html view of calendar/projects calendar
+  * /home/roland/calendar.atom                // atom feed of calendar  (-7/+7 days by default)
+  * /home/roland/calendar.atom?start=0day&end=+2weeks    // atom feed of calendar for next two weeks
 
 The second format is used to reference something by its mail item id:
 
-/home/roland/?id=10                       // ICS view of calendar, referenced via ID
-/home/roland/?id=945&fmt=vcf              // contact formatted as a vcard
-/home/roland/?id=100&part=2.3             // mime part 2.3 from message with id 100
-/home/roland/?id=100&part=1,4,5&fmt=zip   // zipfile containing mime parts 1, 4, and 5 from message with id 100
-/home/roland/?id=100&part=2&view=text     // Used for show original of a message attachment (part 2 in this case)
+  * /home/roland/?id=10                       // ICS view of calendar, referenced via ID
+  * /home/roland/?id=945&fmt=vcf              // contact formatted as a vcard
+  * /home/roland/?id=100&part=2.3             // mime part 2.3 from message with id 100
+  * /home/roland/?id=100&part=1,4,5&fmt=zip   // zipfile containing mime parts 1, 4, and 5 from message with id 100
+  * /home/roland/?id=100&part=2&view=text     // Used for show original of a message attachment (part 2 in this case)
                                           // To avoid problems with browsers, given Content-Type: text/plain
                                           // instead of message/rfc822
 
 When we support documents in a folder, we'd use the document's name as you'd expect:
 
-/home/smith/work/partner/authentication.doc
+  * /home/smith/work/partner/authentication.doc
 
 We should of course be able to convert attachments to HTML (via Verity) with this
 syntax:
 
-/home/roland/?id=564&part=4&view=html   // part 4 (which could be a word doc) in html
+  * /home/roland/?id=564&part=4&view=html   // part 4 (which could be a word doc) in html
 
 A list of files in a zip package:
 
-/home/smith/?fmt=zip&list=12345,22453    // a zip file containing two mail items
+  * /home/smith/?fmt=zip&list=12345,22453    // a zip file containing two mail items
 
-------------------------------------------------------------
-CALENDAR OPTIONS
-------------------------------------------------------------
+## CALENDAR OPTIONS
+
+```
 tz=timezone
 date=YYYYMMDD
 view=day|workWeek|week|month
@@ -244,54 +239,52 @@ color=defaultColor(0),
         pink(7),
         gray(8),
         orange(9);
+```
 
-
-------------------------------------------------------------
-SEARCHING
-------------------------------------------------------------
+## SEARCHING
 
 Since search is a big part of Zimbra, all item URLs should generally allow a search
 query to either gather all results, or constrain them. For example:
 
-/home/roland/inbox.rss
+    /home/roland/inbox.rss
 
 This would give back a simple RSS feed of all items in the inbox. To send back only
 unread, you'd do:
 
-/home/roland/inbox.rss?query="is:unread"
+    /home/roland/inbox.rss?query="is:unread"
 
 or:
 
-/home/roland/?fmt=rss&query="in:inbox is:unread"
+    /home/roland/?fmt=rss&query="in:inbox is:unread"
 
 We probably want to allow the same params that the SearchRequest soap command allows,
 to allow for paging, restricting what types of items are returned, etc:
 
- types="{types}" (done)
- 
- [limit="..."] 
- [offset="..."]
- [sortBy="{sort-by}"]
- [groupBy="{group-by}"] 
+```
+types="{types}" (done)
 
- [cursorId="prevId"]
+[limit="..."]
+[offset="..."]
+[sortBy="{sort-by}"]
+[groupBy="{group-by}"]
 
-------------------------------------------------------------
-ACCESSING DATA ACROSS Zimbra DOMAINs
-------------------------------------------------------------
+[cursorId="prevId"]
+```
 
-1. Intra-domain (authoratative domains within a Zimbra install)
+## ACCESSING DATA ACROSS Zimbra DOMAINs
+
+### 1. Intra-domain (authoratative domains within a Zimbra install)
 
 to access items across domains within a Zimra install, specify an @ in the mailbox
 name:
 
-/home/schemers@zimbra.com/calendar
-/home/joer@zombo.com/calendar
+    /home/schemers@zimbra.com/calendar
+    /home/joer@zombo.com/calendar
 
 Both zimbra.com and zombo.com are part of the same Zimbra install, and thus accounts
 and mailbox locations on both can be resolved internally.
 
-2. Inter-domain
+### 2. Inter-domain
 
 To access items across domains that span Zimbra installations, use the
 exact same naming convention.
@@ -299,66 +292,64 @@ exact same naming convention.
 For example, if companyA installs Zimbra, and companyB installs Zimbra, someone at
 companyA should be able to reference an item from companyB using the same syntax:
 
-/home/john.smith@companyB.com/shared/contacts
+    /home/john.smith@companyB.com/shared/contacts
 
 this can be accomplished with DNS SRV records. For example, companyB.com could
 publish a SRV record for _zimbra._tcp:
 
-_zimbra._tcp.companyB.com. SRV   10  5   80      zimbra.companyB.com
+    _zimbra._tcp.companyB.com. SRV   10  5   80      zimbra.companyB.com
 
 The Zimbra proxy at companyA can then detect that companyB.com is not a local Zimbra
 domain, and do a DNS lookup for:
 
-_zimbra._tcp.companyB.com
+    _zimbra._tcp.companyB.com
 
 And get back "zimbra.companyB.com" as the name of the Zimbra sever to
 direct the request to. It would then do the equivalent of:
 
-http://zimbra.companyB.com/home/john.smith@companyB.com/shared/contacts
+    http://zimbra.companyB.com/home/john.smith@companyB.com/shared/contacts
 
-------------------------------------------------------------
-ISSUES/NOTES
-------------------------------------------------------------
+## ISSUES/NOTES
 
-1. how do you specify a folder and all sub folders recursively?
+1. How do you specify a folder and all sub folders recursively?
 
-  For example, I can see wanting to specify:
+   For example, I can see wanting to specify:
 
-  /home/roland/sales?fmt=zip                 // the sales folder only
-  /home/roland/sales?fmt=zip?recursive=1     // sales folder and all recursive
-  /home/roland/sales/*?fmt=zip               // all folders in sales (not including sales)
-  /home/roland/sales/*?fmt=zip?recursive=1   //  same as previous, but recursive
+       /home/roland/sales?fmt=zip                 // the sales folder only
+       /home/roland/sales?fmt=zip?recursive=1     // sales folder and all recursive
+       /home/roland/sales/*?fmt=zip               // all folders in sales (not including sales)
+       /home/roland/sales/*?fmt=zip?recursive=1   //  same as previous, but recursive
 
 2. user-friendly item "ids"? It would be nice to have user-friendly names 
    for items inside of a folder, such as (+ is url-encoded form of a space):
 
-  /home/roland/calendar/Staff+Meeting
-  /home/roland/contacts/Roland+Schemers
-  /home/roland/inbox/Important+Meeting
+       /home/roland/calendar/Staff+Meeting
+       /home/roland/contacts/Roland+Schemers
+       /home/roland/inbox/Important+Meeting
 
-  Exchange allows this type of naming, need to determine how/if we'd want to do
+   Exchange allows this type of naming, need to determine how/if we'd want to do
   this, and how to deal with collisions like it does. 
   
-  Might need to come up with a per-item query-param string, or use search:
+   Might need to come up with a per-item query-param string, or use search:
   
-  /home/roland/contacts/?query="Roland Schemers"
+       /home/roland/contacts/?query="Roland Schemers"
 
 3. there will probably by mail-item specific query params, like duration for 
    calendars, picking alternate views for .html flavors, etc. Should try and
    standardize where possible. For exmaple:
 
-   /home/roland/calendar?start=20051225&fmt=hmtl&view=week
+       /home/roland/calendar?start=20051225&fmt=hmtl&view=week
 
 4. calendar free/busy chould also be exported via this mechanism:
 
-   /home/schemers/?fmt=vfb
+       /home/schemers/?fmt=vfb
 
    specifying it on the "root" folder would get the free/busy for all calendars that
    are marked to be included in free/busy.
 
 5. initially we might not support things like:
 
-   /home/roland/inbox?fmt=csv
+       /home/roland/inbox?fmt=csv
 
    but ideally we'd emit a simple CSV format. We could define to be something like a
    separate column for each header, and specially named columns for the "body" 
@@ -371,75 +362,61 @@ ISSUES/NOTES
 
 7. When using the extension-style format syntax:
 
-   /home/roland/inbox.rss
-   
-   vs:
-   
-   /home/roland/inbox?fmt=rss
+       /home/roland/inbox.rss
 
-  If there is a folder/document that is actually named "inbox.rss", then it takes precedence
-  over the "inbox" folder. So you'll have to explicitly use the fmt query parameter to 
+   vs:
+
+       /home/roland/inbox?fmt=rss
+
+   If there is a folder/document that is actually named "inbox.rss", then it takes precedence
+  over the "inbox" folder. So you'll have to explicitly use the fmt query parameter to
   disambiguate between the two:
 
-   /home/roland/inbox?fmt=rss
-   /home/roland/inbox.rss?fmt=zip
-   
-------------------------------------------------------------
-REFERENCES
-------------------------------------------------------------
-REST (Representational State Transfer)
+       /home/roland/inbox?fmt=rss
+       /home/roland/inbox.rss?fmt=zip
 
-  http://www.xfront.com/REST.html
+## REFERENCES
 
-Building Web Services the REST Way
+  * [REST (Representational State Transfer)](http://www.xfront.com/REST.html)
+  * [Building Web Services the REST Way](http://www.xfront.com/REST-Web-Services.html)
+  * [Meerkat: An Open Service API](http://www.oreillynet.com/pub/a/rss/2000/05/09/meerkat_api.html)
+  * [REST and the Real World](http://webservices.xml.com/pub/a/ws/2002/02/20/rest.html?page=1)
+  * [Microformats](http://microformats.org/)
+  * [Hula URLs](http://www.hula-project.org/Hula_URLs)
 
-  http://www.xfront.com/REST-Web-Services.html
+## APPENDIX A: URL forms
 
-Meerkat: An Open Service API
-
-  http://www.oreillynet.com/pub/a/rss/2000/05/09/meerkat_api.html
-
-REST and the Real World
- 
-  http://webservices.xml.com/pub/a/ws/2002/02/20/rest.html?page=1
-
-Microformats
-
-  http://microformats.org/
-
-Hula URLs
-
-  http://www.hula-project.org/Hula_URLs
-
-------------------------------------------------------------
-APPENDIX A: URL forms
-------------------------------------------------------------
 Here various ways to access john.doe@zimbra.com's calendar:
 
-shortcut to yourself: 
-  /home/~/calendar
-  /home/~/?id=10       // id 10 is always the calendar folder
+shortcut to yourself:
 
-explicit account: 
-   /~john.doe/calendar
-   /home/john.doe/calendar
-   /home/john.doe/?id=10
-   /home/john.doe@zimbra.com/calendar
-   /home/34cc4086-801e-42a0-a67a-ea93c1590c4e/?id=10
-   
-------------------------------------------------------------
-APPENDIX B: POST Data with CSRF token
-------------------------------------------------------------
-For POST request which is currently supported for Import in ZWC the CSRF token is expected 
+    /home/~/calendar
+    /home/~/?id=10       // id 10 is always the calendar folder
+
+explicit account:
+
+    /~john.doe/calendar
+    /home/john.doe/calendar
+    /home/john.doe/?id=10
+    /home/john.doe@zimbra.com/calendar
+    /home/34cc4086-801e-42a0-a67a-ea93c1590c4e/?id=10
+
+## APPENDIX B: POST Data with CSRF token
+
+For POST request which is currently supported for Import in ZWC the CSRF token is expected
 as a HTTP header
-X-Zimbra-Csrf-Token
+`X-Zimbra-Csrf-Token`
 or as a form field
-csrfToken
+`csrfToken`.
 
+```
 ------Example with Form field ---
 Content-Disposition: form-data; name="csrfToken"
 0_2f9a602552d8be83930b8e061718a5b56eabbc87
+```
 
+```
 ----Example with Http Header----
 Referer http://localhost:7070/
 X-Zimbra-Csrf-Token 0_b9c88c641becf7943e7c9af7e569ea911cf8b7a0
+```

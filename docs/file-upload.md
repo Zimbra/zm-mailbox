@@ -84,35 +84,37 @@ To see the different responses, cut and paste this html and give it a shot:
 
 A request at the http level looks something like this:
 
-
-POST /service/upload HTTP/1.1 
-Cookie: ZM_AUTH_TOKEN=0_6029... 
-Content-Type: multipart/form-data; boundary=SKhAvar1nat0rt3mp 
-Host: localhost:7070 
-Content-Length: 338 
-Connection: Keep-Alive 
+```
+POST /service/upload HTTP/1.1
+Cookie: ZM_AUTH_TOKEN=0_6029...
+Content-Type: multipart/form-data; boundary=SKhAvar1nat0rt3mp
+Host: localhost:7070
+Content-Length: 338
+Connection: Keep-Alive
 Cache-Control: no-cache
-Pragma: no-cache 
+Pragma: no-cache
 
---SKhAvar1nat0rt3mp 
+--SKhAvar1nat0rt3mp
 Content-Disposition: form-data; name="requestId"
 
-lsrpc32-client-id 
---SKhAvar1nat0rt3mp 
-Content-Disposition: form-data; name="lsms32uc"; filename="bla.bla" 
-Content-Type: application/octet-stream 
-Content-Transfer-Encoding: binary 
+lsrpc32-client-id
+--SKhAvar1nat0rt3mp
+Content-Disposition: form-data; name="lsms32uc"; filename="bla.bla"
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: binary
 
 ...binary stuff goes here...
---SKhAvar1nat0rt3mp-- 
-
+--SKhAvar1nat0rt3mp--
+```
 
 And the response looks like this:
 
+```
 HTTP/1.1 200 OK
 Content-Type: text/html; charset=utf-8
 Content-Length: 153
 Date: Wed, 22 Jun 2005 01:35:08 GMT
-Server: Apache-Coyote/1.1 
+Server: Apache-Coyote/1.1
 
-<html><head></head><body onload="window.parent._uploadManager.loaded(200,'lsrpc32-client-id','ddca28ef-e2bd-11d9-a5e5-c7a05d86b154');"> 
+<html><head></head><body onload="window.parent._uploadManager.loaded(200,'lsrpc32-client-id','ddca28ef-e2bd-11d9-a5e5-c7a05d86b154');">
+```

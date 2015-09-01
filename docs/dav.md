@@ -7,7 +7,7 @@ There are two primary applications using DAV with Zimbra server.
 
 The main DAV URL for users mailbox is
 
-http://<server>/dav/<username>
+    http://<server>/dav/<username>
 
 Most of modern operating system now comes with DAV support built in.  
 On Windows XP, File Explorer can be used to access DAV repository.
@@ -38,7 +38,7 @@ Sunbird, Gnome Evolution, and OSAF Chandler.
 
 iCal supports CalDAV principal concept, and the URL to use is simply
 
-http://<server>
+    http://<server>
 
 Using the supplied username and password it can discover the user's
 calendar.
@@ -47,17 +47,16 @@ For other clients, users may need to
 add "Calendar" at the end of the URL to point to the calendar
 folder.  e.g.
 
-http://<server>/dav/<username>/Calendar
+    http://<server>/dav/<username>/Calendar
 
 iCal on Tiger and older release only support ics import and export,
 not the full CalDAV.  The ics import mode is not compatible with
 CalDAV at all, and the usage is completely different.  In order
-to use ics import mode, first the user needs to export the 
-calendar folder as ics, save to a file, then import the file into 
-the target calendar application.  Using ics import mode, the 
-changes made to the 3rd party calendar is saved as a local copy, 
+to use ics import mode, first the user needs to export the
+calendar folder as ics, save to a file, then import the file into
+the target calendar application.  Using ics import mode, the
+changes made to the 3rd party calendar is saved as a local copy,
 and does not automatically synchronize with Zimbra server.  When
 using CalDAV client, the changes are immediately saved to the server,
 unless the client is run in the offline mode.  There is no manual
 file based synchronization needed as with ics import mode.
-
