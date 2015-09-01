@@ -191,12 +191,17 @@ public final class Threader {
         List<String> hashes = new ArrayList<String>(3);
         // technically shouldn't be shorter than 22 bytes, but always take 1 pass just in case
         int length = tindex.length;
+        boolean addDataSource = mbox.getAccount().isDisableCrossAccountConversationThreading();
         do {
             try {
                 MessageDigest md = MessageDigest.getInstance("SHA1");
                 md.update((byte) 1);  md.update((byte) 3);
+                if (addDataSource && pm.getDataSourceId() != null) {
+                    md.update(pm.getDataSourceId().getBytes());
+                }
                 md.update(tindex, 0, length);
-                hashes.add(ByteUtil.encodeFSSafeBase64(md.digest()));
+                String hash = ByteUtil.encodeFSSafeBase64(md.digest());
+                hashes.add(hash);
             } catch (NoSuchAlgorithmException e) {
                 return Collections.emptyList();
             }
