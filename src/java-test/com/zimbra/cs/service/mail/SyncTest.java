@@ -135,7 +135,7 @@ public class SyncTest {
 
         mbox.beginTrackingSync();
         acct.setMailThreadingAlgorithm(MailThreadingAlgorithm.subject);
-        int currTime = (int) System.currentTimeMillis() / 1000;
+        int currTime = (int) (System.currentTimeMillis() / 1000);
         long before60min = currTime - (60 * Constants.SECONDS_PER_MINUTE);
         long before45min = currTime - (45 * Constants.SECONDS_PER_MINUTE);
         long before30min = currTime - (30 * Constants.SECONDS_PER_MINUTE);
@@ -388,14 +388,14 @@ public class SyncTest {
         token = syncRes.getToken();
 
         // Add 3 messages 1 with current date and 2 past date.
-        int currTime = (int) System.currentTimeMillis() / 1000;
-        int before60min = currTime - (60 * Constants.SECONDS_PER_MINUTE);
-        int before45min = currTime - (45 * Constants.SECONDS_PER_MINUTE);
+        int currTime = (int) (System.currentTimeMillis() / 1000);
+        long before60min = currTime - (60 * Constants.SECONDS_PER_MINUTE);
+        long before45min = currTime - (45 * Constants.SECONDS_PER_MINUTE);
         TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "test1 x", before60min * 1000);
         TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "test2 x", before45min * 1000);
         mbox.addMessage(null, MailboxTestUtil.generateMessage("test3 x"), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
 
-        //Delta Sync without msgCutoff. should return all 3 added messages.
+           //Delta Sync without msgCutoff. should return all 3 added messages.
         request = new SyncRequest();
         request.setToken(token);
         request.setChangeLimit(5);
@@ -408,7 +408,7 @@ public class SyncTest {
         request = new SyncRequest();
         request.setToken(token);
         request.setChangeLimit(5);
-        request.setMsgCutoff(before45min -1);
+        request.setMsgCutoff(currTime - (46 * Constants.SECONDS_PER_MINUTE));
         response = new Sync().handle(JaxbUtil.jaxbToElement(request), context);
         syncRes = JaxbUtil.elementToJaxb(response);
         Assert.assertEquals(2, syncRes.getItems().size());
