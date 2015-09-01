@@ -174,8 +174,9 @@ public final class Threader {
      * @param includeParents  If {@code true}, includes the hashes for parent
      *                        messages in the returned {@code List}.  If {@code
      *                        false}, returns only this message's hash.
+     * @throws ServiceException
      * @see ThreadIndex */
-    private List<String> getThreadIndexHashes(boolean includeParents) {
+    private List<String> getThreadIndexHashes(boolean includeParents) throws ServiceException  {
         byte[] tindex = null;
         try {
             String header = pm.getMimeMessage().getHeader("Thread-Index", null);
