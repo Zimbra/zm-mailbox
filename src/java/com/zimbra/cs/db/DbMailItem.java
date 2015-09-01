@@ -115,6 +115,8 @@ public class DbMailItem {
 
     static final int RESULTS_STREAMING_MIN_ROWS = 10000;
 
+    static final int CI_DUMPSTER_FOLDER_ID   = 2;
+
     public static final int setMailboxId(PreparedStatement stmt, Mailbox mbox, int pos) throws SQLException {
         return setMailboxId(stmt, mbox.getId(), pos);
     }
@@ -5478,4 +5480,30 @@ public class DbMailItem {
         }
         return imapDeletedItems;
     }
+
+    public static Map<Integer,Integer> getDumpsterItemAndFolderId(Mailbox mbox, int lastSync)
+         throws ServiceException {
+               Map <Integer,Integer> id2folderMap = new HashMap<Integer,Integer>();
+               DbConnection conn = mbox.getOperationConnection();
+               PreparedStatement stmt = null;
+               ResultSet rs = null;
+               try {
+                   stmt = conn.prepareStatement("SELECT id, folder_id FROM " + getMailItemTableName(mbox, true) +
+                             " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? ");
+                    Db.getInstance().enableStreaming(stmt);
+                    int pos = 1;
+                    pos = setMailboxId(stmt, mbox, pos);
+                    stmt.setLong(pos++, lastSync);
+                    rs = stmt.executeQuery();
+                        while (rs.next()) {
+                          id2folderMap.put(rs.getInt(CI_ID), rs.getInt(CI_DUMPSTER_FOLDER_ID));
+                        }
+                    } catch (SQLException e) {
+                       throw ServiceException.FAILURE("fetching item and folder Id from mail_item_dumpster since modseq: " + lastSync, e);
+                   } finally {
+                        DbPool.closeResults(rs);
+                        DbPool.closeStatement(stmt);
+                   }
+               return id2folderMap;
+           }
 }

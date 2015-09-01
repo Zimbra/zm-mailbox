@@ -3614,6 +3614,23 @@ public class Mailbox {
         }
     }
 
+    public Map<Integer,Integer> getDumpsterItemAndFolderId(int lastSync) throws ServiceException {
+        lock.lock(false);
+        try {
+            boolean success = false;
+            try {
+                beginReadTransaction("getDumpsterItemAndFolderId", null);
+                Map<Integer,Integer> items = DbMailItem.getDumpsterItemAndFolderId(this, lastSync);
+                success = true;
+                return items;
+            } finally {
+                endTransaction(success);
+            }
+        } finally {
+            lock.release();
+        }
+    }
+
     public List<Folder> getModifiedFolders(final int lastSync) throws ServiceException {
         return getModifiedFolders(lastSync, MailItem.Type.UNKNOWN);
     }
