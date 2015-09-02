@@ -216,7 +216,7 @@ public class URLUtil {
         Selector<ServiceLocator.Entry> selector = null;
         try {
             selector = Zimbra.getAppContext().getBean(Selector.class);
-        } catch (NoClassDefFoundError e) {
+        } catch (Exception | NoClassDefFoundError e) {
             selector = ServiceLocator.SELECT_RANDOM;
         }
         return getAdminURL(serviceLocator, selector, healthyOnly);
