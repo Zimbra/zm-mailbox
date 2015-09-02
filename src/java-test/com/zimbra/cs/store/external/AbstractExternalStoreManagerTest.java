@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.store.external;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 
@@ -97,6 +98,40 @@ public abstract class AbstractExternalStoreManagerTest extends AbstractStoreMana
         Assert.assertTrue(file.exists());
 
         Assert.assertTrue("stream content = mime content", TestUtil.bytesEqual(mimeBytes, stream));
+    }
+
+    @Test
+    public void testExternalBlobIOByMailbox() throws Exception {
+        ParsedMessage pm = ThreaderTest.getRootMessage();
+        byte[] mimeBytes = TestUtil.readInputStream(pm.getRawInputStream());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        StoreManager sm = StoreManager.getInstance();
+        assert(sm instanceof ExternalBlobIO);
+
+        ExternalBlobIO extMgr = (ExternalBlobIO) sm;
+        ByteArrayInputStream bais = new ByteArrayInputStream(mimeBytes);
+        String locator = extMgr.writeStreamToStore(bais, mimeBytes.length, mbox);
+        InputStream read = extMgr.readStreamFromStore(locator, mbox);
+        byte[] readBytes = TestUtil.readInputStream(read);
+        Assert.assertArrayEquals(mimeBytes, readBytes);
+    }
+
+    @Test
+    public void testExternalBlobIOByMailboxData() throws Exception {
+        ParsedMessage pm = ThreaderTest.getRootMessage();
+        byte[] mimeBytes = TestUtil.readInputStream(pm.getRawInputStream());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        StoreManager sm = StoreManager.getInstance();
+        assert(sm instanceof ExternalBlobIO);
+
+        ExternalBlobIO extMgr = (ExternalBlobIO) sm;
+        ByteArrayInputStream bais = new ByteArrayInputStream(mimeBytes);
+        String locator = extMgr.writeStreamToStore(bais, mimeBytes.length, mbox.getData());
+        InputStream read = extMgr.readStreamFromStore(locator, mbox.getData());
+        byte[] readBytes = TestUtil.readInputStream(read);
+        Assert.assertArrayEquals(mimeBytes, readBytes);
     }
 
 }

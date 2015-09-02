@@ -86,7 +86,7 @@ public class SimpleStoreManager extends ExternalStoreManager {
 
     @Override
     public String writeStreamToStore(InputStream in, long actualSize, Mailbox mbox) throws IOException {
-        return writeStreamToStore(in, actualSize, mbox);
+        return writeStreamToStore(in, actualSize, mbox.getData());
     }
 
     @Override
