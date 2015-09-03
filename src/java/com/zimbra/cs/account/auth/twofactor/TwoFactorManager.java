@@ -56,10 +56,10 @@ public class TwoFactorManager {
     public TwoFactorManager(Account account, String acctNamePassedIn) throws ServiceException {
         this.account = account;
         this.acctNamePassedIn = acctNamePassedIn;
+        disableTwoFactorAuthIfNecessary();
         if (account.isFeatureTwoFactorAuthAvailable()) {
             loadCredentials();
         }
-        disableTwoFactorAuthIfNecessary();
     }
 
     private void disableTwoFactorAuthIfNecessary() throws ServiceException {
