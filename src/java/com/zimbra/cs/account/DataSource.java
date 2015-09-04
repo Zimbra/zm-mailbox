@@ -563,4 +563,6 @@ public class DataSource extends AccountProperty {
         System.out.println(enc);
         System.out.println(decryptData(dataSourceId, enc));
     }
+
+    public int getImapTrashFolderId() { return getIntAttr(Provisioning.A_zimbraDataSourceImapTrashFolderId, -1); }
 }

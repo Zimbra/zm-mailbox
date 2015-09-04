@@ -246,13 +246,8 @@ public class ItemAction extends MailDocumentHandler {
                 }
                 for (String dataSourceId: remoteTrashIds.keySet()) {
                     List<Integer> imapTrashIds = remoteTrashIds.get(dataSourceId);
-                    Integer imapTrashId = lookupImapTrashFolder(mbox, dataSourceId);
-                    ItemId iidImapTrash;
-                    if (imapTrashId != null) {
-                        iidImapTrash = new ItemId(mbox, imapTrashId);
-                    } else {
-                        iidImapTrash = iidTrash; //if IMAP trash folder cannot be found, move to local trash
-                    }
+                    Integer imapTrashId = getImapTrashFolder(mbox, dataSourceId);
+                    ItemId iidImapTrash = new ItemId(mbox, imapTrashId);
                     String imapTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, imapTrashIds, type, tcon, iidImapTrash).getResult();
                     if (!Strings.isNullOrEmpty(imapTrashResults)) {
                         trashResults.add(imapTrashResults);
@@ -367,16 +362,28 @@ public class ItemAction extends MailDocumentHandler {
         }
         return null;
     }
-    private Integer lookupImapTrashFolder(Mailbox mbox, String dsId) throws ServiceException {
+    private Integer getImapTrashFolder(Mailbox mbox, String dsId) throws ServiceException {
         DataSource ds = mbox.getAccount().getDataSourceById(dsId);
         if (ds.getType() == DataSourceType.imap) {
-            ImapFolderCollection folders = ImapFolder.getFolders(ds);
-            for (ImapFolder folder: folders) {
-                String name = folder.getRemoteId();
-                if (name.equalsIgnoreCase("trash")) {
-                    return folder.getItemId();
+            /* If RFC 6154 is supported, we know exactly what the remote trash folder is.
+             * If it's not supported, default to checking folder name.
+             * The remote folder can be called "Trash", or possibly something like [gmail]/Trash,
+             * So the plan B here is to check for these patterns. If nothing matches,
+             * fall back to local trash folder.
+             */
+            int folderId = ds.getImapTrashFolderId();
+            if (folderId < 0) {
+                ImapFolderCollection folders = ImapFolder.getFolders(ds);
+                for (ImapFolder folder: folders) {
+                    String name = folder.getRemoteId();
+                    if (name.equalsIgnoreCase("trash")
+                            || name.toLowerCase().endsWith("]/trash")) {
+                        folderId = folder.getItemId();
+                        break;
+                    }
                 }
             }
+            return folderId < 0 ? Mailbox.ID_FOLDER_TRASH : folderId;
         }
         return null;
     }

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.datasource.IOExceptionHandler;
 import com.zimbra.cs.datasource.MessageContent;
@@ -137,7 +139,17 @@ class ImapFolderSync {
             // Check local folder flags for consistency with remote folder
             localFolder.updateFlags(ld);
         }
+        updateImapTrashFolderId(ld);
         return tracker;
+    }
+
+    private void updateImapTrashFolderId(ListData ld) throws ServiceException {
+        Flags flags = ld.getFlags();
+        if (flags.isSet("\\Trash") && ds.getImapTrashFolderId() != localFolder.getId()) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraDataSourceImapTrashFolderId, localFolder.getId());
+            ds.getProvisioning().modifyDataSource(ds.getAccount(), ds.getId(), attrs);
+        }
     }
 
     /**
