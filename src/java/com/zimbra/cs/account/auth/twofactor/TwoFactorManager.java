@@ -50,10 +50,10 @@ public class TwoFactorManager {
 
     public TwoFactorManager(Account account) throws ServiceException {
         this.account = account;
+        disableTwoFactorAuthIfNecessary();
         if (account.isFeatureTwoFactorAuthAvailable()) {
             loadCredentials();
         }
-        disableTwoFactorAuthIfNecessary();
     }
 
     private void disableTwoFactorAuthIfNecessary() throws ServiceException {
