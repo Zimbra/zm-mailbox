@@ -39,12 +39,6 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.SystemUtil;
-import com.zimbra.cs.datasource.DataSourceManager;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import org.apache.commons.codec.binary.Hex;
 
 import com.google.common.base.Strings;
@@ -65,8 +59,10 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -159,6 +155,7 @@ import com.zimbra.cs.account.ldap.entry.LdapXMPPComponent;
 import com.zimbra.cs.account.ldap.entry.LdapZimlet;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
@@ -199,6 +196,9 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
@@ -3382,6 +3382,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private static final String ZMG_PROXY_ACCT_FOREIGN_PRINCIPAL_PREFIX = "zmgproxyacct:";
 
+    @Override
     public Pair<Account, Boolean> autoProvZMGProxyAccount(String emailAddr, String password) throws ServiceException {
         Account acct = getAccountByForeignPrincipal(ZMG_PROXY_ACCT_FOREIGN_PRINCIPAL_PREFIX + emailAddr);
         if (acct != null) {
@@ -9875,17 +9876,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             try {
                 // modify attrs on the mail entry
                 modifyAttrsInternal(group, zlc, attrs);
+                if (group.isIsACLGroup()) {
+                    // modify attrs on the units (which are only present when group is an ACL Group)
+                    String dynamicUnitNewLocal = dynamicGroupDynamicUnitLocalpart(newLocal);
+                    String dynamicUnitNewEmail = dynamicUnitNewLocal + "@" + newDomain;
+                    String dynamicUnitDN = mDIT.dynamicGroupUnitNameToDN(DYNAMIC_GROUP_DYNAMIC_UNIT_NAME, newDn);
 
-                // modify attrs on the units
-                String dynamicUnitNewLocal = dynamicGroupDynamicUnitLocalpart(newLocal);
-                String dynamicUnitNewEmail = dynamicUnitNewLocal + "@" + newDomain;
-                String dynamicUnitDN = mDIT.dynamicGroupUnitNameToDN(
-                        DYNAMIC_GROUP_DYNAMIC_UNIT_NAME, newDn);
-
-                ZMutableEntry entry = LdapClient.createMutableEntry();
-                entry.setAttr(A_mail, dynamicUnitNewEmail);
-                entry.setAttr(A_zimbraMailAlias, dynamicUnitNewEmail);
-                zlc.replaceAttributes(dynamicUnitDN, entry.getAttributes());
+                    ZMutableEntry entry = LdapClient.createMutableEntry();
+                    entry.setAttr(A_mail, dynamicUnitNewEmail);
+                    entry.setAttr(A_zimbraMailAlias, dynamicUnitNewEmail);
+                    zlc.replaceAttributes(dynamicUnitDN, entry.getAttributes());
+                }
 
             } catch (ServiceException e) {
                 ZimbraLog.account.error("dynamic group renamed to " + newLocal +
