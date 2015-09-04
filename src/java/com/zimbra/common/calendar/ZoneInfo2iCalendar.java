@@ -43,12 +43,34 @@ import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import net.fortuna.ical4j.data.CalendarBuilder;
+import net.fortuna.ical4j.data.ParserException;
+import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.DateTime;
+import net.fortuna.ical4j.model.ParameterList;
+import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.PropertyList;
+import net.fortuna.ical4j.model.UtcOffset;
+import net.fortuna.ical4j.model.component.Daylight;
+import net.fortuna.ical4j.model.component.Observance;
+import net.fortuna.ical4j.model.component.Standard;
+import net.fortuna.ical4j.model.component.VTimeZone;
+import net.fortuna.ical4j.model.property.DtStart;
+import net.fortuna.ical4j.model.property.LastModified;
+import net.fortuna.ical4j.model.property.RRule;
+import net.fortuna.ical4j.model.property.TzId;
+import net.fortuna.ical4j.model.property.TzName;
+import net.fortuna.ical4j.model.property.TzOffsetFrom;
+import net.fortuna.ical4j.model.property.TzOffsetTo;
+import net.fortuna.ical4j.model.property.XProperty;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.calendar.ZoneInfoParser.Day;
 import com.zimbra.common.calendar.ZoneInfoParser.Day.DayType;
 import com.zimbra.common.calendar.ZoneInfoParser.Rule;
@@ -259,12 +281,29 @@ public class ZoneInfo2iCalendar {
         return addTimes(t1, t2neg);
     }
 
-    private static String toVTimezonePart(int hintYear, RuleLine rline, boolean isStandard,
+    private static DtStart msOutlookStyleDtStart = null;
+    private static DtStart getDtStart(String dateString) {
+        DtStart dtStart = null;
+        try {
+            dtStart = new DtStart(dateString);
+        } catch (ParseException e) {
+        }
+        return dtStart;
+    }
+
+    private static DtStart getMsOutlookStyleDtstart() {
+        if (msOutlookStyleDtStart != null) {
+            return msOutlookStyleDtStart;
+        }
+        // YYYYMMDDThhmmss fixed to 16010101T000000 (MS Outlook style)
+        msOutlookStyleDtStart = getDtStart("16010101T000000");
+        return msOutlookStyleDtStart;
+    }
+
+    private static Observance toObservanceComp(int hintYear, RuleLine rline, boolean isStandard,
                                           Time standardOffset, Time daylightOffset,
                                           String tznameFormat) {
-        StringBuilder sb = new StringBuilder("BEGIN:");
-        String partName = isStandard ? "STANDARD" : "DAYLIGHT";
-        sb.append(partName).append(CRLF);
+        PropertyList props = new PropertyList();
         if (tznameFormat != null && tznameFormat.length() > 0) {
             String tzname = null;
             if (tznameFormat.contains("%s")) {
@@ -275,10 +314,10 @@ public class ZoneInfo2iCalendar {
             } else {
                 tzname = tznameFormat;
             }
-            if (tzname != null)
-                sb.append("TZNAME:").append(iCalEscape(tzname)).append(CRLF);
+            if (tzname != null) {
+                props.add(new TzName(tzname));
+            }
         }
-        sb.append("DTSTART:").append("16010101T");  // YYYYMMDD fixed to 16010101 (MS Outlook style)
         Time at = rline.getAt();
         Time onset;
         switch (at.getType()) {
@@ -322,8 +361,8 @@ public class ZoneInfo2iCalendar {
             // 23:59:59.
             hh = 23; mm = 59; ss = 59;
         }
-        String hhmmss = String.format("%02d%02d%02d", hh, mm, ss);
-        sb.append(hhmmss).append(CRLF);
+        // YYYYMMDD fixed to 16010101 (MS Outlook style)
+        props.add(getDtStart(String.format("16010101T%02d%02d%02d", hh, mm, ss)));
         Time toOffset, fromOffset;
         if (isStandard) {
             toOffset = standardOffset;
@@ -332,43 +371,69 @@ public class ZoneInfo2iCalendar {
             toOffset = daylightOffset;
             fromOffset = standardOffset;
         }
-        sb.append("TZOFFSETTO:").append(getUtcOffset(toOffset)).append(CRLF);
-        sb.append("TZOFFSETFROM:").append(getUtcOffset(fromOffset)).append(CRLF);
+        props.add(new TzOffsetTo(new UtcOffset(getUtcOffset(toOffset))));
+        props.add(new TzOffsetFrom(new UtcOffset(getUtcOffset(fromOffset))));
         int month = rline.getIn();
-        sb.append("RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=").append(month).append(";");
-        sb.append(dayToICalRRulePart(hintYear, month, rline.getOn())).append(CRLF);
-        sb.append("END:").append(partName).append(CRLF);
-        return sb.toString();
+        StringBuilder rruleVal = new StringBuilder();
+        rruleVal.append("FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=").append(month).append(";");
+        rruleVal.append(dayToICalRRulePart(hintYear, month, rline.getOn()));
+        try {
+            RRule rrule = new RRule(new ParameterList(), rruleVal.toString());
+            props.add(rrule);
+        } catch (ParseException e) {
+        }
+        if (isStandard) {
+            return new Standard(props);
+        } else {
+            return new Daylight(props);
+        }
     }
 
-    private static String toNonDSTVTimezone(Time gmtOffset, String tznameFormat) {
-        StringBuilder sb = new StringBuilder("BEGIN:STANDARD");
-        sb.append(CRLF);
-        if (tznameFormat != null && tznameFormat.length() > 0 && !tznameFormat.contains("%"))
-            sb.append("TZNAME:").append(iCalEscape(tznameFormat)).append(CRLF);
-        sb.append("DTSTART:16010101T000000").append(CRLF);  // YYYYMMDDThhmmss fixed to 16010101T000000 (MS Outlook style)
+    private static Standard toStandardComp(Time gmtOffset, String tznameFormat) {
+        PropertyList props = new PropertyList();
+        if (tznameFormat != null && tznameFormat.length() > 0 && !tznameFormat.contains("%")) {
+            props.add(new TzName(iCalEscape(tznameFormat)));
+        }
+        props.add(getMsOutlookStyleDtstart());
         String offset = getUtcOffset(gmtOffset);
-        sb.append("TZOFFSETTO:").append(offset).append(CRLF);
-        sb.append("TZOFFSETFROM:").append(offset).append(CRLF);
-        sb.append("END:STANDARD").append(CRLF);
-        return sb.toString();
+        UtcOffset utcOffset = new UtcOffset(offset);
+        props.add(new TzOffsetTo(utcOffset));
+        props.add(new TzOffsetFrom(utcOffset));
+        return new Standard(props);
     }
 
-    private static String toVTimezone(int hintYear, ZoneLine zline, String lastModified, Set<String> tzAliases,
-                                      boolean isPrimary, Integer matchScore) {
-        StringBuilder sb = new StringBuilder("BEGIN:VTIMEZONE");
-        sb.append(CRLF);
-        sb.append("TZID:").append(iCalEscape(zline.getName())).append(CRLF);
-        sb.append("LAST-MODIFIED:").append(lastModified).append(CRLF);
-        if (isPrimary)
-            sb.append(TZIDMapper.X_ZIMBRA_TZ_PRIMARY).append(":TRUE").append(CRLF);
-        if (matchScore != null)
-            sb.append(TZIDMapper.X_ZIMBRA_TZ_MATCH_SCORE).append(":").append(matchScore.toString()).append(CRLF);
+    private static LastModified getLastModified(String lastModified) {
+        LastModified lMod = null;
+        DateTime dt;
+        try {
+            dt = new DateTime(lastModified);
+            lMod = new LastModified(dt);
+        } catch (ParseException e) {
+            System.err.println(e.getMessage());
+            System.err.println("String turning into LAST-MODIFIED: " + lastModified);
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return lMod;
+    }
+
+    private static VTimeZone toVTimeZoneComp(int hintYear, ZoneLine zline, LastModified lastModified,
+                Set<String> tzAliases, boolean isPrimary, Integer matchScore) {
+        PropertyList vtzProps = new PropertyList();
+        vtzProps.add(new TzId(zline.getName()));
+        vtzProps.add(lastModified);
+        if (isPrimary) {
+            vtzProps.add(new XProperty(TZIDMapper.X_ZIMBRA_TZ_PRIMARY,"TRUE"));
+        }
+        if (matchScore != null) {
+            vtzProps.add(new XProperty(TZIDMapper.X_ZIMBRA_TZ_MATCH_SCORE, matchScore.toString()));
+        }
         if (tzAliases != null) {
             for (String alias : tzAliases) {
-                sb.append(TZIDMapper.X_ZIMBRA_TZ_ALIAS).append(":").append(iCalEscape(alias)).append(CRLF);
+                vtzProps.add(new XProperty(TZIDMapper.X_ZIMBRA_TZ_ALIAS, alias));
             }
         }
+        VTimeZone vtz = new VTimeZone(vtzProps);
         String tznameFormat = zline.getAbbrevFormat();
         if (zline.hasRule()) {
             Rule rule = zline.getRule();
@@ -384,16 +449,17 @@ public class ZoneInfo2iCalendar {
             if (standard != null && daylight != null) {
                 Time standarfOffset = zline.getGmtOff();
                 Time daylightOffset = addTimes(standarfOffset, daylight.getSave());
-                sb.append(toVTimezonePart(hintYear, standard, true, standarfOffset, daylightOffset, tznameFormat));
-                sb.append(toVTimezonePart(hintYear, daylight, false, standarfOffset, daylightOffset, tznameFormat));
+                vtz.getObservances().add(toObservanceComp(
+                        hintYear, standard, true, standarfOffset, daylightOffset, tznameFormat));
+                vtz.getObservances().add(
+                        toObservanceComp(hintYear, daylight, false, standarfOffset, daylightOffset, tznameFormat));
             } else {
-                sb.append(toNonDSTVTimezone(zline.getGmtOff(), tznameFormat));
+                vtz.getObservances().add(toStandardComp(zline.getGmtOff(), tznameFormat));
             }
         } else {
-            sb.append(toNonDSTVTimezone(addTimes(zline.getGmtOff(), zline.getSave()), tznameFormat));
+            vtz.getObservances().add(toStandardComp(addTimes(zline.getGmtOff(), zline.getSave()), tznameFormat));
         }
-        sb.append("END:VTIMEZONE").append(CRLF);
-        return sb.toString();
+        return vtz;
     }
 
     private static ZoneLine getCurrentZoneLine(Zone zone) {
@@ -560,6 +626,7 @@ public class ZoneInfo2iCalendar {
     private static final String OPT_YEAR = "y";
     private static final String OPT_DATE = "d";
     private static final String OPT_LAST_MODIFIED = "last-modified";
+    private static final String OPT_OLD_TIMEZONES_FILE = "old-timezones-file";
 
     private static Options sOptions = new Options();
 
@@ -572,6 +639,7 @@ public class ZoneInfo2iCalendar {
         sOptions.addOption(OPT_DATE, "date", true,
                 "reference date for determining simplified DST rules.\nUse format yyyy-MM-dd (default is today's date)");
         sOptions.addOption(null, OPT_LAST_MODIFIED, true, "LAST-MODIFIED value; current time by default");
+        sOptions.addOption(null, OPT_OLD_TIMEZONES_FILE, true, "Old timezones.ics file - used for minimizing changes");
         sOptions.addOption(OPT_YEAR, "year", true,
                 "4 digit year (DEPRECATED - use date)");
     }
@@ -609,6 +677,7 @@ public class ZoneInfo2iCalendar {
         public File outputFile;                   // path to the output iCalendar file
         public Calendar referenceDate;            // reference date; today if not specified
         public String lastModified;               // value for LAST-MODIFIED property; current time if not specified
+        public String oldTimezonesFileName;       // Name of old timezones.ics file if specified
     }
 
     private static Params initParams(CommandLine cl)
@@ -659,6 +728,12 @@ public class ZoneInfo2iCalendar {
                     "%04d%02d%02dT%02d%02d%02dZ",
                     now.get(Calendar.YEAR), now.get(Calendar.MONTH) + 1, now.get(Calendar.DAY_OF_MONTH),
                     now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), now.get(Calendar.SECOND));
+        }
+
+        if (cl.hasOption(OPT_OLD_TIMEZONES_FILE)) {
+            params.oldTimezonesFileName = cl.getOptionValue(OPT_OLD_TIMEZONES_FILE);
+        } else {
+            params.oldTimezonesFileName = null;
         }
 
         if (cl.hasOption(OPT_EXTRA_DATA_FILE)) {
@@ -725,6 +800,92 @@ public class ZoneInfo2iCalendar {
         return params;
     }
 
+    private static Map<String,VTimeZone> makeOldTimeZonesMap(Params params) {
+        Map<String,VTimeZone> oldTimeZones = Maps.newHashMap();
+        if (null != params.oldTimezonesFileName) {
+            try (FileInputStream fin = new FileInputStream(params.oldTimezonesFileName)) {
+                CalendarBuilder builder = new CalendarBuilder();
+                net.fortuna.ical4j.model.Calendar calendar = builder.build(fin, "UTF-8");
+                for (Iterator i = calendar.getComponents().iterator(); i.hasNext();) {
+                    Component component = (Component) i.next();
+                    if (Component.VTIMEZONE.equals(component.getName())) {
+                        VTimeZone vtz = (VTimeZone)component;
+                        Property tzprop = vtz.getProperties().getProperty(Property.TZID);
+                        if (null != tzprop) {
+                            oldTimeZones.put(tzprop.getValue(), vtz);
+                        }
+                    }
+                }
+            } catch (IOException | ParserException e) {
+                System.err.println("Problem loading old timezones.ics - ignoring it.  " + e.getMessage());
+            }
+        }
+        return oldTimeZones;
+    }
+
+    private static String getTimeZoneForZoneLine(Zone zone, Params params, Set<String> zoneIDs,
+            Map<String,VTimeZone> oldTimeZones) {
+        String tzid = zone.getName();
+        boolean isPrimary = sPrimaryTZIDs.contains(tzid);
+        Integer matchScore = sMatchScores.get(tzid);
+        if (matchScore == null) {
+            if (isPrimary) {
+                matchScore = Integer.valueOf(TZIDMapper.DEFAULT_MATCH_SCORE_PRIMARY);
+            } else {
+                matchScore = Integer.valueOf(TZIDMapper.DEFAULT_MATCH_SCORE_NON_PRIMARY);
+            }
+        }
+        Set<String> aliases = zone.getAliases();
+        Iterator<String> aliasesIter = aliases.iterator();
+        while (aliasesIter.hasNext()) {
+            String curr = aliasesIter.next();
+            if (zoneIDs.contains(curr)) {
+                aliasesIter.remove();
+            }
+        }
+        ZoneLine zline = getZoneLineForYear(zone, params.referenceDate);
+        if (zline == null) {
+            return "";
+        }
+        VTimeZone oldVtz = oldTimeZones.get(zline.getName());
+        Property oldLastModProp = null;
+        if (null != oldVtz) {
+            oldLastModProp = oldVtz.getProperties().getProperty(Property.LAST_MODIFIED);
+        }
+        LastModified newLastModified = getLastModified(params.lastModified);
+        LastModified trialLastModified;
+        if (null != oldLastModProp && oldLastModProp instanceof LastModified) {
+            trialLastModified = (LastModified) oldLastModProp;
+        } else {
+            trialLastModified = newLastModified;
+        }
+        VTimeZone vtz = toVTimeZoneComp(params.referenceDate.get(Calendar.YEAR), zline,
+                trialLastModified, aliases, isPrimary, matchScore);
+        String asText = vtz.toString();
+        if ((null != oldVtz) && (trialLastModified != newLastModified)) {
+            String oldText = oldVtz.toString();
+            if (!asText.equals(oldText)) {
+                /* Work around non-round tripped entries where the original source has:
+                 *     X-ZIMBRA-TZ-ALIAS:(GMT+12.00) Anadyr\, Petropavlovsk-Kamchatsky (RTZ 11)
+                 * but in this we have:
+                 *     X-ZIMBRA-TZ-ALIAS:(GMT+12.00) Anadyr\\\, Petropavlovsk-Kamchatsky (RTZ 11)
+                 * suspect that is a bug in libical which may be fixed in a later revision
+                 */
+                String oldText2 = oldText.replace("\\\\\\,", "\\,");
+                if (!asText.equals(oldText2)) {
+                    LastModified lastModProp =
+                            (LastModified) vtz.getProperties().getProperty(Property.LAST_MODIFIED);
+                    try {
+                        lastModProp.setValue(newLastModified.getValue());
+                        asText = vtz.toString();
+                    } catch (ParseException e) {
+                        System.err.println("Problem assigning LAST-MODIFIED - " + e.getMessage());
+                    }
+                }
+            }
+        }
+        return asText;
+    }
 
     // main
 
@@ -799,6 +960,7 @@ public class ZoneInfo2iCalendar {
             hdr.append("METHOD:PUBLISH").append(CRLF);
             out.write(hdr.toString());
 
+            Map<String,VTimeZone> oldTimeZones = makeOldTimeZonesMap(params);
             Set<Zone> zones = new TreeSet<Zone>(new ZoneComparatorByGmtOffset());
             zones.addAll(parser.getZones());
             Set<String> zoneIDs = new TreeSet<String>();
@@ -806,29 +968,7 @@ public class ZoneInfo2iCalendar {
                 zoneIDs.add(zone.getName());
             }
             for (Zone zone : zones) {
-                String tzid = zone.getName();
-                boolean isPrimary = sPrimaryTZIDs.contains(tzid);
-                Integer matchScore = sMatchScores.get(tzid);
-                if (matchScore == null) {
-                    if (isPrimary) {
-                        matchScore = Integer.valueOf(TZIDMapper.DEFAULT_MATCH_SCORE_PRIMARY);
-                    } else {
-                        matchScore = Integer.valueOf(TZIDMapper.DEFAULT_MATCH_SCORE_NON_PRIMARY);
-                    }
-                }
-                Set<String> aliases = zone.getAliases();
-                Iterator<String> aliasesIter = aliases.iterator();
-                while (aliasesIter.hasNext()) {
-                    String curr = aliasesIter.next();
-                    if (zoneIDs.contains(curr)) {
-                        aliasesIter.remove();
-                    }
-                }
-                ZoneLine zline = getZoneLineForYear(zone, params.referenceDate);
-                if (zline != null) {
-                    out.write(toVTimezone(params.referenceDate.get(Calendar.YEAR),
-                            zline, params.lastModified, aliases, isPrimary, matchScore));
-                }
+                out.write(getTimeZoneForZoneLine(zone, params, zoneIDs, oldTimeZones));
             }
 
             StringBuilder footer = new StringBuilder("END:VCALENDAR");
