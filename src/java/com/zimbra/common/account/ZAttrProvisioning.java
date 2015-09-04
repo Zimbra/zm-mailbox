@@ -4759,6 +4759,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceImapPollingInterval = "zimbraDataSourceImapPollingInterval";
 
     /**
+     * ID of trash folder of IMAP account
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2062)
+    public static final String A_zimbraDataSourceImapTrashFolderId = "zimbraDataSourceImapTrashFolderId";
+
+    /**
      * DataImport class used by this data source object
      *
      * @since ZCS 5.0.10
