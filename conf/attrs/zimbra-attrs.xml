@@ -10415,4 +10415,8 @@ TODO: delete them permanently from here
   <desc>this attribute contains the timestamps of each of the consecutive second factor authentication failures made on an account</desc>
 </attr>
 
+<attr id="2062" name="zimbraDataSourceImapTrashFolderId" type="integer" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0">
+  <desc>ID of trash folder of IMAP account</desc>
+</attr>
+
 </attrs>
