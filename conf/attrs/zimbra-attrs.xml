@@ -9085,4 +9085,9 @@ TODO: delete them permanently from here
   <desc>ID of trash folder of IMAP account</desc>
 </attr>
 
+<attr id="2063" name="zimbraFeatureMobileGatewayEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.7.0,9.0.0">
+  <desc>Whether to enable Zimbra Mobile Gateway feature</desc>
+  <defaultCOSValue>FALSE</defaultCOSValue>
+</attr>
+
 </attrs>

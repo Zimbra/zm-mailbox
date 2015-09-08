@@ -24,14 +24,13 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.datasource.DataSourceListener;
+import com.zimbra.cs.datasource.DataSourceFolderListener;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.filter.FilterListener;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.acl.AclPushListener;
 import com.zimbra.cs.mailbox.acl.ShareExpirationListener;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
-import com.zimbra.cs.pushnotifications.PushNotificationListener;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.ZimbraApplication;
 
@@ -95,9 +94,8 @@ public abstract class MailboxListener {
         register(new FilterListener());
         register(new MemcachedCacheManager());
         register(new FreeBusyProvider.Listener());
-        register(new DataSourceListener());
+        register(new DataSourceFolderListener());
         register(new ShareStartStopListener());
-        register(new PushNotificationListener());
         if (application.supports(AclPushListener.class)) {
             register(new AclPushListener());
         }

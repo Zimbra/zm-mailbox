@@ -29,10 +29,6 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.service.account.zmg.BootstrapMobileGatewayApp;
-import com.zimbra.cs.service.account.zmg.GetGcmSenderId;
-import com.zimbra.cs.service.account.zmg.RegisterMobileGatewayApp;
-import com.zimbra.cs.service.account.zmg.RenewMobileGatewayAppToken;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 
@@ -116,12 +112,6 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.GET_RIGHTS_REQUEST, new GetRights());
         dispatcher.registerHandler(AccountConstants.GRANT_RIGHTS_REQUEST, new GrantRights());
         dispatcher.registerHandler(AccountConstants.REVOKE_RIGHTS_REQUEST, new RevokeRights());
-
-        // mobile gateway
-        dispatcher.registerHandler(AccountConstants.BOOTSTRAP_MOBILE_GATEWAY_APP_REQUEST, new BootstrapMobileGatewayApp());
-        dispatcher.registerHandler(AccountConstants.RENEW_MOBILE_GATEWAY_APP_TOKEN_REQUEST, new RenewMobileGatewayAppToken());
-        dispatcher.registerHandler(AccountConstants.REGISTER_MOBILE_GATEWAY_APP_REQUEST, new RegisterMobileGatewayApp());
-        dispatcher.registerHandler(AccountConstants.GET_GCM_SENDER_ID_REQUEST, new GetGcmSenderId());
 
         // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());

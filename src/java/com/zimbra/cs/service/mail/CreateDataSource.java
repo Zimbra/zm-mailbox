@@ -26,7 +26,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -34,13 +33,12 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.datasource.DataSourceListner;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.pushnotifications.NotificationsManager;
-import com.zimbra.cs.pushnotifications.PushNotification;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -149,10 +147,7 @@ public class CreateDataSource extends MailDocumentHandler {
         try {
             ds = prov.createDataSource(account, type, name, dsAttrs);
             if (type == DataSourceType.imap) {
-                if (DebugConfig.pushNotificationVerboseMode) {
-                    NotificationsManager.getInstance().pushSyncDataNotification(account, ds,
-                        PushNotification.CREATE_DATASOURCE);
-                }
+                DataSourceListner.createDataSource(account, ds);
             }
         } catch (ServiceException e) {
             if (returnFolderId) {
