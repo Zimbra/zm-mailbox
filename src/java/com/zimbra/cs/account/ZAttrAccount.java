@@ -15784,6 +15784,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether to enable Zimbra Mobile Gateway feature
+     *
+     * @return zimbraFeatureMobileGatewayEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2063)
+    public boolean isFeatureMobileGatewayEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureMobileGatewayEnabled, false);
+    }
+
+    /**
+     * Whether to enable Zimbra Mobile Gateway feature
+     *
+     * @param zimbraFeatureMobileGatewayEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2063)
+    public void setFeatureMobileGatewayEnabled(boolean zimbraFeatureMobileGatewayEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileGatewayEnabled, zimbraFeatureMobileGatewayEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable Zimbra Mobile Gateway feature
+     *
+     * @param zimbraFeatureMobileGatewayEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2063)
+    public Map<String,Object> setFeatureMobileGatewayEnabled(boolean zimbraFeatureMobileGatewayEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileGatewayEnabled, zimbraFeatureMobileGatewayEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable Zimbra Mobile Gateway feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2063)
+    public void unsetFeatureMobileGatewayEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileGatewayEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable Zimbra Mobile Gateway feature
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2063)
+    public Map<String,Object> unsetFeatureMobileGatewayEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileGatewayEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether to enforce mobile policy
      *
      * @return zimbraFeatureMobilePolicyEnabled, or true if unset
