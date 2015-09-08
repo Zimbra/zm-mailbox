@@ -6205,6 +6205,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMAPIConnectorEnabled = "zimbraFeatureMAPIConnectorEnabled";
 
     /**
+     * Whether to enable Zimbra Mobile Gateway feature
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2063)
+    public static final String A_zimbraFeatureMobileGatewayEnabled = "zimbraFeatureMobileGatewayEnabled";
+
+    /**
      * whether to enforce mobile policy
      *
      * @since ZCS 6.0.0_BETA1
