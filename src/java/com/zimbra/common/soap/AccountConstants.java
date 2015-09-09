@@ -386,7 +386,8 @@ public class AccountConstants {
     public static final String E_SHARE = "share";
     public static final String E_CONTACT_ID = "cid";
     public static final String E_STORE = "store";
-
+    public static final String E_BOSH_URL = "boshURL";
+    
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
     public static final String A_ADDR = "addr";
