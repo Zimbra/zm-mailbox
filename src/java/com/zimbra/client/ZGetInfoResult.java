@@ -209,7 +209,11 @@ public class ZGetInfoResult implements ToZJSONObject {
     public String getPublicURLBase() {
         return data.getPublicURL();
     }
-    
+
+    public String getBOSHURL() {
+        return data.getBOSHURL();
+    }
+
     @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
@@ -224,6 +228,7 @@ public class ZGetInfoResult implements ToZJSONObject {
         jo.putMapList("prefs", getPrefAttrs());
         jo.putList("mailURLs", getMailURL());
         jo.put("publicURL", getPublicURL());
+        jo.put("boshURL", getBOSHURL());
         return jo;
     }
 
