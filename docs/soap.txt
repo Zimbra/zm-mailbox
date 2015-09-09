@@ -773,6 +773,7 @@ Setting logoff to "1" will prevent the cookie from being re-used.
    <publicURL>{account-base-public-url}</publicURL>
    [<adminURL>{admin-base-public-url}</adminURL>]
    [<communityURL>{community-url}</communityURL>]
+   [<boshURL>{bosh-url}</boshURL>]
    <identities>
      <identity name={identity-name} id="...">
        <a name="{name}">{value}</a>
@@ -856,6 +857,7 @@ Setting logoff to "1" will prevent the cookie from being re-used.
    [<adminURL>{admin-base-public-url}</adminURL>]
    [<changePasswordURL>{change-password-url}</changePasswordURL>]
    [<communityURL>{community-url}</communityURL>]
+   [<boshURL>{bosh-url}</boshURL>]
 </GetAccountInfoResponse>
 
   {account-name} = email address (user@domain)
@@ -881,7 +883,7 @@ Setting logoff to "1" will prevent the cookie from being re-used.
                     The URL points to /api.ashx/v2/oauth/redirect script in Zimbra Community and contains signed GET parameters used by Zimbra Community to authenticate current user.  
                     This parameter is returned only when zimbraFeatureSocialExternalEnabled is set to TRUE and the following attributes are configured:
                         zimbraCommunityAPIClientID, zimbraCommunityAPIClientSecret, zimbraCommunityUsernameMapping,zimbraCommunityBaseURL,zimbraCommunityHomeURL  
-
+  {bosh-url} = Proxy URL for accessing XMPP over BOSH. Should be returned only when zimbraFeatureChatEnabled is set to TRUE for Account/COS
 ----------------------------
 
 <GetAvailableSkinsRequest/>

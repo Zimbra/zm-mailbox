@@ -178,5 +178,10 @@ public class GetAccountInfo extends AccountDocumentHandler  {
                 }
             }
         }
+
+        //add BOSH URL if Chat is enabled
+        if(account.getBooleanAttr(Provisioning.A_zimbraFeatureChatEnabled, false)) {
+            response.addAttribute(AccountConstants.E_BOSH_URL, server.getReverseProxyXmppBoshLocalHttpBindURL());
+        }
     }
 }
