@@ -32,7 +32,7 @@ import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
-public class DataSourceListener implements MailboxListener {
+public class DataSourceFolderListener implements MailboxListener {
 
     public static final ImmutableSet<MailItem.Type> ITEMTYPES = ImmutableSet.of(
             MailItem.Type.FOLDER
