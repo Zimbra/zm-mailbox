@@ -10,7 +10,7 @@ import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Base64;
 
 import com.google.common.base.Strings;
-import com.zimbra.common.auth.twofactor.CredentialConfig.Encoding;
+import com.zimbra.common.auth.twofactor.TwoFactorOptions.Encoding;
 import com.zimbra.common.service.ServiceException;
 
 /** Verify validity of a time-based one-time password for a given secret and point in time

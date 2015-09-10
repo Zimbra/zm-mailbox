@@ -803,6 +803,7 @@ public final class LC {
     public static final KnownKey zimbra_class_customproxyselector = KnownKey.newKey(""); //intentionally has no value; set one if u want to use a custom proxy selector
     public static final KnownKey zimbra_class_galgroupinfoprovider = KnownKey.newKey("com.zimbra.cs.gal.GalGroupInfoProvider");
     public static final KnownKey zimbra_class_jsieve_comparators_ascii_casemap = KnownKey.newKey("org.apache.jsieve.comparators.AsciiCasemap");
+    public static final KnownKey zimbra_class_two_factor_auth_factory = KnownKey.newKey("com.zimbra.cs.account.auth.twofactor.TwoFactorAuth$DefaultFactory");
 
     // XXX REMOVE AND RELEASE NOTE
     public static final KnownKey data_source_trust_self_signed_certs = KnownKey.newKey(false);
