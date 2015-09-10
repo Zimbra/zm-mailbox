@@ -1063,7 +1063,7 @@ public final class ToXML {
             }
 
             for (InternetAddress ia : toRecips) {
-                ParsedAddress pa = new ParsedAddress(ia);
+                ParsedAddress pa = new ParsedAddress(ia).parse();
                 aggregatedRecipients.remove(pa);
                 aggregatedRecipients.add(0, pa);
             }
