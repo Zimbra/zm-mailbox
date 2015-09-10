@@ -27,7 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
+import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.ldap.LdapDateUtil;
 
 public class LdapLockoutPolicy {
@@ -50,8 +50,8 @@ public class LdapLockoutPolicy {
         mEnabled = (maxFailures > 0 || max2FAFailures > 0) && mAccount.getBooleanAttr(Provisioning.A_zimbraPasswordLockoutEnabled, false);
         mIsLockedOut = computeIsLockedOut();
         failedLogins = getFailedLoginState();
-        TwoFactorManager manager = new TwoFactorManager(account);
-        if (manager.twoFactorAuthEnabled()) {
+        TwoFactorAuth twoFactorAuth = TwoFactorAuth.getFactory().getTwoFactorAuth(account);
+        if (twoFactorAuth.twoFactorAuthEnabled()) {
             twoFactorFailedLogins = getTwoFactorAuthFailedLoginState();
         }
     }

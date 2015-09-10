@@ -54,7 +54,9 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TrustedDevice;
 import com.zimbra.cs.account.TrustedDeviceToken;
 import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
+import com.zimbra.cs.account.auth.twofactor.AppSpecificPasswords;
+import com.zimbra.cs.account.auth.twofactor.TrustedDevices;
+import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.service.AuthProvider;
@@ -100,16 +102,21 @@ public class Auth extends AccountDocumentHandler {
             acct = prov.get(acctBy, acctValue);
         }
 
-        TrustedDeviceToken trustedToken = TrustedDeviceToken.fromRequest(acct, request, context);
-        if (trustedToken != null && trustedToken.isExpired()) {
-            TrustedDevice device = TrustedDevice.byTrustedToken(acct, trustedToken);
-            if (device != null) {
-                device.revoke();
+        TrustedDeviceToken trustedToken = null;
+        if (acct != null) {
+            TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(acct);
+            if (trustedDeviceManager != null) {
+                trustedToken = trustedDeviceManager.getTokenFromRequest(request, context);
+                if (trustedToken != null && trustedToken.isExpired()) {
+                    TrustedDevice device = trustedDeviceManager.getTrustedDeviceByTrustedToken(trustedToken);
+                    if (device != null) {
+                        device.revoke();
+                    }
+                }
             }
         }
 
         String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
-//        Element twoFactorTokenEl = request.getOptionalElement(AccountConstants.E_TWO_FACTOR_AUTH_TOKEN);
         boolean generateDeviceId = request.getAttributeBool(AccountConstants.A_GENERATE_DEVICE_ID, false);
         String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
         String newDeviceId = generateDeviceId? UUIDUtil.generateUUID(): null;
@@ -162,11 +169,6 @@ public class Auth extends AccountDocumentHandler {
         }
 
         Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
-        Boolean registerTrustedDevice = false;
-        TwoFactorManager twoFactorManager = new TwoFactorManager(acct);
-        if (acct != null && twoFactorManager.twoFactorAuthEnabled()) {
-            registerTrustedDevice = trustedToken == null && request.getAttributeBool(AccountConstants.A_TRUSTED_DEVICE, false);
-        }
         String deviceId = request.getAttribute(AccountConstants.E_DEVICE_ID, null);
         long expires = 0;
 
@@ -239,7 +241,11 @@ public class Auth extends AccountDocumentHandler {
         }
 
         AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
-
+        Boolean registerTrustedDevice = false;
+        TwoFactorAuth twoFactorManager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
+        if (twoFactorManager.twoFactorAuthEnabled()) {
+            registerTrustedDevice = trustedToken == null && request.getAttributeBool(AccountConstants.A_TRUSTED_DEVICE, false);
+        }
         // if account was auto provisioned, we had already authenticated the principal
         if (!acctAutoProvisioned) {
             boolean trustedDeviceOverride = false;
@@ -268,8 +274,8 @@ public class Auth extends AccountDocumentHandler {
                         // if we are here, it means we are authenticating SMTP,
                         // so app-specific passwords are accepted. Other protocols (pop, imap)
                         // doesn't touch this code, so their authentication happens in ZimbraAuth.
-                        TwoFactorManager manager = new TwoFactorManager(acct, acctValuePassedIn);
-                        manager.authenticateAppSpecificPassword(password);
+                        AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct, acctValuePassedIn);
+                        appPasswords.authenticate(password);
                     } else {
                         prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
                         return needTwoFactorAuth(acct, twoFactorManager, zsc);
@@ -297,7 +303,7 @@ public class Auth extends AccountDocumentHandler {
                                 throw AuthFailedServiceException.AUTH_FAILED("bad auth token");
                             }
                         }
-                        TwoFactorManager manager = new TwoFactorManager(acct);
+                        TwoFactorAuth manager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
                         if (twoFactorCode != null) {
                             manager.authenticate(twoFactorCode);
                         }
@@ -324,8 +330,8 @@ public class Auth extends AccountDocumentHandler {
         if (registerTrustedDevice && (trustedToken == null || trustedToken.isExpired())) {
             //generate a new trusted device token if there is no existing one or if the current one is no longer valid
             Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, newDeviceId == null? deviceId: newDeviceId);
-            TwoFactorManager manager = new TwoFactorManager(acct);
-            trustedToken = manager.registerTrustedDevice(attrs);
+            TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(acct);
+            trustedToken = trustedDeviceManager.registerTrustedDevice(attrs);
         }
         ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         // For CSRF filter so that token generation can happen
@@ -347,10 +353,12 @@ public class Auth extends AccountDocumentHandler {
     }
 
     private void verifyTrustedDevice(Account account, TrustedDeviceToken td, Map<String, Object> attrs) throws ServiceException {
-        new TwoFactorManager(account).verifyTrustedDevice(td, attrs);
+        TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(account);
+
+        trustedDeviceManager.verifyTrustedDevice(td, attrs);
     }
 
-    private Element needTwoFactorAuth(Account account, TwoFactorManager manager, ZimbraSoapContext zsc) throws ServiceException {
+    private Element needTwoFactorAuth(Account account, TwoFactorAuth auth, ZimbraSoapContext zsc) throws ServiceException {
         /* two cases here:
          * 1) the user needs to provide a two-factor code.
          *    in this case, the server returns a two-factor auth token in the response header that the client
@@ -358,7 +366,7 @@ public class Auth extends AccountDocumentHandler {
          * 2) the user needs to set up two-factor auth.
          *    this can happen if it's required for the account but the user hasn't received a secret yet.
          */
-        if (!manager.twoFactorAuthEnabled()) {
+        if (!auth.twoFactorAuthEnabled()) {
             throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
         } else {
             Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);

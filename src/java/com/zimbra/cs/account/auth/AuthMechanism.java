@@ -32,7 +32,8 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
-import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
+import com.zimbra.cs.account.auth.twofactor.AppSpecificPasswords;
+import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.ldap.LdapProv;
@@ -201,8 +202,9 @@ public abstract class AuthMechanism {
                 Map<String, Object> authCtxt) throws ServiceException {
 
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
-            TwoFactorManager manager = new TwoFactorManager(acct);
-            if (manager.twoFactorAuthRequired() && authCtxt != null) {
+            TwoFactorAuth twoFactorManager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
+            AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct);
+            if (twoFactorManager.twoFactorAuthRequired() && authCtxt != null) {
                 //if two-factor auth is enabled, check non-http protocols against app-specific passwords
                 Protocol proto = (Protocol) authCtxt.get("proto");
                 switch(proto) {
@@ -210,8 +212,8 @@ public abstract class AuthMechanism {
                 case http_basic:
                     break;
                 default:
-                    if (manager.appSpecificPasswordsEnabled()) {
-                        manager.authenticateAppSpecificPassword(password);
+                    if (appPasswords.isEnabled()) {
+                        appPasswords.authenticate(password);
                         return;
                     } else {
                         throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),

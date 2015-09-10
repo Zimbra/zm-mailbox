@@ -9019,7 +9019,7 @@ TODO: delete them permanently from here
 
 <attr id="2050" name="zimbraFeatureTwoFactorAuthAvailable" type="boolean" cardinality="single" optionalIn="account,cos" callback="TwoFactorAuthStatus" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.7.0,9.0.0">
   <desc>Whether the option of enabling two-factor authentication is available on the account</desc>
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
 <attr id="2051" name="zimbraPrefChatPlaySound" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.7.0,9.0.0">
