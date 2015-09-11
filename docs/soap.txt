@@ -447,6 +447,7 @@ global soap/system errors used with zimbra:Error/Code:
    [<trustLifetime>...</trustLifetime>]
    [<deviceId>...</deviceId>]
    [<twoFactorAuthRequired>...</twoFactorAuthRequired>]
+   [<trustedDevicesEnabled>...</trustedDevicesEnabled>]
  </AuthResponse>
 
 Note:
