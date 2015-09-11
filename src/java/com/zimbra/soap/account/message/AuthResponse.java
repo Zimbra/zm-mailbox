@@ -31,7 +31,6 @@ import javax.xml.bind.annotation.XmlType;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Session;
@@ -139,8 +138,11 @@ public class AuthResponse {
     @XmlElement(name=AccountConstants.E_ATTR /* attr */)
     private List<Attr> attrs = new ArrayList<Attr>();
 
-    @XmlElement(name=AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED, required =false)
+    @XmlElement(name=AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED, required=false)
     private ZmBoolean twoFactorAuthRequired;
+
+    @XmlElement(name=AccountConstants.E_TRUSTED_DEVICES_ENABLED, required=false)
+    private ZmBoolean trustedDevicesEnabled;
 
     public AuthResponse() {
     }
@@ -231,4 +233,7 @@ public class AuthResponse {
 
     public Boolean getZmgProxy() { return ZmBoolean.toBool(zmgProxy); }
     public void setZmgProxy(Boolean zmgProxy) { this.zmgProxy = ZmBoolean.fromBool(zmgProxy); }
+
+    public ZmBoolean getTrustedDevicesEnabled() { return trustedDevicesEnabled; }
+    public AuthResponse setTrustedDevicesEnabled(boolean bool) { this.trustedDevicesEnabled = ZmBoolean.fromBool(bool); return this; }
 }
