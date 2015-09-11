@@ -31,6 +31,7 @@ public class ZAuthResult {
     private long expires;
     private long trustExpires;
     private boolean twoFactorAuthRequired;
+    private boolean trustedDevicesEnabled;
     private AuthResponse data;
 
     /*
@@ -53,6 +54,7 @@ public class ZAuthResult {
             trustExpires = data.getTrustLifetime() + System.currentTimeMillis();
         }
         twoFactorAuthRequired = ZmBoolean.toBool(data.getTwoFactorAuthRequired(), false);
+        trustedDevicesEnabled = ZmBoolean.toBool(data.getTrustedDevicesEnabled(), false);
     }
 
     public ZAuthToken getAuthToken() {
@@ -118,5 +120,9 @@ public class ZAuthResult {
 
     public boolean getTwoFactorAuthRequired() {
         return twoFactorAuthRequired;
+    }
+
+    public boolean getTrustedDevicesEnabled() {
+        return trustedDevicesEnabled;
     }
 }
