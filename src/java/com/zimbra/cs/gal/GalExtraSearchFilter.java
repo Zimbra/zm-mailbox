@@ -160,7 +160,7 @@ public class GalExtraSearchFilter {
             } else if (op.equals(Operator.startswith)) {
                 query.append('#').append(attr).append(":(").append(val).append("*)");
             } else if (op.equals(Operator.endswith)) {
-                query.append('#').append(attr).append(":(*").append(val);
+                query.append('#').append(attr).append(":(*").append(val).append(")");
             } else {
                 // fallback to EQUALS
                 query.append('#').append(attr).append(":(").append(val).append(")");
