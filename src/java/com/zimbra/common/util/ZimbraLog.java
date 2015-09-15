@@ -435,6 +435,10 @@ public final class ZimbraLog {
      */
     public static final Log ews = LogFactory.getLog("zimbra.ews");
 
+    /**
+     * the "zimbra.oauth" logger. For OAuth code.
+     */
+    public static final Log oauth = LogFactory.getLog("zimbra.oauth");
 
     /**
      * Maps the log category name to its description.
