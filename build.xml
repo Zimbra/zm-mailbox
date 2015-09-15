@@ -548,6 +548,7 @@
           <include name="log4j-*.jar"/>
           <include name="apache-log4j-extras-*.jar"/>
           <include name="icu4j-*.jar"/>
+          <include name="oauth-*.jar"/>
         </fileset>
       </delete>
     </target>
@@ -594,6 +595,7 @@
 	      <include name="wsdl4j-*.jar"/>
 	      <include name="xmlschema-core-*.jar"/>
           <include name="stax2-api-*.jar"/>
+          <include name="oauth*.jar"/>
         </lib>
         <lib dir="${aux.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
@@ -1121,6 +1123,7 @@
         <include name="log4j-*.jar"/>
         <include name="apache-log4j-extras-*.jar"/>
         <include name="junit*.jar"/>
+        <include name="oauth-*.jar"/>
       </fileset>
     </copy>
     <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">

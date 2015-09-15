@@ -5260,7 +5260,7 @@ TODO: delete them permanently from here
   <desc>sieve script generated from user outgoing filter rules</desc>
 </attr>
 
-<attr id="1131" name="zimbraOAuthConsumerCredentials" type="string" max="1024" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
+<attr id="1131" name="zimbraOAuthConsumerCredentials" type="ostring" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
   <desc>OAuth Consumer id, secret, and application name.  It is in the format of {consumer-id}:{secret}:{consumer-app-name}</desc>
 </attr>
 
@@ -9013,7 +9013,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
 
-<attr id="2049" name="zimbraOAuthAccessor" type="string" cardinality="multi" optionalIn="account" since="8.7.0,9.0.0">
+<attr id="2049" name="zimbraOAuthAccessor" type="ostring" cardinality="multi" optionalIn="account" since="8.7.0,9.0.0">
   <desc>Credentials associated with a successfully authorized OAuth Consumer</desc>
 </attr>
 

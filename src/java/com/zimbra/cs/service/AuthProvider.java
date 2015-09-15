@@ -53,7 +53,7 @@ public abstract class AuthProvider {
 
     static {
         register(new ZimbraAuthProvider());
-        // register(new ZimbraOAuthProvider());
+        register(new ZimbraAuthProviderForOAuth());
         refresh();
     }
 

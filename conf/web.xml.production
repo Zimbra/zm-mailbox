@@ -212,7 +212,37 @@
     <load-on-startup>2</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7071, 7072, 7443</param-value>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7072, 7443</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>OAuthRequestToken</servlet-name>
+    <servlet-class>com.zimbra.cs.account.oauth.OAuthRequestTokenServlet</servlet-class>
+    <async-supported>true</async-supported>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>OAuthAuthorization</servlet-name>
+    <servlet-class>com.zimbra.cs.account.oauth.OAuthAuthorizationServlet</servlet-class>
+    <async-supported>true</async-supported>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>OAuthAccessToken</servlet-name>
+    <servlet-class>com.zimbra.cs.account.oauth.OAuthAccessTokenServlet</servlet-class>
+    <async-supported>true</async-supported>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443</param-value>
     </init-param>
   </servlet>
 
@@ -513,6 +543,21 @@
   <servlet-mapping>
     <servlet-name>ExtensionDispatcherServlet</servlet-name>
     <url-pattern>/extension/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>OAuthRequestToken</servlet-name>
+    <url-pattern>/oauth/req_token</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>OAuthAuthorization</servlet-name>
+    <url-pattern>/oauth/authorization</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>OAuthAccessToken</servlet-name>
+    <url-pattern>/oauth/access_token</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
