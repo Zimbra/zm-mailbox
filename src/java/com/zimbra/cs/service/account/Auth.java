@@ -137,7 +137,10 @@ public class Auth extends AccountDocumentHandler {
                 // so the account will show in log context
                 if (!checkPasswordSecurity(context))
                     throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
-                AuthToken.Usage usage = twoFactorCode == null ? Usage.AUTH : Usage.TWO_FACTOR_AUTH;
+                AuthToken.Usage usage = at.getUsage();
+                if (usage != Usage.AUTH && usage != Usage.TWO_FACTOR_AUTH) {
+                    throw AuthFailedServiceException.AUTH_FAILED("invalid auth token");
+                }
                 Account authTokenAcct = AuthProvider.validateAuthToken(prov, at, false, usage);
                 if (verifyAccount) {
                     // Verify the named account matches the account in the auth token.  Client can easily decode
@@ -306,6 +309,8 @@ public class Auth extends AccountDocumentHandler {
                         TwoFactorAuth manager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
                         if (twoFactorCode != null) {
                             manager.authenticate(twoFactorCode);
+                        } else {
+                            throw AuthFailedServiceException.AUTH_FAILED("no two-factor code provided");
                         }
                         if (twoFactorToken != null) {
                             try {
