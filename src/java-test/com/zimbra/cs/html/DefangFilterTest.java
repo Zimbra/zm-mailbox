@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -1123,6 +1124,18 @@ public class DefangFilterTest {
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+    }
+
+    /**
+     * Checks that the input data is extracted and sanitized correctly.
+     * @throws Exception
+     */
+    @Test
+    public void testBug100966() throws Exception {
+        String inputString = new String(ByteUtil.getContent(new File(EMAIL_BASE_DIR + "bug_100966.txt")));
+        String expectedResult = new String (ByteUtil.getContent(new File(EMAIL_BASE_DIR + "bug_100966_op.txt")));
+        String result = new DefangFilter(false).extractAndSanitizeAsciiData(inputString);
+        Assert.assertTrue(result.equals(expectedResult));
     }
 
 }
