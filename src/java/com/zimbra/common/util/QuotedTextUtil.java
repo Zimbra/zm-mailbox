@@ -682,12 +682,12 @@ public class QuotedTextUtil {
             // DIV: check for Outlook class used as delimiter, or a top border
             // used as a separator, and finally just
             // check the text content
-            if (className.equals("OutlookMessageHeader") || className.equals("gmail_quote")) {
+            if (className.equals("OutlookMessageHeader")) {
                 type = LineType.SEP_STRONG;
             }
             // TODO: identify separator using style attributes
 
-            if (type == null) {
+            if (className.equals("gmail_quote")) {
                 type = checkNodeContent(node);
             }
         } else if ("span".equals(nodeName)) {
@@ -702,7 +702,7 @@ public class QuotedTextUtil {
             // BLOCKQUOTE: treat as quoted section
             type = LineType.QUOTED;
         }
-        return type;
+        return type != null ? type : LineType.UNKNOWN;
     }
 
     /**

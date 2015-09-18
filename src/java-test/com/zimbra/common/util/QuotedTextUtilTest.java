@@ -88,5 +88,32 @@ public class QuotedTextUtilTest {
         originalContent = quotedTextUtil.getOriginalContent(content, false);
         expected = "";
         Assert.assertEquals(expected, originalContent);
+
+        content = "<div dir=\"ltr\"><div class=\"gmail_quote\"><br><br><br><div dir=\"ltr\">"
+            + "<span style=\"font-size:12.8000001907349px\">asdasdasdasasfasfasfasfasfasfa</span>"
+            + "<span class=\"HOEnZb\"><font color=\"#888888\"><br clear=\"all\"><div><br></div>-- "
+            + "<br><div><div dir=\"ltr\">Thanks and regards,<div>Saurabh</div></div></div>"
+            + "</font></span></div></div>";
+        originalContent = quotedTextUtil.getOriginalContent(content, true);
+        expected = "<div dir=\"ltr\"><div class=\"gmail_quote\"><br><br><br><div dir=\"ltr\">"
+            + "<span style=\"font-size:12.8000001907349px\">asdasdasdasasfasfasfasfasfasfa</span><span class=\"HOEnZb\">"
+            + "<font color=\"#888888\"><br clear=\"all\"><div><br></div>-- <br>"
+            + "<div><div dir=\"ltr\">Thanks and regards,<div>Saurabh</div></div></div></font>"
+            + "</span></div></div>";
+        Assert.assertEquals(expected, originalContent);
+
+        content = "<div dir=\"ltr\">This is my reply<br><div><div class=\"gmail_extra\"><br>"
+            + "<div class=\"gmail_quote\">On Fri, Sep 4, 2015 at 4:35 PM, Rohan Ambasta "
+            + "<span dir=\"ltr\">&lt;<a href=\"mailto:rambasta@zimbra.com\" target=\"_blank\">"
+            + "rambasta@zimbra.com</a>&gt;</span> wrote:<br><blockquote class=\"gmail_quote\""
+            + "style=\"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex\"><div>"
+            + "<div style=\"font-family:arial,helvetica,sans-serif;font-size:12pt;color:#000000\">"
+            + "<div>teat mail re 1<br></div></div></div></blockquote></div><br></div></div></div>";
+        originalContent = quotedTextUtil.getOriginalContent(content, true);
+        expected = "<HTML>\n<HEAD>\n<META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+            + "</HEAD>\n<BODY xmlns=\"http://www.w3.org/1999/xhtml\">\n"
+            + "<DIV dir=\"ltr\">This is my reply<BR>\n<DIV>\n<DIV class=\"gmail_extra\">\n"
+            + "<BR>\n</DIV>\n</DIV>\n</DIV>\n</BODY>\n</HTML>\n";
+        Assert.assertEquals(expected, originalContent);
     }
 }
