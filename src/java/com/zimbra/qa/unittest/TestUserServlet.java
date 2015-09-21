@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -20,7 +20,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,11 +32,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import junit.framework.TestCase;
 import net.fortuna.ical4j.data.CalendarOutputter;
@@ -62,11 +56,8 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import com.sun.net.httpserver.Authenticator.Success;
 import com.zimbra.client.ZDocument;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -208,14 +199,39 @@ extends TestCase {
         get = new GetMethod(uri.toString());
         executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        ZimbraLog.test.info("testIcsImportExport:ICS exported (with icalAttach=none):%s", respIcal);
+        ZimbraLog.test.debug("testIcsImportExport:ICS exported (with icalAttach=none):%s", respIcal);
         assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
         uri = mbox.getRestURI(calUri);
         get = new GetMethod(uri.toString());
         executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        ZimbraLog.test.info("testIcsImportExport:ICS exported (default - same as icalAttach=none):%s", respIcal);
+        ZimbraLog.test.debug("testIcsImportExport:ICS exported (default - same as icalAttach=none):%s", respIcal);
         assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
+    }
+
+    /** Bug 84362 Confirm that import with London timezone incorrectly identified as "GMT" works */
+    public void testIcsImportExportGMTtoLondon() throws IOException, ServiceException {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String calName = NAME_PREFIX + "3rdCalendar";
+        String calUri = String.format("/%s?fmt=ics", calName);
+        TestUtil.createFolder(mbox, calName, ZFolder.View.appointment);
+        URI uri = mbox.getRestURI(calUri);
+        HttpClient client = mbox.getHttpClient(uri);
+        PostMethod post = new PostMethod(uri.toString());
+        post.setRequestEntity(new InputStreamRequestEntity(new ByteArrayInputStream(
+                TestCalDav.LOTUS_NOTES_WITH_BAD_GMT_TZID.getBytes()),
+                MimeConstants.CT_TEXT_CALENDAR));
+        ZimbraLog.test.debug("testIcsImportExport:ICS to be imported:%s", TestCalDav.LOTUS_NOTES_WITH_BAD_GMT_TZID);
+        TestCalDav.HttpMethodExecutor.execute(client, post, HttpStatus.SC_OK);
+        uri = mbox.getRestURI(calUri);
+        GetMethod get = new GetMethod(uri.toString());
+        TestCalDav.HttpMethodExecutor executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
+        String respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        ZimbraLog.test.debug("testIcsImportExport:ICS exported:%s", respIcal);
+        // If this is present, it implies that both the timezone and the references have been correctly changed.
+        String dtstartWithNewTZID = "DTSTART;TZID=\"Europe/London\":20150721T140000";
+        int dtstartIndex = respIcal.indexOf(dtstartWithNewTZID);
+        assertTrue(String.format("'%s' should be present", dtstartWithNewTZID), -1 != dtstartIndex);
     }
 
     private void verifyZipFile(ZMailbox mbox, String relativePath, boolean hasBody)
@@ -262,38 +278,38 @@ extends TestCase {
 
     @Test
     public void testSort() throws Exception {
-    	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-    	List<String> dateDesc = new ArrayList<String>();
-    	dateDesc.add(id2);
-    	dateDesc.add(id1);
-    	List<String> dateAsc = new ArrayList<String>(dateDesc);
-    	Collections.reverse(dateAsc);
-    	checkResultOrder(mbox, "/inbox?fmt=xml&query=TestUserServlet", dateDesc); //check that default is dateDesc
-    	checkResultOrder(mbox, "/inbox?fmt=xml&sort=dateDesc&query=TestUserServlet", dateDesc);
-    	checkResultOrder(mbox, "/inbox?fmt=xml&sort=dateAsc&query=TestUserServlet", dateAsc);	
-    	try {
-    		checkResultOrder(mbox, "/inbox?fmt=xml&sort=rubbish&query=TestUserServlet", dateAsc);
-    		fail(); //invalid sort order should throw an error
-    	} catch (ServiceException e) {
-    		String msg = e.getMessage();
-    		assertTrue(msg.contains("rubbish is not a valid sort order"));
-    	}
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        List<String> dateDesc = new ArrayList<String>();
+        dateDesc.add(id2);
+        dateDesc.add(id1);
+        List<String> dateAsc = new ArrayList<String>(dateDesc);
+        Collections.reverse(dateAsc);
+        checkResultOrder(mbox, "/inbox?fmt=xml&query=TestUserServlet", dateDesc); //check that default is dateDesc
+        checkResultOrder(mbox, "/inbox?fmt=xml&sort=dateDesc&query=TestUserServlet", dateDesc);
+        checkResultOrder(mbox, "/inbox?fmt=xml&sort=dateAsc&query=TestUserServlet", dateAsc);
+        try {
+            checkResultOrder(mbox, "/inbox?fmt=xml&sort=rubbish&query=TestUserServlet", dateAsc);
+            fail(); //invalid sort order should throw an error
+        } catch (ServiceException e) {
+            String msg = e.getMessage();
+            assertTrue(msg.contains("rubbish is not a valid sort order"));
+        }
     }
-    
+
     private void checkResultOrder(ZMailbox mbox, String uri, List<String> expectedOrder) throws Exception {
-    	InputStream is = mbox.getRESTResource(uri);
-    	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-    	DocumentBuilder builder = factory.newDocumentBuilder();
-    	Document doc = builder.parse(is);
-    	NodeList nodes = doc.getElementsByTagName("m");
-    	assertEquals(expectedOrder.size(), nodes.getLength());
-    	List<String> results = new ArrayList<String>();
-    	for (int i = 0; i < nodes.getLength(); i++) {
-    	    Element node = (Element) nodes.item(i);
-    	    String id = node.getAttribute("id");
-    	    results.add(id);
-    	}
-    	assertEquals(expectedOrder, results);
+        InputStream is = mbox.getRESTResource(uri);
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(is);
+        NodeList nodes = doc.getElementsByTagName("m");
+        assertEquals(expectedOrder.size(), nodes.getLength());
+        List<String> results = new ArrayList<String>();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Element node = (Element) nodes.item(i);
+            String id = node.getAttribute("id");
+            results.add(id);
+        }
+        assertEquals(expectedOrder, results);
     }
     private void checkContentType(ZMailbox mbox, ZDocument doc) throws ServiceException, IOException {
         URI uri = mbox.getRestURI("?id=" + doc.getId());
