@@ -9,12 +9,16 @@ import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.extension.ExtensionUtil;
 
 public class TwoFactorAuthStatus extends AttributeCallback {
 
     @Override
     public void preModify(CallbackContext context, String attrName, Object attrValue, Map attrsToModify, Entry entry) throws ServiceException {
         boolean setting = ((String) attrValue).equalsIgnoreCase("true");
+        if (attrName.equals(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable) && setting && !is2faExtensionInstalled()) {
+            throw ServiceException.FAILURE("cannot make two-factor auth available because the extension is not deployed on this server", null);
+        }
         if (entry instanceof Account) {
             Account account = (Account) entry;
             if (attrName.equals(Provisioning.A_zimbraFeatureTwoFactorAuthRequired) && !is2faAvailable(account, attrsToModify)
@@ -44,6 +48,10 @@ public class TwoFactorAuthStatus extends AttributeCallback {
     private boolean setting2faAttr(Map attrs, String attr, String value) {
         String attrValue = (String) attrs.get(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable);
         return attrValue != null ? attrValue.equals(value) : false;
+    }
+
+    private boolean is2faExtensionInstalled() {
+        return ExtensionUtil.getExtension("twofactorauth") != null;
     }
 
     private boolean is2faAvailable(Account account, Map attrs) {
