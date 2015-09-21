@@ -8186,7 +8186,10 @@ public class Mailbox {
                                     importIt = sameFolder && changed;
                                     if (!importIt && ZimbraLog.calendar.isDebugEnabled()) {
                                         if (sameFolder) {
-                                            ZimbraLog.calendar.debug("Skip importing UID=%s. Already present & not newer", uid);
+                                            ZimbraLog.calendar.debug(
+                    "Skip importing UID=%s. Already present & not newer.  SEQUENCE/LAST-MODIFIED old=%s,%s new=%s,%s",
+                                                    uid, curInv.getSeqNo(), curInv.getLastModified(),
+                                                    inv.getSeqNo(), inv.getLastModified());
                                         } else {
                                             ZimbraLog.calendar.debug("Skip importing UID=%s. Already in different folder id=%d",
                                                     uid, curFolder.getId());
