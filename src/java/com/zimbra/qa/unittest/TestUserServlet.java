@@ -56,7 +56,6 @@ import com.zimbra.client.ZDocument;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.httpclient.HttpClientUtil;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -194,14 +193,40 @@ public class TestUserServlet {
         get = new GetMethod(uri.toString());
         executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        ZimbraLog.test.info("testIcsImportExport:ICS exported (with icalAttach=none):%s", respIcal);
+        ZimbraLog.test.debug("testIcsImportExport:ICS exported (with icalAttach=none):%s", respIcal);
         Assert.assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
         uri = mbox.getRestURI(calUri);
         get = new GetMethod(uri.toString());
         executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        ZimbraLog.test.info("testIcsImportExport:ICS exported (default - same as icalAttach=none):%s", respIcal);
+        ZimbraLog.test.debug("testIcsImportExport:ICS exported (default - same as icalAttach=none):%s", respIcal);
         Assert.assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
+    }
+
+    /** Bug 84362 Confirm that import with London timezone incorrectly identified as "GMT" works */
+    @Test
+    public void testIcsImportExportGMTtoLondon() throws IOException, ServiceException {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String calName = NAME_PREFIX + "3rdCalendar";
+        String calUri = String.format("/%s?fmt=ics", calName);
+        TestUtil.createFolder(mbox, calName, ZFolder.View.appointment);
+        URI uri = mbox.getRestURI(calUri);
+        HttpClient client = mbox.getHttpClient(uri);
+        PostMethod post = new PostMethod(uri.toString());
+        post.setRequestEntity(new InputStreamRequestEntity(new ByteArrayInputStream(
+                TestCalDav.LOTUS_NOTES_WITH_BAD_GMT_TZID.getBytes()),
+                MimeConstants.CT_TEXT_CALENDAR));
+        ZimbraLog.test.debug("testIcsImportExport:ICS to be imported:%s", TestCalDav.LOTUS_NOTES_WITH_BAD_GMT_TZID);
+        TestCalDav.HttpMethodExecutor.execute(client, post, HttpStatus.SC_OK);
+        uri = mbox.getRestURI(calUri);
+        GetMethod get = new GetMethod(uri.toString());
+        TestCalDav.HttpMethodExecutor executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
+        String respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        ZimbraLog.test.debug("testIcsImportExport:ICS exported:%s", respIcal);
+        // If this is present, it implies that both the timezone and the references have been correctly changed.
+        String dtstartWithNewTZID = "DTSTART;TZID=\"Europe/London\":20150721T140000";
+        int dtstartIndex = respIcal.indexOf(dtstartWithNewTZID);
+        Assert.assertTrue(String.format("'%s' should be present", dtstartWithNewTZID), -1 != dtstartIndex);
     }
 
     private void verifyZipFile(ZMailbox mbox, String relativePath, boolean hasBody)

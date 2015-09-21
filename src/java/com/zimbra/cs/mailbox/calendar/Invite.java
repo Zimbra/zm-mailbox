@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.mail.BodyPart;
@@ -39,7 +41,9 @@ import javax.mail.internet.MimePart;
 import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.Attach;
 import com.zimbra.common.calendar.Geo;
@@ -1694,6 +1698,27 @@ public class Invite {
         return list;
     }
 
+    public static void adjustTZIDnames(List<ZComponent> components, Map<String,String> tzidRenames) {
+        if (tzidRenames.isEmpty() || (null == components) || components.isEmpty()) {
+            return;
+        }
+        for (ZComponent comp : components) {
+            if (!ICalTok.VTIMEZONE.equals(comp.getTok())) {
+                for (Entry<String, String> entry: tzidRenames.entrySet()) {
+                    for (ZProperty prop : comp.getProperties()) {
+                        ZParameter param = prop.getParameter(ICalTok.TZID);
+                        if (null != param) {
+                            if (entry.getKey().equals(param.getValue())) {
+                                param.setValue(entry.getValue());
+                            }
+                        }
+                    }
+                }
+                adjustTZIDnames(ImmutableList.copyOf(comp.getComponents()), tzidRenames);
+            }
+        }
+    }
+
     private static void createFromCalendar(
             List<Invite> toAdd, Account account, String fragment, ZVCalendar cal, boolean sentByMe,
             Mailbox mbx, int mailItemId,
@@ -1703,14 +1728,20 @@ public class Invite {
 
         // process the TIMEZONE's first: everything depends on them being there...
         TimeZoneMap tzmap = new TimeZoneMap(Util.getAccountTimeZone(account));
+        Map<String,String> tzidRenames = Maps.newHashMap();
         List<ZComponent> components = Lists.newArrayList(cal.getComponentIterator());
         for (ZComponent comp : components) {
             if (ICalTok.VTIMEZONE.equals(comp.getTok())) {
-                ICalTimeZone tz = ICalTimeZone.fromVTimeZone(comp);
+                ICalTimeZone tz = ICalTimeZone.fromVTimeZone(comp, false /* skipLookup */,
+                                ICalTimeZone.TZID_NAME_ASSIGNMENT_BEHAVIOR.KEEP_IF_DOESNT_CLASH);
                 tzmap.add(tz);
+                String origTZID = comp.getPropVal(ICalTok.TZID, null);
+                if ((null != origTZID) && (origTZID != tz.getID())) {
+                    tzidRenames.put(origTZID, tz.getID());
+                }
             }
         }
-
+        adjustTZIDnames(components, tzidRenames);
         createFromCalendar(toAdd, account, fragment, method, tzmap, cal.getComponentIterator(),
                            sentByMe, mbx, mailItemId, continueOnError, visitor);
     }

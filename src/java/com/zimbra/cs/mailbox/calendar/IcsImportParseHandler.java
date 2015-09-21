@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -20,12 +20,15 @@ package com.zimbra.cs.mailbox.calendar;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import net.fortuna.ical4j.data.ParserException;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.zimbra.common.calendar.ICalTimeZone;
-import com.zimbra.common.calendar.TZIDMapper;
+import com.zimbra.common.calendar.ICalTimeZone.TZID_NAME_ASSIGNMENT_BEHAVIOR;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.calendar.ZCalendar;
@@ -35,7 +38,6 @@ import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -55,19 +57,19 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     private int mNumCals;
     private boolean mInZCalendar;
 
-    private Account mAccount;
-    private boolean mContinueOnError;
+    private final Account mAccount;
+    private final boolean mContinueOnError;
     private String mMethod;
     private TimeZoneMap mTimeZoneMap;
-    private Set<String> mTZIDsSeen;
+    private final Set<String> mTZIDsSeen = Sets.newHashSet();
+    private final Map<String,String> tzidRenames = Maps.newHashMap();
 
-    private InviteVisitor mInviteVisitor;
+    private final InviteVisitor mInviteVisitor;
 
     public IcsImportParseHandler(OperationContext ctxt, Account account, Folder folder,
                                  boolean continueOnError, boolean preserveExistingAlarms) {
         mAccount = account;
         mContinueOnError = continueOnError;
-        mTZIDsSeen = new HashSet<String>();
         mInviteVisitor = new ImportInviteVisitor(ctxt, folder, preserveExistingAlarms);
     }
 
@@ -75,10 +77,10 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
                                  boolean continueOnError, boolean removeAlarms) {
         mAccount = account;
         mContinueOnError = continueOnError;
-        mTZIDsSeen = new HashSet<String>();
         mInviteVisitor = visitor;
     }
 
+    @Override
     public void startCalendar() throws ParserException {
         mComponents.clear();
         mInZCalendar = true;
@@ -88,21 +90,28 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         mTimeZoneMap = new TimeZoneMap(Util.getAccountTimeZone(mAccount));
     }
 
+    @Override
     public void endCalendar() throws ParserException {
         mInZCalendar = false;
         mNumCals++;
         mCurCal = null;
     }
 
+    @Override
     public boolean inZCalendar() { return mInZCalendar; }
+
+    @Override
     public int getNumCals() { return mNumCals; }
 
+    @Override
     public void startComponent(String name) {
-        if (mComponents.isEmpty())
+        if (mComponents.isEmpty()) {
             mTZIDsSeen.clear();
+        }
         mComponents.add(new ZComponent(name));
     }
 
+    @Override
     public void endComponent(String name) throws ParserException {
         if (mComponents.isEmpty())
             throw new ParserException("Found END:" + name + " without BEGIN");
@@ -118,8 +127,15 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
                         doComp(comp);
                         break;
                     case VTIMEZONE:
-                        ICalTimeZone tz = ICalTimeZone.fromVTimeZone(comp);
+                        String origTZID = comp.getPropVal(ICalTok.TZID, null);
+                        ICalTimeZone tz = ICalTimeZone.fromVTimeZone(comp, false /* skipLookup */,
+                                TZID_NAME_ASSIGNMENT_BEHAVIOR.KEEP_IF_DOESNT_CLASH);
+                        if ((null != origTZID) && (origTZID != tz.getID())) {
+                            tzidRenames.put(origTZID, tz.getID());
+                        }
                         mTimeZoneMap.add(tz);
+                        break;
+                    default:
                         break;
                     }
                 } catch (ServiceException e) {
@@ -131,9 +147,10 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         }
     }
 
+    @Override
     public void startProperty(String name) {
         mCurProperty = new ZProperty(name);
-        
+
         if (mComponents.size() > 0) {
             mComponents.get(mComponents.size()-1).addProperty(mCurProperty);
         } else {
@@ -141,7 +158,8 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         }
     }
 
-    public void propertyValue(String value) throws ParserException { 
+    @Override
+    public void propertyValue(String value) throws ParserException {
         ICalTok token = mCurProperty.getToken();
         if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token) || ICalTok.FREEBUSY.equals(token))
             mCurProperty.setValueList(ZCalendar.parseCommaSepText(value));
@@ -159,9 +177,17 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         }
     }
 
+    @Override
     public void endProperty(String name) { mCurProperty = null; }
 
+    @Override
     public void parameter(String name, String value) {
+        if (ICalTok.TZID.equals(name) && (null != value)) {
+            String newTzid = tzidRenames.get(value);
+            if (newTzid != null) {
+                value = newTzid;
+            }
+        }
         ZParameter param = new ZParameter(name, value);
         if (mCurProperty != null) {
             mCurProperty.addParameter(param);
@@ -169,7 +195,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
             if (ICalTok.TZID.equals(param.getToken()) && mCurProperty.getToken() != null)
                 mTZIDsSeen.add(value);
         } else {
-            ZimbraLog.calendar.debug("ERROR: got parameter " + name + "," + value + " outside of Property");
+            ZimbraLog.calendar.debug("ERROR: got parameter %s=\"%s\"  outside of Property", name, value);
         }
     }
 
@@ -203,10 +229,10 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     }
 
     public static class ImportInviteVisitor implements InviteVisitor {
-        private OperationContext mCtxt;
-        private Folder mFolder;
-        private boolean mPreserveExistingAlarms;
-        private Set<String> mUidsSeen = new HashSet<String>();
+        private final OperationContext mCtxt;
+        private final Folder mFolder;
+        private final boolean mPreserveExistingAlarms;
+        private final Set<String> mUidsSeen = new HashSet<String>();
 
         public ImportInviteVisitor(OperationContext ctxt, Folder folder, boolean preserveExistingAlarms) {
             mCtxt = ctxt;
@@ -214,6 +240,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
             mPreserveExistingAlarms = preserveExistingAlarms;
         }
 
+        @Override
         public void visit(Invite inv) throws ServiceException {
             // handle missing UIDs on remote calendars by generating them as needed
             String uid = inv.getUid();

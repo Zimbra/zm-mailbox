@@ -1531,7 +1531,8 @@ public class TestCalDav  {
             assertNotNull("tzcal", tzcal);
             ZComponent tzcomp = tzcal.getComponent(ICalTok.VTIMEZONE);
             assertNotNull("tzcomp", tzcomp);
-            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzcomp);
+            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzcomp, false /* skipLookup */,
+                                ICalTimeZone.TZID_NAME_ASSIGNMENT_BEHAVIOR.KEEP_IF_DOESNT_CLASH);
             ICalTimeZone matchtz = ICalTimeZone.lookupMatchingWellKnownTZ(tz);
             assertEquals("ID of Timezone which fuzzy matches W. Europe", "Europe/Berlin", matchtz.getID());
         }
@@ -1562,7 +1563,8 @@ public class TestCalDav  {
             assertNotNull("tzcal", tzcal);
             ZComponent tzcomp = tzcal.getComponent(ICalTok.VTIMEZONE);
             assertNotNull("tzcomp", tzcomp);
-            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzcomp);
+            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzcomp, false /* skipLookup */,
+                                ICalTimeZone.TZID_NAME_ASSIGNMENT_BEHAVIOR.ALWAYS_KEEP);
             ICalTimeZone matchtz = ICalTimeZone.lookupMatchingWellKnownTZ(tz);
             assertEquals("ID of Timezone which fuzzy matches GMT=06.00/-05.00", "America/Chicago", matchtz.getID());
         }
@@ -1593,9 +1595,85 @@ public class TestCalDav  {
             assertNotNull("tzcal", tzcal);
             ZComponent tzcomp = tzcal.getComponent(ICalTok.VTIMEZONE);
             assertNotNull("tzcomp", tzcomp);
-            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzcomp);
+            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzcomp, false /* skipLookup */,
+                                ICalTimeZone.TZID_NAME_ASSIGNMENT_BEHAVIOR.ALWAYS_KEEP);
             ICalTimeZone matchtz = ICalTimeZone.lookupMatchingWellKnownTZ(tz);
             assertEquals("ID of Timezone which fuzzy matches GMT=08.00/-07.00", "America/Los_Angeles", matchtz.getID());
+        }
+    }
+
+    public static String LOTUS_NOTES_WITH_BAD_GMT_TZID =
+            "BEGIN:VCALENDAR\r\n" +
+            "X-LOTUS-CHARSET:UTF-8\r\n" +
+            "VERSION:2.0\r\n" +
+            "PRODID:-//Lotus Development Corporation//NONSGML Notes 8.5.3//EN_C\r\n" +
+            "METHOD:REQUEST\r\n" +
+            "BEGIN:VTIMEZONE\r\n" +
+            "TZID:GMT\r\n" +
+            "BEGIN:STANDARD\r\n" +
+            "DTSTART:19501029T020000\r\n" +
+            "TZOFFSETFROM:+0100\r\n" +
+            "TZOFFSETTO:+0000\r\n" +
+            "RRULE:FREQ=YEARLY;BYMINUTE=0;BYHOUR=2;BYDAY=-1SU;BYMONTH=10\r\n" +
+            "END:STANDARD\r\n" +
+            "BEGIN:DAYLIGHT\r\n" +
+            "DTSTART:19500326T020000\r\n" +
+            "TZOFFSETFROM:+0000\r\n" +
+            "TZOFFSETTO:+0100\r\n" +
+            "RRULE:FREQ=YEARLY;BYMINUTE=0;BYHOUR=2;BYDAY=-1SU;BYMONTH=3\r\n" +
+            "END:DAYLIGHT\r\n" +
+            "END:VTIMEZONE\r\n" +
+            "BEGIN:VEVENT\r\n" +
+            "DTSTART;TZID=\"GMT\":20150721T140000\r\n" +
+            "DTEND;TZID=\"GMT\":20150721T150000\r\n" +
+            "TRANSP:OPAQUE\r\n" +
+            "DTSTAMP:20150721T072350Z\r\n" +
+            "SEQUENCE:0\r\n" +
+            "ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED;CN=\"Administrator/zimbra\"\r\n" +
+            " ;RSVP=FALSE:mailto:administrator@example.com\r\n" +
+            "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE\r\n" +
+            " :mailto:fred.flintstone@example.com\r\n" +
+            "CLASS:PUBLIC\r\n" +
+            "SUMMARY:new meeting\r\n" +
+            "ORGANIZER;CN=\"Administrator/zimbra\":mailto:administrator@example.com\r\n" +
+            "UID:F0197AA9F439EFC888257E890026367E-Lotus_Notes_Generated\r\n" +
+            "X-LOTUS-BROADCAST:FALSE\r\n" +
+            "X-LOTUS-UPDATE-SEQ:1\r\n" +
+            "X-LOTUS-UPDATE-WISL:$S:1;$L:1;$B:1;$R:1;$E:1;$W:1;$O:1;$M:1;RequiredAttendees:1;INetRequiredNames:1;AltRequiredNames:1;StorageRequiredNames:1;OptionalAttendees:1;INetOptionalNames:1;AltOptionalNames:1;StorageOptionalNames:1\r\n" +
+            "X-LOTUS-NOTESVERSION:2\r\n" +
+            "X-LOTUS-NOTICETYPE:I\r\n" +
+            "X-LOTUS-APPTTYPE:3\r\n" +
+            "X-LOTUS-CHILD-UID:F0197AA9F439EFC888257E890026367E\r\n" +
+            "END:VEVENT\r\n" +
+            "END:VCALENDAR\r\n";
+
+    public void testLondonTimeZoneCalledGMTkeepSameName() throws Exception {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(LOTUS_NOTES_WITH_BAD_GMT_TZID.getBytes())) {
+            ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
+            assertNotNull("tzcal", tzcal);
+            ZComponent tzcomp = tzcal.getComponent(ICalTok.VTIMEZONE);
+            assertNotNull("tzcomp", tzcomp);
+            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzcomp, false /* skipLookup */,
+                                ICalTimeZone.TZID_NAME_ASSIGNMENT_BEHAVIOR.ALWAYS_KEEP);
+            assertEquals("ID that London Timezone originally with TZID=GMT maps to", "GMT",
+                    tz.getID());
+            assertEquals("that London Timezone originally with TZID=GMT maps to this daylightTzname",
+                    "GMT/BST", tz.getDaylightTzname());
+        }
+    }
+
+    public void testLondonTimeZoneCalledGMT() throws Exception {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(LOTUS_NOTES_WITH_BAD_GMT_TZID.getBytes())) {
+            ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
+            assertNotNull("tzcal", tzcal);
+            ZComponent tzcomp = tzcal.getComponent(ICalTok.VTIMEZONE);
+            assertNotNull("tzcomp", tzcomp);
+            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzcomp, false /* skipLookup */,
+                                ICalTimeZone.TZID_NAME_ASSIGNMENT_BEHAVIOR.KEEP_IF_DOESNT_CLASH);
+            assertEquals("ID that London Timezone originally with TZID=GMT maps to", "Europe/London",
+                    tz.getID());
+            assertEquals("that London Timezone originally with TZID=GMT maps to this daylightTzname",
+                    "GMT/BST", tz.getDaylightTzname());
         }
     }
 
