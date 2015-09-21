@@ -1067,16 +1067,12 @@ public class ICalTimeZone extends SimpleTimeZone {
             return tzComp1;
     }
 
-    public static ICalTimeZone fromVTimeZone(ZComponent comp)
-    throws ServiceException {
-        return fromVTimeZone(comp, false);
-    }
-
-    public static ICalTimeZone fromVTimeZone(ZComponent comp, boolean skipLookup)
+    public static ICalTimeZone fromVTimeZone(ZComponent comp, boolean skipLookup,
+            TZID_NAME_ASSIGNMENT_BEHAVIOR tzidNameAssigmentBehavior)
     throws ServiceException {
         String tzid = comp.getPropVal(ICalTok.TZID, null);
 
-        if (!skipLookup) {
+        if (!(skipLookup || ("GMT".equals(tzid)))) {
             ICalTimeZone tz = lookupByTZID(tzid);
             if (tz != null) {
                 return tz;
@@ -1225,7 +1221,7 @@ public class ICalTimeZone extends SimpleTimeZone {
                 dayoffsetTime, daydtStart, dayrrule, dayTzname);
 
         if (!skipLookup) {
-            newTz = lookupByRule(newTz, true);
+            newTz = lookupByRule(newTz, tzidNameAssigmentBehavior);
         }
         return newTz;
     }
@@ -1246,21 +1242,32 @@ public class ICalTimeZone extends SimpleTimeZone {
         return null;
     }
 
+    public enum TZID_NAME_ASSIGNMENT_BEHAVIOR { ALWAYS_KEEP, KEEP_IF_DOESNT_CLASH, USE_MATCHED_NAME };
+
     // Lookup a well-known time zone by DST rule.
-    public static ICalTimeZone lookupByRule(ICalTimeZone tz, boolean keepTZID) {
+    public static ICalTimeZone lookupByRule(ICalTimeZone tz, TZID_NAME_ASSIGNMENT_BEHAVIOR assignmentBehavior) {
         if (!DebugConfig.disableCalendarTZMatchByRule) {
             ICalTimeZone match = WellKnownTimeZones.getBestFuzzyMatch(tz);
             if (match != null) {
-                if (keepTZID) {
-                    // Return the matched TZ, but using the TZID of the passed-in tz.
-                    String tzid = tz.getID();
-                    if (match.getID().equals(tzid)) {
+                String tzid = tz.getID();
+                String matchTZID = match.getID();
+                if (matchTZID.equals(tzid)) {
+                    return match;
+                }
+                switch (assignmentBehavior){
+                case ALWAYS_KEEP:
+                    return match.cloneWithNewTZID(tzid);
+                case KEEP_IF_DOESNT_CLASH:
+                    if (null != WellKnownTimeZones.getTimeZoneById(tzid)) {
+                        /* Return the matched TZ.  TZID may be different than that of passed-in tz, so any references
+                         * to it will need to be changed. */
                         return match;
-                    } else {
-                        return match.cloneWithNewTZID(tzid);
                     }
-                } else {
-                    // Return the matched TZ.  TZID may be different than that of passed-in tz.
+                    return match.cloneWithNewTZID(tzid);
+                case USE_MATCHED_NAME:
+                default:
+                    /* Return the matched TZ.  TZID may be different than that of passed-in tz, so any references
+                     * to it will need to be changed. */
                     return match;
                 }
             }
@@ -1269,11 +1276,20 @@ public class ICalTimeZone extends SimpleTimeZone {
         return tz;
     }
 
+    // Lookup a well-known time zone by DST rule.
+    public static ICalTimeZone lookupByRule(ICalTimeZone tz, boolean keepTZID) {
+        return lookupByRule(tz,
+                keepTZID ? TZID_NAME_ASSIGNMENT_BEHAVIOR.ALWAYS_KEEP : TZID_NAME_ASSIGNMENT_BEHAVIOR.USE_MATCHED_NAME);
+    }
+
     public static ICalTimeZone lookupMatchingWellKnownTZ(ICalTimeZone tz) {
         if (!DebugConfig.disableCalendarTZMatchByID) {
-            ICalTimeZone match = WellKnownTimeZones.getTimeZoneById(tz.getID());
-            if (match != null) {
-                return match;
+            String tzid = tz.getID();
+            if (!"GMT".equals(tzid)) {
+                ICalTimeZone match = WellKnownTimeZones.getTimeZoneById(tz.getID());
+                if (match != null) {
+                    return match;
+                }
             }
         }
         if (!DebugConfig.disableCalendarTZMatchByRule) {

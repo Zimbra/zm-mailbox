@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.zimbra.common.calendar.ICalTimeZone.SimpleOnset;
+import com.zimbra.common.calendar.ICalTimeZone.TZID_NAME_ASSIGNMENT_BEHAVIOR;
 import com.zimbra.common.calendar.TZIDMapper.TZ;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
@@ -110,7 +111,7 @@ public class WellKnownTimeZones {
             ZComponent tzComp = compIter.next();
             if (!ICalTok.VTIMEZONE.equals(tzComp.getTok()))
                 continue;
-            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzComp, true);
+            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzComp, true, TZID_NAME_ASSIGNMENT_BEHAVIOR.ALWAYS_KEEP);
             sTZIDMap.put(tz.getID(), tz);
         }
         // Add aliases from TZIDMapper.  Build map of TZID to match score.
