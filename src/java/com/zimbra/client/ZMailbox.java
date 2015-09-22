@@ -3662,6 +3662,7 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public enum SharedItemBy {
+            private String mAttachmentId;
         BY_ID, BY_PATH;
 
         public static SharedItemBy fromString(String s) throws ServiceException {
@@ -3670,12 +3671,20 @@ public class ZMailbox implements ToZJSONObject {
             } catch (IllegalArgumentException e) {
                 throw ZClientException.CLIENT_ERROR("invalid sharedItemBy: "+s+", valid values: "+Arrays.asList(SharedItemBy.values()), e);
             }
+            public AttachedMessagePart(String attachmentId, String contentId) {
+                mAttachmentId = attachmentId;
+                mContentId = contentId;
+            }
+
         }
     }
 
     /**
      * create a new mountpoint in the specified parent folder.
      *
+            public String getAttachmentId() { return mAttachmentId; }
+            public void setAttachmentId(String attachmentId) { mAttachmentId = attachmentId; }
+
      * @param parentId parent folder id
      * @param name name of new folder
      * @param defaultView default view of new folder.
@@ -3850,10 +3859,13 @@ public class ZMailbox implements ToZJSONObject {
                         Element e = parent.addElement(MailConstants.E_MIMEPART);
                         e.addAttribute(MailConstants.A_CONTENT_ID, subPart.getContentId());
                         Element attach = e.addElement(MailConstants.E_ATTACH);
-                        Element el = attach.addElement(MailConstants.E_MIMEPART);
-                        el.addAttribute(MailConstants.A_MESSAGE_ID,subPart.getMessageId());
-                        el.addAttribute(MailConstants.A_PART,subPart.getPartName());
-
+                        if (subPart.getMessageId() != null) {
+                            Element el = attach.addElement(MailConstants.E_MIMEPART);
+                            el.addAttribute(MailConstants.A_MESSAGE_ID,subPart.getMessageId());
+                            el.addAttribute(MailConstants.A_PART,subPart.getPartName());
+                        } else {
+                            attach.addAttribute(MailConstants.A_ATTACHMENT_ID,subPart.getAttachmentId());
+                        }
                     }
                 }
                 return mpEl;
