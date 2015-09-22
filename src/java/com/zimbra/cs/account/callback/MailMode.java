@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
 
@@ -33,16 +34,25 @@ public class MailMode extends LocalBind {
         SingleValueMod mod = singleValueMod(attrsToModify, attrName);
         if (mod.setting()) {
             String zimbraMailMode = mod.value();
-            Server server = (Server) entry;
-            String zimbraReverseProxySSLToUpstreamEnabled = server.getAttr("zimbraReverseProxySSLToUpstreamEnabled", true);
-            if (zimbraReverseProxySSLToUpstreamEnabled.equals("TRUE") &&
-                    !(zimbraMailMode.equals("https") || zimbraMailMode.equals("both"))) {
-                throw ServiceException.INVALID_REQUEST(ERROR_MM_W_IP_SEC, null);
+            if (isReverseProxySSLToUpstreamEnabled(entry)) {
+                if (!(zimbraMailMode.equals("https") || zimbraMailMode.equals("both"))) {
+                    throw ServiceException.INVALID_REQUEST(ERROR_MM_W_IP_SEC, null);
+                }
             }
-            else if (zimbraReverseProxySSLToUpstreamEnabled.equals("FALSE") &&
-                    !(zimbraMailMode.equals("http") || zimbraMailMode.equals("both"))) {
+            else if (!(zimbraMailMode.equals("http") || zimbraMailMode.equals("both"))) {
                 throw ServiceException.INVALID_REQUEST(ERROR_MM_WO_IP_SEC, null);
             }
+        }
+    }
+
+    private boolean isReverseProxySSLToUpstreamEnabled (Entry entry)
+    throws ServiceException {
+        if (entry instanceof Server) {
+            Server server = (Server) entry;
+            return (server.getAttr("zimbraReverseProxySSLToUpstreamEnabled", true) == "TRUE");
+        }
+        else {
+            return Provisioning.getInstance().getConfig().isReverseProxySSLToUpstreamEnabled();
         }
     }
 }
