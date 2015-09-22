@@ -28,7 +28,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.auth.twofactor.TwoFactorManager.TwoFactorPasswordChange;
 
 public abstract class ChangePasswordListener {
 
@@ -206,11 +205,6 @@ public abstract class ChangePasswordListener {
 		public void postModify(Account acct, String newPassword, Map context) {
             System.out.println("postModify dummy");
         }
-    }
-
-    public static void registerDefaultListeners() {
-        InternalChangePasswordListenerId cplId = InternalChangePasswordListenerId.CPL_REVOKE_APP_PASSWORDS;
-        ChangePasswordListener.registerInternal(cplId, new TwoFactorPasswordChange());
     }
 
     public static void main(String[] args) throws Exception {

@@ -12804,13 +12804,13 @@ public abstract class ZAttrCos extends NamedEntry {
      * Whether the option of enabling two-factor authentication is available
      * on the account
      *
-     * @return zimbraFeatureTwoFactorAuthAvailable, or true if unset
+     * @return zimbraFeatureTwoFactorAuthAvailable, or false if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2050)
     public boolean isFeatureTwoFactorAuthAvailable() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureTwoFactorAuthAvailable, false);
     }
 
     /**

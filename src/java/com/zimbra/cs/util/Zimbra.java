@@ -44,7 +44,6 @@ import com.zimbra.cs.account.ExternalAccountManagerTask;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.RightManager;
-import com.zimbra.cs.account.ldap.ChangePasswordListener;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -409,7 +408,6 @@ public final class Zimbra {
                 ZimbraPerf.initialize();
             }
         }
-        ChangePasswordListener.registerDefaultListeners();
 
         ExtensionManager.getInstance().postInitAll();
 

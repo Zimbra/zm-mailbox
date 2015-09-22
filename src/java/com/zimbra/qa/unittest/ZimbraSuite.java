@@ -134,10 +134,6 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestResetLdapClient.class);
         sClasses.add(TestShareNotifications.class);
         sClasses.add(TestDLMembership.class);
-        sClasses.add(TestTwoFactorAuth.class);
-        sClasses.add(TestTwoFactorAuthAdmin.class);
-        sClasses.add(TestAppSpecificPasswords.class);
-        sClasses.add(TestTrustedToken.class);
         sClasses.add(TestPurgeDataSource.class);
         sClasses.add(TestDomainAdmin.class);
         sClasses.add(TestTrashImapMessage.class);

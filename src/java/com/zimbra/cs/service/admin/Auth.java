@@ -45,7 +45,7 @@ import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
-import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
+import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
@@ -158,11 +158,11 @@ public class Auth extends AdminDocumentHandler {
                 authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
                 authCtxt.put(AuthContext.AC_AS_ADMIN, Boolean.TRUE);
                 prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
-                TwoFactorManager manager = new TwoFactorManager(acct);
-                boolean usingTwoFactorAuth = manager.twoFactorAuthEnabled();
+                TwoFactorAuth twoFactorAuth = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
+                boolean usingTwoFactorAuth = twoFactorAuth.twoFactorAuthEnabled();
                 if (usingTwoFactorAuth) {
                     if (twoFactorCode != null) {
-                        manager.authenticate(twoFactorCode);
+                        twoFactorAuth.authenticate(twoFactorCode);
                     }
                 }
                 checkAdmin(acct);

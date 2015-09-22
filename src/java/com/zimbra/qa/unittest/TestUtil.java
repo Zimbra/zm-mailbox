@@ -94,9 +94,8 @@ import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig;
-import com.zimbra.common.auth.twofactor.AuthenticatorConfig.CodeLength;
-import com.zimbra.common.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
 import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
+import com.zimbra.common.auth.twofactor.TwoFactorOptions;
 import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.KnownKey;
@@ -1412,8 +1411,8 @@ extends Assert {
 
     public static TOTPAuthenticator getDefaultAuthenticator() {
         final int WINDOW_SIZE = 30;
-        final HashAlgorithm HASH_ALGORITHM = HashAlgorithm.SHA1;
-        final CodeLength NUM_CODE_DIGITS = CodeLength.SIX;
+        final TwoFactorOptions.HashAlgorithm HASH_ALGORITHM = TwoFactorOptions.HashAlgorithm.SHA1;
+        final TwoFactorOptions.CodeLength NUM_CODE_DIGITS = TwoFactorOptions.CodeLength.SIX;
         AuthenticatorConfig config = new AuthenticatorConfig();
         config.setHashAlgorithm(HASH_ALGORITHM);
         config.setNumCodeDigits(NUM_CODE_DIGITS);
