@@ -3662,7 +3662,6 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public enum SharedItemBy {
-            private String mAttachmentId;
         BY_ID, BY_PATH;
 
         public static SharedItemBy fromString(String s) throws ServiceException {
@@ -3671,20 +3670,12 @@ public class ZMailbox implements ToZJSONObject {
             } catch (IllegalArgumentException e) {
                 throw ZClientException.CLIENT_ERROR("invalid sharedItemBy: "+s+", valid values: "+Arrays.asList(SharedItemBy.values()), e);
             }
-            public AttachedMessagePart(String attachmentId, String contentId) {
-                mAttachmentId = attachmentId;
-                mContentId = contentId;
-            }
-
         }
     }
 
     /**
      * create a new mountpoint in the specified parent folder.
      *
-            public String getAttachmentId() { return mAttachmentId; }
-            public void setAttachmentId(String attachmentId) { mAttachmentId = attachmentId; }
-
      * @param parentId parent folder id
      * @param name name of new folder
      * @param defaultView default view of new folder.
@@ -3782,10 +3773,16 @@ public class ZMailbox implements ToZJSONObject {
             private String mMessageId;
             private String mPartName;
             private String mContentId;
+            private String mAttachmentId;
 
             public AttachedMessagePart(String messageId, String partName, String contentId) {
                 mMessageId = messageId;
                 mPartName = partName;
+                mContentId = contentId;
+            }
+
+            public AttachedMessagePart(String attachmentId, String contentId) {
+                mAttachmentId = attachmentId;
                 mContentId = contentId;
             }
 
@@ -3797,6 +3794,9 @@ public class ZMailbox implements ToZJSONObject {
 
             public String getPartName() { return mPartName; }
             public void setPartName(String partName) { mPartName = partName; }
+
+            public String getAttachmentId() { return mAttachmentId; }
+            public void setAttachmentId(String attachmentId) { mAttachmentId = attachmentId; }
         }
 
         public static class MessagePart {
