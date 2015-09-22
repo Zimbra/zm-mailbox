@@ -1778,6 +1778,7 @@
             ModifyConfig zimbraRemoteManagementUser ${zimbra.user}
             ModifyConfig +zimbraBackupReportEmailRecipients '"Backup Admin" &lt;user2@${defaultdomain.name}&gt;'
             ModifyConfig zimbraBackupReportEmailSender '"Backup Daemon" &lt;admin@${defaultdomain.name}&gt;'
+            ModifyConfig zimbraReverseProxySSLToUpstreamEnabled FALSE
             CreateServer ${zimbra.server.hostname} \
             zimbraSmtpHostname ${zimbra.smtp.host} \
             zimbraSmtpPort 7024 \
