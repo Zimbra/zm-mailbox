@@ -16,17 +16,26 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Date;
@@ -51,6 +60,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 import com.zimbra.client.ZDocument;
 import com.zimbra.client.ZFolder;
@@ -76,6 +88,9 @@ public class TestUserServlet {
     private static final String USER_NAME = NAME_PREFIX  + "_user1";
     private static final String USER_2_NAME = NAME_PREFIX + "_user2";
     private boolean originalLCSetting = false;
+    private static String id1;
+    private static String id2;
+    private String originalSanitizeHtml;
 
     @Before
     public void setUp()
@@ -85,6 +100,11 @@ public class TestUserServlet {
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         TestUtil.createAccount(USER_NAME);
         // Add a test message, in case the account is empty.
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        originalSanitizeHtml = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraNotebookSanitizeHtml);
+        id1 = TestUtil.addMessage(mbox, NAME_PREFIX);
+        Thread.sleep(1000); //so that timestamps are different
+        id2 = TestUtil.addMessage(mbox, NAME_PREFIX + " 2");
         TestUtil.addMessageLmtp(NAME_PREFIX, USER_NAME, USER_2_NAME);
     }
 
@@ -272,14 +292,55 @@ public class TestUserServlet {
         checkContentType(mbox, doc);
     }
 
+    /** This test is currently failing on main due to the "query" url parameter
+     * not returning the correct results. Temporarily commenting out the test.
+     * @throws Exception
+     */
+    // @Test
+    public void testSort() throws Exception {
+    	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+    	List<String> dateDesc = new ArrayList<String>();
+    	dateDesc.add(id2);
+    	dateDesc.add(id1);
+    	List<String> dateAsc = new ArrayList<String>(dateDesc);
+    	Collections.reverse(dateAsc);
+    	Thread.sleep(1000 * 60);
+    	checkResultOrder(mbox, "/inbox?fmt=xml&query=TestUserServlet", dateDesc); //check that default is dateDesc
+    	checkResultOrder(mbox, "/inbox?fmt=xml&sort=dateDesc&query=TestUserServlet", dateDesc);
+    	checkResultOrder(mbox, "/inbox?fmt=xml&sort=dateAsc&query=TestUserServlet", dateAsc);
+    	try {
+    		checkResultOrder(mbox, "/inbox?fmt=xml&sort=rubbish&query=TestUserServlet", dateAsc);
+    		fail(); //invalid sort order should throw an error
+    	} catch (ServiceException e) {
+    		String msg = e.getMessage();
+    		assertTrue(msg.contains("rubbish is not a valid sort order"));
+    	}
+    }
+
+    private void checkResultOrder(ZMailbox mbox, String uri, List<String> expectedOrder) throws Exception {
+    	InputStream is = mbox.getRESTResource(uri);
+    	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    	DocumentBuilder builder = factory.newDocumentBuilder();
+    	Document doc = builder.parse(is);
+    	NodeList nodes = doc.getElementsByTagName("m");
+    	Assert.assertEquals(expectedOrder.size(), nodes.getLength());
+    	List<String> results = new ArrayList<String>();
+    	for (int i = 0; i < nodes.getLength(); i++) {
+    	    Element node = (Element) nodes.item(i);
+    	    String id = node.getAttribute("id");
+    	    results.add(id);
+    	}
+    	assertEquals(expectedOrder, results);
+    }
+
     private void checkContentType(ZMailbox mbox, ZDocument doc) throws ServiceException, IOException {
         URI uri = mbox.getRestURI("?id=" + doc.getId());
         HttpClient client = mbox.getHttpClient(uri);
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(client, get);
         get.releaseConnection();
-        Assert.assertEquals(200, statusCode);
-        Assert.assertEquals("text/plain", get.getResponseHeader("Content-Type").getValue());
+        assertEquals(200, statusCode);
+        assertEquals("text/plain", get.getResponseHeader("Content-Type").getValue());
     }
 
     @After
