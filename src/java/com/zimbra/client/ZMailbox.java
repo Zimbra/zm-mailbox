@@ -4023,6 +4023,12 @@ public class ZMailbox implements ToZJSONObject {
                 attach.addElement(MailConstants.E_DOC).addAttribute(MailConstants.A_ID, did);
             }
         }
+        if (message.getContactIdsToAttach() != null) {
+            if (attach == null) attach = m.addElement(MailConstants.E_ATTACH);
+            for (String cid: message.getContactIdsToAttach()) {
+                attach.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, cid);
+            }
+        }
         if (message.getMessagePartsToAttach() != null) {
             if (attach == null) {
                 attach = m.addElement(MailConstants.E_ATTACH);
