@@ -160,7 +160,7 @@ public class AccountConstants {
     public static final String E_GET_GCM_SENDER_ID_RESPONSE = "GetGcmSenderIdResponse";
 
     //OAuth
-    public static final String E_OAUTH_CONSUMER = "OauthConsumer";
+    public static final String E_OAUTH_CONSUMER = "OAuthConsumer";
     public static final String E_GET_OAUTH_CONSUMERS_REQUEST = "GetOAuthConsumersRequest";
     public static final String E_GET_OAUTH_CONSUMERS_RESPONSE = "GetOAuthConsumersResponse";
     public static final String E_REVOKE_OAUTH_CONSUMER_REQUEST = "RevokeOAuthConsumerRequest";
