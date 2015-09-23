@@ -49,7 +49,7 @@ public class MailMode extends LocalBind {
     throws ServiceException {
         if (entry instanceof Server) {
             Server server = (Server) entry;
-            return (server.getAttr("zimbraReverseProxySSLToUpstreamEnabled", true) == "TRUE");
+            return server.isReverseProxySSLToUpstreamEnabled();
         }
         else {
             return Provisioning.getInstance().getConfig().isReverseProxySSLToUpstreamEnabled();
