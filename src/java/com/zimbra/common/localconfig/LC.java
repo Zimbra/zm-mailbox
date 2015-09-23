@@ -430,6 +430,7 @@ public final class LC {
     public static final KnownKey ldap_accesslog_maxsize = KnownKey.newKey(85899345920L);
     public static final KnownKey ldap_accesslog_envflags = KnownKey.newKey("writemap nometasync");
     public static final KnownKey ldap_overlay_syncprov_checkpoint = KnownKey.newKey("20 10");
+    public static final KnownKey ldap_overlay_syncprov_sessionlog = KnownKey.newKey(10000000L);
     public static final KnownKey ldap_overlay_accesslog_logpurge = KnownKey.newKey("01+00:00  00+04:00");
     public static final KnownKey ldap_monitor_mdb = KnownKey.newKey("true");
     public static final KnownKey ldap_monitor_alert_only = KnownKey.newKey("true");
