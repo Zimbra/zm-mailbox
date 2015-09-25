@@ -8821,11 +8821,6 @@ TODO: delete them permanently from here
   <desc>Google Server API key used by sever to push notifications to GCM</desc>
 </attr>
 
-<attr id="1956" name="zimbraMobileGatewayPushNotificationsQueueThreadPoolSize" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
-  <globalConfigValue>10</globalConfigValue>
-  <desc>Notifications Queue Thread Pool Size</desc>
-</attr>
-
 <attr id="1957" name="zimbraReverseProxyXmppBoshLocalHttpBindURL" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
   <globalConfigValue>/http-bind</globalConfigValue>
   <desc>Local HTTP-BIND URL prefix where ZWC sends XMPP over BOSH requests</desc>
