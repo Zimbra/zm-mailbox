@@ -9128,14 +9128,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileGatewayProxySmtpPort = "zimbraMobileGatewayProxySmtpPort";
 
     /**
-     * Notifications Queue Thread Pool Size
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1956)
-    public static final String A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize = "zimbraMobileGatewayPushNotificationsQueueThreadPoolSize";
-
-    /**
      * Max size of items in a folder that server tracks, categorized by
      * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
      * the max size of items to track for an Email folder to be 3000. If not
