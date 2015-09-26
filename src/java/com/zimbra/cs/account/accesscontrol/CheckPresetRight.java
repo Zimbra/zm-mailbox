@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -85,8 +85,7 @@ public class CheckPresetRight extends CheckRight {
         Boolean allowed;
 
         if ((cached == null) || (cached == CachedPermission.NOT_CACHED)) {
-            CheckPresetRight checker = new CheckPresetRight(grantee, target,
-                    rightNeeded, canDelegateNeeded, via);
+            CheckPresetRight checker = new CheckPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
             allowed = checker.checkRight();
             PermissionCache.cachePut(grantee, target, rightNeeded, canDelegateNeeded, allowed);
         } else {
@@ -94,10 +93,9 @@ public class CheckPresetRight extends CheckRight {
         }
 
         if (sLog.isDebugEnabled()) {
-            sLog.debug("check ACL: " + (allowed==null ? "no matching ACL" : allowed) +
-                    "(target=" + target.getLabel() + ", grantee=" + grantee.getName() +
-                    ", right=" + rightNeeded.getName() +
-                    ", canDelegateNeeded=" + canDelegateNeeded + ")");
+            sLog.debug("check ACL: %s (target=%s, grantee=%s, right=%s, canDelegateNeeded=%s, wasCached=%s)",
+                        (allowed==null ? "no matching ACL" : allowed), target.getLabel(), grantee.getName(),
+                        rightNeeded.getName(), canDelegateNeeded, cached);
         }
 
         return allowed;

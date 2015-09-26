@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,14 +22,22 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.message.FlushCacheRequest;
 import com.zimbra.soap.admin.message.GrantRightRequest;
+import com.zimbra.soap.admin.type.CacheEntrySelector;
+import com.zimbra.soap.admin.type.CacheEntrySelector.CacheEntryBy;
+import com.zimbra.soap.admin.type.CacheEntryType;
+import com.zimbra.soap.admin.type.CacheSelector;
+import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.RightModifierInfo;
+import com.zimbra.soap.type.TargetBy;
 import com.zimbra.soap.type.ZmBoolean;
 
 public class GrantRight extends RightDocumentHandler {
@@ -46,9 +54,26 @@ public class GrantRight extends RightDocumentHandler {
         RightModifier rightModifier = getRightModifier(modifierInfo);
 
         // right checking is done in RightCommand
-
-        RightCommand.grantRight(Provisioning.getInstance(), getAuthenticatedAccount(zsc), grReq.getTarget(),
+        EffectiveRightsTargetSelector erTargSel = grReq.getTarget();
+        RightCommand.grantRight(Provisioning.getInstance(), getAuthenticatedAccount(zsc), erTargSel,
                                 grReq.getGrantee(), modifierInfo.getValue(), rightModifier);
+        // Bug 100965 Avoid Cross server delegate admin being broken after initial creation due to stale caches
+        if (com.zimbra.soap.type.TargetType.domain == erTargSel.getType()) {
+            TargetBy by = erTargSel.getBy();
+            if ((TargetBy.id == by) || (TargetBy.name == by)) {
+                CacheSelector cacheSel = new CacheSelector(true /* allServers */, CacheEntryType.domain.toString());
+                CacheEntrySelector ceSel = new CacheEntrySelector(
+                        (TargetBy.id == erTargSel.getBy()) ? CacheEntryBy.id : CacheEntryBy.name, erTargSel.getValue());
+                cacheSel.addEntry(ceSel);
+                FlushCacheRequest fcReq = new FlushCacheRequest(cacheSel);
+                try {
+                    FlushCache.doFlushCache(this, context, fcReq);
+                } catch (ServiceException se) {
+                    ZimbraLog.acl.info("Problem flushing acl cache for domain %s/%s after granting rights",
+                            erTargSel.getBy(), erTargSel.getValue(), se);
+                }
+            }
+        }
 
         Element response = zsc.createElement(AdminConstants.GRANT_RIGHT_RESPONSE);
         return response;
