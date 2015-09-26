@@ -67,7 +67,7 @@ public class SyncRequest {
      *  are older than time (specified in seconds) "Note:value in seconds, unlike calCutoff which is in milliseconds"
      */
     @XmlAttribute(name=MailConstants.A_MSG_CUTOFF /* msgCutoff */, required=false)
-    private Integer msgCutoff;
+    private Long msgCutoff;
 
     /**
      * @zm-api-field-tag root-folder-id
@@ -104,7 +104,7 @@ public class SyncRequest {
     public void setCalendarCutoff(Long calendarCutoff) {
         this.calendarCutoff = calendarCutoff;
     }
-    public void setMsgCutoff(Integer msgCutoff) {
+    public void setMsgCutoff(Long msgCutoff) {
         this.msgCutoff = msgCutoff;
     }
     public void setFolderId(String folderId) { this.folderId = folderId; }
@@ -119,7 +119,7 @@ public class SyncRequest {
     }
     public String getToken() { return token; }
     public Long getCalendarCutoff() { return calendarCutoff; }
-    public Integer getMsgCutoff() { return msgCutoff; }
+    public Long getMsgCutoff() { return msgCutoff; }
     public String getFolderId() { return folderId; }
     public Boolean getTypedDeletes() { return ZmBoolean.toBool(typedDeletes); }
     public int getDeleteLimit() { return deleteLimit; }

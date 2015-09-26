@@ -40,7 +40,7 @@ import com.zimbra.soap.type.NamedValue;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_ACCOUNT_INFO_RESPONSE)
-@XmlType(propOrder = {"name", "attrs", "soapURL", "publicURL", "changePasswordURL","communityURL", "adminURL", "boshURL"})
+@XmlType(propOrder = {"name", "attrs", "soapURL", "publicURL", "changePasswordURL","communityURL", "adminURL"})
 public class GetAccountInfoResponse {
 
     /**
@@ -109,14 +109,6 @@ public class GetAccountInfoResponse {
     @XmlElement(name=AccountConstants.E_ADMIN_URL /* adminURL */, required=false)
     @ZimbraJsonAttribute
     private String adminURL;
-
-    /**
-     * @zm-api-field-tag bosh-url
-     * @zm-api-field-description Proxy URL for accessing XMPP over BOSH. Should be returned only when zimbraFeatureChatEnabled is set to TRUE for Account/COS
-     */
-    @XmlElement(name=AccountConstants.E_BOSH_URL /* boshURL */, required=false)
-    @ZimbraJsonAttribute
-    private String boshURL;
 
     /**
      * no-argument constructor wanted by JAXB
