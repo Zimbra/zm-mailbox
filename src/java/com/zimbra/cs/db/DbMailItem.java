@@ -5115,7 +5115,7 @@ public class DbMailItem {
                ResultSet rs = null;
                try {
                    stmt = conn.prepareStatement("SELECT id, folder_id FROM " + getMailItemTableName(mbox, true) +
-                             " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? ");
+                             " WHERE " + IN_THIS_MAILBOX_AND + "change_date > ? ");
                     Db.getInstance().enableStreaming(stmt);
                     int pos = 1;
                     pos = setMailboxId(stmt, mbox, pos);
