@@ -9721,7 +9721,7 @@ TODO: delete them permanently from here
   <desc>Value for postconf postscreen_dnsbl_action.</desc>
 </attr>
 
-<attr id="1926" name="zimbraMtaPostscreenDnsblSites" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
+<attr id="1926" name="zimbraMtaPostscreenDnsblSites" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
   <desc>Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL value pair per attribute value.</desc>
 </attr>
 
