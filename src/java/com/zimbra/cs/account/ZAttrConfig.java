@@ -36664,13 +36664,13 @@ public abstract class ZAttrConfig extends Entry {
      * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
      * value pair per attribute value.
      *
-     * @return zimbraMtaPostscreenDnsblSites, or null if unset
+     * @return zimbraMtaPostscreenDnsblSites, or empty array if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1926)
-    public String getMtaPostscreenDnsblSites() {
-        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblSites, null);
+    public String[] getMtaPostscreenDnsblSites() {
+        return getMultiAttr(Provisioning.A_zimbraMtaPostscreenDnsblSites);
     }
 
     /**
@@ -36683,7 +36683,7 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1926)
-    public void setMtaPostscreenDnsblSites(String zimbraMtaPostscreenDnsblSites) throws com.zimbra.common.service.ServiceException {
+    public void setMtaPostscreenDnsblSites(String[] zimbraMtaPostscreenDnsblSites) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblSites, zimbraMtaPostscreenDnsblSites);
         getProvisioning().modifyAttrs(this, attrs);
@@ -36700,9 +36700,75 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1926)
-    public Map<String,Object> setMtaPostscreenDnsblSites(String zimbraMtaPostscreenDnsblSites, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaPostscreenDnsblSites(String[] zimbraMtaPostscreenDnsblSites, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblSites, zimbraMtaPostscreenDnsblSites);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
+     * value pair per attribute value.
+     *
+     * @param zimbraMtaPostscreenDnsblSites new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1926)
+    public void addMtaPostscreenDnsblSites(String zimbraMtaPostscreenDnsblSites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaPostscreenDnsblSites, zimbraMtaPostscreenDnsblSites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
+     * value pair per attribute value.
+     *
+     * @param zimbraMtaPostscreenDnsblSites new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1926)
+    public Map<String,Object> addMtaPostscreenDnsblSites(String zimbraMtaPostscreenDnsblSites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaPostscreenDnsblSites, zimbraMtaPostscreenDnsblSites);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
+     * value pair per attribute value.
+     *
+     * @param zimbraMtaPostscreenDnsblSites existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1926)
+    public void removeMtaPostscreenDnsblSites(String zimbraMtaPostscreenDnsblSites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaPostscreenDnsblSites, zimbraMtaPostscreenDnsblSites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
+     * value pair per attribute value.
+     *
+     * @param zimbraMtaPostscreenDnsblSites existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1926)
+    public Map<String,Object> removeMtaPostscreenDnsblSites(String zimbraMtaPostscreenDnsblSites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaPostscreenDnsblSites, zimbraMtaPostscreenDnsblSites);
         return attrs;
     }
 
