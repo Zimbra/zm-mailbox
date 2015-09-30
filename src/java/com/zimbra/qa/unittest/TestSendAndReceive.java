@@ -314,9 +314,48 @@ public class TestSendAndReceive extends TestCase {
     }
 
     /**
+     * Test inline attachment. See bug #88933
+     */
+    public void testInlineAttachment()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+
+        //create inline image attachment
+        String imgName = "synacore.jpg";
+        String content = "<content><img src=\"cid:" + imgName +"\"></content>";
+        List<AttachedMessagePart> inlineAttachments = new ArrayList<AttachedMessagePart>();
+        String attachId = mbox.uploadAttachment(imgName, new byte[1024], MimeConstants.CT_IMAGE_JPEG, 5000);
+        AttachedMessagePart inlineImg = new AttachedMessagePart(attachId, imgName);
+        inlineAttachments.add(inlineImg);
+        MessagePart html = new MessagePart(MimeConstants.CT_TEXT_HTML, content, inlineAttachments);
+
+        //create outgoing message
+        String subject = NAME_PREFIX + " testInlineAttachment " + MimeConstants.CT_TEXT_PLAIN + " 1";
+        ZOutgoingMessage outgoingMsg = new ZOutgoingMessage();
+        List<ZEmailAddress> addresses = new ArrayList<ZEmailAddress>();
+        addresses.add(new ZEmailAddress(TestUtil.addDomainIfNecessary(USER_NAME),
+            null, null, ZEmailAddress.EMAIL_TYPE_TO));
+        outgoingMsg.setAddresses(addresses);
+        outgoingMsg.setSubject(subject);
+        MessagePart related = new MessagePart(MimeConstants.CT_MULTIPART_RELATED, html);
+        outgoingMsg.setMessagePart(related);
+        mbox.sendMessage(outgoingMsg, null, false);
+
+        //verify that received message has the attachment
+        ZMessage incoming = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        assertTrue("this message should have an attachment", incoming.hasAttachment());
+        assertNotNull("this message should have mime parts", incoming.getMimeStructure());
+        assertNotNull("this message should have two subparts", incoming.getMimeStructure().getChildren());
+        List<ZMimePart> parts = incoming.getMimeStructure().getChildren();
+        assertEquals("this message should have 2 subparts", 2,parts.size());
+        assertTrue("one of the parts should have a content id", parts.get(0).getContentId() != null || parts.get(1).getContentId() != null);
+        assertTrue("one of the parts should be " + imgName, imgName.equalsIgnoreCase(parts.get(0).getFileName())
+                || imgName.equalsIgnoreCase(parts.get(1).getFileName()));
+    }
+
+    /**
      * Confirms that we preserve line endings of attached text files (bugs 45858 and 53405).
      */
-
     public void testTextAttachmentLineEnding()
     throws Exception {
         String content = "I used to think that the day would never come,\n" +
