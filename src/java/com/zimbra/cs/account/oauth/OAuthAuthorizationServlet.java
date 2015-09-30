@@ -84,7 +84,7 @@ public class OAuthAuthorizationServlet extends ZimbraServlet {
             if (null != status && status.equals("no")) {
                 LOG.debug("Access to zimbra message is denied.");
                 OAuthTokenCache.remove(accessor.requestToken, OAuthTokenCache.REQUEST_TOKEN_TYPE);
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Access to data is denied by user.");
+                sendUnauthorizedResponse(response, accessor);
                 return;
             }
 
@@ -148,8 +148,7 @@ public class OAuthAuthorizationServlet extends ZimbraServlet {
             String token = accessor.requestToken;
             String verifier = accessor.getProperty(OAuth.OAUTH_VERIFIER).toString();
             if (token != null) {
-                callback = OAuth.addParameters(callback,
-                        "oauth_token", token,OAuth.OAUTH_VERIFIER,verifier);
+                callback = OAuth.addParameters(callback, "oauth_token", token, OAuth.OAUTH_VERIFIER, verifier);
             }
 
             callback = String.format
@@ -167,6 +166,14 @@ public class OAuthAuthorizationServlet extends ZimbraServlet {
             //not sending back ZM_AUTH_TOKEN to consumer
             response.setHeader("Set-Cookie", "");
         }
+    }
+
+    private void sendUnauthorizedResponse(HttpServletResponse response,
+            OAuthAccessor accessor) throws IOException {
+        String callback = (String) accessor.getProperty(OAuth.OAUTH_CALLBACK);
+        callback += "?authorized=false";
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.sendRedirect(callback);
     }
 
     private static final long serialVersionUID = 6775946952939185091L;
