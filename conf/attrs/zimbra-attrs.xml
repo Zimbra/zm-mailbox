@@ -9085,4 +9085,9 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
+<attr id="2064" name="zimbraReverseProxyXmppBoshTimeout" type="duration" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.7.0,9.0.0">
+  <globalConfigValue>1m</globalConfigValue>
+  <desc>the response timeout for an external XMPP/BOSH server</desc>
+</attr>
+
 </attrs>

@@ -56499,6 +56499,118 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * the response timeout for an external XMPP/BOSH server. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getReverseProxyXmppBoshTimeoutAsString to access value as a string.
+     *
+     * @see #getReverseProxyXmppBoshTimeoutAsString()
+     *
+     * @return zimbraReverseProxyXmppBoshTimeout in millseconds, or 60000 (1m)  if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2064)
+    public long getReverseProxyXmppBoshTimeout() {
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, 60000L);
+    }
+
+    /**
+     * the response timeout for an external XMPP/BOSH server. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraReverseProxyXmppBoshTimeout, or "1m" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2064)
+    public String getReverseProxyXmppBoshTimeoutAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, "1m");
+    }
+
+    /**
+     * the response timeout for an external XMPP/BOSH server. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraReverseProxyXmppBoshTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2064)
+    public void setReverseProxyXmppBoshTimeout(String zimbraReverseProxyXmppBoshTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, zimbraReverseProxyXmppBoshTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the response timeout for an external XMPP/BOSH server. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraReverseProxyXmppBoshTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2064)
+    public Map<String,Object> setReverseProxyXmppBoshTimeout(String zimbraReverseProxyXmppBoshTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, zimbraReverseProxyXmppBoshTimeout);
+        return attrs;
+    }
+
+    /**
+     * the response timeout for an external XMPP/BOSH server. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2064)
+    public void unsetReverseProxyXmppBoshTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the response timeout for an external XMPP/BOSH server. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2064)
+    public Map<String,Object> unsetReverseProxyXmppBoshTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, "");
+        return attrs;
+    }
+
+    /**
      * whether nginx should cache upstream routes in memcache
      *
      * @return zimbraReverseProxyZmlookupCachingEnabled, or true if unset
