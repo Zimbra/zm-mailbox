@@ -216,7 +216,7 @@ class ProxyConfVar
             mValue = lcValue(mAttribute, (String) mDefault);
         } else if (mOverride == ProxyConfOverride.SERVER) {
             mValue = serverSource.getAttr(mAttribute, (String) mDefault);
-       	}
+        }
     }
 
     public String formatString(Object o) {
@@ -2952,68 +2952,69 @@ public class ProxyConfGen
         mConfVars.put("web.admin.upstream.adminclient.name", new ProxyConfVar("web.admin.upstream.adminclient.name", null, ZIMBRA_ADMIN_CONSOLE_CLIENT_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin client console upstream cluster"));
         mConfVars.put("web.admin.upstream.:servers", new MailstoreAdminServersVar());
         mConfVars.put("web.admin.upstream.adminclient.:servers", new WebAdminServersVar());
-		mConfVars.put("web.upstream.noop.timeout", new TimeoutVar("web.upstream.noop.timeout", "zimbraMailboxNoopMaxTimeout", 1200*1000L, ProxyConfValueType.TIME, ProxyConfOverride.SERVER, 20*1000L, "the response timeout for NoOpRequest"));
+        mConfVars.put("web.upstream.noop.timeout", new TimeoutVar("web.upstream.noop.timeout", "zimbraMailboxNoopMaxTimeout", 1200*1000L, ProxyConfValueType.TIME, ProxyConfOverride.SERVER, 20*1000L, "the response timeout for NoOpRequest"));
         mConfVars.put("web.upstream.waitset.timeout", new TimeoutVar("web.upstream.waitset.timeout", "zimbraWaitsetMaxRequestTimeout", 1200*1000L, ProxyConfValueType.TIME, ProxyConfOverride.SERVER, 20*1000L, "the response timeout for WaitSetRequest"));
         mConfVars.put("main.accept_mutex", new ProxyConfVar("main.accept_mutex", "zimbraReverseProxyAcceptMutex", "on", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "accept_mutex flag for NGINX - can be on|off - on indicates regular distribution, off gets better distribution of client connections between workers"));
-	    mConfVars.put("web.ews.upstream.disable", new EwsEnablerVar());
-	    mConfVars.put("web.upstream.ewsserver.:servers", new WebEwsUpstreamServersVar());
-	    mConfVars.put("web.ssl.upstream.ewsserver.:servers", new WebEwsSSLUpstreamServersVar());
-	    mConfVars.put("web.ews.upstream.name", new ProxyConfVar("web.ews.upstream.name", null, ZIMBRA_UPSTREAM_EWS_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for ews upstream server cluster"));
-	    mConfVars.put("web.ssl.ews.upstream.name", new ProxyConfVar("web.ssl.ews.upstream.name", null, ZIMBRA_SSL_UPSTREAM_EWS_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for https ews upstream server cluster"));
-	    mConfVars.put("web.login.upstream.disable", new LoginEnablerVar());
-	    mConfVars.put("web.upstream.loginserver.:servers", new WebLoginUpstreamServersVar());
-	    mConfVars.put("web.ssl.upstream.loginserver.:servers", new WebLoginSSLUpstreamServersVar());
-	    mConfVars.put("web.login.upstream.name", new ProxyConfVar("web.login.upstream.name", null, ZIMBRA_UPSTREAM_LOGIN_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for upstream login server cluster"));
-	    mConfVars.put("web.ssl.login.upstream.name", new ProxyConfVar("web.ssl.login.upstream.name", null, ZIMBRA_SSL_UPSTREAM_LOGIN_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for https upstream login server cluster"));
-	    mConfVars.put("web.login.upstream.url", new ProxyConfVar("web.login.upstream.url", "zimbraMailURL", "/", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Zimbra Login URL"));
-	    mConfVars.put("web.upstream.login.target", new WebProxyUpstreamLoginTargetVar());
-	    mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
-	    mConfVars.put("web.ssl.stapling", new ProxyConfVar("web.ssl.stapling", "zimbraReverseProxySSLStapling", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling flag for NGINX - can be on|off - on Enables stapling of OCSP responses by the server, off disables it"));
-	    mConfVars.put("ssl.stapling.responder.enabled", new SSLStaplingEnablerVar());
-	    mConfVars.put("ssl.stapling.responder.url", new ProxyConfVar("ssl.stapling.responder.url", "zimbraReverseProxySSLStaplingResponderURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling responder URL"));
-	    mConfVars.put("ssl.session.timeout", new TimeInSecVarWrapper(new ProxyConfVar("ssl.session.timeout", "zimbraReverseProxySSLSessionTimeout", new Long(600), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "SSL session timeout value for the proxy in secs")));
-	    mConfVars.put("ssl.session.cachesize", new WebSSLSessionCacheSizeVar());
-	    mConfVars.put("web.upstream.zone.size", new ProxyConfVar("web.upstream.zone.size", "zimbraReverseProxyLimitReqZoneSize", "10m", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Shared memory zone size in megabytes used for rate-limiting"));
-	    mConfVars.put("web.upstream.zone.rate", new ProxyConfVar("web.upstream.zone.rate", "zimbraReverseProxyLimitReqZoneRate", new Integer(120), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Maximum rate in requests per second to be enforced by the proxy for a particualr zone. Requests in excess of this are throttled"));
-	    mConfVars.put("web.upstream.restricted.:ips", new WebUpstreamRestrictedIPsVar());
-	    mConfVars.put("web.upstream.blocked.urls", new WebUpstreamBlockedURLsVar());
-	    mConfVars.put("web.blocked.user.agents.enabled", new WebBlockedUserAgentsEnablerVar());
-	    mConfVars.put("web.blocked.user.agents", new WebBlockedUserAgentsVar());
-	    mConfVars.put("web.zss.upstream.disable", new WebZSSUpstreamEnablerVar());
-	    mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
-	    mConfVars.put("web.zss.resolver.file", new ProxyConfVar("web.zss.resolver.file", null, mResolverfile, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "File containing resolver directive with the nameservers from /etc/resolv.conf"));
-	    IPMode ipmode = IPModeEnablerVar.getZimbraIPMode();
-	    ArrayList<InetAddress> ips = new ArrayList<InetAddress>();
-	    mConfVars.put("mail.listen.imap.default", new ListenVipsVar("mail.listen.imap.default", ips,
+        mConfVars.put("web.ews.upstream.disable", new EwsEnablerVar());
+        mConfVars.put("web.upstream.ewsserver.:servers", new WebEwsUpstreamServersVar());
+        mConfVars.put("web.ssl.upstream.ewsserver.:servers", new WebEwsSSLUpstreamServersVar());
+        mConfVars.put("web.ews.upstream.name", new ProxyConfVar("web.ews.upstream.name", null, ZIMBRA_UPSTREAM_EWS_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for ews upstream server cluster"));
+        mConfVars.put("web.ssl.ews.upstream.name", new ProxyConfVar("web.ssl.ews.upstream.name", null, ZIMBRA_SSL_UPSTREAM_EWS_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for https ews upstream server cluster"));
+        mConfVars.put("web.login.upstream.disable", new LoginEnablerVar());
+        mConfVars.put("web.upstream.loginserver.:servers", new WebLoginUpstreamServersVar());
+        mConfVars.put("web.ssl.upstream.loginserver.:servers", new WebLoginSSLUpstreamServersVar());
+        mConfVars.put("web.login.upstream.name", new ProxyConfVar("web.login.upstream.name", null, ZIMBRA_UPSTREAM_LOGIN_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for upstream login server cluster"));
+        mConfVars.put("web.ssl.login.upstream.name", new ProxyConfVar("web.ssl.login.upstream.name", null, ZIMBRA_SSL_UPSTREAM_LOGIN_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for https upstream login server cluster"));
+        mConfVars.put("web.login.upstream.url", new ProxyConfVar("web.login.upstream.url", "zimbraMailURL", "/", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Zimbra Login URL"));
+        mConfVars.put("web.upstream.login.target", new WebProxyUpstreamLoginTargetVar());
+        mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
+        mConfVars.put("web.ssl.stapling", new ProxyConfVar("web.ssl.stapling", "zimbraReverseProxySSLStapling", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling flag for NGINX - can be on|off - on Enables stapling of OCSP responses by the server, off disables it"));
+        mConfVars.put("ssl.stapling.responder.enabled", new SSLStaplingEnablerVar());
+        mConfVars.put("ssl.stapling.responder.url", new ProxyConfVar("ssl.stapling.responder.url", "zimbraReverseProxySSLStaplingResponderURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling responder URL"));
+        mConfVars.put("ssl.session.timeout", new TimeInSecVarWrapper(new ProxyConfVar("ssl.session.timeout", "zimbraReverseProxySSLSessionTimeout", new Long(600), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "SSL session timeout value for the proxy in secs")));
+        mConfVars.put("ssl.session.cachesize", new WebSSLSessionCacheSizeVar());
+        mConfVars.put("web.upstream.zone.size", new ProxyConfVar("web.upstream.zone.size", "zimbraReverseProxyLimitReqZoneSize", "10m", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Shared memory zone size in megabytes used for rate-limiting"));
+        mConfVars.put("web.upstream.zone.rate", new ProxyConfVar("web.upstream.zone.rate", "zimbraReverseProxyLimitReqZoneRate", new Integer(120), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Maximum rate in requests per second to be enforced by the proxy for a particualr zone. Requests in excess of this are throttled"));
+        mConfVars.put("web.upstream.restricted.:ips", new WebUpstreamRestrictedIPsVar());
+        mConfVars.put("web.upstream.blocked.urls", new WebUpstreamBlockedURLsVar());
+        mConfVars.put("web.blocked.user.agents.enabled", new WebBlockedUserAgentsEnablerVar());
+        mConfVars.put("web.blocked.user.agents", new WebBlockedUserAgentsVar());
+        mConfVars.put("web.zss.upstream.disable", new WebZSSUpstreamEnablerVar());
+        mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
+        mConfVars.put("web.zss.resolver.file", new ProxyConfVar("web.zss.resolver.file", null, mResolverfile, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "File containing resolver directive with the nameservers from /etc/resolv.conf"));
+        IPMode ipmode = IPModeEnablerVar.getZimbraIPMode();
+        ArrayList<InetAddress> ips = new ArrayList<InetAddress>();
+        mConfVars.put("mail.listen.imap.default", new ListenVipsVar("mail.listen.imap.default", ips,
                 "zimbraImapProxyBindPort", ipmode, "Listen directive for default mail imap proxy"));
-	    mConfVars.put("mail.listen.imaps.default", new ListenVipsVar("mail.listen.imaps.default", ips,
+        mConfVars.put("mail.listen.imaps.default", new ListenVipsVar("mail.listen.imaps.default", ips,
                 "zimbraImapSSLProxyBindPort", ipmode, "Listen directive for default mail imaps proxy"));
-	    mConfVars.put("mail.listen.pop3.default", new ListenVipsVar("mail.listen.pop3.default", ips,
+        mConfVars.put("mail.listen.pop3.default", new ListenVipsVar("mail.listen.pop3.default", ips,
                 "zimbraPop3ProxyBindPort", ipmode, "Listen directive for default mail pop3 proxy"));
-	    mConfVars.put("mail.listen.pop3s.default", new ListenVipsVar("mail.listen.pop3s.default", ips,
+        mConfVars.put("mail.listen.pop3s.default", new ListenVipsVar("mail.listen.pop3s.default", ips,
                 "zimbraPop3SSLProxyBindPort", ipmode, "Listen directive for default mail pop3s proxy"));
-	    mConfVars.put("web.listen.admin.default", new ListenVipsVar("web.listen.admin.default", ips,
+        mConfVars.put("web.listen.admin.default", new ListenVipsVar("web.listen.admin.default", ips,
                 "zimbraAdminProxyPort", ipmode, "Listen directive for default web admin proxy"));
-	    mConfVars.put("web.listen.http.default", new ListenVipsVar("web.listen.http.default", ips,
+        mConfVars.put("web.listen.http.default", new ListenVipsVar("web.listen.http.default", ips,
                 "zimbraMailProxyPort", ipmode, "Listen directive for default web http proxy"));
-	    mConfVars.put("web.listen.https.default", new ListenVipsVar("web.listen.https.default", ips,
+        mConfVars.put("web.listen.https.default", new ListenVipsVar("web.listen.https.default", ips,
                 "zimbraMailSSLProxyPort", ipmode, "Listen directive for default web https proxy"));
-	    mConfVars.put("web.listen.sso.default", new ListenVipsVar("web.listen.sso.default", ips,
+        mConfVars.put("web.listen.sso.default", new ListenVipsVar("web.listen.sso.default", ips,
                 "zimbraMailSSLProxyClientCertPort", ipmode, "Listen directive for default web sso proxy"));
-	    mConfVars.put("web.xmpp.bosh.upstream.disable", new WebXmppBoshEnablerVar());
-	    mConfVars.put("web.xmpp.local.bind.url", new ProxyConfVar("web.xmpp.local.bind.url", "zimbraReverseProxyXmppBoshLocalHttpBindURL", "/http-bind", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Local HTTP-BIND URL prefix where ZWC sends XMPP over BOSH requests"));
-	    mConfVars.put("web.xmpp.remote.bind.url", new ProxyConfVar("web.xmpp.remote.bind.url", "zimbraReverseProxyXmppBoshRemoteHttpBindURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Remote HTTP-BIND URL prefix for an external XMPP server where XMPP over BOSH requests need to be proxied"));
-	    mConfVars.put("web.xmpp.bosh.hostname", new ProxyConfVar("web.xmpp.bosh.hostname", "zimbraReverseProxyXmppBoshHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the external XMPP server where XMPP over BOSH requests need to be proxied"));
-	    mConfVars.put("web.xmpp.bosh.port", new ProxyConfVar("web.xmpp.bosh.port", "zimbraReverseProxyXmppBoshPort", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Port number of the external XMPP server where XMPP over BOSH requests need to be proxied"));
-	    mConfVars.put("web.ssl.dhparam.enabled", new WebSSLDhparamEnablerVar());
-	    mConfVars.put("web.ssl.dhparam.file", new ProxyConfVar("web.ssl.dhparam.file", "zimbraReverseProxySSLDHParam", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Filename with DH parameters for EDH ciphers to be used by the proxy"));
-	    //Get the response headers list from globalconfig
-	    String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
+        mConfVars.put("web.xmpp.bosh.upstream.disable", new WebXmppBoshEnablerVar());
+        mConfVars.put("web.xmpp.local.bind.url", new ProxyConfVar("web.xmpp.local.bind.url", "zimbraReverseProxyXmppBoshLocalHttpBindURL", "/http-bind", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Local HTTP-BIND URL prefix where ZWC sends XMPP over BOSH requests"));
+        mConfVars.put("web.xmpp.remote.bind.url", new ProxyConfVar("web.xmpp.remote.bind.url", "zimbraReverseProxyXmppBoshRemoteHttpBindURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Remote HTTP-BIND URL prefix for an external XMPP server where XMPP over BOSH requests need to be proxied"));
+        mConfVars.put("web.xmpp.bosh.hostname", new ProxyConfVar("web.xmpp.bosh.hostname", "zimbraReverseProxyXmppBoshHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the external XMPP server where XMPP over BOSH requests need to be proxied"));
+        mConfVars.put("web.xmpp.bosh.port", new ProxyConfVar("web.xmpp.bosh.port", "zimbraReverseProxyXmppBoshPort", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Port number of the external XMPP server where XMPP over BOSH requests need to be proxied"));
+        mConfVars.put("web.xmpp.bosh.timeout", new TimeInSecVarWrapper(new ProxyConfVar("web.xmpp.bosh.timeout", "zimbraReverseProxyXmppBoshTimeout", new Long(60), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "the response timeout for an external XMPP/BOSH server")));
+        mConfVars.put("web.ssl.dhparam.enabled", new WebSSLDhparamEnablerVar());
+        mConfVars.put("web.ssl.dhparam.file", new ProxyConfVar("web.ssl.dhparam.file", "zimbraReverseProxySSLDHParam", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Filename with DH parameters for EDH ciphers to be used by the proxy"));
+        //Get the response headers list from globalconfig
+        String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
         ArrayList<String> rhdr = new ArrayList<String>();
         for(int i = 0; i < rspHeaders.length; i++) {
             rhdr.add(rspHeaders[i]);
         }
-	    mConfVars.put("web.add.headers.default", new AddHeadersVar("web.add.headers.default", rhdr,
+        mConfVars.put("web.add.headers.default", new AddHeadersVar("web.add.headers.default", rhdr,
                 "add_header directive for default web proxy"));
     }
 
