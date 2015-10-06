@@ -678,6 +678,7 @@ public final class LC {
     public static final KnownKey calendar_allow_invite_without_method = KnownKey.newKey(false);
     public static final KnownKey calendar_freebusy_max_days = KnownKey.newKey(366);
     public static final KnownKey calendar_search_max_days  = KnownKey.newKey(400);
+    public static final KnownKey exchange_free_busy_interval_min = KnownKey.newKey(15);
 
     @Supported
     public static final KnownKey calendar_cache_enabled = KnownKey.newKey(true);
