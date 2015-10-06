@@ -43,6 +43,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.XmlParseException;
