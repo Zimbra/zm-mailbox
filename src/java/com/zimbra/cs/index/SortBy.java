@@ -17,6 +17,8 @@
 package com.zimbra.cs.index;
 
 import java.text.Collator;
+import java.text.ParseException;
+import java.text.RuleBasedCollator;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
@@ -115,16 +117,21 @@ public enum SortBy {
 
     public Comparator<ZimbraHit> getHitComparator(Locale locale) {
         locale = (locale != null) ? locale : Locale.getDefault();
-        return new NameComparator(this, Collator.getInstance(locale));
+        return new NameComparator(this, locale);
     }
 
     private static final class NameComparator implements Comparator<ZimbraHit> {
         private final SortBy sort;
         private final Collator collator;
 
-        NameComparator(SortBy sort, Collator collator) {
+        NameComparator(SortBy sort, Locale locale) {
             this.sort = sort;
-            this.collator = collator;
+            if (locale.equals(Locale.JAPANESE)) {
+                this.collator = getJapaneseNameRuleBaseCollator();
+            } else {
+                this.collator = Collator.getInstance(locale);
+            }
+
             try {
                 int localDecomposition = Provisioning.getInstance().getLocalServer().getContactSearchDecomposition();
                 collator.setDecomposition(localDecomposition);
@@ -134,6 +141,31 @@ public enum SortBy {
             } catch (ServiceException e) {
                 collator.setDecomposition(Collator.FULL_DECOMPOSITION);
                 ZimbraLog.index.info("Failed to get a valid decomposition mode.  Set default value (%d)", Collator.FULL_DECOMPOSITION);
+            }
+        }
+
+        /** Create a Collator instance with Japanese specific sort order.  The instantiated collator has
+         * an extended comparing rule so that the a set of ascii symbols can be treated as same manner as
+         * that of 3-byte symbols defined in the higher code point.
+         * @return Collator
+         */
+        private Collator getJapaneseNameRuleBaseCollator() {
+            Collator collator = Collator.getInstance(Locale.JAPANESE);
+            RuleBasedCollator jaCollator;
+            if (collator instanceof RuleBasedCollator) {
+                jaCollator = (RuleBasedCollator)collator;
+            } else {
+                ZimbraLog.index.debug("Unexpected Collator for Japanese locale. Use the rule of [%s]", collator.getClass().getName());
+                return collator;
+            }
+            String jaRules = jaCollator.getRules();
+            String supplementaryString = "& \u3001 < '!' < '\"' < '#' < '$' < '%' < '&' < '\'' < '(' < ')' < '*' < '+' < ',' < '-' < '.' < '/' < ':' < ';' < '<' < '=' < '>' < '?' < '@' < '[' < '\u00a2' = \uffe0 < '\u00a3' = '\uffe1' < '\\' < '\u00a5' = \uffe5 < ']' < '\u00a6' = '\uffe4' < '^' < '_' < '`' < '{' < '|' < '}' < '~' < \u309d < \u309e < \u30fd <  \u30fe <  \u20a1 < \u20a2 < \u20ab < \u20ac < \u20a3 < \u20a4 < \u20a5 < \u20a6 < \u20a7 < \uffe1 < \u20aa < \u20a9 < \uffe6";
+            try {
+                return new RuleBasedCollator (jaRules + supplementaryString);
+            } catch (ParseException e) {
+                // Fall back to the default collator
+                ZimbraLog.index.debug("Rule parse error.  Use default rule");
+                return collator;
             }
         }
 
