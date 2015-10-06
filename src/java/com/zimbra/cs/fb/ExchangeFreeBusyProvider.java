@@ -62,7 +62,6 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 
     public static final String USER_AGENT = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322)";
     //public static final String FORM_AUTH_PATH = "/exchweb/bin/auth/owaauth.dll";  // specified in LC.calendar_exchange_form_auth_url
-    public static final int FB_INTERVAL = 30;
     public static final int MULTI_STATUS = 207;
     public static final String TYPE_WEBDAV = "webdav";
 
@@ -429,6 +428,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 
     public List<FreeBusy> getFreeBusyForHost(String host, ArrayList<Request> req) throws IOException {
         ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
+        int fb_interval = LC.exchange_free_busy_interval_min.intValueWithinRange(5, 1444);
         Request r = req.get(0);
         ServerInfo serverInfo = (ServerInfo) r.data;
         if (serverInfo == null) {
@@ -470,7 +470,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         }
         for (Request re : req) {
             String fb = getFbString(response, re.email);
-            ret.add(new ExchangeUserFreeBusy(fb, re.email, FB_INTERVAL, re.start, re.end));
+            ret.add(new ExchangeUserFreeBusy(fb, re.email, fb_interval, re.start, re.end));
         }
         return ret;
     }
@@ -482,11 +482,13 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         //   end      = [ISO8601date]
         //   interval = [minutes]
         //   u        = SMTP:[emailAddr]
+        int fb_interval = LC.exchange_free_busy_interval_min.intValueWithinRange(5, 1444);
+        long start = Request.offsetInterval(req.get(0).start, fb_interval);
         StringBuilder buf = new StringBuilder(info.url);
         buf.append("/public/?cmd=freebusy");
-        buf.append("&start=").append(DateUtil.toISO8601(new Date(req.get(0).start)));
+        buf.append("&start=").append(DateUtil.toISO8601(new Date(start)));
         buf.append("&end=").append(DateUtil.toISO8601(new Date(req.get(0).end)));
-        buf.append("&interval=").append(FB_INTERVAL);
+        buf.append("&interval=").append(fb_interval);
         for (Request r : req)
             buf.append("&u=SMTP:").append(r.email);
         return buf.toString();
@@ -569,25 +571,32 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         }
         private void parseInterval(String fb, String emailAddr, int interval, long start, long end) {
             long intervalInMillis = interval * 60L * 1000L;
+            long maskedStart = Request.offsetInterval(start, interval);
+            if (maskedStart < start) {
+                end = maskedStart + intervalInMillis;
+            } else {
+                end = start + intervalInMillis;
+            }
             for (int i = 0; i < fb.length(); i++) {
                 switch (fb.charAt(i)) {
                 case TENTATIVE:
-                    mList.addInterval(new Interval(start, start + intervalInMillis, IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE));
+                    mList.addInterval(new Interval(start, end, IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE));
                     break;
                 case BUSY:
-                    mList.addInterval(new Interval(start, start + intervalInMillis, IcalXmlStrMap.FBTYPE_BUSY));
+                    mList.addInterval(new Interval(start, end, IcalXmlStrMap.FBTYPE_BUSY));
                     break;
                 case UNAVAILABLE:
-                    mList.addInterval(new Interval(start, start + intervalInMillis, IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE));
+                    mList.addInterval(new Interval(start, end, IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE));
                     break;
                 case NODATA:
-                    mList.addInterval(new Interval(start, start + intervalInMillis, IcalXmlStrMap.FBTYPE_NODATA));
+                    mList.addInterval(new Interval(start, end, IcalXmlStrMap.FBTYPE_NODATA));
                     break;
                 case FREE:
                 default:
                     break;
                 }
-                start += intervalInMillis;
+                start = end;
+                end = start + intervalInMillis;
             }
         }
     }
