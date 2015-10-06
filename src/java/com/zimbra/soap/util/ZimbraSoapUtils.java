@@ -2,6 +2,7 @@ package com.zimbra.soap.util;
 
 import java.io.IOException;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -56,6 +57,7 @@ public class ZimbraSoapUtils {
      * @throws ServiceException
      */
     public static void soapAdminAuthenticate(SoapHttpTransport transport, String name, String password) throws ServiceException {
+        transport.setVoidOnExpired(true);
         com.zimbra.soap.admin.message.AuthRequest req = new com.zimbra.soap.admin.message.AuthRequest(name, password);
         com.zimbra.soap.admin.message.AuthResponse resp = invokeJaxb(transport, req);
         transport.setAuthToken(resp.getAuthToken());
