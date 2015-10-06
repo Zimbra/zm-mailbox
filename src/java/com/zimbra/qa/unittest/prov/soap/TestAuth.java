@@ -56,6 +56,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.SoapUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
@@ -115,7 +116,6 @@ public class TestAuth extends SoapTest {
 
         private boolean isAdmin;
         private String authTokenForCookie;
-        private boolean voidAuthTokenOnExpired;
         
         private AuthTokenInCookieTransport(String authTokenForCookie, boolean isAdmin) {
             this(authTokenForCookie, isAdmin, false, null);
@@ -126,7 +126,7 @@ public class TestAuth extends SoapTest {
             super(null);
             this.isAdmin = isAdmin;
             this.authTokenForCookie = authTokenForCookie;
-            this.voidAuthTokenOnExpired = voidAuthTokenOnExpired;
+            this.setVoidOnExpired(voidAuthTokenOnExpired);
             setHttpDebugListener(
                     debugListener == null ? new SoapDebugListener(Level.ALL) : debugListener);
         }
@@ -145,12 +145,7 @@ public class TestAuth extends SoapTest {
             try {
                 Element envelope = generateSoapMessage(document, raw, noSession, 
                         requestedAccountId, changeToken, tokenType);
-                
-                if (voidAuthTokenOnExpired) {
-                    Element eCtxt = SoapProtocol.Soap12.getHeader(envelope, HeaderConstants.CONTEXT);
-                    Element eAuthTokenControl = eCtxt.addElement(HeaderConstants.E_AUTH_TOKEN_CONTROL);
-                    eAuthTokenControl.addAttribute(HeaderConstants.A_VOID_ON_EXPIRED, true);
-                }
+                SoapUtil.addAuthTokenControl(SoapProtocol.Soap12.getHeader(envelope, HeaderConstants.CONTEXT), this.voidOnExpired());
                 String soapMessage = SoapProtocol.toString(envelope, getPrettyPrint());
                 method.setRequestEntity(new StringRequestEntity(soapMessage, null, "UTF-8"));
                 
