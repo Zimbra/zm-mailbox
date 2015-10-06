@@ -46,6 +46,7 @@ public abstract class SoapTransport {
     private DebugListener mDebugListener;
     private String csrfToken;
     private String trustedToken;
+    private boolean voidOnExpired = false;
 
     public static final String DEFAULT_USER_AGENT_NAME = "ZCS";
     private static String sDefaultUserAgentName = DEFAULT_USER_AGENT_NAME;
@@ -305,6 +306,7 @@ public abstract class SoapTransport {
             SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
             SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
             SoapUtil.addUserAgentToCtxt(context, getUserAgentName(), getUserAgentVersion());
+            SoapUtil.addAuthTokenControl(context, voidOnExpired);
             if (responseProto != proto) {
                 SoapUtil.addResponseProtocolToCtxt(context, responseProto);
             }
@@ -437,6 +439,22 @@ public abstract class SoapTransport {
      */
     public void setTimeout(int ms) {
         // do nothing by default
+    }
+
+    /**
+     * Controls authTokenControl SOAP header
+     * @return
+     */
+    public boolean voidOnExpired() {
+        return voidOnExpired;
+    }
+
+    /**
+     * Controls authTokenControl SOAP header
+     * @param mVoidOnExpired
+     */
+    public void setVoidOnExpired(boolean mVoidOnExpired) {
+        this.voidOnExpired = mVoidOnExpired;
     }
 
 }

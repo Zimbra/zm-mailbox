@@ -40,8 +40,9 @@ public final class SoapUtil {
      */
     public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken) {
         Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
-        if (authToken != null)
+        if (authToken != null) {
             authToken.encodeSoapCtxt(ctxt);
+        }
         return ctxt;
     }
 
@@ -59,8 +60,9 @@ public final class SoapUtil {
      */
     public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, String csrfToken) {
         Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
-        if (authToken != null)
+        if (authToken != null) {
             authToken.encodeSoapCtxt(ctxt);
+        }
         if (csrfToken != null) {
            Element csrfElmnt = ctxt.addElement(HeaderConstants.E_CSRFTOKEN);
            csrfElmnt.addText(csrfToken);
@@ -86,11 +88,12 @@ public final class SoapUtil {
     }
 
     public static Element disableNotificationOnCtxt(Element ctxt) {
-        if (ctxt == null)
+        if (ctxt == null) {
             return ctxt;
-        if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT))
+        }
+        if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT)) {
             throw new IllegalArgumentException("Invalid element: " + ctxt.getName());
-
+        }
         ctxt.addUniqueElement(HeaderConstants.E_NO_SESSION);
         return ctxt;
     }
@@ -110,34 +113,38 @@ public final class SoapUtil {
      * @see #toCtxt
      */
     public static Element addSessionToCtxt(Element ctxt, String sessionId, long sequence) {
-        if (ctxt == null)
+        if (ctxt == null) {
             return ctxt;
-        if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT))
+        }
+        if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT)) {
             throw new IllegalArgumentException("Invalid element: " + ctxt.getName());
-
+        }
         Element eSession = ctxt.addUniqueElement(HeaderConstants.E_SESSION);
         if (sessionId != null && !sessionId.trim().equals("")) {
             // be backwards-compatible for sanity-preservation purposes
             for (Element elt : Arrays.asList(eSession, ctxt.addUniqueElement(HeaderConstants.E_SESSION_ID))) {
                 elt.addAttribute(HeaderConstants.A_ID, sessionId);
-                if (sequence > 0)
+                if (sequence > 0) {
                     elt.addAttribute(HeaderConstants.A_SEQNO, sequence);
+                }
             }
         }
         return ctxt;
     }
 
     public static Element addTargetAccountToCtxt(Element ctxt, String targetAccountId, String targetAccountName) {
-        if (ctxt == null)
+        if (ctxt == null) {
             return ctxt;
-        if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT))
+        }
+        if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT)) {
             throw new IllegalArgumentException("Invalid element: " + ctxt.getName());
-
+        }
         String by = targetAccountId != null ? HeaderConstants.BY_ID : HeaderConstants.BY_NAME;
         String target = targetAccountId != null ? targetAccountId : targetAccountName;
 
-        if (target != null && !target.trim().equals(""))
+        if (target != null && !target.trim().equals("")) {
             ctxt.addUniqueElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_BY, by).setText(target);
+        }
         return ctxt;
     }
 
@@ -154,15 +161,17 @@ public final class SoapUtil {
      * @see #toCtxt(SoapProtocol, ZAuthToken)
      */
     public static Element addUserAgentToCtxt(Element ctxt, String name, String version) {
-        if (ctxt == null || Strings.isNullOrEmpty(name))
+        if (ctxt == null || Strings.isNullOrEmpty(name)) {
             return ctxt;
-        if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT))
+        }
+        if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT)) {
             throw new IllegalArgumentException("Invalid element: " + ctxt.getName());
-
+        }
         Element eUserAgent = ctxt.addUniqueElement(HeaderConstants.E_USER_AGENT);
         eUserAgent.addAttribute(HeaderConstants.A_NAME, name);
-        if (!Strings.isNullOrEmpty(version))
+        if (!Strings.isNullOrEmpty(version)) {
             eUserAgent.addAttribute(HeaderConstants.A_VERSION, version);
+        }
         return ctxt;
     }
 
@@ -177,24 +186,45 @@ public final class SoapUtil {
      * @see #toCtxt(SoapProtocol, ZAuthToken)
      */
     public static Element addChangeTokenToCtxt(Element ctxt, String token, String type) {
-        if (ctxt == null || Strings.isNullOrEmpty(token))
+        if (ctxt == null || Strings.isNullOrEmpty(token)) {
             return ctxt;
-        if (!ctxt.getName().equalsIgnoreCase(HeaderConstants.E_CONTEXT))
+        }
+        if (!ctxt.getName().equalsIgnoreCase(HeaderConstants.E_CONTEXT)) {
             throw new IllegalArgumentException("Invalid element: " + ctxt.getName());
-
+        }
         Element eChange = ctxt.addUniqueElement(HeaderConstants.E_CHANGE);
         eChange.addAttribute(HeaderConstants.A_CHANGE_ID, token);
-        if (!Strings.isNullOrEmpty(type))
+        if (!Strings.isNullOrEmpty(type)) {
             eChange.addAttribute(HeaderConstants.A_TYPE, type);
+        }
+        return ctxt;
+    }
+
+    /**
+     * Add <authTokenControl voidOnExpired="1|0"/> element to <context> element
+     * @param ctxt A {@code <context>} Element as created by toCtxt
+     * @param voidOnExpired boolean
+     * @return
+     */
+    public static Element addAuthTokenControl(Element ctxt, boolean voidOnExpired) {
+        if (ctxt == null) {
+            return ctxt;
+        }
+        if (!ctxt.getName().equalsIgnoreCase(HeaderConstants.E_CONTEXT)) {
+            throw new IllegalArgumentException("Invalid element: " + ctxt.getName());
+        }
+        Element eChange = ctxt.addUniqueElement(HeaderConstants.E_AUTH_TOKEN_CONTROL);
+        eChange.addAttribute(HeaderConstants.A_VOID_ON_EXPIRED, voidOnExpired);
         return ctxt;
     }
 
     public static Element addResponseProtocolToCtxt(Element ctxt, SoapProtocol proto) {
-        if (ctxt == null)
+        if (ctxt == null) {
             return ctxt;
-        if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT))
+        }
+        if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT)) {
             throw new IllegalArgumentException("Invalid element: " + ctxt.getName());
-
+        }
         if (proto != null) {
             ctxt.addElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE,
                     proto == SoapProtocol.SoapJS ? HeaderConstants.TYPE_JAVASCRIPT : HeaderConstants.TYPE_XML);
