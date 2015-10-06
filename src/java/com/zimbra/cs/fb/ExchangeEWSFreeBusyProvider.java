@@ -115,6 +115,7 @@ import com.microsoft.schemas.exchange.services._2006.types.TimeZoneDefinitionTyp
 import com.microsoft.schemas.exchange.services._2006.types.UnindexedFieldURIType;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -128,8 +129,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 
 public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
-    public static final int FB_INTERVAL = 30;
-	public static final String TYPE_EWS = "ews";
+    public static final String TYPE_EWS = "ews";
     private ExchangeServicePortType service = null;
     private static ExchangeService factory = null;
 
@@ -824,10 +824,12 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     public List<FreeBusy>
         getFreeBusyForHost(String host, ArrayList<Request> req)
             throws IOException {
+        int fb_interval = LC.exchange_free_busy_interval_min.intValueWithinRange(5, 1444);
         List<FreeBusyResponseType> results = null;
         ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
 
 		Request r = req.get(0);
+        long start = Request.offsetInterval(req.get(0).start, fb_interval);
 		ServerInfo serverInfo = (ServerInfo) r.data;
 		if (serverInfo == null) {
 			ZimbraLog.fb.warn("no exchange server info for user "+r.email);
@@ -852,7 +854,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             DatatypeFactory datatypeFactory = DatatypeFactory.newInstance();
 
             GregorianCalendar gregorianCalStart = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-            gregorianCalStart.setTimeInMillis(req.get(0).start);
+            gregorianCalStart.setTimeInMillis(start);
             duration.setStartTime(datatypeFactory.newXMLGregorianCalendar(gregorianCalStart));
 
             GregorianCalendar gregorianCalEnd = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
@@ -861,7 +863,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 
             FreeBusyViewOptionsType availabilityOpts =
                 new FreeBusyViewOptionsType();
-            availabilityOpts.setMergedFreeBusyIntervalInMinutes(FB_INTERVAL);
+            availabilityOpts.setMergedFreeBusyIntervalInMinutes(fb_interval);
 
             availabilityOpts.getRequestedView().add("MergedOnly");
             availabilityOpts.setTimeWindow(duration);
@@ -938,7 +940,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             }
 
             ret.add(new ExchangeFreeBusyProvider.ExchangeUserFreeBusy(fb,
-                    re.email, FB_INTERVAL, req.get(0).start, req.get(0).end));
+                    re.email, fb_interval, req.get(0).start, req.get(0).end));
         }
 
         return ret;
