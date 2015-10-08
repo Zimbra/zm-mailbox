@@ -240,7 +240,7 @@ public class UserServletContext {
             if (this.formatter == null) {
                 throw new UserServletException(HttpServletResponse.SC_NOT_IMPLEMENTED, L10nUtil.getMessage(MsgKey.errNotImplemented, request));
             } else {
-                formatter.parseParams(this);
+                formatter.validateParams(this);
             }
         }
 

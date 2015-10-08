@@ -160,7 +160,7 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_QUERY = "query"; // query query param
 
     public static final String QP_SORT = "sort"; //sort query param
-    
+
     public static final String QP_VIEW = "view"; // view query param
 
     public static final String QP_TYPES = "types"; // types
@@ -698,15 +698,20 @@ public class UserServlet extends ZimbraServlet {
     private void resolveFormatter(UserServletContext context) throws UserServletException {
         if (context.format == null) {
             context.format = defaultFormat(context);
-            if (context.format == null)
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errUnsupportedFormat, context.req));
+            if (context.format == null) {
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                                                L10nUtil.getMessage(MsgKey.errUnsupportedFormat, context.req));
+            }
         }
 
         if (context.formatter == null) {
             context.formatter = FormatterFactory.mFormatters.get(context.format);
-            if (context.formatter == null)
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errUnsupportedFormat, context.req));
+            if (context.formatter == null) {
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                                                L10nUtil.getMessage(MsgKey.errUnsupportedFormat, context.req));
+            }
         }
+        context.formatter.validateParams(context);
     }
 
     protected boolean proxyIfMountpoint(HttpServletRequest req, HttpServletResponse resp, UserServletContext context, MailItem item)
