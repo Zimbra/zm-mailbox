@@ -218,7 +218,7 @@ public abstract class Formatter {
     }
 
     // hook to support sanity checks on params
-    public void parseParams(UserServletContext context) throws UserServletException {
+    public void validateParams(UserServletContext context) throws UserServletException {
         String callback = context.params.get(QP_CALLBACK);
         if (callback != null && callback.length() != 0) {
             if (!ALLOWED_CALLBACK_CHARS.matcher(callback).matches()) {
@@ -345,6 +345,11 @@ public abstract class Formatter {
             exception = null;
         }
 
+        /* Make doubly sure that parameters are valid.  In the past, a path which failed to call this during
+         * initial formatter setup was missed.  Ideally, should have caught this issue earlier to avoid
+         * wasting effort.
+         */
+        validateParams(context);
         if (callback == null || callback.equals("")) {
             if (context.params.get(PROGRESS) == null) {
                 if (exception == null) {
