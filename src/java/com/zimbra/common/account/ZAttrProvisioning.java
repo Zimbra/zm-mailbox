@@ -14255,14 +14255,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyWorkerProcesses = "zimbraReverseProxyWorkerProcesses";
 
     /**
-     * Whether to enable XMPP/BOSH proxy
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2065)
-    public static final String A_zimbraReverseProxyXmppBoshEnabled = "zimbraReverseProxyXmppBoshEnabled";
-
-    /**
      * Hostname of the external XMPP server where XMPP over BOSH requests
      * need to be proxied
      *
@@ -14297,14 +14289,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1958)
     public static final String A_zimbraReverseProxyXmppBoshRemoteHttpBindURL = "zimbraReverseProxyXmppBoshRemoteHttpBindURL";
-
-    /**
-     * Whether to use SSL to connect to upstream XMPP/Bosh server
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2066)
-    public static final String A_zimbraReverseProxyXmppBoshSSL = "zimbraReverseProxyXmppBoshSSL";
 
     /**
      * the response timeout for an external XMPP/BOSH server. Must be in
