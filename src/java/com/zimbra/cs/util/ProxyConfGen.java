@@ -1452,23 +1452,6 @@ class WebProxyUpstreamEwsTargetVar extends ProxyConfVar {
     }
 }
 
-class XmppBoshProxyUpstreamProtoVar extends ProxyConfVar {
-    public XmppBoshProxyUpstreamProtoVar() {
-        super("xmpp.upstream.schema", "zimbraReverseProxyXmppBoshSSL", true, ProxyConfValueType.BOOLEAN,
-                ProxyConfOverride.SERVER, "The xmpp target of proxy_pass for web proxy");
-    }
-
-    @Override
-    public String format(Object o) throws ProxyConfException {
-        if((Boolean)o == false) {
-            return "http://";
-        } else {
-            return "https://";
-        }
-    }
-}
-
-
 class WebSSLSessionCacheSizeVar extends ProxyConfVar {
 
     public WebSSLSessionCacheSizeVar() {
@@ -1541,10 +1524,9 @@ class LoginEnablerVar extends WebEnablerVar {
 
 class WebXmppBoshEnablerVar extends ProxyConfVar {
 
-    //        mConfVars.put("mail.enabled", new ProxyConfVar("mail.enabled", "zimbraReverseProxyMailEnabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Mail Proxy is enabled"));
     public WebXmppBoshEnablerVar() {
         super("web.xmpp.bosh.upstream.disable",
-              "zimbraReverseProxyXmppBoshEnabled",
+              "",
               false,
               ProxyConfValueType.ENABLER,
               ProxyConfOverride.CUSTOM,
@@ -1772,6 +1754,7 @@ public class ProxyConfGen
     static final String ZIMBRA_SSL_UPSTREAM_EWS_NAME = "zimbra_ews_ssl";
     static final String ZIMBRA_UPSTREAM_LOGIN_NAME = "zimbra_login";
     static final String ZIMBRA_SSL_UPSTREAM_LOGIN_NAME = "zimbra_login_ssl";
+
 
     /** the pattern for custom header cmd, such as "!{explode domain} */
     private static Pattern cmdPattern = Pattern.compile("(.*)\\!\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
@@ -2453,7 +2436,7 @@ public class ProxyConfGen
         mConfVars.put("mail.imap.greeting", new ImapGreetingVar());
         mConfVars.put("mail.pop3.greeting", new Pop3GreetingVar());
         mConfVars.put("mail.enabled", new ProxyConfVar("mail.enabled", "zimbraReverseProxyMailEnabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Mail Proxy is enabled"));
-
+        mConfVars.put("mail.imap.enabled", new ProxyConfVar("mail.imap.enabled", "zimbraReverseProxyMailImapEnabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Imap Mail Proxy is enabled"));
         mConfVars.put("mail.imaps.enabled", new ProxyConfVar("mail.imaps.enabled", "zimbraReverseProxyMailImapsEnabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Imaps Mail Proxy is enabled"));
         mConfVars.put("mail.pop3.enabled", new ProxyConfVar("mail.pop3.enabled", "zimbraReverseProxyMailPop3Enabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Pop Mail Proxy is enabled"));
         mConfVars.put("mail.pop3s.enabled", new ProxyConfVar("mail.pop3s.enabled", "zimbraReverseProxyMailPop3sEnabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Pops Mail Proxy is enabled"));
@@ -2529,15 +2512,12 @@ public class ProxyConfGen
         mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
         mConfVars.put("ssl.session.timeout", new TimeInSecVarWrapper(new ProxyConfVar("ssl.session.timeout", "zimbraReverseProxySSLSessionTimeout", new Long(600), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "SSL session timeout value for the proxy in secs")));
         mConfVars.put("ssl.session.cachesize", new WebSSLSessionCacheSizeVar());
-        mConfVars.put("web.xmpp.upstream.proto", new XmppBoshProxyUpstreamProtoVar());
         mConfVars.put("web.xmpp.bosh.upstream.disable", new WebXmppBoshEnablerVar());
-        mConfVars.put("web.xmpp.bosh.enabled", new ProxyConfVar("web.xmpp.bosh.enabled", "zimbraReverseProxyXmppBoshEnabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether XMPP/Bosh Reverse Proxy is enabled"));
         mConfVars.put("web.xmpp.local.bind.url", new ProxyConfVar("web.xmpp.local.bind.url", "zimbraReverseProxyXmppBoshLocalHttpBindURL", "/http-bind", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Local HTTP-BIND URL prefix where ZWC sends XMPP over BOSH requests"));
         mConfVars.put("web.xmpp.remote.bind.url", new ProxyConfVar("web.xmpp.remote.bind.url", "zimbraReverseProxyXmppBoshRemoteHttpBindURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Remote HTTP-BIND URL prefix for an external XMPP server where XMPP over BOSH requests need to be proxied"));
         mConfVars.put("web.xmpp.bosh.hostname", new ProxyConfVar("web.xmpp.bosh.hostname", "zimbraReverseProxyXmppBoshHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the external XMPP server where XMPP over BOSH requests need to be proxied"));
         mConfVars.put("web.xmpp.bosh.port", new ProxyConfVar("web.xmpp.bosh.port", "zimbraReverseProxyXmppBoshPort", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Port number of the external XMPP server where XMPP over BOSH requests need to be proxied"));
         mConfVars.put("web.xmpp.bosh.timeout", new TimeInSecVarWrapper(new ProxyConfVar("web.xmpp.bosh.timeout", "zimbraReverseProxyXmppBoshTimeout", new Long(60), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "the response timeout for an external XMPP/BOSH server")));
-        mConfVars.put("web.xmpp.bosh.use_ssl", new ProxyConfVar("web.xmpp.bosh.use_ssl", "zimbraReverseProxyXmppBoshSSL", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether XMPP/Bosh uses SSL"));
         mConfVars.put("web.ssl.dhparam.enabled", new WebSSLDhparamEnablerVar());
         mConfVars.put("web.ssl.dhparam.file", new ProxyConfVar("web.ssl.dhparam.file", "zimbraReverseProxySSLDHParam", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Filename with DH parameters for EDH ciphers to be used by the proxy"));
         //Get the response headers list from globalconfig

@@ -9086,18 +9086,8 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="2064" name="zimbraReverseProxyXmppBoshTimeout" type="duration" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.7.0,9.0.0">
-  <globalConfigValue>90s</globalConfigValue>
+  <globalConfigValue>1m</globalConfigValue>
   <desc>the response timeout for an external XMPP/BOSH server</desc>
-</attr>
-
-<attr id="2065" name="zimbraReverseProxyXmppBoshEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0,9.0.0">
-   <globalConfigValue>FALSE</globalConfigValue>
-   <desc>Whether to enable XMPP/BOSH proxy</desc>
- </attr>
-
-<attr id="2066" name="zimbraReverseProxyXmppBoshSSL" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0,9.0.0">
-   <globalConfigValue>FALSE</globalConfigValue>
-   <desc>Whether to use SSL to connect to upstream XMPP/Bosh server</desc>
 </attr>
 
 </attrs>
