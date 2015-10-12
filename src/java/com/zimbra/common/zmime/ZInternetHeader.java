@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -20,9 +20,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.ibm.icu.text.CharsetDetector;
@@ -145,7 +147,7 @@ public class ZInternetHeader {
     protected ZInternetHeader(final String name, final String value, final String charset) {
         this.hinfo = HeaderInfo.of(name);
         this.name = hinfo.name == null ? name : hinfo.name;
-//        updateContent(escape(value, CharsetUtil.toCharset(charset), false).getBytes());
+        //        updateContent(escape(value, CharsetUtil.toCharset(charset), false).getBytes());
         updateContent(value == null ? null : value.getBytes());
     }
 
@@ -346,54 +348,53 @@ public class ZInternetHeader {
         }
 
         ByteBuilder builder = new ByteBuilder(length, decodingCharset(charset));
-        String value = null;
+        List<ZByteString> byteStrings = new ArrayList<ZByteString>();
         boolean encoded = false;
-        Boolean encwspenc = Boolean.FALSE;
-        int questions = 0, wsplength = 0;
+        int questions = 0;
 
         for (int pos = start; pos < end; pos++) {
             byte c = content[pos];
             if (c == '\r' || c == '\n') {
                 // ignore folding
+            } else if ((c == ' ' || c == '\t') && pos < end - 3 &&
+                    content[pos + 1] == '='  && content[pos + 2] == '?' &&
+                    (!encoded || content[pos + 3] != '=')) {
+                // omit one linear whitespace before beginning of encoded word (RFC's 2047, 822)
             } else if (c == '=' && pos < end - 2 && content[pos + 1] == '?' && (!encoded || content[pos + 2] != '=')) {
                 // "=?" marks the beginning of an encoded-word
                 if (!builder.isEmpty()) {
-                    value = builder.appendTo(value);
+                    byteStrings.add(new ZByteString(builder));
                 }
                 builder.reset();  builder.write('=');
                 encoded = true;  questions = 0;
             } else if (c == '?' && encoded && ++questions > 3 && pos < end - 1 && content[pos + 1] == '=') {
                 // "?=" may mean the end of an encoded-word, so see if it decodes correctly
                 builder.write('?');  builder.write('=');
-                String decoded = ZMimeUtility.decodeWord(builder.toByteArray());
+                ZByteString decoded = ZMimeUtility.decodeWordBytes(builder.toByteArray());
                 boolean valid = decoded != null;
                 if (valid) {
                     pos++;
+                    // consume one linear whitespace after end of encoded word (RFC's 2047, 822)
+                    while (pos < end - 1 && (content[pos + 1] == '\r' || content[pos + 1] == '\n')) {
+                        pos+=1;
+                    }
+                    if (pos < end - 1 && (content[pos + 1] == ' ' || content[pos + 1] == '\t')) {
+                        pos++;
+                    }
                 } else {
-                    decoded = builder.pop().toString();
+                    decoded = new ZByteString(builder.pop());
                 }
-                // drop all whitespace between encoded-words
-                if (valid && encwspenc == Boolean.TRUE) {
-                    value = value.substring(0, value.length() - wsplength);
-                }
-                value = value == null ? decoded : value + decoded;
-                encwspenc = valid ? null : Boolean.FALSE;  wsplength = 0;
+                byteStrings.add(decoded);
                 encoded = false;  builder.reset();
             } else {
                 builder.write(c);
-                // track whitespace after encoded-words (enc wsp enc => remove wsp)
-                boolean isWhitespace = c == ' ' || c == '\t';
-                if (!encoded && encwspenc != Boolean.FALSE) {
-                    encwspenc = isWhitespace;
-                    wsplength = isWhitespace ? wsplength + 1 : 0;
-                }
             }
         }
 
         if (!builder.isEmpty()) {
-            value = builder.appendTo(value);
+            byteStrings.add(new ZByteString(builder));
         }
-        return value == null ? "" : value;
+        return ZByteString.makeString(byteStrings);
     }
 
     static String unfold(final String folded) {

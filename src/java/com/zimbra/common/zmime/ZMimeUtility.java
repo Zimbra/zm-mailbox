@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -26,7 +26,13 @@ import java.nio.charset.Charset;
 import com.zimbra.common.util.CharsetUtil;
 
 public class ZMimeUtility {
+
     static String decodeWord(byte[] word) {
+        ZByteString byteString = decodeWordBytes(word);
+        return byteString != null ? byteString.toString() : null;
+    }
+
+    static ZByteString decodeWordBytes(byte[] word) {
         int length = word.length;
         if (length <= 8 || word[0] != '=' || word[1] != '?' || word[length - 2] != '?' || word[length - 1] != '=') {
             return null;
@@ -53,7 +59,7 @@ public class ZMimeUtility {
         }
         int remaining = length - pos - 3;
         if (remaining == 0) {
-            return "";
+            return new ZByteString(word, 0, 0, CharsetUtil.UTF_8);
         }
         if (encoding == 'Q' || encoding == 'q') {
             decoder = new QP2047Decoder(new ByteArrayInputStream(word, pos + 1, remaining));
@@ -66,7 +72,7 @@ public class ZMimeUtility {
         try {
             byte[] dbuffer = new byte[word.length];
             int dsize = decoder.read(dbuffer);
-            return new String(dbuffer, 0, dsize, CharsetUtil.normalizeCharset(charset));
+            return new ZByteString(dbuffer, 0, dsize, CharsetUtil.normalizeCharset(charset));
         } catch (OutOfMemoryError oome) {
             throw oome;
         } catch (Error e) { // bug 40926 - catch java.lang.Error thrown by String class for invalid charset issues
@@ -124,6 +130,10 @@ public class ZMimeUtility {
         public ByteBuilder(byte[] b) {
             super((int) (b.length * 1.5 + 1));
             append(b);
+        }
+
+        public Charset getCharset () {
+            return this.charset;
         }
 
         public ByteBuilder setCharset(String enc) throws UnsupportedEncodingException {
