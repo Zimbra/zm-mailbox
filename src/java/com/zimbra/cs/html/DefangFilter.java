@@ -37,6 +37,7 @@ import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
 import org.cyberneko.html.filters.DefaultFilter;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.StringUtil;
@@ -776,7 +777,8 @@ public class DefangFilter extends DefaultFilter {
      * @param string
      * @return
      */
-    private String extractAndSanitizeAsciiData(String data) {
+    @VisibleForTesting
+    String extractAndSanitizeAsciiData(String data) {
         char c[] = data.toCharArray();
         StringBuilder sanitizedStrg = new StringBuilder();
         StringBuilder asciiData = new StringBuilder();
@@ -793,10 +795,10 @@ public class DefangFilter extends DefaultFilter {
                 }
                 sanitizedStrg.append(c[i]);
             }
-
         }
+        //Append the asciiData to the sanitizedStrg
+        sanitizedStrg.append(asciiData);
         return sanitizedStrg.toString();
     }
-
 
 }
