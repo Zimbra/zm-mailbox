@@ -129,6 +129,15 @@ public abstract class FreeBusyProvider {
             else
                 hopcount += 1;
         }
+
+        public static long offsetInterval(long time, int intervalInMins) {
+            Calendar cal = GregorianCalendar.getInstance();
+            cal.setTimeInMillis(time);
+            int min = cal.get(Calendar.MINUTE);
+            int off = min % intervalInMins;
+            cal.set(Calendar.MINUTE, min - off);
+            return cal.getTimeInMillis();
+        }
     }
     @SuppressWarnings("serial")
     public static class FreeBusyUserNotFoundException extends Exception {
