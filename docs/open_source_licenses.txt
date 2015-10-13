@@ -393,7 +393,7 @@ SECTION 10: GNU Lesser General Public License, V2.1
    >>> perl-mozilla-ca-20130114
    >>> perl-test-nowarnings-1.04
    >>> syslog4j-0.9.46
-   >>> tinymce-4.2.5
+   >>> tinymce-4.2.6
    >>> unbound-ldap-sdk-2.3.5
 
 
@@ -35126,7 +35126,7 @@ F<http://www.fsf.org/licenses/licenses.html>.
 License: LGPL 2.1
 
 
->>> tinymce-4.2.5
+>>> tinymce-4.2.6
 
 Copyright 2009, Moxiecode Systems AB
 Released under LGPL License.
