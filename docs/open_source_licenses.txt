@@ -399,6 +399,7 @@ SECTION 10: GNU Lesser General Public License, V2.1
 SECTION 11: GNU Lesser General Public License, V3.0
 
    >>> zeromq-4.0.5
+   >>> javapns-2.2
 
 
 
@@ -35155,6 +35156,22 @@ Written by Gary V. Vaughan, 2004
 This file is free software; the Free Software Foundation gives
 unlimited permission to copy and/or distribute it, with or without
 modifications, as long as this notice is preserved.
+
+
+>>> javapns-2.2
+
+It is assumed based off of the home page of the defunct JavaPNS project, which has the
+single line: "Licensed under the GNU LGPL license v3.0" and the entry in the pom.xml file
+which has 
+   <licenses>
+        <license>
+            <name>Lesser General Public License (LGPL)</name>
+            <url>http://www.gnu.org/copyleft/lesser.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+that the code is released under the GNU Lesser General Public License, V3.0, as that
+is what the link resolves to at this time.
 
 
 --------------- SECTION 12: GNU Library General Public License, V2.0 ----------
