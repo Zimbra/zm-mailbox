@@ -350,7 +350,13 @@ public class Sync extends MailDocumentHandler {
                     break delta;
                 }
 
-                ToXML.encodeItem(response, ifmt, octxt, item, MUTABLE_FIELDS);
+                // For items in the system, if the content has changed since the user last sync'ed
+                // (because it was edited or created), just send back the folder ID and saved date --
+                // the client will request the whole object out of band -- potentially using the
+                // content servlet's "include metadata in headers" hack.
+                // If it's just the metadata that changed, send back the set of mutable attributes.
+                boolean created = item.getSavedSequence() > begin;
+                ToXML.encodeItem(response, ifmt, octxt, item, created ? Change.FOLDER | Change.CONFLICT | Change.DATE | Change.PARENT : MUTABLE_FIELDS);
                 itemCount++;
             }
             batch.clear();
