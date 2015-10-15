@@ -60243,6 +60243,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Whether to enable XMPP/BOSH proxy
+     *
+     * @return zimbraReverseProxyXmppBoshEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2065)
+    public boolean isReverseProxyXmppBoshEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, false);
+    }
+
+    /**
+     * Whether to enable XMPP/BOSH proxy
+     *
+     * @param zimbraReverseProxyXmppBoshEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2065)
+    public void setReverseProxyXmppBoshEnabled(boolean zimbraReverseProxyXmppBoshEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, zimbraReverseProxyXmppBoshEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable XMPP/BOSH proxy
+     *
+     * @param zimbraReverseProxyXmppBoshEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2065)
+    public Map<String,Object> setReverseProxyXmppBoshEnabled(boolean zimbraReverseProxyXmppBoshEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, zimbraReverseProxyXmppBoshEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable XMPP/BOSH proxy
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2065)
+    public void unsetReverseProxyXmppBoshEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable XMPP/BOSH proxy
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2065)
+    public Map<String,Object> unsetReverseProxyXmppBoshEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, "");
+        return attrs;
+    }
+
+    /**
      * The servers running mailbox with EWS functionality to be included in
      * the &quot;ews&quot; block in the nginx web proxy config file
      *
@@ -60768,12 +60840,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The send timeout of transfering a request to the upstream server. If
-     * after this time the upstream server doesn&#039;t take new data, proxy
-     * will close the connection. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Whether to use SSL to connect to upstream XMPP/Bosh server
+     *
+     * @return zimbraReverseProxyXmppBoshSSL, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2066)
+    public boolean isReverseProxyXmppBoshSSL() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyXmppBoshSSL, false);
+    }
+
+    /**
+     * Whether to use SSL to connect to upstream XMPP/Bosh server
+     *
+     * @param zimbraReverseProxyXmppBoshSSL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2066)
+    public void setReverseProxyXmppBoshSSL(boolean zimbraReverseProxyXmppBoshSSL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, zimbraReverseProxyXmppBoshSSL ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to use SSL to connect to upstream XMPP/Bosh server
+     *
+     * @param zimbraReverseProxyXmppBoshSSL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2066)
+    public Map<String,Object> setReverseProxyXmppBoshSSL(boolean zimbraReverseProxyXmppBoshSSL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, zimbraReverseProxyXmppBoshSSL ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to use SSL to connect to upstream XMPP/Bosh server
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2066)
+    public void unsetReverseProxyXmppBoshSSL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to use SSL to connect to upstream XMPP/Bosh server
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2066)
+    public Map<String,Object> unsetReverseProxyXmppBoshSSL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, "");
+        return attrs;
+    }
+
+    /**
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
