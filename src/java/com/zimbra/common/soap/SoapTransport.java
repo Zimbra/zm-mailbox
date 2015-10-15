@@ -47,7 +47,7 @@ public abstract class SoapTransport {
     private String csrfToken;
     private String trustedToken;
     private boolean voidOnExpired = false;
-
+    private boolean isAdmin = false;
     public static final String DEFAULT_USER_AGENT_NAME = "ZCS";
     private static String sDefaultUserAgentName = DEFAULT_USER_AGENT_NAME;
     private static String sDefaultUserAgentVersion;
@@ -455,6 +455,14 @@ public abstract class SoapTransport {
      */
     public void setVoidOnExpired(boolean mVoidOnExpired) {
         this.voidOnExpired = mVoidOnExpired;
+    }
+
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    public void setAdmin(boolean isAdmin) {
+        this.isAdmin = isAdmin;
     }
 
 }

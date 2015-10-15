@@ -227,7 +227,7 @@ public class SoapHttpTransport extends SoapTransport {
             }
 
             String host = method.getURI().getHost();
-            HttpState state = HttpClientUtil.newHttpState(getAuthToken(), host, false);
+            HttpState state = HttpClientUtil.newHttpState(getAuthToken(), host, this.isAdmin());
             String trustedToken = getTrustedToken();
             if (trustedToken != null) {
                 state.addCookie(new Cookie(host, ZimbraCookie.COOKIE_ZM_TRUST_TOKEN, trustedToken, "/", null, false));
