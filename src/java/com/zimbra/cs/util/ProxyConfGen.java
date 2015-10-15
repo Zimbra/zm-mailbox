@@ -1715,7 +1715,7 @@ class WebProxyUpstreamEwsTargetVar extends ProxyConfVar {
 }
 
 class XmppBoshProxyUpstreamProtoVar extends ProxyConfVar {
-    public XmppBoshProxyUpstreamProtoVar() {
+    public XmppBoshProxyUpstreamProtoVar() throws ProxyConfException {
         super("xmpp.upstream.schema", "zimbraReverseProxyXmppBoshSSL", true, ProxyConfValueType.BOOLEAN,
                 ProxyConfOverride.SERVER, "The XMPP target of proxy_pass for web proxy");
     }
