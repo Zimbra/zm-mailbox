@@ -164,7 +164,7 @@ public class CsrfFilter implements Filter {
             if (CsrfUtil.doCsrfCheck(req, authToken)) {
                 // post request and Auth token is CSRF enabled
                 req.setAttribute(CSRF_TOKEN_CHECK, Boolean.TRUE);
-            } else if (CsrfUtil.isPostReq(req) && (authToken != null && !authToken.isCsrfTokenEnabled())) {
+            } else if (!CsrfUtil.isPostReq(req) && (authToken != null && !authToken.isCsrfTokenEnabled())) {
                 if (CsrfUtil.isCsrfTokenCreated(authToken)) {
                     req.setAttribute(CSRF_TOKEN_CHECK, Boolean.TRUE);
                     ZimbraLog.misc.debug("CSRF token not created for this Auth Token, "

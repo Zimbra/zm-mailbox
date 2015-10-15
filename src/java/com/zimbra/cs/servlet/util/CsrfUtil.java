@@ -181,28 +181,22 @@ public final class CsrfUtil {
             throws MalformedURLException {
 
         boolean csrfReq = true;
-        String method = req.getMethod();
-        if (!method.equalsIgnoreCase("POST") && !method.equalsIgnoreCase("PUT")
-            && !method.equalsIgnoreCase("DELETE")) {
-            csrfReq = false;
-            return csrfReq;
-        }
-
-       if (authToken != null) {
-           if (!authToken.isCsrfTokenEnabled()) {
+        csrfReq = isPostReq(req);
+        if (csrfReq) {
+            if (authToken != null) {
+                if (!authToken.isCsrfTokenEnabled()) {
+                    csrfReq = false;
+                }
+            } else {
                csrfReq = false;
-           }
-       } else {
-           csrfReq = false;
-       }
-
-       String reqUrl = req.getRequestURI();
+            }
+        }
         if (ZimbraLog.misc.isDebugEnabled()) {
+            String reqUrl = req.getRequestURI();
             ZimbraLog.misc.debug("ReqURL : " + reqUrl
                 + (csrfReq ? " needs to " : " does not need to ")
                 + "pass through CSRF check");
         }
-
         return csrfReq;
     }
 
@@ -210,11 +204,11 @@ public final class CsrfUtil {
      * @return
      */
     public static boolean isPostReq(HttpServletRequest req) {
-        boolean postReq = false;
+        boolean postReq = true;
         String method = req.getMethod();
         if (!method.equalsIgnoreCase("POST") && !method.equalsIgnoreCase("PUT")
             && !method.equalsIgnoreCase("DELETE")) {
-            postReq = true;
+            postReq = false;
         }
         return postReq;
     }

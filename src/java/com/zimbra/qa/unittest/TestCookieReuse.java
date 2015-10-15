@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
@@ -27,22 +28,28 @@ import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
@@ -53,6 +60,7 @@ import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.message.EndSessionRequest;
+import com.zimbra.soap.admin.message.CreateAccountRequest;
 import com.zimbra.soap.mail.message.SearchRequest;
 import com.zimbra.soap.mail.message.SearchResponse;
 import com.zimbra.soap.type.AccountSelector;
@@ -61,6 +69,7 @@ import com.zimbra.soap.type.SearchHit;
 public class TestCookieReuse extends TestCase {
     private static final String NAME_PREFIX = TestUserServlet.class.getSimpleName();
     private static final String USER_NAME = "user1";
+    private static final String UNAUTHORIZED_USER = "unauthorized@example.com";
     private int currentSupportedAuthVersion = 2;
     @Override
     public void setUp()
@@ -69,6 +78,9 @@ public class TestCookieReuse extends TestCase {
         // Add a test message, in case the account is empty.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         TestUtil.addMessage(mbox, NAME_PREFIX);
+        if(TestUtil.accountExists(UNAUTHORIZED_USER)) {
+            TestUtil.deleteAccount(UNAUTHORIZED_USER);
+        }
     }
 
     @Override
@@ -79,7 +91,7 @@ public class TestCookieReuse extends TestCase {
 
     private void cleanUp()
     throws Exception {
-    	Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(currentSupportedAuthVersion);
+        Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(currentSupportedAuthVersion);
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
 
@@ -100,7 +112,7 @@ public class TestCookieReuse extends TestCase {
         HttpClient client = mbox.getHttpClient(uri);
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(client, get);
-        assertEquals("This request sohuld succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
     }
 
     /**
@@ -109,7 +121,7 @@ public class TestCookieReuse extends TestCase {
     @Test
     public void testValidSessionCookieReuse() throws ServiceException, IOException {
         //establish legitimate connection
-    	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss");
         HttpClient alice = mbox.getHttpClient(uri);
         //create evesdropper's connection
@@ -117,7 +129,7 @@ public class TestCookieReuse extends TestCase {
         Cookie[] cookies = alice.getState().getCookies();
         HttpState state = new HttpState();
         for (int i=0;i<cookies.length;i++) {
-        	Cookie cookie = cookies[i];
+            Cookie cookie = cookies[i];
             state.addCookie(new Cookie(uri.getHost(), cookie.getName(), cookie.getValue(), "/", null, false));
         }
         eve.setState(state);
@@ -132,8 +144,8 @@ public class TestCookieReuse extends TestCase {
     @Test
     public void testAutoEndSession() throws ServiceException, IOException {
         //establish legitimate connection
-    	TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "TRUE");
-    	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "TRUE");
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss");
         HttpClient alice = mbox.getHttpClient(uri);
 
@@ -142,7 +154,7 @@ public class TestCookieReuse extends TestCase {
         Cookie[] cookies = alice.getState().getCookies();
         HttpState state = new HttpState();
         for (int i=0;i<cookies.length;i++) {
-        	Cookie cookie = cookies[i];
+            Cookie cookie = cookies[i];
             state.addCookie(new Cookie(uri.getHost(), cookie.getName(), cookie.getValue(), "/", null, false));
         }
         eve.setState(state);
@@ -162,8 +174,8 @@ public class TestCookieReuse extends TestCase {
     @Test
     public void testForceEndSession() throws ServiceException, IOException {
         //establish legitimate connection
-    	TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
-    	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss");
         HttpClient alice = mbox.getHttpClient(uri);
 
@@ -172,7 +184,7 @@ public class TestCookieReuse extends TestCase {
         Cookie[] cookies = alice.getState().getCookies();
         HttpState state = new HttpState();
         for (int i=0;i<cookies.length;i++) {
-        	Cookie cookie = cookies[i];
+            Cookie cookie = cookies[i];
             state.addCookie(new Cookie(uri.getHost(), cookie.getName(), cookie.getValue(), "/", null, false));
         }
         eve.setState(state);
@@ -193,8 +205,8 @@ public class TestCookieReuse extends TestCase {
     @Test
     public void testInvalidSearchRequest() throws ServiceException, IOException {
         //establish legitimate connection
-    	TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
-    	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss");
         mbox.getHttpClient(uri);
         ZAuthToken authT = mbox.getAuthToken();
@@ -229,13 +241,13 @@ public class TestCookieReuse extends TestCase {
         searchReq.setSearchTypes(MailItem.Type.MESSAGE.toString());
         searchReq.setQuery("in:inbox");
         try {
-	        req = JaxbUtil.jaxbToElement(searchReq, SoapProtocol.SoapJS.getFactory());
-	        res = transport.invoke(req);
-	        searchResp = JaxbUtil.elementToJaxb(res);
-	        searchHits = searchResp.getSearchHits();
-	        assertTrue("this search request should fail", searchHits.isEmpty());
+            req = JaxbUtil.jaxbToElement(searchReq, SoapProtocol.SoapJS.getFactory());
+            res = transport.invoke(req);
+            searchResp = JaxbUtil.elementToJaxb(res);
+            searchHits = searchResp.getSearchHits();
+            assertTrue("this search request should fail", searchHits.isEmpty());
         } catch (SoapFaultException ex) {
-        	assertEquals("Should be getting 'auth required' exception", ServiceException.AUTH_EXPIRED, ex.getCode());
+            assertEquals("Should be getting 'auth required' exception", ServiceException.AUTH_EXPIRED, ex.getCode());
         }
     }
 
@@ -247,8 +259,8 @@ public class TestCookieReuse extends TestCase {
     @Test
     public void testWebLogOut() throws ServiceException, IOException, URISyntaxException, InterruptedException {
         //establish legitimate connection
-    	TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
-    	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss");
         HttpClient alice = mbox.getHttpClient(uri);
 
@@ -257,7 +269,7 @@ public class TestCookieReuse extends TestCase {
         Cookie[] cookies = alice.getState().getCookies();
         HttpState state = new HttpState();
         for (int i=0;i<cookies.length;i++) {
-        	Cookie cookie = cookies[i];
+            Cookie cookie = cookies[i];
             state.addCookie(new Cookie(uri.getHost(), cookie.getName(), cookie.getValue(), "/", null, false));
         }
         eve.setState(state);
@@ -279,9 +291,9 @@ public class TestCookieReuse extends TestCase {
      */
     @Test
     public void testTokenRegistration () throws Exception {
-    	Account a = TestUtil.getAccount(USER_NAME);
-    	ZimbraAuthToken at = new ZimbraAuthToken(a);
-    	Assert.assertTrue("token should be registered", at.isRegistered());
+        Account a = TestUtil.getAccount(USER_NAME);
+        ZimbraAuthToken at = new ZimbraAuthToken(a);
+        Assert.assertTrue("token should be registered", at.isRegistered());
     }
 
     /**
@@ -290,13 +302,12 @@ public class TestCookieReuse extends TestCase {
      */
     @Test
     public void testTokenDeregistration () throws Exception {
-    	Account a = TestUtil.getAccount(USER_NAME);
-    	ZimbraAuthToken at = new ZimbraAuthToken(a);
-    	Assert.assertTrue("token should be registered", at.isRegistered());
-    	at.deRegister();
-    	Assert.assertFalse("token should not be registered", at.isRegistered());
+        Account a = TestUtil.getAccount(USER_NAME);
+        ZimbraAuthToken at = new ZimbraAuthToken(a);
+        Assert.assertTrue("token should be registered", at.isRegistered());
+        at.deRegister();
+        Assert.assertFalse("token should not be registered", at.isRegistered());
     }
-
 
     /**
      * test de-registering an admin authtoken
@@ -316,13 +327,13 @@ public class TestCookieReuse extends TestCase {
      */
     @Test
     public void testTokenExpiredTokenDeregistration() throws Exception {
-    	Account a = TestUtil.getAccount(USER_NAME);
-    	ZimbraAuthToken at = new ZimbraAuthToken(a, System.currentTimeMillis() - 1000);
+        Account a = TestUtil.getAccount(USER_NAME);
+        ZimbraAuthToken at = new ZimbraAuthToken(a, System.currentTimeMillis() - 1000);
 
-    	ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 10000);
+        ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 10000);
 
-    	Assert.assertFalse("First token should not be registered", at.isRegistered());
-    	Assert.assertTrue("Second token should be registered", at2.isRegistered());
+        Assert.assertFalse("First token should not be registered", at.isRegistered());
+        Assert.assertTrue("Second token should be registered", at2.isRegistered());
     }
 
     /**
@@ -331,19 +342,19 @@ public class TestCookieReuse extends TestCase {
      */
     @Test
     public void testOldClientSupport() throws Exception {
-    	Account a = TestUtil.getAccount(USER_NAME);
-    	ZimbraAuthToken at = new ZimbraAuthToken(a, System.currentTimeMillis() - 1000);
-    	Assert.assertTrue("token should be registered", at.isRegistered());
-    	at.deRegister();
-    	Assert.assertFalse("token should not be registered", at.isRegistered());
+        Account a = TestUtil.getAccount(USER_NAME);
+        ZimbraAuthToken at = new ZimbraAuthToken(a, System.currentTimeMillis() - 1000);
+        Assert.assertTrue("token should be registered", at.isRegistered());
+        at.deRegister();
+        Assert.assertFalse("token should not be registered", at.isRegistered());
 
-    	//lowering supported auth version should allow unregistered cookies
-    	Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(1);
-    	Assert.assertTrue("token should appear to be registered", at.isRegistered());
+        //lowering supported auth version should allow unregistered cookies
+        Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(1);
+        Assert.assertTrue("token should appear to be registered", at.isRegistered());
 
-    	//raising supported auth version should not allow unregistered cookies
-    	Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(2);
-    	Assert.assertFalse("token should not be registered", at.isRegistered());
+        //raising supported auth version should not allow unregistered cookies
+        Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(2);
+        Assert.assertFalse("token should not be registered", at.isRegistered());
     }
 
     /**
@@ -373,12 +384,12 @@ public class TestCookieReuse extends TestCase {
      */
     @Test
     public void testClearCookies () throws Exception {
-    	Account a = TestUtil.getAccount(USER_NAME);
-    	a.setForceClearCookies(true);
-    	ZimbraAuthToken at = new ZimbraAuthToken(a);
-    	Assert.assertTrue("token should be registered", at.isRegistered());
-    	at.deRegister();
-    	Assert.assertFalse("token should not be registered", at.isRegistered());
+        Account a = TestUtil.getAccount(USER_NAME);
+        a.setForceClearCookies(true);
+        ZimbraAuthToken at = new ZimbraAuthToken(a);
+        Assert.assertTrue("token should be registered", at.isRegistered());
+        at.deRegister();
+        Assert.assertFalse("token should not be registered", at.isRegistered());
     }
 
     /**
@@ -480,51 +491,172 @@ public class TestCookieReuse extends TestCase {
     }
 
     /**
+     * Verify that we CANNOT make an unauthorized admin GET request without an admin cookie 
+     */
+    @Test
+    public static void testGetWithoutAdminCookie() throws Exception {
+        int port = 7071;
+        try {
+            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        } catch (ServiceException e) {
+            ZimbraLog.test.error("Unable to get admin SOAP port", e);
+        }
+        String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host=" + Provisioning.getInstance().getLocalServer().getName();
+        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        GetMethod get = new GetMethod(getServerConfigURL);
+        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        assertEquals("This request should NOT succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
+    }
+
+    /**
+     * Verify that we CAN make an admin GET request by re-using a valid non-csrf-enabled cookie 
+     */
+    @Test
+    public static void testReuseAdminCookieWithoutCsrf() throws Exception {
+        AuthToken at = AuthProvider.getAdminAuthToken();
+        at.setCsrfTokenEnabled(false);
+        int port = 7071;
+        try {
+            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        } catch (ServiceException e) {
+            ZimbraLog.test.error("Unable to get admin SOAP port", e);
+        }
+        String host =  Provisioning.getInstance().getLocalServer().getName();
+        String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host=" + host;
+        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpState state = new HttpState();
+        at.encode(state, true, "localhost");
+        eve.setState(state);
+        GetMethod get = new GetMethod(getServerConfigURL);
+        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+    }
+
+    /**
+     * Verify that we CAN make a GET request by reusing a valid non-csrf-enabled cookie 
+     */
+    @Test
+    public static void testReuseUserCookieWithoutCsrf() throws Exception {
+        AuthToken at = AuthProvider.getAuthToken(TestUtil.getAccount(USER_NAME));
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        URI uri = mbox.getRestURI("Inbox?fmt=rss&thief=false");
+        at.setCsrfTokenEnabled(false);
+        GetMethod get = new GetMethod(uri.toString());
+        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpState state = HttpClientUtil.newHttpState(new ZAuthToken(at.getEncoded()), uri.getHost(), false);
+        eve.setState(state);
+        eve.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        assertEquals("This request should succeed. Getting status code " + statusCode + " Response: " + get.getResponseBodyAsString(), HttpStatus.SC_OK,statusCode);
+    }
+    
+    /**
+     * Verify that we CAN make a GET request by reusing a valid CSRF-enabled cookie 
+     */
+    @Test
+    public static void testReuseUserCookieWithCsrf() throws Exception {
+        AuthToken at = AuthProvider.getAuthToken(TestUtil.getAccount(USER_NAME));
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        URI uri = mbox.getRestURI("Inbox?fmt=rss&thief=true");
+        at.setCsrfTokenEnabled(true);
+        GetMethod get = new GetMethod(uri.toString());
+        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpState state = HttpClientUtil.newHttpState(new ZAuthToken(at.getEncoded()), uri.getHost(), false);
+        eve.setState(state);
+        eve.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        assertEquals("This request should succeed. Getting status code " + statusCode + " Response: " + get.getResponseBodyAsString(), HttpStatus.SC_OK,statusCode);
+    }
+
+    /**
+     * Verify that we CAN make an admin GET request by reusing a valid csrf-enabled cookie 
+     */
+    @Test
+    public static void testReuseAdminCookieWithCsrf() throws Exception {
+        AuthToken at = AuthProvider.getAdminAuthToken();
+        at.setCsrfTokenEnabled(true);
+        int port = 7071;
+        try {
+            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        } catch (ServiceException e) {
+            ZimbraLog.test.error("Unable to get admin SOAP port", e);
+        }
+        String host =  Provisioning.getInstance().getLocalServer().getName();
+        String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host=" + host;
+        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpState state = new HttpState();
+        at.encode(state, true, "localhost");
+        eve.setState(state);
+        GetMethod get = new GetMethod(getServerConfigURL);
+        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+    }
+
+    /**
+     * Verify that we CANNOT make an admin POST request by reusing a valid csrf-enabled cookie without a csrf token
+     */
+    @Test
+    public static void testUnauthorizedAdminPostWithCsrf() throws Exception {
+        AuthToken at = AuthProvider.getAdminAuthToken();
+        at.setCsrfTokenEnabled(true);
+        SoapTransport transport = TestUtil.getAdminSoapTransport();
+        transport.setAuthToken(at.getEncoded());
+        Map<String, Object> attrs = null;
+        CreateAccountRequest request = new CreateAccountRequest(UNAUTHORIZED_USER, "test123", attrs);
+        try {
+            transport.invoke(JaxbUtil.jaxbToElement(request));
+        } catch (ServiceException e) {
+            assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
+            return;
+        }
+        fail("should have caught an exception");
+    }
+    /**
      * version of SOAP transport that uses HTTP cookies instead of SOAP message header for transporting Auth Token
      * @author gsolovyev
      */
     private class HttpCookieSoapTransport extends SoapHttpTransport {
 
-		public HttpCookieSoapTransport(String uri) {
-			super(uri);
-		}
+        public HttpCookieSoapTransport(String uri) {
+            super(uri);
+        }
 
-		  @Override
-		protected final Element generateSoapMessage(Element document, boolean raw, boolean noSession,
-		            String requestedAccountId, String changeToken, String tokenType) {
+          @Override
+        protected final Element generateSoapMessage(Element document, boolean raw, boolean noSession,
+                    String requestedAccountId, String changeToken, String tokenType) {
 
-		        // don't use the default protocol version if it's incompatible with the passed-in request
-		        SoapProtocol proto = getRequestProtocol();
-		        if (proto == SoapProtocol.SoapJS) {
-		            if (document instanceof XMLElement)
-		                proto = SoapProtocol.Soap12;
-		        } else {
-		            if (document instanceof JSONElement)
-		                proto = SoapProtocol.SoapJS;
-		        }
-		        SoapProtocol responseProto = getResponseProtocol() == null ? proto : getResponseProtocol();
+                // don't use the default protocol version if it's incompatible with the passed-in request
+                SoapProtocol proto = getRequestProtocol();
+                if (proto == SoapProtocol.SoapJS) {
+                    if (document instanceof XMLElement)
+                        proto = SoapProtocol.Soap12;
+                } else {
+                    if (document instanceof JSONElement)
+                        proto = SoapProtocol.SoapJS;
+                }
+                SoapProtocol responseProto = getResponseProtocol() == null ? proto : getResponseProtocol();
 
-		        String targetId = requestedAccountId != null ? requestedAccountId : getTargetAcctId();
-		        String targetName = targetId == null ? getTargetAcctName() : null;
+                String targetId = requestedAccountId != null ? requestedAccountId : getTargetAcctId();
+                String targetName = targetId == null ? getTargetAcctName() : null;
 
-		        Element context = null;
-		        if (generateContextHeader()) {
-		            context = SoapUtil.toCtxt(proto, null, null);
-		            if (noSession) {
-		                SoapUtil.disableNotificationOnCtxt(context);
-		            } else {
-		                SoapUtil.addSessionToCtxt(context, getAuthToken() == null ? null : getSessionId(), getMaxNotifySeq());
-		            }
-		            SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
-		            SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
-		            SoapUtil.addUserAgentToCtxt(context, getUserAgentName(), getUserAgentVersion());
-		            if (responseProto != proto) {
-		                SoapUtil.addResponseProtocolToCtxt(context, responseProto);
-		            }
+                Element context = null;
+                if (generateContextHeader()) {
+                    context = SoapUtil.toCtxt(proto, null, null);
+                    if (noSession) {
+                        SoapUtil.disableNotificationOnCtxt(context);
+                    } else {
+                        SoapUtil.addSessionToCtxt(context, getAuthToken() == null ? null : getSessionId(), getMaxNotifySeq());
+                    }
+                    SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
+                    SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
+                    SoapUtil.addUserAgentToCtxt(context, getUserAgentName(), getUserAgentVersion());
+                    if (responseProto != proto) {
+                        SoapUtil.addResponseProtocolToCtxt(context, responseProto);
+                    }
 
-		        }
-		        Element envelope = proto.soapEnvelope(document, context);
-		        return envelope;
-		    }
+                }
+                Element envelope = proto.soapEnvelope(document, context);
+                return envelope;
+            }
     }
 }

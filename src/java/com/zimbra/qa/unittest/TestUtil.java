@@ -1063,6 +1063,7 @@ extends Assert {
         Element response = transport.invoke(auth);
         String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         transport.setAuthToken(authToken);
+        transport.setAdmin(true);
         return transport;
     }
 

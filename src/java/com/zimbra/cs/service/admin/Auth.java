@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -33,6 +34,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -47,6 +49,8 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.servlet.CsrfFilter;
+import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.SoapEngine;
@@ -64,6 +68,7 @@ public class Auth extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
         Element authTokenEl = request.getOptionalElement(AdminConstants.E_AUTH_TOKEN);
+        boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
         if (authTokenEl != null) {
             // authtoken admin auth is only supported by Yahoo auth provider, not the default Zimbra auth provider
             try {
@@ -168,15 +173,16 @@ public class Auth extends AdminDocumentHandler {
                 checkAdmin(acct);
                 AuthMech authedByMech = (AuthMech) authCtxt.get(AuthContext.AC_AUTHED_BY_MECH);
                 at = AuthProvider.getAuthToken(acct, true, authedByMech);
-
+                at.setCsrfTokenEnabled(csrfSupport);
             } catch (ServiceException se) {
                 ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
                         new String[] {"cmd", "AdminAuth","account", value, "error", se.getMessage()}));
                 throw se;
             }
         }
-
-        return doResponse(request, at, zsc, context, acct);
+        ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
+        return doResponse(request, at, zsc, context, acct, csrfSupport);
     }
 
     private AuthToken dummyYCCTokenTestNeverCallMe(Element authTokenEl)
@@ -206,7 +212,7 @@ public class Auth extends AdminDocumentHandler {
     }
 
     private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
-            Map<String, Object> context, Account acct) throws ServiceException {
+            Map<String, Object> context, Account acct, boolean csrfSupport) throws ServiceException {
         Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, true);
 
@@ -224,6 +230,21 @@ public class Auth extends AdminDocumentHandler {
         Session session = updateAuthenticatedAccount(zsc, at, context, true);
         if (session != null) {
             ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
+        }
+
+        boolean csrfCheckEnabled = false;
+        if (httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
+            csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
+        }
+        if (csrfSupport && csrfCheckEnabled) {
+            String accountId = at.getAccountId();
+            long authTokenExpiration = at.getExpires();
+            int tokenSalt = (Integer)httpReq.getAttribute(CsrfFilter.CSRF_SALT);
+            String token = CsrfUtil.generateCsrfToken(accountId,
+                authTokenExpiration, tokenSalt, at);
+            Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
+            csrfResponse.addText(token);
+            httpResp.setHeader(CsrfFilter.CSRF_TOKEN, token);
         }
         return response;
     }
