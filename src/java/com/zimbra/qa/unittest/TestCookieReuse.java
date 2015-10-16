@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import junit.framework.TestCase;
 
@@ -30,19 +31,16 @@ import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
@@ -56,10 +54,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.message.EndSessionRequest;
+import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.admin.message.CreateAccountRequest;
 import com.zimbra.soap.mail.message.SearchRequest;
 import com.zimbra.soap.mail.message.SearchResponse;
@@ -474,6 +474,7 @@ public class TestCookieReuse extends TestCase {
         EndSessionRequest esr = new EndSessionRequest();
         transport.setAuthToken(at2.getEncoded());
         transport.invoke(JaxbUtil.jaxbToElement(esr, SoapProtocol.SoapJS.getFactory()));
+        Provisioning.getInstance().reload(a);
         String[] tokensFinal = a.getAuthTokens();
         assertEquals("should have one less authtoken after EndSessionRequest", tokensFinal.length,tokensPost.length-1);
 
@@ -611,6 +612,49 @@ public class TestCookieReuse extends TestCase {
         }
         fail("should have caught an exception");
     }
+
+    /**
+     * Verify that we CANNOT make an POST request with a non-CSRF-enabled auth token if the auth token has an associated CSRF token
+     */
+    @Test
+    public void testForgedNonCSRFPost() throws Exception {
+        AuthToken at = AuthProvider.getAuthToken(TestUtil.getAccount(USER_NAME));
+        at.setCsrfTokenEnabled(false);
+        CsrfUtil.generateCsrfToken(at.getAccountId(), at.getExpires(), new Random().nextInt() + 1, at);
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        transport.setAuthToken(at.getEncoded());
+        GetInfoRequest request = new GetInfoRequest();
+        try {
+            transport.invoke(JaxbUtil.jaxbToElement(request));
+        } catch (ServiceException e) {
+            assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
+            return;
+        }
+        fail("should have caught an exception");
+    }
+    
+
+    /**
+     * Verify that we CANNOT make an admin POST request with a non-CSRF-enabled auth token if the auth token has an associated CSRF token
+     */
+    @Test
+    public void testForgedNonCSRFAdminPost() throws Exception {
+        AuthToken at = AuthProvider.getAdminAuthToken();
+        at.setCsrfTokenEnabled(false);
+        CsrfUtil.generateCsrfToken(at.getAccountId(), at.getExpires(), new Random().nextInt() + 1, at);
+        SoapTransport transport = TestUtil.getAdminSoapTransport();
+        transport.setAuthToken(at.getEncoded());
+        Map<String, Object> attrs = null;
+        CreateAccountRequest request = new CreateAccountRequest(UNAUTHORIZED_USER, "test123", attrs);
+        try {
+            transport.invoke(JaxbUtil.jaxbToElement(request));
+        } catch (ServiceException e) {
+            assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
+            return;
+        }
+        fail("should have caught an exception");
+    }
+
     /**
      * version of SOAP transport that uses HTTP cookies instead of SOAP message header for transporting Auth Token
      * @author gsolovyev
