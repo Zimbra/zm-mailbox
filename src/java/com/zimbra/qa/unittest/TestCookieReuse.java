@@ -16,19 +16,28 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-
-import junit.framework.TestCase;
+import java.util.Map;
+import java.util.Random;
 
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
@@ -42,28 +51,34 @@ import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.message.EndSessionRequest;
+import com.zimbra.soap.account.message.GetInfoRequest;
+import com.zimbra.soap.admin.message.CreateAccountRequest;
 import com.zimbra.soap.mail.message.SearchRequest;
 import com.zimbra.soap.mail.message.SearchResponse;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.SearchHit;
 
-public class TestCookieReuse extends TestCase {
+public class TestCookieReuse  {
     private static final String NAME_PREFIX = TestUserServlet.class.getSimpleName();
     private static final String USER_NAME = "user1";
+    private static final String UNAUTHORIZED_USER = "unauthorized@example.com";
     private int currentSupportedAuthVersion = 2;
-    @Override
+    @Before
     public void setUp()
     throws Exception {
         cleanUp();
@@ -72,7 +87,7 @@ public class TestCookieReuse extends TestCase {
         TestUtil.addMessage(mbox, NAME_PREFIX);
     }
 
-    @Override
+    @After
     public void tearDown()
     throws Exception {
         cleanUp();
@@ -82,6 +97,9 @@ public class TestCookieReuse extends TestCase {
     throws Exception {
         Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(currentSupportedAuthVersion);
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        if(TestUtil.accountExists(UNAUTHORIZED_USER)) {
+            TestUtil.deleteAccount(UNAUTHORIZED_USER);
+        }
     }
 
     public static void main(String[] args)
@@ -446,45 +464,6 @@ public class TestCookieReuse extends TestCase {
     }
 
     /**
-     * Verify that EndSessionRequest does not clean up expired tokens
-     * @throws Exception
-     */
-    @Test
-    public void testEndSessionNoCleanup() throws Exception {
-        Account a = TestUtil.getAccount(USER_NAME);
-        String[] tokensPre = a.getAuthTokens();
-        ZimbraAuthToken at1 = new ZimbraAuthToken(a, System.currentTimeMillis() + 1000);
-        ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 100000);
-        assertFalse("First token should not be expired yet", at1.isExpired());
-        assertFalse("Second token should not be expired", at2.isExpired());
-
-        String[] tokensPost = a.getAuthTokens();
-        assertEquals("should have two more authtoken now", tokensPre.length+2, tokensPost.length);
-        Thread.sleep(2000);
-        assertTrue("First token should have expired by now", at1.isExpired());
-        assertFalse("Second token should not have expired by now", at2.isExpired());
-
-        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
-        EndSessionRequest esr = new EndSessionRequest();
-        transport.setAuthToken(at2.getEncoded());
-        transport.invoke(JaxbUtil.jaxbToElement(esr, SoapProtocol.SoapJS.getFactory()));
-        String[] tokensFinal = a.getAuthTokens();
-        assertEquals("should have one less authtoken after EndSessionRequest", tokensFinal.length,tokensPost.length-1);
-
-        //verify that AuthRequest still works
-        AccountSelector acctSel = new AccountSelector(com.zimbra.soap.type.AccountBy.name, a.getName());
-        AuthRequest req = new AuthRequest(acctSel, "test123");
-        transport.setAuthToken("");
-        Element resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
-        AuthResponse authResp = JaxbUtil.elementToJaxb(resp);
-        String newAuthToken = authResp.getAuthToken();
-        assertNotNull("should have received a new authtoken", newAuthToken);
-        AuthToken at = ZimbraAuthToken.getAuthToken(newAuthToken);
-        assertTrue("new auth token should be registered", at.isRegistered());
-        assertFalse("new auth token should ne be expired yet", at.isExpired());
-    }
-
-    /**
      * Verify that a login request bearing a cookie with invalid token will succeed with voidOnExpired header
      * https://bugzilla.zimbra.com/show_bug.cgi?id=95799
      */
@@ -560,6 +539,210 @@ public class TestCookieReuse extends TestCase {
         } catch (SoapFaultException ex) {
             assertEquals("Should be getting 'auth required' exception", ServiceException.AUTH_EXPIRED, ex.getCode());
         }
+    }
+
+    /**
+     * Verify that EndSessionRequest does not clean up expired tokens
+     * @throws Exception
+     */
+    @Test
+    public void testEndSessionNoCleanup() throws Exception {
+        Account a = TestUtil.getAccount(USER_NAME);
+        String[] tokensPre = a.getAuthTokens();
+        ZimbraAuthToken at1 = new ZimbraAuthToken(a, System.currentTimeMillis() + 1000);
+        ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 100000);
+        assertFalse("First token should not be expired yet", at1.isExpired());
+        assertFalse("Second token should not be expired", at2.isExpired());
+
+        String[] tokensPost = a.getAuthTokens();
+        assertEquals("should have two more authtoken now", tokensPre.length+2, tokensPost.length);
+        Thread.sleep(2000);
+        assertTrue("First token should have expired by now", at1.isExpired());
+        assertFalse("Second token should not have expired by now", at2.isExpired());
+
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        EndSessionRequest esr = new EndSessionRequest();
+        esr.setLogOff(true);
+        transport.setAuthToken(at2.getEncoded());
+        transport.invoke(JaxbUtil.jaxbToElement(esr, SoapProtocol.SoapJS.getFactory()));
+        Provisioning.getInstance().reload(a);
+        String[] tokensFinal = a.getAuthTokens();
+        assertEquals("should have one less authtoken after EndSessionRequest", tokensPost.length-1, tokensFinal.length);
+
+        //verify that AuthRequest still works
+        AccountSelector acctSel = new AccountSelector(com.zimbra.soap.type.AccountBy.name, a.getName());
+        AuthRequest req = new AuthRequest(acctSel, "test123");
+        transport.setAuthToken("");
+        Element resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+        AuthResponse authResp = JaxbUtil.elementToJaxb(resp);
+        String newAuthToken = authResp.getAuthToken();
+        assertNotNull("should have received a new authtoken", newAuthToken);
+        AuthToken at = ZimbraAuthToken.getAuthToken(newAuthToken);
+        assertTrue("new auth token should be registered", at.isRegistered());
+        assertFalse("new auth token should ne be expired yet", at.isExpired());
+    }
+
+    /**
+     * Verify that we CANNOT make an unauthorized admin GET request without an admin cookie
+     */
+    @Test
+    public void testGetWithoutAdminCookie() throws Exception {
+        int port = 7071;
+        try {
+            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        } catch (ServiceException e) {
+            ZimbraLog.test.error("Unable to get admin SOAP port", e);
+        }
+        String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host=" + Provisioning.getInstance().getLocalServer().getName();
+        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        GetMethod get = new GetMethod(getServerConfigURL);
+        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        assertEquals("This request should NOT succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
+    }
+
+    /**
+     * Verify that we CAN make a GET request by reusing a valid non-csrf-enabled cookie
+     */
+    @Test
+    public void testReuseUserCookieWithoutCsrf() throws Exception {
+        AuthToken at = AuthProvider.getAuthToken(TestUtil.getAccount(USER_NAME));
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        URI uri = mbox.getRestURI("Inbox?fmt=rss&thief=false");
+        at.setCsrfTokenEnabled(false);
+        GetMethod get = new GetMethod(uri.toString());
+        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpState state = HttpClientUtil.newHttpState(new ZAuthToken(at.getEncoded()), uri.getHost(), false);
+        eve.setState(state);
+        eve.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        assertEquals("This request should succeed. Getting status code " + statusCode + " Response: " + get.getResponseBodyAsString(), HttpStatus.SC_OK,statusCode);
+    }
+
+    /**
+     * Verify that we CAN make a GET request by reusing a valid CSRF-enabled cookie
+     */
+    @Test
+    public void testReuseUserCookieWithCsrf() throws Exception {
+        AuthToken at = AuthProvider.getAuthToken(TestUtil.getAccount(USER_NAME));
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        URI uri = mbox.getRestURI("Inbox?fmt=rss&thief=true");
+        at.setCsrfTokenEnabled(true);
+        GetMethod get = new GetMethod(uri.toString());
+        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpState state = HttpClientUtil.newHttpState(new ZAuthToken(at.getEncoded()), uri.getHost(), false);
+        eve.setState(state);
+        eve.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        assertEquals("This request should succeed. Getting status code " + statusCode + " Response: " + get.getResponseBodyAsString(), HttpStatus.SC_OK,statusCode);
+    }
+
+    /**
+     * Verify that we CANNOT make an admin POST request by reusing a valid csrf-enabled cookie without a csrf token
+     */
+    @Test
+    public void testUnauthorizedAdminPostWithCsrf() throws Exception {
+        AuthToken at = AuthProvider.getAdminAuthToken();
+        at.setCsrfTokenEnabled(true);
+        SoapTransport transport = TestUtil.getAdminSoapTransport();
+        transport.setAuthToken(at.getEncoded());
+        Map<String, Object> attrs = null;
+        CreateAccountRequest request = new CreateAccountRequest(UNAUTHORIZED_USER, "test123", attrs);
+        try {
+            transport.invoke(JaxbUtil.jaxbToElement(request));
+        } catch (ServiceException e) {
+            assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
+            return;
+        }
+        fail("should have caught an exception");
+    }
+
+    /**
+     * Verify that we CAN make an admin GET request by reusing a valid csrf-enabled cookie
+     */
+    @Test
+    public void testReuseAdminCookieWithCsrf() throws Exception {
+        AuthToken at = AuthProvider.getAdminAuthToken();
+        at.setCsrfTokenEnabled(true);
+        int port = 7071;
+        try {
+            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        } catch (ServiceException e) {
+            ZimbraLog.test.error("Unable to get admin SOAP port", e);
+        }
+        String host =  Provisioning.getInstance().getLocalServer().getName();
+        String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host=" + host;
+        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpState state = new HttpState();
+        at.encode(state, true, "localhost");
+        eve.setState(state);
+        GetMethod get = new GetMethod(getServerConfigURL);
+        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+    }
+
+    /**
+     * Verify that we CAN make an admin GET request by re-using a valid non-csrf-enabled cookie
+     */
+    @Test
+    public void testReuseAdminCookieWithoutCsrf() throws Exception {
+        AuthToken at = AuthProvider.getAdminAuthToken();
+        at.setCsrfTokenEnabled(false);
+        int port = 7071;
+        try {
+            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        } catch (ServiceException e) {
+            ZimbraLog.test.error("Unable to get admin SOAP port", e);
+        }
+        String host =  Provisioning.getInstance().getLocalServer().getName();
+        String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host=" + host;
+        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpState state = new HttpState();
+        at.encode(state, true, "localhost");
+        eve.setState(state);
+        GetMethod get = new GetMethod(getServerConfigURL);
+        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+    }
+
+    /**
+     * Verify that we CANNOT make an POST request with a non-CSRF-enabled auth token if the auth token has an associated CSRF token
+     */
+    @Test
+    public void testForgedNonCSRFPost() throws Exception {
+        AuthToken at = AuthProvider.getAuthToken(TestUtil.getAccount(USER_NAME));
+        at.setCsrfTokenEnabled(false);
+        CsrfUtil.generateCsrfToken(at.getAccountId(), at.getExpires(), new Random().nextInt() + 1, at);
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        transport.setAuthToken(at.getEncoded());
+        GetInfoRequest request = new GetInfoRequest();
+        try {
+            transport.invoke(JaxbUtil.jaxbToElement(request));
+        } catch (ServiceException e) {
+            assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
+            return;
+        }
+        fail("should have caught an exception");
+    }
+
+    /**
+     * Verify that we CANNOT make an admin POST request with a non-CSRF-enabled auth token if the auth token has an associated CSRF token
+     */
+    @Test
+    public void testForgedNonCSRFAdminPost() throws Exception {
+        AuthToken at = AuthProvider.getAdminAuthToken();
+        at.setCsrfTokenEnabled(false);
+        CsrfUtil.generateCsrfToken(at.getAccountId(), at.getExpires(), new Random().nextInt() + 1, at);
+        SoapTransport transport = TestUtil.getAdminSoapTransport();
+        transport.setAuthToken(at.getEncoded());
+        Map<String, Object> attrs = null;
+        CreateAccountRequest request = new CreateAccountRequest(UNAUTHORIZED_USER, "test123", attrs);
+        try {
+            transport.invoke(JaxbUtil.jaxbToElement(request));
+        } catch (ServiceException e) {
+            assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
+            return;
+        }
+        fail("should have caught an exception");
     }
 
     /**
