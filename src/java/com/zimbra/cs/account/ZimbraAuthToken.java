@@ -34,7 +34,6 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import com.google.common.base.Objects;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -417,20 +416,21 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         }
     }
 
-    //remove the token from LDAP (token will be invalid for cookie-based auth after that
+    // remove the token from LDAP (token will be invalid for cookie-based auth
+    // after that
     @Override
     public void deRegister() throws AuthTokenException {
-		try {
-		    Account acct = Provisioning.getInstance().getAccountById(accountId);
-		    if(acct != null) {
-		        acct.removeAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
-		    }
-		    if(acct.getBooleanAttr(Provisioning.A_zimbraLogOutFromAllServers, false)) {
-		        AuthTokenRegistry.addTokenToQueue(this);
-		    }
-		} catch (ServiceException e) {
-			throw new AuthTokenException("unable to de-register auth token", e);
-		}
+        try {
+            Account acct = Provisioning.getInstance().getAccountById(accountId);
+            if (acct != null) {
+                acct.removeAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
+            }
+            if (acct.getBooleanAttr(Provisioning.A_zimbraLogOutFromAllServers, false)) {
+                AuthTokenRegistry.addTokenToQueue(this);
+            }
+        } catch (ServiceException e) {
+            throw new AuthTokenException("unable to de-register auth token", e);
+        }
 
     }
 
