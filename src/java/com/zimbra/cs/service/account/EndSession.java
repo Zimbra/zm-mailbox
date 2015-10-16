@@ -27,14 +27,14 @@ import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
- * End the current session immediately cleaning up all resources used by the session
- * including the notification buffer and logging the session out from IM if applicable
+ * End the current session immediately cleaning up all resources used by the
+ * session including the notification buffer and logging the session out from IM
+ * if applicable
  */
 public class EndSession extends AccountDocumentHandler {
 
     @Override
-    public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         if (zsc.hasSession()) {
             Session s = getSession(zsc);
@@ -44,10 +44,10 @@ public class EndSession extends AccountDocumentHandler {
         if (clearCookies || getAuthenticatedAccount(zsc).isForceClearCookies()) {
             context.put(SoapServlet.INVALIDATE_COOKIES, true);
             try {
-				zsc.getAuthToken().deRegister();
-			} catch (AuthTokenException e) {
-				throw ServiceException.FAILURE("Failed to de-register an auth token", e);
-			}
+                zsc.getAuthToken().deRegister();
+            } catch (AuthTokenException e) {
+                throw ServiceException.FAILURE("Failed to de-register an auth token", e);
+            }
         }
         Element response = zsc.createElement(AccountConstants.END_SESSION_RESPONSE);
         return response;
