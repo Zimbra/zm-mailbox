@@ -22579,7 +22579,7 @@ jetty-xml-9.3.5.v20151012
 
 > EPL 1.0
 
-jetty-distribution-9.3.0.v20150612.tar.gz\jetty-distribution-9.3.0.v20150612.tar\jetty-distribution-9.3.0.v20150612\lib\jta\javax.transaction-1.1.1.v201105210645.jar\about.html
+jetty-distribution-9.3.5.v20151012.tar.gz\jetty-distribution-9.3.5.v20151012.tar\jetty-distribution-9.3.5.v20151012\lib\jta\javax.transaction-1.1.1.v201105210645.jar\about.html
 
 The Eclipse Foundation makes available all content in this plug-in unless otherwise indicated below, the Content is provided to you under the terms and conditions of the Eclipse Public License Version 1.0.
 
@@ -22608,7 +22608,7 @@ servlet-api-3.1.jar
 
 > MIT
 
-jetty-distribution-9.3.0.v20150612.tar.gz\jetty-distribution-9.3.0.v20150612.tar\jetty-distribution-9.3.0.v20150612\lib\monitor\jetty-monitor-9.3.0.v20150612\about.html
+jetty-distribution-9.3.5.v20151012.tar.gz\jetty-distribution-9.3.5.v20151012.tar\jetty-distribution-9.3.5.v20151012\lib\monitor\jetty-monitor-9.3.5.v20151012\about.html
 
 Copyright 1996 Aki Yoshida,
 
@@ -22621,7 +22621,7 @@ granted provided that the copyright notice appears in all copies.
 
 > Apache 2.0
 
-jetty-distribution-9.3.0.v20150612.tar.gz\jetty-istribution-9.3.0.v20150612.tar\jetty-distribution-9.3.0.v20150612\lib\jta\javax.transaction-1.1.1.v201105210645.jar\META-INF\maven\org.apache.geronimo.specs\geronimo-jta_1.1_spec\pom.xml
+jetty-distribution-9.3.5.v20151012.tar.gz\jetty-istribution-9.3.5.v20151012.tar\jetty-distribution-9.3.5.v20151012\lib\jta\javax.transaction-1.1.1.v201105210645.jar\META-INF\maven\org.apache.geronimo.specs\geronimo-jta_1.1_spec\pom.xml
 
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -22650,7 +22650,7 @@ javax.activation-1.1.0.v201105071233.jar
 
 > CDDL 1.0
 
-jetty-distribution-9.3.0.v20150612.tar.gz\jetty-distribution-9.3.0.v20150612.tar\jetty-distribution-9.3.0.v20150612\lib\jsp\org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar\org\apache\taglibs\standard\resources\Resources.properties
+jetty-distribution-9.3.5.v20151012.tar.gz\jetty-distribution-9.3.5.v20151012.tar\jetty-distribution-9.3.5.v20151012\lib\jsp\org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar\org\apache\taglibs\standard\resources\Resources.properties
 
 
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
@@ -22698,7 +22698,7 @@ javax.mail.glassfish-1.4.1.v201005082020.jar
 
 > 3RD-PARTY-LICENSE.txt
 
-jetty-distribution-9.3.0.v20150612.tar.gz\jetty-distribution-9.3.0.v20150612.tar\jetty-distribution-9.3.0.v20150612\lib\jndi\javax.mail.glassfish-1.4.1.v201005082020.jar\about_files\ 3RD-PARTY-LICENSE.txt
+jetty-distribution-9.3.5.v20151012.tar.gz\jetty-distribution-9.3.5.v20151012.tar\jetty-distribution-9.3.5.v20151012\lib\jndi\javax.mail.glassfish-1.4.1.v201005082020.jar\about_files\ 3RD-PARTY-LICENSE.txt
 
 DO NOT TRANSLATE OR LOCALIZE.
 
