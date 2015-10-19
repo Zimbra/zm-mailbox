@@ -69,12 +69,15 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.python.google.common.base.Strings;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.common.calendar.ZoneInfoParser.Day;
 import com.zimbra.common.calendar.ZoneInfoParser.Day.DayType;
 import com.zimbra.common.calendar.ZoneInfoParser.Rule;
 import com.zimbra.common.calendar.ZoneInfoParser.RuleLine;
+import com.zimbra.common.calendar.ZoneInfoParser.TZDataParseException;
 import com.zimbra.common.calendar.ZoneInfoParser.Time;
 import com.zimbra.common.calendar.ZoneInfoParser.Until;
 import com.zimbra.common.calendar.ZoneInfoParser.Weekday;
@@ -300,23 +303,28 @@ public class ZoneInfo2iCalendar {
         return msOutlookStyleDtStart;
     }
 
+    private static String getObservanceName(String tznameFormat, RuleLine rline) {
+        if (Strings.isNullOrEmpty(tznameFormat)) {
+            return null;
+        }
+        if (tznameFormat.contains("%s")) {
+            String letter = (rline == null) ? "" : rline.getLetter();
+            if (letter == null || letter.equals("-")) {
+                letter = "";
+            }
+            return String.format(tznameFormat, letter);
+        } else {
+            return tznameFormat;
+        }
+    }
+
     private static Observance toObservanceComp(int hintYear, RuleLine rline, boolean isStandard,
                                           Time standardOffset, Time daylightOffset,
                                           String tznameFormat) {
         PropertyList props = new PropertyList();
-        if (tznameFormat != null && tznameFormat.length() > 0) {
-            String tzname = null;
-            if (tznameFormat.contains("%s")) {
-                String letter = rline.getLetter();
-                if (letter == null || letter.equals("-"))
-                    letter = "";
-                tzname = String.format(tznameFormat, letter);
-            } else {
-                tzname = tznameFormat;
-            }
-            if (tzname != null) {
-                props.add(new TzName(tzname));
-            }
+        String tzname = getObservanceName(tznameFormat, rline);
+        if (tzname != null) {
+            props.add(new TzName(tzname));
         }
         Time at = rline.getAt();
         Time onset;
@@ -417,7 +425,98 @@ public class ZoneInfo2iCalendar {
         return lMod;
     }
 
-    private static VTimeZone toVTimeZoneComp(int hintYear, ZoneLine zline, LastModified lastModified,
+    private static class Observances {
+        public Observance std;
+        public Observance daylight;
+        public Observances(Observance std, Observance daylight) {
+            this.std = std;
+            this.daylight = daylight;
+        }
+
+        public boolean inDaylightTimeOnDate(Calendar refDate) {
+            if (null == this.daylight) {
+                return true;
+            }
+            net.fortuna.ical4j.model.Date ical4jReferenceDate = new net.fortuna.ical4j.model.Date(refDate.getTime());
+            net.fortuna.ical4j.model.Date stdLatestOnset = std.getLatestOnset(ical4jReferenceDate);
+            net.fortuna.ical4j.model.Date dayLatestOnset = daylight.getLatestOnset(ical4jReferenceDate);
+            return stdLatestOnset.before(dayLatestOnset);
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder("Observances:\n");
+            if (null != std) {
+                sb.append("    Standard Observance:\n").append(std.toString());
+            }
+            if (null != daylight) {
+                sb.append("    Daylight Observance=\n").append(daylight.toString());
+            }
+            return sb.toString();
+        }
+    }
+
+    private static class RuleInfo {
+        public boolean hasRule;
+        public Time saveDuration;
+        public RuleLine standard;
+        public RuleLine daylight;
+        public RuleInfo(boolean hasRule, Time saveDuration, RuleLine std, RuleLine daylight) {
+            this.hasRule = hasRule;
+            this.saveDuration = saveDuration;
+            this.standard = std;
+            this.daylight = daylight;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder("RuleLines:hasRule=").append(hasRule);
+            sb.append(" saveDuration=").append(saveDuration == null ? "<null>" : saveDuration.toString());
+            if (null != standard) {
+                sb.append(" STD=").append(standard.toString());
+            }
+            if (null != daylight) {
+                sb.append(" DAY=").append(daylight.toString());
+            }
+            return sb.toString();
+        }
+    }
+
+    private static RuleInfo getRuleInfo(int hintYear, ZoneLine zline) {
+        if (!zline.hasRule()) {
+            return new RuleInfo(false, zline.getSave(), null, null);
+        }
+        Rule rule = zline.getRule();
+        List<RuleLine> rlines = getRuleLinesForYear(rule.getRuleLines(), hintYear);
+        RuleLine standard = null;
+        RuleLine daylight = null;
+        for (RuleLine rline : rlines) {
+            if (rline.getSave().getDuration() == 0) {
+                standard = rline;
+            } else {
+                daylight = rline;
+            }
+        }
+        return new RuleInfo(true, zline.getSave(), standard, daylight);
+    }
+
+    private static Observances toObservances(int hintYear, ZoneLine zline) {
+        String tznameFormat = zline.getAbbrevFormat();
+        if (!zline.hasRule()) {
+            return new Observances(toStandardComp(addTimes(zline.getGmtOff(), zline.getSave()), tznameFormat), null);
+        }
+        RuleInfo ruleInfo = getRuleInfo(hintYear, zline);
+        if ((null != ruleInfo.standard) && (null != ruleInfo.daylight)) {
+            Time standardOffset = zline.getGmtOff();
+            Time daylightOffset = addTimes(standardOffset, ruleInfo.daylight.getSave());
+            return new Observances(
+                    toObservanceComp(hintYear, ruleInfo.standard, true, standardOffset, daylightOffset, tznameFormat),
+                    toObservanceComp(hintYear, ruleInfo.daylight, false, standardOffset, daylightOffset, tznameFormat));
+        }
+        return new Observances(toStandardComp(zline.getGmtOff(), tznameFormat), null);
+    }
+
+    private static PropertyList toVTimeZonePropertyList(ZoneLine zline, LastModified lastModified,
                 Set<String> tzAliases, boolean isPrimary, Integer matchScore) {
         PropertyList vtzProps = new PropertyList();
         vtzProps.add(new TzId(zline.getName()));
@@ -433,33 +532,208 @@ public class ZoneInfo2iCalendar {
                 vtzProps.add(new XProperty(TZIDMapper.X_ZIMBRA_TZ_ALIAS, alias));
             }
         }
+        return vtzProps;
+    }
+
+    private static VTimeZone toVTimeZoneComp(int hintYear, Observances observances, PropertyList vtzProps) {
         VTimeZone vtz = new VTimeZone(vtzProps);
-        String tznameFormat = zline.getAbbrevFormat();
-        if (zline.hasRule()) {
-            Rule rule = zline.getRule();
-            List<RuleLine> rlines = getRuleLinesForYear(rule.getRuleLines(), hintYear);
-            RuleLine standard = null;
-            RuleLine daylight = null;
-            for (RuleLine rline : rlines) {
-                if (rline.getSave().getDuration() == 0)
-                    standard = rline;
-                else
-                    daylight = rline;
-            }
-            if (standard != null && daylight != null) {
-                Time standarfOffset = zline.getGmtOff();
-                Time daylightOffset = addTimes(standarfOffset, daylight.getSave());
-                vtz.getObservances().add(toObservanceComp(
-                        hintYear, standard, true, standarfOffset, daylightOffset, tznameFormat));
-                vtz.getObservances().add(
-                        toObservanceComp(hintYear, daylight, false, standarfOffset, daylightOffset, tznameFormat));
-            } else {
-                vtz.getObservances().add(toStandardComp(zline.getGmtOff(), tznameFormat));
-            }
-        } else {
-            vtz.getObservances().add(toStandardComp(addTimes(zline.getGmtOff(), zline.getSave()), tznameFormat));
+        vtz.getObservances().add(observances.std);
+        if (null != observances.daylight) {
+            vtz.getObservances().add(observances.daylight);
         }
         return vtz;
+    }
+
+    /**
+     * @param zoneLines - Only the zoneLines related to a time zone that might be relevant from the reference date.
+     */
+    private static VTimeZone toVTimeZoneComp(Calendar referenceDate, List<ZoneLine> zoneLines,
+                LastModified lastModified, Set<String> tzAliases, boolean isPrimary, Integer matchScore) {
+        int hintYear = referenceDate.get(Calendar.YEAR);
+        ZoneLine zline1 = zoneLines.get(0);
+        PropertyList vtzProps = toVTimeZonePropertyList(zline1, lastModified, tzAliases, isPrimary, matchScore);
+        if (zoneLines.size() == 1) {
+            return toVTimeZoneComp(hintYear, toObservances(hintYear, zline1), vtzProps);
+        }
+        boolean suppressWarning = false;
+        //  Rare to get here - generally happens for some new timezone changes in the near future.
+        ZoneLine zline2 = zoneLines.get(1);
+        Observances obs1 = toObservances(hintYear, zline1);
+        if (zline1.hasRule()) {
+            if ((null != obs1.std) && (null != obs1.daylight)) {
+                VTimeZone vtz = null;
+                vtz = toVTimeZoneComp(referenceDate, zline1, zline2, obs1, vtzProps,
+                        obs1.inDaylightTimeOnDate(referenceDate));
+                if (vtz != null) {
+                    return vtz;
+                }
+            }
+        } else {
+            SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
+            String fmtRefDate = format1.format(referenceDate.getTime());
+            if ((null != obs1.std) && (null == obs1.daylight)) {
+                // At reference date, only using STANDARD time
+                Observances obs2 = toObservances(hintYear, zline2);
+                if ((null != obs2.std) && (null != obs2.daylight)) {
+                    if (obs2.inDaylightTimeOnDate(referenceDate)) {
+                        System.err.println(String.format("1st zoneLine '%s' for '%s' only has STANDARD time.",
+                                zline1.toString(), zline1.getName()));
+                        System.err.println(String.format(
+                                "Reference date %s would be in DAYLIGHT time by rules of 2nd zoneLine '%s'",
+                                fmtRefDate, zline2.toString()));
+                        System.err.println("Therefore, Ignoring 2nd zoneLine.");
+                        suppressWarning = true;
+                    } else {
+                        TzOffsetTo oldOffsetTo = (TzOffsetTo) obs1.std.getProperties().getProperty(Property.TZOFFSETTO);
+                        TzOffsetTo newOffsetTo = (TzOffsetTo) obs2.std.getProperties().getProperty(Property.TZOFFSETTO);
+                        if (oldOffsetTo.equals(newOffsetTo)) {
+                            // Standard time same by current rules and new rules - can ignore 1st zoneLine going forward
+                            return toVTimeZoneComp(hintYear, toObservances(hintYear, zline2), vtzProps);
+                        }
+                        System.err.println(String.format("1st zoneLine '%s' for '%s' only has STANDARD time.",
+                                zline1.toString(), zline1.getName()));
+                        System.err.println(String.format(
+                                "Reference date %s would also be in STANDARD time by rules of 2nd zoneLine '%s'",
+                                fmtRefDate, zline2.toString()));
+                        System.err.println(String.format(
+                                "BUT OLD STANDARD has TZOFFSETTO=%s which differs from new TZOFFSETTO=%s.",
+                                oldOffsetTo.toString(), newOffsetTo.toString()));
+                        System.err.println("Therefore, Ignoring 2nd zoneLine.");
+                        suppressWarning = true;
+                    }
+                }
+            }
+        }
+        if (!suppressWarning) {
+            System.err.println(String.format(
+                    "More than 1 zoneLine for zone '%s' but unknown scenario.  Using only zoneLine:\n    %s",
+                    zline1.getName(), zline1.toString()));
+        }
+        return toVTimeZoneComp(hintYear, toObservances(hintYear, zline1), vtzProps);
+    }
+
+    /**
+     * @param referenceDate
+     * @param zline1 ZoneLine for 1st rule applicable after referenceDate
+     * @param zline2 ZoneLine for 2nd rule applicable after referenceDate
+     * @param obs1 Observances corresponding to zline1
+     * @param vtzProps Properties to associate with the VTIMEZONE component
+     * @param inDaylightTime  true if referenceDate falls within daylight time by the rules in zline1
+     * @return best timezone or null if unable to determine one.
+     */
+    private static VTimeZone toVTimeZoneComp(Calendar referenceDate, ZoneLine zline1, ZoneLine zline2, Observances obs1,
+            PropertyList vtzProps, boolean inDaylightTime) {
+        int hintYear = referenceDate.get(Calendar.YEAR);
+        Observance obs4zl2;
+        Time daylightOffset;
+        Time standardOffset = zline2.getGmtOff();
+        String tznameFormat = zline2.getAbbrevFormat();
+        if (zline2.hasRule()) {
+            RuleInfo rl2 = getRuleInfo(hintYear, zline2);
+            daylightOffset = (null == rl2.daylight) ? standardOffset : addTimes(standardOffset, rl2.daylight.getSave());
+            if (inDaylightTime) {
+                obs4zl2 = toObservanceComp(hintYear, rl2.standard, true /* isStandard */,
+                        standardOffset, daylightOffset, tznameFormat);
+                return toVTimeZoneComp(hintYear, new Observances(obs4zl2, obs1.daylight), vtzProps);
+            } else {
+                if (null == rl2.daylight) {
+                    return null;
+                }
+                obs4zl2 = toObservanceComp(hintYear, rl2.daylight, false /* isStandard */,
+                        standardOffset, daylightOffset, tznameFormat);
+                return toVTimeZoneComp(hintYear, new Observances(obs1.std, obs4zl2), vtzProps);
+            }
+        } else if (zline2.hasSave()) {
+            List<String> tokens = Lists.newArrayList();
+            Until prevRuleEnd = zline1.getUntil();
+            if (zline2.hasUntil()) {
+                Until currRuleEnd = zline2.getUntil();
+                if (null == currRuleEnd) {
+                    return null; // Don't think this can happen
+                }
+                String fromYear;
+                if (prevRuleEnd != null) {
+                    fromYear = String.format("%d", prevRuleEnd.getYear());
+                } else {
+                    fromYear = String.format("%d", hintYear);
+                }
+                String toYear = String.format("%d", currRuleEnd.getYear());
+                tokens.add(getObservanceName(tznameFormat, null));                    // NAME
+                tokens.add(fromYear);                                                 // FROM
+                tokens.add(toYear);                                                   // TO
+                tokens.add("-");                                                      // TYPE
+                tokens.add(ZoneInfoParser.Month.toString(currRuleEnd.getMonth()));    // IN
+                tokens.add(String.format("%s", currRuleEnd.getDay().toString()));     // ON
+                tokens.add(String.format("%s", currRuleEnd.getTime().toString()));    // AT
+                tokens.add(zline2.getSave().toString());                              // SAVE
+                tokens.add("-");                                                      // LETTER/S
+                RuleLine newRule = pseudoZoneLineTokensToRuleLine(tokens, zline2);
+                if (null == newRule) {
+                    return null;
+                }
+                daylightOffset = addTimes(standardOffset, zline2.getSave());
+                obs4zl2 = toObservanceComp(hintYear, newRule, inDaylightTime /* need the opposite */,
+                        standardOffset, daylightOffset, tznameFormat);
+                if (inDaylightTime) {
+                    return toVTimeZoneComp(hintYear, new Observances(obs4zl2, obs1.daylight), vtzProps);
+                } else {
+                    return toVTimeZoneComp(hintYear, new Observances(obs1.std, obs4zl2), vtzProps);
+                }
+            } else {
+                if (!inDaylightTime) {
+                    return null; // Only reason for having a save but no until is if changing to standard time only?
+                }
+                if (prevRuleEnd == null) {
+                    return null;
+                }
+                String fromYear = String.format("%d", prevRuleEnd.getYear());
+                String toYear = "max";
+                tokens.add(getObservanceName(tznameFormat, null));                    // NAME
+                tokens.add(fromYear);                                                 // FROM
+                tokens.add(toYear);                                                   // TO
+                tokens.add("-");                                                      // TYPE
+                tokens.add(ZoneInfoParser.Month.toString(prevRuleEnd.getMonth()));    // IN
+                tokens.add(String.format("%s", prevRuleEnd.getDay().toString()));     // ON
+                tokens.add(String.format("%s", prevRuleEnd.getTime().toString()));    // AT
+                tokens.add(zline2.getSave().toString());                              // SAVE
+                tokens.add("-");                                                      // LETTER/S
+                RuleLine newRule = pseudoZoneLineTokensToRuleLine(tokens, zline2);
+                if (null == newRule) {
+                    return null;
+                }
+                daylightOffset = standardOffset; /* random value - fix later */;
+                obs4zl2 = toObservanceComp(hintYear, newRule, true,
+                                            standardOffset, daylightOffset, tznameFormat);
+                TzOffsetFrom stdOffsetFrom = (TzOffsetFrom) obs4zl2.getProperties().getProperty(Property.TZOFFSETFROM);
+                TzOffsetTo stdOffsetTo = (TzOffsetTo) obs4zl2.getProperties().getProperty(Property.TZOFFSETTO);
+                TzOffsetTo dlOffsetTo = (TzOffsetTo) obs1.daylight.getProperties().getProperty(Property.TZOFFSETTO);
+                if (stdOffsetTo.equals(dlOffsetTo)) {
+                    // New standard time is same as current daylight time - just use observance.
+                    obs4zl2 = toStandardComp(zline2.getGmtOff(), tznameFormat);
+                    return toVTimeZoneComp(hintYear, new Observances(obs4zl2, null), vtzProps);
+                }
+                // Make sure that the zones are consistent with each other
+                stdOffsetFrom.setOffset(dlOffsetTo.getOffset());
+                TzOffsetFrom dlOffsetFrom =
+                        (TzOffsetFrom) obs1.daylight.getProperties().getProperty(Property.TZOFFSETFROM);
+                dlOffsetFrom.setOffset(stdOffsetTo.getOffset());
+                return toVTimeZoneComp(hintYear, new Observances(obs4zl2, obs1.daylight), vtzProps);
+            }
+        }
+        return null;
+    }
+
+    private static RuleLine pseudoZoneLineTokensToRuleLine(List<String> tokens, ZoneLine zoneLineBasedOn) {
+        RuleLine newRule = null;
+        try {
+            newRule = new RuleLine(tokens);
+        } catch (TZDataParseException e) {
+            System.err.println(String.format(
+                    "Exception [%s] thrown constructing pseudo rule from zoneLine:\n    %s",
+                    e.getMessage(), zoneLineBasedOn.toString()));
+        }
+        return newRule;
+
     }
 
     private static ZoneLine getCurrentZoneLine(Zone zone) {
@@ -472,9 +746,10 @@ public class ZoneInfo2iCalendar {
         return null;
     }
 
-    private static ZoneLine getZoneLineForYear(Zone zone, Calendar referenceDate) {
+    private static List<ZoneLine> getZoneLinesFromDate(Zone zone, Calendar referenceDate) {
         Until referenceUntil = new Until(referenceDate);
         Set<ZoneLine> zlines = zone.getZoneLines();
+        List<ZoneLine> zoneLines = Lists.newArrayList();
         for (ZoneLine zline : zlines) {
             Until until = zline.getUntil();
             if (until != null) {
@@ -482,9 +757,9 @@ public class ZoneInfo2iCalendar {
                     continue;
                 }
             }
-            return zline;
+            zoneLines.add(zline);
         }
-        return null;
+        return zoneLines;
     }
 
     private static class ZoneComparatorByGmtOffset implements Comparator<Zone> {
@@ -823,9 +1098,20 @@ public class ZoneInfo2iCalendar {
         return oldTimeZones;
     }
 
-    private static String getTimeZoneForZoneLine(Zone zone, Params params, Set<String> zoneIDs,
+    private static String getTimeZoneForZone(Zone zone, Params params, Set<String> zoneIDs,
             Map<String,VTimeZone> oldTimeZones) {
-        String tzid = zone.getName();
+        List<ZoneLine> zoneLines = ZoneInfo2iCalendar.getZoneLinesFromDate(zone, params.referenceDate);
+        return getTimeZoneForZoneLines(zone.getName(), zone.getAliases(), zoneLines, params, zoneIDs, oldTimeZones);
+    }
+
+    /**
+     * @param zoneLines - Only the zoneLines related to a time zone that might be relevant from the reference date.
+     */
+    private static String getTimeZoneForZoneLines(String tzid, Set<String> aliases, List<ZoneLine> zoneLines,
+            Params params, Set<String> zoneIDs, Map<String,VTimeZone> oldTimeZones) {
+        if ((zoneLines == null) || (zoneLines.isEmpty())) {
+            return "";
+        }
         boolean isPrimary = sPrimaryTZIDs.contains(tzid);
         Integer matchScore = sMatchScores.get(tzid);
         if (matchScore == null) {
@@ -835,7 +1121,6 @@ public class ZoneInfo2iCalendar {
                 matchScore = Integer.valueOf(TZIDMapper.DEFAULT_MATCH_SCORE_NON_PRIMARY);
             }
         }
-        Set<String> aliases = zone.getAliases();
         Iterator<String> aliasesIter = aliases.iterator();
         while (aliasesIter.hasNext()) {
             String curr = aliasesIter.next();
@@ -843,10 +1128,7 @@ public class ZoneInfo2iCalendar {
                 aliasesIter.remove();
             }
         }
-        ZoneLine zline = getZoneLineForYear(zone, params.referenceDate);
-        if (zline == null) {
-            return "";
-        }
+        ZoneLine zline = zoneLines.get(0);
         VTimeZone oldVtz = oldTimeZones.get(zline.getName());
         Property oldLastModProp = null;
         if (null != oldVtz) {
@@ -859,7 +1141,7 @@ public class ZoneInfo2iCalendar {
         } else {
             trialLastModified = newLastModified;
         }
-        VTimeZone vtz = toVTimeZoneComp(params.referenceDate.get(Calendar.YEAR), zline,
+        VTimeZone vtz = toVTimeZoneComp(params.referenceDate, zoneLines,
                 trialLastModified, aliases, isPrimary, matchScore);
         String asText = vtz.toString();
         if ((null != oldVtz) && (trialLastModified != newLastModified)) {
@@ -968,7 +1250,7 @@ public class ZoneInfo2iCalendar {
                 zoneIDs.add(zone.getName());
             }
             for (Zone zone : zones) {
-                out.write(getTimeZoneForZoneLine(zone, params, zoneIDs, oldTimeZones));
+                out.write(getTimeZoneForZone(zone, params, zoneIDs, oldTimeZones));
             }
 
             StringBuilder footer = new StringBuilder("END:VCALENDAR");

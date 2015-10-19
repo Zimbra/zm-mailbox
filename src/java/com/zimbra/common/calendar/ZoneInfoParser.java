@@ -76,7 +76,7 @@ public class ZoneInfoParser {
         }
     }
 
-    private static class Month {
+    public static class Month {
         private static final String JAN = "january";
         private static final String FEB = "february";
         private static final String MAR = "march";
