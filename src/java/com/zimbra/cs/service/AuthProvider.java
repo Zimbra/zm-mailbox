@@ -33,6 +33,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
@@ -728,7 +729,14 @@ public abstract class AuthProvider {
         String acctStatus = acct.getAccountStatus(prov);
 
         if (!delegatedAuth && !Provisioning.ACCOUNT_STATUS_ACTIVE.equals(acctStatus)) {
-            throw ServiceException.AUTH_EXPIRED("account not active");
+            if (at.getUsage() == Usage.TWO_FACTOR_AUTH) {
+                // if this is a 2FA token, attempting to log into an inactive account
+                // should throw the same error as when authenticating with a username/password
+                // for an inactive account
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "account not active");
+            } else {
+                throw ServiceException.AUTH_EXPIRED("account not active");
+            }
         }
 
         // if using delegated auth, make sure the "admin" is really an active admin account
