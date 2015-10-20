@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,6 +16,8 @@
  */
 
 package com.zimbra.common.util.ngxlookup;
+
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -46,6 +48,7 @@ public class ZimbraNginxLookUpClient {
     private static final int DEFAULT_NGINX_HANDLER_PORT = 7072;
     private static final int DEFAULT_UPSTREAM_MAIL_SERVER_PORT = 7070;
     private static final String ngxPassword = "_password_";
+    private static final String[] ngxSchemes = new String[]{"https", "http"};
 
     public ZimbraNginxLookUpClient() {
         ngxLookUpServers = null;
@@ -96,7 +99,7 @@ public class ZimbraNginxLookUpClient {
     }
 
     private Route getNginxRouteHandler() throws ServiceException {
-         // Return nginx handlers using RR algorithm
+        // Return nginx handlers using RR algorithm
         int count = 0;
         int currentIndex = 0;
         Route ngxHandler = null;
@@ -120,9 +123,9 @@ public class ZimbraNginxLookUpClient {
                     }
                     // Ping the Upstream handler to check whether its up
                     // if the handler is not reachable, mark is down
-                    String url = (new StringBuilder("http://").append(ngxHandler.ngxServerAddress.getHostName()).
+                    String hostPath = (new StringBuilder().append(ngxHandler.ngxServerAddress.getHostName()).
                             append(":").append(ngxHandler.ngxServerAddress.getPort()).append(urlExtension)).toString();
-                    if (!ping(url, ngxConnectTimeout)) {
+                    if (!ping(ngxSchemes, hostPath, ngxConnectTimeout)) {
                         ngxHandler.failureTime = System.nanoTime();
                         continue;
                     }
@@ -137,13 +140,14 @@ public class ZimbraNginxLookUpClient {
     }
 
     /**
-     * Pings a HTTP URL. This effectively sends a GET request and returns <code>true</code> if the response code is 200
-     * @param url The HTTP URL to be pinged.
+     * Pings a HTTP(S) URL. This effectively sends a GET request and returns <code>true</code> if the response code is 200
+     * @param url The HTTP(S) URL to be pinged.
      * @param timeout The timeout in millis for both the connection timeout.
-     * @return <code>true</code> if the given HTTP URL has returned response code 200 within the
+     * @return <code>true</code> if the given HTTP(S) URL has returned response code 200 within the
      * given timeout, otherwise <code>false</code>.
      */
     public static boolean ping(String url, int timeout) {
+        ZimbraLog.misc.debug("attempting to ping \"%s\" with timeout %d", url, timeout);
         try {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setConnectTimeout(timeout);
@@ -153,40 +157,62 @@ public class ZimbraNginxLookUpClient {
         }
     }
 
+    /**
+     * Pings a series of URLs constructed by combining the supplied URL schemes with the given host/path.
+     * This effectively sends a GET request and returns <code>true</code> if the response code is 200.
+     * Will return <code>true</code> with the first successful request, else <code>false</code> if
+     * all fail.
+     * @param schemes The list of URL schemes to try.
+     * @param hostPath The host and path portions of the URL to be pinged.
+     * @param timeout The timeout in millis for both the connection timeout.
+     * @return <code>true</code> if any of the constructed URLs return a response code 200 within the
+     * given timeout, otherwise <code>false</code>.
+     */
+    public static boolean ping(String[] schemes, String hostPath, int timeout) {
+        for (String scheme : asList(schemes)) {
+            if (ping(scheme + "://" + hostPath, timeout)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public NginxAuthServer getRouteforAccount(String userName, String authMethod, String authProtocol, String clientIP,
             String proxyIP, String virtualHost) throws ServiceException {
         Route nginxLookUpHandler = getNginxRouteHandler();
         ZimbraLog.misc.debug("getting route for account %s with handler %s", userName, nginxLookUpHandler);
         if (nginxLookUpHandler != null) {
-            GetMethod method = new GetMethod((new StringBuilder("http://").append(nginxLookUpHandler.ngxServerAddress.getHostName()).
-                    append(":").append(nginxLookUpHandler.ngxServerAddress.getPort()).append(urlExtension)).toString());
+            for (String scheme : asList(ngxSchemes)) {
+                GetMethod method = new GetMethod((new StringBuilder(scheme + "://").append(nginxLookUpHandler.ngxServerAddress.getHostName()).
+                        append(":").append(nginxLookUpHandler.ngxServerAddress.getPort()).append(urlExtension)).toString());
 
-            method.setRequestHeader("Auth-Method", authMethod);
-            method.setRequestHeader("Auth-User", userName);
-            method.setRequestHeader("Auth-Pass", ngxPassword);
-            method.setRequestHeader("Auth-Protocol", authProtocol);
-            // for web requests, login attempts is always 0
-            method.setRequestHeader("Auth-Login-Attempt", "0");
-            method.setRequestHeader("X-Proxy-IP", proxyIP);
-            method.setRequestHeader("Client-IP", clientIP);
-            method.setRequestHeader("X-Proxy-Host", virtualHost);
-            HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-            // currently we use default httpclient_internal_connmgr_connection_timeout instead of ngxConnectTimeout
-            client.getParams().setParameter("http.protocol.version", HttpVersion.HTTP_1_0);
+                method.setRequestHeader("Auth-Method", authMethod);
+                method.setRequestHeader("Auth-User", userName);
+                method.setRequestHeader("Auth-Pass", ngxPassword);
+                method.setRequestHeader("Auth-Protocol", authProtocol);
+                // for web requests, login attempts is always 0
+                method.setRequestHeader("Auth-Login-Attempt", "0");
+                method.setRequestHeader("X-Proxy-IP", proxyIP);
+                method.setRequestHeader("Client-IP", clientIP);
+                method.setRequestHeader("X-Proxy-Host", virtualHost);
+                HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+                // currently we use default httpclient_internal_connmgr_connection_timeout instead of ngxConnectTimeout
+                client.getParams().setParameter("http.protocol.version", HttpVersion.HTTP_1_0);
 
-            try {
-                int statusCode = HttpClientUtil.executeMethod(client, method);
-                if (statusCode == 200 && method.getResponseHeader("Auth-Status").getValue().equals("OK")) {
-                    return new NginxAuthServer(method.getResponseHeader("Auth-Server").getValue(), method.getResponseHeader("Auth-Port").getValue(),
-                            method.getResponseHeader("Auth-User").getValue());
-                } else {
-                	ZimbraLog.misc.debug("unexpected return %d\r\n%s", statusCode, method.getResponseBodyAsString());
+                try {
+                    int statusCode = HttpClientUtil.executeMethod(client, method);
+                    if (statusCode == 200 && method.getResponseHeader("Auth-Status").getValue().equals("OK")) {
+                        return new NginxAuthServer(method.getResponseHeader("Auth-Server").getValue(), method.getResponseHeader("Auth-Port").getValue(),
+                                method.getResponseHeader("Auth-User").getValue());
+                    } else {
+                        ZimbraLog.misc.debug("unexpected return %d\r\n%s", statusCode, method.getResponseBodyAsString());
+                    }
+                } catch (IOException e) {
+                    nginxLookUpHandler.failureTime = System.nanoTime();
+                    ZimbraLog.misc.debug("IOException getting route", e);
+                } finally {
+                    method.releaseConnection();
                 }
-            } catch (IOException e) {
-                nginxLookUpHandler.failureTime = System.nanoTime();
-                ZimbraLog.misc.debug("IOException getting route", e);
-            } finally {
-                method.releaseConnection();
             }
         }
         return null;
@@ -215,8 +241,8 @@ public class ZimbraNginxLookUpClient {
                 // In case of nginx lookup handlers, there might be additional '/service/extension/nginx-lookup' at the end.
                 // Remove it as the parser expects a server value with hostname:port or just hostname
                 if (defaultPort == DEFAULT_NGINX_HANDLER_PORT) {
-                	server = server.replace(urlExtension, "");
-                	ZimbraLog.misc.debug("Lookup server after removing urlExtension " + server);
+                    server = server.replace(urlExtension, "");
+                    ZimbraLog.misc.debug("Lookup server after removing urlExtension " + server);
                 }
                 ZimbraLog.misc.debug("Server before parsing " + server);
                 String[] parts = server.split(":");
