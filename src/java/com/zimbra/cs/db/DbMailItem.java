@@ -49,6 +49,7 @@ import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
@@ -2439,6 +2440,42 @@ public class DbMailItem {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
+    }
+
+    public static Map<String, Integer> getDigestsForItems(Folder folder, MailItem.Type type)
+    throws ServiceException {
+        if (Mailbox.isCachedType(type)) {
+            throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
+        }
+        Map<String, Integer> digestMap = Maps.newHashMap();
+        if (null == folder) {
+            return digestMap;
+        }
+        Mailbox mbox = folder.getMailbox();
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement(String.format(
+                    "SELECT mi.id, mi.blob_digest FROM %s WHERE %s folder_id = ? AND %s",
+                        getMailItemTableName(mbox, "mi"), IN_THIS_MAILBOX_AND, typeIn(type)));
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, folder.getId());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                Integer id = rs.getInt(1);
+                String digest = rs.getString(2);
+                digestMap.put(digest, id);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("Getting digests for items from folder id=%s name='%s'",
+                    folder.getId(), folder.getName()), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+        return digestMap;
     }
 
     public static UnderlyingData getById(Mailbox mbox, int id, MailItem.Type type, boolean fromDumpster)

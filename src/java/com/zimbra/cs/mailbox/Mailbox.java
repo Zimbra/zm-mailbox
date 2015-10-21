@@ -51,6 +51,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -3477,6 +3478,34 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
+    }
+
+    public Map<String, Integer> getDigestsForItems(OperationContext octxt, MailItem.Type type, int folderId)
+    throws ServiceException {
+        boolean success = false;
+        Map<String, Integer> digestToID = null;
+        try {
+            beginReadTransaction("getDigestsForItems", octxt);
+            Folder folder = folderId == -1 ? null : getFolderById(folderId);
+            if (folder == null) {
+                if (!hasFullAccess()) {
+                    throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+                }
+            } else {
+                if (!folder.canAccess(ACL.RIGHT_READ, getAuthenticatedAccount(), isUsingAdminPrivileges())) {
+                    throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+                }
+            }
+            digestToID = DbMailItem.getDigestsForItems(folder, type);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+
+        if (digestToID == null) {
+            digestToID = Maps.newHashMap();
+        }
+        return digestToID;
     }
 
     public List<ImapMessage> openImapFolder(OperationContext octxt, int folderId) throws ServiceException {
@@ -9302,6 +9331,24 @@ public class Mailbox {
                     }
                 }
             }
+        }
+    }
+
+    public void suspendIndexing() {
+        if (null != index) {
+            index.setIndexingSuspended(true);
+        }
+    }
+
+    public void resumeIndexing() {
+        if (null != index) {
+            index.resumeIndexing();
+        }
+    }
+
+    public void resumeIndexingAndDrainDeferred() {
+        if (null != index) {
+            index.resumeIndexingAndDrainDeferred();
         }
     }
 

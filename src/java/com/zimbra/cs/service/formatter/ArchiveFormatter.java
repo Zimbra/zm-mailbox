@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -41,6 +41,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.mail.Part;
@@ -50,6 +53,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
@@ -115,7 +121,7 @@ public abstract class ArchiveFormatter extends Formatter {
     private final Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|\\\0]");
     private final Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|\\\0]");
     private static String UTF8 = "UTF-8";
-    private Map<Integer, List<Contact>> contacts = new HashMap<Integer, List<Contact>>(); 
+    private final Map<Integer, List<Contact>> contacts = new HashMap<Integer, List<Contact>>();
     public static enum Resolve { Modify, Replace, Reset, Skip }
     public static final String PARAM_RESOLVE = "resolve";
 
@@ -779,6 +785,53 @@ public abstract class ArchiveFormatter extends Formatter {
         return path;
     }
 
+    static class FolderDigestInfo {
+        private final Cache<Integer, Map<String, Integer>> CACHE =
+                CacheBuilder.newBuilder().maximumSize(16).expireAfterAccess(30, TimeUnit.MINUTES).build();
+        OperationContext octxt;
+        public FolderDigestInfo(OperationContext octxt) {
+            this.octxt = octxt;
+        }
+
+        public Integer getIdForDigest(final Folder fldr, String digest) {
+            Map<String, Integer> digestsToIDs = getCacheForFolder(fldr);
+            return digestsToIDs.get(digest);
+        }
+
+        public Map<String, Integer> getCacheForFolder(final Folder fldr) {
+            if (fldr == null) {
+                return Maps.newHashMap();
+            }
+            Integer fldrId = fldr.getId();
+            try {
+                Map<String, Integer> map =  CACHE.get(fldrId, new Callable<Map<String, Integer>>() {
+                    @Override
+                    public Map<String, Integer> call() {
+                        return makeDigestToID(fldr);
+                    }
+                });
+                if (map == null) {
+                    return Maps.newHashMap();
+                }
+                return map;
+            } catch (ExecutionException e) {
+                ZimbraLog.misc.debug("Problem getting digestsToIDs map from CACHE for folder %s", fldr.getName(), e);
+            }
+            return Maps.newHashMap();
+        }
+
+        private Map<String, Integer> makeDigestToID(Folder fldr) {
+            Map<String, Integer> digestToID = null;
+            try {
+                digestToID = fldr.getMailbox().getDigestsForItems(octxt, MailItem.Type.MESSAGE, fldr.getId());
+                ZimbraLog.misc.debug("digestsToIDs map folder %s has size %s", fldr.getName(), digestToID.size());
+            } catch (Exception e) {
+                ZimbraLog.misc.debug("Exception getting digests for items in folder %s", fldr.getName(), e);
+            }
+            return digestToID;
+        }
+    }
+
     @Override
     public void saveCallback(UserServletContext context, String contentType, Folder fldr, String file)
     throws IOException, ServiceException {
@@ -788,7 +841,7 @@ public abstract class ArchiveFormatter extends Formatter {
 
         Exception ex = null;
         ItemData id = null;
-        Map<String, Integer> digestMap = new HashMap<String, Integer>();
+        FolderDigestInfo digestInfo = new FolderDigestInfo(context.opContext);
         List<ServiceException> errs = new LinkedList<ServiceException>();
         List<Folder> flist;
         Map<Object, Folder> fmap = new HashMap<Object, Folder>();
@@ -900,7 +953,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     } else if (aie.getName().endsWith(".meta")) {
                         meta = true;
                         if (id != null) {
-                            addItem(context, fldr, fmap, digestMap, idMap, ids, searchTypes, r, id, ais, null, errs);
+                            addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
                         }
                         try {
                             id = new ItemData(readArchiveEntry(ais, aie));
@@ -920,12 +973,12 @@ public abstract class ArchiveFormatter extends Formatter {
                     } else if ((aie.getType() != 0 && id.ud.type != aie.getType()) || (id.ud.getBlobDigest() != null && aie.getSize() != -1 && id.ud.size != aie.getSize())) {
                         addError(errs, FormatterServiceException.MISMATCHED_META(aie.getName()));
                     } else {
-                        addItem(context, fldr, fmap, digestMap, idMap, ids, searchTypes, r, id, ais, aie, errs);
+                        addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, aie, errs);
                     }
                     id = null;
                 }
                 if (id != null) {
-                    addItem(context, fldr, fmap, digestMap, idMap, ids, searchTypes, r, id, ais, null, errs);
+                    addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
                 }
             } catch (Exception e) {
                 if (id == null) {
@@ -1037,7 +1090,8 @@ public abstract class ArchiveFormatter extends Formatter {
         }
     }
 
-    private void addItem(UserServletContext context, Folder fldr, Map<Object, Folder> fmap, Map<String, Integer> digestMap,
+    private void addItem(UserServletContext context, Folder fldr, Map<Object, Folder> fmap,
+            FolderDigestInfo digestInfo,
             Map<Integer, Integer> idMap, int[] ids, Set<MailItem.Type> types, Resolve r, ItemData id,
             ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs)
     throws ServiceException {
@@ -1315,19 +1369,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         }
                     }
                     if (oldMsg == null) {
-                        Integer digestId = digestMap.get(path);
-
-                        if (digestId == null) {
-                            digestMap.clear();
-                            digestMap.put(path, -1);
-                            try {
-                                for (MailItem item : mbox.getItemList(octxt, MailItem.Type.MESSAGE, fldr.getId())) {
-                                    digestMap.put(item.getDigest(), item.getId());
-                                }
-                            } catch (Exception e) {
-                            }
-                        }
-                        digestId = digestMap.get(mi.getDigest());
+                        Integer digestId = digestInfo.getIdForDigest(fldr, mi.getDigest());
                         if (digestId != null) {
                             oldMsg = mbox.getMessageById(octxt, digestId);
                             if (!msg.getDigest().equals(oldMsg.getDigest())) {
@@ -1337,17 +1379,23 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                     if (oldMsg != null) {
                         if (r == Resolve.Replace) {
+                            ZimbraLog.misc.debug("Deleting old msg with id=%s as has same digest='%s'",
+                                    oldMsg.getId(), mi.getDigest());
                             mbox.delete(octxt, oldMsg.getId(), oldMsg.getType());
                         } else {
                             oldItem = oldMsg;
                         }
                     }
-                    if (oldItem == null) {
+                    if (oldItem != null) {
+                        ZimbraLog.misc.debug("Message with id=%s has same digest='%s' - not re-adding",
+                                    oldItem.getId(), mi.getDigest());
+                    } else {
                         DeliveryOptions opt = new DeliveryOptions().
                         setFolderId(fldr.getId()).setNoICal(true).
                         setFlags(msg.getFlagBitmask()).
                         setTags(msg.getTags());
-                        newItem = mbox.addMessage(octxt, ais.getInputStream(), (int) aie.getSize(), msg.getDate(), opt, null, id);
+                        newItem = mbox.addMessage(octxt, ais.getInputStream(), (int) aie.getSize(),
+                                msg.getDate(), opt, null, id);
                     }
                     break;
 

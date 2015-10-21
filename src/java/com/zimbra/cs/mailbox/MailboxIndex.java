@@ -108,6 +108,8 @@ public final class MailboxIndex {
     // current compact-indexing operation for this mailbox, or NULL if a compact-index is not in progress.
     private volatile CompactIndexTask compactIndex;
     private volatile SetMultimap<MailItem.Type, Integer> deferredIds; // guarded by IndexHelper
+    boolean indexingSuspended = false;
+    int numMaybeIndexDeferredItemsCalls = 0;
 
     MailboxIndex(Mailbox mbox) {
         mailbox = mbox;
@@ -327,6 +329,15 @@ public final class MailboxIndex {
         INDEX_EXECUTOR.submit(task);
     }
 
+    void setIndexingSuspended( boolean suspended) {
+        ZimbraLog.index.info("indexSuspended set to %s.  Current deferred count %s", suspended,
+                getDeferredCount(EnumSet.noneOf(MailItem.Type.class)));
+        indexingSuspended = suspended;
+        if (! suspended) {
+            numMaybeIndexDeferredItemsCalls = 0;
+        }
+    }
+
     /**
      * Attempts to index deferred items.
      */
@@ -335,6 +346,16 @@ public final class MailboxIndex {
             ZimbraLog.index.debug("index delete is in progress by other thread, skipping");
             return;  // No point in indexing if we are going to delete the index
         }
+        if (indexingSuspended) {
+            if ((numMaybeIndexDeferredItemsCalls % 1000) == 0) {
+                ZimbraLog.index.debug("Indexing suspended. maybeIndexDeferredItems called %s times whilst suspended",
+                        numMaybeIndexDeferredItemsCalls);
+                numMaybeIndexDeferredItemsCalls = 0;
+            }
+            numMaybeIndexDeferredItemsCalls++;
+            return;
+        }
+
         // If there was a failure, we trigger indexing even if the deferred count is still low.
         if ((lastFailedTime >= 0 && System.currentTimeMillis() - lastFailedTime > FAILURE_DELAY) ||
                 getDeferredCount(EnumSet.noneOf(MailItem.Type.class)) >= getBatchThreshold()) {
@@ -344,6 +365,17 @@ public final class MailboxIndex {
                 ZimbraLog.index.warn("Skipping batch index because all index threads are busy");
             }
         }
+    }
+
+    void resumeIndexing() {
+        setIndexingSuspended(false);
+    }
+
+    void resumeIndexingAndDrainDeferred() {
+        resumeIndexing();
+        maybeIndexDeferredItems();
+        ZimbraLog.index.info("resumeIndexingAndDrainDeferred deferred count=%s",
+                getDeferredCount(EnumSet.noneOf(MailItem.Type.class)));
     }
 
     /**
