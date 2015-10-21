@@ -1,6 +1,8 @@
 package com.zimbra.cs.account.auth.twofactor;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig;
 import com.zimbra.common.auth.twofactor.TwoFactorOptions;
@@ -121,7 +123,15 @@ public abstract class TwoFactorAuth implements SecondFactor {
     public abstract void authenticateTOTP(String code) throws ServiceException;
     public abstract void clearData() throws ServiceException;
 
+    public void enable() throws ServiceException {
+        enableTwoFactorAuth();
+        TwoFactorChangeListener.invokeEnabled(account);
+    }
 
+    public void disable(boolean deleteCredentials) throws ServiceException {
+        disableTwoFactorAuth(deleteCredentials);
+        TwoFactorChangeListener.invokeDisabled(account);
+    }
 
     //  Helper classes and interfaces ----------------------------
 
@@ -203,6 +213,35 @@ public abstract class TwoFactorAuth implements SecondFactor {
 
         public int getBytesPerScratchCode() {
             return getBytesPerCodeLength(scratchCodeEncoding, scratchCodeLength);
+        }
+    }
+
+    public static abstract class TwoFactorChangeListener {
+        private static Map<String, TwoFactorChangeListener> listeners = new HashMap<String, TwoFactorChangeListener>();
+
+        public abstract void twoFactorAuthEnabled(Account acct);
+        public abstract void twoFactorAuthDisabled(Account acct);
+
+        public static void register(String name, TwoFactorChangeListener listener) {
+            if (listeners.containsKey(name)) {
+                ZimbraLog.extensions.warn("TwoFactorChangeListener " + name + " is already registered");
+            } else {
+                listeners.put(name,  listener);
+            }
+        }
+
+        public static void invokeEnabled(Account acct) {
+            for (Map.Entry<String, TwoFactorChangeListener> entry: listeners.entrySet()) {
+                TwoFactorChangeListener listener = entry.getValue();
+                listener.twoFactorAuthEnabled(acct);
+            }
+        }
+
+        public static void invokeDisabled(Account acct) {
+            for (Map.Entry<String, TwoFactorChangeListener> entry: listeners.entrySet()) {
+                TwoFactorChangeListener listener = entry.getValue();
+                listener.twoFactorAuthDisabled(acct);
+            }
         }
     }
 }

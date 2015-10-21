@@ -34,7 +34,8 @@ public abstract class ChangePasswordListener {
     // internal listeners will be invoked by the enum order
     public enum InternalChangePasswordListenerId {
         CPL_SYNC,
-        CPL_REVOKE_APP_PASSWORDS;
+        CPL_REVOKE_APP_PASSWORDS,
+        CPL_REMOVE_EWS_PWD_CACHE_ENTRY;
     }
 
     /*
