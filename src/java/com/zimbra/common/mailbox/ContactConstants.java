@@ -122,7 +122,6 @@ public final class ContactConstants {
     public static final String A_imAddress2 = Attr.imAddress2.name();
     public static final String A_imAddress3 = Attr.imAddress3.name();
     public static final String A_zimbraId = Attr.zimbraId.name();
-    public static final String A_commentForEmailAddress = Attr.commentForEmailAddress.name();
 
     // Comcast specific fields
     public static final String A_homeAddress = Attr.homeAddress.name();
@@ -259,8 +258,7 @@ public final class ContactConstants {
         vCardUID,
         vCardXProps,
         zimbraId,
-        outlookProps,
-        commentForEmailAddress;
+        outlookProps;
 
 
         public static Attr fromString(String s) throws ServiceException {
