@@ -310,9 +310,14 @@ public class SoapEngine {
             return soapFaultEnv(soapProto, "SOAP exception", ServiceException.INVALID_REQUEST("No SOAP body", null));
         }
         ServletRequest servReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        boolean doCsrfCheck = false;
-        if (servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null) {
-            doCsrfCheck =  (Boolean) servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
+
+        //Check if this handler requires authentication. 
+        //Do not perform CSRF checks for handlers that do not require authentication
+        DocumentHandler handler = dispatcher.getHandler(doc);
+        boolean doCsrfCheck = handler != null ? handler.needsAuth(context)
+                && servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null : false;
+        if (doCsrfCheck) {
+            doCsrfCheck = (Boolean) servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
             if (doc.getName().equals("AuthRequest")) {
                 // this is a Auth request, no CSRF validation happens
                 doCsrfCheck = false;
@@ -342,9 +347,7 @@ public class SoapEngine {
                 return soapFaultEnv(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
             }
         }
-
         ZimbraSoapContext zsc = null;
-        DocumentHandler handler = dispatcher.getHandler(doc);
         Element ectxt = soapProto.getHeader(envelope, HeaderConstants.CONTEXT);
         try {
             zsc = new ZimbraSoapContext(ectxt, doc.getQName(), handler, context, soapProto);

@@ -66,35 +66,45 @@ public class Auth extends AdminDocumentHandler {
         Account acct = null;
 
         Provisioning prov = Provisioning.getInstance();
-
-        Element authTokenEl = request.getOptionalElement(AdminConstants.E_AUTH_TOKEN);
         boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
-        if (authTokenEl != null) {
-            // authtoken admin auth is only supported by Yahoo auth provider, not the default Zimbra auth provider
-            try {
-                at = AuthProvider.getAuthToken(request, new HashMap<String, Object>());
-                if (at == null)
-                    throw ServiceException.AUTH_EXPIRED();
+        String name = request.getAttribute(AdminConstants.E_NAME, null);
+        Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
 
-                com.zimbra.cs.service.account.Auth.addAccountToLogContextByAuthToken(prov, at);
-
-                if (at.isExpired())
-                    throw ServiceException.AUTH_EXPIRED();
-
-                if(!at.isRegistered())
-                    throw ServiceException.AUTH_EXPIRED("authtoken is invalid");
-
-                // make sure that the authenticated account is active and has not been deleted/disabled since the last request
-                acct = prov.get(AccountBy.id, at.getAccountId(), at);
-                if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                    throw ServiceException.AUTH_EXPIRED();
-
-                // make sure the authenticated account is an admin account
-                checkAdmin(acct);
-            } catch (AuthTokenException e) {
-                throw ServiceException.AUTH_REQUIRED();
+        //only perform auth-token authentication if other credentials are not provided
+        if (name == null && acctEl == null) {
+            //get an auth token from cookie
+            at = zsc.getAuthToken();
+            if(at == null) {
+                //if auth token is not in the cookie check for auth token in SOAP
+                Element authTokenEl = request.getOptionalElement(AdminConstants.E_AUTH_TOKEN);
+                if(authTokenEl != null) {
+                    try {
+                        at = AuthProvider.getAuthToken(request, new HashMap<String, Object>());
+                    } catch (AuthTokenException e) {
+                        throw ServiceException.AUTH_REQUIRED();
+                    }
+                }
             }
 
+            if(at == null) {
+                //neither login credentials nor valid auth token could be retrieved
+                throw ServiceException.AUTH_REQUIRED();
+            }
+            com.zimbra.cs.service.account.Auth.addAccountToLogContextByAuthToken(prov, at);
+
+            if (at.isExpired())
+                throw ServiceException.AUTH_EXPIRED();
+
+            if(!at.isRegistered())
+                throw ServiceException.AUTH_EXPIRED("authtoken is invalid");
+
+            // make sure that the authenticated account is active and has not been deleted/disabled since the last request
+            acct = prov.get(AccountBy.id, at.getAccountId(), at);
+            if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                throw ServiceException.AUTH_EXPIRED();
+
+            // make sure the authenticated account is an admin account
+            checkAdmin(acct);
         } else {
             /*
              * only one of
@@ -103,8 +113,6 @@ public class Auth extends AdminDocumentHandler {
              *     <account by="name|id|foreignPrincipal">...</account>
              * can/must be specified
              */
-            String name = request.getAttribute(AdminConstants.E_NAME, null);
-            Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
             if (name != null && acctEl != null)
                 throw ServiceException.INVALID_REQUEST("only one of <name> or <account> can be specified", null);
             if (name == null && acctEl == null)
@@ -173,33 +181,18 @@ public class Auth extends AdminDocumentHandler {
                 checkAdmin(acct);
                 AuthMech authedByMech = (AuthMech) authCtxt.get(AuthContext.AC_AUTHED_BY_MECH);
                 at = AuthProvider.getAuthToken(acct, true, authedByMech);
-                at.setCsrfTokenEnabled(csrfSupport);
             } catch (ServiceException se) {
                 ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
                         new String[] {"cmd", "AdminAuth","account", value, "error", se.getMessage()}));
                 throw se;
             }
         }
+        if(at != null) {
+            at.setCsrfTokenEnabled(csrfSupport);
+        }
         ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
         return doResponse(request, at, zsc, context, acct, csrfSupport);
-    }
-
-    private AuthToken dummyYCCTokenTestNeverCallMe(Element authTokenEl)
-    throws ServiceException, AuthTokenException  {
-        String atType = authTokenEl.getAttribute(AdminConstants.A_TYPE);
-        if ("YAHOO_CALENDAR_AUTH_PROVIDER".equals(atType)) {
-            for (Element a : authTokenEl.listElements(AdminConstants.E_A)) {
-                String name = a.getAttribute(AdminConstants.A_N);
-                String value = a.getText();
-                if ("ADMIN_AUTH_KEY".equals(name) &&
-                        "1210713456+dDedin1lO8d1_j8Kl.vl".equals(value)) {
-                    Account acct = Provisioning.getInstance().get(AccountBy.name, "admin@phoebe.mac");
-                    return new ZimbraAuthToken(acct, true, null);
-                }
-            }
-        }
-        return null;
     }
 
     private void checkAdmin(Account acct) throws ServiceException {
