@@ -358,7 +358,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             mOut.println("Sending admin auth request to " + mUrl);
         }
 
-        response = getTransport().invoke(auth, false, !mUseSession, null);
+        response = getTransport(true).invoke(auth, false, !mUseSession, null);
         handleAuthResponse(response);
 
         // Do delegate auth if this is a mail or account service request
@@ -371,14 +371,14 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             if (mVeryVerbose) {
                 mOut.println(getInfo.prettyPrint());
             }
-            response = getTransport().invoke(getInfo, false, !mUseSession, null);
+            response = getTransport(true).invoke(getInfo, false, !mUseSession, null);
             String userServiceUrl = response.getElement(AdminConstants.E_SOAP_URL).getText();
 
             // Get delegate auth token
             Element delegateAuth = mFactory.createElement(AdminConstants.DELEGATE_AUTH_REQUEST);
             account = delegateAuth.addElement(AccountConstants.E_ACCOUNT).setText(mAuthAccountName);
             account.addAttribute(AdminConstants.A_BY, nameIsUUID ? AdminConstants.BY_ID : AdminConstants.BY_NAME);
-            response = getTransport().invoke(delegateAuth, false, !mUseSession, null);
+            response = getTransport(true).invoke(delegateAuth, false, !mUseSession, null);
             handleAuthResponse(response);
 
             // Set URL for subsequent mail and account requests.
@@ -386,10 +386,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         }
     }
 
-    private SoapHttpTransport getTransport() {
+    private SoapHttpTransport getTransport(boolean isAdmin) {
         if (mTransport == null || !Objects.equal(mTransport.getURI(), mUrl)) {
             mTransport = new SoapHttpTransport(mUrl);
         }
+        mTransport.setAdmin(isAdmin);
         mTransport.setAuthToken(mAuthToken);
         mTransport.setSessionId(mSessionId);
         mTransport.setDebugListener(this);
@@ -421,7 +422,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             auth.addElement(AccountConstants.E_TWO_FACTOR_CODE).setText(mTwoFactorCode);
         }
         // Authenticate and get auth token
-        Element response = getTransport().invoke(auth, false, !mUseSession, null);
+        Element response = getTransport(false).invoke(auth, false, !mUseSession, null);
         handleAuthResponse(response);
     }
 
@@ -514,7 +515,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         // Send request and print response.
         if (!mType.equals(TYPE_ADMIN) && !StringUtil.isNullOrEmpty(mTargetAccountName) &&
             !StringUtil.equalIgnoreCase(mAuthAccountName, mTargetAccountName)) {
-            getTransport().setTargetAcctName(mTargetAccountName);
+            getTransport(false).setTargetAcctName(mTargetAccountName);
         }
         Element response = null;
 
@@ -525,7 +526,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             System.out.println(request.prettyPrint());
         }
 
-        response = getTransport().invoke(request, false, !mUseSession, null);
+        response = getTransport(mType.equals(TYPE_ADMIN)).invoke(request, false, !mUseSession, null);
 
         // Select result.
         List<Element> results = null;

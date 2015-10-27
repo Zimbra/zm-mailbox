@@ -460,7 +460,7 @@ public class TestCookieReuse  {
         assertNotNull("should have received a new authtoken", newAuthToken);
         AuthToken at = ZimbraAuthToken.getAuthToken(newAuthToken);
         assertTrue("new auth token should be registered", at.isRegistered());
-        assertFalse("new auth token should ne be expired yet", at.isExpired());
+        assertFalse("new auth token should not be expired yet", at.isExpired());
     }
 
     /**
