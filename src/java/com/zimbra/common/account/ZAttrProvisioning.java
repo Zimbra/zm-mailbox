@@ -2132,6 +2132,24 @@ public class ZAttrProvisioning {
         public boolean isOnly() { return this == only;}
     }
 
+    public static enum ScheduledTaskRetryPolicy {
+        linear("linear"),
+        constant("constant"),
+        exponential("exponential");
+        private String mValue;
+        private ScheduledTaskRetryPolicy(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ScheduledTaskRetryPolicy fromString(String s) throws ServiceException {
+            for (ScheduledTaskRetryPolicy value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isLinear() { return this == linear;}
+        public boolean isConstant() { return this == constant;}
+        public boolean isExponential() { return this == exponential;}
+    }
+
     public static enum ShareNotificationMtaConnectionType {
         CLEARTEXT("CLEARTEXT"),
         SSL("SSL"),
@@ -14344,10 +14362,60 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSaslGssapiRequiresTls = "zimbraSaslGssapiRequiresTls";
 
     /**
+     * The initial retry delay for the exponential backoff algorithm. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2069)
+    public static final String A_zimbraScheduledTaskInitialRetryDelay = "zimbraScheduledTaskInitialRetryDelay";
+
+    /**
+     * The maximum number of times a scheduled task can be retried upon
+     * failure. A value of 0 means no maximum
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2068)
+    public static final String A_zimbraScheduledTaskMaxRetries = "zimbraScheduledTaskMaxRetries";
+
+    /**
+     * The maximum retry delay for the exponential backoff algorithm, or 0
+     * for no maximum. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2070)
+    public static final String A_zimbraScheduledTaskMaxRetryDelay = "zimbraScheduledTaskMaxRetryDelay";
+
+    /**
      * Maximum number of scheduled tasks that can run simultaneously.
      */
     @ZAttr(id=522)
     public static final String A_zimbraScheduledTaskNumThreads = "zimbraScheduledTaskNumThreads";
+
+    /**
+     * Whether to retry, after a delay, scheduled tasks upon failure
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2067)
+    public static final String A_zimbraScheduledTaskRetry = "zimbraScheduledTaskRetry";
+
+    /**
+     * The algorithm for determining how long the task scheduler should delay
+     * a task attempt upon failure
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2071)
+    public static final String A_zimbraScheduledTaskRetryPolicy = "zimbraScheduledTaskRetryPolicy";
 
     /**
      * Object classes to add when creating a zimbra server object.

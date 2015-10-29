@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -15,6 +15,9 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.util;
+
+import static com.zimbra.common.util.StringUtil.isNullOrEmpty;
+import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,16 +29,18 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static com.zimbra.common.util.StringUtil.isNullOrEmpty;
-import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.TaskRetry.RetryParams;
 
 /**
  * Runs a <tt>Callable</tt> task either once or at a given interval.  Subsequent
  * start times for a task are based on the previous completion time.
  *
- * @param <V> the result type returned by the task 
+ * @param <V> the result type returned by the task
  */
 public class TaskScheduler<V> {
+
+    private static Map<Object, TaskRetry> retries = new HashMap<Object, TaskRetry>();
 
     /**
      * <tt>Callable</tt> wrapper that takes care of catching exceptions and
@@ -52,22 +57,32 @@ public class TaskScheduler<V> {
         V2 mLastResult;
         ScheduledFuture<V2> mSchedule;
         List<ScheduledTaskCallback<V2>> mCallbacks;
-        
-        TaskRunner(Object id, Callable<V2> task, boolean recurs, long intervalMillis, List<ScheduledTaskCallback<V2>> callbacks) {
+        RetryParams retryParams;
+
+        TaskRunner(Object id, Callable<V2> task, boolean recurs, long intervalMillis, List<ScheduledTaskCallback<V2>> callbacks, RetryParams retry) {
             mTask = task;
             mId = id;
             mRecurs = recurs;
             mIntervalMillis = intervalMillis;
             mCallbacks = callbacks;
+            retryParams = retry;
         }
 
         Callable<V2> getTask() { return mTask; }
 
+        @Override
         public V2 call() throws Exception {
+            long backoff = 0L;
+            boolean retrying = false;
             try {
                 ZimbraLog.scheduler.debug("Executing task %s", mId);
                 mLastResult = mTask.call();
-                ZimbraLog.scheduler.debug("Task returned result %s", mLastResult);
+                TaskRetry retry = retries.remove(mId);
+                if (retry == null) {
+                    ZimbraLog.scheduler.debug("Task returned result %s", mLastResult);
+                } else {
+                    ZimbraLog.scheduler.debug("Task returned result %s after %d attempts", mLastResult, retry.getNumRetries());
+                }
 
                 if (mCallbacks != null) {
                     for (ScheduledTaskCallback<V2> callback : mCallbacks) {
@@ -78,19 +93,37 @@ public class TaskScheduler<V> {
                 if (t instanceof OutOfMemoryError) {
                     ZimbraLog.scheduler.fatal("Shutting down", t);
                     System.exit(1);
+                } else {
+                    ZimbraLog.scheduler.warn("Exception during execution of task %s", mId, t);
+                    mLastResult = null;
+                    if (t instanceof ServiceException) {
+                        TaskRetry retry = retries.get(mId);
+                        if (retry == null && retryParams != null) {
+                            retry = new TaskRetry(retryParams);
+                            retries.put(mId, retry);
+                        }
+                        if (retry != null) {
+                            if (retry.canRetry()) {
+                                backoff = retry.getDelayMillis();
+                                retry.increment();
+                                ZimbraLog.scheduler.debug("Retrying task %s in %s ms", mId, backoff);
+                                mSchedule = mThreadPool.schedule(this, backoff, TimeUnit.MILLISECONDS);
+                                retrying = true;
+                            } else {
+                                ZimbraLog.scheduler.debug("reached retry limit for task %s", mId);
+                            }
+                        }
+                    }
                 }
-                ZimbraLog.scheduler.warn("Exception during execution of task %s", mId, t);
-                mLastResult = null;
             }
-            
+
             boolean cancelled = false;
             if (mSchedule != null) {
-                // mSchedule may have not been set by schedule() if the task runs immediately 
+                // mSchedule may have not been set by schedule() if the task runs immediately
                 cancelled = mSchedule.isCancelled();
             }
-            
             // Reschedule if this is a recurring task
-            if (mRecurs && !cancelled) {
+            if (mRecurs && !cancelled && !retrying) {
                 ZimbraLog.scheduler.debug("Rescheduling task %s", mId);
                 mSchedule = mThreadPool.schedule(this, mIntervalMillis, TimeUnit.MILLISECONDS);
             } else {
@@ -99,7 +132,7 @@ public class TaskScheduler<V> {
             return mLastResult;
         }
     }
-    
+
     private final Map<Object, TaskRunner<V>> mRunnerMap =
         Collections.synchronizedMap(new HashMap<Object, TaskRunner<V>>());
     private final ScheduledThreadPoolExecutor mThreadPool;
@@ -109,11 +142,11 @@ public class TaskScheduler<V> {
     /**
      * Creates a new <tt>TaskScheduler</tt>.  Task threads will be named
      * <tt>ScheduledTask-[name-]</tt>.
-     * 
+     *
      * @param name the name to use when creating task threads, or <tt>null</tt>
      * @param corePoolSize the minimum number of threads to allocate
      * @param maximumPoolSize the maximum number of threads to allocate
-     * 
+     *
      * @see ScheduledThreadPoolExecutor#setCorePoolSize(int)
      * @see ScheduledThreadPoolExecutor#setMaximumPoolSize(int)
      */
@@ -123,16 +156,22 @@ public class TaskScheduler<V> {
         mThreadPool.setMaximumPoolSize(maximumPoolSize);
     }
 
+    public void schedule(Object taskId, Callable<V> task, boolean recurs, long intervalMillis, long delayMillis) {
+        schedule(taskId, task, recurs, intervalMillis, delayMillis, null);
+    }
+
     /**
      * Schedules a task that runs once.
      * @param taskId the task id, used for looking up results and cancelling the task
      * @param task the task
      * @param delayMillis number of milliseconds to wait before executing the task
+     * @param retry task retry configuration, to be used if the task throws a ServiceException
+     *
      */
-    public void schedule(Object taskId, Callable<V> task, long delayMillis) {
-        schedule(taskId, task, false, 0, delayMillis);
+    public void schedule(Object taskId, Callable<V> task, long delayMillis, RetryParams retry) {
+        schedule(taskId, task, false, 0, delayMillis, retry);
     }
-    
+
     /**
      * Schedules a task.
      * @param taskId the task id, used for looking up results and canceling the task
@@ -141,11 +180,12 @@ public class TaskScheduler<V> {
      * @param intervalMillis number of milliseconds between executions of a recurring
      * task, measured between the end of the last execution and the start of the next
      * @param delayMillis number of milliseconds to wait before the first execution
+     * @param retry task retry configuration, to be used if the task throws a ServiceException
      */
-    public void schedule(Object taskId, Callable<V> task, boolean recurs, long intervalMillis, long delayMillis) {
+    public void schedule(Object taskId, Callable<V> task, boolean recurs, long intervalMillis, long delayMillis, RetryParams retry) {
         ZimbraLog.scheduler.debug("Scheduling task %s", taskId);
-        
-        TaskRunner<V> runner = new TaskRunner<V>(taskId, task, recurs, intervalMillis, mCallbacks);
+
+        TaskRunner<V> runner = new TaskRunner<V>(taskId, task, recurs, intervalMillis, mCallbacks, retry);
         runner.mSchedule = mThreadPool.schedule(runner, delayMillis, TimeUnit.MILLISECONDS);
         mRunnerMap.put(taskId, runner);
     }
@@ -164,7 +204,7 @@ public class TaskScheduler<V> {
         }
         return runner.getTask();
     }
-    
+
     /**
      * Returns the result of the last task execution.
      * @param taskId
@@ -192,7 +232,7 @@ public class TaskScheduler<V> {
         runner.mSchedule.cancel(mayInterruptIfRunning);
         return runner.getTask();
     }
-    
+
     /**
      * Shuts down the task scheduler.
      *
@@ -201,7 +241,7 @@ public class TaskScheduler<V> {
     public void shutdown() {
         mThreadPool.shutdown();
     }
-    
+
     public void addCallback(ScheduledTaskCallback<V> callback) {
         mCallbacks.add(callback);
     }
