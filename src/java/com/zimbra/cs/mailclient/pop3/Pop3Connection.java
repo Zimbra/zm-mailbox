@@ -273,7 +273,7 @@ public final class Pop3Connection extends MailConnection {
     public void quit() throws IOException {
         setState(State.LOGOUT);
         sendCommandCheckStatus(QUIT, null);
-        setState(State.CLOSED);
+        close();
     }
 
     public boolean hasCapability(String cap) {
