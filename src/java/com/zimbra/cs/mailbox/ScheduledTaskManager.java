@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -21,12 +21,15 @@ import java.util.concurrent.Callable;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ScheduledTaskCallback;
+import com.zimbra.common.util.TaskRetry.RetryParams;
+import com.zimbra.common.util.TaskRetry.RetryParams.DelayPolicy;
 import com.zimbra.common.util.TaskScheduler;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.mailbox.acl.ExpireGrantsTaskCallback;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderTaskCallback;
 
@@ -102,7 +105,7 @@ public class ScheduledTaskManager {
             // Delay each recurring task by a random time up to its recurrence interval,
             // so that all recurring tasks don't run at once.
             long delay = Math.abs(sRandom.nextLong()) % task.getIntervalMillis();
-            sScheduler.schedule(getKey(task), task, true, task.getIntervalMillis(), delay);
+            sScheduler.schedule(getKey(task), task, true, task.getIntervalMillis(), delay, getRetryParams());
         } else {
             if (task.getExecTime() == null) {
                 throw ServiceException.FAILURE("Exec time not set for scheduled task.", null);
@@ -111,7 +114,22 @@ public class ScheduledTaskManager {
             if (delay < 0) {
                 delay = 0;
             }
-            sScheduler.schedule(getKey(task), task, delay);
+            sScheduler.schedule(getKey(task), task, delay, getRetryParams());
+        }
+    }
+
+    private static RetryParams getRetryParams() throws ServiceException {
+        Config cfg = Provisioning.getInstance().getConfig();
+        if (!cfg.isScheduledTaskRetry()) {
+            return null;
+        } else {
+            RetryParams params = new RetryParams();
+            params.setMaxRetries(cfg.getScheduledTaskMaxRetries());
+            params.setInitialDelay(cfg.getScheduledTaskInitialRetryDelay());
+            params.setMaxDelay(cfg.getScheduledTaskMaxRetryDelay());
+            String policyStr = cfg.getScheduledTaskRetryPolicyAsString();
+            params.setDelayPolicy(DelayPolicy.valueOf(policyStr));
+            return params;
         }
     }
 
@@ -173,6 +191,7 @@ public class ScheduledTaskManager {
     implements ScheduledTaskCallback<ScheduledTaskResult> {
         TaskCleanup()  { }
 
+        @Override
         public void afterTaskRun(Callable<ScheduledTaskResult> c, ScheduledTaskResult lastResult) {
             DbConnection conn = null;
             ScheduledTask task = (ScheduledTask) c;

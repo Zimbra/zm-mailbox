@@ -73883,78 +73883,6 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable XMPP/BOSH proxy
-     *
-     * @return zimbraReverseProxyXmppBoshEnabled, or false if unset
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2065)
-    public boolean isReverseProxyXmppBoshEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, false);
-    }
-
-    /**
-     * Whether to enable XMPP/BOSH proxy
-     *
-     * @param zimbraReverseProxyXmppBoshEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2065)
-    public void setReverseProxyXmppBoshEnabled(boolean zimbraReverseProxyXmppBoshEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, zimbraReverseProxyXmppBoshEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to enable XMPP/BOSH proxy
-     *
-     * @param zimbraReverseProxyXmppBoshEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2065)
-    public Map<String,Object> setReverseProxyXmppBoshEnabled(boolean zimbraReverseProxyXmppBoshEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, zimbraReverseProxyXmppBoshEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * Whether to enable XMPP/BOSH proxy
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2065)
-    public void unsetReverseProxyXmppBoshEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to enable XMPP/BOSH proxy
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2065)
-    public Map<String,Object> unsetReverseProxyXmppBoshEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, "");
-        return attrs;
-    }
-
-    /**
      * Enable/Disable SPDY support for nginx
      *
      * @return zimbraReverseProxySPDYEnabled, or true if unset
@@ -74397,78 +74325,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to use SSL to connect to upstream XMPP/Bosh server
-     *
-     * @return zimbraReverseProxyXmppBoshSSL, or false if unset
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2066)
-    public boolean isReverseProxyXmppBoshSSL() {
-        return getBooleanAttr(Provisioning.A_zimbraReverseProxyXmppBoshSSL, false);
-    }
-
-    /**
-     * Whether to use SSL to connect to upstream XMPP/Bosh server
-     *
-     * @param zimbraReverseProxyXmppBoshSSL new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2066)
-    public void setReverseProxyXmppBoshSSL(boolean zimbraReverseProxyXmppBoshSSL) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, zimbraReverseProxyXmppBoshSSL ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to use SSL to connect to upstream XMPP/Bosh server
-     *
-     * @param zimbraReverseProxyXmppBoshSSL new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2066)
-    public Map<String,Object> setReverseProxyXmppBoshSSL(boolean zimbraReverseProxyXmppBoshSSL, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, zimbraReverseProxyXmppBoshSSL ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * Whether to use SSL to connect to upstream XMPP/Bosh server
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2066)
-    public void unsetReverseProxyXmppBoshSSL() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to use SSL to connect to upstream XMPP/Bosh server
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2066)
-    public Map<String,Object> unsetReverseProxyXmppBoshSSL(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, "");
-        return attrs;
-    }
-
-    /**
+     * SSL session cache size in megabytes. Need to have &#039;m&#039; (for
+     * megabytes) suffix at the end
      *
      * @return zimbraReverseProxySSLSessionCacheSize, or "10m" if unset
      *
@@ -76499,6 +76357,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether to enable XMPP/BOSH proxy
+     *
+     * @return zimbraReverseProxyXmppBoshEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2065)
+    public boolean isReverseProxyXmppBoshEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, false);
+    }
+
+    /**
+     * Whether to enable XMPP/BOSH proxy
+     *
+     * @param zimbraReverseProxyXmppBoshEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2065)
+    public void setReverseProxyXmppBoshEnabled(boolean zimbraReverseProxyXmppBoshEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, zimbraReverseProxyXmppBoshEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable XMPP/BOSH proxy
+     *
+     * @param zimbraReverseProxyXmppBoshEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2065)
+    public Map<String,Object> setReverseProxyXmppBoshEnabled(boolean zimbraReverseProxyXmppBoshEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, zimbraReverseProxyXmppBoshEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable XMPP/BOSH proxy
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2065)
+    public void unsetReverseProxyXmppBoshEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable XMPP/BOSH proxy
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2065)
+    public Map<String,Object> unsetReverseProxyXmppBoshEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Hostname of the external XMPP server where XMPP over BOSH requests
      * need to be proxied
      *
@@ -76857,6 +76787,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether to use SSL to connect to upstream XMPP/Bosh server
+     *
+     * @return zimbraReverseProxyXmppBoshSSL, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2066)
+    public boolean isReverseProxyXmppBoshSSL() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyXmppBoshSSL, false);
+    }
+
+    /**
+     * Whether to use SSL to connect to upstream XMPP/Bosh server
+     *
+     * @param zimbraReverseProxyXmppBoshSSL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2066)
+    public void setReverseProxyXmppBoshSSL(boolean zimbraReverseProxyXmppBoshSSL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, zimbraReverseProxyXmppBoshSSL ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to use SSL to connect to upstream XMPP/Bosh server
+     *
+     * @param zimbraReverseProxyXmppBoshSSL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2066)
+    public Map<String,Object> setReverseProxyXmppBoshSSL(boolean zimbraReverseProxyXmppBoshSSL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, zimbraReverseProxyXmppBoshSSL ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to use SSL to connect to upstream XMPP/Bosh server
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2066)
+    public void unsetReverseProxyXmppBoshSSL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to use SSL to connect to upstream XMPP/Bosh server
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2066)
+    public Map<String,Object> unsetReverseProxyXmppBoshSSL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshSSL, "");
+        return attrs;
+    }
+
+    /**
      * the response timeout for an external XMPP/BOSH server. Must be in
      * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
@@ -76867,13 +76869,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @see #getReverseProxyXmppBoshTimeoutAsString()
      *
-     * @return zimbraReverseProxyXmppBoshTimeout in millseconds, or 60000 (1m)  if unset
+     * @return zimbraReverseProxyXmppBoshTimeout in millseconds, or 90000 (90s)  if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2064)
     public long getReverseProxyXmppBoshTimeout() {
-        return getTimeInterval(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, 60000L);
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, 90000L);
     }
 
     /**
@@ -76883,13 +76885,13 @@ public abstract class ZAttrConfig extends Entry {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @return zimbraReverseProxyXmppBoshTimeout, or "1m" if unset
+     * @return zimbraReverseProxyXmppBoshTimeout, or "90s" if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2064)
     public String getReverseProxyXmppBoshTimeoutAsString() {
-        return getAttr(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, "1m");
+        return getAttr(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, "90s");
     }
 
     /**
@@ -79578,6 +79580,307 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * The initial retry delay for the exponential backoff algorithm. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getScheduledTaskInitialRetryDelayAsString to access value as a string.
+     *
+     * @see #getScheduledTaskInitialRetryDelayAsString()
+     *
+     * @return zimbraScheduledTaskInitialRetryDelay in millseconds, or 5000 (5s)  if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2069)
+    public long getScheduledTaskInitialRetryDelay() {
+        return getTimeInterval(Provisioning.A_zimbraScheduledTaskInitialRetryDelay, 5000L);
+    }
+
+    /**
+     * The initial retry delay for the exponential backoff algorithm. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraScheduledTaskInitialRetryDelay, or "5s" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2069)
+    public String getScheduledTaskInitialRetryDelayAsString() {
+        return getAttr(Provisioning.A_zimbraScheduledTaskInitialRetryDelay, "5s");
+    }
+
+    /**
+     * The initial retry delay for the exponential backoff algorithm. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraScheduledTaskInitialRetryDelay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2069)
+    public void setScheduledTaskInitialRetryDelay(String zimbraScheduledTaskInitialRetryDelay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskInitialRetryDelay, zimbraScheduledTaskInitialRetryDelay);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The initial retry delay for the exponential backoff algorithm. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraScheduledTaskInitialRetryDelay new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2069)
+    public Map<String,Object> setScheduledTaskInitialRetryDelay(String zimbraScheduledTaskInitialRetryDelay, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskInitialRetryDelay, zimbraScheduledTaskInitialRetryDelay);
+        return attrs;
+    }
+
+    /**
+     * The initial retry delay for the exponential backoff algorithm. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2069)
+    public void unsetScheduledTaskInitialRetryDelay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskInitialRetryDelay, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The initial retry delay for the exponential backoff algorithm. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2069)
+    public Map<String,Object> unsetScheduledTaskInitialRetryDelay(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskInitialRetryDelay, "");
+        return attrs;
+    }
+
+    /**
+     * The maximum number of times a scheduled task can be retried upon
+     * failure. A value of 0 means no maximum
+     *
+     * @return zimbraScheduledTaskMaxRetries, or 10 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2068)
+    public int getScheduledTaskMaxRetries() {
+        return getIntAttr(Provisioning.A_zimbraScheduledTaskMaxRetries, 10);
+    }
+
+    /**
+     * The maximum number of times a scheduled task can be retried upon
+     * failure. A value of 0 means no maximum
+     *
+     * @param zimbraScheduledTaskMaxRetries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2068)
+    public void setScheduledTaskMaxRetries(int zimbraScheduledTaskMaxRetries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskMaxRetries, Integer.toString(zimbraScheduledTaskMaxRetries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum number of times a scheduled task can be retried upon
+     * failure. A value of 0 means no maximum
+     *
+     * @param zimbraScheduledTaskMaxRetries new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2068)
+    public Map<String,Object> setScheduledTaskMaxRetries(int zimbraScheduledTaskMaxRetries, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskMaxRetries, Integer.toString(zimbraScheduledTaskMaxRetries));
+        return attrs;
+    }
+
+    /**
+     * The maximum number of times a scheduled task can be retried upon
+     * failure. A value of 0 means no maximum
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2068)
+    public void unsetScheduledTaskMaxRetries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskMaxRetries, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum number of times a scheduled task can be retried upon
+     * failure. A value of 0 means no maximum
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2068)
+    public Map<String,Object> unsetScheduledTaskMaxRetries(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskMaxRetries, "");
+        return attrs;
+    }
+
+    /**
+     * The maximum retry delay for the exponential backoff algorithm, or 0
+     * for no maximum. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getScheduledTaskMaxRetryDelayAsString to access value as a string.
+     *
+     * @see #getScheduledTaskMaxRetryDelayAsString()
+     *
+     * @return zimbraScheduledTaskMaxRetryDelay in millseconds, or 600000 (10m)  if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2070)
+    public long getScheduledTaskMaxRetryDelay() {
+        return getTimeInterval(Provisioning.A_zimbraScheduledTaskMaxRetryDelay, 600000L);
+    }
+
+    /**
+     * The maximum retry delay for the exponential backoff algorithm, or 0
+     * for no maximum. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraScheduledTaskMaxRetryDelay, or "10m" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2070)
+    public String getScheduledTaskMaxRetryDelayAsString() {
+        return getAttr(Provisioning.A_zimbraScheduledTaskMaxRetryDelay, "10m");
+    }
+
+    /**
+     * The maximum retry delay for the exponential backoff algorithm, or 0
+     * for no maximum. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraScheduledTaskMaxRetryDelay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2070)
+    public void setScheduledTaskMaxRetryDelay(String zimbraScheduledTaskMaxRetryDelay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskMaxRetryDelay, zimbraScheduledTaskMaxRetryDelay);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum retry delay for the exponential backoff algorithm, or 0
+     * for no maximum. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraScheduledTaskMaxRetryDelay new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2070)
+    public Map<String,Object> setScheduledTaskMaxRetryDelay(String zimbraScheduledTaskMaxRetryDelay, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskMaxRetryDelay, zimbraScheduledTaskMaxRetryDelay);
+        return attrs;
+    }
+
+    /**
+     * The maximum retry delay for the exponential backoff algorithm, or 0
+     * for no maximum. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2070)
+    public void unsetScheduledTaskMaxRetryDelay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskMaxRetryDelay, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum retry delay for the exponential backoff algorithm, or 0
+     * for no maximum. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2070)
+    public Map<String,Object> unsetScheduledTaskMaxRetryDelay(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskMaxRetryDelay, "");
+        return attrs;
+    }
+
+    /**
      * Maximum number of scheduled tasks that can run simultaneously.
      *
      * @return zimbraScheduledTaskNumThreads, or 20 if unset
@@ -79636,6 +79939,217 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetScheduledTaskNumThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraScheduledTaskNumThreads, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to retry, after a delay, scheduled tasks upon failure
+     *
+     * @return zimbraScheduledTaskRetry, or true if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2067)
+    public boolean isScheduledTaskRetry() {
+        return getBooleanAttr(Provisioning.A_zimbraScheduledTaskRetry, true);
+    }
+
+    /**
+     * Whether to retry, after a delay, scheduled tasks upon failure
+     *
+     * @param zimbraScheduledTaskRetry new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2067)
+    public void setScheduledTaskRetry(boolean zimbraScheduledTaskRetry) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskRetry, zimbraScheduledTaskRetry ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to retry, after a delay, scheduled tasks upon failure
+     *
+     * @param zimbraScheduledTaskRetry new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2067)
+    public Map<String,Object> setScheduledTaskRetry(boolean zimbraScheduledTaskRetry, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskRetry, zimbraScheduledTaskRetry ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to retry, after a delay, scheduled tasks upon failure
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2067)
+    public void unsetScheduledTaskRetry() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskRetry, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to retry, after a delay, scheduled tasks upon failure
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2067)
+    public Map<String,Object> unsetScheduledTaskRetry(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskRetry, "");
+        return attrs;
+    }
+
+    /**
+     * The algorithm for determining how long the task scheduler should delay
+     * a task attempt upon failure
+     *
+     * <p>Valid values: [exponential, constant, linear]
+     *
+     * @return zimbraScheduledTaskRetryPolicy, or ZAttrProvisioning.ScheduledTaskRetryPolicy.exponential if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2071)
+    public ZAttrProvisioning.ScheduledTaskRetryPolicy getScheduledTaskRetryPolicy() {
+        try { String v = getAttr(Provisioning.A_zimbraScheduledTaskRetryPolicy); return v == null ? ZAttrProvisioning.ScheduledTaskRetryPolicy.exponential : ZAttrProvisioning.ScheduledTaskRetryPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ScheduledTaskRetryPolicy.exponential; }
+    }
+
+    /**
+     * The algorithm for determining how long the task scheduler should delay
+     * a task attempt upon failure
+     *
+     * <p>Valid values: [exponential, constant, linear]
+     *
+     * @return zimbraScheduledTaskRetryPolicy, or "exponential" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2071)
+    public String getScheduledTaskRetryPolicyAsString() {
+        return getAttr(Provisioning.A_zimbraScheduledTaskRetryPolicy, "exponential");
+    }
+
+    /**
+     * The algorithm for determining how long the task scheduler should delay
+     * a task attempt upon failure
+     *
+     * <p>Valid values: [exponential, constant, linear]
+     *
+     * @param zimbraScheduledTaskRetryPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2071)
+    public void setScheduledTaskRetryPolicy(ZAttrProvisioning.ScheduledTaskRetryPolicy zimbraScheduledTaskRetryPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskRetryPolicy, zimbraScheduledTaskRetryPolicy.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The algorithm for determining how long the task scheduler should delay
+     * a task attempt upon failure
+     *
+     * <p>Valid values: [exponential, constant, linear]
+     *
+     * @param zimbraScheduledTaskRetryPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2071)
+    public Map<String,Object> setScheduledTaskRetryPolicy(ZAttrProvisioning.ScheduledTaskRetryPolicy zimbraScheduledTaskRetryPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskRetryPolicy, zimbraScheduledTaskRetryPolicy.toString());
+        return attrs;
+    }
+
+    /**
+     * The algorithm for determining how long the task scheduler should delay
+     * a task attempt upon failure
+     *
+     * <p>Valid values: [exponential, constant, linear]
+     *
+     * @param zimbraScheduledTaskRetryPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2071)
+    public void setScheduledTaskRetryPolicyAsString(String zimbraScheduledTaskRetryPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskRetryPolicy, zimbraScheduledTaskRetryPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The algorithm for determining how long the task scheduler should delay
+     * a task attempt upon failure
+     *
+     * <p>Valid values: [exponential, constant, linear]
+     *
+     * @param zimbraScheduledTaskRetryPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2071)
+    public Map<String,Object> setScheduledTaskRetryPolicyAsString(String zimbraScheduledTaskRetryPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskRetryPolicy, zimbraScheduledTaskRetryPolicy);
+        return attrs;
+    }
+
+    /**
+     * The algorithm for determining how long the task scheduler should delay
+     * a task attempt upon failure
+     *
+     * <p>Valid values: [exponential, constant, linear]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2071)
+    public void unsetScheduledTaskRetryPolicy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskRetryPolicy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The algorithm for determining how long the task scheduler should delay
+     * a task attempt upon failure
+     *
+     * <p>Valid values: [exponential, constant, linear]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2071)
+    public Map<String,Object> unsetScheduledTaskRetryPolicy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraScheduledTaskRetryPolicy, "");
         return attrs;
     }
 
