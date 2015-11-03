@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -26,6 +26,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -74,7 +75,7 @@ public class ImapSession extends Session {
     private final boolean  mIsVirtual;
     private ImapFolderData mFolder;
     private ImapHandler handler;
-    private Map<Integer, Integer> renumberCount = new ConcurrentHashMap<Integer, Integer>();
+    private final Map<Integer, Integer> renumberCount = new ConcurrentHashMap<Integer, Integer>();
 
     ImapSession(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
@@ -213,7 +214,7 @@ public class ImapSession extends Session {
         } catch (MailServiceException.NoSuchItemException nsie) {
             // don't log if the session expires because the folder was deleted out from under it
         } catch (Exception e) {
-            ZimbraLog.session.warn("exception recording unloaded session's RECENT limit", e);
+            ZimbraLog.session.warn("exception recording unloaded session's RECENT limit %s", this, e);
         }
     }
 
@@ -229,7 +230,7 @@ public class ImapSession extends Session {
 
     @Override
     public void doEncodeState(Element parent) {
-        mFolder.doEncodeState(parent.addElement("imap"));
+        mFolder.doEncodeState(parent.addNonUniqueElement("imap"));
     }
 
     @Override
@@ -265,7 +266,7 @@ public class ImapSession extends Session {
     protected void cleanup() {
         ImapHandler i4handler = handler;
         if (i4handler != null) {
-            ZimbraLog.imap.debug("dropping connection because Session is closing");
+            ZimbraLog.imap.debug("dropping connection because Session is closing %s", this);
             i4handler.close();
         }
     }
@@ -319,14 +320,17 @@ public class ImapSession extends Session {
                     PagedFolderData paged = (PagedFolderData) mFolder;
                     if (paged.getCacheKey() == null || !paged.getCacheKey().equals(MANAGER.cacheKey(this, active))) {
                         //currently cached to wrong cache need to move it so it doesn't get expired or LRU'd
-                        ZimbraLog.imap.trace("relocating cached item to %s already unloaded but cache key mismatched", (active ? "active" : "inactive"));
+                        ZimbraLog.imap.trace("relocating cached item to %s already unloaded but cache key mismatched %s",
+                                (active ? "active" : "inactive"), this);
                         ImapFolder folder = null;
                         try {
                             folder = reload();
                             if (folder != null) {
                                 mFolder = new PagedFolderData(serialize(active), folder);
                             } else {
-                                ZimbraLog.imap.debug("folder not found while reloading for relocate. probably already evicted");
+                                ZimbraLog.imap.debug(
+                                        "folder not found while reloading for relocate. probably already evicted. %s",
+                                        this);
                             }
                         } catch (ImapSessionClosedException e) {
                             throw ServiceException.FAILURE("Session closed while relocating paged item", e);
@@ -355,14 +359,14 @@ public class ImapSession extends Session {
                     ImapFolder i4folder = MANAGER.deserialize(paged.getCacheKey());
                     if (i4folder == null) { // cache miss
                         if (ImapSessionManager.isActiveKey(paged.getCacheKey())) {
-                            ZimbraLog.imap.debug("cache miss in active cache with key %s",paged.getCacheKey());
+                            ZimbraLog.imap.debug("cache miss in active cache with key %s. %s",paged.getCacheKey(), this);
                         }
                         return null;
                     }
                     try {
                         paged.restore(i4folder);
                     } catch (ServiceException e) {
-                        ZimbraLog.imap.warn("Failed to restore folder %s", paged.getCacheKey(), e);
+                        ZimbraLog.imap.warn("Failed to restore folder %s for session %s", paged.getCacheKey(), this, e);
                         return null;
                     }
                     // need to switch target before replay (yes, this is inelegant)
@@ -390,7 +394,7 @@ public class ImapSession extends Session {
 
     ImapFolder handleRenumberError(String key) {
         resetRenumber();
-        ZimbraLog.imap.warn("could not replay due to too many renumbers");
+        ZimbraLog.imap.warn("could not replay due to too many renumbers  key=%s %s", key, this);
         MANAGER.safeRemoveCache(key);
         return null;
     }
@@ -821,4 +825,19 @@ public class ImapSession extends Session {
         }
     }
 
+    @Override
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
+        helper.add("path", mPath).add("folderId", mFolderId);
+        if ((mFolder == null) || ((mPath != null) && (!mPath.toString().equals(mFolder.toString())))) {
+            helper.add("folder", mFolder);
+        }
+        if (mIsVirtual) {
+            helper.add("isVirtual", mIsVirtual);
+        }
+        if (handler == null) {
+            helper.add("handler", handler);
+        }
+        return helper;
+    }
 }
