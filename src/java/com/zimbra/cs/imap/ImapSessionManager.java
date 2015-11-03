@@ -150,7 +150,7 @@ final class ImapSessionManager {
                 long cutoff = SESSION_INACTIVITY_SERIALIZATION_TIME > 0 ?
                         System.currentTimeMillis() - SESSION_INACTIVITY_SERIALIZATION_TIME : Long.MIN_VALUE;
                 long nonInteractiveCutoff =
-                        LC.imap_noninteractive_session_cache_maxage_minutes.intValue() * Constants.MILLIS_PER_MINUTE;
+                        LC.imap_noninteractive_session_cache_maxage_days.intValue() * Constants.MILLIS_PER_DAY;
                 nonInteractiveCutoff = (nonInteractiveCutoff > 0) ?
                         System.currentTimeMillis() - nonInteractiveCutoff : Long.MIN_VALUE;
 
