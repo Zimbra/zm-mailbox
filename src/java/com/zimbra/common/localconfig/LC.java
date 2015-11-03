@@ -718,6 +718,9 @@ public final class LC {
 
     @Supported
     public static final KnownKey imap_inactive_session_cache_size = KnownKey.newKey(10000);
+    // default slightly over 3 days.  Without limit 1 server was needing to restart every 30 to 45 days
+    public static final KnownKey imap_noninteractive_session_cache_maxage_minutes
+            = KnownKey.newKey(((3 * 24) + 4) * 60);
     public static final KnownKey imap_use_ehcache = KnownKey.newKey(true);
     public static final KnownKey imap_write_timeout = KnownKey.newKey(10);
     public static final KnownKey imap_write_chunk_size = KnownKey.newKey(8 * 1024);
