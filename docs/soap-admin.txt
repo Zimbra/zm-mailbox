@@ -13,7 +13,7 @@ Note that name1 appears twice.
 When updating multiple attributes, you need to specify all the old values at the same time you specify new ones.
 
 ----------------------------
- <AuthRequest xmlns="urn:zimbraAdmin" [persistAuthTokenCookie="1"]>
+ <AuthRequest xmlns="urn:zimbraAdmin" [persistAuthTokenCookie="1"] [csrfTokenSecured="0|1"]>
    [<name>...</name>]
    [<account by="name|id|foreignPrincipal">...</account>]
    <password>...</password>
@@ -23,6 +23,7 @@ When updating multiple attributes, you need to specify all the old values at the
 
  <AuthResponse>
    <authToken>...</authToken>
+   [<csrfToken>...</csrfToken>]
    <lifetime>{lifetime-in-milliseconds}</lifetime>
  </AuthResponse>
 
@@ -31,7 +32,11 @@ When updating multiple attributes, you need to specify all the old values at the
                              0: (default)
                                 the cookie will be deleted when the Web browser exits.
                              1: The "Expires" attribute of the cookie will be set per rfc6265.
-                             
+
+  {csrfTokenSecured} = controls whether the client has the capability to handle CSRF token
+                0: (default) the client is not capable of handling CSRF token
+                1: The client is capable of handling CSRF token.
+
 Note: Only works with admin/domain-admin accounts
 
 Access: domain admin sufficient
