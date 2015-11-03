@@ -357,12 +357,30 @@ public abstract class Session {
         return !mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId);
     }
 
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        helper.add("id", mSessionId)
+            .add("authAcct", mAuthenticatedAccountId);
+        if (!Objects.equal(mAuthenticatedAccountId, mTargetAccountId)) {
+            helper.add("targetAcct", mTargetAccountId);
+        }
+        if (null == mailbox) {
+            helper.add("mbox", mailbox);
+        }
+        helper.add("lastAccessed", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS").format(new Date(mLastAccessed)));
+        if (mCleanedUp) {
+            helper.add("cleanedUp", mCleanedUp);
+        }
+        if (!mIsRegistered) {
+            helper.add("registered", mIsRegistered);
+        }
+        if (!mAddedToCache) {
+            helper.add("addedToCache", mAddedToCache);
+        }
+        return helper;
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("sessionId", mSessionId)
-            .add("accountId", mAuthenticatedAccountId)
-            .add("lastAccessed", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS").format(new Date(mLastAccessed)))
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

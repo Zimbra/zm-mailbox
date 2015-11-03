@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -171,12 +171,24 @@ public class MailServiceException extends ServiceException {
         super(message, code, isReceiversFault, cause, args);
     }
 
+    public static class MailboxInMaintenanceException extends MailServiceException {
+        private static final long serialVersionUID = 2105634546355254491L;
+        public MailboxInMaintenanceException(int id) {
+            this(id, null);
+        }
+        public MailboxInMaintenanceException(int id, String message) {
+            super(
+                String.format("mailbox in maintenance mode: %s%s",id, ( message != null ? " reason: "+ message : "")),
+                MAINTENANCE, RECEIVERS_FAULT, new Argument(MAILBOX_ID, id, Argument.Type.IID));
+        }
+    }
+
     public static MailServiceException MAINTENANCE(int id) {
-        return MailServiceException.MAINTENANCE(id, null);
+        return new MailboxInMaintenanceException(id);
     }
 
     public static MailServiceException MAINTENANCE(int id, String message) {
-        return new MailServiceException("mailbox in maintenance mode: "+ id + ( message != null ? " reason: "+ message : ""), MAINTENANCE, RECEIVERS_FAULT, new Argument(MAILBOX_ID, id, Argument.Type.IID));
+        return new MailboxInMaintenanceException(id, message);
     }
 
     public static MailServiceException NO_SUCH_MBOX(int id) {
