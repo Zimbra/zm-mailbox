@@ -1685,7 +1685,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>preauth secret key</desc>
 </attr>
 
-<attr id="308" name="zimbraMailMode" type="enum" value="http,https,both,mixed,redirect" callback="MailMode" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="308" name="zimbraMailMode" type="enum" value="http,https,both,mixed,redirect" callback="LocalBind" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <desc>whether to run HTTP or HTTPS or both/mixed mode or redirect mode.  See also related attributes zimbraMailPort and zimbraMailSSLPort</desc>
 </attr>
 
