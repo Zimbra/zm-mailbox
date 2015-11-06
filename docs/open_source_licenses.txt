@@ -85,6 +85,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> perl-geography-countries-2009041301
    >>> perl-locale-maketext-simple-0.21
    >>> perl-mail-spf-2.9.0
+   >>> perl-net-dns-0.74
    >>> perl-net-ssleay-1.67
    >>> perl-socket6-0.25
    >>> perl-termreadkey-2.32
@@ -328,7 +329,6 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-mro-compat-0.12
    >>> perl-net-cidr-0.17
    >>> perl-net-cidr-lite-0.21
-   >>> perl-net-dns-0.74
    >>> perl-net-dns-resolver-programmable-0.003
    >>> perl-net-http-6.06
    >>> perl-net-ip-1.26
@@ -20133,6 +20133,37 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+>>> perl-net-dns-0.74
+
+Copyright (c)1997-2000 Michael Fuhr.
+
+Portions Copyright (c)2002,2003 Chris Reinhardt.
+
+Portions Copyright (c)2005 Olaf Kolkman (RIPE NCC)
+
+Portions Copyright (c)2006 Olaf Kolkman (NLnet Labs)
+
+Portions Copyright (c)2014 Dick Franks
+
+All rights reserved.
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted, provided
+that the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation, and that the name of the author not be used in advertising
+or publicity pertaining to distribution of the software without specific
+prior written permission.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+
 >>> perl-net-ssleay-1.67
 
 Copyright (c) 1996-2002 Sampo Kellomaki <sampo@iki.fi>
@@ -34195,44 +34226,6 @@ Copyright (C) 2001 Douglas Wilson <dougw@cpan.org>
 
 This program is free software; you can redistribute it
 and/or modify it under the same terms as Perl itself.
-
-
->>> perl-net-dns-0.74
-
-[PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
-
-Copyright (c)1997-2002 Michael Fuhr.
-Portions Copyright(c)2002-2004 Chris Reinhardt.
-Portions Copyright(c)2005 Olaf Kolkman (RIPE NCC)
-Portions Copyright(c)2006 Olaf Kolkman (NLnet Labs)
-
-All rights reserved.
-
-This program is free software; you may redistribute it and/or
-modify it under the same terms as Perl itself.
-
-
-=head1 AUTHOR INFORMATION
-
-Net::DNS is currently maintained at NLnet Labs (www.nlnetlabs.nl) by:
-        Olaf Kolkman
-	olaf@net-dns.org
-
-Between 2002 and 2004 Net::DNS was maintained by:
-       Chris Reinhardt
-
-
-Net::DNS was created by:
-	Michael Fuhr
-	mike@fuhr.org
-
-
-
-For more information see:
-    http://www.net-dns.org/
-
-Stay tuned and syndicate:
-    http://www.net-dns.org/blog/
 
 
 >>> perl-net-dns-resolver-programmable-0.003
