@@ -90,4 +90,26 @@ public final class SyncConstants {
     public static final Integer STATUS_INVALID_INTERVAL = 14;
     public static final Integer STATUS_INVALID_SYNC_REQUEST = 15;
     public static final Integer STATUS_SYNC_RETRY = 16;
+
+    // ItemOperation response statuses
+    // Reference - https://msdn.microsoft.com/en-us/library/gg663459(v=exchg.80).aspx
+    public static final Integer ITEMOPERATIONS_STATUS_SUCCESS = 1;
+    public static final Integer ITEMOPERATIONS_STATUS_PROTOCOL_ERROR = 2;
+    public static final Integer ITEMOPERATIONS_STATUS_SERVER_ERROR = 3;
+    public static final Integer ITEMOPERATIONS_STATUS_DOCUMENT_LIB_BAD_URI = 4;
+    public static final Integer ITEMOPERATIONS_STATUS_DOCUMENT_LIB_ACCESS_DENIED = 5;
+    public static final Integer ITEMOPERATIONS_STATUS_DOCUMENT_LIB_OBJECT_NOT_FOUND = 6;
+    public static final Integer ITEMOPERATIONS_STATUS_DOCUMENT_LIB_CONNECTION_ERROR = 7;
+    public static final Integer ITEMOPERATIONS_STATUS_INVALID_BYTE_RANGE = 8;
+    public static final Integer ITEMOPERATIONS_STATUS_UNKNOWN_STORE = 9;
+    public static final Integer ITEMOPERATIONS_STATUS_EMPTY_FILE = 10;
+    public static final Integer ITEMOPERATIONS_STATUS_DATA_SIZE_TOO_LARGE = 11;
+    public static final Integer ITEMOPERATIONS_STATUS_IO_FAILURE = 12;
+    public static final Integer ITEMOPERATIONS_STATUS_ITEM_CONVERSION_FAILURE = 14;
+    public static final Integer ITEMOPERATIONS_STATUS_ATTACHMENT_INVALID = 15;
+    public static final Integer ITEMOPERATIONS_STATUS_RESOURCE_ACCESS_DENIED = 16;
+    public static final Integer ITEMOPERATIONS_STATUS_PARTIAL_SUCCESS = 17;
+    public static final Integer ITEMOPERATIONS_STATUS_CREDENTIALS_REQUIRED = 18;
+    public static final Integer ITEMOPERATIONS_STATUS_ELEMENT_MISSING = 155;
+    public static final Integer ITEMOPERATIONS_STATUS_ACTION_NOT_SUPPORTED = 156;
 }
