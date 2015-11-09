@@ -213,6 +213,14 @@ public class ImapSession extends Session {
             }
         } catch (MailServiceException.NoSuchItemException nsie) {
             // don't log if the session expires because the folder was deleted out from under it
+        } catch (MailServiceException.MailboxInMaintenanceException miMe) {
+            if (ZimbraLog.session.isDebugEnabled()) {
+                ZimbraLog.session.info(
+                        "Mailbox in maintenance detected recording unloaded session's RECENT limit %s", this, miMe);
+            } else {
+                ZimbraLog.session.info(
+                        "Mailbox in maintenance detected recording unloaded session's RECENT limit %s", this);
+            }
         } catch (Exception e) {
             ZimbraLog.session.warn("exception recording unloaded session's RECENT limit %s", this, e);
         }
