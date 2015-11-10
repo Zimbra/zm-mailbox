@@ -1877,6 +1877,7 @@ class WebXmppBoshEnablerVar extends ProxyConfVar {
 
     @Override
     public void update() throws ServiceException {
+        String xmppEnabled = serverSource.getAttr("zimbraReverseProxyXmppBoshEnabled", false);
         String XmppBoshLocalBindURL = serverSource.getAttr("zimbraReverseProxyXmppBoshLocalHttpBindURL", true);
         String XmppBoshHostname = serverSource.getAttr("zimbraReverseProxyXmppBoshHostname", true);
         int XmppBoshPort = serverSource.getIntAttr("zimbraReverseProxyXmppBoshPort", 0);
@@ -1887,7 +1888,11 @@ class WebXmppBoshEnablerVar extends ProxyConfVar {
             mLog.debug("web.xmpp.bosh.upstream.disable is false because one of the required attrs is unset");
             mValue = false;
         } else {
-            mValue = true;
+            if (xmppEnabled == "TRUE") {
+                mValue = true;
+            } else {
+                mValue = false;
+            }
         }
     }
 }
