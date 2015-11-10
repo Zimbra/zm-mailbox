@@ -152,7 +152,7 @@ SECTION 2: Apache License, V2.0
    >>> org.openid4java-0.9.5
    >>> redisson-1.1.5
    >>> ridl-4.0.2
-   >>> selenium-2.47.1
+   >>> selenium-2.48.2
    >>> smack-3.2.1
    >>> solr-5.2.0
    >>> spamassassin-3.4.1-r1669629
@@ -27692,7 +27692,7 @@ License : Apache 2.0
 License : Apache 2.0
 
 
->>> selenium-2.47.1
+>>> selenium-2.48.2
 
 Copyright 2008-2009 Web Driver committers
 Copyright 2008-2009 Google Inc.
