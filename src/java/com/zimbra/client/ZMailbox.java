@@ -1660,6 +1660,7 @@ public class ZMailbox implements ToZJSONObject {
             req.addAttribute(MailConstants.A_SYNC, sync);
         }
         if (!StringUtil.isNullOrEmpty(ids)) {
+            req.addAttribute(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, true);
             req.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, ids);
         }
         if (attrs != null) {
