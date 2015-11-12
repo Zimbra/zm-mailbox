@@ -207,7 +207,7 @@ public final class DebugConfig {
             "defang_valid_ext_url",
             "^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
     public static final String defangValidImgFile = value(
-            "defang_valid_img_file", "\\.(jpg|jpeg|png|gif)((\\?)?)");
+            "defang_valid_img_file", "\\.(jpg|jpeg|png|gif|bmp)((\\?)?)");
     public static final String defangValidIntImg = value(
             "defang_valid_int_img", "^data:image/|^cid:");
 
