@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
 import javax.servlet.ServletException;
@@ -61,6 +62,9 @@ public abstract class Formatter {
     protected static final int TIME_UNSPECIFIED = -1;
 
     public abstract FormatType getType();
+
+    public static final String QP_CALLBACK = "callback";
+    private final Pattern ALLOWED_CALLBACK_CHARS = Pattern.compile("^[a-zA-Z0-9_.-]+$");
 
     private static String PROGRESS = "-progress";
 
@@ -213,6 +217,16 @@ public abstract class Formatter {
         }
     }
 
+    // hook to support sanity checks on params
+    public void parseParams(UserServletContext context) throws UserServletException {
+        String callback = context.params.get(QP_CALLBACK);
+        if (callback != null && callback.length() != 0) {
+            if (!ALLOWED_CALLBACK_CHARS.matcher(callback).matches()) {
+                throw UserServletException.badRequest("invalid callback");
+            }
+        }
+    }
+
     protected Collection<? extends MailItem> getMailItemsFromFolder(UserServletContext context, Folder folder,
             long startTime, long endTime, long chunkSize) throws ServiceException {
         switch (folder.getDefaultView()) {
@@ -312,7 +326,7 @@ public abstract class Formatter {
 
     protected void updateClient(UserServletContext context, Exception e, List<ServiceException> w)
     throws UserServletException, IOException, ServletException, ServiceException {
-        String callback = context.params.get("callback");
+        String callback = context.params.get(QP_CALLBACK);
         Throwable exception = null;
         PrintWriter out = null;
 
