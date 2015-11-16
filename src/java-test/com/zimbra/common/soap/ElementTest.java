@@ -86,16 +86,16 @@ public class ElementTest {
     }
 
     private void prettyPrintSafe(Element element) {
-        element.addElement("password").addText("secret");
-        element.addElement("pfxPassword").addText("secret");
-        element.addElement("a").addAttribute("n", "pfxPassword").addText("secret");
-        element.addElement("a").addAttribute("n", "hostPwd").addText("secret");
-        element.addElement("a").addAttribute("n", "webexZimlet_pwd1").addText("secret");
-        element.addElement("dummy2")
+        element.addNonUniqueElement("password").addText("secret");
+        element.addNonUniqueElement("pfxPassword").addText("secret");
+        element.addNonUniqueElement("a").addAttribute("n", "pfxPassword").addText("secret");
+        element.addNonUniqueElement("a").addAttribute("n", "hostPwd").addText("secret");
+        element.addNonUniqueElement("a").addAttribute("n", "webexZimlet_pwd1").addText("secret");
+        element.addNonUniqueElement("dummy2")
                .addAttribute("password", "secret")
                .addAttribute("pass", "secret")
                .addAttribute("pwd", "secret");
-        element.addElement("prop").addAttribute("name", "passwd").addText("secret");
+        element.addNonUniqueElement("prop").addAttribute("name", "passwd").addText("secret");
         String elementStr = element.prettyPrint(true);
         Assert.assertFalse("Sensitive values have not been masked\n" + elementStr, elementStr.contains("secret"));
     }
@@ -115,7 +115,7 @@ public class ElementTest {
     @Test
     public void getPathElementList() {
         Element e = XMLElement.mFactory.createElement("parent");
-        e.addElement("child");
+        e.addNonUniqueElement("child");
         Assert.assertEquals(1, e.getPathElementList(new String[] { "child" } ).size());
         Assert.assertEquals(0, e.getPathElementList(new String[] { "bogus" } ).size());
     }
@@ -554,25 +554,57 @@ public class ElementTest {
         }
     }
 
+    /**
+     * Exercise different ways of adding something to Element and how it affects the resulting XML or JSON
+     * ZimbraSoap has other tests which explore the idiosyncrasies of our SOAP API.
+     */
+    @Test
+    public void elementsAndAttributes() {
+        Element e = XMLElement.mFactory.createElement("parent");
+        e.addAttribute(MailConstants.A_SUBJECT, "subject", Element.Disposition.CONTENT);
+        Assert.assertEquals("XML with content attribute", "<parent><su>subject</su></parent>", e.toString());
+        e = Element.JSONElement.mFactory.createElement("parent");
+        e.addAttribute(MailConstants.A_SUBJECT, "subject", Element.Disposition.CONTENT);
+        Assert.assertEquals("JSON with content attribute", "{\"su\":\"subject\"}", e.toString());
+        e = XMLElement.mFactory.createElement("parent");
+        e.addAttribute(MailConstants.A_SUBJECT, "subject");
+        Assert.assertEquals("XML with normal attribute", "<parent su=\"subject\"/>", e.toString());
+        e = Element.JSONElement.mFactory.createElement("parent");
+        e.addAttribute(MailConstants.A_SUBJECT, "subject");
+        Assert.assertEquals("JSON with normal attribute", "{\"su\":\"subject\"}", e.toString());
+        e = XMLElement.mFactory.createElement("parent");
+        e.addUniqueElement(MailConstants.A_SUBJECT).addText("subject");
+        Assert.assertEquals("XML with unique element", "<parent><su>subject</su></parent>", e.toString());
+        e = Element.JSONElement.mFactory.createElement("parent");
+        e.addUniqueElement(MailConstants.A_SUBJECT).addText("subject");
+        Assert.assertEquals("JSON with unique element", "{\"su\":{\"_content\":\"subject\"}}", e.toString());
+        e = XMLElement.mFactory.createElement("parent");
+        e.addNonUniqueElement(MailConstants.A_SUBJECT).addText("subject");
+        Assert.assertEquals("XML with non-unique element", "<parent><su>subject</su></parent>", e.toString());
+        e = Element.JSONElement.mFactory.createElement("parent");
+        e.addNonUniqueElement(MailConstants.A_SUBJECT).addText("subject");
+        Assert.assertEquals("JSON with non-unique element", "{\"su\":[{\"_content\":\"subject\"}]}", e.toString());
+    }
+
     @Test
     public void reorderChildren() {
         final String expected =
             "<top attr=\"val\"><z/><a>1</a><a>2</a><b/><c/><d><kid/></d><f>W</f><h2/><h3/><h4/><j/><p/><q/></top>";
         Element top = new Element.XMLElement("top");
         top.addAttribute("attr", "val");
-        top.addElement("b");
-        top.addElement("c");
-        top.addElement("p");
-        top.addElement("f").addText("W");
-        top.addElement("a").addText("1");
-        top.addElement("z");
-        top.addElement("j");
-        top.addElement("a").addText("2");
-        top.addElement("h2");
-        top.addElement("h3");
-        top.addElement("h4");
-        top.addElement("d").addElement("kid");
-        top.addElement("q");
+        top.addNonUniqueElement("b");
+        top.addNonUniqueElement("c");
+        top.addNonUniqueElement("p");
+        top.addNonUniqueElement("f").addText("W");
+        top.addNonUniqueElement("a").addText("1");
+        top.addNonUniqueElement("z");
+        top.addNonUniqueElement("j");
+        top.addNonUniqueElement("a").addText("2");
+        top.addNonUniqueElement("h2");
+        top.addNonUniqueElement("h3");
+        top.addNonUniqueElement("h4");
+        top.addNonUniqueElement("d").addNonUniqueElement("kid");
+        top.addNonUniqueElement("q");
         List<List<QName>> order = Lists.newArrayList();
         order.add(Lists.newArrayList(new QName("z")));
         order.add(Lists.newArrayList(new QName("a")));
