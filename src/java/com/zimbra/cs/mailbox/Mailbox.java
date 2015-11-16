@@ -10054,4 +10054,15 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+
+    public void setPreviousFolder(OperationContext octx, int id, String prevFolder) throws ServiceException {
+        beginTransaction("setPrevFolder", octx);
+        boolean success = false;
+        try {
+            DbMailItem.setPreviousFolder(this, id, prevFolder);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
 }
