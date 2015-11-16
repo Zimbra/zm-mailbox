@@ -5534,4 +5534,28 @@ public class DbMailItem {
                    }
                return id2folderMap;
            }
+
+    public static void setPreviousFolder(Mailbox mbox, int id, String prevFolders) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox, false) +
+                    " SET prev_folders = ? " +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+            int pos = 1;
+            stmt.setString(pos++, prevFolders);
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            // catch item_id uniqueness constraint violation and return failure
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                throw MailServiceException.ALREADY_EXISTS(id, e);
+            } else {
+                throw ServiceException.FAILURE("writing new folder data for item " + id, e);
+            }
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
 }
