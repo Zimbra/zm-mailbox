@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -27,14 +27,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.io.Writer;
 
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParserConfiguration;
 import org.cyberneko.html.HTMLConfiguration;
+import org.cyberneko.html.filters.Purifier;
 
 import com.zimbra.common.util.ByteUtil;
 
@@ -48,7 +47,7 @@ public class HtmlDefang extends AbstractDefang
     public void defang(InputStream html, boolean neuterImages, Writer out)
     throws IOException {
         XMLInputSource source = new XMLInputSource(null, null, null, html, null);
-        defang(source, neuterImages, out);        
+        defang(source, neuterImages, out);
     }
     /**
      * @param source HTML source
@@ -64,11 +63,13 @@ public class HtmlDefang extends AbstractDefang
             new org.cyberneko.html.filters.Writer(out, "utf-8");
             */
         DefangWriter writer = new DefangWriter(out, "utf-8");
-        
+
         DefangFilter defang = new DefangFilter(neuterImages);
-        
+        Purifier purifier= new HtmlPurifier();
+
         // setup filter chain
         XMLDocumentFilter[] filters = {
+            purifier,
             defang,
             writer,
         };
@@ -76,12 +77,12 @@ public class HtmlDefang extends AbstractDefang
         // create HTML parser
         XMLParserConfiguration parser = new HTMLConfiguration();
         parser.setProperty("http://cyberneko.org/html/properties/filters", filters);
-        parser.setProperty("http://cyberneko.org/html/properties/names/elems", "match"); 
+        parser.setProperty("http://cyberneko.org/html/properties/names/elems", "match");
 
-        parser.setFeature("http://cyberneko.org/html/features/balance-tags", false); 
+        parser.setFeature("http://cyberneko.org/html/features/balance-tags", false);
         parser.setFeature("http://xml.org/sax/features/namespaces", false);
         // parse document
-    
+
         parser.parse(source);
     }
 

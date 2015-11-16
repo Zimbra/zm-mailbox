@@ -1150,4 +1150,28 @@ public class DefangFilterTest {
         Assert.assertTrue(result.equals(expectedResult));
     }
 
+
+    @Test
+    public void testBug101813() throws Exception {
+        String html = "<textarea><img title=\"</<!-- -->textarea><img src=x onerror=alert(1)></img>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        int index = result.indexOf("alert(1)");
+        Assert.assertEquals(-1, index);
+
+        html = "<textarea><IMG title=\"</<!-- -->textarea><img src=x onerror=alert(1)></img>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        index = result.indexOf("alert(1)");
+        Assert.assertEquals(-1, index);
+
+        html = "<textarea><   img title=\"</<!-- -->textarea><img src=x onerror=alert(1)></img>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        index = result.indexOf("alert(1)");
+        Assert.assertEquals(-1, index);
+    }
+
+
 }
