@@ -1037,6 +1037,7 @@ public final class ToXML {
                 m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
                 m.addAttribute(MailConstants.A_DATE, msg.getDate());
                 m.addAttribute(MailConstants.A_SIZE, msg.getSize());
+                m.addAttribute(MailConstants.A_SUBJECT, msg.getSubject(), Element.Disposition.CONTENT);;
                 m.addAttribute(MailConstants.A_FOLDER,
                     ifmt.formatItemId(new ItemId(msg.getMailbox().getAccountId(), msg.getFolderId())));
                 recordItemTags(m, msg, octxt, fields);

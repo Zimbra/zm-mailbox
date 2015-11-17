@@ -1999,6 +1999,7 @@ needExp="1" to return group info (isGroup and exp flags) on <e> elements in the 
     <m id="{message-id}" [f="{flags}"] s="{size}" d="{date}" [tn="{tag-names}"]>
       <e .../>
       <fr>{fragment}</fr>
+      <su>{subject}</su>
      </m>+
   </c>
 </GetConvResponse>
