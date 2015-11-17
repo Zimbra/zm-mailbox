@@ -708,6 +708,7 @@ public final class LC {
     public static final KnownKey nio_max_write_queue_size = KnownKey.newKey(10000);
 
     public static final KnownKey imap_max_request_size = KnownKey.newKey(10 * 1024);
+    public static final KnownKey imap_max_nesting_in_search_request = KnownKey.newKey(100);
 
     @Supported
     @Reloadable
