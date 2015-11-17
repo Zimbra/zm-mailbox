@@ -172,6 +172,7 @@ public class ZConversation implements ZItem, ToZJSONObject {
         private ZEmailAddress mSender;
         private long mSize;
         private Element mElement;
+        private String mSubject;
 
         public ZMessageSummary(Element e) throws ServiceException {
             mElement = e;
@@ -184,6 +185,7 @@ public class ZConversation implements ZItem, ToZJSONObject {
             mSize = e.getAttributeLong(MailConstants.A_SIZE);
             Element emailEl = e.getOptionalElement(MailConstants.E_EMAIL);
             if (emailEl != null) mSender = new ZEmailAddress(emailEl);
+            mSubject = e.getAttribute(MailConstants.E_SUBJECT, null);
         }
 
         public Element getElement() { return mElement; }
@@ -224,6 +226,7 @@ public class ZConversation implements ZItem, ToZJSONObject {
             jo.put("isRepliedTo", isRepliedTo());
             jo.put("isSentByMe", isSentByMe());
             jo.put("isUnread", isUnread());
+            jo.put("subject", mSubject);
             return jo;
         }
 
@@ -272,6 +275,10 @@ public class ZConversation implements ZItem, ToZJSONObject {
 
         public String getTagIds() {
             return mTags;
+        }
+
+        public String getSubject() {
+            return mSubject;
         }
 
         public boolean hasFlags() {
