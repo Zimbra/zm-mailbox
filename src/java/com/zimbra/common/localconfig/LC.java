@@ -532,9 +532,6 @@ public final class LC {
     // with abundant precaution, re-generate my.cnf and restart MySQL server for
     // the change to take effect.
     @Supported
-    public static final KnownKey mysql_directory = KnownKey.newKey("/opt/zimbra/mariadb");
-
-    @Supported
     public static final KnownKey mysql_data_directory = KnownKey.newKey("${zimbra_db_directory}/data");
 
     @Supported
