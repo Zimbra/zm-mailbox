@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,9 +16,25 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.codec.binary.Base64;
+
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapSearch.AllSearch;
 import com.zimbra.cs.imap.ImapSearch.AndOperation;
@@ -33,20 +49,6 @@ import com.zimbra.cs.imap.ImapSearch.OrOperation;
 import com.zimbra.cs.imap.ImapSearch.RelativeDateSearch;
 import com.zimbra.cs.imap.ImapSearch.SequenceSearch;
 import com.zimbra.cs.imap.ImapSearch.SizeSearch;
-import org.apache.commons.codec.binary.Base64;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @since Apr 30, 2005
@@ -127,9 +129,11 @@ abstract class ImapRequest {
     int offset;
     private boolean isAppend;
     private boolean isLogin;
+    private final int maxNestingInSearchRequest;
 
     ImapRequest(ImapHandler handler) {
         mHandler = handler;
+        maxNestingInSearchRequest = LC.imap_max_nesting_in_search_request.intValue();
     }
 
     ImapRequest rewind() {
@@ -958,8 +962,13 @@ abstract class ImapRequest {
         return pspec;
     }
 
-    private ImapSearch readSearchClause(Charset charset, boolean single, LogicalOperation parent)
+    private ImapSearch readSearchClause(Charset charset, boolean single, LogicalOperation parent, int depth)
             throws IOException, ImapParseException {
+        depth++;
+        if (depth > maxNestingInSearchRequest) {
+            ZimbraLog.imap.debug("search nesting too deep (depth=%s) Max allowed=%s", depth, maxNestingInSearchRequest);
+            throw new ImapSearchTooComplexException(tag, "Search query too complex");
+        }
         boolean first = true;
         int nots = 0;
         do {
@@ -1085,15 +1094,15 @@ abstract class ImapRequest {
                 child = new RelativeDateSearch(DateSearch.Relation.after, parseInteger(readNumber()));
             } else if (key.equals(SUBCLAUSE)) {
                 skipChar('(');
-                child = readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation());
+                child = readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation(), depth);
                 skipChar(')');
             } else if (Character.isDigit(key.charAt(0)) || key.charAt(0) == '*' || key.charAt(0) == '$') {
                 child = new SequenceSearch(tag, validateSequence(key, true), false);
             } else if (key.equals("OR")) {
                 skipSpace();
-                child = readSearchClause(charset, SINGLE_CLAUSE, new OrOperation());
+                child = readSearchClause(charset, SINGLE_CLAUSE, new OrOperation(), depth);
                 skipSpace();
-                readSearchClause(charset, SINGLE_CLAUSE, (LogicalOperation) child);
+                readSearchClause(charset, SINGLE_CLAUSE, (LogicalOperation) child, depth);
             } else {
                 throw new ImapParseException(tag, "unknown search tag: " + key);
             }
@@ -1104,11 +1113,12 @@ abstract class ImapRequest {
         if (nots > 0) {
             throw new ImapParseException(tag, "missing search-key after NOT");
         }
+        depth--;
         return parent;
     }
 
     ImapSearch readSearch(Charset charset) throws IOException, ImapParseException {
-        return readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation());
+        return readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation(), 0);
     }
 
     Charset readCharset() throws IOException, ImapParseException {

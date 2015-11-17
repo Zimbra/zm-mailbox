@@ -31,17 +31,20 @@ import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
 
+import org.apache.commons.lang.StringUtils;
+import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -60,7 +63,6 @@ import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
-import com.zimbra.qa.unittest.prov.ProvTestUtil;
 
 /**
  * IMAP server tests.
@@ -76,21 +78,24 @@ public class TestImap extends TestCase {
 
     @Override
     public void setUp() throws Exception {
+        if (!TestUtil.fromRunUnitTests) {
+            TestUtil.cliSetup();
+        }
+        TestUtil.deleteAccount(USER);
         TestUtil.createAccount(USER);
-        connection = connect();
         mDisplayMailFoldersOnly = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
         Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(false);
-        
+        connection = connect();
     }
 
     @Override
     public void tearDown() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER); //funky, but somehow it gets us around SSL
 
-        TestUtil.deleteAccount(USER);
         if (connection != null) {
             connection.close();
         }
+        TestUtil.deleteAccount(USER);
         Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
     }
 
@@ -102,6 +107,145 @@ public class TestImap extends TestCase {
                     expected, new Boolean(re.matches(target)));
         } catch (AccessBoundedRegex.TooManyAccessesToMatchTargetException se) {
             assertTrue("Throwing exception considered OK", timeoutOk);
+        }
+    }
+
+    @Test
+    public void testSubClauseAndSearch() throws IOException {
+        connection.select("INBOX");
+        connection.search((Object[]) new String[] { "OR (FROM yahoo.com) (FROM hotmail.com)" } );
+        connection.search((Object[]) new String[] { "(SEEN)"} );
+        connection.search((Object[]) new String[] { "(SEEN (ANSWERED UNDELETED))"} );
+        connection.search((Object[]) new String[] { "NOT (SEEN UNDELETED)" } );
+        connection.search((Object[]) new String[] { "(SEEN UNDELETED)" } );
+        connection.search((Object[]) new String[] { "OR ANSWERED (SEEN UNDELETED)" } );
+        connection.search((Object[]) new String[] { "OR (SEEN UNDELETED) ANSWERED"} );
+        connection.search((Object[]) new String[] { "OR ((SEEN UNDELETED) ANSWERED) DRAFT"} );
+    }
+
+    @Test
+    public void testNotSearch() throws IOException {
+        connection.select("INBOX");
+        connection.search((Object[]) new String[] { "NOT SEEN"} );
+        connection.search((Object[]) new String[] { "NOT NOT SEEN"} );
+        connection.search((Object[]) new String[] { "NOT NOT NOT SEEN"} );
+    }
+
+    @Test
+    public void testAndSearch() throws IOException {
+        connection.select("INBOX");
+        connection.search((Object[]) new String[] { "HEADER Message-ID z@eg"} );
+        connection.search((Object[]) new String[] { "HEADER Message-ID z@eg UNDELETED"} );
+        connection.search((Object[]) new String[] { "ANSWERED HEADER Message-ID z@eg UNDELETED"} );
+    }
+
+    @Test
+    public void testBadOrSearch() throws IOException {
+        connection.select("INBOX");
+        try {
+            connection.search((Object[]) new String[] { "OR ANSWERED" } );
+            Assert.fail("search succeeded in spite of invalid syntax");
+        } catch (CommandFailedException cfe) {
+            ZimbraLog.test.debug("Got this exception", cfe);
+            String es = "SEARCH failed: parse error: unexpected end of line; expected ' '";
+            Assert.assertTrue(String.format("Exception '%s' should contain string '%s'", cfe.getMessage(), es),
+                    cfe.getMessage().contains(es));
+        }
+    }
+
+    @Test
+    public void testOrSearch() throws IOException {
+        connection.select("INBOX");
+        connection.search((Object[]) new String[] { "OR SEEN ANSWERED DELETED"} );
+        connection.search((Object[]) new String[] { "SEEN OR ANSWERED DELETED"} );
+        connection.search((Object[]) new String[] { "OR DRAFT OR SEEN ANSWERED DELETED"} );
+        connection.search((Object[]) new String[] { "OR HEADER Message-ID z@eg UNDELETED"} );
+        List<String>terms = Lists.newArrayList();
+        terms.add("HEADER");
+        terms.add("Message-ID");
+        terms.add("a@eg.com");
+
+        for (int cnt = 0;cnt < 3; cnt++) {
+            terms.add(0, String.format("b%s@eg.com", cnt));
+            terms.add(0, "Message-ID");
+            terms.add(0, "HEADER");
+            terms.add(0, "OR");
+        }
+        terms.add("UNDELETED");
+        connection.search(terms.toArray());
+    }
+
+    @Test
+    public void testDeepNestedOrSearch() throws IOException, ServiceException {
+        int maxNestingInSearchRequest = LC.imap_max_nesting_in_search_request.intValue();
+        connection = connect();
+        connection.select("INBOX");
+        List<String>terms = Lists.newArrayList();
+        terms.add("HEADER");
+        terms.add("Message-ID");
+        terms.add("a@eg.com");
+
+        for (int cnt = 0;cnt < (maxNestingInSearchRequest - 2); cnt++) {
+            terms.add(0, String.format("b%s@eg.com", cnt));
+            terms.add(0, "Message-ID");
+            terms.add(0, "HEADER");
+            terms.add(0, "OR");
+        }
+        terms.add("UNDELETED");
+        connection.search(terms.toArray());
+    }
+
+    @Test
+    public void testTooDeepNestedOrSearch() throws IOException, ServiceException {
+        int maxNestingInSearchRequest = LC.imap_max_nesting_in_search_request.intValue();
+        connection = connect();
+        connection.select("INBOX");
+        List<String>terms = Lists.newArrayList();
+        terms.add("HEADER");
+        terms.add("Message-ID");
+        terms.add("a@eg.com");
+
+        for (int cnt = 0;cnt < (maxNestingInSearchRequest); cnt++) {
+            terms.add(0, String.format("b%s@eg.com", cnt));
+            terms.add(0, "Message-ID");
+            terms.add(0, "HEADER");
+            terms.add(0, "OR");
+        }
+        terms.add("UNDELETED");
+        try {
+            connection.search(terms.toArray());
+            Assert.fail("Expected search to fail due to complexity");
+        } catch (CommandFailedException cfe) {
+            String es = "parse error: Search query too complex";
+            Assert.assertTrue(String.format("Exception '%s' should contain string '%s'", cfe.getMessage(), es),
+                    cfe.getMessage().contains(es));
+        }
+    }
+
+    @Test
+    public void testDeepNestedAndSearch() throws IOException, ServiceException {
+        int nesting = LC.imap_max_nesting_in_search_request.intValue() - 1;
+        connection = connect();
+        connection.select("INBOX");
+        connection.search((Object[]) new String[] {
+                StringUtils.repeat("(", nesting) + "ANSWERED UNDELETED" +
+                StringUtils.repeat(")", nesting) } );
+    }
+
+    @Test
+    public void testTooDeepNestedAndSearch() throws IOException, ServiceException {
+        int nesting = LC.imap_max_nesting_in_search_request.intValue();
+        connection = connect();
+        connection.select("INBOX");
+        try {
+            connection.search((Object[]) new String[] {
+                    StringUtils.repeat("(", nesting) + "ANSWERED UNDELETED" +
+                    StringUtils.repeat(")", nesting) } );
+            Assert.fail("Expected search to fail due to complexity");
+        } catch (CommandFailedException cfe) {
+            String es = "parse error: Search query too complex";
+            Assert.assertTrue(String.format("Exception '%s' should contain string '%s'", cfe.getMessage(), es),
+                    cfe.getMessage().contains(es));
         }
     }
 
@@ -293,7 +437,7 @@ public class TestImap extends TestCase {
 	assertTrue("folderList * contains Sent",hasSent);
 	assertTrue("folderList * contains Junk",hasJunk);
     }
-	
+
     @Test
     public void testListContacts() throws Exception {
     List<ListData> listResult = connection.list("", "*Contacts*");
