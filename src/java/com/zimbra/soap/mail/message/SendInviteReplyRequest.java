@@ -67,6 +67,7 @@ public class SendInviteReplyRequest {
      * @zm-api-field-description Update organizer. true by default. if false then only make the update locally.
      * <br />Note that earlier documentation implied incorrectly that if this was false it would be ignored and treated
      * as being true if an <b>&lt;m></b> element is present.
+     * <br />Also take a note that, if RSVP setting in original invite is not present or FALSE then <b>updateOrganizer</b> will be treated as FALSE.
      */
     @XmlAttribute(name=MailConstants.A_CAL_UPDATE_ORGANIZER /* updateOrganizer */, required=false)
     private ZmBoolean updateOrganizer;
