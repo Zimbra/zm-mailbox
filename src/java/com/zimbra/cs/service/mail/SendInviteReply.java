@@ -244,6 +244,9 @@ public class SendInviteReply extends CalendarRequest {
                 throw ServiceException.PERM_DENIED("You do not have ACTION rights for CalendarItem "+calItemId);
             }
 
+            // check if invite organizer requested rsvp or not
+            updateOrg = updateOrg && oldInv.getRsvp();
+
             // Don't allow creating/editing a private appointment on behalf of another user,
             // unless that other user is a calendar resource.
             boolean allowPrivateAccess = calItem != null ? calItem.allowPrivateAccess(authAcct, isAdmin) : true;

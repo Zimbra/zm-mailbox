@@ -1041,6 +1041,7 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
   updateOrganizer: true by default. if false then only make the update locally.
                    Note that earlier documentation implied incorrectly that if this was false it would be ignored and
                    treated as being true if an <m> element is present.
+                   Also take a note that, if RSVP setting in original invite is not present or FALSE then updateOrganizer will be treated as FALSE.
   
 <SendInviteReplyResponse status="STATUS"/>
 
