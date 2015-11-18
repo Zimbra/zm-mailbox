@@ -596,6 +596,7 @@
 	      <include name="xmlschema-core-*.jar"/>
           <include name="stax2-api-*.jar"/>
           <include name="oauth*.jar"/>
+          <include name="owasp*.jar"/>
         </lib>
         <lib dir="${aux.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
