@@ -46,6 +46,7 @@ import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.AdminExtConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
@@ -62,6 +63,7 @@ public final class JaxbUtil {
     private static final String ACCOUNT_JAXB_PACKAGE = "com.zimbra.soap.account.message";
     private static final String ADMIN_JAXB_PACKAGE = "com.zimbra.soap.admin.message";
     private static final String MAIL_JAXB_PACKAGE = "com.zimbra.soap.mail.message";
+    private static final String ADMIN_EXT_JAXB_PACKAGE = "com.zimbra.soap.adminext.message";
     private static JAXBContext JAXB_CONTEXT;
     private static Map <Class<?>,JAXBContext> classJaxbContexts;
 
@@ -1396,6 +1398,8 @@ public final class JaxbUtil {
                 className = ACCOUNT_JAXB_PACKAGE  + "." + elem.getName();
             } else if (MailConstants.NAMESPACE_STR.equals(ns)) {
                 className = MAIL_JAXB_PACKAGE  + "." + elem.getName();
+            } else if (AdminExtConstants.NAMESPACE_STR.equals(ns)) {
+                className = ADMIN_EXT_JAXB_PACKAGE  + "." + elem.getName();
             } else {
                 LOG.info("Unexpected namespace[" + ns + "]");
                 return null;
