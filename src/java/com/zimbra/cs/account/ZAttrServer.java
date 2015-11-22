@@ -40317,13 +40317,13 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf manpage_directory
      *
-     * @return zimbraMtaManpageDirectory, or "/opt/zimbra/common/man" if unset
+     * @return zimbraMtaManpageDirectory, or "/opt/zimbra/common/share/man" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1509)
     public String getMtaManpageDirectory() {
-        return getAttr(Provisioning.A_zimbraMtaManpageDirectory, "/opt/zimbra/common/man");
+        return getAttr(Provisioning.A_zimbraMtaManpageDirectory, "/opt/zimbra/common/share/man");
     }
 
     /**

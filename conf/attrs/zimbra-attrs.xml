@@ -7584,7 +7584,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1509" name="zimbraMtaManpageDirectory" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
-  <globalConfigValue>/opt/zimbra/common/man</globalConfigValue>
+  <globalConfigValue>/opt/zimbra/common/share/man</globalConfigValue>
   <desc>Value for postconf manpage_directory</desc>
 </attr>
 
