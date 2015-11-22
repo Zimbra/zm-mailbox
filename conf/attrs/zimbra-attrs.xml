@@ -7531,12 +7531,12 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1498" name="zimbraMtaCommandDirectory" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
-  <globalConfigValue>/opt/zimbra/postfix/sbin</globalConfigValue>
+  <globalConfigValue>/opt/zimbra/common/sbin</globalConfigValue>
   <desc>Value for postconf command_directory</desc>
 </attr>
 
 <attr id="1499" name="zimbraMtaDaemonDirectory" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
-  <globalConfigValue>/opt/zimbra/postfix/libexec</globalConfigValue>
+  <globalConfigValue>/opt/zimbra/common/libexec</globalConfigValue>
   <desc>Value for postconf daemon_directory</desc>
 </attr>
 
@@ -7579,17 +7579,17 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1508" name="zimbraMtaMailqPath" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
-  <globalConfigValue>/opt/zimbra/postfix/sbin/mailq</globalConfigValue>
+  <globalConfigValue>/opt/zimbra/common/sbin/mailq</globalConfigValue>
   <desc>Value for postconf mailq_path</desc>
 </attr>
 
 <attr id="1509" name="zimbraMtaManpageDirectory" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
-  <globalConfigValue>/opt/zimbra/postfix/man</globalConfigValue>
+  <globalConfigValue>/opt/zimbra/common/man</globalConfigValue>
   <desc>Value for postconf manpage_directory</desc>
 </attr>
 
 <attr id="1510" name="zimbraMtaNewaliasesPath" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
-  <globalConfigValue>/opt/zimbra/postfix/sbin/newaliases</globalConfigValue>
+  <globalConfigValue>/opt/zimbra/common/sbin/newaliases</globalConfigValue>
   <desc>Value for postconf newaliases_path</desc>
 </attr>
 
@@ -7599,7 +7599,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1512" name="zimbraMtaSendmailPath" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
-  <globalConfigValue>/opt/zimbra/postfix/sbin/sendmail</globalConfigValue>
+  <globalConfigValue>/opt/zimbra/common/sbin/sendmail</globalConfigValue>
   <desc>Value for postconf sendmail_path</desc>
 </attr>
 
