@@ -79,24 +79,7 @@ public class RemoveAttachments extends MailDocumentHandler {
             mm.saveChanges();
 
             ParsedMessage pm = new ParsedMessage(mm, msg.getDate(), mbox.attachmentsIndexingEnabled());
-            if (msg.isDraft()) {
-                msg = mbox.saveDraft(octxt, pm, msg.getId());
-            } else {
-                DeliveryOptions dopt = new DeliveryOptions();
-                dopt.setFolderId(msg.getFolderId()).setNoICal(true);
-                dopt.setFlags(msg.getFlagBitmask()).setTags(msg.getTags());
-                if (msg.getConversationId() > 0)
-                    dopt.setConversationId(msg.getConversationId());
-                // FIXME: copy custom metadata to new item
-                msg = mbox.addMessage(octxt, pm, dopt, null);
-                // Activesync fails to add new mail_item as it has all the details of old mail_item, so it considers it as a change in mail_item Bug:102084
-                // Hence, set previous folder field to the mail_item with dummy folder, because of which activesync code thinks it is moved item and adds it on device.
-                String prevFolders = msg.getModifiedSequence() + ":" + Mailbox.ID_FOLDER_USER_ROOT;
-                mbox.setPreviousFolder(octxt, msg.getId(), prevFolders);
-                msg.getUnderlyingData().setPrevFolders(prevFolders);
-                // and clean up the existing message...
-                mbox.delete(octxt, iid.getId(), MailItem.Type.MESSAGE);
-            }
+            msg = removeAttachmentOperation(mbox, octxt, pm, msg);
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("error reading existing message blob", ioe);
         } catch (MessagingException me) {
@@ -208,5 +191,27 @@ public class RemoveAttachments extends MailDocumentHandler {
         } finally {
             ByteUtil.closeStream(is);
         }
+    }
+
+    public static Message removeAttachmentOperation(Mailbox mbox, OperationContext octxt, ParsedMessage pm, Message msg) throws IOException, ServiceException {
+        if (msg.isDraft()) {
+            msg = mbox.saveDraft(octxt, pm, msg.getId());
+        } else {
+            int itemId = msg.getId();
+            DeliveryOptions dopt = new DeliveryOptions();
+            dopt.setFolderId(msg.getFolderId()).setNoICal(true);
+            dopt.setFlags(msg.getFlagBitmask()).setTags(msg.getTags());
+            if (msg.getConversationId() > 0)
+                dopt.setConversationId(msg.getConversationId());
+            msg = mbox.addMessage(octxt, pm, dopt, null);
+            // Activesync fails to add new mail_item as it has all the details of old mail_item, so it considers it as a change in mail_item Bug:102084
+            // Hence, set previous folder field to the mail_item with dummy folder, because of which activesync code thinks it is moved item and adds it on device.
+            String prevFolders = msg.getModifiedSequence() + ":" + Mailbox.ID_FOLDER_USER_ROOT;
+            mbox.setPreviousFolder(octxt, msg.getId(), prevFolders);
+            msg.getUnderlyingData().setPrevFolders(prevFolders);
+            // and clean up the existing message...
+            mbox.delete(octxt, itemId, MailItem.Type.MESSAGE);
+        }
+        return msg;
     }
 }
