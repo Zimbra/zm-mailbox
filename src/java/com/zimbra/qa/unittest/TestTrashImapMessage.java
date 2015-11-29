@@ -25,12 +25,9 @@ import com.zimbra.soap.mail.message.CreateDataSourceRequest;
 import com.zimbra.soap.mail.message.CreateDataSourceResponse;
 import com.zimbra.soap.mail.message.CreateFolderRequest;
 import com.zimbra.soap.mail.message.CreateFolderResponse;
-import com.zimbra.soap.mail.message.GetImportStatusRequest;
-import com.zimbra.soap.mail.message.GetImportStatusResponse;
 import com.zimbra.soap.mail.message.ImportDataRequest;
 import com.zimbra.soap.mail.type.DataSourceNameOrId;
 import com.zimbra.soap.mail.type.ImapDataSourceNameOrId;
-import com.zimbra.soap.mail.type.ImportStatusInfo;
 import com.zimbra.soap.mail.type.MailImapDataSource;
 import com.zimbra.soap.mail.type.NewFolderSpec;
 import com.zimbra.soap.type.DataSource.ConnectionType;
@@ -44,7 +41,7 @@ public class TestTrashImapMessage extends TestCase {
     private static ZMailbox imapDsMbox1;
     private static String imapDsFolder1Id;
     private static String imapDsId1;
-    private List<String> msgIds = new LinkedList<String>();
+    private final List<String> msgIds = new LinkedList<String>();
 
     @Override
     @BeforeClass
@@ -108,25 +105,7 @@ public class TestTrashImapMessage extends TestCase {
         dsList.add(imapDs1);
         req.setDataSources(dsList);
         mbox.invokeJaxb(req);
-        waitUntilImportsFinish();
-    }
-
-    private void waitUntilImportsFinish() throws InterruptedException, ServiceException {
-        GetImportStatusResponse status = null;
-        while(true) {
-            Thread.sleep(1000);
-            status = mbox.invokeJaxb(new GetImportStatusRequest());
-            List<ImportStatusInfo> statuses = status.getStatuses();
-            boolean allDone = true;
-            for (ImportStatusInfo info: statuses) {
-                if (info.getRunning()) {
-                    allDone = false;
-                }
-            }
-            if (allDone) {
-                break;
-            }
-        }
+        TestDataSource.waitUntilImportsFinish(mbox);
     }
 
     @Test

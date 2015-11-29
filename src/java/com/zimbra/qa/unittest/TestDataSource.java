@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,6 +23,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import com.google.common.collect.Lists;
 import com.zimbra.client.ZCalDataSource;
 import com.zimbra.client.ZDataSource;
 import com.zimbra.client.ZFolder;
@@ -30,11 +31,15 @@ import com.zimbra.client.ZGrant.GranteeType;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZRssDataSource;
+import com.zimbra.client.ZSearchHit;
+import com.zimbra.client.ZSearchParams;
+import com.zimbra.client.ZSearchResult;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -44,6 +49,20 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.message.ConvActionRequest;
+import com.zimbra.soap.mail.message.CreateDataSourceRequest;
+import com.zimbra.soap.mail.message.CreateDataSourceResponse;
+import com.zimbra.soap.mail.message.CreateFolderRequest;
+import com.zimbra.soap.mail.message.CreateFolderResponse;
+import com.zimbra.soap.mail.message.GetImportStatusRequest;
+import com.zimbra.soap.mail.message.GetImportStatusResponse;
+import com.zimbra.soap.mail.message.ImportDataRequest;
+import com.zimbra.soap.mail.type.ConvActionSelector;
+import com.zimbra.soap.mail.type.DataSourceNameOrId;
+import com.zimbra.soap.mail.type.ImapDataSourceNameOrId;
+import com.zimbra.soap.mail.type.ImportStatusInfo;
+import com.zimbra.soap.mail.type.MailPop3DataSource;
+import com.zimbra.soap.mail.type.NewFolderSpec;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
 public class TestDataSource extends TestCase {
@@ -64,6 +83,9 @@ public class TestDataSource extends TestCase {
     @Override
     public void setUp()
     throws Exception {
+        if (!TestUtil.fromRunUnitTests) {
+            TestUtil.cliSetup();
+        }
         cleanUp();
 
         // Remember original polling intervals.
@@ -299,13 +321,102 @@ public class TestDataSource extends TestCase {
         assertEquals("2h", cos.getAttr(Provisioning.A_zimbraDataSourceImapPollingInterval));
     }
 
+    public static String createPop3DataSource(ZMailbox shareeMbox, String sharedAcctName, String dsFolderId)
+    throws ServiceException {
+        CreateDataSourceRequest req = new CreateDataSourceRequest();
+        MailPop3DataSource pop3 = new MailPop3DataSource();
+        pop3.setUsername(sharedAcctName);
+        pop3.setPassword("test123");
+        pop3.setEnabled(true);
+        pop3.setHost("localhost");
+        pop3.setPort(Integer.valueOf(TestUtil.getServerAttr(Provisioning.A_zimbraPop3BindPort)));
+        pop3.setConnectionType(ConnectionType.cleartext);
+        pop3.setFolderId(dsFolderId);
+        pop3.setName("pop3datasource1");
+        req.setDataSource(pop3);
+        CreateDataSourceResponse resp = shareeMbox.invokeJaxb(req);
+        return resp.getDataSource().getId();
+    }
+
+    public static String createFolderForDataSource(ZMailbox shareeMBox, String datasource) throws ServiceException {
+        CreateFolderResponse resp = shareeMBox.invokeJaxb(
+                new CreateFolderRequest( NewFolderSpec.createForNameAndParentFolderId(
+                        datasource, Integer.toString(Mailbox.ID_FOLDER_USER_ROOT))));
+        return resp.getFolder().getId();
+    }
+
+    public static String addMessage(ZMailbox mbox, String subject, String body) throws Exception {
+        String id = mbox.addMessage("2", null, null, System.currentTimeMillis(),
+                new MessageBuilder().withSubject(subject).withBody(body).create(), true);
+        Thread.sleep(1000);
+        return id;
+    }
+
+    public static void waitUntilImportsFinish(ZMailbox mbox) throws InterruptedException, ServiceException {
+        GetImportStatusResponse status = null;
+        int slept = 0;
+        boolean happy = false;
+        while(slept < 30000) {
+            Thread.sleep(100);
+            slept += 100;
+            status = mbox.invokeJaxb(new GetImportStatusRequest());
+            List<ImportStatusInfo> statuses = status.getStatuses();
+            boolean allDone = true;
+            for (ImportStatusInfo info: statuses) {
+                if (info.getRunning()) {
+                    allDone = false;
+                }
+            }
+            if (allDone) {
+                happy = true;
+                break;
+            }
+        }
+        assertTrue("DS Imports did not finish in a reasonable time", happy);
+    }
+
+    public void refreshPop3DatasourceData(ZMailbox mbox, String dsId) throws ServiceException, InterruptedException {
+        ImportDataRequest req = new ImportDataRequest();
+        req.setDataSources(Lists.newArrayList((DataSourceNameOrId)ImapDataSourceNameOrId.createForId(dsId)));
+        mbox.invokeJaxb(req);
+        waitUntilImportsFinish(mbox);
+    }
+
+    public void testPop3() throws Exception {
+        Account pop3acct = TestUtil.createAccount(TEST_USER_NAME);
+        ZMailbox pop3mbox = TestUtil.getZMailbox(TEST_USER_NAME);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String pop3DSFolder = NAME_PREFIX + " testPop3 source";
+        String pop3DSFolderId = createFolderForDataSource(mbox, pop3DSFolder);
+        String dsId = createPop3DataSource(mbox, pop3acct.getName(), pop3DSFolderId);
+        String subj = NAME_PREFIX + " testtrashpop3";
+        addMessage(pop3mbox, subj, "test");
+        refreshPop3DatasourceData(mbox, dsId);
+        ZSearchParams params = new ZSearchParams(String.format("subject:\"%s\"", subj));
+        params.setTypes("MESSAGE");
+        ZSearchResult result = mbox.search(params);
+        ZSearchHit hit = result.getHits().get(0);
+        String id = hit.getId();
+        try {
+            mbox.trashMessage(id);
+        } catch (SoapFaultException sfe) {
+            fail("SoapFaultException caught when deleting item from Pop3 datasource folder - " + sfe.getMessage());
+        }
+        params = new ZSearchParams("in:Trash");
+        params.setTypes("MESSAGE");
+        result = mbox.search(params);
+        List<ZSearchHit> hits = result.getHits();
+        assertEquals(1, hits.size());
+        assertEquals(id, hits.get(0).getId());
+    }
+
     /**
      * Creates a folder that syncs to another folder via RSS, and verifies that an
      * RSS data source was implicitly created.
      */
     public void testRss()
     throws Exception {
-        // Create source folder, make it publically readable, and add a message to it.
+        // Create source folder, make it publicly readable, and add a message to it.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String parentId = Integer.toString(Mailbox.ID_FOLDER_USER_ROOT);
         ZFolder sourceFolder = TestUtil.createFolder(mbox, "/" + NAME_PREFIX + " testRss source");
@@ -314,8 +425,9 @@ public class TestDataSource extends TestCase {
         TestUtil.addMessage(mbox, subject, sourceFolder.getId());
 
         // Create destination folder that syncs to the source folder via RSS.
-        String urlString = String.format("https://%s:%s/home/%s%s.rss", TestUtil.getServerAttr(Provisioning.A_zimbraServiceHostname),
-                                            TestUtil.getServerAttr(Provisioning.A_zimbraMailSSLPort), USER_NAME, sourceFolder.getPath());
+        String urlString = String.format("https://%s:%s/home/%s%s.rss",
+                TestUtil.getServerAttr(Provisioning.A_zimbraServiceHostname),
+                TestUtil.getServerAttr(Provisioning.A_zimbraMailSSLPort), USER_NAME, sourceFolder.getPath());
         urlString = HttpUtil.encodePath(urlString);
         ZFolder rssFolder = mbox.createFolder(parentId, NAME_PREFIX + " testRss destination", null, null, null, urlString);
 
@@ -331,6 +443,17 @@ public class TestDataSource extends TestCase {
         waitForData(mbox, rssFolder);
         ZMessage syncedMsg = TestUtil.getMessage(mbox, "in:\"" + rssFolder.getPath() + "\"");
         assertEquals(subject, syncedMsg.getSubject());
+        /*
+         *   Bug 102261 - simulate ZWC deleting an item from the folder
+         */
+        ConvActionSelector sel = ConvActionSelector.createForIdsAndOperation(syncedMsg.getConversationId(), "trash");
+        sel.setConstraint("-dtjs");
+        sel.setFolder(syncedMsg.getFolderId());
+        try {
+            mbox.invokeJaxb(new ConvActionRequest(sel));
+        } catch (SoapFaultException sfe) {
+            fail("SoapFaultException caught when deleting item from RSS datasource folder - " + sfe.getMessage());
+        }
 
         // Delete folder, import data, and make sure that the data source was deleted.
         // Data source import runs asynchronously, so poll until the data source is gone.
