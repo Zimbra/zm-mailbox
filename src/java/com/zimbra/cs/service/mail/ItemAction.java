@@ -173,128 +173,9 @@ public class ItemAction extends MailDocumentHandler {
             } else if (opStr.equals(OP_DUMPSTER_DELETE)) {
                 localResults = ItemActionHelper.DUMPSTER_DELETE(octxt, mbox, responseProto, local, type, tcon).getResult();
             } else if (opStr.equals(OP_TRASH)) {
-                // determine if any of the items should be moved to an IMAP trash folder
-                Map<String, LinkedList<Integer>> remoteTrashIds = new HashMap<String, LinkedList<Integer>>();
-                LinkedList<Integer> localTrashIds = new LinkedList<Integer>();
-                Map<String, String> msgToConvId = new HashMap<String, String>();
-                MailItem[] items = mbox.getItemById(octxt, local, MailItem.Type.UNKNOWN);
-                for (MailItem item: items) {
-                    String dsId = null;
-                    boolean doneDistributingTrash = false;
-                    if (item instanceof Message) {
-                        dsId = getDataSourceOfItem(octxt, mbox, item);
-                    } else if (item instanceof VirtualConversation) {
-                        VirtualConversation vConv = (VirtualConversation) item;
-                        Message msg = mbox.getMessageById(octxt, vConv.getMessageId());
-                        dsId = getDataSourceOfItem(octxt, mbox, msg);
-                    } else if (item instanceof Conversation) {
-                        Set<String> dsIds = new HashSet<String>();
-                        boolean hasLocal = false;
-                        List<Message> messages = mbox.getMessagesByConversation(octxt, item.getId());
-                        for (Message msg: messages) {
-                            String msgDsId = getDataSourceOfItem(octxt, mbox, msg);
-                            if (msgDsId == null) {
-                                hasLocal = true;
-                            } else {
-                                dsIds.add(msgDsId);
-                            }
-                        }
-                        // If the conversation is all local or in one data source, delete it as a conversation.
-                        // If it spans multiple accounts, delete it message-by-message
-                        if (dsIds.isEmpty() && hasLocal) {
-                            dsId = null;
-                        } else if (!hasLocal && dsIds.size() == 1) {
-                            dsId = dsIds.iterator().next();
-                        } else {
-                            type = MailItem.Type.MESSAGE;
-                            for (Message msg: messages) {
-                                String msgDsId = getDataSourceOfItem(octxt, mbox, msg);
-                                msgToConvId.put(String.valueOf(msg.getId()), String.valueOf(item.getId()));
-                                if (msgDsId == null) {
-                                    localTrashIds.add(msg.getId());
-                                } else {
-                                    LinkedList<Integer> idsInDs = remoteTrashIds.get(dsId);
-                                    if (idsInDs == null) {
-                                        idsInDs = new LinkedList<Integer>();
-                                        remoteTrashIds.put(msgDsId, idsInDs);
-                                    }
-                                    idsInDs.add(msg.getId());
-                                }
-                            }
-                            doneDistributingTrash = true;
-                        }
-                    }
-                    if (!doneDistributingTrash) {
-                        if (dsId != null) {
-                            LinkedList<Integer> idsInDs = remoteTrashIds.get(dsId);
-                            if (idsInDs == null) {
-                                idsInDs = new LinkedList<Integer>();
-                                remoteTrashIds.put(dsId, idsInDs);
-                            }
-                            idsInDs.add(item.getId());
-                        } else {
-                            localTrashIds.add(item.getId());
-                        }
-                    }
-                }
-                // move non-IMAP items to local trash
-                ItemId iidTrash = new ItemId(mbox, Mailbox.ID_FOLDER_TRASH);
-                List<String> trashResults = new LinkedList<String>();
-                String localTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, localTrashIds, type, tcon, iidTrash).getResult();
-                if (!Strings.isNullOrEmpty(localTrashResults)) {
-                    trashResults.add(localTrashResults);
-                }
-                for (String dataSourceId: remoteTrashIds.keySet()) {
-                    List<Integer> imapTrashIds = remoteTrashIds.get(dataSourceId);
-                    Integer imapTrashId = getImapTrashFolder(mbox, dataSourceId);
-                    ItemId iidImapTrash = new ItemId(mbox, imapTrashId);
-                    String imapTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, imapTrashIds, type, tcon, iidImapTrash).getResult();
-                    if (!Strings.isNullOrEmpty(imapTrashResults)) {
-                        trashResults.add(imapTrashResults);
-                    }
-                }
-                localResults = Joiner.on(",").join(trashResults);
-                if (!msgToConvId.isEmpty()) {
-                    String[] ids = localResults.split(",");
-                    Set<String> reconstructedConvIds = new HashSet<String>();
-                    for (String id: ids) {
-                        String convId = msgToConvId.get(id);
-                        if (convId != null) {
-                            reconstructedConvIds.add(convId);
-                        } else {
-                            reconstructedConvIds.add(id);
-                        }
-                    }
-                    localResults = Joiner.on(",").join(reconstructedConvIds);
-                }
-
+                localResults = handleTrashOperation(octxt, request, mbox, responseProto, local, type, tcon);
             } else if (opStr.equals(OP_MOVE)) {
-                String acctRelativePath = action.getAttribute(MailConstants.A_ACCT_RELATIVE_PATH, null);
-                if (acctRelativePath == null) {
-                    ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
-                    localResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
-                } else if (type == MailItem.Type.CONVERSATION) {
-                    if ("/".equals(acctRelativePath.trim())) {
-                        throw ServiceException.INVALID_REQUEST("Invalid account relative path", null);
-                    }
-                    List<ItemActionHelper> actionHelpers =
-                            ItemActionHelper.MOVE(octxt, mbox, responseProto, local, tcon, acctRelativePath);
-                    if (actionHelpers.isEmpty()) {
-                        localResults = "";
-                    } else {
-                        StringBuilder resultsBuilder = new StringBuilder(actionHelpers.get(0).getResult());
-                        for (int i = 1; i < actionHelpers.size(); i++) {
-                            String result = actionHelpers.get(i).getResult();
-                            if (!result.isEmpty()) {
-                                resultsBuilder.append(',').append(result);
-                            }
-                        }
-                        localResults = resultsBuilder.toString();
-                    }
-                } else {
-                    throw ServiceException.INVALID_REQUEST(MailConstants.A_ACCT_RELATIVE_PATH +
-                            " is supported only for " + MailConstants.E_CONV_ACTION_REQUEST, null);
-                }
+                localResults = handleMoveOperation(zsc, octxt, request, action, mbox, responseProto, local, type, tcon);
             } else if (opStr.equals(OP_COPY)) {
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
                 localResults = ItemActionHelper.COPY(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
@@ -347,6 +228,146 @@ public class ItemAction extends MailDocumentHandler {
         return successes.toString();
     }
 
+    protected String handleTrashOperation(OperationContext octxt, Element request, Mailbox mbox,
+            SoapProtocol responseProto, List<Integer> local, MailItem.Type type, TargetConstraint tcon)
+    throws ServiceException {
+        String localResults;
+        // determine if any of the items should be moved to an IMAP trash folder
+        Map<String, LinkedList<Integer>> remoteTrashIds = new HashMap<String, LinkedList<Integer>>();
+        LinkedList<Integer> localTrashIds = new LinkedList<Integer>();
+        Map<String, String> msgToConvId = new HashMap<String, String>();
+        MailItem[] items = mbox.getItemById(octxt, local, MailItem.Type.UNKNOWN);
+        for (MailItem item: items) {
+            String dsId = null;
+            boolean doneDistributingTrash = false;
+            if (item instanceof Message) {
+                dsId = getDataSourceOfItem(octxt, mbox, item);
+            } else if (item instanceof VirtualConversation) {
+                VirtualConversation vConv = (VirtualConversation) item;
+                Message msg = mbox.getMessageById(octxt, vConv.getMessageId());
+                dsId = getDataSourceOfItem(octxt, mbox, msg);
+            } else if (item instanceof Conversation) {
+                Set<String> dsIds = new HashSet<String>();
+                boolean hasLocal = false;
+                List<Message> messages = mbox.getMessagesByConversation(octxt, item.getId());
+                for (Message msg: messages) {
+                    String msgDsId = getDataSourceOfItem(octxt, mbox, msg);
+                    if (msgDsId == null) {
+                        hasLocal = true;
+                    } else {
+                        dsIds.add(msgDsId);
+                    }
+                }
+                // If the conversation is all local or in one data source, delete it as a conversation.
+                // If it spans multiple accounts, delete it message-by-message
+                if (dsIds.isEmpty() && hasLocal) {
+                    dsId = null;
+                } else if (!hasLocal && dsIds.size() == 1) {
+                    dsId = dsIds.iterator().next();
+                } else {
+                    type = MailItem.Type.MESSAGE;
+                    for (Message msg: messages) {
+                        String msgDsId = getDataSourceOfItem(octxt, mbox, msg);
+                        msgToConvId.put(String.valueOf(msg.getId()), String.valueOf(item.getId()));
+                        if (msgDsId == null) {
+                            localTrashIds.add(msg.getId());
+                        } else {
+                            LinkedList<Integer> idsInDs = remoteTrashIds.get(dsId);
+                            if (idsInDs == null) {
+                                idsInDs = new LinkedList<Integer>();
+                                remoteTrashIds.put(msgDsId, idsInDs);
+                            }
+                            idsInDs.add(msg.getId());
+                        }
+                    }
+                    doneDistributingTrash = true;
+                }
+            }
+            if (!doneDistributingTrash) {
+                if (dsId != null) {
+                    LinkedList<Integer> idsInDs = remoteTrashIds.get(dsId);
+                    if (idsInDs == null) {
+                        idsInDs = new LinkedList<Integer>();
+                        remoteTrashIds.put(dsId, idsInDs);
+                    }
+                    idsInDs.add(item.getId());
+                } else {
+                    localTrashIds.add(item.getId());
+                }
+            }
+        }
+        // move non-IMAP items to local trash
+        ItemId iidTrash = new ItemId(mbox, Mailbox.ID_FOLDER_TRASH);
+        List<String> trashResults = new LinkedList<String>();
+        String localTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, localTrashIds, type, tcon, iidTrash).getResult();
+        if (!Strings.isNullOrEmpty(localTrashResults)) {
+            trashResults.add(localTrashResults);
+        }
+        for (String dataSourceId: remoteTrashIds.keySet()) {
+            List<Integer> imapTrashIds = remoteTrashIds.get(dataSourceId);
+            Integer imapTrashId = getImapTrashFolder(mbox, dataSourceId);
+            if (null == imapTrashId) {  // e.g. for non-IMAP data sources like RSS feeds
+                imapTrashId = Mailbox.ID_FOLDER_TRASH;
+            }
+            ItemId iidImapTrash = new ItemId(mbox, imapTrashId);
+            String imapTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, imapTrashIds, type, tcon, iidImapTrash).getResult();
+            if (!Strings.isNullOrEmpty(imapTrashResults)) {
+                trashResults.add(imapTrashResults);
+            }
+        }
+        localResults = Joiner.on(",").join(trashResults);
+        if (!msgToConvId.isEmpty()) {
+            String[] ids = localResults.split(",");
+            Set<String> reconstructedConvIds = new HashSet<String>();
+            for (String id: ids) {
+                String convId = msgToConvId.get(id);
+                if (convId != null) {
+                    reconstructedConvIds.add(convId);
+                } else {
+                    reconstructedConvIds.add(id);
+                }
+            }
+            localResults = Joiner.on(",").join(reconstructedConvIds);
+        }
+
+        return localResults;
+    }
+
+    protected String handleMoveOperation(ZimbraSoapContext zsc, OperationContext octxt,
+            Element request, Element action, Mailbox mbox,
+            SoapProtocol responseProto, List<Integer> local, MailItem.Type type, TargetConstraint tcon)
+                    throws ServiceException {
+        String localResults;
+        String acctRelativePath = action.getAttribute(MailConstants.A_ACCT_RELATIVE_PATH, null);
+        if (acctRelativePath == null) {
+            ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
+            localResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
+        } else if (type == MailItem.Type.CONVERSATION) {
+            if ("/".equals(acctRelativePath.trim())) {
+                throw ServiceException.INVALID_REQUEST("Invalid account relative path", null);
+            }
+            List<ItemActionHelper> actionHelpers =
+                    ItemActionHelper.MOVE(octxt, mbox, responseProto, local, tcon, acctRelativePath);
+            if (actionHelpers.isEmpty()) {
+                localResults = "";
+            } else {
+                StringBuilder resultsBuilder = new StringBuilder(actionHelpers.get(0).getResult());
+                for (int i = 1; i < actionHelpers.size(); i++) {
+                    String result = actionHelpers.get(i).getResult();
+                    if (!result.isEmpty()) {
+                        resultsBuilder.append(',').append(result);
+                    }
+                }
+                localResults = resultsBuilder.toString();
+            }
+        } else {
+            throw ServiceException.INVALID_REQUEST(MailConstants.A_ACCT_RELATIVE_PATH +
+                    " is supported only for " + MailConstants.E_CONV_ACTION_REQUEST, null);
+        }
+        return localResults;
+    }
+
+
     private String getDataSourceOfItem(OperationContext octxt, Mailbox mbox, MailItem item) throws ServiceException {
         Folder folder = mbox.getFolderById(octxt, item.getFolderId());
         Map<Integer, String> dataSources = new HashMap<Integer, String>();
@@ -362,6 +383,7 @@ public class ItemAction extends MailDocumentHandler {
         }
         return null;
     }
+
     private Integer getImapTrashFolder(Mailbox mbox, String dsId) throws ServiceException {
         DataSource ds = mbox.getAccount().getDataSourceById(dsId);
         if (ds.getType() == DataSourceType.imap) {
