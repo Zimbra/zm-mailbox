@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,12 +17,12 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.zimbra.common.soap.MailConstants;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+
+import com.google.common.base.Objects;
+import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class ConvActionSelector extends ActionSelector {
@@ -37,11 +37,19 @@ public class ConvActionSelector extends ActionSelector {
     @XmlElement(name=MailConstants.A_ACCT_RELATIVE_PATH, required=false)
     private String acctRelativePath;
 
-    private ConvActionSelector() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    protected ConvActionSelector() {
+        super();
     }
 
-    public ConvActionSelector(String ids, String operation) {
+    protected ConvActionSelector(String ids, String operation) {
         super(ids, operation);
+    }
+
+    public static ConvActionSelector createForIdsAndOperation(String ids, String operation) {
+        return new ConvActionSelector(ids, operation);
     }
 
     public String getAcctRelativePath() {
@@ -52,6 +60,7 @@ public class ConvActionSelector extends ActionSelector {
         this.acctRelativePath = acctRelativePath;
     }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper

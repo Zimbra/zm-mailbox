@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,11 +17,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -30,6 +25,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -108,7 +106,7 @@ public class NewFolderSpec {
      */
     @XmlElementWrapper(name=MailConstants.E_ACL /* acl */, required=false)
     @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
-    private List<ActionGrantSelector> grants = Lists.newArrayList();
+    private final List<ActionGrantSelector> grants = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -120,6 +118,12 @@ public class NewFolderSpec {
 
     public NewFolderSpec(String name) {
         this.name = name;
+    }
+
+    public static NewFolderSpec createForNameAndParentFolderId(String name, String parentFolderId) {
+        NewFolderSpec nfs = new NewFolderSpec(name);
+        nfs.setParentFolderId(parentFolderId);
+        return nfs;
     }
 
     public void setDefaultView(String defaultView) { this.defaultView = defaultView; }

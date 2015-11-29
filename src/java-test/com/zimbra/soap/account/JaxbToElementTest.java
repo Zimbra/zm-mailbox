@@ -34,7 +34,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 
-import com.zimbra.soap.mail.type.ConvActionSelector;
 import junit.framework.Assert;
 
 import org.apache.log4j.BasicConfigurator;
@@ -87,13 +86,10 @@ import com.zimbra.soap.mail.message.GetContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
 import com.zimbra.soap.mail.message.SearchConvRequest;
 import com.zimbra.soap.mail.message.WaitSetRequest;
-import com.zimbra.soap.mail.type.ActionSelector;
-import com.zimbra.soap.mail.type.ContactActionSelector;
-import com.zimbra.soap.mail.type.FolderActionSelector;
+import com.zimbra.soap.mail.type.ConvActionSelector;
 import com.zimbra.soap.mail.type.ImapDataSourceNameOrId;
 import com.zimbra.soap.mail.type.MessageHitInfo;
 import com.zimbra.soap.mail.type.ModifyGroupMemberOperation;
-import com.zimbra.soap.mail.type.NoteActionSelector;
 import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.type.KeyValuePair;
@@ -473,8 +469,8 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         Element icrElem = Element.XMLElement.mFactory.createElement(
                 MailConstants.IMPORT_CONTACTS_REQUEST);
         icrElem.addAttribute(MailConstants.A_CSVLOCALE, "fr");
-        icrElem.addElement(MailConstants.A_CONTENT_TYPE).setText("csv");
-        icrElem.addElement(MailConstants.E_CONTENT).setText("CONTENT");
+        icrElem.addNonUniqueElement(MailConstants.A_CONTENT_TYPE).setText("csv");
+        icrElem.addNonUniqueElement(MailConstants.E_CONTENT).setText("CONTENT");
         ImportContactsRequest icr = JaxbUtil.elementToJaxb(icrElem);
         Assert.assertEquals("ImportContactsRequest content type:",
                 "csv", icr.getContentType());
@@ -495,38 +491,38 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         Element rootElem = Element.XMLElement.mFactory.createElement(
                 AdminConstants.MAIL_QUEUE_ACTION_REQUEST);
         // JAXB Element E_SERVER --> ServerWithQueueAction
-        Element svrE = rootElem.addElement(AdminConstants.E_SERVER);
+        Element svrE = rootElem.addNonUniqueElement(AdminConstants.E_SERVER);
         // JAXB attribute A_NAME
-        svrE.addElement(AdminConstants.A_NAME).setText("SERVER-NAME");
+        svrE.addNonUniqueElement(AdminConstants.A_NAME).setText("SERVER-NAME");
         // JAXB Element E_QUEUE --> MailQueueWithAction
-        Element qE = svrE.addElement(AdminConstants.E_QUEUE);
+        Element qE = svrE.addNonUniqueElement(AdminConstants.E_QUEUE);
         // JAXB attribute A_NAME
-        qE.addElement(AdminConstants.A_NAME).setText("queueName");
+        qE.addNonUniqueElement(AdminConstants.A_NAME).setText("queueName");
         // JAXB Element E_ACTION --> MailQueueAction
-        Element actE = qE.addElement(AdminConstants.E_ACTION);
+        Element actE = qE.addNonUniqueElement(AdminConstants.E_ACTION);
         // JAXB attribute A_OP
-        actE.addElement(AdminConstants.A_OP).setText("requeue");
+        actE.addNonUniqueElement(AdminConstants.A_OP).setText("requeue");
         // JAXB attribute A_BY
-        actE.addElement(AdminConstants.A_BY).setText("query");
+        actE.addNonUniqueElement(AdminConstants.A_BY).setText("query");
         // MailQueueAction XmlElementRef E_QUERY --> QueueQuery
         // actually, part of XmlMixed, so JAXB class deals in
         // an array of Object
-        Element queryE = actE.addElement(AdminConstants.E_QUERY);
+        Element queryE = actE.addNonUniqueElement(AdminConstants.E_QUERY);
         // JAXB attribute A_OFFSET
         queryE.addAttribute(AdminConstants.A_OFFSET, "20");
         // JAXB attribute A_LIMIT
-        queryE.addElement(AdminConstants.A_LIMIT).setText("99");
+        queryE.addNonUniqueElement(AdminConstants.A_LIMIT).setText("99");
         for (int sfx = 1; sfx <= 3; sfx++) {
             // List<QueueQueryField> fields
-            Element fE = queryE.addElement(AdminConstants.E_FIELD);
+            Element fE = queryE.addNonUniqueElement(AdminConstants.E_FIELD);
             fE.addAttribute(AdminConstants.A_NAME, "name" + sfx);
             // List<ValueAttrib> matches
-            Element mE = fE.addElement(AdminConstants.E_MATCH);
+            Element mE = fE.addNonUniqueElement(AdminConstants.E_MATCH);
             // JAXB attribute A_VALUE
-            mE.addElement(AdminConstants.A_VALUE).setText("value " + sfx);
-            mE = fE.addElement(AdminConstants.E_MATCH);
+            mE.addNonUniqueElement(AdminConstants.A_VALUE).setText("value " + sfx);
+            mE = fE.addNonUniqueElement(AdminConstants.E_MATCH);
             // JAXB attribute A_VALUE
-            mE.addElement(AdminConstants.A_VALUE).setText("2nd value " + sfx);
+            mE.addNonUniqueElement(AdminConstants.A_VALUE).setText("2nd value " + sfx);
         }
         MailQueueActionRequest req = JaxbUtil.elementToJaxb(rootElem);
         ServerWithQueueAction svrWithQ = req.getServer();
@@ -562,24 +558,24 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         Element rootElem = Element.XMLElement.mFactory.createElement(
                 MailConstants.GET_CONTACTS_REQUEST);
         // JAXB Attribute A_SYNC
-        rootElem.addElement(MailConstants.A_SYNC).addText("true");
+        rootElem.addNonUniqueElement(MailConstants.A_SYNC).addText("true");
         // JAXB Attribute A_FOLDER
         rootElem.addAttribute(MailConstants.A_FOLDER, "folderId");
         // JAXB Attribute A_SORTBY
-        rootElem.addElement(MailConstants.A_SORTBY).addText("sortBy");
+        rootElem.addNonUniqueElement(MailConstants.A_SORTBY).addText("sortBy");
         // JAXB Elements:
         //    Element E_ATTRIBUTE --> AttributeName
         //    Element E_CONTACT --> Id
-        Element attrName1 = rootElem.addElement(MailConstants.E_ATTRIBUTE);
+        Element attrName1 = rootElem.addNonUniqueElement(MailConstants.E_ATTRIBUTE);
         attrName1.addAttribute(MailConstants.A_ATTRIBUTE_NAME, "aName1");
-        Element contact1 = rootElem.addElement(MailConstants.E_CONTACT);
-        contact1.addElement(MailConstants.A_ID).addText("ctctId1");
-        Element contact2 = rootElem.addElement(MailConstants.E_CONTACT);
+        Element contact1 = rootElem.addNonUniqueElement(MailConstants.E_CONTACT);
+        contact1.addNonUniqueElement(MailConstants.A_ID).addText("ctctId1");
+        Element contact2 = rootElem.addNonUniqueElement(MailConstants.E_CONTACT);
         contact2.addAttribute(MailConstants.A_ID, "ctctId2");
-        Element attrName2 = rootElem.addElement(MailConstants.E_ATTRIBUTE);
-        attrName2.addElement(MailConstants.A_ATTRIBUTE_NAME).addText("aName2");
-        Element memAttr1 = rootElem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER_ATTRIBUTE);
-        memAttr1.addElement(MailConstants.A_ATTRIBUTE_NAME).addText("grpAttrName1");
+        Element attrName2 = rootElem.addNonUniqueElement(MailConstants.E_ATTRIBUTE);
+        attrName2.addNonUniqueElement(MailConstants.A_ATTRIBUTE_NAME).addText("aName2");
+        Element memAttr1 = rootElem.addNonUniqueElement(MailConstants.E_CONTACT_GROUP_MEMBER_ATTRIBUTE);
+        memAttr1.addNonUniqueElement(MailConstants.A_ATTRIBUTE_NAME).addText("grpAttrName1");
 
         GetContactsRequest req = JaxbUtil.elementToJaxb(rootElem);
 
@@ -602,13 +598,13 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
     public void jaxbSubclassFixupTest() throws Exception {
         Element rootElem = Element.XMLElement.mFactory.createElement(AdminConstants.CREATE_ACCOUNT_REQUEST);
         // JAXB Attribute E_NAME
-        rootElem.addElement(AdminConstants.E_NAME).addText("acctName");
+        rootElem.addNonUniqueElement(AdminConstants.E_NAME).addText("acctName");
         // JAXB Attribute E_PASSWORD
-        rootElem.addElement(AdminConstants.E_PASSWORD).addText("AcctPassword");
+        rootElem.addNonUniqueElement(AdminConstants.E_PASSWORD).addText("AcctPassword");
         // JAXB Element E_A ---> Attr (actually a List)
-        Element a1 = rootElem.addElement(AdminConstants.E_A);
+        Element a1 = rootElem.addNonUniqueElement(AdminConstants.E_A);
         // JAXB Attribute A_N
-        a1.addElement(AdminConstants.A_N).addText("attrName1");
+        a1.addNonUniqueElement(AdminConstants.A_N).addText("attrName1");
         // value can't be set when we've specified an attribute as an element
 
         CreateAccountRequest req = JaxbUtil.elementToJaxb(rootElem);
@@ -668,16 +664,16 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
     public void jaxbBelowWrapperFixupTest() throws Exception {
         Element rootElem = Element.XMLElement.mFactory.createElement(MailConstants.WAIT_SET_REQUEST);
         // JAXB Attribute - not Element
-        rootElem.addElement(MailConstants.A_WAITSET_ID /* waitSet */).addText("myWaitSet");
+        rootElem.addNonUniqueElement(MailConstants.A_WAITSET_ID /* waitSet */).addText("myWaitSet");
         // JAXB Attribute - not Element
-        rootElem.addElement(MailConstants.A_SEQ /* seq */).addText("lastKnownSeq");
+        rootElem.addNonUniqueElement(MailConstants.A_SEQ /* seq */).addText("lastKnownSeq");
         // JAXB XmlElementWrapper
-        Element addElem = rootElem.addElement(MailConstants.E_WAITSET_ADD /* add */);
-        Element aElem = addElem.addElement(MailConstants.E_A /* a */);
+        Element addElem = rootElem.addNonUniqueElement(MailConstants.E_WAITSET_ADD /* add */);
+        Element aElem = addElem.addNonUniqueElement(MailConstants.E_A /* a */);
         // JAXB Attribute - not Element
-        aElem.addElement(MailConstants.A_NAME).addText("waitsetName");
+        aElem.addNonUniqueElement(MailConstants.A_NAME).addText("waitsetName");
         // JAXB Attribute - not Element
-        aElem.addElement(MailConstants.A_ID).addText("waitsetId");
+        aElem.addNonUniqueElement(MailConstants.A_ID).addText("waitsetId");
         WaitSetRequest req = JaxbUtil.elementToJaxb(rootElem);
         List<WaitSetAddSpec> adds = req.getAddAccounts();
         Assert.assertEquals("Waitset add number", 1, adds.size());
@@ -697,10 +693,10 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         Element rootElem = Element.XMLElement.mFactory.createElement(
                 AccountConstants.AUTH_REQUEST);
         // JAXB wrapper element name E_PREFS
-        Element prefsE = rootElem.addElement(AccountConstants.E_PREFS);
+        Element prefsE = rootElem.addNonUniqueElement(AccountConstants.E_PREFS);
         // JAXB element E_PREF with attribute "name"
-        Element prefE = prefsE.addElement(AccountConstants.E_PREF);
-        prefE.addElement("name").addText("pref name");
+        Element prefE = prefsE.addNonUniqueElement(AccountConstants.E_PREF);
+        prefE.addNonUniqueElement("name").addText("pref name");
 
         AuthRequest req = JaxbUtil.elementToJaxb(rootElem);
         List<Pref> prefs = req.getPrefs();
@@ -722,7 +718,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
      */
     // @Test
     public void ConvActionRequestJaxbSubclassHandlingTestDisabled() throws Exception {
-        ConvActionSelector actionSelector = new ConvActionSelector("ids", "op");
+        ConvActionSelector actionSelector = ConvActionSelector.createForIdsAndOperation("ids", "op");
         actionSelector.setAcctRelativePath("folder");
         ConvActionRequest car = new ConvActionRequest(actionSelector);
         Element carE = JaxbUtil.jaxbToElement(car);
@@ -734,7 +730,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
 
         carE = Element.XMLElement.mFactory.createElement(
                 MailConstants.CONV_ACTION_REQUEST);
-        Element actionE = carE.addElement(MailConstants.E_ACTION);
+        Element actionE = carE.addNonUniqueElement(MailConstants.E_ACTION);
         actionE.addAttribute(MailConstants.A_OPERATION, "op");
         actionE.addAttribute(MailConstants.A_ID, "ids");
         actionE.addAttribute(MailConstants.A_ACCT_RELATIVE_PATH, "folder");
@@ -828,17 +824,17 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
 
     @Test
     public void KeyValuePairs() throws Exception {
-        InputStream is = JaxbToElementTest.class.getResourceAsStream(
-                "CreateXMbxSearchRequest.xml");
-        // String soapXml = streamToString(is, Charsets.UTF_8);
-        JAXBContext jaxb = JAXBContext.newInstance(CreateXMbxSearchRequest.class);
-        Unmarshaller unmarshaller = jaxb.createUnmarshaller();
-        JAXBElement<CreateXMbxSearchRequest> jaxbElem =
-            unmarshaller.unmarshal(new StreamSource(is), CreateXMbxSearchRequest.class);
-        Assert.assertNotNull("JAXBElement resulting from unmarshal", jaxbElem);
-        CreateXMbxSearchRequest soapObj = jaxbElem.getValue();
-        Assert.assertNotNull("Unmarshal soap object", soapObj);
-        Assert.assertEquals("Number of attributes", 10, soapObj.getKeyValuePairs().size());
+        try (InputStream is = JaxbToElementTest.class.getResourceAsStream("CreateXMbxSearchRequest.xml")) {
+            // String soapXml = streamToString(is, Charsets.UTF_8);
+            JAXBContext jaxb = JAXBContext.newInstance(CreateXMbxSearchRequest.class);
+            Unmarshaller kvpunmarshaller = jaxb.createUnmarshaller();
+            JAXBElement<CreateXMbxSearchRequest> jaxbElem =
+                    kvpunmarshaller.unmarshal(new StreamSource(is), CreateXMbxSearchRequest.class);
+            Assert.assertNotNull("JAXBElement resulting from unmarshal", jaxbElem);
+            CreateXMbxSearchRequest soapObj = jaxbElem.getValue();
+            Assert.assertNotNull("Unmarshal soap object", soapObj);
+            Assert.assertEquals("Number of attributes", 10, soapObj.getKeyValuePairs().size());
+        }
     }
 
     // AutoProvDirectoryEntry contains 2 lists - one via extending AdminKeyValuePairs
@@ -849,12 +845,12 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
                 AdminConstants.SEARCH_AUTO_PROV_DIRECTORY_RESPONSE);
         resp.addAttribute(AdminConstants.A_MORE, false);
         resp.addAttribute(AdminConstants.A_SEARCH_TOTAL, 1);
-        Element entryE = resp.addElement(AdminConstants.E_ENTRY);
+        Element entryE = resp.addNonUniqueElement(AdminConstants.E_ENTRY);
         entryE.addAttribute(AdminConstants.A_DN, "displayNam");
-        entryE.addElement(AdminConstants.E_KEY).setText("keyValue1");
-        entryE.addElement(AdminConstants.E_KEY).setText("keyValue2");
-        entryE.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, "nVal1").setText("attr1Txt");
-        entryE.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, "nVal2").setText("attr2Txt");
+        entryE.addNonUniqueElement(AdminConstants.E_KEY).setText("keyValue1");
+        entryE.addNonUniqueElement(AdminConstants.E_KEY).setText("keyValue2");
+        entryE.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, "nVal1").setText("attr1Txt");
+        entryE.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, "nVal2").setText("attr2Txt");
         SearchAutoProvDirectoryResponse jaxb = JaxbUtil.elementToJaxb(resp);
         Assert.assertNotNull("Unmarshal soap object", jaxb);
         List<AutoProvDirectoryEntry> entries = jaxb.getEntries();
