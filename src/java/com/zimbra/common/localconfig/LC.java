@@ -74,9 +74,8 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_home = KnownKey.newKey("/opt/zimbra").protect();
-    public static final KnownKey zimbra_java_path = KnownKey.newKey("java");
     @Supported
-    public static final KnownKey zimbra_java_home = KnownKey.newKey("${zimbra_home}/${zimbra_java_path}");
+    public static final KnownKey zimbra_java_home = KnownKey.newKey("${zimbra_home}/common/lib/jvm/java");
 
     @Supported
     public static final KnownKey zimbra_log_directory = KnownKey.newKey("${zimbra_home}/log");
@@ -627,7 +626,7 @@ public final class LC {
     public static final KnownKey mailboxd_keystore_base_password = KnownKey.newKey("zimbra");
 
     @Supported
-    public static final KnownKey mailboxd_truststore = KnownKey.newKey("${zimbra_java_home}/lib/security/cacerts");
+    public static final KnownKey mailboxd_truststore = KnownKey.newKey("${zimbra_java_home}/jre/lib/security/cacerts");
 
     @Supported
     public static final KnownKey mailboxd_truststore_password = KnownKey.newKey("changeit");
