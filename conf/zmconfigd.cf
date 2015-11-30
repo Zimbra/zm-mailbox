@@ -64,9 +64,9 @@ SECTION archiving DEPENDS amavis
 
 SECTION mta DEPENDS amavis
 	LOCAL postjournal_enabled
-	REWRITE postfix/conf/master.cf.in postfix/conf/master.cf
-	REWRITE postfix/conf/tag_as_foreign.re.in postfix/conf/tag_as_foreign.re
-	REWRITE postfix/conf/tag_as_originating.re.in postfix/conf/tag_as_originating.re
+	REWRITE common/conf/master.cf.in common/conf/master.cf
+	REWRITE common/conf/tag_as_foreign.re.in common/conf/tag_as_foreign.re
+	REWRITE common/conf/tag_as_originating.re.in common/conf/tag_as_originating.re
 	REWRITE conf/mta_milter_options.in conf/mta_milter_options
 	VAR zimbraMtaEnableSmtpdPolicyd
 	VAR zimbraAmavisMaxServers
