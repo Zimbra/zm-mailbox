@@ -32031,13 +32031,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf command_directory
      *
-     * @return zimbraMtaCommandDirectory, or "/opt/zimbra/postfix/sbin" if unset
+     * @return zimbraMtaCommandDirectory, or "/opt/zimbra/common/sbin" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1498)
     public String getMtaCommandDirectory() {
-        return getAttr(Provisioning.A_zimbraMtaCommandDirectory, "/opt/zimbra/postfix/sbin");
+        return getAttr(Provisioning.A_zimbraMtaCommandDirectory, "/opt/zimbra/common/sbin");
     }
 
     /**
@@ -32219,13 +32219,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf daemon_directory
      *
-     * @return zimbraMtaDaemonDirectory, or "/opt/zimbra/postfix/libexec" if unset
+     * @return zimbraMtaDaemonDirectory, or "/opt/zimbra/common/libexec" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1499)
     public String getMtaDaemonDirectory() {
-        return getAttr(Provisioning.A_zimbraMtaDaemonDirectory, "/opt/zimbra/postfix/libexec");
+        return getAttr(Provisioning.A_zimbraMtaDaemonDirectory, "/opt/zimbra/common/libexec");
     }
 
     /**
@@ -34283,13 +34283,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf mailq_path
      *
-     * @return zimbraMtaMailqPath, or "/opt/zimbra/postfix/sbin/mailq" if unset
+     * @return zimbraMtaMailqPath, or "/opt/zimbra/common/sbin/mailq" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1508)
     public String getMtaMailqPath() {
-        return getAttr(Provisioning.A_zimbraMtaMailqPath, "/opt/zimbra/postfix/sbin/mailq");
+        return getAttr(Provisioning.A_zimbraMtaMailqPath, "/opt/zimbra/common/sbin/mailq");
     }
 
     /**
@@ -34355,13 +34355,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf manpage_directory
      *
-     * @return zimbraMtaManpageDirectory, or "/opt/zimbra/postfix/man" if unset
+     * @return zimbraMtaManpageDirectory, or "/opt/zimbra/common/share/man" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1509)
     public String getMtaManpageDirectory() {
-        return getAttr(Provisioning.A_zimbraMtaManpageDirectory, "/opt/zimbra/postfix/man");
+        return getAttr(Provisioning.A_zimbraMtaManpageDirectory, "/opt/zimbra/common/share/man");
     }
 
     /**
@@ -35364,13 +35364,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf newaliases_path
      *
-     * @return zimbraMtaNewaliasesPath, or "/opt/zimbra/postfix/sbin/newaliases" if unset
+     * @return zimbraMtaNewaliasesPath, or "/opt/zimbra/common/sbin/newaliases" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1510)
     public String getMtaNewaliasesPath() {
-        return getAttr(Provisioning.A_zimbraMtaNewaliasesPath, "/opt/zimbra/postfix/sbin/newaliases");
+        return getAttr(Provisioning.A_zimbraMtaNewaliasesPath, "/opt/zimbra/common/sbin/newaliases");
     }
 
     /**
@@ -39087,13 +39087,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf sendmail_path
      *
-     * @return zimbraMtaSendmailPath, or "/opt/zimbra/postfix/sbin/sendmail" if unset
+     * @return zimbraMtaSendmailPath, or "/opt/zimbra/common/sbin/sendmail" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1512)
     public String getMtaSendmailPath() {
-        return getAttr(Provisioning.A_zimbraMtaSendmailPath, "/opt/zimbra/postfix/sbin/sendmail");
+        return getAttr(Provisioning.A_zimbraMtaSendmailPath, "/opt/zimbra/common/sbin/sendmail");
     }
 
     /**
@@ -56653,13 +56653,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @see #getReverseProxyXmppBoshTimeoutAsString()
      *
-     * @return zimbraReverseProxyXmppBoshTimeout in millseconds, or 60000 (1m)  if unset
+     * @return zimbraReverseProxyXmppBoshTimeout in millseconds, or 90000 (90s)  if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2064)
     public long getReverseProxyXmppBoshTimeout() {
-        return getTimeInterval(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, 60000L);
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, 90000L);
     }
 
     /**
@@ -56669,13 +56669,13 @@ public abstract class ZAttrConfig extends Entry {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @return zimbraReverseProxyXmppBoshTimeout, or "1m" if unset
+     * @return zimbraReverseProxyXmppBoshTimeout, or "90s" if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2064)
     public String getReverseProxyXmppBoshTimeoutAsString() {
-        return getAttr(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, "1m");
+        return getAttr(Provisioning.A_zimbraReverseProxyXmppBoshTimeout, "90s");
     }
 
     /**
