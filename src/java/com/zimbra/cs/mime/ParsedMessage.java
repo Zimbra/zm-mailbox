@@ -38,6 +38,7 @@ import java.util.zip.GZIPInputStream;
 import javax.mail.Address;
 import javax.mail.Header;
 import javax.mail.MessagingException;
+import javax.mail.Part;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MailDateFormat;
@@ -71,6 +72,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Fragment;
@@ -968,25 +970,39 @@ public final class ParsedMessage {
 
         // iterate all the message headers, add them to the structured-field data in the index
         FieldTokenStream fields = new FieldTokenStream();
-        Enumeration<?> en = getMimeMessage().getAllHeaders();
-        while (en.hasMoreElements()) {
-            Header h = (Header) en.nextElement();
-            String key = h.getName().trim();
-            String value = h.getValue();
-            if (value != null) {
-                value = MimeUtility.unfold(value).trim();
-            } else {
-                value = "";
+        MimeMessage mm = getMimeMessage();
+        List<Part> parts = new ArrayList<Part>();
+        parts.add(mm);
+        try {
+            if (mm.getContent() instanceof ZMimeMultipart) {
+                ZMimeMultipart content = (ZMimeMultipart) mm.getContent();
+                int numParts = content.getCount();
+                for (int i = 0; i < numParts; i++) {
+                    parts.add(content.getBodyPart(i));
+                }
             }
-            if (key.length() > 0) {
-                if (value.length() == 0) {
-                    // low-level tokenizer can't deal with blank header value, so we'll index
-                    // some dummy value just so the header appears in the index.
-                    // Users can query for the existence of the header with a query
-                    // like #headername:*
-                    fields.add(key, "_blank_");
+        } catch (IOException ignore) {}
+        for (Part part: parts) {
+            Enumeration<?> en = part.getAllHeaders();
+            while (en.hasMoreElements()) {
+                Header h = (Header) en.nextElement();
+                String key = h.getName().trim();
+                String value = h.getValue();
+                if (value != null) {
+                    value = MimeUtility.unfold(value).trim();
                 } else {
-                    fields.add(key, value);
+                    value = "";
+                }
+                if (key.length() > 0) {
+                    if (value.length() == 0) {
+                        // low-level tokenizer can't deal with blank header value, so we'll index
+                        // some dummy value just so the header appears in the index.
+                        // Users can query for the existence of the header with a query
+                        // like #headername:*
+                        fields.add(key, "_blank_");
+                    } else {
+                        fields.add(key, value);
+                    }
                 }
             }
         }

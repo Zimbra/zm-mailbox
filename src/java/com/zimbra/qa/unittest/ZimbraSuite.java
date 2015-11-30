@@ -133,6 +133,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestPurgeDataSource.class);
         sClasses.add(TestDomainAdmin.class);
         sClasses.add(TestTrashImapMessage.class);
+        sClasses.add(TestSearchHeaders.class);
     }
 
     /**
