@@ -121,6 +121,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF disable_dns_lookups			VAR !zimbraMtaDnsLookupsEnabled	
 	POSTCONF message_size_limit			VAR zimbraMtaMaxMessageSize
 	POSTCONF mailbox_size_limit			0
+	POSTCONF smtputf8_enable			no
 	POSTCONF max_use				VAR zimbraMtaMaxUse
 	POSTCONF relayhost				VAR zimbraMtaRelayHost
 	POSTCONF smtp_fallback_relay			VAR zimbraMtaFallbackRelayHost
