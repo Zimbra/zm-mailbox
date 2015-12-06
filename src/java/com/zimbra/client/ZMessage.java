@@ -57,6 +57,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
     private ZMailbox mMailbox;
     private Map<String, String> mReqHdrs;
     private String mIdentityId;
+    private long mAutoSendTime;
 
     public ZMessage(Element e, ZMailbox mailbox) throws ServiceException {
         mMailbox = mailbox;
@@ -77,6 +78,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         mPartName = e.getAttribute(MailConstants.A_PART, null);
         mSize = e.getAttributeLong(MailConstants.A_SIZE, -1);
         mIdentityId = e.getAttribute(MailConstants.A_IDENTITY_ID, null);
+        mAutoSendTime = e.getAttributeLong(MailConstants.A_AUTO_SEND_TIME, 1);
 
         Element content = e.getOptionalElement(MailConstants.E_CONTENT);
         if (content != null) {
@@ -545,5 +547,9 @@ public class ZMessage implements ZItem, ToZJSONObject {
 
     public void update(String destFolderId, String tagList, String flags) throws ServiceException {
         getMailbox().updateMessage(getId(), destFolderId, tagList, flags); // TODO: simplify tags/folders
+    }
+
+    public long getAutoSendTime() {
+        return mAutoSendTime;
     }
 }

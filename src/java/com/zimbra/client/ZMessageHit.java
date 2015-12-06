@@ -45,6 +45,7 @@ public class ZMessageHit implements ZSearchHit {
     private List<ZEmailAddress> mAddresses;
     private ZMessage mMessage;
     private boolean mIsInvite;
+    private long mAutoSendTime;
 
     public ZMessageHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
@@ -58,6 +59,7 @@ public class ZMessageHit implements ZSearchHit {
         mSize = (int) e.getAttributeLong(MailConstants.A_SIZE);
         mConvId = e.getAttribute(MailConstants.A_CONV_ID);
         mContentMatched = e.getAttributeBool(MailConstants.A_CONTENTMATCHED, false);
+        mAutoSendTime = e.getAttributeLong(MailConstants.A_AUTO_SEND_TIME, -1);
         mMimePartHits = new ArrayList<String>();
         for (Element hp: e.listElements(MailConstants.E_HIT_MIMEPART)) {
             mMimePartHits.add(hp.getAttribute(MailConstants.A_PART));
@@ -224,6 +226,10 @@ public class ZMessageHit implements ZSearchHit {
 
     public String getFolderId() {
         return mFolderId;
+    }
+
+    public long getAutoSendTime() {
+        return mAutoSendTime;
     }
 
     @Override
