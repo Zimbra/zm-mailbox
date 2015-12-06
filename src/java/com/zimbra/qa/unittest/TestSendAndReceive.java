@@ -82,43 +82,6 @@ public class TestSendAndReceive extends TestCase {
     }
 
     /**
-     * Verifies "send-message-later" functionality.
-     */
-    public void testAutoSendDraft() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-
-        ZMailbox.ZOutgoingMessage outgoingMsg = new ZMailbox.ZOutgoingMessage();
-        List<ZEmailAddress> addrs = new LinkedList<ZEmailAddress>();
-        String senderAddr = TestUtil.getAddress(USER_NAME);
-        addrs.add(new ZEmailAddress(senderAddr, null, null, ZEmailAddress.EMAIL_TYPE_FROM));
-        String rcptAddr = TestUtil.getAddress(REMOTE_USER_NAME);
-        addrs.add(new ZEmailAddress(rcptAddr, null, null, ZEmailAddress.EMAIL_TYPE_TO));
-        outgoingMsg.setAddresses(addrs);
-        String subject = NAME_PREFIX + " autoSendDraft";
-        outgoingMsg.setSubject(subject);
-
-        // auto-send after 0.5 sec
-        mbox.saveDraft(outgoingMsg, null, Integer.toString(Mailbox.ID_FOLDER_DRAFTS), System.currentTimeMillis() + 500);
-
-        // make sure message has arrived in the Sent folder
-        TestUtil.waitForMessage(mbox, "in:Sent " + subject);
-
-        // make sure message is no longer in the Drafts folder
-        //there is a race here since auto send and delete from drafts are two transactions
-        //handle the race by sleeping and trying again a few times
-        boolean deletedFromSent = false;
-        int tries = 0;
-        while (!deletedFromSent && tries < 10) {
-            deletedFromSent = TestUtil.search(mbox, "in:Drafts " + subject).isEmpty();
-            if (!deletedFromSent) {
-                Thread.sleep(500);
-            }
-            tries++;
-        }
-        assertTrue("message is still in the Drafts folder", deletedFromSent);
-    }
-
-    /**
      * Verifies that we set the Return-Path and Received headers
      * for incoming messages.
      */
