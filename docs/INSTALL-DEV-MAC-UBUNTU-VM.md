@@ -104,41 +104,8 @@ If you want to be able to edit files using an IDE on your Mac, you have to set u
 
 Once VMWare tools are installed, your Mac's shared folder will be mounted at /mnt/hgfs/. You can use this path as your workspace or you can map it to another folder on the VM.
 
-## Configure MariDB
-1. Copy ZimbraServer/conf/mariadb/my.cnf to /opt/zimbra/conf/my.cnf
-````
-$ cp ZimbraServer/conf/mariadb/my.cnf to /opt/zimbra/conf/my.cnf
-````
-
-2. Create default database and tables
-````
-$ /opt/zimbra/common/share/mysql/scripts/mysql_install_db --basedir=/opt/zimbra/common --datadir=/opt/zimbra/db/data --defaults-file=/opt/zimbra/conf/my.cnf --user=zimbra
-````
-
-3. Start mariadb:
-````
-$ /opt/zimbra/bin/mysql.server start
-````
-
-4. Set password for MariaDB root user
-````
-$ /opt/zimbra/common/bin/mysqladmin --socket=/opt/zimbra/data/tmp/mysql/mysql.sock -u root password zimbra
-````
-
-5. Reload permissions tables
-````
-$ /opt/zimbra/common/bin/mysqladmin --socket=/opt/zimbra/data/tmp/mysql/mysql.sock -u root -p reload
-````
-
-6. Restart mariadb and make sure it is running:
-````
-$ /opt/zimbra/bin/mysql.server restart
-$ /opt/zimbra/bin/mysql.server status
-````
-
 ## Download Sun JDK 1.7
-You need both JDK 1.7 to work on JUDASPRIEST branch. 
-For working on "main" branch, use zimbra-openjdk (installed on "Install zimbra packages" step above)
+Even though JUDASPRIEST branch runs on Java8, you need JDK 1.7 to compil JUDASPRIEST branch. 
 If you are installing Sun JDK. Download and unpack it to your home folder on Ubuntu. Then, add jdk's bin folder to your $PATH environment variable. 
 If you are using zimbra-openjdk for compiling Zimbra Java code, add /opt/zimbra/java/bin to your $PATH. You may also want to set JAVA_HOME for other Java tools to work properly. 
 If using Sun JDK 1.7.0 rev 79, add the following to $HOME/.profile
@@ -259,6 +226,50 @@ only what you need. Take a look at the clients of others in your group for examp
 ````
 $ cd ~/p4/main
 $ p4 sync
+````
+
+## Initialize /opt/zimbra/ folder structure
+Run the following command in ZimbraServer folder. This will reate required folders under /opt/zimbra and place required binaries under /opt/zimbra/bin
+````
+$ ant  init-opt-zimbra
+````
+
+## Configure MariDB
+1. Copy ZimbraServer/conf/mariadb/my.cnf to /opt/zimbra/conf/my.cnf
+````
+$ cp ZimbraServer/conf/mariadb/my.cnf to /opt/zimbra/conf/my.cnf
+````
+
+2. Create default database and tables
+````
+$ /opt/zimbra/common/share/mysql/scripts/mysql_install_db --basedir=/opt/zimbra/common --datadir=/opt/zimbra/db/data --defaults-file=/opt/zimbra/conf/my.cnf --user=zimbra
+````
+
+3. Start mariadb:
+````
+$ /opt/zimbra/bin/mysql.server start
+````
+
+4. Set password for MariaDB root user
+````
+$ /opt/zimbra/common/bin/mysqladmin --socket=/opt/zimbra/data/tmp/mysql/mysql.sock -u root password zimbra
+````
+
+5. Reload permissions tables
+````
+$ /opt/zimbra/common/bin/mysqladmin --socket=/opt/zimbra/data/tmp/mysql/mysql.sock -u root -p reload
+````
+
+6. Restart mariadb and make sure it is running:
+````
+$ /opt/zimbra/bin/mysql.server restart
+$ /opt/zimbra/bin/mysql.server status
+````
+
+## Deploy dev build
+run the following command in ZimbraServer folder
+````
+$ ant reset-all
 ````
 
 ## Integration with Eclipse and perforce on your Mac
