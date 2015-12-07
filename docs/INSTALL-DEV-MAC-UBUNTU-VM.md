@@ -229,9 +229,10 @@ $ p4 sync
 ````
 
 ## Initialize /opt/zimbra/ folder structure
-Run the following command in ZimbraServer folder. This will reate required folders under /opt/zimbra and place required binaries under /opt/zimbra/bin
+Run the following command in ZimbraServer folder. This will install jetty and copy some scripts to /opt/zimbra/bin
+
 ````
-$ ant  init-opt-zimbra
+$ ant install-thirdparty init-opt-zimbra
 ````
 
 ## Configure MariDB
