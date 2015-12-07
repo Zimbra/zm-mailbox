@@ -1,6 +1,10 @@
 Setup Development Environment for Mac OSX
 =========================================
 
+IMPORTANT: 
+These instructions are obsolete and will not work with source code newer than November 17th, 2015
+
+
 ## Install Homebrew
 
 Install the [Homebrew](http://brew.sh) package manager for OS X.

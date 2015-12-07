@@ -78,7 +78,7 @@
     <property name="deploy.port" value="7070"/>
     <property name="ldap.host" value="127.0.0.1"/>
     <property name="ldap.port" value="389"/>
-  <property name="ldap.service.windows" value="CDSSilverSlapd" />
+  	<property name="ldap.service.windows" value="CDSSilverSlapd" />
 
     <condition property="remote.deploy.host" value="${env.ZIMBRA_REMOTE_DEPLOY_HOST}">
         <isset property="env.ZIMBRA_REMOTE_DEPLOY_HOST"/>
@@ -140,38 +140,11 @@
         <not><isset property="is-production"/></not>
     </condition>
 
-    <condition property="slapd.conf.src" value="${config.dir}/ldap/slapd.win.conf">
-        <isset property="is-windows"/>
-    </condition>
-    <condition property="slapd.conf.src" value="${config.dir}/ldap/slapd.conf${production.suffix}">
-        <isset property="is-unix"/>
-    </condition>
-    <condition property="slapd.conf.dir" value="openldap">
-        <isset property="is-windows"/>
-    </condition>
-    <condition property="slapd.conf.dir" value="conf">
-        <isset property="is-unix"/>
-    </condition>
-    <condition property="slapd.etc.dir" value="openldap/etc">
-        <isset property="is-windows"/>
-    </condition>
-    <condition property="slapd.etc.dir" value="openldap/etc/openldap">
-        <isset property="is-unix"/>
-    </condition>
-
-    <condition property="ldapmodify" value="${zimbra.home.dir}/openldap/ldapmodify">
-        <isset property="is-windows"/>
-    </condition>
-    <condition property="ldapmodify" value="${zimbra.home.dir}/openldap/bin/ldapmodify">
-        <isset property="is-unix"/>
-    </condition>
-
-    <condition property="ldapdelete" value="${zimbra.home.dir}/openldap/ldapdelete">
-        <isset property="is-windows"/>
-    </condition>
-    <condition property="ldapdelete" value="${zimbra.home.dir}/openldap/bin/ldapdelete">
-        <isset property="is-unix"/>
-    </condition>
+    <property name="slapd.conf.src" value="${config.dir}/ldap/slapd.conf${production.suffix}" />
+    <property name="slapd.conf.dir" value="conf" />
+    <property name="slapd.etc.dir" value="common/etc/openldap" />
+    <property name="ldapmodify" value="${zimbra.home.dir}/common/bin/ldapmodify" />
+    <property name="ldapdelete" value="${zimbra.home.dir}/common/bin/ldapdelete" />
 
     <property name="defaultdomain.name" value="${zimbra.server.hostname}"/>
     <property name="samplefamilyaccounts.file" location="data/soap/samplefamilyaccounts.xml"/>
@@ -1352,7 +1325,7 @@
         <echo message="to stop (or stop jetty manually)"/>
         <echo message="and try again later."/>
         <delete failonerror="no">
-            <fileset dir="${zimbra.home.dir}/data/tmp" excludes="mysql/**,mysql.sock"/>
+            <fileset dir="${zimbra.home.dir}/data" excludes="**/mysql/**,mysql.sock,mysql.server.lock"/>
         </delete>
 
         <delete dir="${zimbra.home.dir}/zmstat"/>
@@ -1364,14 +1337,11 @@
         <delete dir="${zimbra.home.dir}/conf/attrs"/>
         <delete dir="${zimbra.home.dir}/conf/rights"/>
         <delete dir="${zimbra.home.dir}/conf/msgs"/>
-        <delete dir="${zimbra.home.dir}/data"/>
         <delete failonerror="no">
             <fileset dir="${zimbra.home.dir}/log" includes="*.log"/>
         </delete>
       <antcall target="dir-init-jetty"/>
 
-
-      <mkdir dir="${zimbra.home.dir}/data"/>
         <mkdir dir="${zimbra.home.dir}/data/ldap"/>
          <mkdir dir="${zimbra.home.dir}/data/ldap/mdb"/>
          <mkdir dir="${zimbra.home.dir}/data/ldap/mdb/db"/>
@@ -1930,7 +1900,6 @@
         <if>
             <and>
                 <available file="${zimbra.home.dir}/bin/ldap" type="file"/>
-                <available file="${zimbra.home.dir}/openldap"/>
             </and>
             <then>
                 <exec executable="${zimbra.home.dir}/bin/ldap">
