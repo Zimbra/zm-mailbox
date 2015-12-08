@@ -36,7 +36,7 @@ public class PreAuth {
      * expiration time for the account. Can be used to sync the auth token expiration time with the external system's
      * notion of expiration (like a Kerberos TGT lifetime, for example).
      */
-    @XmlAttribute private Long expiresTimestamp;
+    @XmlAttribute private Long expires;
     /**
      * @zm-api-field-tag computed-preauth-value
      * @zm-api-field-description Computed preauth value
@@ -46,8 +46,12 @@ public class PreAuth {
     public long getTimestamp() { return timestamp; }
     public PreAuth setTimestamp(long timestamp) { this.timestamp = timestamp; return this; }
 
-    public Long getExpiresTimestamp() { return expiresTimestamp; }
-    public PreAuth setExpiresTimestamp(Long timestamp) { this.expiresTimestamp = timestamp; return this; }
+    public Long getExpires() { return expires; }
+    public PreAuth setExpires(Long timestamp) { this.expires = timestamp; return this; }
+    /* Deprecated interface */
+    public Long getExpiresTimestamp() { return getExpires(); }
+    public PreAuth setExpiresTimestamp(Long timestamp) { return setExpires(timestamp); }
+    /* End Deprecated interface */
 
     public String getValue() { return value; }
     public PreAuth setValue(String value) { this.value = value; return this; }
