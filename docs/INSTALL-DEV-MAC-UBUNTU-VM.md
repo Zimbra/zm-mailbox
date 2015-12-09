@@ -107,16 +107,16 @@ If you want to be able to edit files using an IDE on your Mac, you have to set u
 Once VMWare tools are installed, your Mac's shared folder will be mounted at /mnt/hgfs/. You can use this path as your workspace or you can map it to another folder on the VM.
 
 ## Download Sun JDK 1.7
-Even though JUDASPRIEST branch runs on Java8, you need JDK 1.7 to compil JUDASPRIEST branch. 
-If you are installing Sun JDK. Download and unpack it to your home folder on Ubuntu. Then, add jdk's bin folder to your $PATH environment variable. 
-If you are using zimbra-openjdk for compiling Zimbra Java code, add /opt/zimbra/java/bin to your $PATH. You may also want to set JAVA_HOME for other Java tools to work properly. 
+Even though JUDASPRIEST branch runs on Java8, you need JDK 1.7 to compil JUDASPRIEST branch.
+If you are installing Sun JDK. Download and unpack it to your home folder on Ubuntu. Then, add jdk's bin folder to your $PATH environment variable.
+If you are using zimbra-openjdk for compiling Zimbra Java code, add /opt/zimbra/java/bin to your $PATH. You may also want to set JAVA_HOME for other Java tools to work properly.
 If using Sun JDK 1.7.0 rev 79, add the following to $HOME/.profile
 ````
 export JAVA_HOME="$HOME/jdk1.7.0_79"
 ````
 
 ## Get the source code
-You have to log in to perforce on the guest Ubuntu VM. 
+You have to log in to perforce on the guest Ubuntu VM.
 
 ````
 $ p4 login
@@ -285,16 +285,15 @@ $ zmlocalconfig -e zimbra_uid=1000
 $ zmlocalconfig -e zimbra_gid=1000
 ````
 
-
 ## Integration with Eclipse and perforce on your Mac
-After you follow the steps outlined above, you will be able to check-out/check-in code on your Ubuntu VM. That's cool, but it is not very convenient if you want to use Eclipse or any other IDE on your Mac. To be able to manage files and use an IDE on your Mac, you will need to 
+After you follow the steps outlined above, you will be able to check-out/check-in code on your Ubuntu VM. That's cool, but it is not very convenient if you want to use Eclipse or any other IDE on your Mac. To be able to manage files and use an IDE on your Mac, you will need to:
 1. install and configure performce on your Mac
 2. reconfigure your workspace "Root" to map to the path on your Mac, e.g. $HOME/ubuntuhome/p4 instead of /mnt/hgfs/ubuntuhome/p4
 3. (bonus points) create a simlink to /mng/hgfs/ubuntuhome on the Ubuntu VM to match the path on your Mac host. This will allow you to use the same perforce client spec on both machines. 
 
-E.g., if the shared folder on your mac is /Users/gsolovyev/ubuntuhome, run the following on your Ubuntu VM:  
+E.g., if the shared folder on your mac is /Users/gsolovyev/ubuntuhome, run the following on your Ubuntu VM:
 ````
 $ sudo mkdir -p /Users/gsolovyev
 $ sudo ln -s /mnt/hgfs/ubuntuhome /Users/gsolovyev/
 $ sudo chown zimbra:zimbra /Users/gsolovyev
-````  
+````
