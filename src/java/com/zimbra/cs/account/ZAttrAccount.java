@@ -4865,6 +4865,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether account should act as a service account to provide free busy
+     * information to exchange servers for users in the domain.
+     *
+     * @return zimbraAvailibilityServiceProvider, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2072)
+    public boolean isAvailibilityServiceProvider() {
+        return getBooleanAttr(Provisioning.A_zimbraAvailibilityServiceProvider, false);
+    }
+
+    /**
+     * Whether account should act as a service account to provide free busy
+     * information to exchange servers for users in the domain.
+     *
+     * @param zimbraAvailibilityServiceProvider new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2072)
+    public void setAvailibilityServiceProvider(boolean zimbraAvailibilityServiceProvider) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAvailibilityServiceProvider, zimbraAvailibilityServiceProvider ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether account should act as a service account to provide free busy
+     * information to exchange servers for users in the domain.
+     *
+     * @param zimbraAvailibilityServiceProvider new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2072)
+    public Map<String,Object> setAvailibilityServiceProvider(boolean zimbraAvailibilityServiceProvider, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAvailibilityServiceProvider, zimbraAvailibilityServiceProvider ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether account should act as a service account to provide free busy
+     * information to exchange servers for users in the domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2072)
+    public void unsetAvailibilityServiceProvider() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAvailibilityServiceProvider, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether account should act as a service account to provide free busy
+     * information to exchange servers for users in the domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2072)
+    public Map<String,Object> unsetAvailibilityServiceProvider(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAvailibilityServiceProvider, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 9.0.0. index batch size is controlled on server
      * level using zimbraReindexBatchSize. Orig desc: Batch size to use when
      * indexing data

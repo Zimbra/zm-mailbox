@@ -10459,4 +10459,7 @@ TODO: delete them permanently from here
    <desc>The algorithm for determining how long the task scheduler should delay a task attempt upon failure</desc>
 </attr>
 
+<attr id="2072" name="zimbraAvailibilityServiceProvider" type="boolean" cardinality="single" optionalIn="account" since="8.7.0,9.0.0">
+    <desc>Whether account should act as a service account to provide free busy information to exchange servers for users in the domain.</desc>
+</attr>
 </attrs>
