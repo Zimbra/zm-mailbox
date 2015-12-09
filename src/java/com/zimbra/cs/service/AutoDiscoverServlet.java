@@ -250,7 +250,8 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         }
 
         try {
-            if (!AccountUtil.addressMatchesAccount(acct, email)) {
+            if (! (AccountUtil.addressMatchesAccount(acct, email) ||
+                acct.isAvailibilityServiceProvider())) { //Exchange server sends dummy email address from service account.
                 log.warn(email + " doesn't match account addresses for user " + acct.getName());
                 sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                         email + " doesn't match account addresses");
@@ -606,6 +607,10 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         Element ews = xmlDoc.createElement("EwsUrl");
         protocol.appendChild(ews);
         ews.appendChild(xmlDoc.createTextNode(serviceUrl));
+
+        Element as = xmlDoc.createElement("ASUrl");
+        protocol.appendChild(as);
+        as.appendChild(xmlDoc.createTextNode(serviceUrl));
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
