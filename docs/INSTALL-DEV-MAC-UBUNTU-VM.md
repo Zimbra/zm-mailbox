@@ -41,7 +41,7 @@ $ sudo apt-get update
 ````
 4. Install zimbra packages
 ````
-$ sudo apt-get install zimbra-openldap-server zimbra-openldap-client zimbra-rsync zimbra-openssl zimbra-openjdk zimbra-openjdk-cacerts zimbra-mariadb zimbra-tcmalloc-lib
+$ sudo apt-get install zimbra-openldap-server zimbra-openldap-client zimbra-rsync zimbra-openssl zimbra-openjdk zimbra-openjdk-cacerts zimbra-mariadb zimbra-tcmalloc-lib zimbra-openjdk
 ````
 
 5. Change owner of /opt/zimbra to "zimbra"
@@ -52,11 +52,13 @@ $ sudo chown -R zimbra /opt/zimbra
 
 ## Configure your workspace environment on the VM
 
-1. Download Perforce - P4 Command-Line Client
-2. $ sudo mv p4 $HOME/bin    (may need to create local/bin)
-3. $ chmod +x $HOME/bin/p4
-4. Copy your SSH keys (public and private) to $HOME/.ssh/ folder on the VM
-5. set up your environment variables (may be different depending on your office location and SSH set up)
+1. Add Helix (former Perforce) repository following instructions on this page: https://www.perforce.com/perforce-packages/helix-versioning-engine
+2. Install helix-cli via apt
+````
+$ sudo apt-get install helix-cli
+````
+3. Copy your SSH keys (public and private) to $HOME/.ssh/ folder on the VM
+4. Set up your environment variables (may be different depending on your office location and SSH set up)
 
 Add the following content to $HOME/.profile
 ````
@@ -72,7 +74,7 @@ alias ssh_web='ssh -f -N web'
 alias ssh_rb='ssh -f -N rb'
 alias ssh_all='ssh_p4; ssh_web; ssh_rb'
 ````
-6. set up SSH configuration for accessing servers behind the firewall
+5. set up SSH configuration for accessing servers behind the firewall
 Add the following content to $HOME/.ssh/config
 ````
 Host *
@@ -94,7 +96,7 @@ Host rb
 Hostname fence-new.zimbra.com
 LocalForward 8080 reviewboard.eng.zimbra.com:80
 ````
-7. load new environment settings and start SSH tunnel to perforce:
+6. load new environment settings and start SSH tunnel to perforce:
 ````
 $ source ~/.profile
 $ ssh_all
@@ -110,13 +112,9 @@ If you are installing Sun JDK. Download and unpack it to your home folder on Ubu
 If you are using zimbra-openjdk for compiling Zimbra Java code, add /opt/zimbra/java/bin to your $PATH. You may also want to set JAVA_HOME for other Java tools to work properly. 
 If using Sun JDK 1.7.0 rev 79, add the following to $HOME/.profile
 ````
-JAVA_HOME="$HOME/jdk1.7.0_79"
+export JAVA_HOME="$HOME/jdk1.7.0_79"
 ````
 
-If using zimbra-openjdk add the following to $HOME/.profile
-````
-JAVA_HOME="/opt/zimbra/java"
-````
 ## Get the source code
 You have to log in to perforce on the guest Ubuntu VM. 
 
@@ -238,7 +236,7 @@ $ ant install-thirdparty init-opt-zimbra
 ## Configure MariDB
 1. Copy ZimbraServer/conf/mariadb/my.cnf to /opt/zimbra/conf/my.cnf
 ````
-$ cp ZimbraServer/conf/mariadb/my.cnf to /opt/zimbra/conf/my.cnf
+$ cp ZimbraServer/conf/mariadb/my.cnf /opt/zimbra/conf/my.cnf
 ````
 
 2. Create default database and tables
@@ -273,12 +271,30 @@ run the following command in ZimbraServer folder
 $ ant reset-all
 ````
 
+## Configure localconfig
+Find out your zimbra users uid and gid either by looking at /etc/passwd or by running
+````
+$ sudo id -u zimbra
+$ sudo id -g zimbra
+````
+
+Edit localconfig value zimbra_id to match your zimbra user's uid. e.g., if your zimbra user's uid is 1000 and gid is 1000, which is what it would normally be if this is the first and only user account.
+
+````
+$ zmlocalconfig -e zimbra_uid=1000
+$ zmlocalconfig -e zimbra_gid=1000
+````
+
+
 ## Integration with Eclipse and perforce on your Mac
 After you follow the steps outlined above, you will be able to check-out/check-in code on your Ubuntu VM. That's cool, but it is not very convenient if you want to use Eclipse or any other IDE on your Mac. To be able to manage files and use an IDE on your Mac, you will need to 
 1. install and configure performce on your Mac
 2. reconfigure your workspace "Root" to map to the path on your Mac, e.g. $HOME/ubuntuhome/p4 instead of /mnt/hgfs/ubuntuhome/p4
+3. (bonus points) create a simlink to /mng/hgfs/ubuntuhome on the Ubuntu VM to match the path on your Mac host. This will allow you to use the same perforce client spec on both machines. 
 
-
-
-
-  
+E.g., if the shared folder on your mac is /Users/gsolovyev/ubuntuhome, run the following on your Ubuntu VM:  
+````
+$ sudo mkdir -p /Users/gsolovyev
+$ sudo ln -s /mnt/hgfs/ubuntuhome /Users/gsolovyev/
+$ sudo chown zimbra:zimbra /Users/gsolovyev
+````  
