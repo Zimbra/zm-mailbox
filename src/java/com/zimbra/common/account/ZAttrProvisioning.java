@@ -3623,6 +3623,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAutoSubmittedNullReturnPath = "zimbraAutoSubmittedNullReturnPath";
 
     /**
+     * Whether account should act as a service account to provide free busy
+     * information to exchange servers for users in the domain.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2072)
+    public static final String A_zimbraAvailabilityServiceProvider = "zimbraAvailabilityServiceProvider";
+
+    /**
      * Locales available for this account
      */
     @ZAttr(id=487)
@@ -3635,15 +3644,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=364)
     public static final String A_zimbraAvailableSkin = "zimbraAvailableSkin";
-
-    /**
-     * Whether account should act as a service account to provide free busy
-     * information to exchange servers for users in the domain.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2072)
-    public static final String A_zimbraAvailibilityServiceProvider = "zimbraAvailibilityServiceProvider";
 
     /**
      * length of each interval in auto-grouped backup
