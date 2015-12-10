@@ -20,6 +20,7 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.service.ServiceException;
@@ -28,6 +29,7 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class CacheEntrySelector {
 
+    @XmlType(namespace="urn:zimbraAdmin")
     public static enum CacheEntryBy {
 
         // case must match protocol

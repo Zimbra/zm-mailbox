@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -49,7 +49,7 @@ import com.zimbra.soap.admin.type.SessionInfo;
 public class DumpSessionsTest {
 
     private static final Logger LOG = Logger.getLogger(DumpSessionsTest.class);
-    
+
     private static Unmarshaller unmarshaller;
     private static Marshaller marshaller;
 
@@ -160,8 +160,7 @@ public class DumpSessionsTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         marshaller.marshal(gsr, out);
         String xml = out.toString("UTF-8");
-        if (LOG.isInfoEnabled())
-            LOG.info("Xml:\n" + xml);
+        LOG.debug("Xml:\n" + xml);
         Assert.assertTrue("Marshalled XML should contain 'push=\"true\"'", xml.indexOf("push=\"true\"") > 0);
         Assert.assertTrue("Marshalled XML should contain 'size=\"222\"'", xml.indexOf("size=\"222\"") > 0);
         Assert.assertTrue(

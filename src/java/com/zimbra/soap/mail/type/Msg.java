@@ -266,6 +266,7 @@ public class Msg {
         return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 
+    @XmlType(namespace="urn:zimbraMail")
     public static final class Header {
         /**
          * @zm-api-field-tag header-name

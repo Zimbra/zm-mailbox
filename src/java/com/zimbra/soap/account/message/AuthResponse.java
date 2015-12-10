@@ -42,7 +42,7 @@ import com.zimbra.soap.type.ZmBoolean;
 /*
 <AuthResponse">
    <authToken>...</authToken>
-   <lifetime>...</lifetime>
+   <lifetime>{lifetime-in-milliseconds}</lifetime>
    <session .../>
    <refer>{mail-host}</refer>
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
@@ -63,7 +63,7 @@ public class AuthResponse {
     @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=true)
     private String authToken;
     /**
-     * @zm-api-field-description Life time for the authorization
+     * @zm-api-field-description Life time for the authorization - given in milliseconds
      */
     @ZimbraJsonAttribute
     @XmlElement(name=AccountConstants.E_LIFETIME /* lifetime */, required=true)
