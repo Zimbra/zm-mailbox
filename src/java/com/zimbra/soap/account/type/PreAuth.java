@@ -48,10 +48,16 @@ public class PreAuth {
 
     public Long getExpires() { return expires; }
     public PreAuth setExpires(Long timestamp) { this.expires = timestamp; return this; }
-    /* Deprecated interface */
+    /**
+     * Gets the expiration for this PreAuth
+     * @deprecated Use the `getExpires` method 
+     */
     public Long getExpiresTimestamp() { return getExpires(); }
+    /**
+     * Sets the expiration for this PreAuth
+     * @deprecated Use the `setExpires` method 
+     */    
     public PreAuth setExpiresTimestamp(Long timestamp) { return setExpires(timestamp); }
-    /* End Deprecated interface */
 
     public String getValue() { return value; }
     public PreAuth setValue(String value) { this.value = value; return this; }
