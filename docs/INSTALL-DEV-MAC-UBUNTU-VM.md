@@ -222,7 +222,7 @@ That view may have a lot more than you need, so you may want to consider explici
 only what you need. Take a look at the clients of others in your group for examples.
 
 ````
-$ cd ~/p4/main
+$ cd ~/p4/JUDASPRIEST
 $ p4 sync
 ````
 
