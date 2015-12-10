@@ -23,42 +23,43 @@ import org.apache.lucene.analysis.NormalizeCharMap;
 import org.apache.lucene.analysis.CharStream;
 
 public class HalfwidthKanaVoicedMappingFilter extends MappingCharFilter {
-	private static NormalizeCharMap normMap = new NormalizeCharMap();
-	static {
-		normMap.add("ｶﾞ","ガ");
-		normMap.add("ｷﾞ","ギ");
-		normMap.add("ｸﾞ","グ");
-		normMap.add("ｹﾞ","ゲ");
-		normMap.add("ｺﾞ","ゴ");
-		normMap.add("ｻﾞ","ザ");
-		normMap.add("ｼﾞ","ジ");
-		normMap.add("ｽﾞ","ズ");
-		normMap.add("ｾﾞ","ゼ");
-		normMap.add("ｿﾞ","ゾ");
-		normMap.add("ﾀﾞ","ダ");
-		normMap.add("ﾁﾞ","ヂ");
-		normMap.add("ﾂﾞ","ヅ");
-		normMap.add("ﾃﾞ","デ");
-		normMap.add("ﾄﾞ","ド");
-		normMap.add("ﾊﾟ","パ");
-		normMap.add("ﾋﾟ","ピ");
-		normMap.add("ﾌﾟ","プ");
-		normMap.add("ﾍﾟ","ペ");
-		normMap.add("ﾎﾟ","ポ");
-		normMap.add("ﾊﾞ","バ");
-		normMap.add("ﾋﾞ","ビ");
-		normMap.add("ﾌﾞ","ブ");
-		normMap.add("ﾍﾞ","ベ");
-		normMap.add("ﾎﾞ","ボ");
-		normMap.add("ｳﾞ","ヴ");
-		normMap.add("ﾜﾞ","ヷ");
-		normMap.add("ｦﾞ","ヺ");
-	}
+    private static NormalizeCharMap normMap = new NormalizeCharMap();
+    static {
+        normMap.add("\uff76\uff9e","\u30ac");
+        normMap.add("\uff77\uff9e","\u30ae");
+        normMap.add("\uff78\uff9e","\u30b0");
+        normMap.add("\uff79\uff9e","\u30b2");
+        normMap.add("\uff7a\uff9e","\u30b4");
+        normMap.add("\uff7b\uff9e","\u30b6");
+        normMap.add("\uff7c\uff9e","\u30b8");
+        normMap.add("\uff7d\uff9e","\u30ba");
+        normMap.add("\uff7e\uff9e","\u30bc");
+        normMap.add("\uff7f\uff9e","\u30be");
+        normMap.add("\uff80\uff9e","\u30c0");
+        normMap.add("\uff81\uff9e","\u30c2");
+        normMap.add("\uff82\uff9e","\u30c5");
+        normMap.add("\uff83\uff9e","\u30c7");
+        normMap.add("\uff84\uff9e","\u30c9");
+        normMap.add("\uff8a\uff9f","\u30d1");
+        normMap.add("\uff8b\uff9f","\u30d4");
+        normMap.add("\uff8c\uff9f","\u30d7");
+        normMap.add("\uff8d\uff9f","\u30da");
+        normMap.add("\uff8e\uff9f","\u30dd");
+        normMap.add("\uff8a\uff9e","\u30d0");
+        normMap.add("\uff8b\uff9e","\u30d3");
+        normMap.add("\uff8c\uff9e","\u30d6");
+        normMap.add("\uff8d\uff9e","\u30d9");
+        normMap.add("\uff8e\uff9e","\u30dc");
+        normMap.add("\uff73\uff9e","\u30f4");
+        normMap.add("\uff9c\uff9e","\u30f7");
+        normMap.add("\uff66\uff9e","\u30fa");
+    }
 
-	public HalfwidthKanaVoicedMappingFilter(Reader in) {
-		super(normMap, in);
-	}
-	public HalfwidthKanaVoicedMappingFilter(CharStream in) {
-		super(normMap, in);
-	}
+    public HalfwidthKanaVoicedMappingFilter(Reader in) {
+        super(normMap, in);
+    }
+
+    public HalfwidthKanaVoicedMappingFilter(CharStream in) {
+        super(normMap, in);
+    }
 }
