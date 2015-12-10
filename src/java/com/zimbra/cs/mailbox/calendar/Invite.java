@@ -558,7 +558,8 @@ public class Invite {
             }
 
         } catch (ParseException e) {
-            throw ServiceException.FAILURE("Error parsing metadata for invite " + mailItemId+"-"+ componentNum + " in calItem " + calItem!=null ? Integer.toString(calItem.getId()) : "(null)", e);
+            throw ServiceException.FAILURE(String.format("Error parsing metadata for invite %s-%s in calItem %s",
+                    mailItemId, componentNum, (calItem != null) ? Integer.toString(calItem.getId()) : "(null)"), e);
         }
 
         String name = meta.get(FN_NAME, "");
@@ -578,9 +579,8 @@ public class Invite {
             Metadata metaOrg = meta.getMap(FN_ORGANIZER, true);
             org = metaOrg != null ? new ZOrganizer(metaOrg) : null;
         } catch (ServiceException e) {
-            sLog.warn("Problem decoding organizer for calItem "
-                    + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
-                    + " invite "+mailItemId+"-" + componentNum);
+            sLog.warn("Problem decoding organizer for calItem %s invite %s-%s",
+                    (calItem != null) ? Integer.toString(calItem.getId()) : "(null)", mailItemId, componentNum);
         }
 
         long numAts = meta.getLong(FN_NUM_ATTENDEES, 0);
@@ -591,9 +591,8 @@ public class Invite {
                 if (metaAttendee != null)
                     attendees.add(new ZAttendee(metaAttendee));
             } catch (ServiceException e) {
-                ZimbraLog.calendar.warn("Problem decoding attendee " + i + " for calendar item "
-                        + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
-                        + " invite "+mailItemId+"-" + componentNum);
+                ZimbraLog.calendar.warn("Problem decoding attendee %s for calendar item %s invite %s-%s",
+                        i, (calItem != null) ? Integer.toString(calItem.getId()) : "(null)", mailItemId, componentNum);
             }
         }
 
@@ -677,9 +676,9 @@ public class Invite {
                         invite.addAlarm(alarm);
                 }
             } catch (ServiceException e) {
-                ZimbraLog.calendar.warn("Problem decoding alarm " + i + " for calendar item "
-                        + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
-                        + " invite "+mailItemId+"-" + componentNum, e);
+                ZimbraLog.calendar.warn("Problem decoding alarm %s for calendar item %s invite %s-%s",
+                        i, (calItem != null) ? Integer.toString(calItem.getId()) : "(null)",
+                        mailItemId, componentNum, e);
             }
         }
 
