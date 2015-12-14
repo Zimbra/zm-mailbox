@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,14 +18,20 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcSearchRequest;
@@ -41,15 +47,26 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
+import com.zimbra.soap.account.type.PreAuth;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.common.util.ZimbraLog;
 
-public class TestAuthentication
-extends TestCase {
+public class TestAuthentication extends TestCase {
     private static String USER_NAME = "testauthentication";
     private static String PASSWORD = "test123";
 
     private Provisioning mProv;
     private Integer mMboxId;
+
+    String setUpAndReturnDomainAuthKey() throws Exception {
+        String domainName = TestUtil.getDomain();
+        Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
+        String preAuthKey = PreAuthKey.generateRandomPreAuthKey();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraPreAuthKey, preAuthKey);
+        Provisioning.getInstance().modifyAttrs(domain, attrs);
+        return preAuthKey;
+    }
 
     @Override public void setUp()
     throws Exception {
@@ -202,6 +219,44 @@ extends TestCase {
     }
 
     /**
+     * test auth request with preauth in SOAP instead of login/password
+     * @throws Exception
+     */
+    public void testAuthViaPreauthToken() throws Exception {
+        long timestamp = System.currentTimeMillis();
+        long expires = timestamp + 60000;
+
+        String domainPreAuthKey = setUpAndReturnDomainAuthKey();
+
+        Account a = TestUtil.getAccount(USER_NAME);
+        AccountSelector acctSel = new AccountSelector(com.zimbra.soap.type.AccountBy.name, a.getName());
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+
+        AuthRequest req = new AuthRequest(acctSel);
+        HashMap<String, String> params = new HashMap<String, String> ();
+        params.put("account", a.getName() );
+        params.put("by", "name");
+        params.put("timestamp", timestamp + "");
+        params.put("expires", expires + "");
+        PreAuth preAuth = new PreAuth()
+            .setExpires(expires)
+            .setTimestamp(timestamp)
+                .setValue(PreAuthKey.computePreAuth(params, domainPreAuthKey));
+
+        req = req.setPreauth(preAuth);
+        Element resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+        AuthResponse authResp = JaxbUtil.elementToJaxb(resp);
+        assertTrue("Lifetime is invalid", authResp.getLifetime() < expires - timestamp);
+
+        String newAuthToken = authResp.getAuthToken();
+        assertNotNull("should have received a new authtoken", newAuthToken);
+        assertTrue("should have a received a non-empty authtoken", newAuthToken.length() > 0);
+        AuthToken at = ZimbraAuthToken.getAuthToken(newAuthToken);
+        assertTrue("new auth token should be registered", at.isRegistered());
+        assertFalse("new auth token should not be expired yet", at.isExpired());
+    }
+
+    /**
      * Deletes the account and the associated mailbox.
      */
     private void cleanUp()
@@ -210,7 +265,7 @@ extends TestCase {
         if (account != null) {
             Provisioning.getInstance().deleteAccount(account.getId());
         }
-        
+
         if (mMboxId != null) {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMboxId);
             mbox.deleteMailbox();
