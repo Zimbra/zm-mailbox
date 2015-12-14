@@ -5,7 +5,7 @@
 
 
 # Comment or remove the line below.
-#Example
+# Example
 
 # Path to the database directory.
 # WARNING: It must match clamd.conf's directive!
@@ -20,7 +20,8 @@ UpdateLogFile /opt/zimbra/log/freshclam.log
 # Value of 0 disables the limit.
 # You may use 'M' or 'm' for megabytes (1M = 1m = 1048576 bytes)
 # and 'K' or 'k' for kilobytes (1K = 1k = 1024 bytes).
-# in bytes just don't use modifiers.
+# in bytes just don't use modifiers. If LogFileMaxSize is enabled,
+# log rotation (the LogRotate option) will always be enabled.
 # Default: 1M
 #LogFileMaxSize 2M
 
@@ -40,6 +41,10 @@ UpdateLogFile /opt/zimbra/log/freshclam.log
 # for facility names.
 # Default: LOG_LOCAL6
 #LogFacility LOG_MAIL
+
+# Enable log rotation. Always enabled when LogFileMaxSize is enabled.
+# Default: no
+#LogRotate yes
 
 # This option allows you to save the process identifier of the daemon
 # Default: disabled
@@ -64,6 +69,7 @@ DatabaseOwner zimbra
 
 # Uncomment the following line and replace XY with your country
 # code. See http://www.iana.org/cctld/cctld-whois.htm for the full list.
+# You can use db.XY.ipv6.clamav.net for IPv6 connections.
 DatabaseMirror db.us.clamav.net
 
 # database.clamav.net is a round-robin record which points to our most 
@@ -86,6 +92,25 @@ DatabaseMirror database.clamav.net
 # the change will take effect with the next database update.
 # Default: no
 #CompressLocalDatabase no
+
+# With this option you can provide custom sources (http:// or file://) for
+# database files. This option can be used multiple times.
+# Default: no custom URLs
+#DatabaseCustomURL http://myserver.com/mysigs.ndb
+#DatabaseCustomURL file:///mnt/nfs/local.hdb
+
+# This option allows you to easily point freshclam to private mirrors.
+# If PrivateMirror is set, freshclam does not attempt to use DNS
+# to determine whether its databases are out-of-date, instead it will
+# use the If-Modified-Since request or directly check the headers of the
+# remote database files. For each database, freshclam first attempts
+# to download the CLD file. If that fails, it tries to download the
+# CVD file. This option overrides DatabaseMirror, DNSDatabaseInfo
+# and ScriptedUpdates. It can be used multiple times to provide
+# fall-back mirrors.
+# Default: disabled
+#PrivateMirror mirror1.mynetwork.com
+#PrivateMirror mirror2.mynetwork.com
 
 # Number of database checks per day.
 # Default: 12 (every two hours)
@@ -141,3 +166,68 @@ NotifyClamd /opt/zimbra/conf/clamd.conf
 # Timeout in seconds when reading from database server.
 # Default: 30
 #ReceiveTimeout 60
+
+# With this option enabled, freshclam will attempt to load new
+# databases into memory to make sure they are properly handled
+# by libclamav before replacing the old ones.
+# Default: yes
+#TestDatabases yes
+
+# When enabled freshclam will submit statistics to the ClamAV Project about
+# the latest virus detections in your environment. The ClamAV maintainers
+# will then use this data to determine what types of malware are the most
+# detected in the field and in what geographic area they are.
+# Freshclam will connect to clamd in order to get recent statistics.
+# Default: no
+#SubmitDetectionStats /path/to/clamd.conf
+
+# Country of origin of malware/detection statistics (for statistical
+# purposes only). The statistics collector at ClamAV.net will look up
+# your IP address to determine the geographical origin of the malware
+# reported by your installation. If this installation is mainly used to
+# scan data which comes from a different location, please enable this
+# option and enter a two-letter code (see http://www.iana.org/domains/root/db/)
+# of the country of origin.
+# Default: disabled
+#DetectionStatsCountry country-code
+
+# This option enables support for our "Personal Statistics" service. 
+# When this option is enabled, the information on malware detected by
+# your clamd installation is made available to you through our website.
+# To get your HostID, log on http://www.stats.clamav.net and add a new
+# host to your host list. Once you have the HostID, uncomment this option
+# and paste the HostID here. As soon as your freshclam starts submitting
+# information to our stats collecting service, you will be able to view
+# the statistics of this clamd installation by logging into
+# http://www.stats.clamav.net with the same credentials you used to
+# generate the HostID. For more information refer to:
+# http://www.clamav.net/documentation.html#cctts 
+# This feature requires SubmitDetectionStats to be enabled.
+# Default: disabled
+#DetectionStatsHostID unique-id
+
+# This option enables support for Google Safe Browsing. When activated for
+# the first time, freshclam will download a new database file (safebrowsing.cvd)
+# which will be automatically loaded by clamd and clamscan during the next
+# reload, provided that the heuristic phishing detection is turned on. This
+# database includes information about websites that may be phishing sites or
+# possible sources of malware. When using this option, it's mandatory to run
+# freshclam at least every 30 minutes.
+# Freshclam uses the ClamAV's mirror infrastructure to distribute the
+# database and its updates but all the contents are provided under Google's
+# terms of use. See http://www.google.com/transparencyreport/safebrowsing
+# and http://www.clamav.net/documentation.html#safebrowsing 
+# for more information.
+# Default: disabled
+#SafeBrowsing yes
+
+# This option enables downloading of bytecode.cvd, which includes additional
+# detection mechanisms and improvements to the ClamAV engine.
+# Default: enabled
+#Bytecode yes
+
+# Download an additional 3rd party signature database distributed through
+# the ClamAV mirrors. 
+# This option can be used multiple times.
+#ExtraDatabase dbname1
+#ExtraDatabase dbname2
