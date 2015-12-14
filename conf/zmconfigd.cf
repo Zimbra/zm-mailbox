@@ -32,7 +32,7 @@ SECTION amavis
 	VAR zimbraAmavisLogLevel
 	VAR zimbraAmavisSALogLevel
 	VAR zimbraAmavisExternalDisclaimerOnly
-	RESTART archiving antispam antivirus amavis mta
+	RESTART antivirus amavis mta
 
 SECTION antivirus DEPENDS amavis
 	REWRITE conf/clamd.conf.in conf/clamd.conf
@@ -51,7 +51,6 @@ SECTION antispam DEPENDS amavis
 	REWRITE conf/dspam.conf.in conf/dspam.conf
 	VAR zimbraMtaMyNetworks
 	VAR zimbraMtaAntiSpamLockMethod
-	VAR zimbraIPMode
 	LOCAL antispam_mysql_enabled
 	LOCAL antispam_mysql_host
 	LOCAL antispam_mysql_port
