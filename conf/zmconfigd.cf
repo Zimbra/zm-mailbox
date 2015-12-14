@@ -32,7 +32,7 @@ SECTION amavis
 	VAR zimbraAmavisLogLevel
 	VAR zimbraAmavisSALogLevel
 	VAR zimbraAmavisExternalDisclaimerOnly
-	RESTART archiving antispam antivirus mta
+	RESTART archiving antispam antivirus amavis mta
 
 SECTION antivirus DEPENDS amavis
 	REWRITE conf/clamd.conf.in conf/clamd.conf
