@@ -10470,6 +10470,6 @@ TODO: delete them permanently from here
 
 <attr id="2074" name="zimbraClamAVSafeBrowsing" type="enum" value="yes,no" cardinality="single" optionalIn="server,globalConfig" since="8.7.0,9.0.0">
   <globalConfigValue>no</globalConfigValue>
-  <desc>Whether or not to enable the Safe Browsing feature.  If enabled, freshclam will download Google's safe browsing database. See http://www.google.com/transparencyreport/safebrowsing and http://www.clamav.net/documentation.html#safebrowsing for more information about this service.<desc>
+  <desc>Whether or not to enable the Safe Browsing feature.  If enabled, freshclam will download Google's safe browsing database. See http://www.google.com/transparencyreport/safebrowsing and http://www.clamav.net/documentation.html#safebrowsing for more information about this service.</desc>
 </attr>
 </attrs>
