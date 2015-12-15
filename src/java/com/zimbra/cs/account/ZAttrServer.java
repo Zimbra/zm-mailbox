@@ -9475,6 +9475,88 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Default database mirror for freshclam to use for virus and other
+     * updates. Defaults to the United States mirror. See
+     * http://www.iana.org/cctld/cctld-whois.htm for a list of mirrors.
+     *
+     * @return zimbraClamAVDatabaseMirror, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2073)
+    public String getClamAVDatabaseMirror() {
+        return getAttr(Provisioning.A_zimbraClamAVDatabaseMirror, null);
+    }
+
+    /**
+     * Default database mirror for freshclam to use for virus and other
+     * updates. Defaults to the United States mirror. See
+     * http://www.iana.org/cctld/cctld-whois.htm for a list of mirrors.
+     *
+     * @param zimbraClamAVDatabaseMirror new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2073)
+    public void setClamAVDatabaseMirror(String zimbraClamAVDatabaseMirror) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVDatabaseMirror, zimbraClamAVDatabaseMirror);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default database mirror for freshclam to use for virus and other
+     * updates. Defaults to the United States mirror. See
+     * http://www.iana.org/cctld/cctld-whois.htm for a list of mirrors.
+     *
+     * @param zimbraClamAVDatabaseMirror new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2073)
+    public Map<String,Object> setClamAVDatabaseMirror(String zimbraClamAVDatabaseMirror, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVDatabaseMirror, zimbraClamAVDatabaseMirror);
+        return attrs;
+    }
+
+    /**
+     * Default database mirror for freshclam to use for virus and other
+     * updates. Defaults to the United States mirror. See
+     * http://www.iana.org/cctld/cctld-whois.htm for a list of mirrors.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2073)
+    public void unsetClamAVDatabaseMirror() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVDatabaseMirror, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default database mirror for freshclam to use for virus and other
+     * updates. Defaults to the United States mirror. See
+     * http://www.iana.org/cctld/cctld-whois.htm for a list of mirrors.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2073)
+    public Map<String,Object> unsetClamAVDatabaseMirror(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVDatabaseMirror, "");
+        return attrs;
+    }
+
+    /**
      * Port to bind to for attachment scanning. Default is 3310
      *
      * @return zimbraClamAVListenPort, or 3310 if unset
@@ -9615,6 +9697,169 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetClamAVMaxThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraClamAVMaxThreads, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable the Safe Browsing feature. If enabled,
+     * freshclam will download Google&#039;s safe browsing database. See
+     * http://www.google.com/transparencyreport/safebrowsing and
+     * http://www.clamav.net/documentation.html#safebrowsing for more
+     * information about this service.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @return zimbraClamAVSafeBrowsing, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2074)
+    public ZAttrProvisioning.ClamAVSafeBrowsing getClamAVSafeBrowsing() {
+        try { String v = getAttr(Provisioning.A_zimbraClamAVSafeBrowsing); return v == null ? null : ZAttrProvisioning.ClamAVSafeBrowsing.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * Whether or not to enable the Safe Browsing feature. If enabled,
+     * freshclam will download Google&#039;s safe browsing database. See
+     * http://www.google.com/transparencyreport/safebrowsing and
+     * http://www.clamav.net/documentation.html#safebrowsing for more
+     * information about this service.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @return zimbraClamAVSafeBrowsing, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2074)
+    public String getClamAVSafeBrowsingAsString() {
+        return getAttr(Provisioning.A_zimbraClamAVSafeBrowsing, null);
+    }
+
+    /**
+     * Whether or not to enable the Safe Browsing feature. If enabled,
+     * freshclam will download Google&#039;s safe browsing database. See
+     * http://www.google.com/transparencyreport/safebrowsing and
+     * http://www.clamav.net/documentation.html#safebrowsing for more
+     * information about this service.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraClamAVSafeBrowsing new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2074)
+    public void setClamAVSafeBrowsing(ZAttrProvisioning.ClamAVSafeBrowsing zimbraClamAVSafeBrowsing) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVSafeBrowsing, zimbraClamAVSafeBrowsing.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable the Safe Browsing feature. If enabled,
+     * freshclam will download Google&#039;s safe browsing database. See
+     * http://www.google.com/transparencyreport/safebrowsing and
+     * http://www.clamav.net/documentation.html#safebrowsing for more
+     * information about this service.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraClamAVSafeBrowsing new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2074)
+    public Map<String,Object> setClamAVSafeBrowsing(ZAttrProvisioning.ClamAVSafeBrowsing zimbraClamAVSafeBrowsing, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVSafeBrowsing, zimbraClamAVSafeBrowsing.toString());
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable the Safe Browsing feature. If enabled,
+     * freshclam will download Google&#039;s safe browsing database. See
+     * http://www.google.com/transparencyreport/safebrowsing and
+     * http://www.clamav.net/documentation.html#safebrowsing for more
+     * information about this service.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraClamAVSafeBrowsing new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2074)
+    public void setClamAVSafeBrowsingAsString(String zimbraClamAVSafeBrowsing) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVSafeBrowsing, zimbraClamAVSafeBrowsing);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable the Safe Browsing feature. If enabled,
+     * freshclam will download Google&#039;s safe browsing database. See
+     * http://www.google.com/transparencyreport/safebrowsing and
+     * http://www.clamav.net/documentation.html#safebrowsing for more
+     * information about this service.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraClamAVSafeBrowsing new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2074)
+    public Map<String,Object> setClamAVSafeBrowsingAsString(String zimbraClamAVSafeBrowsing, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVSafeBrowsing, zimbraClamAVSafeBrowsing);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to enable the Safe Browsing feature. If enabled,
+     * freshclam will download Google&#039;s safe browsing database. See
+     * http://www.google.com/transparencyreport/safebrowsing and
+     * http://www.clamav.net/documentation.html#safebrowsing for more
+     * information about this service.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2074)
+    public void unsetClamAVSafeBrowsing() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVSafeBrowsing, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to enable the Safe Browsing feature. If enabled,
+     * freshclam will download Google&#039;s safe browsing database. See
+     * http://www.google.com/transparencyreport/safebrowsing and
+     * http://www.clamav.net/documentation.html#safebrowsing for more
+     * information about this service.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2074)
+    public Map<String,Object> unsetClamAVSafeBrowsing(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVSafeBrowsing, "");
         return attrs;
     }
 
