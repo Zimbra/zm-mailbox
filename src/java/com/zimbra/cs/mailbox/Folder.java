@@ -233,6 +233,7 @@ public class Folder extends MailItem {
         if (mId == Mailbox.ID_FOLDER_ROOT || mId == Mailbox.ID_FOLDER_USER_ROOT) {
             return "/";
         }
+        setupParent();
         String parentPath = parent.getPath();
         return parentPath + (parentPath.equals("/") ? "" : "/") + getName();
     }
@@ -359,8 +360,12 @@ public class Folder extends MailItem {
 
     @Override
     public MailItem snapshotItem() throws ServiceException {
+        return snapshotItem(true);
+    }
+
+    public MailItem snapshotItem(boolean snapshotParent) throws ServiceException {
         Folder retVal = (Folder) super.snapshotItem();
-        if (parent != null) {
+        if (snapshotParent && (parent != null)) {
             retVal.parent = (Folder) parent.snapshotItem();
         }
         return retVal;
@@ -485,6 +490,23 @@ public class Folder extends MailItem {
 
     @Override Folder getFolder() throws ServiceException {
         return parent != null ? parent : super.getFolder();
+    }
+
+    /** Tries as far as possible to ensure "parent" has a non-null value. */
+    private void setupParent() {
+        if (parent != null) {
+            return;
+        }
+        try {
+            ZimbraLog.mailbox.debug("setupParent() for folder id=%s name=%s. parent was null, re-getting.",
+                    getId(), getName());
+            parent = getFolder();
+        } catch (ServiceException e) {
+            // Will end up throwing an NPE if call sites assume parent is non-null.
+            // (close to release so don't want to change behavior)
+            ZimbraLog.mailbox.info("setupParent() Problem re-getting parent for folder id=%s name=%s %s",
+                    getId(), getName(), e.getMessage());
+        }
     }
 
     /** Returns whether the folder contains any subfolders. */
@@ -750,9 +772,11 @@ public class Folder extends MailItem {
             return false;
         } else if (child instanceof Folder) {
             // may not contain our parents or grandparents (c.f. Back to the Future)
-            for (Folder folder = this; folder.getId() != Mailbox.ID_FOLDER_ROOT; folder = folder.parent)
-                if (folder.getId() == child.getId())
+            for (Folder folder = this; folder.getId() != Mailbox.ID_FOLDER_ROOT; folder = folder.parent) {
+                if (folder.getId() == child.getId()) {
                     return false;
+                }
+            }
         }
         return true;
     }

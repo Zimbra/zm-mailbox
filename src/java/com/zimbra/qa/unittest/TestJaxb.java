@@ -39,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.client.ZDateTime;
+import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZInvite;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
@@ -51,6 +52,10 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.JaxbUtil;
@@ -60,6 +65,8 @@ import com.zimbra.soap.mail.message.CounterAppointmentRequest;
 import com.zimbra.soap.mail.message.CounterAppointmentResponse;
 import com.zimbra.soap.mail.message.CreateAppointmentRequest;
 import com.zimbra.soap.mail.message.CreateAppointmentResponse;
+import com.zimbra.soap.mail.message.GetFolderRequest;
+import com.zimbra.soap.mail.message.GetFolderResponse;
 import com.zimbra.soap.mail.message.GetMsgRequest;
 import com.zimbra.soap.mail.message.GetMsgResponse;
 import com.zimbra.soap.mail.message.ModifyAppointmentRequest;
@@ -729,5 +736,29 @@ public class TestJaxb  {
         Assert.assertNotNull("Envelope", envelope);
         Assert.assertTrue("Error contained in SOAP response",
             envelope.toString().contains("regular expression match involved more than 100000 accesses for pattern"));
+    }
+
+    private static final String FOLDER_F1 = "/" + NAME_PREFIX + "-f1";
+    private static final String SUB_FOLDER_F2 = FOLDER_F1 + "/" + NAME_PREFIX + "-subf2";
+
+    @Test
+    public void testGetFolderWithCacheContainingNullParent() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder f1 = TestUtil.createFolder(zmbox, FOLDER_F1);
+        ZFolder f2 = TestUtil.createFolder(zmbox, SUB_FOLDER_F2);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        OperationContext octxt = new OperationContext(mbox);
+        ItemId f1ItemId = new ItemId(mbox, Integer.parseInt(f1.getId()));
+        ItemId f2ItemId = new ItemId(mbox, Integer.parseInt(f2.getId()));
+        // ItemId rootItemId = new ItemId(mbox, Mailbox.ID_FOLDER_USER_ROOT);
+        // mbox.getFolderTree(octxt, rootItemId, false);
+        Folder f1folder = mbox.getFolderById(octxt, f1ItemId.getId());
+        Folder f2folder = mbox.getFolderById(octxt, f2ItemId.getId());
+        // Bug 100588 f1folder/f2folder will have been retrieved from the folder cache.  Deliberately poison it
+        // by setting the parent folder to null, and ensure that can still successfully do a GetFolderRequest
+        f1folder.setParent(null);
+        f2folder.setParent(null);
+        GetFolderResponse gfResp = zmbox.invokeJaxb(new GetFolderRequest());
+        Assert.assertNotNull("GetFolderResponse null", gfResp);
     }
 }
