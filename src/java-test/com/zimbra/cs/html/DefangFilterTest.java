@@ -429,8 +429,8 @@ public class DefangFilterTest {
 
         // and make sure we have the the complete URL for
         Assert.assertTrue(result
-          .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png?" +
-                "version=1&modificationDate=1335967057000"));
+          .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png?version&#61;1&amp;modificationDate&#61;1335967057000"));
 
         // case where base URL does not have a trailing '/'
         String html = "<html><head><base href=\"https://wiki.tomsawyer.com\"/>"
@@ -441,8 +441,8 @@ public class DefangFilterTest {
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result
-                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png?"
-                    + "version=3D1&modificationDate=3D1335967057"));
+                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png?version&#61;3D1&amp;modificationDate&#61;3D1335967057000"));
 
         // case where base URL has a trailing '/'
         html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
@@ -453,8 +453,8 @@ public class DefangFilterTest {
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result
-                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png?"
-                    + "version=3D1&modificationDate=3D1335967057"));
+                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png?version&#61;3D1&amp;modificationDate&#61;3D1335967057000"));
 
        // case where base URL has a single parameter'/'
         html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
@@ -464,8 +464,8 @@ public class DefangFilterTest {
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result
-                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png?"
-                    + "version=3D1"));
+                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png?version&#61;3D1"));
 
      // case where base URL no parameters
         html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
@@ -475,7 +475,8 @@ public class DefangFilterTest {
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result
-                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png"));
+                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png"));
 
      // case where relative URL is invalidsomething like.pngxxx.gif
         html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
@@ -484,7 +485,8 @@ public class DefangFilterTest {
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(!result
-                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen+Shot+2012-05-02+at+08.08.12+AM.png"));
+                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png"));
     }
 
 
@@ -497,7 +499,7 @@ public class DefangFilterTest {
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
                 .defang(htmlStream, true);
         Assert.assertTrue(result
-            .contains("href=\"JAVASCRIPT-BLOCKED:alert('Hello!');\""));
+            .contains("href=\"JAVASCRIPT-BLOCKED:alert(&#39;Hello!&#39;);\""));
 
         html = "<html><head><base href=\"http://lbpe.wikispaces.com/\" /></head><body>"
             + "<table><tr><td><B>javascript-blocked test</B></td></tr><tr><td>"
@@ -507,7 +509,7 @@ public class DefangFilterTest {
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
                 .defang(htmlStream, true);
         Assert.assertTrue(result
-                .contains("href=\"JAVASCRIPT-BLOCKED:alert('Hello!');\""));
+                .contains("href=\"JAVASCRIPT-BLOCKED:alert(&#39;Hello!&#39;);\""));
     }
 
     @Test
@@ -959,7 +961,7 @@ public class DefangFilterTest {
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
-        Assert.assertTrue(result.contains("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAErkJggg=="));
+        Assert.assertTrue(result.contains("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAErkJggg&#61;&#61;"));
 
         html = "<a target=_blank href=\"data:text/html,<script>alert(opener.document.body.innerHTML)</script>\">"
         		+" clickme in Opera/FF</a>";
@@ -1159,6 +1161,21 @@ public class DefangFilterTest {
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         index = result.indexOf("alert(1)");
         Assert.assertEquals(-1, index);
+    }
+
+    @Test
+    public void testBug102637() throws Exception {
+        String html = "<html><body><div style=\"font-family: arial, helvetica, sans-serif; font-size: 12pt; color: #000000\">"
+            + "<div><br></div><div><a href=\"&amp;#106&amp;#097&amp;#118&amp;#097&amp;#115&amp;#099&amp;#114&amp;#105&amp;"
+            + "#112&amp;#116&amp;#058&amp;#097&amp;#108&amp;#101&amp;#114&amp;#116&amp;#040&amp;#039&amp;#088&amp;#083&amp;"
+            + "#083&amp;#039&amp;#041\" data-mce-href=\"&amp;#106&amp;#097&amp;#118&amp;#097&amp;#115&amp;#099&amp;"
+                + "#114&amp;#105&amp;#112&amp;#116&amp;#058&amp;#097&amp;#108&amp;#101&amp;#114&amp;#116&amp;#040&amp;"
+                + "#039&amp;#088&amp;#083&amp;#083&amp;#039&amp;#041\">test</a><br data-mce-bogus=\"1\"></div><div>"
+                + "<br data-mce-bogus=\"1\"></div><div>Test message<br data-mce-bogus=\"1\"></div></div></body></html>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
     }
 
 

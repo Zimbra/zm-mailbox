@@ -20,6 +20,7 @@ import org.owasp.html.Sanitizers;
  */
 public class HtmlPurifier extends Purifier {
     private static final Pattern VALID_IMG_TAG = Pattern.compile("<\\s*img", Pattern.CASE_INSENSITIVE);
+    private static final PolicyFactory sanitizer = Sanitizers.IMAGES;
 
     /* (non-Javadoc)
      * @see org.cyberneko.html.filters.Purifier#purifyText(org.apache.xerces.xni.XMLString)
@@ -29,7 +30,6 @@ public class HtmlPurifier extends Purifier {
         String temp = text.toString();
 
         if (VALID_IMG_TAG.matcher(temp).find()) {
-            PolicyFactory sanitizer = Sanitizers.IMAGES;
             temp = sanitizer.sanitize(temp);
         }
 
