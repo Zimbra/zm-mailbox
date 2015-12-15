@@ -208,6 +208,22 @@ public class ZAttrProvisioning {
         public boolean isPass() { return this == pass;}
     }
 
+    public static enum ClamAVSafeBrowsing {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private ClamAVSafeBrowsing(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ClamAVSafeBrowsing fromString(String s) throws ServiceException {
+            for (ClamAVSafeBrowsing value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
     public static enum ClusterType {
         Veritas("Veritas"),
         RedHat("RedHat"),
@@ -4308,6 +4324,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraClamAVBindAddress = "zimbraClamAVBindAddress";
 
     /**
+     * Default database mirror for freshclam to use for virus and other
+     * updates. Defaults to the United States mirror. See
+     * http://www.iana.org/cctld/cctld-whois.htm for a list of mirrors.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2073)
+    public static final String A_zimbraClamAVDatabaseMirror = "zimbraClamAVDatabaseMirror";
+
+    /**
      * Port to bind to for attachment scanning. Default is 3310
      *
      * @since ZCS 8.5.0
@@ -4322,6 +4348,18 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1462)
     public static final String A_zimbraClamAVMaxThreads = "zimbraClamAVMaxThreads";
+
+    /**
+     * Whether or not to enable the Safe Browsing feature. If enabled,
+     * freshclam will download Google&#039;s safe browsing database. See
+     * http://www.google.com/transparencyreport/safebrowsing and
+     * http://www.clamav.net/documentation.html#safebrowsing for more
+     * information about this service.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2074)
+    public static final String A_zimbraClamAVSafeBrowsing = "zimbraClamAVSafeBrowsing";
 
     /**
      * Regex for identifying client types
