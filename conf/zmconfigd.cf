@@ -1,6 +1,6 @@
-SECTION amavis 
+SECTION amavis
 	REWRITE conf/amavisd.conf.in conf/amavisd.conf
-	POSTCONF content_filter 
+	POSTCONF content_filter
 	if SERVICE antivirus
 		POSTCONF content_filter FILE zmconfigd/postfix_content_filter.cf
 	fi
@@ -40,10 +40,12 @@ SECTION antivirus DEPENDS amavis
 	VAR zimbraVirusWarnAdmin
 	VAR zimbraVirusDefinitionsUpdateFrequency
 	VAR zimbraVirusBlockEncryptedArchive
-  	VAR zimbraMtaMaxMessageSize
+	VAR zimbraMtaMaxMessageSize
 	VAR zimbraClamAVMaxThreads
 	VAR zimbraClamAVListenPort
 	VAR zimbraClamAVBindAddress
+	VAR zimbraClamAVDatabaseMirror
+	VAR zimbraClamAVSafeBrowsing
 	RESTART antivirus mta
 
 SECTION antispam DEPENDS amavis
@@ -312,25 +314,25 @@ SECTION mailbox
 	REWRITE mailboxd/start.d/setuid.ini.in mailboxd/start.d/setuid.ini	
 	REWRITE mailboxd/etc/krb5.ini.in mailboxd/etc/krb5.ini
 	REWRITE mailboxd/etc/spnego.conf.in mailboxd/etc/spnego.conf
-	REWRITE mailboxd/etc/spnego.properties.in mailboxd/etc/spnego.properties 
+	REWRITE mailboxd/etc/spnego.properties.in mailboxd/etc/spnego.properties
 	RESTART mailboxd
-    
+
 SECTION service
 	REWRITE mailboxd/etc/service.web.xml.in mailboxd/webapps/service/WEB-INF/web.xml
 	RESTART mailboxd
-    
+
 SECTION zimbra
 	REWRITE mailboxd/etc/zimbra.web.xml.in mailboxd/webapps/zimbra/WEB-INF/web.xml
 	REWRITE mailboxd/etc/zimbra-jetty-env.xml.in mailboxd/webapps/zimbra/WEB-INF/jetty-env.xml
 	RESTART mailboxd
-    
-SECTION zimbraAdmin 
+
+SECTION zimbraAdmin
 	REWRITE mailboxd/etc/zimbraAdmin.web.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/web.xml
 	REWRITE mailboxd/etc/zimbraAdmin-jetty-env.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/jetty-env.xml
 	RESTART mailboxd
 
 SECTION zimlet
-	REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml   
+	REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml
 	RESTART mailboxd
 	
 SECTION proxy
@@ -346,7 +348,7 @@ SECTION proxy
 	VAR zimbraPop3ProxyBindPort
 	VAR zimbraPop3SSLProxyBindPort
 	VAR zimbraServerVersion
-	VAR zimbraReverseProxyAdminEnabled 
+	VAR zimbraReverseProxyAdminEnabled
 	VAR zimbraReverseProxyAuthWaitInterval
 	VAR zimbraReverseProxyCacheEntryTTL
 	VAR zimbraReverseProxyCacheFetchTimeout
@@ -375,7 +377,7 @@ SECTION proxy
 	VAR zimbraReverseProxyPop3SaslGssapiEnabled
 	VAR zimbraReverseProxyPop3SaslPlainEnabled
 	VAR zimbraReverseProxyPop3StartTlsMode
-	VAR zimbraReverseProxyRouteLookupTimeout 
+	VAR zimbraReverseProxyRouteLookupTimeout
 	VAR zimbraReverseProxySendPop3Xoip
 	VAR zimbraReverseProxySSLCiphers
 	VAR zimbraReverseProxyUpstreamPollingTimeout
