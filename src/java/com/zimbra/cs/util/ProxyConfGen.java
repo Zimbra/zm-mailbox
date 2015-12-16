@@ -696,18 +696,26 @@ class MemcacheServersVar extends ProxyConfVar {
                     Provisioning.A_zimbraServiceHostname, "");
             int serverPort = mc.getIntAttr(
                     Provisioning.A_zimbraMemcachedBindPort, 11211);
-            InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(serverName);
+            try {
+                InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(serverName);
 
-            Formatter f = new Formatter();
-            if (ip instanceof Inet4Address) {
-                f.format("%s:%d", ip.getHostAddress(), serverPort);
-            } else {
-                f.format("[%s]:%d", ip.getHostAddress(), serverPort);
+                Formatter f = new Formatter();
+                if (ip instanceof Inet4Address) {
+                    f.format("%s:%d", ip.getHostAddress(), serverPort);
+                } else {
+                    f.format("[%s]:%d", ip.getHostAddress(), serverPort);
+                }
+
+                servers.add(f.toString());
+                f.close();
             }
-
-            servers.add(f.toString());
+            catch (ProxyConfException pce) {
+                mLog.error("Error resolving memcached host name: '" + serverName + "'", pce);
+            }
         }
-
+        if (servers.isEmpty()) {
+            throw new ProxyConfException ("No available memcached servers could be contacted");
+        }
         mValue = servers;
     }
 
@@ -1125,15 +1133,21 @@ class ZMLookupHandlerVar extends ProxyConfVar{
                     }
                     boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
                     if (isTarget) {
-                        InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
-                        Formatter f = new Formatter();
-                        if (ip instanceof Inet4Address) {
-                            f.format("%s%s:%d", proto, ip.getHostAddress(), port);
-                        } else {
-                            f.format("%s[%s]:%d", proto, ip.getHostAddress(), port);
+                        try {
+                            InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
+                            Formatter f = new Formatter();
+                            if (ip instanceof Inet4Address) {
+                                f.format("%s%s:%d", proto, ip.getHostAddress(), port);
+                            } else {
+                                f.format("%s[%s]:%d", proto, ip.getHostAddress(), port);
+                            }
+                            servers.add(f.toString());
+                            f.close();
+                            mLog.debug("Route Lookup: Added server " + ip);
                         }
-                        servers.add(f.toString());
-                        mLog.debug("Route Lookup: Added server " + ip);
+                        catch (ProxyConfException pce) {
+                            mLog.error("Error resolving service host name: '" + sn + "'", pce);
+                        }
                     }
                 }
                 else {
@@ -1157,19 +1171,27 @@ class ZMLookupHandlerVar extends ProxyConfVar{
                 }
                 boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
                 if (isTarget) {
-                    InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
-                    Formatter f = new Formatter();
-                    if (ip instanceof Inet4Address) {
-                        f.format("%s%s:%d", proto, ip.getHostAddress(), port);
-                    } else {
-                        f.format("%s[%s]:%d", proto, ip.getHostAddress(), port);
+                    try {
+                        InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
+                        Formatter f = new Formatter();
+                        if (ip instanceof Inet4Address) {
+                            f.format("%s%s:%d", proto, ip.getHostAddress(), port);
+                        } else {
+                            f.format("%s[%s]:%d", proto, ip.getHostAddress(), port);
+                        }
+                        servers.add(f.toString());
+                        f.close();
+                        mLog.debug("Route Lookup: Added server " + ip);
                     }
-                    servers.add(f.toString());
-                    mLog.debug("Route Lookup: Added server " + ip);
+                    catch (ProxyConfException pce) {
+                        mLog.error("Error resolving service host name: '" + sn + "'", pce);
+                    }
                 }
             }
         }
-
+        if (servers.isEmpty()) {
+            throw new ProxyConfException ("No available nginx lookup handlers could be contacted");
+        }
         mValue = servers;
     }
 
