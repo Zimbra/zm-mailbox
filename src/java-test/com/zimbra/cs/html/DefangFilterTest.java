@@ -218,7 +218,7 @@ public class DefangFilterTest {
         long endTime = System.currentTimeMillis();
 
         // Make sure this takes less than one second
-        Assert.assertTrue("Possible slowness in a regex", (endTime - startTime) < 1000);
+        Assert.assertTrue("Possible slowness in a regex", (endTime - startTime) < 2000);
         // Make sure this has been replaced
         Assert.assertTrue(result.contains("src=\"data:"));
     }
