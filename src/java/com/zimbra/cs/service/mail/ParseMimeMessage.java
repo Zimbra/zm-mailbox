@@ -377,7 +377,8 @@ public final class ParseMimeMessage {
 
             MimeMessage mmOrig = null;
             if (iid != null) {
-                mmOrig = mbox.getMessageById(null,  iid.getId()).getMimeMessage();
+                Mailbox msgMbox = iid.getAccountId() != null ? MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId()) : mbox;
+                mmOrig = msgMbox.getMessageById(null,  iid.getId()).getMimeMessage();
             }
             // handle the content from the client, if any
             if (hasContent) {
