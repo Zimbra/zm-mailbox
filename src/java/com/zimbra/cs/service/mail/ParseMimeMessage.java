@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.activation.DataHandler;
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.SendFailedException;
@@ -201,10 +202,15 @@ public final class ParseMimeMessage {
     }
 
     public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
-                                               Element msgElem, MimeBodyPart[] additionalParts, MimeMessageData out)
+                                               Element msgElem, MimeBodyPart[] additionalParts, ItemId iid, MimeMessageData out)
     throws ServiceException {
-        return parseMimeMsgSoap(zsc, octxt, mbox, msgElem, additionalParts, NO_INV_ALLOWED_PARSER, out);
+        return parseMimeMsgSoap(zsc, octxt, mbox, msgElem, additionalParts, iid, NO_INV_ALLOWED_PARSER, out);
     }
+
+    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
+            Element msgElem, MimeBodyPart[] additionalParts, MimeMessageData out) throws ServiceException {
+        return parseMimeMsgSoap(zsc, octxt, mbox, msgElem, additionalParts, null, NO_INV_ALLOWED_PARSER, out);
+        }
 
     public static String getTextPlainContent(Element elem) {
         return getFirstContentByType(elem, MimeConstants.CT_TEXT_PLAIN);
@@ -274,6 +280,12 @@ public final class ParseMimeMessage {
         }
     }
 
+    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
+            Element msgElem, MimeBodyPart[] additionalParts, InviteParser inviteParser, MimeMessageData out)
+    throws ServiceException {
+        return parseMimeMsgSoap(zsc, octxt, mbox, msgElem, additionalParts, null, inviteParser, out);
+    }
+
     /**
      * Given an {@code <m>} element from SOAP, return us a parsed {@link MimeMessage}, and also fill in the
      * {@link MimeMessageData} structure with information we parsed out of it (e.g. contained Invite, msgids, etc etc)
@@ -281,11 +293,12 @@ public final class ParseMimeMessage {
      * @param msgElem the {@code <m>} element
      * @param additionalParts MimeBodyParts that we want to have added to the {@link MimeMessage} (ie things the server
      * is adding onto the message)
+     * @param iid the ID of message. If provided, it is used to inherit mime headers that were not explictly passed in the msgElem
      * @param inviteParser Callback which handles {@code <inv>} embedded invite components
      * @param out Holds info about things we parsed out of the message that the caller might want to know about
      */
     public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
-            Element msgElem, MimeBodyPart[] additionalParts, InviteParser inviteParser, MimeMessageData out)
+            Element msgElem, MimeBodyPart[] additionalParts, ItemId iid, InviteParser inviteParser, MimeMessageData out)
     throws ServiceException {
         assert(msgElem.getName().equals(MailConstants.E_MSG)); // msgElem == "<m>" E_MSG
 
@@ -362,11 +375,15 @@ public final class ParseMimeMessage {
                 alternatives = additionalParts;
             }
 
+            MimeMessage mmOrig = null;
+            if (iid != null) {
+                mmOrig = mbox.getMessageById(null,  iid.getId()).getMimeMessage();
+            }
             // handle the content from the client, if any
             if (hasContent) {
-                setContent(mm, mmp, partElem != null ? partElem : inviteElem, alternatives, ctxt);
+                KnownMimeContext mimeCtxt = mmOrig != null ? new KnownMimeContext(mmOrig) : null;
+                setContent(mm, mmp, partElem != null ? partElem : inviteElem, alternatives, ctxt, mimeCtxt);
             }
-
             // attachments go into the toplevel "mixed" part
             if (isMultipart && attachElem != null) {
                 handleAttachments(attachElem, mmp, ctxt, null, Part.ATTACHMENT);
@@ -506,7 +523,7 @@ public final class ParseMimeMessage {
      * within another one (that would be very tacky)....so this is a bit complicated.
      */
     private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives,
-            ParseMessageContext ctxt)
+            ParseMessageContext ctxt, KnownMimeContext mimeCtxt)
     throws MessagingException, ServiceException, IOException {
         String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, MimeConstants.CT_DEFAULT).trim();
         ContentType ctype = new ContentType(type, ctxt.use2231).cleanup();
@@ -514,7 +531,7 @@ public final class ParseMimeMessage {
         // is the client passing us a multipart?
         if (ctype.getPrimaryType().equals("multipart")) {
             // handle multipart content separately...
-            setMultipartContent(ctype, mm, mmp, elem, alternatives, ctxt);
+            setMultipartContent(ctype, mm, mmp, elem, alternatives, ctxt, mimeCtxt);
             return;
         }
 
@@ -557,6 +574,12 @@ public final class ParseMimeMessage {
             if (mmp != null) {
                 MimeBodyPart mbp = new ZMimeBodyPart();
                 mbp.setContent(content, ctype.toString());
+                if (mimeCtxt != null && mimeCtxt.curMimePart != null) {
+                    String[] origCTE = mimeCtxt.curMimePart.getHeader("Content-Transfer-Encoding");
+                    if (origCTE != null && origCTE.length == 1) {
+                        mbp.setHeader("Content-Transfer-Encoding", origCTE[0]);
+                    }
+                }
                 mmp.addBodyPart(mbp);
             } else {
                 mm.setContent(content, ctype.toString());
@@ -570,7 +593,7 @@ public final class ParseMimeMessage {
         }
     }
 
-    private static void setMultipartContent(ContentType contentType, MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt)
+    private static void setMultipartContent(ContentType contentType, MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt, KnownMimeContext mimeCtxt)
     throws MessagingException, ServiceException, IOException {
         // do we need to add a multipart/alternative for the alternatives?
         if (alternatives == null || contentType.getSubType().equals("alternative")) {
@@ -588,9 +611,25 @@ public final class ParseMimeMessage {
                 mmp.addBodyPart(mbpWrapper);
             }
 
+            ZMimeMultipart origMultiPart = null;
+            if (mimeCtxt != null) {
+                Object origContent = mimeCtxt.knownMimeMsg.getContent();
+                if (origContent instanceof ZMimeMultipart) {
+                    origMultiPart = (ZMimeMultipart) origContent;
+                }
+            }
             // add each part in turn (recursively) below
+            int partNum = 0;
             for (Element subpart : elem.listElements()) {
-                setContent(mm, mmpNew, subpart, null, ctxt);
+                BodyPart part = null;
+                if (origMultiPart != null) {
+                    try {
+                        part = origMultiPart.getBodyPart(partNum);
+                        mimeCtxt.curMimePart = part;
+                    } catch (MessagingException e) {}
+                    partNum++;
+                }
+                setContent(mm, mmpNew, subpart, null, ctxt, mimeCtxt);
             }
 
             // finally, add the alternatives if there are any...
@@ -612,7 +651,7 @@ public final class ParseMimeMessage {
             }
 
             // add the entire client's multipart/whatever here inside our multipart/alternative
-            setContent(mm, mmpNew, elem, null, ctxt);
+            setContent(mm, mmpNew, elem, null, ctxt, mimeCtxt);
 
             // add all the alternatives
             for (int i = 0; i < alternatives.length; i++) {
@@ -937,6 +976,15 @@ public final class ParseMimeMessage {
             reference = reference + ">";
         }
         return reference;
+    }
+
+    private static class KnownMimeContext {
+        MimeMessage knownMimeMsg;
+        BodyPart curMimePart;
+
+        KnownMimeContext(MimeMessage mm) {
+            this.knownMimeMsg = mm;
+        }
     }
 
 }
