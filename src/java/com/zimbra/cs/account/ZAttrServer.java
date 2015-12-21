@@ -21105,7 +21105,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf disable_dns_lookups (note enable v. disable)
+     * Deprecated since: 8.7.0_BETA2. deprecated in favor
+     * zimbraMtaSmtpDnsSupportLevel. Orig desc: Value for postconf
+     * disable_dns_lookups (note enable v. disable)
      *
      * @return zimbraMtaDnsLookupsEnabled, or true if unset
      */
@@ -21115,7 +21117,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf disable_dns_lookups (note enable v. disable)
+     * Deprecated since: 8.7.0_BETA2. deprecated in favor
+     * zimbraMtaSmtpDnsSupportLevel. Orig desc: Value for postconf
+     * disable_dns_lookups (note enable v. disable)
      *
      * @param zimbraMtaDnsLookupsEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21128,7 +21132,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf disable_dns_lookups (note enable v. disable)
+     * Deprecated since: 8.7.0_BETA2. deprecated in favor
+     * zimbraMtaSmtpDnsSupportLevel. Orig desc: Value for postconf
+     * disable_dns_lookups (note enable v. disable)
      *
      * @param zimbraMtaDnsLookupsEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21142,7 +21148,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf disable_dns_lookups (note enable v. disable)
+     * Deprecated since: 8.7.0_BETA2. deprecated in favor
+     * zimbraMtaSmtpDnsSupportLevel. Orig desc: Value for postconf
+     * disable_dns_lookups (note enable v. disable)
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -21154,7 +21162,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf disable_dns_lookups (note enable v. disable)
+     * Deprecated since: 8.7.0_BETA2. deprecated in favor
+     * zimbraMtaSmtpDnsSupportLevel. Orig desc: Value for postconf
+     * disable_dns_lookups (note enable v. disable)
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -27763,6 +27773,137 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtp_dns_support_level
+     *
+     * <p>Valid values: [enabled, disabled, dnssec]
+     *
+     * @return zimbraMtaSmtpDnsSupportLevel, or ZAttrProvisioning.MtaSmtpDnsSupportLevel.enabled if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2075)
+    public ZAttrProvisioning.MtaSmtpDnsSupportLevel getMtaSmtpDnsSupportLevel() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaSmtpDnsSupportLevel); return v == null ? ZAttrProvisioning.MtaSmtpDnsSupportLevel.enabled : ZAttrProvisioning.MtaSmtpDnsSupportLevel.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaSmtpDnsSupportLevel.enabled; }
+    }
+
+    /**
+     * Value for postconf smtp_dns_support_level
+     *
+     * <p>Valid values: [enabled, disabled, dnssec]
+     *
+     * @return zimbraMtaSmtpDnsSupportLevel, or "enabled" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2075)
+    public String getMtaSmtpDnsSupportLevelAsString() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpDnsSupportLevel, "enabled");
+    }
+
+    /**
+     * Value for postconf smtp_dns_support_level
+     *
+     * <p>Valid values: [enabled, disabled, dnssec]
+     *
+     * @param zimbraMtaSmtpDnsSupportLevel new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2075)
+    public void setMtaSmtpDnsSupportLevel(ZAttrProvisioning.MtaSmtpDnsSupportLevel zimbraMtaSmtpDnsSupportLevel) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpDnsSupportLevel, zimbraMtaSmtpDnsSupportLevel.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_dns_support_level
+     *
+     * <p>Valid values: [enabled, disabled, dnssec]
+     *
+     * @param zimbraMtaSmtpDnsSupportLevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2075)
+    public Map<String,Object> setMtaSmtpDnsSupportLevel(ZAttrProvisioning.MtaSmtpDnsSupportLevel zimbraMtaSmtpDnsSupportLevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpDnsSupportLevel, zimbraMtaSmtpDnsSupportLevel.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_dns_support_level
+     *
+     * <p>Valid values: [enabled, disabled, dnssec]
+     *
+     * @param zimbraMtaSmtpDnsSupportLevel new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2075)
+    public void setMtaSmtpDnsSupportLevelAsString(String zimbraMtaSmtpDnsSupportLevel) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpDnsSupportLevel, zimbraMtaSmtpDnsSupportLevel);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_dns_support_level
+     *
+     * <p>Valid values: [enabled, disabled, dnssec]
+     *
+     * @param zimbraMtaSmtpDnsSupportLevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2075)
+    public Map<String,Object> setMtaSmtpDnsSupportLevelAsString(String zimbraMtaSmtpDnsSupportLevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpDnsSupportLevel, zimbraMtaSmtpDnsSupportLevel);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_dns_support_level
+     *
+     * <p>Valid values: [enabled, disabled, dnssec]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2075)
+    public void unsetMtaSmtpDnsSupportLevel() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpDnsSupportLevel, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_dns_support_level
+     *
+     * <p>Valid values: [enabled, disabled, dnssec]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2075)
+    public Map<String,Object> unsetMtaSmtpDnsSupportLevel(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpDnsSupportLevel, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtp_generic_maps
      *
      * @return zimbraMtaSmtpGenericMaps, or null if unset
@@ -31571,6 +31712,137 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaSmtpdTlsProtocols(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdTlsProtocols, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_received_header
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraMtaSmtpdTlsReceivedHeader, or ZAttrProvisioning.MtaSmtpdTlsReceivedHeader.no if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2076)
+    public ZAttrProvisioning.MtaSmtpdTlsReceivedHeader getMtaSmtpdTlsReceivedHeader() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaSmtpdTlsReceivedHeader); return v == null ? ZAttrProvisioning.MtaSmtpdTlsReceivedHeader.no : ZAttrProvisioning.MtaSmtpdTlsReceivedHeader.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaSmtpdTlsReceivedHeader.no; }
+    }
+
+    /**
+     * Value for postconf smtpd_tls_received_header
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraMtaSmtpdTlsReceivedHeader, or "no" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2076)
+    public String getMtaSmtpdTlsReceivedHeaderAsString() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsReceivedHeader, "no");
+    }
+
+    /**
+     * Value for postconf smtpd_tls_received_header
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdTlsReceivedHeader new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2076)
+    public void setMtaSmtpdTlsReceivedHeader(ZAttrProvisioning.MtaSmtpdTlsReceivedHeader zimbraMtaSmtpdTlsReceivedHeader) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsReceivedHeader, zimbraMtaSmtpdTlsReceivedHeader.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_received_header
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdTlsReceivedHeader new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2076)
+    public Map<String,Object> setMtaSmtpdTlsReceivedHeader(ZAttrProvisioning.MtaSmtpdTlsReceivedHeader zimbraMtaSmtpdTlsReceivedHeader, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsReceivedHeader, zimbraMtaSmtpdTlsReceivedHeader.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_received_header
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdTlsReceivedHeader new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2076)
+    public void setMtaSmtpdTlsReceivedHeaderAsString(String zimbraMtaSmtpdTlsReceivedHeader) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsReceivedHeader, zimbraMtaSmtpdTlsReceivedHeader);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_received_header
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSmtpdTlsReceivedHeader new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2076)
+    public Map<String,Object> setMtaSmtpdTlsReceivedHeaderAsString(String zimbraMtaSmtpdTlsReceivedHeader, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsReceivedHeader, zimbraMtaSmtpdTlsReceivedHeader);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_received_header
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2076)
+    public void unsetMtaSmtpdTlsReceivedHeader() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsReceivedHeader, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_received_header
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2076)
+    public Map<String,Object> unsetMtaSmtpdTlsReceivedHeader(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsReceivedHeader, "");
         return attrs;
     }
 
