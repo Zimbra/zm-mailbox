@@ -5642,13 +5642,13 @@ public abstract class ZAttrServer extends NamedEntry {
      * updates. Defaults to the United States mirror. See
      * http://www.iana.org/cctld/cctld-whois.htm for a list of mirrors.
      *
-     * @return zimbraClamAVDatabaseMirror, or null if unset
+     * @return zimbraClamAVDatabaseMirror, or "db.us.clamav.net" if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2073)
     public String getClamAVDatabaseMirror() {
-        return getAttr(Provisioning.A_zimbraClamAVDatabaseMirror, null);
+        return getAttr(Provisioning.A_zimbraClamAVDatabaseMirror, "db.us.clamav.net");
     }
 
     /**
@@ -5872,13 +5872,13 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * <p>Valid values: [yes, no]
      *
-     * @return zimbraClamAVSafeBrowsing, or null if unset and/or has invalid value
+     * @return zimbraClamAVSafeBrowsing, or ZAttrProvisioning.ClamAVSafeBrowsing.no if unset and/or has invalid value
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2074)
     public ZAttrProvisioning.ClamAVSafeBrowsing getClamAVSafeBrowsing() {
-        try { String v = getAttr(Provisioning.A_zimbraClamAVSafeBrowsing); return v == null ? null : ZAttrProvisioning.ClamAVSafeBrowsing.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraClamAVSafeBrowsing); return v == null ? ZAttrProvisioning.ClamAVSafeBrowsing.no : ZAttrProvisioning.ClamAVSafeBrowsing.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ClamAVSafeBrowsing.no; }
     }
 
     /**
@@ -5890,13 +5890,13 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * <p>Valid values: [yes, no]
      *
-     * @return zimbraClamAVSafeBrowsing, or null if unset
+     * @return zimbraClamAVSafeBrowsing, or "no" if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2074)
     public String getClamAVSafeBrowsingAsString() {
-        return getAttr(Provisioning.A_zimbraClamAVSafeBrowsing, null);
+        return getAttr(Provisioning.A_zimbraClamAVSafeBrowsing, "no");
     }
 
     /**
