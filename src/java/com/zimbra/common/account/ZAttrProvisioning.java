@@ -1188,6 +1188,24 @@ public class ZAttrProvisioning {
         public boolean isNo() { return this == no;}
     }
 
+    public static enum MtaSmtpDnsSupportLevel {
+        enabled("enabled"),
+        dnssec("dnssec"),
+        disabled("disabled");
+        private String mValue;
+        private MtaSmtpDnsSupportLevel(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpDnsSupportLevel fromString(String s) throws ServiceException {
+            for (MtaSmtpDnsSupportLevel value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isEnabled() { return this == enabled;}
+        public boolean isDnssec() { return this == dnssec;}
+        public boolean isDisabled() { return this == disabled;}
+    }
+
     public static enum MtaSmtpdRejectUnlistedRecipient {
         yes("yes"),
         no("no");
@@ -1316,6 +1334,22 @@ public class ZAttrProvisioning {
         public boolean isLow() { return this == low;}
         public boolean isMedium() { return this == medium;}
         public boolean isNull_() { return this == null_;}
+    }
+
+    public static enum MtaSmtpdTlsReceivedHeader {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdTlsReceivedHeader(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdTlsReceivedHeader fromString(String s) throws ServiceException {
+            for (MtaSmtpdTlsReceivedHeader value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
     }
 
     public static enum MtaSmtpSaslAuthEnable {
@@ -9992,7 +10026,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaDelayWarningTime = "zimbraMtaDelayWarningTime";
 
     /**
-     * Value for postconf disable_dns_lookups (note enable v. disable)
+     * Deprecated since: 8.7.0_BETA2. deprecated in favor
+     * zimbraMtaSmtpDnsSupportLevel. Orig desc: Value for postconf
+     * disable_dns_lookups (note enable v. disable)
      */
     @ZAttr(id=197)
     public static final String A_zimbraMtaDnsLookupsEnabled = "zimbraMtaDnsLookupsEnabled";
@@ -10641,6 +10677,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdMilters = "zimbraMtaSmtpdMilters";
 
     /**
+     * Value for postconf smtp_dns_support_level
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2075)
+    public static final String A_zimbraMtaSmtpDnsSupportLevel = "zimbraMtaSmtpDnsSupportLevel";
+
+    /**
      * Value for postconf smtpd_proxy_timeout
      *
      * @since ZCS 8.5.0
@@ -10784,6 +10828,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1646)
     public static final String A_zimbraMtaSmtpdTlsProtocols = "zimbraMtaSmtpdTlsProtocols";
+
+    /**
+     * Value for postconf smtpd_tls_received_header
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2076)
+    public static final String A_zimbraMtaSmtpdTlsReceivedHeader = "zimbraMtaSmtpdTlsReceivedHeader";
 
     /**
      * Value for postconf virtual_transport
