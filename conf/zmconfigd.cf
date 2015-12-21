@@ -119,12 +119,12 @@ SECTION mta DEPENDS amavis
 	fi
 	POSTCONF recipient_delimiter			VAR zimbraMtaRecipientDelimiter
 	POSTCONF smtpd_sasl_auth_enable			VAR zimbraMtaSaslAuthEnable
-	POSTCONF disable_dns_lookups			VAR !zimbraMtaDnsLookupsEnabled	
 	POSTCONF message_size_limit			VAR zimbraMtaMaxMessageSize
 	POSTCONF mailbox_size_limit			0
 	POSTCONF smtputf8_enable			no
 	POSTCONF max_use				VAR zimbraMtaMaxUse
 	POSTCONF relayhost				VAR zimbraMtaRelayHost
+	POSTCONF smtp_dns_support_level			VAR zimbraMtaSmtpDnsSupportLevel
 	POSTCONF smtp_fallback_relay			VAR zimbraMtaFallbackRelayHost
 	POSTCONF smtp_generic_maps			VAR zimbraMtaSmtpGenericMaps
 	POSTCONF smtpd_recipient_restrictions		FILE zmconfigd/smtpd_recipient_restrictions.cf
@@ -177,6 +177,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_tls_mandatory_ciphers		VAR zimbraMtaSmtpdTlsMandatoryCiphers
 	POSTCONF smtpd_tls_mandatory_protocols		VAR zimbraMtaSmtpdTlsMandatoryProtocols
 	POSTCONF smtpd_tls_protocols			VAR zimbraMtaSmtpdTlsProtocols
+	POSTCONF smtpd_tls_received_header		VAR zimbraMtaSmtpdTlsReceivedHeader
 	POSTCONF smtpd_tls_security_level		VAR zimbraMtaTlsSecurityLevel
 	POSTCONF smtpd_error_sleep_time			VAR zimbraMtaSmtpdErrorSleepTime
 	POSTCONF smtpd_hard_error_limit			VAR zimbraMtaSmtpdHardErrorLimit
