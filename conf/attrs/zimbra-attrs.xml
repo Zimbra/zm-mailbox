@@ -1229,7 +1229,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="197" name="zimbraMtaDnsLookupsEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mta" deprecatedSince="8.7.0_BETA2">
   <globalConfigValue>TRUE</globalConfigValue>
-  <desc>Value for postconf disable_dns_lookups (note enable v. disable). Deprecated with 8.7.0, see zimbraMtaSmtpDnsSupportLevel instead</desc>
+  <desc>Value for postconf disable_dns_lookups (note enable v. disable).</desc>
+  <deprecateDesc>deprecated in favor zimbraMtaSmtpDnsSupportLevel</deprecateDesc>
 </attr>
 
 <attr id="198" name="zimbraMtaMaxMessageSize" type="long" min="0" cardinality="single" optionalIn="globalConfig" flags="accountInfo" requiresRestart="mta">
