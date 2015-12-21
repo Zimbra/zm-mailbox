@@ -44,8 +44,7 @@ import com.zimbra.qa.unittest.server.TestPop3ImportServer;
  * @author bburtin
  *
  */
-public class ZimbraSuite extends TestSuite
-{
+public class ZimbraSuite extends TestSuite {
     private static final List<Class<? extends TestCase>> sClasses = new ArrayList<Class<? extends TestCase>>();
 
     static {
@@ -128,9 +127,9 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestCommunityIntegration.class);
         sClasses.add(TestJaxb.class);
         sClasses.add(TestCollectConfigServletsAccess.class);
-        //sClasses.add(TestDLMembership.class);
+        // sClasses.add(TestDLMembership.class);
         sClasses.add(TestShareNotifications.class);
-        sClasses.add(TestPurgeDataSource.class);
+        // sClasses.add(TestPurgeDataSource.class);
         sClasses.add(TestDomainAdmin.class);
         sClasses.add(TestTrashImapMessage.class);
         sClasses.add(TestSearchHeaders.class);
@@ -165,8 +164,8 @@ public class ZimbraSuite extends TestSuite
                     }
                 }
                 if (!found) {
-                    ZimbraLog.test.warn("Could not find test %s.  Make sure it's registered with %s.",
-                        testName, ZimbraSuite.class.getName());
+                    ZimbraLog.test.warn("Could not find test %s.  Make sure it's registered with %s.", testName,
+                            ZimbraSuite.class.getName());
                 }
             } else {
                 try {
@@ -199,7 +198,8 @@ public class ZimbraSuite extends TestSuite
         return runTestsInternal(sClasses, null);
     }
 
-    private static TestResults runTestsInternal(Collection<Class<? extends TestCase>> testClasses, Iterable<Request> requests) {
+    private static TestResults runTestsInternal(Collection<Class<? extends TestCase>> testClasses,
+            Iterable<Request> requests) {
         JUnitCore junit = new JUnitCore();
         junit.addListener(new TestLogger());
         TestResults results = new TestResults();
