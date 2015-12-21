@@ -10464,12 +10464,12 @@ TODO: delete them permanently from here
   <desc>Whether account should act as a service account to provide free busy information to exchange servers for users in the domain.</desc>
 </attr>
 
-<attr id="2073" name="zimbraClamAVDatabaseMirror" type="string" cardinality="single" optionalIn="server,globalConfig,alwaysOnCluster" since="8.7.0,9.0.0">
+<attr id="2073" name="zimbraClamAVDatabaseMirror" type="string" cardinality="single" optionalIn="server,globalConfig,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
   <globalConfigValue>db.us.clamav.net</globalConfigValue>
   <desc>Default database mirror for freshclam to use for virus and other updates.  Defaults to the United States mirror.  See http://www.iana.org/cctld/cctld-whois.htm for a list of mirrors.</desc>
 </attr>
 
-<attr id="2074" name="zimbraClamAVSafeBrowsing" type="enum" value="yes,no" cardinality="single" optionalIn="server,globalConfig,alwaysOnCluster" since="8.7.0,9.0.0">
+<attr id="2074" name="zimbraClamAVSafeBrowsing" type="enum" value="yes,no" cardinality="single" optionalIn="server,globalConfig,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
   <globalConfigValue>no</globalConfigValue>
   <desc>Whether or not to enable the Safe Browsing feature.  If enabled, freshclam will download Google's safe browsing database. See http://www.google.com/transparencyreport/safebrowsing and http://www.clamav.net/documentation.html#safebrowsing for more information about this service.</desc>
 </attr>
