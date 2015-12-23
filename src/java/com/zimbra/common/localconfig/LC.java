@@ -1127,7 +1127,6 @@ public final class LC {
 
     @Supported
     public static final KnownKey antispam_mysql_enabled = KnownKey.newKey(false);
-    public static final KnownKey antispam_mysql_directory = KnownKey.newKey("${zimbra_home}/mta/mariadb");
     public static final KnownKey antispam_mysql_data_directory = KnownKey.newKey("${zimbra_home}/data/amavisd/mysql/data");
     public static final KnownKey antispam_mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/antispam-mysqld.log");
     public static final KnownKey antispam_mysql_mycnf = KnownKey.newKey("${zimbra_home}/conf/antispam-my.cnf");
