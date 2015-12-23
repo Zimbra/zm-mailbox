@@ -575,21 +575,36 @@ public final class ParseMimeMessage {
             if (mmp != null) {
                 MimeBodyPart mbp = new ZMimeBodyPart();
                 mbp.setContent(content, ctype.toString());
-                if (mimeCtxt != null && mimeCtxt.curMimePart != null) {
-                    String[] origCTE = mimeCtxt.curMimePart.getHeader("Content-Transfer-Encoding");
-                    if (origCTE != null && origCTE.length == 1) {
-                        mbp.setHeader("Content-Transfer-Encoding", origCTE[0]);
-                    }
-                }
                 mmp.addBodyPart(mbp);
+                setKnownContentTransferEncoding(mbp, mimeCtxt);
             } else {
                 mm.setContent(content, ctype.toString());
+                setKnownContentTransferEncoding(mm, mimeCtxt);
             }
         }
+
         if (alternatives != null) {
             for (int i = 0; i < alternatives.length; i++) {
                 ctxt.incrementSize("alternative body", alternatives[i].getSize());
                 mmp.addBodyPart(alternatives[i]);
+            }
+        }
+    }
+
+    private static void setKnownContentTransferEncoding(MimeMessage mm, KnownMimeContext mimeCtxt) throws MessagingException {
+        if (mimeCtxt != null) {
+            String origCTE = mimeCtxt.getContentTransferEncoding();
+            if (origCTE != null) {
+                mm.setHeader("Content-Transfer-Encoding", origCTE);
+            }
+        }
+    }
+
+    private static void setKnownContentTransferEncoding(MimeBodyPart mbp, KnownMimeContext mimeCtxt) throws MessagingException {
+        if (mimeCtxt != null) {
+            String origCTE = mimeCtxt.getContentTransferEncoding();
+            if (origCTE != null) {
+                mbp.setHeader("Content-Transfer-Encoding", origCTE);
             }
         }
     }
@@ -986,6 +1001,19 @@ public final class ParseMimeMessage {
         KnownMimeContext(MimeMessage mm) {
             this.knownMimeMsg = mm;
         }
-    }
 
+        String getContentTransferEncoding() throws MessagingException {
+            String[] origCTE;
+            if (curMimePart != null) {
+                origCTE = curMimePart.getHeader("Content-Transfer-Encoding");
+            } else {
+                origCTE = knownMimeMsg.getHeader("Content-Transfer-Encoding");
+            }
+            if (origCTE != null && origCTE.length == 1) {
+                return origCTE[0];
+            } else {
+                return null;
+            }
+        }
+    }
 }
