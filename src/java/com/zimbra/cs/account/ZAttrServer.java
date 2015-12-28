@@ -23251,6 +23251,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf maximal_queue_lifetime
+     *
+     * @return zimbraMtaMaximalQueueLifetime, or "5d" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2078)
+    public String getMtaMaximalQueueLifetime() {
+        return getAttr(Provisioning.A_zimbraMtaMaximalQueueLifetime, "5d");
+    }
+
+    /**
+     * Value for postconf maximal_queue_lifetime
+     *
+     * @param zimbraMtaMaximalQueueLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2078)
+    public void setMtaMaximalQueueLifetime(String zimbraMtaMaximalQueueLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaximalQueueLifetime, zimbraMtaMaximalQueueLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf maximal_queue_lifetime
+     *
+     * @param zimbraMtaMaximalQueueLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2078)
+    public Map<String,Object> setMtaMaximalQueueLifetime(String zimbraMtaMaximalQueueLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaximalQueueLifetime, zimbraMtaMaximalQueueLifetime);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf maximal_queue_lifetime
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2078)
+    public void unsetMtaMaximalQueueLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaximalQueueLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf maximal_queue_lifetime
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2078)
+    public Map<String,Object> unsetMtaMaximalQueueLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaMaximalQueueLifetime, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf milter_command_timeout
      *
      * @return zimbraMtaMilterCommandTimeout, or "30s" if unset
@@ -30814,6 +30886,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @return zimbraMtaSmtpdSoftErrorLimit, or 10 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2077)
+    public int getMtaSmtpdSoftErrorLimit() {
+        return getIntAttr(Provisioning.A_zimbraMtaSmtpdSoftErrorLimit, 10);
+    }
+
+    /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @param zimbraMtaSmtpdSoftErrorLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2077)
+    public void setMtaSmtpdSoftErrorLimit(int zimbraMtaSmtpdSoftErrorLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdSoftErrorLimit, Integer.toString(zimbraMtaSmtpdSoftErrorLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @param zimbraMtaSmtpdSoftErrorLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2077)
+    public Map<String,Object> setMtaSmtpdSoftErrorLimit(int zimbraMtaSmtpdSoftErrorLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdSoftErrorLimit, Integer.toString(zimbraMtaSmtpdSoftErrorLimit));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2077)
+    public void unsetMtaSmtpdSoftErrorLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdSoftErrorLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2077)
+    public Map<String,Object> unsetMtaSmtpdSoftErrorLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdSoftErrorLimit, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtpd_tls_ask_ccert
      *
      * <p>Valid values: [yes, no]
@@ -31919,7 +32063,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtpd_soft_error_limit
+     * Deprecated since: 8.7.0_BETA2. use zimbraMtaSmtpdSoftErrorLimit
+     * instead. Orig desc: Value for postconf smtpd_soft_error_limit
      *
      * @return zimbraMtaStpdSoftErrorLimit, or 10 if unset
      *
@@ -31931,7 +32076,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtpd_soft_error_limit
+     * Deprecated since: 8.7.0_BETA2. use zimbraMtaSmtpdSoftErrorLimit
+     * instead. Orig desc: Value for postconf smtpd_soft_error_limit
      *
      * @param zimbraMtaStpdSoftErrorLimit new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31946,7 +32092,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtpd_soft_error_limit
+     * Deprecated since: 8.7.0_BETA2. use zimbraMtaSmtpdSoftErrorLimit
+     * instead. Orig desc: Value for postconf smtpd_soft_error_limit
      *
      * @param zimbraMtaStpdSoftErrorLimit new value
      * @param attrs existing map to populate, or null to create a new map
@@ -31962,7 +32109,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtpd_soft_error_limit
+     * Deprecated since: 8.7.0_BETA2. use zimbraMtaSmtpdSoftErrorLimit
+     * instead. Orig desc: Value for postconf smtpd_soft_error_limit
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -31976,7 +32124,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtpd_soft_error_limit
+     * Deprecated since: 8.7.0_BETA2. use zimbraMtaSmtpdSoftErrorLimit
+     * instead. Orig desc: Value for postconf smtpd_soft_error_limit
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
