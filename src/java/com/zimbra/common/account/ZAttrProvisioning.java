@@ -10212,6 +10212,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaMaximalBackoffTime = "zimbraMtaMaximalBackoffTime";
 
     /**
+     * Value for postconf maximal_queue_lifetime
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2078)
+    public static final String A_zimbraMtaMaximalQueueLifetime = "zimbraMtaMaximalQueueLifetime";
+
+    /**
      * Maximum total size of a mail message. Enforced in mailbox server and
      * also used as value for postconf message_size_limit. 0 means &quot;no
      * limit&quot;
@@ -10749,6 +10757,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdSenderRestrictions = "zimbraMtaSmtpdSenderRestrictions";
 
     /**
+     * Value for postconf smtpd_soft_error_limit
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2077)
+    public static final String A_zimbraMtaSmtpdSoftErrorLimit = "zimbraMtaSmtpdSoftErrorLimit";
+
+    /**
      * Value for postconf smtpd_tls_ask_ccert
      *
      * @since ZCS 8.5.0
@@ -10959,7 +10975,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpTlsSecurityLevel = "zimbraMtaSmtpTlsSecurityLevel";
 
     /**
-     * Value for postconf smtpd_soft_error_limit
+     * Deprecated since: 8.7.0_BETA2. use zimbraMtaSmtpdSoftErrorLimit
+     * instead. Orig desc: Value for postconf smtpd_soft_error_limit
      *
      * @since ZCS 8.5.0
      */
