@@ -52362,7 +52362,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraMtaMaximalQueueLifetime, or "5d" if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2078)
     public String getMtaMaximalQueueLifetime() {
@@ -52375,7 +52375,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMtaMaximalQueueLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2078)
     public void setMtaMaximalQueueLifetime(String zimbraMtaMaximalQueueLifetime) throws com.zimbra.common.service.ServiceException {
@@ -52391,7 +52391,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2078)
     public Map<String,Object> setMtaMaximalQueueLifetime(String zimbraMtaMaximalQueueLifetime, Map<String,Object> attrs) {
@@ -52405,7 +52405,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2078)
     public void unsetMtaMaximalQueueLifetime() throws com.zimbra.common.service.ServiceException {
@@ -52420,7 +52420,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2078)
     public Map<String,Object> unsetMtaMaximalQueueLifetime(Map<String,Object> attrs) {
@@ -60122,7 +60122,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraMtaSmtpdSoftErrorLimit, or 10 if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2077)
     public int getMtaSmtpdSoftErrorLimit() {
@@ -60135,7 +60135,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMtaSmtpdSoftErrorLimit new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2077)
     public void setMtaSmtpdSoftErrorLimit(int zimbraMtaSmtpdSoftErrorLimit) throws com.zimbra.common.service.ServiceException {
@@ -60151,7 +60151,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2077)
     public Map<String,Object> setMtaSmtpdSoftErrorLimit(int zimbraMtaSmtpdSoftErrorLimit, Map<String,Object> attrs) {
@@ -60165,7 +60165,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2077)
     public void unsetMtaSmtpdSoftErrorLimit() throws com.zimbra.common.service.ServiceException {
@@ -60180,7 +60180,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2077)
     public Map<String,Object> unsetMtaSmtpdSoftErrorLimit(Map<String,Object> attrs) {

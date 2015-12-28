@@ -10485,12 +10485,12 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtpd_tls_received_header</desc>
 </attr>
 
-<attr id="2077" name="zimbraMtaSmtpdSoftErrorLimit" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0">
+<attr id="2077" name="zimbraMtaSmtpdSoftErrorLimit" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
   <globalConfigValue>10</globalConfigValue>
   <desc>Value for postconf smtpd_soft_error_limit</desc>
 </attr>
 
-<attr id="2078" name="zimbraMtaMaximalQueueLifetime" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0">
+<attr id="2078" name="zimbraMtaMaximalQueueLifetime" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
   <globalConfigValue>5d</globalConfigValue>
   <desc>Value for postconf maximal_queue_lifetime</desc>
 </attr>
