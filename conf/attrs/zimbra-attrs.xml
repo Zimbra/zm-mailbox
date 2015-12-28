@@ -7727,9 +7727,10 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtpd_hard_error_limit</desc>
 </attr>
 
-<attr id="1538" name="zimbraMtaStpdSoftErrorLimit" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
+<attr id="1538" name="zimbraMtaStpdSoftErrorLimit" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0" deprecatedSince="8.7.0_BETA2">
   <globalConfigValue>10</globalConfigValue>
   <desc>Value for postconf smtpd_soft_error_limit</desc>
+  <deprecateDesc>use zimbraMtaSmtpdSoftErrorLimit instead</deprecateDesc>
 </attr>
 
 <attr id="1539" name="zimbraMtaSmtpdErrorSleepTime" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
@@ -10482,6 +10483,16 @@ TODO: delete them permanently from here
 <attr id="2076" name="zimbraMtaSmtpdTlsReceivedHeader" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
   <globalConfigValue>no</globalConfigValue>
   <desc>Value for postconf smtpd_tls_received_header</desc>
+</attr>
+
+<attr id="2077" name="zimbraMtaSmtpdSoftErrorLimit" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Value for postconf smtpd_soft_error_limit</desc>
+</attr>
+
+<attr id="2078" name="zimbraMtaMaximalQueueLifetime" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0">
+  <globalConfigValue>5d</globalConfigValue>
+  <desc>Value for postconf maximal_queue_lifetime</desc>
 </attr>
 
 </attrs>
