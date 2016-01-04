@@ -42,9 +42,8 @@ With the following contents:
         $ sudo apt-get update
 
 4. Install zimbra packages
-$ sudo apt-get install zimbra-openldap-server zimbra-openldap-client zimbra-rsync zimbra-openssl zimbra-openjdk zimbra-openjdk-cacerts zimbra-mariadb zimbra-tcmalloc-lib zimbra-openjdk zimbra-cyrus-sasl
 
-        $ sudo apt-get install zimbra-openldap-server zimbra-openldap-client zimbra-rsync zimbra-openssl zimbra-openjdk zimbra-openjdk-cacerts zimbra-mariadb zimbra-tcmalloc-lib zimbra-openjdk
+        $ sudo apt-get install zimbra-openldap-server zimbra-openldap-client zimbra-rsync zimbra-openssl zimbra-openjdk zimbra-openjdk-cacerts zimbra-mariadb zimbra-tcmalloc-lib zimbra-openjdk zimbra-cyrus-sasl
 
 5. Change owner of /opt/zimbra to "zimbra"
 
