@@ -17,6 +17,7 @@
 package com.zimbra.common.localconfig;
 
 
+
 /**
  * Various switches to turn features on/off, mainly for measuring the
  * performance overhead.  Refer to the code that uses these keys to
@@ -255,6 +256,9 @@ public final class DebugConfig {
     public static final boolean debugLocalSplit = value("debug_local_websplit", false);
 
     public static final boolean allowUnauthedPing = value("allow_unauthed_ping", false);
+
+    public static final String defangImgSkipOwaspSanitize = value("defang_img_skip_owasp_sanitize", "^cid:.*@");
+    public static final String defangOwaspValidImgTag = value("owasp_valid_img_tag", "<\\s*img");
 
     /*
      * Default maximum size of convertd response. This reduces OOME in case of
