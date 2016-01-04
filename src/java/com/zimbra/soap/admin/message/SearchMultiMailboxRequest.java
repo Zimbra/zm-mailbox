@@ -570,7 +570,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
 
     @Override
     public Boolean getNeedCanExpand() {
-        throw new UnsupportedOperationException();
+        return Boolean.FALSE;
     }
 
     @Override
