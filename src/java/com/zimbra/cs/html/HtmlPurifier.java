@@ -13,14 +13,20 @@ import org.cyberneko.html.filters.Purifier;
 import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;
 
+import com.zimbra.common.localconfig.DebugConfig;
+
 
 /**
  * @author zimbra
  *
  */
 public class HtmlPurifier extends Purifier {
-    private static final Pattern VALID_IMG_TAG = Pattern.compile("<\\s*img", Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern VALID_IMG_TAG = Pattern.compile(
+        DebugConfig.defangOwaspValidImgTag, Pattern.CASE_INSENSITIVE);
     private static final PolicyFactory sanitizer = Sanitizers.IMAGES;
+    private static final Pattern IMG_SKIP_OWASPSANITIZE = Pattern.compile(
+        DebugConfig.defangImgSkipOwaspSanitize, Pattern.CASE_INSENSITIVE);
 
     /* (non-Javadoc)
      * @see org.cyberneko.html.filters.Purifier#purifyText(org.apache.xerces.xni.XMLString)
@@ -28,6 +34,10 @@ public class HtmlPurifier extends Purifier {
     @Override
     protected XMLString purifyText(XMLString text) {
         String temp = text.toString();
+
+        if (IMG_SKIP_OWASPSANITIZE.matcher(temp).find()) {
+            return text;
+        }
 
         if (VALID_IMG_TAG.matcher(temp).find()) {
             temp = sanitizer.sanitize(temp);

@@ -122,6 +122,9 @@ public class DefangFilter extends DefaultFilter {
     // matches the file format that convertd uses so it doesn't get 'pnsrc'ed
     private static final Pattern VALID_CONVERTD_FILE = Pattern
         .compile(DebugConfig.defangValidConvertdFile);
+    //matches cid:1040f05975d4d4b8fcf8747be3eb9ae3c08e5cd4@
+    private static final Pattern IMG_SKIP_OWASPSANITIZE = Pattern.compile(
+        DebugConfig.defangImgSkipOwaspSanitize, Pattern.CASE_INSENSITIVE);
 
     //
     // Data
@@ -735,7 +738,10 @@ public class DefangFilter extends DefaultFilter {
      */
     private void sanitizeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
         String value = attributes.getValue(i);
-        String result = sanitizer.sanitize(value);
+        String result = value;
+        if (!(IMG_SKIP_OWASPSANITIZE.matcher(result).find())) {
+            result = sanitizer.sanitize(result);
+        }
         result = AV_JS_ENTITY.matcher(result).replaceAll("JS-ENTITY-BLOCKED");
         result = AV_SCRIPT_TAG.matcher(result).replaceAll("SCRIPT-TAG-BLOCKED");
 
