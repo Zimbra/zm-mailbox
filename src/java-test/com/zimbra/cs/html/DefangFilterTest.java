@@ -1178,5 +1178,17 @@ public class DefangFilterTest {
         Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
     }
 
+    @Test
+    public void testBug102910() throws Exception {
+        String html = "<div><img pnsrc=\"cid:1040f05975d4d4b8fcf8747be3eb9ae3c08e5cd4@zimbra\" "
+            + "data-mce-src=\"cid:1040f05975d4d4b8fcf8747be3eb9ae3c08e5cd4@zimbra\" "
+            + "src=\"cid:1040f05975d4d4b8fcf8747be3eb9ae3c08e5cd4@zimbra\"></div>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("@zimbra"));
+        Assert.assertTrue(!result.contains("&#64;zimbra"));
+    }
+
 
 }
