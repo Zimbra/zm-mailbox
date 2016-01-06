@@ -378,7 +378,16 @@ public final class ParseMimeMessage {
             MimeMessage mmOrig = null;
             if (iid != null) {
                 Mailbox msgMbox = iid.getAccountId() != null ? MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId()) : mbox;
-                mmOrig = msgMbox.getMessageById(null,  iid.getId()).getMimeMessage();
+                try {
+                    if (iid.hasSubpart()) {
+                        // calendar reply; the MIME message is in the subpart
+                        mmOrig = msgMbox.getMessageById(null, iid.getSubpartId()).getMimeMessage();
+                    } else {
+                        mmOrig = msgMbox.getMessageById(null,  iid.getId()).getMimeMessage();
+                    }
+                } catch (NoSuchItemException e) {
+                    ZimbraLog.account.warn("cannot inherit MIME headers from local version of message; item %s not found", iid.toString());
+                }
             }
             // handle the content from the client, if any
             if (hasContent) {
