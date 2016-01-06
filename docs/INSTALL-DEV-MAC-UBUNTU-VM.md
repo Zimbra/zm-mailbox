@@ -1,126 +1,171 @@
 Setup Development Environment for Mac with a Ubuntu Server VM
 =============================================================
+
 These instructions describe how to set up a development environment on an OSX machine with VMWare Fusion. 
 Please note, that Zimbra does not run on OSX natively. Therefore, in order to run Zimbra, you need to have a Linux VM. However, you can still
-use Eclipse and p4v on your Mac.
+use Eclipse or IntelliJ and p4v on your Mac.
+
+
+## Make sure your version of Fusion is current (recommended)
+
+1. Start Fusion
+2. Go to VMware Fusion / Check for Updates ...
+3. Update to the latest version if applicable
+
+The current version as of Jan 2016 is 7.1.3. If you're on an early version of Fusion 7, eg 7.0.1, you won't be able to share folders between
+your Mac and your Ubuntu VM due to a bug in the sharing module of VMware Tools.
+
 
 ## Create a Fusion VM with Ubuntu 14.04
 
-1. Download Ubuntu 14.04 Server ISO file
-2. Create a VMWare Fusion virtual machine with Ubuntu 14.04 Server guest OS.
-    - DO NOT USE "Easy Install" OPTION - uncheck the "Easy Install" checkbox".
-    - Make sure to assign enough RAM and disk space to the VM (4GB RAM and 20GB disk is sufficient).
-    - Default (shared) network option is sufficient.
-    - Assigning 2 virtual CPUs may also speed things up.
-    - You can choose all default options during installation.
-    - Install OpenSSH Server when prompted to select additional packages.
-    - **DO NOT INSTALL ANY OTHER ADDITIONAL PACKAGES SUGGESTED BY THE INSTALLER**.
-    - During installation create the **zimbra** user account  
-      (**MUST be zimbra, not your favorite account name**).  
-      The account will be used both as the user for the Zimbra installation and the account for building Zimbra.
+1. Download Ubuntu 14.04 Server ISO file from <http://releases.ubuntu.com/14.04/>. You'll want the 64-bit server install image.
+
+2. Create the VM:
+
+    - Start Fusion
+    - File|New
+    - Select "Install from disc or image", click Continue
+    - Browse to the downloaded Ubuntu image in Finder, click Open
+    - Uncheck "User Easy Install", click Continue
+    - A VM window and a settings window will pop up. Next, we adjust settings.
+    - Go to "Processors & Memory". Select "2 processor cores" and 4096MB memory.
+    - Click the "play" arrow in the VM window. Now it's time to install Ubuntu.
+    - Hit Enter to accept English as the language for the install
+    - Hit Enter to begin the install. Keep hitting Enter to accept defaults until you get to "Set up users and passwords".
+    - Create the account Zimbra/zimbra/zimbra (you will be asked to pick a better password, select No)
+    - During the install, accept defaults except:
+    	- Select Yes when asked to install LVM
+    	- Make sure it sets aside at least 20G of disk space
+    	- Select Yes to write changes
+    - When you get to "Software selection", hit Space to select "OpenSSH server", then Enter to continue. **DO NOT** install any
+    other packages.
+
+3. Ubuntu has been installed and booted. Login with zimbra/zimbra. The account 'zimbra' is the only one you should need in your VM.
+
+To regain control of your mouse from the VM, type Ctrl-Cmd. At this point it would also be a good idea to find and write down your
+VM's IP address. To find it, run the command
+
+    $ ifconfig -a
+
+and look for the address for eth0.
+
 
 ## Install and update required packages on the VM
 
-1. update apt
+1. Update apt:
 
-        $ sudo apt-get update  
+        $ sudo apt-get update
         $ sudo apt-get install build-essential ant python-pip
         
-2. add and configure zimbra repositories  
-To enable the repository on UBUNTU14, create the following file:
-
-        /etc/apt/sources.list.d/zimbra.list
-With the following contents:
+2. Add and configure zimbra-related package repositories. To enable the repository on Ubuntu, create the file `/etc/apt/sources.list.d/zimbra.list` with the following contents:
 
         deb     [arch=amd64] https://repo.zimbra.com/apt/87 trusty zimbra
         deb-src [arch=amd64] https://repo.zimbra.com/apt/87 trusty zimbra
 
-3. Run the following commands
+You can use `sudo vi` to edit the file.
+
+3. Run the following commands:
 
         $ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9BE6ED79
         $ sudo apt-get install -y apt-transport-https
         $ sudo apt-get update
 
-4. Install zimbra packages
+4. Install zimbra packages:
 
-        $ sudo apt-get install zimbra-openldap-server zimbra-openldap-client zimbra-rsync zimbra-openssl zimbra-openjdk zimbra-openjdk-cacerts zimbra-mariadb zimbra-tcmalloc-lib zimbra-openjdk
+        $ sudo apt-get install zimbra-openldap-server zimbra-openldap-client zimbra-rsync zimbra-openssl zimbra-openjdk zimbra-openjdk-cacerts zimbra-mariadb zimbra-tcmalloc-lib
 
-5. Change owner of /opt/zimbra to "zimbra"
+5. Change owner of `/opt/zimbra` to "zimbra":
 
         $ sudo chown -R zimbra /opt/zimbra
 
 
 ## Configure your workspace environment on the VM
 
-1. Add Helix (former Perforce) repository following instructions on this page:
+1. Add Helix (Perforce) repository by following the instructions for "How to Configure": <https://www.perforce.com/perforce-packages/helix-versioning-engine>
 
-        https://www.perforce.com/perforce-packages/helix-versioning-engine
+Follow the instructions for APT. The {distro} is 'trusty'.
 
-2. Install helix-cli via apt
+2. Install helix-cli via apt:
 
         $ sudo apt-get install helix-cli
 
-3. Copy your SSH keys (public and private) to `$HOME/.ssh/` folder on the VM
+3. Copy your SSH keys (public and private) to `/home/zimbra/.ssh/` on the VM. You may want to copy your local `.ssh` directory over.
+Your keys are in `id_rsa` and `id_rsa.pub`, but it might be handy to also have the `config` and `known_hosts` files. (Note: I was not able to get
+copy/paste working, so I used ftp via an external domain of mine.) You should now be able to use `scp` to copy files between your Mac and
+the VM.
 
-4. Set up your environment variables (may be different depending on your office location and SSH set up)
+4. Set up your environment variables (may be different depending on your office location and SSH set up):
 
-   Add the following content to `$HOME/.profile`
-````
-export P4PORT=1066
-export P4HOST=p4proxy.eng.zimbra.com
-export P4USER={your p4 username}
-export P4CONFIG=.p4config
-export P4EDITOR=/usr/bin/vi
-export PATH=$PATH:/opt/zimbra/bin:$HOME/bin
-export ZIMBRA_HOSTNAME={your computer name}.local
-alias ssh_p4='ssh -f -N p4'
-alias ssh_web='ssh -f -N web'
-alias ssh_rb='ssh -f -N rb'
-alias ssh_all='ssh_p4; ssh_web; ssh_rb'
-````
+Add the following content to `/home/zimbra/.profile`:
 
-5. set up SSH configuration for accessing servers behind the firewall.  
-Add the following content to `$HOME/.ssh/config`
+    export P4PORT=1066
+    export P4HOST=p4proxy.eng.zimbra.com
+    export P4USER={your p4 username}
+    export P4CONFIG=.p4config
+    export P4EDITOR=/usr/bin/vi
+    export PATH=$PATH:/opt/zimbra/bin:$HOME/bin
+    export ZIMBRA_HOSTNAME={your computer name}.local
+    alias ssh_p4='ssh -f -N p4'
+    alias ssh_web='ssh -f -N web'
+    alias ssh_rb='ssh -f -N rb'
+    alias ssh_all='ssh_p4; ssh_web; ssh_rb'
 
-        Host *
-          User {your user name on fence-new}
-          IdentityFile ~/.ssh/id_rsa
-          ForwardAgent yes
-          ServerAliveInterval 30
-          ServerAliveCountMax 120
+The `ssh_p4` alias is the only one you really need. The other two are only needed if you want to browse *.eng.zimbra.com from your VM, or post reviews from it.
 
-        Host p4
-          Hostname fence-new.zimbra.com
-          LocalForward 1066 perforce.zimbra.com:1066
+5. Set up SSH configuration for accessing servers behind the firewall (if you haven't copied over your `~/.ssh/config` file):
 
-        Host web
-          Hostname fence-new.zimbra.com
-          DynamicForward 8787
+Add the following content to `/home/zimbra/.ssh/config`:
 
-        Host rb
-          Hostname fence-new.zimbra.com
-          LocalForward 8080 reviewboard.eng.zimbra.com:80
+    Host *
+      User {your user name on fence-new}
+      IdentityFile ~/.ssh/id_rsa
+      ForwardAgent yes
+      ServerAliveInterval 30
+      ServerAliveCountMax 120
 
-6. load new environment settings and start SSH tunnel to perforce:
+    Host p4
+      Hostname fence-new.zimbra.com
+      LocalForward 1066 perforce.zimbra.com:1066
+
+    Host web
+      Hostname fence-new.zimbra.com
+      DynamicForward 8787
+
+    Host rb
+      Hostname fence-new.zimbra.com
+      LocalForward 8080 reviewboard.eng.zimbra.com:80
+
+6. Load new environment settings and start SSH tunnel to perforce:
 
         $ source ~/.profile
         $ ssh_all
 
-## Install VMWare tools
-If you want to be able to edit files using an IDE on your Mac, you have to set up a shared folder on your Mac with read/write access for your Ubuntu VM. Follow instructions on VMWare website: http://kb.vmware.com/selfservice/microsites/search.do?language=en_US&cmd=displayKC&externalId=1022525
 
-Once VMWare tools are installed, your Mac's shared folder will be mounted at:
-	`/mnt/hgfs/`.  
-You can use this path as your workspace or you can map it to another folder on the VM.
+## Install VMWare Tools
 
-## Setup JDK 1.7
+If you want to be able to edit files on your Mac, you have to set up a shared folder on your Mac with read/write access for your Ubuntu VM.
+Follow the instructions at <http://kb.vmware.com/selfservice/microsites/search.do?language=en_US&cmd=displayKC&externalId=1022525>.
 
-Download Sun JDK 1.7
-Even though JUDASPRIEST branch runs on Java8, you need JDK 1.7 to compile JUDASPRIEST branch.  You can use either zimbra-openjdk or the Sun JDK:
+Once VMWare Tools is installed, your Mac's shared folder will be mounted at `/mnt/hgfs/`. You can use this path as your workspace or you can
+map it to another folder on the VM.
 
-### Sun JDK 1.7
-- download and unpack the Sun JDK from the Oracle web site to your home folder.
-- Move the folder under `/usr/lib/jvm/`.  e.g. If using Sun JDK 1.7.0 rev 79:
+
+## Set up JDK 1.7 (JUDASPRIEST)
+
+0. Note: Instead of steps 1-4 below, you may be able to install Java7 much more simply by running the command:
+
+        $ apt-get install openjdk-7-jdk
+
+If you try this and it works, please update this document by removing steps 1-4 below.
+
+1. Download Sun JDK 1.7 from <http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html>. You'll want the 64-bit Linux
+version in tar.gz form.
+
+2. Copy the file from your Mac to the VM (the exact version may vary):
+
+        scp ~/Downloads/jdk-7u79-linux-x64.gz zimbra@{VM IP address}:/home/zimbra
+
+3. On the VM, move the folder under `/usr/lib/jvm/`.  For example, if using Sun JDK 1.7.0 rev 79:
 
         export SUNJDK=jdk1.7.0_79
         sudo mv ${SUNJDK} /usr/lib/jvm/
@@ -128,9 +173,11 @@ Even though JUDASPRIEST branch runs on Java8, you need JDK 1.7 to compile JUDASP
         sudo update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/${SUNJDK}/bin/javac" 1
         sudo update-alternatives --install "/usr/bin/javaws" "javaws" "/usr/lib/jvm/${SUNJDK}/bin/javaws" 1
 
-- Make it the default java
+4. Make it the default java:
+
         sudo update-alternatives --config java
-        There are 2 choices for the alternative java (providing /usr/bin/java).
+
+        There are three choices for the alternative java (providing /usr/bin/java). Choose #2:
 
           Selection    Path                                            Priority   Status
         ------------------------------------------------------------
@@ -140,191 +187,100 @@ Even though JUDASPRIEST branch runs on Java8, you need JDK 1.7 to compile JUDASP
 
         Press enter to keep the current choice[*], or type selection number: 2
 
-### zimbra-openjdk (not suitable for building JUDASPRIEST because is Java8)
 
-If you are using zimbra-openjdk for compiling Zimbra Java code, add `/opt/zimbra/common/lib/jvm/java/bin` to your `$PATH`.  
+### Set up zimbra-openjdk (main, or any branch based on Java8)
+
+If you are using zimbra-openjdk for compiling Zimbra Java code, add `/opt/zimbra/common/lib/jvm/java/bin` to your `$PATH`.
 You may also want to set `$JAVA_HOME` for other Java tools to work properly.
 
 
 ## Get the source code
-You have to log in to perforce on the guest Ubuntu VM.
 
-````
-$ p4 login
-* enter your password
-$ p4 client
-````
-If you are configuring perforce client on your host (Mac), then make sure your workspace is mapped to the folder that you are sharing between the Ubuntu guest VM and Mac host. E.g.: /mnt/hgfs/ubuntuhome/p4
+1. Create one or more Perforce clients. You could do that on your VM, but since clients (workspace specifications) are stored on the Perforce server,
+it's much easier to create it on your Mac. The simplest way is to use P4V to create a new client based on an existing client, for example the one you
+use for JUDASPRIEST. The new client could be named something like "{myusername}-ubuntu-judaspriest". You'll want to update the base directory to the
+location on your VM in your shared folder, for example `/mnt/hgfs/ubuntuhome/p4`. You'll also need to either update or remove the host constraint.
 
-````
-Root:   /mnt/hgfs/ubuntuhome/p4
-````
+2. Login to Perforce on your VM, set the client, and sync down the code:
 
-Enter the following as the view contents:
+        $ p4 login
+        $ export P4CLIENT={myusername}-ubuntu-judaspriest
+        $ p4 sync
 
-````
-//depot/zimbra/JUDASPRIEST/ant-global.xml //{your-workspace-name}/JUDASPRIEST/ant-global.xml
-//depot/zimbra/JUDASPRIEST/pom.xml //{your-workspace-name}/JUDASPRIEST/pom.xml
-//depot/zimbra/JUDASPRIEST/zimbra.l10n //{your-workspace-name}/JUDASPRIEST/zimbra.l10n
-//depot/zimbra/JUDASPRIEST/mvn-local-jars.sh //{your-workspace-name}/JUDASPRIEST/mvn-local-jars.sh
-//depot/zimbra/JUDASPRIEST/OpenID/... //{your-workspace-name}/JUDASPRIEST/OpenID/...
-//depot/zimbra/JUDASPRIEST/ZimbraMezeoExtension/... //{your-workspace-name}/JUDASPRIEST/ZimbraMezeoExtension/...
-//depot/zimbra/JUDASPRIEST/ZimbraHSM/... //{your-workspace-name}/JUDASPRIEST/ZimbraHSM/...
-//depot/zimbra/JUDASPRIEST/ZimbraHtmlExtras/... //{your-workspace-name}/JUDASPRIEST/ZimbraHtmlExtras/...
-//depot/zimbra/JUDASPRIEST/ZimbraFreeBusyProvider/... //{your-workspace-name}/JUDASPRIEST/ZimbraFreeBusyProvider/...
-//depot/zimbra/JUDASPRIEST/ZimbraAdminVersionCheck/... //{your-workspace-name}/JUDASPRIEST/ZimbraAdminVersionCheck/...
-//depot/zimbra/JUDASPRIEST/ZimbraEws/... //{your-workspace-name}/JUDASPRIEST/ZimbraEws/...
-//depot/zimbra/JUDASPRIEST/ZimbraLicensePortal/... //{your-workspace-name}/JUDASPRIEST/ZimbraLicensePortal/...
-//depot/zimbra/JUDASPRIEST/ZimbraEwsCommon/... //{your-workspace-name}/JUDASPRIEST/ZimbraEwsCommon/...
-//depot/zimbra/JUDASPRIEST/ZimbraLicenseExtension/... //{your-workspace-name}/JUDASPRIEST/ZimbraLicenseExtension/...
-//depot/zimbra/JUDASPRIEST/ZimbraLicenseTools/... //{your-workspace-name}/JUDASPRIEST/ZimbraLicenseTools/...
-//depot/zimbra/JUDASPRIEST/ZimbraLicenseHtmlExtras/... //{your-workspace-name}/JUDASPRIEST/ZimbraLicenseHtmlExtras/...
-//depot/zimbra/JUDASPRIEST/ZimbraLDAPUtilsExtension/... //{your-workspace-name}/JUDASPRIEST/ZimbraLDAPUtilsExtension/...
-//depot/zimbra/JUDASPRIEST/ZimbraNginxLookup/... //{your-workspace-name}/JUDASPRIEST/ZimbraNginxLookup/...
-//depot/zimbra/JUDASPRIEST/ZimbraOpenOfficeExt/... //{your-workspace-name}/JUDASPRIEST/ZimbraOpenOfficeExt/...
-//depot/zimbra/JUDASPRIEST/ZimbraPosixAccountsExtension/... //{your-workspace-name}/JUDASPRIEST/ZimbraPosixAccountsExtension/...
-//depot/zimbra/JUDASPRIEST/ZimbraCharset/... //{your-workspace-name}/JUDASPRIEST/ZimbraCharset/...
-//depot/zimbra/JUDASPRIEST/ThirdParty/jetty/... //{your-workspace-name}/JUDASPRIEST/ThirdParty/jetty/...
-//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/...
-//depot/zimbra/JUDASPRIEST/ZimbraServer/... //{your-workspace-name}/JUDASPRIEST/ZimbraServer/...
-//depot/zimbra/JUDASPRIEST/ZimbraPerf/... //{your-workspace-name}/JUDASPRIEST/ZimbraPerf/...
-//depot/zimbra/JUDASPRIEST/ZimbraPerf/data/dbrawdata/... //{your-workspace-name}/JUDASPRIEST/ZimbraPerf/data/dbrawdata/...
-//depot/zimbra/JUDASPRIEST/ZimbraXMbxSearch/... //{your-workspace-name}/JUDASPRIEST/ZimbraXMbxSearch/...
-//depot/zimbra/JUDASPRIEST/ZimbraCommon/... //{your-workspace-name}/JUDASPRIEST/ZimbraCommon/...
-//depot/zimbra/JUDASPRIEST/ZimbraClient/... //{your-workspace-name}/JUDASPRIEST/ZimbraClient/...
-//depot/zimbra/JUDASPRIEST/ZimbraCluster/... //{your-workspace-name}/JUDASPRIEST/ZimbraCluster/...
-//depot/zimbra/JUDASPRIEST/ZimbraBackup/... //{your-workspace-name}/JUDASPRIEST/ZimbraBackup/...
-//depot/zimbra/JUDASPRIEST/ZimbraBuild/... //{your-workspace-name}/JUDASPRIEST/ZimbraBuild/...
-//depot/zimbra/JUDASPRIEST/ZimbraArchive/... //{your-workspace-name}/JUDASPRIEST/ZimbraArchive/...
-//depot/zimbra/JUDASPRIEST/ZimbraAppliance/... //{your-workspace-name}/JUDASPRIEST/ZimbraAppliance/...
-//depot/zimbra/JUDASPRIEST/ZimbraAdminExt/... //{your-workspace-name}/JUDASPRIEST/ZimbraAdminExt/...
-//depot/zimbra/JUDASPRIEST/ZimbraConvertd/... //{your-workspace-name}/JUDASPRIEST/ZimbraConvertd/...
-//depot/zimbra/JUDASPRIEST/ZimbraEvolution/... //{your-workspace-name}/JUDASPRIEST/ZimbraEvolution/...
-//depot/zimbra/JUDASPRIEST/ZimbraNative/... //{your-workspace-name}/JUDASPRIEST/ZimbraNative/...
-//depot/zimbra/JUDASPRIEST/ZimbraNetwork/... //{your-workspace-name}/JUDASPRIEST/ZimbraNetwork/...
-//depot/zimbra/JUDASPRIEST/ZimbraOffline/... //{your-workspace-name}/JUDASPRIEST/ZimbraOffline/...
-//depot/zimbra/JUDASPRIEST/ZimbraOfflineExt/... //{your-workspace-name}/JUDASPRIEST/ZimbraOfflineExt/...
-//depot/zimbra/JUDASPRIEST/ZimbraSoap/... //{your-workspace-name}/JUDASPRIEST/ZimbraSoap/...
-//depot/zimbra/JUDASPRIEST/ZimbraSync/... //{your-workspace-name}/JUDASPRIEST/ZimbraSync/...
-//depot/zimbra/JUDASPRIEST/ZimbraSyncClient/... //{your-workspace-name}/JUDASPRIEST/ZimbraSyncClient/...
-//depot/zimbra/JUDASPRIEST/ZimbraSyncCommon/... //{your-workspace-name}/JUDASPRIEST/ZimbraSyncCommon/...
-//depot/zimbra/JUDASPRIEST/ZimbraTagLib/... //{your-workspace-name}/JUDASPRIEST/ZimbraTagLib/...
-//depot/zimbra/JUDASPRIEST/ZimbraWebClient/... //{your-workspace-name}/JUDASPRIEST/ZimbraWebClient/...
-//depot/zimbra/JUDASPRIEST/Zimlet/... //{your-workspace-name}/JUDASPRIEST/Zimlet/...
-//depot/zimbra/JUDASPRIEST/ZimbraSyncPerf/... //{your-workspace-name}/JUDASPRIEST/ZimbraSyncPerf/...
-//depot/zimbra/JUDASPRIEST/ZimbraSyncTools/... //{your-workspace-name}/JUDASPRIEST/ZimbraSyncTools/...
-//depot/zimbra/JUDASPRIEST/ZimbraSync4j/... //{your-workspace-name}/JUDASPRIEST/ZimbraSync4j/...
-//depot/zimbra/JUDASPRIEST/ZimbraVoice/... //{your-workspace-name}/JUDASPRIEST/ZimbraVoice/...
-//depot/zimbra/JUDASPRIEST/ZimbraSyncPerf/... //{your-workspace-name}/JUDASPRIEST/ZimbraSyncPerf/...
-//depot/zimbra/JUDASPRIEST/ZimbraLogger/... //{your-workspace-name}/JUDASPRIEST/ZimbraLogger/...
-//depot/zimbra/JUDASPRIEST/ZimbraSync4j/... //{your-workspace-name}/JUDASPRIEST/ZimbraSync4j/...
-//depot/zimbra/JUDASPRIEST/ZimbraNotif/... //{your-workspace-name}/JUDASPRIEST/ZimbraNotif/...
-//depot/zimbra/JUDASPRIEST/ZimbraLauncher/... //{your-workspace-name}/JUDASPRIEST/ZimbraLauncher/...
-//depot/zimbra/JUDASPRIEST/mvn-local-jars.sh //{your-workspace-name}/JUDASPRIEST/mvn-local-jars.sh
-//depot/zimbra/JUDASPRIEST/pom.xml //{your-workspace-name}/JUDASPRIEST/pom.xml
-//depot/zimbra/JUDASPRIEST/README.buildZCS //{your-workspace-name}/JUDASPRIEST/README.buildZCS
-//depot/zimbra/JUDASPRIEST/Zimbra.ipr //{your-workspace-name}/JUDASPRIEST/Zimbra.ipr
-//depot/zimbra/JUDASPRIEST/zimbra.l10n //{your-workspace-name}/JUDASPRIEST/zimbra.l10n
--//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/OSXx86_64/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/OSXx86_64/...
--//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/MACOSXx86_10.7/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/MACOSXx86_10.7/...
-//depot/zimbra/JUDASPRIEST/ZIM/... //{your-workspace-name}/JUDASPRIEST/ZIM/...
-//depot/zimbra/JUDASPRIEST/ZimbraIMExtention/... //{your-workspace-name}/JUDASPRIEST/ZimbraIMExtention/...
-//depot/zimbra/JUDASPRIEST/SolrPlugins/... //{your-workspace-name}/JUDASPRIEST/SolrPlugins/...
-//depot/zimbra/JUDASPRIEST/CrocoDocExt/... //{your-workspace-name}/JUDASPRIEST/CrocoDocExt/...
-//depot/zimbra/JUDASPRIEST/ZimbraFOSS/... //{your-workspace-name}/JUDASPRIEST/ZimbraFOSS/...
--//depot/zimbra/JUDASPRIEST/ZimbraSelenium/... //{your-workspace-name}/JUDASPRIEST/ZimbraSelenium/...
--//depot/zimbra/JUDASPRIEST/ZimbraQA/... //{your-workspace-name}/JUDASPRIEST/ZimbraQA/...
--//depot/zimbra/JUDASPRIEST/ZimbraServer/src/windows/... //{your-workspace-name}/JUDASPRIEST/ZimbraServer/src/windows/...
--//depot/zimbra/JUDASPRIEST/ZimbraPerf/data/... //{your-workspace-name}/JUDASPRIEST/ZimbraPerf/data/...
--//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/MACOSXx86_10.6/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/MACOSXx86_10.6/...
--//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/x86_64/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/x86_64/...
--//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/RHEL6_64/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/RHEL6_64/...
--//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/RHEL7_64/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/RHEL7_64/...
--//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/wndows/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/windows/...
--//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/SLES11_64/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/SLES11_64/...
--//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/UBUNTU14_64/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/UBUNTU14_64/...
--//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/UBUNTU10_64/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/UBUNTU10_64/...
-//depot/zimbra/JUDASPRIEST/ThirdPartyBuilds/UBUNTU12_64/... //{your-workspace-name}/JUDASPRIEST/ThirdPartyBuilds/UBUNTU12_64/...
--//depot/zimbra/JUDASPRIEST/ZimbraPerf/data/dbrawdata/... //{your-workspace-name}/JUDASPRIEST/ZimbraPerf/data/dbrawdata/...
--//depot/zimbra/JUDASPRIEST/ZimbraNetwork/ZimbraImportWizard/... //{your-workspace-name}/JUDASPRIEST/ZimbraNetwork/ZimbraImportWizard/...
-````
-
-That view may have a lot more than you need, so you may want to consider explicitly listing
-only what you need. Take a look at the clients of others in your group for examples.
-
-````
-$ cd ~/p4/JUDASPRIEST
-$ p4 sync
-````
-
-## Initialize /opt/zimbra/ folder structure
-Run the following command in ZimbraServer folder. This will install jetty and copy some scripts to /opt/zimbra/bin
-
-````
-$ ant install-thirdparty init-opt-zimbra
-````
-
-## Configure MariDB
-1. Copy ZimbraServer/conf/mariadb/my.cnf to /opt/zimbra/conf/my.cnf
-
-        cp ZimbraServer/conf/mariadb/my.cnf /opt/zimbra/conf/my.cnf
+Note: The sync will take a while. Though the files are already there, according to the client spec they are not, so everything will be synced.
 
 
-2. Create default database and tables
+## Install Jetty and scripts
 
-        mkdir -p /opt/zimbra/data/tmp
-        /opt/zimbra/common/share/mysql/scripts/mysql_install_db --basedir=/opt/zimbra/common --datadir=/opt/zimbra/db/data --defaults-file=/opt/zimbra/conf/my.cnf --user=zimbra
+Run the following command in ZimbraServer folder. This will install jetty and copy some scripts to `/opt/zimbra/bin`.
+
+        $ ant install-thirdparty init-opt-zimbra
+
+
+## Configure MariaDB
+
+1. Copy the config file:
+
+        $ cp ZimbraServer/conf/mariadb/my.cnf /opt/zimbra/conf/my.cnf
+
+
+2. Create default database and tables:
+
+        $ mkdir -p /opt/zimbra/data/tmp
+        $ /opt/zimbra/common/share/mysql/scripts/mysql_install_db --basedir=/opt/zimbra/common --datadir=/opt/zimbra/db/data --defaults-file=/opt/zimbra/conf/my.cnf --user=zimbra
 
 
 3. Start mariadb:
 
-        mkdir -p /opt/zimbra/log
-        /opt/zimbra/bin/mysql.server start
+        $ mkdir -p /opt/zimbra/log
+        $ /opt/zimbra/bin/mysql.server start
 
 
-4. Set password for MariaDB root user
+4. Set password for MariaDB root user:
 
-        /opt/zimbra/common/bin/mysqladmin --socket=/opt/zimbra/data/tmp/mysql/mysql.sock -u root password zimbra
+        $ /opt/zimbra/common/bin/mysqladmin --socket=/opt/zimbra/data/tmp/mysql/mysql.sock -u root password zimbra
 
+5. Reload permissions tables:
 
-5. Reload permissions tables
+        $ /opt/zimbra/common/bin/mysqladmin --socket=/opt/zimbra/data/tmp/mysql/mysql.sock -u root -p reload
 
-        /opt/zimbra/common/bin/mysqladmin --socket=/opt/zimbra/data/tmp/mysql/mysql.sock -u root -p reload
-
+(You'll need to enter the root password 'zimbra'.)
 
 6. Restart mariadb and make sure it is running:
 
-        /opt/zimbra/bin/mysql.server restart
-        /opt/zimbra/bin/mysql.server status
+        $ /opt/zimbra/bin/mysql.server restart
+        $ /opt/zimbra/bin/mysql.server status
 
 
 ## Deploy dev build
-run the following command in ZimbraServer folder
-````
-$ ant reset-all
-````
+
+Run the following command in ZimbraServer folder
+
+        $ ant reset-all
+
+(You may get asked partway through for the `sudo` password.)
+
 
 ## Configure localconfig
-Find out your zimbra users uid and gid either by looking at /etc/passwd or by running
-````
-$ sudo id -u zimbra
-$ sudo id -g zimbra
-````
 
-Edit localconfig value zimbra_id to match your zimbra user's uid. e.g., if your zimbra user's uid is 1000 and gid is 1000, which is what it would normally be if this is the first and only user account.
+1.Find out your zimbra user's uid and gid either by looking at /etc/passwd or by running
 
-````
-$ zmlocalconfig -e zimbra_uid=1000
-$ zmlocalconfig -e zimbra_gid=1000
-````
+        $ sudo id -u zimbra
+        $ sudo id -g zimbra
 
-## Integration with Eclipse and perforce on your Mac
+2. Edit localconfig value zimbra_id to match your zimbra user's uid. e.g., if your zimbra user's uid is 1000 and gid is 1000, which is what it would normally be if this is the first and only user account.
 
-After you follow the steps outlined above, you will be able to check-out/check-in code on your Ubuntu VM. That's cool, but it is not very convenient if you want to use Eclipse or any other IDE on your Mac.
+        $ zmlocalconfig -e zimbra_uid=1000
+        $ zmlocalconfig -e zimbra_gid=1000
+
+
+## Integration with your IDE (Eclipse or IntelliJ IDEA) and Perforce on your Mac
+
+After you follow the steps outlined above, you will be able to check-out/check-in code on your Ubuntu VM. That's cool, but it is not very convenient if you want to use an IDE on your Mac.
 To be able to manage files and use an IDE on your Mac, you will need to:
 
-1. install and configure Perforce on your Mac
-2. reconfigure your workspace "Root" to map to the path on your Mac e.g. `$HOME/ubuntuhome/p4` instead of `/mnt/hgfs/ubuntuhome/p4`
+1. Install and configure Perforce on your Mac
+2. Reconfigure your workspace "Root" to map to the path on your Mac e.g. `$HOME/ubuntuhome/p4` instead of `/mnt/hgfs/ubuntuhome/p4`
 3. (bonus points) create a symlink to `/mng/hgfs/ubuntuhome` on the Ubuntu VM to match the path on your Mac host. This will allow you to use the same perforce client spec on both machines. 
 
     E.g., if the shared folder on your mac is `/Users/gsolovyev/ubuntuhome`, run the following on your Ubuntu VM:
@@ -332,3 +288,15 @@ To be able to manage files and use an IDE on your Mac, you will need to:
         $ sudo mkdir -p /Users/gsolovyev
         $ sudo ln -s /mnt/hgfs/ubuntuhome /Users/gsolovyev/
         $ sudo chown zimbra:zimbra /Users/gsolovyev
+
+
+## Summary and Overview
+
+For those who are used to doing everything on their Mac via localhost, if you are able to share folders between your Mac and VM, the only things that have to live in your VM are your SSH keys
+and the deployed instance of Zimbra under `/opt/zimbra`. The only commands you'll need to run in the VM are `ant` commands such as `ant sync` or `ant deploy`, in order to update the deploy area.
+If you run those on your Mac, then `/opt/zimbra` on your Mac will be updated, but that's not where your server is running.
+
+To test your server, go to
+
+        https://{your VM IP}:7070
+
