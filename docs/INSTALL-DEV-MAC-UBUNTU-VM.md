@@ -94,6 +94,8 @@ Your keys are in `id_rsa` and `id_rsa.pub`, but it might be handy to also have t
 copy/paste working, so I used ftp via an external domain of mine.) You should now be able to use `scp` to copy files between your Mac and
 the VM.
 
+[ TODO: If you get copy/paste working, please edit this document with instructions. ]
+
 4. Set up your environment variables (may be different depending on your office location and SSH set up):
 
 Add the following content to `/home/zimbra/.profile`:
@@ -156,7 +158,7 @@ map it to another folder on the VM.
 
         $ apt-get install openjdk-7-jdk
 
-If you try this and it works, please update this document by removing steps 1-4 below.
+[ TODO: If you try this and it works, please update this document by removing steps 1-4 below. ]
 
 1. Download Sun JDK 1.7 from <http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html>. You'll want the 64-bit Linux
 version in tar.gz form.
@@ -300,3 +302,13 @@ To test your server, go to
 
         https://{your VM IP}:7070
 
+If you try to load in dev mode with ?dev=1 and the load doesn't finish due to HTTP 429 errors, you have run into the server's
+DOS throttling protection - it senses a flood of requests and stops serving them. To fix that, either raise the limit or add
+an exemption for your server:
+
+        $ zmprov mcf zimbraHttpDosFilterMaxRequestsPerSec 200
+        $ zmprov mcf +zimbraHttpThrottleSafeIPs {your VM IP}
+
+Surprisingly, you may still get 429 errors, but setting those config values helps. The client will typically load without errors if you try again.
+
+As far as I can tell, you only get one VM window. But you can ssh into your VM from Mac terminals, with the bonus that copy/paste will work.
