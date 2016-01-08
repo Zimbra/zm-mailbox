@@ -26,6 +26,7 @@ import java.security.Principal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -51,11 +52,22 @@ public class MockHttpServletRequest implements HttpServletRequest {
     final URL url;
     final byte[] body;
     final String ctype;
+    int port = 0;
+    String remoteAddr = null;
+    HashMap<String, String> headers = new HashMap<String, String>();
 
     public MockHttpServletRequest(byte[] body, URL url, String ctype) {
+        this(body, url, ctype, 0, null, null);
+    }
+
+    public MockHttpServletRequest(byte[] body, URL url, String ctype, int port, String remoteAddr,
+            HashMap<String, String> headers) {
+        this.remoteAddr = remoteAddr;
         this.url = url;
         this.body = body;
         this.ctype = ctype;
+        this.port = port;
+        this.headers = headers;
     }
 
     @Override
@@ -65,7 +77,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
 
     @Override
     public Enumeration<String> getAttributeNames() {
-        return new IteratorEnumeration<String>(Collections.<String>emptyList());
+        return new IteratorEnumeration<String>(Collections.<String> emptyList());
     }
 
     @Override
@@ -176,7 +188,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getRemoteAddr() {
-        return null;
+        return remoteAddr;
     }
 
     @Override
@@ -186,7 +198,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
 
     @Override
     public int getRemotePort() {
-        return 0;
+        return port;
     }
 
     @Override
@@ -248,7 +260,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getHeader(String name) {
-        return null;
+        return headers.get(name);
     }
 
     @Override
@@ -420,8 +432,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
     }
 
     @Override
-    public <T extends HttpUpgradeHandler> T upgrade(Class<T> arg0)
-            throws IOException, ServletException {
+    public <T extends HttpUpgradeHandler> T upgrade(Class<T> arg0) throws IOException, ServletException {
         return null;
     }
 }
