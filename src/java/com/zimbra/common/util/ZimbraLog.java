@@ -58,37 +58,33 @@ public final class ZimbraLog {
     public static final String C_NAME = "name";
 
     /**
-     * "aid" key for context. Id in the auth token. Only present if target id is
-     * different then auth token id.
+     * "aid" key for context. Id in the auth token. Only present if target id is different then auth token id.
      */
     public static final String C_AID = "aid";
 
     /**
-     * "aname" key for context. name in the auth token. Only present if target id is
-     * different then auth token id.
+     * "aname" key for context. name in the auth token. Only present if target id is different then auth token id.
      */
     public static final String C_ANAME = "aname";
 
     /**
-     * "cid" is the connection id of a server that is monotonically increasing - useful
-     * for tracking individual connections.
+     * "cid" is the connection id of a server that is monotonically increasing - useful for tracking individual
+     * connections.
      */
     public static final String C_CONNECTIONID = "cid";
 
     /**
-     * "mid" key for context. Id of requested mailbox. Only present if request is
-     * dealing with a mailbox.
+     * "mid" key for context. Id of requested mailbox. Only present if request is dealing with a mailbox.
      */
     public static final String C_MID = "mid";
 
     /**
-     * "ua" key for context.  The name of the client application.
+     * "ua" key for context. The name of the client application.
      */
     private static final String C_USER_AGENT = "ua";
 
     /**
-     * List of IP addresses and user-agents of the proxy chain.
-     * was sent.
+     * List of IP addresses and user-agents of the proxy chain was sent.
      */
     private static final String C_VIA = "via";
 
@@ -98,8 +94,7 @@ public final class ZimbraLog {
     private static final String C_SOAP_ID = "soapId";
 
     /**
-     * "msgid" key for context.  The Message-ID header of the message being
-     * operated on.
+     * "msgid" key for context. The Message-ID header of the message being operated on.
      */
     private static final String C_MSG_ID = "msgid";
 
@@ -109,15 +104,19 @@ public final class ZimbraLog {
     private static final String C_ITEM = "item";
 
     /**
-     * "ds" key for context.  The name of the Data Source being operated on.
+     * "ds" key for context. The name of the Data Source being operated on.
      */
     private static final String C_DATA_SOURCE_NAME = "ds";
 
     /**
-     * "port" key for context.  The server port to which the client connected.
+     * "port" key for context. The server port to which the client connected.
      */
     private static final String C_PORT = "port";
 
+    /**
+     * "oport" key for context. originating port number of request
+     */
+    private static final String C_OPORT = "oport";
     /**
      * the "zimbra.misc" logger. For all events that don't have a specific-catagory.
      */
@@ -144,12 +143,12 @@ public final class ZimbraLog {
     public static final Log searchstat = LogFactory.getLog("zimbra.searchstat");
 
     /**
-     * The "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
+     * The "zimbra.searchstat" logger. For logging statistics about what kinds of searches are run
      */
     public static final Log searchstats = LogFactory.getLog("zimbra.searchstats");
 
     /**
-     * The "zimbra.elasticsearch" logger.  For logging interactions with Elasticsearch
+     * The "zimbra.elasticsearch" logger. For logging interactions with Elasticsearch
      */
     public static final Log elasticsearch = LogFactory.getLog("zimbra.elasticsearch");
 
@@ -216,7 +215,7 @@ public final class ZimbraLog {
     /**
      * the "zimbra.im.intercept" logger. The IM packet interceptor (IM protocol logger)
      */
-    public static final Log im_intercept= LogFactory.getLog("zimbra.im.intercept");
+    public static final Log im_intercept = LogFactory.getLog("zimbra.im.intercept");
 
     /**
      * the "zimbra.account" logger. For account-related events.
@@ -354,12 +353,12 @@ public final class ZimbraLog {
     public static final Log dav = LogFactory.getLog("zimbra.dav");
 
     /**
-     * the "zimbra.io" logger.  Logs file IO operations.
+     * the "zimbra.io" logger. Logs file IO operations.
      */
     public static final Log io = LogFactory.getLog("zimbra.io");
 
     /**
-     * the "zimbra.datasource" logger.  Logs data source operations.
+     * the "zimbra.datasource" logger. Logs data source operations.
      */
     public static final Log datasource = LogFactory.getLog("zimbra.datasource");
 
@@ -374,32 +373,32 @@ public final class ZimbraLog {
     public static final Log webclient = LogFactory.getLog("zimbra.webclient");
 
     /**
-     * the "zimbra.scheduler" logger.  Logs scheduled task operations.
+     * the "zimbra.scheduler" logger. Logs scheduled task operations.
      */
     public static final Log scheduler = LogFactory.getLog("zimbra.scheduler");
 
     /**
-     * the "zimbra.store" logger.  Logs filesystem storage operations.
+     * the "zimbra.store" logger. Logs filesystem storage operations.
      */
     public static final Log store = LogFactory.getLog("zimbra.store");
 
     /**
-     * the "zimbra.fb" logger.  Logs free/busy operations.
+     * the "zimbra.fb" logger. Logs free/busy operations.
      */
     public static final Log fb = LogFactory.getLog("zimbra.fb");
 
     /**
-     * the "zimbra.purge" logger.  Logs mailbox purge operations.
+     * the "zimbra.purge" logger. Logs mailbox purge operations.
      */
     public static final Log purge = LogFactory.getLog("zimbra.purge");
 
     /**
-     * the "zimbra.mailop" logger.  Logs changes to items in the mailbox.
+     * the "zimbra.mailop" logger. Logs changes to items in the mailbox.
      */
     public static final Log mailop = LogFactory.getLog("zimbra.mailop");
 
     /**
-     * "zimbra.slogger" logger.  Used for "logger service", publishes stats events to syslog
+     * "zimbra.slogger" logger. Used for "logger service", publishes stats events to syslog
      */
     public static final Log slogger = LogFactory.getLog("zimbra.slogger");
 
@@ -409,20 +408,19 @@ public final class ZimbraLog {
     public static final Log mbxmgr = LogFactory.getLog("zimbra.mbxmgr");
 
     /**
-     * "zimbra.tnef" logger.  Logs TNEF conversion operations.
+     * "zimbra.tnef" logger. Logs TNEF conversion operations.
      */
     public static final Log tnef = LogFactory.getLog("zimbra.tnef");
-
 
     public static final Log nginxlookup = LogFactory.getLog("zimbra.nginxlookup");
 
     /**
-     * the "zimbra.contact" logger.  Logs contact operations.
+     * the "zimbra.contact" logger. Logs contact operations.
      */
     public static final Log contact = LogFactory.getLog("zimbra.contact");
 
     /**
-     * the "zimbra.share" logger.  Logs share operations.
+     * the "zimbra.share" logger. Logs share operations.
      */
     public static final Log share = LogFactory.getLog("zimbra.share");
 
@@ -454,8 +452,7 @@ public final class ZimbraLog {
     }
 
     /**
-     * Returns a new <tt>Set</tt> that contains the values of
-     * {@link #C_NAME} and {@link #C_ANAME} if they are set.
+     * Returns a new <tt>Set</tt> that contains the values of {@link #C_NAME} and {@link #C_ANAME} if they are set.
      */
     public static Set<String> getAccountNamesFromContext() {
         Map<String, String> contextMap = sContextMap.get();
@@ -490,7 +487,7 @@ public final class ZimbraLog {
         CONTEXT_KEY_ORDER.add(C_MID);
         CONTEXT_KEY_ORDER.add(C_IP);
 
-        // Initialize log category descriptions.  Categories that don't have a description
+        // Initialize log category descriptions. Categories that don't have a description
         // won't be listed in zmprov online help.
         Map<String, String> descriptions = new TreeMap<String, String>();
         descriptions.put(misc.getCategory(), "Miscellaneous");
@@ -537,21 +534,21 @@ public final class ZimbraLog {
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 
-    static String getContextString() {
+    public static String getContextString() {
         return sContextString.get();
     }
 
-    //this is called from offline and only at LC init so we are taking chances with race
+    // this is called from offline and only at LC init so we are taking chances with race
     private static final Set<String> CONTEXT_FILTER = new HashSet<String>();
+
     public static void addContextFilters(String filters) {
         for (String item : filters.split(","))
             CONTEXT_FILTER.add(item);
     }
 
     /**
-     * Adds a key/value pair to the current thread's logging context.  If
-     * <tt>key</tt> is null, does nothing.  If <tt>value</tt> is null,
-     * removes the context entry.
+     * Adds a key/value pair to the current thread's logging context. If <tt>key</tt> is null, does nothing. If
+     * <tt>value</tt> is null, removes the context entry.
      */
     public static void addToContext(String key, String value) {
         if (key == null || CONTEXT_FILTER.contains(key))
@@ -618,8 +615,7 @@ public final class ZimbraLog {
     }
 
     /**
-     * Adds a <tt>MailItem</tt> id to the current thread's
-     * logging context.
+     * Adds a <tt>MailItem</tt> id to the current thread's logging context.
      */
     public static void addItemToContext(int itemId) {
         addToContext(C_ITEM, Integer.toString(itemId));
@@ -635,8 +631,7 @@ public final class ZimbraLog {
     }
 
     /**
-     * Removes a <tt>MailItem</tt> id from the current thread's
-     * logging context.
+     * Removes a <tt>MailItem</tt> id from the current thread's logging context.
      */
     public static void removeItemFromContext(int itemId) {
         removeFromContext(C_ITEM);
@@ -650,8 +645,7 @@ public final class ZimbraLog {
     }
 
     /**
-     * Removes all account-specific values from the current thread's
-     * logging context.
+     * Removes all account-specific values from the current thread's logging context.
      */
     public static void removeAccountFromContext() {
         removeFromContext(C_ID);
@@ -726,6 +720,13 @@ public final class ZimbraLog {
     }
 
     /**
+     * Adds port of originating request to the current thread's logging context.
+     */
+    public static void addOrigPortToContext(Integer port) {
+        ZimbraLog.addToContext(C_OPORT, port != null ? port.toString() : "");
+    }
+
+    /**
      * Adds user agent to the current thread's logging context.
      */
     public static void addUserAgentToContext(String ua) {
@@ -762,7 +763,7 @@ public final class ZimbraLog {
 
     public static String getStackTrace(int maxDepth) {
         // Thread.currentThread().getStackTrace() would seem cleaner but bizarrely is slower.
-        StackTraceElement [] stElems = new Throwable().getStackTrace();
+        StackTraceElement[] stElems = new Throwable().getStackTrace();
 
         if (stElems == null) {
             return "";
@@ -772,7 +773,7 @@ public final class ZimbraLog {
         for (StackTraceElement stElem : stElems) {
             count++;
             if (count == 0) {
-                continue;  // Skip element for this method.
+                continue; // Skip element for this method.
             }
             sb.append(stElem.toString()).append('\n');
             if (count >= maxDepth) {
@@ -794,8 +795,7 @@ public final class ZimbraLog {
     /**
      * Setup log4j for our command line tools.
      *
-     * If System.getProperty(zimbra.log4j.level) is set then log at that level.
-     * Else log at the specified defaultLevel.
+     * If System.getProperty(zimbra.log4j.level) is set then log at that level. Else log at the specified defaultLevel.
      */
     public static void toolSetupLog4j(String defaultLevel, String logFile, boolean showThreads) {
         String level = System.getProperty("zimbra.log4j.level");
@@ -842,11 +842,12 @@ public final class ZimbraLog {
     }
 
     /**
-     * Setup log4j for command line tool using specified log4j.properties file.
-     * If file doesn't exist System.getProperty(zimbra.home)/conf/log4j.properties
-     * file will be used.
+     * Setup log4j for command line tool using specified log4j.properties file. If file doesn't exist
+     * System.getProperty(zimbra.home)/conf/log4j.properties file will be used.
+     *
      * @param defaultLevel
-     * @param propsFile full path to log4j.properties file
+     * @param propsFile
+     *            full path to log4j.properties file
      */
     public static void toolSetupLog4j(String defaultLevel, String propsFile) {
         if (propsFile != null && new File(propsFile).exists()) {
@@ -873,8 +874,7 @@ public final class ZimbraLog {
     }
 
     /**
-     * Take an array of Strings [ "name1", "value1", "name2", "value2", ...] and
-     * format them for logging purposes.
+     * Take an array of Strings [ "name1", "value1", "name2", "value2", ...] and format them for logging purposes.
      *
      * @param strings
      * @return formatted string
@@ -891,9 +891,8 @@ public final class ZimbraLog {
     }
 
     /**
-     * Take an array of Strings [ "name1", "value1", "name2", "value2", ...] and
-     * format them for logging purposes into: <tt>name1=value1; name2=value;</tt>.
-     * Semicolons are escaped with two semicolons (value a;b is encoded as a;;b).
+     * Take an array of Strings [ "name1", "value1", "name2", "value2", ...] and format them for logging purposes into:
+     * <tt>name1=value1; name2=value;</tt>. Semicolons are escaped with two semicolons (value a;b is encoded as a;;b).
      *
      * @param strings
      * @return formatted string

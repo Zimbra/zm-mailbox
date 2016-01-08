@@ -26,65 +26,121 @@ import com.zimbra.common.localconfig.LC;
 public class RemoteIP {
 
     public static final String X_ORIGINATING_IP_HEADER = LC.zimbra_http_originating_ip_header.value();
-
+    public static final String X_ORIGINATING_PORT_HEADER = "X-Forwarded-Port";
 
     /**
-     * IP of the http client,
-     * Should be always present.
+     * IP of the http client, Should be always present.
      */
     private String mClientIP;
 
     /**
-     * IP of the originating client.
-     * It can be null.
+     * port of the http client, Should be always present.
+     */
+    private int mClientPort;
+
+    /**
+     * IP of the originating client. It can be null.
      */
     private String mOrigIP;
 
     /**
-     *  It can be the IP of the http client, or in the presence of a
-     *  real origin IP address http header(header specified in the LC
-     *  key zimbra_http_originating_ip_header) the IP of the real
-     *  origin client if the http client is in a trusted network.
+     * Port of the originating client. Can be null.
+     */
+    private Integer mOrigPort;
+
+    /**
+     * It can be the IP of the http client, or in the presence of a real origin IP address http header(header specified
+     * in the LC key zimbra_http_originating_ip_header) the IP of the real origin client if the http client is in a
+     * trusted network.
      *
-     *  Should be always present.
+     * Should be always present.
      */
     private String mRequestIP;
 
+    /**
+     * Port number of the http client.
+     */
+    private Integer mRequestPort;
+
     public RemoteIP(HttpServletRequest req, TrustedIPs trustedIPs) {
         mClientIP = req.getRemoteAddr();
+        mClientPort = req.getRemotePort();
 
-        String origIp = null;
         if (trustedIPs.isIpTrusted(mClientIP)) {
             mOrigIP = req.getHeader(X_ORIGINATING_IP_HEADER);
+            String origPort = req.getHeader(X_ORIGINATING_PORT_HEADER);
+            if (origPort != null) {
+                try {
+                    mOrigPort = Integer.parseInt(origPort);
+                } catch (NumberFormatException e) {
+                    // ignore bad header
+                }
+            }
         }
 
-        if (mOrigIP != null)
+        if (mOrigPort != null) {
+            mRequestPort = mOrigPort;
+        } else {
+            mRequestPort = mClientPort;
+        }
+
+        if (mOrigIP != null) {
             mRequestIP = mOrigIP;
-        else
+        } else {
             mRequestIP = mClientIP;
+        }
     }
 
-    public String getClientIP() { return mClientIP; }
+    public String getClientIP() {
+        return mClientIP;
+    }
 
-    public String getOrigIP() { return mOrigIP; }
+    public String getOrigIP() {
+        return mOrigIP;
+    }
 
-    public String getRequestIP() { return mRequestIP; }
+    public String getRequestIP() {
+        return mRequestIP;
+    }
+
+    public Integer getOrigPort() {
+        return mOrigPort;
+    }
+
+    public Integer getRequestPort() {
+        return mRequestPort;
+    }
+
+    public Integer getClientPort() {
+        return mClientPort;
+    }
 
     public void addToLoggingContext() {
-        if (mOrigIP != null)
+        if (mOrigIP != null) {
             ZimbraLog.addOrigIpToContext(mOrigIP);
+        }
 
-        // don't log ip if oip is present and ip is localhost
-        if (!TrustedIPs.isLocalhost(mClientIP) || mOrigIP == null)
-            ZimbraLog.addIpToContext(mClientIP);
+        if (mOrigPort != null) {
+            ZimbraLog.addOrigPortToContext(mOrigPort);
+        }
+
+        // don't log client's IP or client's port if original IP/port are present or if client's IP is localhost
+        if (!TrustedIPs.isLocalhost(mClientIP)) {
+            if (mOrigIP == null) {
+                ZimbraLog.addIpToContext(mClientIP);
+            }
+            if (mOrigPort == null) {
+                ZimbraLog.addPortToContext(mClientPort);
+            }
+        }
     }
 
     @Override
     public String toString() {
-        return "RemoteIP [mClientIP=" + mClientIP + ", mOrigIP=" + mOrigIP
-                + ", mRequestIP=" + mRequestIP + "]";
+        return String
+                .format("RemoteIP [mClientIP=%s, mOrigIP=%s, mRequestIP=%s] : RemotePort [mClientPort=%d, mOrigPort=%d, mRequestPort=%d]",
+                        mClientIP, mOrigIP, mRequestIP, mClientPort, mOrigPort, mRequestPort);
     }
-
 
     public static class TrustedIPs {
         private static final String IP_LOCALHOST = "127.0.0.1";
