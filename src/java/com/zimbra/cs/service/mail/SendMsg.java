@@ -612,9 +612,7 @@ public final class SendMsg extends MailDocumentHandler {
                                     if (sentBy == null) {
                                         prop.addParameter(new ZParameter(ICalTok.SENT_BY, mSentBy));
                                         modified = true;
-                                        ZimbraLog.calendar.info(
-                                                "Fixed up " + token + " (" + addr +
-                                                ") by adding SENT-BY=" + mSentBy);
+                                        ZimbraLog.calendar.debug("Fixed up %s ( %s) by adding SENT-BY=%s", token, addr, mSentBy);
                                     }
                                 }
                             }
@@ -708,6 +706,18 @@ public final class SendMsg extends MailDocumentHandler {
                     if (ICalTok.ORGANIZER.equals(token)) {
                         propIter.remove();
                         break;
+                    } else if  (ICalTok.ATTENDEE.equals(token)) {
+                        if (mFromEmails != null && mSentBy != null) {
+                            String addr = prop.getValue();
+                            if (addressMatchesFrom(addr)) {
+                                ZParameter sentBy = prop.getParameter(ICalTok.SENT_BY);
+                                if (sentBy == null) {
+                                    prop.addParameter(new ZParameter(ICalTok.SENT_BY, mSentBy));
+                                    ZimbraLog.calendar.debug("Fixed up %s ( %s) by adding SENT-BY=%s", token, addr, mSentBy);
+                                }
+                            }
+                        }
+
                     }
                 }
 
