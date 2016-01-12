@@ -27,6 +27,7 @@ public class RemoteIP {
 
     public static final String X_ORIGINATING_IP_HEADER = LC.zimbra_http_originating_ip_header.value();
     public static final String X_ORIGINATING_PORT_HEADER = "X-Forwarded-Port";
+    public static final String X_ORIGINATING_PROTOCOL_HEADER = "X-Forwarded-Proto";
 
     /**
      * IP of the http client, Should be always present.
@@ -62,6 +63,11 @@ public class RemoteIP {
      */
     private Integer mRequestPort;
 
+    /**
+     * Original protocol of the request.
+     */
+    private String mOrigProto;
+
     public RemoteIP(HttpServletRequest req, TrustedIPs trustedIPs) {
         mClientIP = req.getRemoteAddr();
         mClientPort = req.getRemotePort();
@@ -76,6 +82,8 @@ public class RemoteIP {
                     // ignore bad header
                 }
             }
+
+            mOrigProto = req.getHeader(X_ORIGINATING_PROTOCOL_HEADER);
         }
 
         if (mOrigPort != null) {
@@ -115,6 +123,10 @@ public class RemoteIP {
         return mClientPort;
     }
 
+    public String getOrigProto() {
+        return mOrigProto;
+    }
+
     public void addToLoggingContext() {
         if (mOrigIP != null) {
             ZimbraLog.addOrigIpToContext(mOrigIP);
@@ -122,6 +134,10 @@ public class RemoteIP {
 
         if (mOrigPort != null) {
             ZimbraLog.addOrigPortToContext(mOrigPort);
+        }
+
+        if (mOrigProto != null) {
+            ZimbraLog.addOrigProtoToContext(mOrigProto);
         }
 
         // don't log client's IP or client's port if original IP/port are present or if client's IP is localhost
@@ -138,8 +154,8 @@ public class RemoteIP {
     @Override
     public String toString() {
         return String
-                .format("RemoteIP [mClientIP=%s, mOrigIP=%s, mRequestIP=%s] : RemotePort [mClientPort=%d, mOrigPort=%d, mRequestPort=%d]",
-                        mClientIP, mOrigIP, mRequestIP, mClientPort, mOrigPort, mRequestPort);
+                .format("RemoteIP [mClientIP=%s, mOrigIP=%s, mRequestIP=%s] : RemotePort [mClientPort=%d, mOrigPort=%d, mRequestPort=%d] mOrigProto=%s",
+                        mClientIP, mOrigIP, mRequestIP, mClientPort, mOrigPort, mRequestPort, mOrigProto);
     }
 
     public static class TrustedIPs {

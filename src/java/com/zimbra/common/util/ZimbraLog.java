@@ -117,6 +117,13 @@ public final class ZimbraLog {
      * "oport" key for context. originating port number of request
      */
     private static final String C_OPORT = "oport";
+
+    /**
+     * "oproto" key for context. originating protocol of request. This can be passed by internal components such as MTA
+     * that make SOAP requests on behalf of a user.
+     */
+    private static final String C_OPROTO = "oproto";
+
     /**
      * the "zimbra.misc" logger. For all events that don't have a specific-catagory.
      */
@@ -747,6 +754,13 @@ public final class ZimbraLog {
      */
     public static void addSoapIdToContext(String value) {
         ZimbraLog.addToContext(C_SOAP_ID, value);
+    }
+
+    /**
+     * Adds port of originating request to the current thread's logging context.
+     */
+    public static void addOrigProtoToContext(String protocol) {
+        ZimbraLog.addToContext(C_OPROTO, protocol);
     }
 
     /**
