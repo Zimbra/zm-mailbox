@@ -439,7 +439,7 @@ public final class ACL {
         if (expiry != 0) {
             if (type == ACL.GRANTEE_GUEST || type == ACL.GRANTEE_KEY) {
                 if (mGuestGrantExpiry != 0 && expiry > mGuestGrantExpiry) {
-                    throw ServiceException.PERM_DENIED("share expiration policy conflict");
+                   throw ServiceException.PERM_DENIED("share expiration policy conflict");
                 }
             } else if (type != ACL.GRANTEE_PUBLIC) {
                 // internal grantee
@@ -503,6 +503,14 @@ public final class ACL {
         return (mGrants.size() != count);
     }
 
+    public void  setGuestGrantExpiry(long expiry) {
+        mGuestGrantExpiry = expiry;
+    }
+
+    public void  setInternalGrantExpiry(long expiry) {
+        mInternalGrantExpiry = expiry;
+    }
+
     private static final String FN_GRANTS           = "g";
     private static final String FN_INT_GRANT_EXPIRY = "ie";
     private static final String FN_GST_GRANT_EXPIRY = "ge";
@@ -529,6 +537,18 @@ public final class ACL {
      *  {@link ACL.Grant} objects. */
     public List<Grant> getGrants() {
         return Collections.unmodifiableList(mGrants);
+    }
+
+    public int getNumberOfGrantsByType(byte granteeType) {
+        int i =0;
+        if (mGrants != null || !mGrants.isEmpty()) {
+            for (Grant grant : mGrants) {
+                if (grant.getGranteeType() == granteeType) {
+                    i++;
+                }
+            }
+        }
+        return i;
     }
 
     public static final char ABBR_READ = 'r';

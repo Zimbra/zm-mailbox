@@ -6858,7 +6858,8 @@ TODO: delete them permanently from here
     Maximum allowed lifetime of file shares to external users.
     A value of 0 indicates that there's no limit on an external file share's lifetime.
   </desc>
-  <defaultCOSValue>90d</defaultCOSValue>
+  <defaultCOSValue>0</defaultCOSValue>
+  <defaultCOSValueUpgrade>0</defaultCOSValueUpgrade>
 </attr>
 
 <attr id="1364" name="zimbraFilePublicShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.0.0">

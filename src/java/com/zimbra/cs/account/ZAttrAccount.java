@@ -19184,13 +19184,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @see #getFileExternalShareLifetimeAsString()
      *
-     * @return zimbraFileExternalShareLifetime in millseconds, or 7776000000 (90d)  if unset
+     * @return zimbraFileExternalShareLifetime in millseconds, or 0 (0)  if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1363)
     public long getFileExternalShareLifetime() {
-        return getTimeInterval(Provisioning.A_zimbraFileExternalShareLifetime, 7776000000L);
+        return getTimeInterval(Provisioning.A_zimbraFileExternalShareLifetime, 0L);
     }
 
     /**
@@ -19201,13 +19201,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * @return zimbraFileExternalShareLifetime, or "90d" if unset
+     * @return zimbraFileExternalShareLifetime, or "0" if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1363)
     public String getFileExternalShareLifetimeAsString() {
-        return getAttr(Provisioning.A_zimbraFileExternalShareLifetime, "90d");
+        return getAttr(Provisioning.A_zimbraFileExternalShareLifetime, "0");
     }
 
     /**

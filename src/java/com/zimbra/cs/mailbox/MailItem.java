@@ -3717,13 +3717,24 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
 
         markItemModified(Change.ACL);
+        long intShareLifetime = getMaxAllowedInternalShareLifetime(account);
+        long extShareLifetime = getMaxAllowedExternalShareLifetime(account);
+        long now = System.currentTimeMillis();
+        intShareLifetime = intShareLifetime == 0 ? 0 : now + intShareLifetime;
+        extShareLifetime = extShareLifetime == 0 ? 0 : now + extShareLifetime;
         if (this.rights == null) {
-            long intShareLifetime = getMaxAllowedInternalShareLifetime(account);
-            long extShareLifetime = getMaxAllowedExternalShareLifetime(account);
-            long now = System.currentTimeMillis();
-            this.rights = new ACL(intShareLifetime == 0 ? 0 : now + intShareLifetime,
-                    extShareLifetime == 0 ? 0 : now + extShareLifetime);
+            this.rights = new ACL(intShareLifetime, extShareLifetime);
+        } else {
+            if (extShareLifetime != 0 &&
+                (this.rights.getNumberOfGrantsByType(ACL.GRANTEE_GUEST) == 0 ||  this.rights.getGuestGrantExpiry() == 0)) {
+                this.rights.setGuestGrantExpiry(extShareLifetime);
+            }
+            if (intShareLifetime != 0 &&
+                (this.rights.getNumberOfGrantsByType(ACL.GRANTEE_USER) == 0 ||  this.rights.getInternalGrantExpiry() == 0)) {
+                this.rights.setInternalGrantExpiry(intShareLifetime);
+            }
         }
+
         ACL.Grant grant = this.rights.grantAccess(zimbraId, type, rights, args, expiry);
         saveMetadata();
 
@@ -3773,6 +3784,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         rights.revokeAccess(zimbraId);
         if (rights.isEmpty()) {
             rights = null;
+        } else {
+            if (rights.getNumberOfGrantsByType(ACL.GRANTEE_USER) == 0) {
+                rights.setInternalGrantExpiry(0);
+            }
+            if (rights.getNumberOfGrantsByType(ACL.GRANTEE_GUEST) == 0) {
+                rights.setGuestGrantExpiry(0);
+            }
         }
         saveMetadata();
 
