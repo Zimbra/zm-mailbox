@@ -1,6 +1,7 @@
 package com.zimbra.cs.mime;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -11,6 +12,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.common.soap.Element;
@@ -29,7 +31,6 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.mail.ParseMimeMessage;
 import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -63,7 +64,7 @@ public class TestContentTransferEncoding {
         Element msgElt = reqElt.getElement(MailConstants.E_MSG);
         AuthToken at = AuthProvider.getAuthToken(mbox.getAccount());
         ZimbraSoapContext zsc = new ZimbraSoapContext(at, mbox.getAccountId(), SoapProtocol.Soap12, SoapProtocol.Soap12);
-        return ParseMimeMessage.parseMimeMsgSoap(zsc, null, mbox, msgElt, null, new ItemId(origMsg), new MimeMessageData());
+        return ParseMimeMessage.parseMimeMsgSoap(zsc, null, mbox, msgElt, null, new MimeMessageData());
     }
 
     /*
@@ -71,6 +72,7 @@ public class TestContentTransferEncoding {
      * inferring it from the existing message referenced by the "origid" parameter.
      * This scenario also happens to test the case when a CTE header on a sub-part is inherited from the top-level.
      */
+    @Ignore("disabled until bug 98015 is fixed")
     @Test
     public void testBug98015() throws Exception {
         MimeMessage mimeMsg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(getBug98015MimeString().getBytes()));
@@ -96,6 +98,7 @@ public class TestContentTransferEncoding {
     /*
      * This tests the CTE header of a forwarded message being inferred from the existing message when the message is a simple MIME message
      */
+    @Ignore("disabled until bug 98015 is fixed")
     @Test
     public void testSimpleMimeMessage() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -115,8 +118,9 @@ public class TestContentTransferEncoding {
     }
 
     /*
-     * This tests the CTE header of a forwarded message being inferred from the existing message when the message is a multipart message
+     * This tests the CTE header of a forwarded message being inferred from the existing message when the message is a multipart message.
      */
+    @Ignore("disabled until bug 98015 is fixed")
     @Test
     public void testMultipartMimeMessage() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -141,6 +145,39 @@ public class TestContentTransferEncoding {
         ZMimeMultipart mmp = (ZMimeMultipart) parsed.getContent();
         assertEquals("test1", mmp.getBodyPart(0).getHeader("Content-Transfer-Encoding")[0]);
         assertEquals("test2", mmp.getBodyPart(1).getHeader("Content-Transfer-Encoding")[0]);
+    }
+
+    /*
+     * Tests bug 103193, which is a regression introduced by bugfix for 98015.
+     * The problem seems to be that the MIME structure of the forwarded message doesn't match the structure
+     * of the original, which is assumed by the bugfix. Specifically, it lacks the top-level multipart/mixed parent.
+     */
+
+    @Test
+    public void testNestedMultipartMessage() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        MimeMessage mimeMsg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(getNestedMimeString().getBytes()));
+        ParsedMessage pm = new ParsedMessage(mimeMsg, true);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Message msg = mbox.addMessage(null, pm, dopt, null);
+        MsgToSend msgToSend = new MsgToSend();
+        msgToSend.setOrigId(String.valueOf(msg.getId()));
+        msgToSend.setReplyType("w");
+        msgToSend.setSubject("Fwd: Multipart Test");
+        MimePartInfo mpi = new MimePartInfo();
+        mpi.setContentType("multipart/alternative");
+        List<MimePartInfo> mimeParts = new LinkedList<MimePartInfo>();
+        mimeParts.add(MimePartInfo.createForContentTypeAndContent("text/plain", "text content"));
+        mimeParts.add(MimePartInfo.createForContentTypeAndContent("text/html", "html content"));
+        mpi.setMimeParts(mimeParts);
+        msgToSend.setMimePart(mpi);
+        SendMsgRequest req = new SendMsgRequest();
+        req.setMsg(msgToSend);
+        try {
+            MimeMessage parsed = sendForwardedMessage(req, msg);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            fail("could not build MIME message");
+        }
     }
 
     private String getBug98015MimeString() {
@@ -193,6 +230,31 @@ public class TestContentTransferEncoding {
                 "Content-Transfer-Encoding: test\n" +
                 "\n" +
                 "simple test";
+    }
+
+    private String getNestedMimeString() {
+        return "Date: Thu, 7 Jan 2016 01:21:48 -0800 (PST)\n" +
+                "Subject: Nested Mime test" +
+                "MIME-Version: 1.0\n" +
+                "Content-Type: multipart/mixed; \n" +
+                "    boundary=\"----=_Part_2216_1104390902.1452158508524\"\n" +
+                "\n" +
+                "------=_Part_2216_1104390902.1452158508524\n" +
+                "Content-Type: multipart/alternative; \n" +
+                "    boundary=\"=_d8139c58-fec7-4357-8f97-e79402d7cd0f\"\n" +
+                "\n" +
+                "--=_d8139c58-fec7-4357-8f97-e79402d7cd0f\n" +
+                "Content-Type: text/plain; charset=utf-8\n" +
+                "Content-Transfer-Encoding: 7bit\n" +
+                "text content\n" +
+                "--=_d8139c58-fec7-4357-8f97-e79402d7cd0f\n" +
+                "Content-Type: text/html; charset=utf-8\n" +
+                "Content-Transfer-Encoding: 7bit\n" +
+                "\n" +
+                "<html><body>html content</body></html>\n" +
+                "--=_d8139c58-fec7-4357-8f97-e79402d7cd0f--\n" +
+                "\n" +
+                "------=_Part_2216_1104390902.1452158508524--";
     }
 
 }
