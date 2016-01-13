@@ -198,7 +198,7 @@ public class CustomTrustManager implements X509TrustManager {
                 ZimbraLog.security.warn("failed to read keystore file", x);
             }
         } catch (FileNotFoundException x) {
-            ZimbraLog.security.debug(LC.mailboxd_keystore.value() + " not found, falling back to truststore");
+            ZimbraLog.security.debug("%s not found, falling back to truststore", LC.mailboxd_keystore.value());
         } finally {
             if (in != null)
                 try {
@@ -220,9 +220,7 @@ public class CustomTrustManager implements X509TrustManager {
                     ZimbraLog.security.warn("failed to read backup keystore file", x);
                 }
             } catch (FileNotFoundException x) {
-                String errMessage = LC.mailboxd_keystore.value() + ", and "
-                        + LC.mailboxd_truststore.value() + " not found";
-                ZimbraLog.security.warn(errMessage);
+                ZimbraLog.security.warn("%s, and %s not found", LC.mailboxd_keystore.value(), LC.mailboxd_truststore.value());
             } finally {
                 if (in != null)
                     try {
