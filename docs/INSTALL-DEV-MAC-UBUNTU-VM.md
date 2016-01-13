@@ -311,4 +311,21 @@ an exemption for your server:
 
 Surprisingly, you may still get 429 errors, but setting those config values helps. The client will typically load without errors if you try again.
 
-As far as I can tell, you only get one VM window. But you can ssh into your VM from Mac terminals, with the bonus that copy/paste will work.
+Your VM will not work while you are using a VPN (like the Synacor one) that does not support split tunneling. You will not be able to SSH into it,
+or even ping it. Even the loopback address 127.0.0.1 will not be available. You'll need to disconnect from the VPN to use your VM.
+
+As far as I can tell, you only get one VM window. But you can ssh into your VM from Mac terminals, with the bonus that copy/paste will work. Make sure
+you're not connected to the Synacor VPN, as that will disable Mac/VM networking. On your Mac, you might find it useful to add this to your ~/.ssh/config:
+
+    Host ubuntu
+      Hostname {your VM IP}
+      User zimbra
+
+Then on your Mac, you can just start up a terminal window and run
+
+        % ssh ubuntu
+
+and you'll have a VM session.
+
+
+
