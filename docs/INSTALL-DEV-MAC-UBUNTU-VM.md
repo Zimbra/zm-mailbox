@@ -365,3 +365,42 @@ To be able to manage files and use an IDE on your Mac, you will need to:
         $ sudo mkdir -p /Users/gsolovyev
         $ sudo ln -s /mnt/hgfs/ubuntuhome /Users/gsolovyev/
         $ sudo chown zimbra:zimbra /Users/gsolovyev
+
+
+## Summary and Overview
+
+For those who are used to doing everything on their Mac via localhost, if you are able to share folders between your Mac and VM, the only things that have to live in your VM are your SSH keys
+and the deployed instance of Zimbra under `/opt/zimbra`. The only commands you'll need to run in the VM are `ant` commands such as `ant sync` or `ant deploy`, in order to update the deploy area.
+If you run those on your Mac, then `/opt/zimbra` on your Mac will be updated, but that's not where your server is running.
+
+To test your server, go to
+
+        https://{your VM IP}:7070
+
+If you try to load in dev mode with ?dev=1 and the load doesn't finish due to HTTP 429 errors, you have run into the server's
+DOS throttling protection - it senses a flood of requests and stops serving them. To fix that, either raise the limit or add
+an exemption for your server:
+
+        $ zmprov mcf zimbraHttpDosFilterMaxRequestsPerSec 200
+        $ zmprov mcf +zimbraHttpThrottleSafeIPs {your VM IP}
+
+Surprisingly, you may still get 429 errors, but setting those config values helps. The client will typically load without errors if you try again.
+
+Your VM will not work while you are using a VPN (like the Synacor one) that does not support split tunneling. You will not be able to SSH into it,
+or even ping it. Even the loopback address 127.0.0.1 will not be available. You'll need to disconnect from the VPN to use your VM.
+
+As far as I can tell, you only get one VM window. But you can ssh into your VM from Mac terminals, with the bonus that copy/paste will work. Make sure
+you're not connected to the Synacor VPN, as that will disable Mac/VM networking. On your Mac, you might find it useful to add this to your ~/.ssh/config:
+
+    Host ubuntu
+      Hostname {your VM IP}
+      User zimbra
+
+Then on your Mac, you can just start up a terminal window and run
+
+        % ssh ubuntu
+
+and you'll have a VM session.
+
+
+
