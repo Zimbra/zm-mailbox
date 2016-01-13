@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,6 +16,12 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TimerTask;
+
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.SortBy;
@@ -25,13 +31,6 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
-
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.TimerTask;
-
-import static com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 
 /**
  * This task:
@@ -70,11 +69,11 @@ public class ExternalAccountManagerTask extends TimerTask {
                     disableOrDeleteAccount(prov, account, mbox);
                     continue;
                 }
-                // Get all shares granted to the external user 
+                // Get all shares granted to the external user
                 ShareInfoVisitor shareInfoVisitor = new ShareInfoVisitor(mountpoints);
                 ShareInfo.Published.get(prov, account, ACL.GRANTEE_GUEST, null, shareInfoVisitor);
                 boolean hasValidMountpoint = shareInfoVisitor.getResult();
-                
+
                 if (!hasValidMountpoint) {
                     disableOrDeleteAccount(prov, account, mbox);
                 } else if (account.getAccountStatus() == AccountStatus.closed) {
@@ -82,7 +81,7 @@ public class ExternalAccountManagerTask extends TimerTask {
                     account.setAccountStatus(AccountStatus.active);
                 }
             }
-        } catch (ServiceException e) {
+        } catch (Throwable e) {
             ZimbraLog.misc.warn("Error during external virtual account status manager task run", e);
         }
         ZimbraLog.misc.info("Finished external virtual account status manager task");
@@ -98,7 +97,7 @@ public class ExternalAccountManagerTask extends TimerTask {
             long disabledAcctLifetime = account.getExternalAccountLifetimeAfterDisabled();
             if (accountStatus == AccountStatus.closed && disabledAcctLifetime != 0) {
                 Date timeWhenDisabled = account.getExternalAccountDisabledTime();
-                if (timeWhenDisabled != null && 
+                if (timeWhenDisabled != null &&
                         System.currentTimeMillis() - timeWhenDisabled.getTime() > disabledAcctLifetime) {
                     mbox.deleteMailbox();
                     prov.deleteAccount(account.getId());
@@ -106,12 +105,12 @@ public class ExternalAccountManagerTask extends TimerTask {
             }
         }
     }
-    
+
     private static class ShareInfoVisitor implements Provisioning.PublishedShareInfoVisitor {
-        
+
         private List<Mountpoint> mountpoints;
         private boolean result = false;
-        
+
         public ShareInfoVisitor(List<Mountpoint> mountpoints) {
             this.mountpoints = mountpoints;
         }
@@ -126,7 +125,7 @@ public class ExternalAccountManagerTask extends TimerTask {
                 }
             }
         }
-        
+
         public boolean getResult() {
             return result;
         }

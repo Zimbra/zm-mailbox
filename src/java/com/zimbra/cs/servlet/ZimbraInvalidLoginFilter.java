@@ -183,15 +183,18 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
         @Override
         public void run() {
 
-            Set<String> clientIps = suspiciousIpAddrLastAttempt.keySet();
-            long now = System.currentTimeMillis();
-            for (String clientIp : clientIps) {
-                long lastLoginAttempt = suspiciousIpAddrLastAttempt.get(clientIp);
-                if ((now - lastLoginAttempt) > delayInMinBetwnReqBeforeReinstating * MIN_TO_MS) {
-                    suspiciousIpAddrLastAttempt.remove(clientIp);
-                    numberOfFailedOccurence.remove(clientIp);
-
+            try {
+                Set<String> clientIps = suspiciousIpAddrLastAttempt.keySet();
+                long now = System.currentTimeMillis();
+                for (String clientIp : clientIps) {
+                    long lastLoginAttempt = suspiciousIpAddrLastAttempt.get(clientIp);
+                    if ((now - lastLoginAttempt) > delayInMinBetwnReqBeforeReinstating * MIN_TO_MS) {
+                        suspiciousIpAddrLastAttempt.remove(clientIp);
+                        numberOfFailedOccurence.remove(clientIp);
+                    }
                 }
+            } catch (Throwable t) {
+                ZimbraLog.misc.info("Error while running the ReInstateIpTask.", t);
             }
         }
 
