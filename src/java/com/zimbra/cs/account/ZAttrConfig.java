@@ -48558,20 +48558,20 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
+     * listen; if empty, binds to all interfaces
      *
-     * @return zimbraMtaAuthBindAddress, or "127.0.0.1" if unset
+     * @return zimbraMtaAuthBindAddress, or null if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1908)
     public String getMtaAuthBindAddress() {
-        return getAttr(Provisioning.A_zimbraMtaAuthBindAddress, "127.0.0.1");
+        return getAttr(Provisioning.A_zimbraMtaAuthBindAddress, null);
     }
 
     /**
      * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
+     * listen; if empty, binds to all interfaces
      *
      * @param zimbraMtaAuthBindAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -48587,7 +48587,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
+     * listen; if empty, binds to all interfaces
      *
      * @param zimbraMtaAuthBindAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -48604,7 +48604,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
+     * listen; if empty, binds to all interfaces
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -48619,7 +48619,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
+     * listen; if empty, binds to all interfaces
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

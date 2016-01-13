@@ -34796,7 +34796,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
 
     /**
      * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
+     * listen; if empty, binds to all interfaces
      *
      * @return zimbraMtaAuthBindAddress, or null if unset
      *
@@ -34809,7 +34809,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
 
     /**
      * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
+     * listen; if empty, binds to all interfaces
      *
      * @param zimbraMtaAuthBindAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34825,7 +34825,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
 
     /**
      * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
+     * listen; if empty, binds to all interfaces
      *
      * @param zimbraMtaAuthBindAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34842,7 +34842,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
 
     /**
      * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
+     * listen; if empty, binds to all interfaces
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -34857,7 +34857,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
 
     /**
      * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
+     * listen; if empty, binds to all interfaces
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

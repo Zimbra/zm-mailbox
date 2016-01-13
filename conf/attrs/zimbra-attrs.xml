@@ -9641,8 +9641,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1908" name="zimbraMtaAuthBindAddress" type="string" max="128" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" requiresRestart="mta" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
-  <globalConfigValue>127.0.0.1</globalConfigValue>
-  <desc>interface address on which Admin HTTPS connector for MTA Auth should listen; defaults to localhost</desc>
+  <desc>interface address on which Admin HTTPS connector for MTA Auth should listen; if empty, binds to all interfaces</desc>
 </attr>
 
 <attr id="1909" name="zimbraImapDisplayMailFoldersOnly" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.7.0,9.0">
