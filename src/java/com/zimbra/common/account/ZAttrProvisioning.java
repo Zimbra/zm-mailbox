@@ -9890,7 +9890,7 @@ public class ZAttrProvisioning {
 
     /**
      * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
+     * listen; if empty, binds to all interfaces
      *
      * @since ZCS 8.7.0,9.0.0
      */
