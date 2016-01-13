@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -70,39 +70,43 @@ public final class AuthTokenRegistry {
         public void run() {
 
             mLOG.debug("Broadcasting dergistered authtokens");
-            //get a snapshot of the queue so that we are not holding logins and logouts
-            Object[] copy = deregisteredOutAuthTokens.toArray();
+            try {
+                //get a snapshot of the queue so that we are not holding logins and logouts
+                Object[] copy = deregisteredOutAuthTokens.toArray();
 
-            //if we have any tokens to report send them over to all servers
-            if(copy.length > 0) {
-                mLOG.debug("Found some dergistered authtokens to broadcast");
+                //if we have any tokens to report send them over to all servers
+                if(copy.length > 0) {
+                    mLOG.debug("Found some dergistered authtokens to broadcast");
 
-                /* Remove the snapshot from the queue.
-                *  Since this block is not synchronized new tokens may have been added to the queue and some may have been pushed out due to size limitation
-                */
-                deregisteredOutAuthTokens.removeAll(Arrays.asList(copy));
+                    /* Remove the snapshot from the queue.
+                    *  Since this block is not synchronized new tokens may have been added to the queue and some may have been pushed out due to size limitation
+                    */
+                    deregisteredOutAuthTokens.removeAll(Arrays.asList(copy));
 
-                //send the snapshot to other servers
-                try {
-                    List<Server> mailServers = Provisioning.getInstance().getAllMailClientServers();
-                    SoapProvisioning soapProv = SoapProvisioning.getAdminInstance();
-                    soapProv.soapZimbraAdminAuthenticate();
-                    RefreshRegisteredAuthTokensRequest req = new RefreshRegisteredAuthTokensRequest();
-                    for(Object ztoken : copy) {
-                        if(!((ZimbraAuthToken)ztoken).isExpired()) {//no need to broadcast expired tokens, since they will be cleaned up automatically
-                            req.addToken(((ZimbraAuthToken)ztoken).getEncoded());
+                    //send the snapshot to other servers
+                    try {
+                        List<Server> mailServers = Provisioning.getInstance().getAllMailClientServers();
+                        SoapProvisioning soapProv = SoapProvisioning.getAdminInstance();
+                        soapProv.soapZimbraAdminAuthenticate();
+                        RefreshRegisteredAuthTokensRequest req = new RefreshRegisteredAuthTokensRequest();
+                        for(Object ztoken : copy) {
+                            if(!((ZimbraAuthToken)ztoken).isExpired()) {//no need to broadcast expired tokens, since they will be cleaned up automatically
+                                req.addToken(((ZimbraAuthToken)ztoken).getEncoded());
+                            }
                         }
-                    }
-                    for(Server server : mailServers) {
-                        if(server.isLocalServer()) {
-                            continue;
+                        for(Server server : mailServers) {
+                            if(server.isLocalServer()) {
+                                continue;
+                            }
+                            soapProv.invokeJaxb(req, server.getName());
                         }
-                        soapProv.invokeJaxb(req, server.getName());
+                    } catch (ServiceException | AuthTokenException e) {
+                        mLOG.error("Failed to broadcast deregistered authtokens", e);
                     }
-                } catch (ServiceException | AuthTokenException e) {
-                    mLOG.error("Failed to broadcast deregistered authtokens", e);
                 }
-            }
+        } catch (Throwable t) {
+            mLOG.info("Caught exception in SendTokens timer", t);
         }
+    }
     }
 }
