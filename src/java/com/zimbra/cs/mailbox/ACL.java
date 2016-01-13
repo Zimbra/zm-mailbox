@@ -540,8 +540,8 @@ public final class ACL {
     }
 
     public int getNumberOfGrantsByType(byte granteeType) {
-        int i =0;
-        if (mGrants != null || !mGrants.isEmpty()) {
+        int i = 0;
+        if (mGrants != null) {
             for (Grant grant : mGrants) {
                 if (grant.getGranteeType() == granteeType) {
                     i++;
