@@ -78,7 +78,7 @@ public class ZIdentity  implements ToZJSONObject {
         return ProvisioningConstants.TRUE.equals(get(name));
     }
 
-    public boolean isDefault() { return ProvisioningConstants.DEFAULT_IDENTITY_NAME.equals(getRawName()); }
+    public boolean getIsDefault() { return ProvisioningConstants.DEFAULT_IDENTITY_NAME.equals(getRawName()); }
     
     public String getFromAddress() { return get(ZAttrProvisioning.A_zimbraPrefFromAddress); }
 
