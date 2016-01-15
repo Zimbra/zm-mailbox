@@ -14160,6 +14160,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxySendPop3Xoip = "zimbraReverseProxySendPop3Xoip";
 
     /**
+     * Enable the use of Server Name Indication (SNI) TLS extension in the
+     * proxy. When set to TRUE, and using SNI capable clients, there is no
+     * need for a separate IP address per domain (zimbraVirtualIPAddress)
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1818)
+    public static final String A_zimbraReverseProxySNIEnabled = "zimbraReverseProxySNIEnabled";
+
+    /**
      * permitted ciphers for reverse proxy. Ciphers are in the formats
      * supported by OpenSSL e.g.
      * ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP; if not set,
@@ -15939,8 +15949,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraVirtualHostname = "zimbraVirtualHostname";
 
     /**
-     * An virtual IP address for this domain, used to determine domain based
-     * on an IP address
+     * Virtual IP address for this domain, used to determine domain based on
+     * an IP address and have IP-based virtual hosts for the proxy. Consider
+     * using zimbraReverseProxySNIEnabled instead when using SNI capable
+     * clients
      *
      * @since ZCS 5.0.0
      */
