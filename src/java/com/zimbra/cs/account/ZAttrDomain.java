@@ -20958,8 +20958,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * An virtual IP address for this domain, used to determine domain based
-     * on an IP address
+     * Virtual IP address for this domain, used to determine domain based on
+     * an IP address and have IP-based virtual hosts for the proxy. Consider
+     * using zimbraReverseProxySNIEnabled instead when using SNI capable
+     * clients
      *
      * @return zimbraVirtualIPAddress, or empty array if unset
      *
@@ -20971,8 +20973,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * An virtual IP address for this domain, used to determine domain based
-     * on an IP address
+     * Virtual IP address for this domain, used to determine domain based on
+     * an IP address and have IP-based virtual hosts for the proxy. Consider
+     * using zimbraReverseProxySNIEnabled instead when using SNI capable
+     * clients
      *
      * @param zimbraVirtualIPAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20987,8 +20991,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * An virtual IP address for this domain, used to determine domain based
-     * on an IP address
+     * Virtual IP address for this domain, used to determine domain based on
+     * an IP address and have IP-based virtual hosts for the proxy. Consider
+     * using zimbraReverseProxySNIEnabled instead when using SNI capable
+     * clients
      *
      * @param zimbraVirtualIPAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21004,8 +21010,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * An virtual IP address for this domain, used to determine domain based
-     * on an IP address
+     * Virtual IP address for this domain, used to determine domain based on
+     * an IP address and have IP-based virtual hosts for the proxy. Consider
+     * using zimbraReverseProxySNIEnabled instead when using SNI capable
+     * clients
      *
      * @param zimbraVirtualIPAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21020,8 +21028,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * An virtual IP address for this domain, used to determine domain based
-     * on an IP address
+     * Virtual IP address for this domain, used to determine domain based on
+     * an IP address and have IP-based virtual hosts for the proxy. Consider
+     * using zimbraReverseProxySNIEnabled instead when using SNI capable
+     * clients
      *
      * @param zimbraVirtualIPAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -21037,8 +21047,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * An virtual IP address for this domain, used to determine domain based
-     * on an IP address
+     * Virtual IP address for this domain, used to determine domain based on
+     * an IP address and have IP-based virtual hosts for the proxy. Consider
+     * using zimbraReverseProxySNIEnabled instead when using SNI capable
+     * clients
      *
      * @param zimbraVirtualIPAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21053,8 +21065,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * An virtual IP address for this domain, used to determine domain based
-     * on an IP address
+     * Virtual IP address for this domain, used to determine domain based on
+     * an IP address and have IP-based virtual hosts for the proxy. Consider
+     * using zimbraReverseProxySNIEnabled instead when using SNI capable
+     * clients
      *
      * @param zimbraVirtualIPAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -21070,8 +21084,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * An virtual IP address for this domain, used to determine domain based
-     * on an IP address
+     * Virtual IP address for this domain, used to determine domain based on
+     * an IP address and have IP-based virtual hosts for the proxy. Consider
+     * using zimbraReverseProxySNIEnabled instead when using SNI capable
+     * clients
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -21085,8 +21101,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * An virtual IP address for this domain, used to determine domain based
-     * on an IP address
+     * Virtual IP address for this domain, used to determine domain based on
+     * an IP address and have IP-based virtual hosts for the proxy. Consider
+     * using zimbraReverseProxySNIEnabled instead when using SNI capable
+     * clients
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

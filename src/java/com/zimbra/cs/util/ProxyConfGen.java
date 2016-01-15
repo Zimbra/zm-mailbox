@@ -2282,11 +2282,20 @@ public class ProxyConfGen
             }
         }
 
+        boolean sni = ProxyConfVar.serverSource.getBooleanAttr("zimbraReverseProxySNIEnabled", false);
         if (vip instanceof Inet6Address) {
             //ipv6 address has to be enclosed with [ ]
-            mVars.put("vip", "[" + vip.getHostAddress() + "]");
+            if (sni) {
+                mVars.put("vip", "[::]:");
+            } else {
+                mVars.put("vip", "[" + vip.getHostAddress() + "]:");
+            }
         } else {
-            mVars.put("vip", vip.getHostAddress());
+            if (sni) {
+                mVars.put("vip", "");
+            } else {
+                mVars.put("vip", vip.getHostAddress() + ":");
+            }
         }
 
         //Get the response headers list for this domain

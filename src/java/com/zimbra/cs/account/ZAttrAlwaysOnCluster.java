@@ -1167,6 +1167,88 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
+     * Enable the use of Server Name Indication (SNI) TLS extension in the
+     * proxy. When set to TRUE, and using SNI capable clients, there is no
+     * need for a separate IP address per domain (zimbraVirtualIPAddress)
+     *
+     * @return zimbraReverseProxySNIEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1818)
+    public boolean isReverseProxySNIEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxySNIEnabled, false);
+    }
+
+    /**
+     * Enable the use of Server Name Indication (SNI) TLS extension in the
+     * proxy. When set to TRUE, and using SNI capable clients, there is no
+     * need for a separate IP address per domain (zimbraVirtualIPAddress)
+     *
+     * @param zimbraReverseProxySNIEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1818)
+    public void setReverseProxySNIEnabled(boolean zimbraReverseProxySNIEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySNIEnabled, zimbraReverseProxySNIEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable the use of Server Name Indication (SNI) TLS extension in the
+     * proxy. When set to TRUE, and using SNI capable clients, there is no
+     * need for a separate IP address per domain (zimbraVirtualIPAddress)
+     *
+     * @param zimbraReverseProxySNIEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1818)
+    public Map<String,Object> setReverseProxySNIEnabled(boolean zimbraReverseProxySNIEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySNIEnabled, zimbraReverseProxySNIEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable the use of Server Name Indication (SNI) TLS extension in the
+     * proxy. When set to TRUE, and using SNI capable clients, there is no
+     * need for a separate IP address per domain (zimbraVirtualIPAddress)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1818)
+    public void unsetReverseProxySNIEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySNIEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable the use of Server Name Indication (SNI) TLS extension in the
+     * proxy. When set to TRUE, and using SNI capable clients, there is no
+     * need for a separate IP address per domain (zimbraVirtualIPAddress)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1818)
+    public Map<String,Object> unsetReverseProxySNIEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySNIEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Maximum time an entry in the short term All Effective Rights cache
      * will be regarded as valid. If value is 0, the cache is disabled. The
      * cache is particularly useful when significant use is made of delegated

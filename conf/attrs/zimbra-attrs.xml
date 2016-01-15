@@ -2981,7 +2981,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="562" name="zimbraVirtualIPAddress" type="string" max="256" cardinality="multi" optionalIn="domain" since="5.0.0">
-  <desc>An virtual IP address for this domain, used to determine domain based on an IP address</desc>
+  <desc>Virtual IP address for this domain, used to determine domain based on an IP address and have IP-based virtual hosts for the proxy. Consider using zimbraReverseProxySNIEnabled instead when using SNI capable clients</desc>
 </attr>
 
 <attr id="563" name="zimbraSSLCertificate" type="astring" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited" since="5.0.0">
@@ -8480,6 +8480,11 @@ TODO: delete them permanently from here
 <attr id="1787" name="zimbraPrefShowChatsFolderInMail" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.7.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Show Chats folder even if zimbraFeatureIMEnabled is false</desc>
+</attr>
+
+<attr id="1818" name="zimbraReverseProxySNIEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="8.7.0,9.0.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Enable the use of Server Name Indication (SNI) TLS extension in the proxy. When set to TRUE, and using SNI capable clients, there is no need for a separate IP address per domain (zimbraVirtualIPAddress)</desc>
 </attr>
 
 <attr id="1819" name="zimbraTwoFactorAuthEnabled" type="boolean" cardinality="single" optionalIn="account" flags="domainAdminModifiable,accountInfo" callback="TwoFactorAuthStatus" since="8.7.0,9.0.0">
