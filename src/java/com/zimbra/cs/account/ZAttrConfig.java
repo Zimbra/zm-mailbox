@@ -74708,83 +74708,6 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies a file with DH parameters for EDH ciphers to be used by the
-     * proxy
-     *
-     * @return zimbraReverseProxySSLDHParam, or null if unset
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1968)
-    public String getReverseProxySSLDHParam() {
-        return getAttr(Provisioning.A_zimbraReverseProxySSLDHParam, null);
-    }
-
-    /**
-     * Specifies a file with DH parameters for EDH ciphers to be used by the
-     * proxy
-     *
-     * @param zimbraReverseProxySSLDHParam new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1968)
-    public void setReverseProxySSLDHParam(String zimbraReverseProxySSLDHParam) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxySSLDHParam, zimbraReverseProxySSLDHParam);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Specifies a file with DH parameters for EDH ciphers to be used by the
-     * proxy
-     *
-     * @param zimbraReverseProxySSLDHParam new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1968)
-    public Map<String,Object> setReverseProxySSLDHParam(String zimbraReverseProxySSLDHParam, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxySSLDHParam, zimbraReverseProxySSLDHParam);
-        return attrs;
-    }
-
-    /**
-     * Specifies a file with DH parameters for EDH ciphers to be used by the
-     * proxy
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1968)
-    public void unsetReverseProxySSLDHParam() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxySSLDHParam, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Specifies a file with DH parameters for EDH ciphers to be used by the
-     * proxy
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1968)
-    public Map<String,Object> unsetReverseProxySSLDHParam(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxySSLDHParam, "");
-        return attrs;
-    }
-
-    /**
      * SSL ECDH cipher curve for web proxy
      *
      * @return zimbraReverseProxySSLECDHCurve, or "prime256v1" if unset
@@ -79794,6 +79717,90 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetSSLCertificate(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSSLCertificate, "");
+        return attrs;
+    }
+
+    /**
+     * PEM formatted DH parameters for SSL
+     *
+     * @return zimbraSSLDHParam, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1968)
+    public byte[] getSSLDHParam() {
+        return getBinaryAttr(Provisioning.A_zimbraSSLDHParam);
+    }
+
+    /**
+     * PEM formatted DH parameters for SSL
+     *
+     * @return zimbraSSLDHParam, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1968)
+    public String getSSLDHParamAsString() {
+        return getAttr(Provisioning.A_zimbraSSLDHParam, null);
+    }
+
+    /**
+     * PEM formatted DH parameters for SSL
+     *
+     * @param zimbraSSLDHParam new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1968)
+    public void setSSLDHParam(byte[] zimbraSSLDHParam) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLDHParam, zimbraSSLDHParam==null ? "" : ByteUtil.encodeLDAPBase64(zimbraSSLDHParam));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * PEM formatted DH parameters for SSL
+     *
+     * @param zimbraSSLDHParam new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1968)
+    public Map<String,Object> setSSLDHParam(byte[] zimbraSSLDHParam, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLDHParam, zimbraSSLDHParam==null ? "" : ByteUtil.encodeLDAPBase64(zimbraSSLDHParam));
+        return attrs;
+    }
+
+    /**
+     * PEM formatted DH parameters for SSL
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1968)
+    public void unsetSSLDHParam() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLDHParam, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * PEM formatted DH parameters for SSL
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1968)
+    public Map<String,Object> unsetSSLDHParam(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLDHParam, "");
         return attrs;
     }
 

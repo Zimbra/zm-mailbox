@@ -9899,8 +9899,8 @@ TODO: delete them permanently from here
   <desc>trusted device token secret key</desc>
 </attr>
 
-<attr id="1968" name="zimbraReverseProxySSLDHParam" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
-  <desc>Specifies a file with DH parameters for EDH ciphers to be used by the proxy</desc>
+<attr id="1968" name="zimbraSSLDHParam" type="binary" cardinality="single" optionalIn="globalConfig" affectsServices="ldap,mta,nginxproxy" requiresRestart="ldap,mta,nginxproxy" since="8.7.0,9.0.0">
+  <desc>PEM formatted DH parameters for SSL</desc>
 </attr>
 
 <attr id="1969" name="zimbraSolrReplicationFactor" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="9.0.0">
