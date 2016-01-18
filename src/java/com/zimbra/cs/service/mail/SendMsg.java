@@ -1,4 +1,4 @@
-/*
+	/*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
@@ -166,7 +166,7 @@ public final class SendMsg extends MailDocumentHandler {
                     Message msg = mbox.getMessageById(octxt, iidDraft.getId());
                     mm = msg.getMimeMessage(false);
                 } else {
-                    mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, iidOrigId, mimeData);
+                    mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
                 }
 
                 savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
