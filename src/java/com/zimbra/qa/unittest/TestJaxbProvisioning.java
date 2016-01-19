@@ -96,11 +96,11 @@ import com.zimbra.soap.type.ShareInfo;
 import com.zimbra.soap.type.TargetBy;
 
 /**
- * Primary focus of these tests is to ensure that Jaxb objects work, in
- * particular where SoapProvisioning uses them
+ * Primary focus of these tests is to ensure that Jaxb objects work, in particular where SoapProvisioning uses them
  */
 public class TestJaxbProvisioning extends TestCase {
-    @Rule public TestName testName = new TestName();
+    @Rule
+    public TestName testName = new TestName();
 
     private SoapProvisioning prov = null;
 
@@ -211,13 +211,26 @@ public class TestJaxbProvisioning extends TestCase {
         }
     }
 
+    public static void deleteAccountIfExists(String name) {
+        try {
+            ZimbraLog.test.debug("Deleting Account %s", name);
+            Provisioning prov = TestUtil.newSoapProvisioning();
+            Account acc = prov.get(Key.AccountBy.name, name);
+            if (acc != null) {
+                prov.deleteAccount(acc.getId());
+            }
+        } catch (Exception ex) {
+            ZimbraLog.test.error("Problem deleting Account %s", name, ex);
+        }
+    }
+
     public static void deleteCalendarResourceIfExists(String name) {
         try {
             ZimbraLog.test.debug("Deleting CalendarResource %s", name);
             Provisioning prov = TestUtil.newSoapProvisioning();
             CalendarResource res = prov.get(Key.CalendarResourceBy.name, name);
             if (res != null) {
-                prov.deleteDomain(res.getId());
+                prov.deleteCalendarResource(res.getId());
             }
         } catch (Exception ex) {
             ZimbraLog.test.error("Problem deleting Calendar Resource %s", name, ex);
@@ -264,8 +277,7 @@ public class TestJaxbProvisioning extends TestCase {
         return dom;
     }
 
-    public static Account ensureAccountExists(String name)
-            throws ServiceException {
+    public static Account ensureAccountExists(String name) throws ServiceException {
         String domainName = name.substring(name.indexOf('@') + 1);
         ensureDomainExists(domainName);
         Provisioning prov = TestUtil.newSoapProvisioning();
@@ -280,8 +292,7 @@ public class TestJaxbProvisioning extends TestCase {
         return acct;
     }
 
-    public static Account ensureMailboxExists(String name)
-            throws ServiceException {
+    public static Account ensureMailboxExists(String name) throws ServiceException {
         SoapProvisioning prov = TestUtil.newSoapProvisioning();
         Account acct = ensureAccountExists(name);
         if (acct == null) {
@@ -297,8 +308,7 @@ public class TestJaxbProvisioning extends TestCase {
         return acct;
     }
 
-    public static DistributionList ensureDlExists(String name)
-            throws ServiceException {
+    public static DistributionList ensureDlExists(String name) throws ServiceException {
         Provisioning prov = TestUtil.newSoapProvisioning();
         String domainName = name.substring(name.indexOf('@') + 1);
         ensureDomainExists(domainName);
@@ -309,8 +319,7 @@ public class TestJaxbProvisioning extends TestCase {
         return dl;
     }
 
-    public static Cos ensureCosExists(String name)
-            throws ServiceException {
+    public static Cos ensureCosExists(String name) throws ServiceException {
         Provisioning prov = TestUtil.newSoapProvisioning();
         String domainName = name.substring(name.indexOf('@') + 1);
         ensureDomainExists(domainName);
@@ -325,9 +334,9 @@ public class TestJaxbProvisioning extends TestCase {
     public void testGetConfig() throws Exception {
         ZimbraLog.test.debug("Starting test %s", testName());
         Config cfg = prov.getConfig();
-        assertNotNull("Config" , cfg);
+        assertNotNull("Config", cfg);
         cfg = prov.getConfig("zimbra_user");
-        assertNotNull("Config" , cfg);
+        assertNotNull("Config", cfg);
     }
 
     @Test
@@ -338,10 +347,9 @@ public class TestJaxbProvisioning extends TestCase {
         Server svr = prov.createServer(testServer, null);
         assertNotNull("Server for " + testServer, svr);
         svr = prov.get(Key.ServerBy.id, svr.getId());
-        List <Server> svrs = prov.getAllServers();
-        assertNotNull("All Servers" , svrs);
-        assertTrue("Number of Servers objects=" + svrs.size() +
-                " should be >=1", svrs.size() >= 1);
+        List<Server> svrs = prov.getAllServers();
+        assertNotNull("All Servers", svrs);
+        assertTrue("Number of Servers objects=" + svrs.size() + " should be >=1", svrs.size() >= 1);
         prov.deleteServer(svr.getId());
     }
 
@@ -350,10 +358,8 @@ public class TestJaxbProvisioning extends TestCase {
         ZimbraLog.test.debug("Starting testAccount");
         Domain dom = ensureDomainExists(domain2);
         assertNotNull("Domain for " + domain2, dom);
-        Account acct = prov.createAccount(testAcctEmail,
-                TestUtil.DEFAULT_PASSWORD, null);
-        prov.authAccount(acct, TestUtil.DEFAULT_PASSWORD,
-                AuthContext.Protocol.test);
+        Account acct = prov.createAccount(testAcctEmail, TestUtil.DEFAULT_PASSWORD, null);
+        prov.authAccount(acct, TestUtil.DEFAULT_PASSWORD, AuthContext.Protocol.test);
         assertNotNull("Account for " + testAcctEmail, acct);
         prov.changePassword(acct, TestUtil.DEFAULT_PASSWORD, "DelTA4Pa555");
         prov.checkPasswordStrength(acct, "2ndDelTA4Pa555");
@@ -367,24 +373,21 @@ public class TestJaxbProvisioning extends TestCase {
         assertNotNull("SoapAccountInfo for " + testNewAcctEmail, acctInfo);
         acct = prov.get(AccountBy.name, testNewAcctEmail, true);
         assertNotNull("2nd Account for " + testNewAcctEmail, acct);
-        List <Account> adminAccts = prov.getAllAdminAccounts(true);
-        assertNotNull("Admin Accounts" , adminAccts);
-        assertTrue("Number of Admin Account objects=" + adminAccts.size() +
-                " should be >=1", adminAccts.size() >= 1);
-        List <Account> accts = prov.getAllAccounts(dom);
-        assertNotNull("All Accounts" , accts);
-        assertTrue("Number of Account objects=" + accts.size() +
-                " should be >=1", accts.size() >= 1);
-        List <Domain> domains = prov.getAllDomains(false);
-        assertNotNull("All Domains" , domains);
-        assertTrue("Number of Domain objects=" + domains.size() +
-                " should be >=1", domains.size() >= 1);
+        List<Account> adminAccts = prov.getAllAdminAccounts(true);
+        assertNotNull("Admin Accounts", adminAccts);
+        assertTrue("Number of Admin Account objects=" + adminAccts.size() + " should be >=1", adminAccts.size() >= 1);
+        List<Account> accts = prov.getAllAccounts(dom);
+        assertNotNull("All Accounts", accts);
+        assertTrue("Number of Account objects=" + accts.size() + " should be >=1", accts.size() >= 1);
+        List<Domain> domains = prov.getAllDomains(false);
+        assertNotNull("All Domains", domains);
+        assertTrue("Number of Domain objects=" + domains.size() + " should be >=1", domains.size() >= 1);
         dom = prov.get(Key.DomainBy.id, dom.getId());
-        assertNotNull("Domain got by id" , dom);
+        assertNotNull("Domain got by id", dom);
         CountAccountResult res = prov.countAccount(dom);
         assertNotNull("CountAccountResult", res);
         dom = prov.getDomainInfo(Key.DomainBy.id, dom.getId());
-        assertNotNull("DomainInfo got by id" , dom);
+        assertNotNull("DomainInfo got by id", dom);
 
         prov.deleteAccount(acct.getId());
     }
@@ -393,11 +396,13 @@ public class TestJaxbProvisioning extends TestCase {
         String folderPath;
         String ownerEmail;
         String granteeType;
+
         public CutDownShareInfo(String folderPath, String ownerEmail, String granteeType) {
             this.folderPath = folderPath;
             this.ownerEmail = ownerEmail;
             this.granteeType = granteeType;
         }
+
         public CutDownShareInfo(ShareInfo sInfo) {
             this.folderPath = sInfo.getFolderPath();
             this.ownerEmail = sInfo.getOwnerEmail();
@@ -408,6 +413,7 @@ public class TestJaxbProvisioning extends TestCase {
             return folderPath.equals(shareInfo.getFolderPath()) && ownerEmail.equals(shareInfo.getOwnerEmail())
                     && granteeType.equals(shareInfo.getGranteeType());
         }
+
         @Override
         public String toString() {
             return String.format("path=%s ownerEmail=%s granteeType=%s", folderPath, ownerEmail, granteeType);
@@ -416,6 +422,7 @@ public class TestJaxbProvisioning extends TestCase {
 
     public static class ShareSet {
         Set<CutDownShareInfo> shares = Sets.newHashSet();
+
         public ShareSet() {
         }
 
@@ -445,10 +452,10 @@ public class TestJaxbProvisioning extends TestCase {
         }
     }
 
-    public CutDownShareInfo setupShare(Account sharerAccount, String sharerFolderName, byte color,
-            String granteeType, Account shareeAccount, Account mountingAccount, String mountFolderName) {
-        setupShare(sharerAccount, sharerFolderName, color, "appointment", granteeType, "r",
-                shareeAccount, mountingAccount, mountFolderName);
+    public CutDownShareInfo setupShare(Account sharerAccount, String sharerFolderName, byte color, String granteeType,
+            Account shareeAccount, Account mountingAccount, String mountFolderName) {
+        setupShare(sharerAccount, sharerFolderName, color, "appointment", granteeType, "r", shareeAccount,
+                mountingAccount, mountFolderName);
         return new CutDownShareInfo("/" + sharerFolderName, sharerAccount.getName(), granteeType);
     }
 
@@ -465,50 +472,39 @@ public class TestJaxbProvisioning extends TestCase {
     }
 
     /**
-     * Setup: no public shares in DomA; UserM@DomZ has a public share(s)
-    1. UserA@DomA w/GetShareInfoRequest (unqualified)
-    2. UserA@DomA w/GetShareInfoRequest owner by=name UserL@DomZ
-       - valid owner - *no* public shares
-    3. UserA@DomA w/GetShareInfoRequest owner by=name UserM@DomZ
-       - valid owner - with public shares ONLY
-    4. UserA@DomA w/GetShareInfoRequest owner by=name UserN@DomZ
-       - invalid owner (non-existent account)
-    5. UserA@DomA w/GetShareInfoRequest owner by=name UserB@DomA
-       - valid owner - *no* public shares (yet)
-
-    Setup: UserB@DomA creates a public share(s)...
-    - Rerun Tests 1-5
-
-    => I believe responses for 1-5 (both rounds) should be ~identical
-       if public_share_advertising_scope=none and there are no explicit
-       shares to UserA@DomA
-
-    # sanity tests on explicit sharing...
-
-    6. UserC@DomA w/GetShareInfoRequest owner by=name UserO@DomZ
-       - valid owner - with ONLY an *explicit* (non-public) share with UserB@DomA
-    7. UserC@DomA w/GetShareInfoRequest owner by=name UserP@DomB
-       - valid owner - with public shares AND an *explicit* (non-public) share with UserB@DomA
-
-    => I believe responses for 7-8 should be ~identical (different owners of course)
-       if public_share_advertising_scope=none and there are no explicit
-       shares to UserC@DomA
-
-    - for completeness, we should also repeat 2-7 with by=id, although the
-      likelihood of harvesting using by=id is probably quite a bit lower
-      than by=name.
-
-    I don't know how this aligns or overlaps with existing test cases
-    but hopefully we end up with a similar set of test cases for each of
-    none|all|samePrimaryDomain as makes sense.
+     * Setup: no public shares in DomA; UserM@DomZ has a public share(s) 1. UserA@DomA w/GetShareInfoRequest
+     * (unqualified) 2. UserA@DomA w/GetShareInfoRequest owner by=name UserL@DomZ - valid owner - *no* public shares 3.
+     * UserA@DomA w/GetShareInfoRequest owner by=name UserM@DomZ - valid owner - with public shares ONLY 4. UserA@DomA
+     * w/GetShareInfoRequest owner by=name UserN@DomZ - invalid owner (non-existent account) 5. UserA@DomA
+     * w/GetShareInfoRequest owner by=name UserB@DomA - valid owner - *no* public shares (yet)
+     * 
+     * Setup: UserB@DomA creates a public share(s)... - Rerun Tests 1-5
+     * 
+     * => I believe responses for 1-5 (both rounds) should be ~identical if public_share_advertising_scope=none and
+     * there are no explicit shares to UserA@DomA
+     * 
+     * # sanity tests on explicit sharing...
+     * 
+     * 6. UserC@DomA w/GetShareInfoRequest owner by=name UserO@DomZ - valid owner - with ONLY an *explicit* (non-public)
+     * share with UserB@DomA 7. UserC@DomA w/GetShareInfoRequest owner by=name UserP@DomB - valid owner - with public
+     * shares AND an *explicit* (non-public) share with UserB@DomA
+     * 
+     * => I believe responses for 7-8 should be ~identical (different owners of course) if
+     * public_share_advertising_scope=none and there are no explicit shares to UserC@DomA
+     * 
+     * - for completeness, we should also repeat 2-7 with by=id, although the likelihood of harvesting using by=id is
+     * probably quite a bit lower than by=name.
+     * 
+     * I don't know how this aligns or overlaps with existing test cases but hopefully we end up with a similar set of
+     * test cases for each of none|all|samePrimaryDomain as makes sense.
      */
     @Test
     public void testVisibilityNonePublicSharesConsistentlyIgnored() throws Exception {
         ZimbraLog.test.debug("Starting test %s", testName());
 
-        ensureDomainExists(domain1);  // DomA (sameDom) "jaxb.domain.test"
-        ensureDomainExists(domain2);  // DomZ (diffDom) "jaxb.acct.domain.example.test"
-        ensureDomainExists(domain3);  // DomB
+        ensureDomainExists(domain1); // DomA (sameDom) "jaxb.domain.test"
+        ensureDomainExists(domain2); // DomZ (diffDom) "jaxb.acct.domain.example.test"
+        ensureDomainExists(domain3); // DomB
         Cos cos = prov.createCos(testCos, null);
         Assert.assertNotNull("Cos for " + testCos, cos);
         Account sameDomAcct = ensureMailboxExists(sharer); // UserB@DomA
@@ -547,8 +543,7 @@ public class TestJaxbProvisioning extends TestCase {
         accountGetShareInfo(shareeAcct, AccountSelector.fromName(diffDomAcct.getName()), false, new ShareSet());
         accountGetShareInfo(shareeAcct, AccountSelector.fromId(diffDomAcct.getId()), false, new ShareSet());
         // invalid owner, diff domain - non-existent account
-        accountGetShareInfo(shareeAcct, AccountSelector.fromName("nonexistent@" + domain1),
-                false, new ShareSet());
+        accountGetShareInfo(shareeAcct, AccountSelector.fromName("nonexistent@" + domain1), false, new ShareSet());
         // valid owner, same domain - no public shares 1st time , some the 2nd time
         accountGetShareInfo(shareeAcct, AccountSelector.fromName(sameDomAcct.getName()), false, new ShareSet());
         accountGetShareInfo(shareeAcct, AccountSelector.fromId(sameDomAcct.getId()), false, new ShareSet());
@@ -572,48 +567,50 @@ public class TestJaxbProvisioning extends TestCase {
         // Remember how many baseline public shares there are before we start.
         ShareSet baselinePublicShares = new ShareSet().addAll(gsiResp.getShares());
 
-        CutDownShareInfo mountedUsrSameDom =
-                setupShare(sameDomAcct, "USER_Mounted", (byte) 2, "usr", shareeAcct, shareeAcct, "USR_SAME_DOM");
-        CutDownShareInfo notMountedUsrSameDom =
-                setupShare(sameDomAcct, "USER_NOT_Mounted", (byte) 3, "usr", shareeAcct, null, null);
-        CutDownShareInfo mountedPubSameDom =
-                setupShare(sameDomAcct, "PUB_Mounted", (byte) 4, "pub", null, shareeAcct, "PUB_SAME_DOM");
-        CutDownShareInfo notMountedPubSameDom =
-                setupShare(sameDomAcct, "PUB_NOT_Mounted", (byte) 5, "pub", null, null, null);
+        CutDownShareInfo mountedUsrSameDom = setupShare(sameDomAcct, "USER_Mounted", (byte) 2, "usr", shareeAcct,
+                shareeAcct, "USR_SAME_DOM");
+        CutDownShareInfo notMountedUsrSameDom = setupShare(sameDomAcct, "USER_NOT_Mounted", (byte) 3, "usr",
+                shareeAcct, null, null);
+        CutDownShareInfo mountedPubSameDom = setupShare(sameDomAcct, "PUB_Mounted", (byte) 4, "pub", null, shareeAcct,
+                "PUB_SAME_DOM");
+        CutDownShareInfo notMountedPubSameDom = setupShare(sameDomAcct, "PUB_NOT_Mounted", (byte) 5, "pub", null, null,
+                null);
         /* never visible to sharee */
-        CutDownShareInfo usrUnrelatedSameDom =
-                setupShare(sameDomAcct, "USER_Unrelated", (byte) 2, "usr", otherAcct, null, null);
+        CutDownShareInfo usrUnrelatedSameDom = setupShare(sameDomAcct, "USER_Unrelated", (byte) 2, "usr", otherAcct,
+                null, null);
 
-        CutDownShareInfo mountedUsrDiffDom =
-                setupShare(diffDomAcct, "USER_MountedDiffDom", (byte) 2, "usr", shareeAcct, shareeAcct, "USR_DIFF_DOM");
-        CutDownShareInfo notMountedUsrDiffDom =
-                setupShare(diffDomAcct, "USER_NOT_MountedDiffDom", (byte) 3, "usr", shareeAcct, null, null);
-        CutDownShareInfo mountedPubDiffDom =
-                setupShare(diffDomAcct, "PUB_MountedDiffDom", (byte) 4, "pub", null, shareeAcct, "PUB_DIFF_DOM");
-        CutDownShareInfo notMountedPubDiffDom =
-                setupShare(diffDomAcct, "PUB_NOT_MountedDiffDom", (byte) 5, "pub", null, null, null);
+        CutDownShareInfo mountedUsrDiffDom = setupShare(diffDomAcct, "USER_MountedDiffDom", (byte) 2, "usr",
+                shareeAcct, shareeAcct, "USR_DIFF_DOM");
+        CutDownShareInfo notMountedUsrDiffDom = setupShare(diffDomAcct, "USER_NOT_MountedDiffDom", (byte) 3, "usr",
+                shareeAcct, null, null);
+        CutDownShareInfo mountedPubDiffDom = setupShare(diffDomAcct, "PUB_MountedDiffDom", (byte) 4, "pub", null,
+                shareeAcct, "PUB_DIFF_DOM");
+        CutDownShareInfo notMountedPubDiffDom = setupShare(diffDomAcct, "PUB_NOT_MountedDiffDom", (byte) 5, "pub",
+                null, null, null);
         /* never visible to sharee */
-        CutDownShareInfo usrUnrelatedDiffDom =
-                setupShare(diffDomAcct, "USER_UnrelatedDiffDom", (byte) 2, "usr", otherAcct, null, null);
+        CutDownShareInfo usrUnrelatedDiffDom = setupShare(diffDomAcct, "USER_UnrelatedDiffDom", (byte) 2, "usr",
+                otherAcct, null, null);
 
-        ShareSet allMounted =
-                new ShareSet(mountedUsrSameDom).add(mountedPubSameDom).add(mountedUsrDiffDom).add(mountedPubDiffDom);
-        ShareSet allSharedSameDom =
-                new ShareSet(mountedUsrSameDom).add(mountedPubSameDom).add(notMountedUsrSameDom).add(notMountedPubSameDom);
-        ShareSet allSharedDiffDom =
-                new ShareSet(mountedUsrDiffDom).add(mountedPubDiffDom).add(notMountedUsrDiffDom).add(notMountedPubDiffDom);
+        ShareSet allMounted = new ShareSet(mountedUsrSameDom).add(mountedPubSameDom).add(mountedUsrDiffDom)
+                .add(mountedPubDiffDom);
+        ShareSet allSharedSameDom = new ShareSet(mountedUsrSameDom).add(mountedPubSameDom).add(notMountedUsrSameDom)
+                .add(notMountedPubSameDom);
+        ShareSet allSharedDiffDom = new ShareSet(mountedUsrDiffDom).add(mountedPubDiffDom).add(notMountedUsrDiffDom)
+                .add(notMountedPubDiffDom);
         ShareSet allShares = new ShareSet(allSharedSameDom.shares).addAll(allSharedDiffDom.shares);
 
         TestUtil.setLCValue(LC.public_share_advertising_scope, LC.PUBLIC_SHARE_VISIBILITY.samePrimaryDomain.toString());
         prov.flushCache(CacheEntryType.all, null);
-        accountGetShareInfo(shareeAcct, null /* owner account */, false,
-                new ShareSet(allMounted.shares)
-        .add(notMountedUsrSameDom).add(notMountedPubSameDom).add(notMountedUsrDiffDom));
-        accountGetShareInfo(shareeAcct, AccountSelector.fromId(sameDomAcct.getId()), false,
-                new ShareSet(mountedUsrSameDom)
-        .add(mountedPubSameDom).add(notMountedPubSameDom).add(notMountedUsrSameDom));
-        accountGetShareInfo(shareeAcct, AccountSelector.fromId(diffDomAcct.getId()), false,
-                new ShareSet(mountedUsrDiffDom).add(mountedPubDiffDom).add(notMountedUsrDiffDom));
+        accountGetShareInfo(
+                shareeAcct,
+                null /* owner account */,
+                false,
+                new ShareSet(allMounted.shares).add(notMountedUsrSameDom).add(notMountedPubSameDom)
+                        .add(notMountedUsrDiffDom));
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(sameDomAcct.getId()), false, new ShareSet(
+                mountedUsrSameDom).add(mountedPubSameDom).add(notMountedPubSameDom).add(notMountedUsrSameDom));
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(diffDomAcct.getId()), false, new ShareSet(
+                mountedUsrDiffDom).add(mountedPubDiffDom).add(notMountedUsrDiffDom));
         ShareSet adminSet = new ShareSet(allSharedSameDom.shares).add(usrUnrelatedSameDom);
         adminGetShareInfo(sameDomAcct, adminSet);
 
@@ -629,15 +626,15 @@ public class TestJaxbProvisioning extends TestCase {
         prov.flushCache(CacheEntryType.account, null);
         accountGetShareInfo(shareeAcct, null /* owner account */, false,
                 new ShareSet(allMounted.shares).add(notMountedUsrSameDom).add(notMountedUsrDiffDom));
-        accountGetShareInfo(shareeAcct, AccountSelector.fromId(sameDomAcct.getId()), false,
-                new ShareSet(mountedUsrSameDom).add(mountedPubSameDom).add(notMountedUsrSameDom));
-        accountGetShareInfo(shareeAcct, AccountSelector.fromId(diffDomAcct.getId()), false,
-                new ShareSet(mountedUsrDiffDom).add(mountedPubDiffDom).add(notMountedUsrDiffDom));
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(sameDomAcct.getId()), false, new ShareSet(
+                mountedUsrSameDom).add(mountedPubSameDom).add(notMountedUsrSameDom));
+        accountGetShareInfo(shareeAcct, AccountSelector.fromId(diffDomAcct.getId()), false, new ShareSet(
+                mountedUsrDiffDom).add(mountedPubDiffDom).add(notMountedUsrDiffDom));
         adminGetShareInfo(sameDomAcct, adminSet);
-        // Confirm that can't use GetShareInfoRequest with self as owner.  If could, may want to alter things
+        // Confirm that can't use GetShareInfoRequest with self as owner. If could, may want to alter things
         // so that public shares are always included in results if owner==self...
-        accountGetShareInfoExpectFail(shareeAcct, AccountSelector.fromId(shareeAcct.getId()),
-                true, "invalid request: cannot discover shares on self");
+        accountGetShareInfoExpectFail(shareeAcct, AccountSelector.fromId(shareeAcct.getId()), true,
+                "invalid request: cannot discover shares on self");
     }
 
     public void modifyCos(Cos cos, String attr, String value) throws ServiceException {
@@ -667,8 +664,8 @@ public class TestJaxbProvisioning extends TestCase {
     }
 
     public com.zimbra.soap.admin.message.GetShareInfoResponse adminGetShareInfo(Account acct, ShareSet shareSet) {
-        com.zimbra.soap.admin.message.GetShareInfoRequest req =
-                new com.zimbra.soap.admin.message.GetShareInfoRequest(AccountSelector.fromId(acct.getId()));
+        com.zimbra.soap.admin.message.GetShareInfoRequest req = new com.zimbra.soap.admin.message.GetShareInfoRequest(
+                AccountSelector.fromId(acct.getId()));
         com.zimbra.soap.admin.message.GetShareInfoResponse resp = null;
         try {
             resp = prov.invokeJaxb(req);
@@ -686,18 +683,18 @@ public class TestJaxbProvisioning extends TestCase {
             prov.invokeJaxbOnTargetAccount(GetShareInfoRequest.create(owner, grantee, includeSelf), acct.getId());
             Assert.fail("Unexpected success for GetShareInfoRequest");
         } catch (ServiceException e) {
-            Assert.assertTrue(String.format("Unexpected exception %s (expected msg '%s')", e.getMessage(), reason),
-                    e.getMessage().contains(reason));
+            Assert.assertTrue(String.format("Unexpected exception %s (expected msg '%s')", e.getMessage(), reason), e
+                    .getMessage().contains(reason));
         }
     }
 
-    public GetShareInfoResponse accountGetShareInfo(
-            Account acct, AccountSelector owner, Boolean includeSelf, ShareSet shareSet) {
+    public GetShareInfoResponse accountGetShareInfo(Account acct, AccountSelector owner, Boolean includeSelf,
+            ShareSet shareSet) {
         GetShareInfoResponse resp = null;
         GranteeChooser grantee = null;
         try {
-            resp = prov.invokeJaxbOnTargetAccount(GetShareInfoRequest.create(owner, grantee, includeSelf),
-                    acct.getId());
+            resp = prov
+                    .invokeJaxbOnTargetAccount(GetShareInfoRequest.create(owner, grantee, includeSelf), acct.getId());
             Assert.assertNotNull(String.format("GetShareInfoRequest for account %s", acct.getName()), resp);
             checkGetShareInfo(shareSet, resp.getShares());
         } catch (ServiceException e) {
@@ -706,8 +703,8 @@ public class TestJaxbProvisioning extends TestCase {
         return resp;
     }
 
-    public void createMountpoint(Account acct, String localFolderName, String defaultView,
-            String remoteZimbraId, String remoteFolderId) {
+    public void createMountpoint(Account acct, String localFolderName, String defaultView, String remoteZimbraId,
+            String remoteFolderId) {
         NewMountpointSpec folderSpec = new NewMountpointSpec(localFolderName);
         folderSpec.setFolderId("1");
         folderSpec.setDefaultView(defaultView);
@@ -716,8 +713,9 @@ public class TestJaxbProvisioning extends TestCase {
         CreateMountpointRequest req = new CreateMountpointRequest(folderSpec);
         try {
             CreateMountpointResponse resp = prov.invokeJaxbOnTargetAccount(req, acct.getId());
-            Assert.assertNotNull(String.format("CreateMountpointResponse for account %s folder %s",
-                    acct.getName(), localFolderName), resp);
+            Assert.assertNotNull(
+                    String.format("CreateMountpointResponse for account %s folder %s", acct.getName(), localFolderName),
+                    resp);
         } catch (ServiceException e) {
             Assert.fail("Unexpected exception while creating mountpoint " + e);
         }
@@ -760,8 +758,7 @@ public class TestJaxbProvisioning extends TestCase {
         ZimbraLog.test.debug("Starting test %s", testName());
         Domain dom = ensureDomainExists(domain2);
         assertNotNull("Domain for " + domain2, dom);
-        Account acct = prov.createAccount(testAcctEmail,
-                TestUtil.DEFAULT_PASSWORD, null);
+        Account acct = prov.createAccount(testAcctEmail, TestUtil.DEFAULT_PASSWORD, null);
         acct = ensureMailboxExists(testAcctEmail);
         assertNotNull("Account for " + testAcctEmail, acct);
         MailboxInfo mbx = prov.getMailbox(acct);
@@ -778,10 +775,9 @@ public class TestJaxbProvisioning extends TestCase {
         assertNotNull("Cos for " + testCos, cos);
         prov.renameCos(cos.getId(), testNewCos);
         prov.copyCos(cos.getId(), testCosCopy);
-        List <Cos> cosList = prov.getAllCos();
-        assertNotNull("All Cos" , cosList);
-        assertTrue("Number of Cos objects=" + cosList.size() +
-                " should be >=1", cosList.size() >= 1);
+        List<Cos> cosList = prov.getAllCos();
+        assertNotNull("All Cos", cosList);
+        assertTrue("Number of Cos objects=" + cosList.size() + " should be >=1", cosList.size() >= 1);
         prov.deleteCos(cos.getId());
         cos = prov.get(Key.CosBy.name, testCosCopy);
         prov.deleteCos(cos.getId());
@@ -800,8 +796,7 @@ public class TestJaxbProvisioning extends TestCase {
         prov.addAlias(dl, testDlAlias);
         dl = prov.get(Key.DistributionListBy.name, testDlAlias);
         prov.removeAlias(dl, testDlAlias);
-        String[] members = { "one@example.com",
-                "two@example.test", "three@example.net" };
+        String[] members = { "one@example.com", "two@example.test", "three@example.net" };
         String[] rmMembers = { "two@example.test", "three@example.net" };
         prov.addMembers(dl, members);
         prov.removeMembers(dl, rmMembers);
@@ -811,31 +806,26 @@ public class TestJaxbProvisioning extends TestCase {
         assertNotNull("DistributionList for " + parentDl, dadDl);
         String[] dlMembers = { "one@example.com", testDlNewName };
         prov.addMembers(dadDl, dlMembers);
-        Map <String, String> via = Maps.newHashMap();
-        List <DistributionList> containingDls =
-                prov.getDistributionLists(dl, false, via);
-        assertEquals("Number of DLs a DL is a member of", 1,
-                containingDls.size());
+        Map<String, String> via = Maps.newHashMap();
+        List<DistributionList> containingDls = prov.getDistributionLists(dl, false, via);
+        assertEquals("Number of DLs a DL is a member of", 1, containingDls.size());
 
         // Account Membership test
         Account acct = ensureMailboxExists(testAcctEmail);
         String[] dlAcctMembers = { testAcctEmail };
         prov.addMembers(dadDl, dlAcctMembers);
-        containingDls =
-                prov.getDistributionLists(acct, false, via);
-        assertEquals("Number of DLs an acct is a member of", 1,
-                containingDls.size());
+        containingDls = prov.getDistributionLists(acct, false, via);
+        assertEquals("Number of DLs an acct is a member of", 1, containingDls.size());
 
-        List <DistributionList> dls = prov.getAllDistributionLists(dom);
-        assertNotNull("All DLs" , dls);
-        assertTrue("Number of DL objects=" + dls.size() +
-                " should be >=2", dls.size() >= 2);
+        List<DistributionList> dls = prov.getAllDistributionLists(dom);
+        assertNotNull("All DLs", dls);
+        assertTrue("Number of DL objects=" + dls.size() + " should be >=2", dls.size() >= 2);
         prov.deleteDistributionList(dadDl.getId());
         prov.deleteDistributionList(dl.getId());
     }
 
     private void doRenameDynamicGroupTest(boolean isACLGroup, String displayName, String memberURL)
-    throws ServiceException {
+            throws ServiceException {
         List<Attr> attrs = Lists.newArrayList();
         attrs.add(new Attr("zimbraIsACLGroup", isACLGroup ? "TRUE" : "FALSE"));
         attrs.add(new Attr("zimbraMailStatus", "enabled"));
@@ -846,11 +836,11 @@ public class TestJaxbProvisioning extends TestCase {
         Domain dom = ensureDomainExists(testDlDomain);
         assertNotNull(String.format("Domain for %s", testDlDomain), dom);
         deleteDlIfExists(testDl);
-        CreateDistributionListResponse cdlResp =
-                prov.invokeJaxb(new CreateDistributionListRequest(testDl, attrs, true /* dynamic */));
+        CreateDistributionListResponse cdlResp = prov
+                .invokeJaxb(new CreateDistributionListRequest(testDl, attrs, true /* dynamic */));
         assertNotNull("CreateDistributionListResponse", cdlResp);
-        RenameDistributionListResponse rdlResp =
-                prov.invokeJaxb(new RenameDistributionListRequest(cdlResp.getDl().getId(), testDlNewName));
+        RenameDistributionListResponse rdlResp = prov.invokeJaxb(new RenameDistributionListRequest(cdlResp.getDl()
+                .getId(), testDlNewName));
         assertNotNull("RenameDistributionListResponse", rdlResp);
     }
 
@@ -868,8 +858,7 @@ public class TestJaxbProvisioning extends TestCase {
 
     @Test
     public void testRenameDynamicACLGroupWithMemberURL() throws ServiceException {
-        doRenameDynamicGroupTest(true, "Dynamic With MemberURL ACLGroup",
-                "ldap:///??sub?(objectClass=zimbraAccount)");
+        doRenameDynamicGroupTest(true, "Dynamic With MemberURL ACLGroup", "ldap:///??sub?(objectClass=zimbraAccount)");
     }
 
     @Test
@@ -881,14 +870,13 @@ public class TestJaxbProvisioning extends TestCase {
         assertNotNull("Domain for " + domain1, dom);
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put("displayName", testCalResDisplayName);
-        attrs.put ("zimbraCalResType", "Location");
+        attrs.put("zimbraCalResType", "Location");
         attrs.put("zimbraCalResLocationDisplayName", "Harare");
-        CalendarResource calRes = prov.createCalendarResource(
-                testCalRes, TestUtil.DEFAULT_PASSWORD, attrs);
+        CalendarResource calRes = prov.createCalendarResource(testCalRes, TestUtil.DEFAULT_PASSWORD, attrs);
         assertNotNull("CalendarResource on create", calRes);
         prov.renameCalendarResource(calRes.getId(), testNewCalRes);
-        List <CalendarResource> resources = prov.getAllCalendarResources(
-                dom, Provisioning.getInstance().getLocalServer());
+        List<CalendarResource> resources = prov.getAllCalendarResources(dom, Provisioning.getInstance()
+                .getLocalServer());
         assertNotNull("CalendarResource List for getAll", resources);
         assertEquals("CalendarResource list size", 1, resources.size());
         calRes = prov.get(Key.CalendarResourceBy.id, calRes.getId());
@@ -898,25 +886,22 @@ public class TestJaxbProvisioning extends TestCase {
     @Test
     public void testQuotaUsage() throws Exception {
         ZimbraLog.test.debug("Starting testQuotaUsage");
-        List <QuotaUsage> quotaUsages = prov.getQuotaUsage(
-                Provisioning.getInstance().getLocalServer().getName());
+        List<QuotaUsage> quotaUsages = prov.getQuotaUsage(Provisioning.getInstance().getLocalServer().getName());
         assertNotNull("QuotaUsage List", quotaUsages);
-        assertTrue("Number of QuotaUsage objects=" + quotaUsages.size() +
-                " should be >1", quotaUsages.size() > 1);
+        assertTrue("Number of QuotaUsage objects=" + quotaUsages.size() + " should be >1", quotaUsages.size() > 1);
     }
 
     // Disabled - getting :
     // SoapFaultException: system failure: server
-    //    gren-elliots-macbook-pro.local zimbraRemoteManagementPrivateKeyPath
-    //    (/opt/zimbra/.ssh/zimbra_identity) does not exist
+    // gren-elliots-macbook-pro.local zimbraRemoteManagementPrivateKeyPath
+    // (/opt/zimbra/.ssh/zimbra_identity) does not exist
     public void DISABLED_testGetServerNIfs() throws Exception {
         ZimbraLog.test.debug("Starting testGetServerNIfs");
         Server svr = Provisioning.getInstance().getLocalServer();
-        GetServerNIfsRequest req = new GetServerNIfsRequest(
-                null, ServerSelector.fromId(svr.getId()));
+        GetServerNIfsRequest req = new GetServerNIfsRequest(null, ServerSelector.fromId(svr.getId()));
         GetServerNIfsResponse resp = prov.invokeJaxb(req);
         assertNotNull("GetServerNIfsResponse", resp);
-        List <NetworkInformation> nisList = resp.getNetworkInterfaces();
+        List<NetworkInformation> nisList = resp.getNetworkInterfaces();
         assertNotNull("NetworkInfomation List", nisList);
     }
 
@@ -939,7 +924,7 @@ public class TestJaxbProvisioning extends TestCase {
         assertNotNull("GetLicensInfoResponse", resp);
         VersionInfo info = resp.getInfo();
         assertNotNull("VersionInfo", info);
-        info.getType();  // Don't care whether null or not
+        info.getType(); // Don't care whether null or not
         assertNotNull("getVersion result", info.getVersion());
         assertNotNull("getRelease result", info.getRelease());
         assertNotNull("getBuildDate result", info.getBuildDate());
@@ -983,28 +968,26 @@ public class TestJaxbProvisioning extends TestCase {
     @Test
     public void testGetAllRights() throws Exception {
         ZimbraLog.test.debug("Starting testGetAllRights");
-        List<Right> rights = prov.getAllRights("account" /* targetType */,
-                true /* expandAllAttrs */, "USER" /* rightClass */);
+        List<Right> rights = prov
+                .getAllRights("account" /* targetType */, true /* expandAllAttrs */, "USER" /* rightClass */);
         assertNotNull("getAllRight returned list", rights);
-        assertTrue("Number of rights objects=" + rights.size() +
-                " should be > 3", rights.size() > 3);
+        assertTrue("Number of rights objects=" + rights.size() + " should be > 3", rights.size() > 3);
     }
 
     @Test
     public void testGetAllEffectiveRights() throws Exception {
         ZimbraLog.test.debug("Starting testGetAllEffectiveRights");
-        AllEffectiveRights aer = prov.getAllEffectiveRights(null, null, null,
-                false /* expandSetAttrs */, true /* expandGetAttrs */);
+        AllEffectiveRights aer = prov
+                .getAllEffectiveRights(null, null, null, false /* expandSetAttrs */, true /* expandGetAttrs */);
         assertNotNull("AllEffectiveRights", aer);
     }
 
     @Test
     public void testGetEffectiveRights() throws Exception {
         ZimbraLog.test.debug("Starting testGetEffectiveRights");
-        EffectiveRights er = prov.getEffectiveRights("account" /* targetType */,
-                TargetBy.name /* targetBy */, "admin" /* target */,
-                GranteeBy.name /* granteeBy */, "admin" /* grantee */,
-                true /* expandSetAttrs */, true /* expandGetAttrs */);
+        EffectiveRights er = prov.getEffectiveRights("account" /* targetType */, TargetBy.name /* targetBy */,
+                "admin" /* target */, GranteeBy.name /* granteeBy */, "admin" /* grantee */, true /* expandSetAttrs */,
+                true /* expandGetAttrs */);
         assertNotNull("EffectiveRights", er);
     }
 
@@ -1012,8 +995,7 @@ public class TestJaxbProvisioning extends TestCase {
     public void testGetRightsDoc() throws Exception {
         ZimbraLog.test.debug("Starting testGetRightsDoc");
         Map<String, List<RightsDoc>> map = prov.getRightsDoc(null);
-        assertTrue("Map size=" + map.size() +
-                " should be >= 1", map.size() >= 1);
+        assertTrue("Map size=" + map.size() + " should be >= 1", map.size() >= 1);
         String[] pkgs = { "com.zimbra.cs.service.admin" };
         map = prov.getRightsDoc(pkgs);
         assertEquals("Map for specified set of pkgs", 1, map.size());
@@ -1065,8 +1047,7 @@ public class TestJaxbProvisioning extends TestCase {
         assertEquals("Number of identities after delete", 1, identities.size());
     }
 
-    public static void main(String[] args)
-            throws Exception {
+    public static void main(String[] args) throws Exception {
         TestUtil.cliSetup();
         TestUtil.runTest(TestJaxbProvisioning.class);
     }
