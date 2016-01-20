@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 //
 
 public class RightConsts {
-    ///// BEGIN-AUTO-GEN-REPLACE
+    // /// BEGIN-AUTO-GEN-REPLACE
 
 
     /*
@@ -1270,9 +1270,19 @@ public class RightConsts {
     public static final String RT_mailQueueRights = "mailQueueRights";
 
     /**
+     * create, enable and disable archiving for accounts
+     */
+    public static final String RT_manageAccountArchives = "manageAccountArchives";
+
+    /**
      * add/remove account loggers
      */
     public static final String RT_manageAccountLogger = "manageAccountLogger";
+
+    /**
+     * create, enable and disable archiving for calendar resources
+     */
+    public static final String RT_manageCalendarResourceArchives = "manageCalendarResourceArchives";
 
     /**
      * create/abort/delete/purge/get status of a cross mailbox search task
@@ -1403,6 +1413,11 @@ public class RightConsts {
      * reindex mailbox
      */
     public static final String RT_reindexMailbox = "reindexMailbox";
+
+    /**
+     * remotely wipe account&#039;s devices
+     */
+    public static final String RT_remoteWipe = "remoteWipe";
 
     /**
      * remove account alias
@@ -2284,5 +2299,5 @@ public class RightConsts {
      */
     public static final String RT_viewGrants = "viewGrants";
 
-    ///// END-AUTO-GEN-REPLACE
+    // /// END-AUTO-GEN-REPLACE
 }

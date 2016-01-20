@@ -2556,7 +2556,7 @@ public class ProvUtil implements HttpDebugListener {
         console.println("#");
         console.println("#  Date: " + DateFormat.getDateInstance(DateFormat.LONG).format(new Date()));
         console.println("# ");
-        console.println("#  Pacakges:");
+        console.println("#  Packages:");
         for (String pkg : packages) {
             console.println("#       " + pkg);
         }
