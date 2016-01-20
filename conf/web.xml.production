@@ -43,21 +43,6 @@
     <filter-name>DoSFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
-  
-  <filter>
-    <filter-name>RestrictedPortFilter</filter-name>
-    <filter-class>com.zimbra.cs.servlet.RestrictedPortFilter</filter-class>
-    <async-supported>true</async-supported>
-    <init-param>
-      <param-name>restricted.ports</param-name>
-      <param-value>%%zimbraMtaAuthPort%%</param-value>
-    </init-param>
-  </filter>
-  <filter-mapping>
-    <filter-name>RestrictedPortFilter</filter-name>
-    <url-pattern>/admin/soap/*</url-pattern>
-    <url-pattern>/soap/*</url-pattern>
-  </filter-mapping>
 
   <filter>
     <filter-name>ZimbraInvalidLoginFilter</filter-name>
