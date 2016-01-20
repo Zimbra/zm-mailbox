@@ -293,6 +293,10 @@ public class Auth extends AccountDocumentHandler {
                         }
                     }
                     if (usingTwoFactorAuth) {
+                        // check that 2FA has been enabled, in case the client is passing in a twoFactorCode prior to setting up 2FA
+                        if (!twoFactorManager.twoFactorAuthEnabled()) {
+                            throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
+                        }
                         AuthToken twoFactorToken = null;
                         if (password == null) {
                             try {
@@ -359,7 +363,6 @@ public class Auth extends AccountDocumentHandler {
 
     private void verifyTrustedDevice(Account account, TrustedDeviceToken td, Map<String, Object> attrs) throws ServiceException {
         TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(account);
-
         trustedDeviceManager.verifyTrustedDevice(td, attrs);
     }
 
