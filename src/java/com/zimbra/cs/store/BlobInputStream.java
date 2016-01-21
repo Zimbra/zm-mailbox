@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -181,6 +181,21 @@ implements SharedInputStream, InputStreamSource {
         return mRoot.mFile;
     }
 
+    private static final String unknownRootFileName = "<unknownBlobFile>";
+
+    protected String getRootFilePath() {
+        try {
+            File rootFile = getRootFile();
+            if (rootFile == null) {
+                return unknownRootFileName;
+            }
+            return rootFile.getPath();
+        } catch (IOException ex) {
+            sLog.debug("Unexpected exception getting blob root filepath", ex);
+            return unknownRootFileName;
+        }
+    }
+
     protected void setMailboxLocator(BlobInputStream parent) {
         //default empty implementation; provided for extension
     }
@@ -206,7 +221,7 @@ implements SharedInputStream, InputStreamSource {
         try {
             getFileDescriptorCache().remove(getRootFile().getPath());
         } catch (IOException e) {
-            sLog.warn("Unable to close mRoot.mFile", e);
+            sLog.warn("Unable to close mRoot.mFile '%s'", getRootFilePath(), e);
         }
     }
 
@@ -317,10 +332,12 @@ implements SharedInputStream, InputStreamSource {
     @Override
     public synchronized void reset() throws IOException {
         if (mMarkPos == Long.MIN_VALUE) {
-            throw new IOException("reset() called before mark()");
+            throw new IOException(String.format("reset() called before mark() for blob '%s'", getRootFilePath()));
         }
         if (mPos - mMarkPos > mMarkReadLimit) {
-            throw new IOException("Mark position was invalidated because more than " + mMarkReadLimit + " bytes were read.");
+            throw new IOException(String.format(
+                    "Mark position in blob '%s' was invalidated because more than %s bytes were read.",
+                    getRootFilePath(), mMarkReadLimit));
         }
         mPos = mMarkPos;
     }
@@ -362,7 +379,9 @@ implements SharedInputStream, InputStreamSource {
     @Override
     public InputStream newStream(long start, long end) {
         if (start < 0) {
-            throw new IllegalArgumentException("start cannot be less than 0");
+            throw new IllegalArgumentException(String.format(
+                    "Problem creating newStream from blob '%s' with start %s, end %s.  Start cannot be less than 0",
+                    getRootFilePath(), start, end));
         }
         // The start and end markers are relative to this
         // stream's view of the file, not necessarily the entire file.
@@ -378,7 +397,7 @@ implements SharedInputStream, InputStreamSource {
         try {
             newStream = initializeSubStream(null, mRawSize, start, end, this);
         } catch (IOException e) {
-            sLog.warn("Unable to create substream for %s", mRoot.mFile.getPath(), e);
+            sLog.warn("Unable to create substream for blob '%s'", getRootFilePath(), e);
         }
 
         return newStream;
