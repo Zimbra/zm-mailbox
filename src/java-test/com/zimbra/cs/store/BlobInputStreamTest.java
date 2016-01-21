@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -62,14 +62,24 @@ public class BlobInputStreamTest {
         InputStream copy = bis.newStream(0, CONTENT.length);
         Assert.assertNotNull("can create substream before delete", copy);
         Assert.assertEquals("can read 10 bytes from full substream", CONTENT.length, copy.read(new byte[100]));
+        try (InputStream badStartIs = bis.newStream(-1, CONTENT.length)) {
+            Assert.fail("Shouldn't be able to create newStream with start < 0");
+        } catch (IllegalArgumentException iae) {
+            Assert.assertTrue("Blob name included in exception message", iae.getMessage().contains(file.getAbsolutePath()));
+        }
 
         // rely on the FD cache to keep it readable through a file delete
         file.delete();
         Assert.assertFalse("file is gone", file.exists());
         InputStream substream = bis.newStream(2, 8);
         Assert.assertNotNull("can create substream after delete", substream);
-        Assert.assertEquals("can read 6 bytes from substream after deelete", 6, substream.read(new byte[100]));
+        Assert.assertEquals("can read 6 bytes from substream after delete", 6, substream.read(new byte[100]));
 
+        try (InputStream badStartIs = bis.newStream(-1, CONTENT.length)) {
+            Assert.fail("Shouldn't be able to create newStream with start < 0 - especially after delete");
+        } catch (IllegalArgumentException iae) {
+            Assert.assertTrue("Blob name included in exception message", iae.getMessage().contains(file.getAbsolutePath()));
+        }
 
         // set up file again
         file = createTempFile();
