@@ -27,10 +27,12 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.util.BuildInfo;
 
 /**
  * @author jhahm
@@ -82,7 +84,22 @@ public class URLUtil {
      */
     public static String getMtaAuthURL(Server server) {
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-        int port = server.getMtaAuthPort();
+        int port;
+        try {
+            Integer majorVersion = Integer.valueOf(BuildInfo.MAJORVERSION);
+            Integer minorVersion = Integer.valueOf(BuildInfo.MINORVERSION);
+            if (majorVersion.equals(8)) {
+                port = minorVersion >= 7 ? server.getMtaAuthPort() : server.getAdminPort();
+            } else if (majorVersion > 8) {
+                port = server.getMtaAuthPort();
+            } else {
+                port = server.getAdminPort();
+            }
+        } catch (NumberFormatException e) {
+            port = server.getMtaAuthPort();
+            ZimbraLog.misc.warn("cannot determine server version; defaulting to port %d for MTA auth", port);
+        }
+        server.getMtaAuthPort();
         StringBuffer sb = new StringBuffer(128);
         String path = AdminConstants.ADMIN_SERVICE_URI;
         sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(path);
