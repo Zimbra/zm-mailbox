@@ -162,34 +162,28 @@ import com.zimbra.cs.util.Zimbra;
 /**
  * @author bburtin
  */
-public class TestUtil
-extends Assert {
+public class TestUtil extends Assert {
 
     public static final String DEFAULT_PASSWORD = "test123";
     public static boolean fromRunUnitTests = false; /* set if run from within RunUnitTestsRequest */
 
-    public static boolean accountExists(String userName)
-    throws ServiceException {
+    public static boolean accountExists(String userName) throws ServiceException {
         return AccountTestUtil.accountExists(userName);
     }
 
-    public static Account getAccount(String userName)
-    throws ServiceException {
+    public static Account getAccount(String userName) throws ServiceException {
         return AccountTestUtil.getAccount(userName);
     }
 
-    public static String getDomain()
-    throws ServiceException {
+    public static String getDomain() throws ServiceException {
         return AccountTestUtil.getDomain();
     }
 
-    public static Mailbox getMailbox(String userName)
-    throws ServiceException {
+    public static Mailbox getMailbox(String userName) throws ServiceException {
         return AccountTestUtil.getMailbox(userName);
     }
 
-    public static String getAddress(String userName)
-    throws ServiceException {
+    public static String getAddress(String userName) throws ServiceException {
         return AccountTestUtil.getAddress(userName);
     }
 
@@ -206,8 +200,7 @@ extends Assert {
         return null;
     }
 
-    public static String getBaseUrl()
-    throws ServiceException {
+    public static String getBaseUrl() throws ServiceException {
         String scheme;
         int port;
         port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailPort, 0);
@@ -231,9 +224,8 @@ extends Assert {
         return "https://localhost:" + port + AdminConstants.ADMIN_SERVICE_URI;
     }
 
-    public static LmcSession getSoapSession(String userName)
-    throws ServiceException, LmcSoapClientException, IOException, SoapFaultException
-    {
+    public static LmcSession getSoapSession(String userName) throws ServiceException, LmcSoapClientException,
+            IOException, SoapFaultException {
         LmcAuthRequest auth = new LmcAuthRequest();
         auth.setUsername(getAddress(userName));
         auth.setPassword(DEFAULT_PASSWORD);
@@ -241,9 +233,7 @@ extends Assert {
         return authResp.getSession();
     }
 
-    public static LmcSession getAdminSoapSession()
-    throws Exception
-    {
+    public static LmcSession getAdminSoapSession() throws Exception {
         // Authenticate
         LmcAdminAuthRequest auth = new LmcAdminAuthRequest();
         auth.setUsername(LC.zimbra_ldap_user.value());
@@ -252,82 +242,75 @@ extends Assert {
         return authResp.getSession();
     }
 
-    public static Message addMessage(Mailbox mbox, String subject)
-    throws Exception {
+    public static Message addMessage(Mailbox mbox, String subject) throws Exception {
         return addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject, System.currentTimeMillis());
     }
 
-    public static Message addMessage(Mailbox mbox, int folderId, String subject, long timestamp)
-    throws Exception {
+    public static Message addMessage(Mailbox mbox, int folderId, String subject, long timestamp) throws Exception {
         String message = getTestMessage(subject, null, null, new Date(timestamp));
         ParsedMessage pm = new ParsedMessage(message.getBytes(), timestamp, false);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setFlags(Flag.BITMASK_UNREAD);
         return mbox.addMessage(null, pm, dopt, null);
     }
 
-    public static Message addMessage(Mailbox mbox, ParsedMessage pm)
-    throws Exception {
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId( Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
+    public static Message addMessage(Mailbox mbox, ParsedMessage pm) throws Exception {
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
         return mbox.addMessage(null, pm, dopt, null);
     }
 
-    public static Message addMessage(Mailbox mbox, String recipient, String sender, String subject, String body, long timestamp)
-    throws Exception {
+    public static Message addMessage(Mailbox mbox, String recipient, String sender, String subject, String body,
+            long timestamp) throws Exception {
         String message = getTestMessage(subject, recipient, sender, body, new Date(timestamp));
         ParsedMessage pm = new ParsedMessage(message.getBytes(), timestamp, false);
         return addMessage(mbox, pm);
     }
 
-    public static String getTestMessage(String subject)
-    throws ServiceException, MessagingException, IOException {
+    public static String getTestMessage(String subject) throws ServiceException, MessagingException, IOException {
         return new MessageBuilder().withSubject(subject).create();
     }
 
     public static String getTestMessage(String subject, String recipient, String sender, Date date)
-    throws ServiceException, MessagingException, IOException {
-        return new MessageBuilder().withSubject(subject).withToRecipient(recipient)
-            .withFrom(sender).withDate(date).create();
+            throws ServiceException, MessagingException, IOException {
+        return new MessageBuilder().withSubject(subject).withToRecipient(recipient).withFrom(sender).withDate(date)
+                .create();
     }
 
     public static String getTestMessage(String subject, String recipient, String sender, String body, Date date)
-    throws ServiceException, MessagingException, IOException {
-        return new MessageBuilder().withSubject(subject).withToRecipient(recipient)
-            .withFrom(sender).withDate(date).withBody(body).create();
+            throws ServiceException, MessagingException, IOException {
+        return new MessageBuilder().withSubject(subject).withToRecipient(recipient).withFrom(sender).withDate(date)
+                .withBody(body).create();
     }
 
-    static String addDomainIfNecessary(String user)
-    throws ServiceException {
+    static String addDomainIfNecessary(String user) throws ServiceException {
         if (StringUtil.isNullOrEmpty(user) || user.contains("@")) {
             return user;
         }
         return String.format("%s@%s", user, getDomain());
     }
 
-    public static boolean addMessageLmtp(String subject, String recipient, String sender)
-    throws Exception {
+    public static boolean addMessageLmtp(String subject, String recipient, String sender) throws Exception {
         return addMessageLmtp(subject, new String[] { recipient }, sender);
     }
 
-    public static boolean addMessageLmtp(String subject, String[] recipients, String sender)
-    throws Exception {
+    public static boolean addMessageLmtp(String subject, String[] recipients, String sender) throws Exception {
         String message = getTestMessage(subject, recipients[0], sender, null);
         return addMessageLmtp(recipients, sender, message);
     }
 
     public static boolean addMessageLmtp(String subject, String[] recipients, String sender, String body)
-    throws Exception {
+            throws Exception {
         String message = getTestMessage(subject, recipients[0], sender, body, null);
         return addMessageLmtp(recipients, sender, message);
     }
 
-    public static boolean addMessageLmtp(String[] recipients, String sender, String message)
-    throws Exception {
+    public static boolean addMessageLmtp(String[] recipients, String sender, String message) throws Exception {
         String[] recipWithDomain = new String[recipients.length];
         for (int i = 0; i < recipients.length; i++) {
             recipWithDomain[i] = addDomainIfNecessary(recipients[i]);
         }
         Provisioning prov = Provisioning.getInstance();
-        LmtpClient lmtp = new LmtpClient("localhost", prov.getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
+        LmtpClient lmtp = new LmtpClient("localhost", prov.getLocalServer().getIntAttr(
+                Provisioning.A_zimbraLmtpBindPort, 7025));
         byte[] data = message.getBytes();
         String senderAddress = "";
         if (!StringUtil.isNullOrEmpty(sender)) {
@@ -340,47 +323,45 @@ extends Assert {
         return success;
     }
 
-    public static String addMessage(ZMailbox mbox, String subject)
-    throws ServiceException, IOException, MessagingException {
+    public static String addMessage(ZMailbox mbox, String subject) throws ServiceException, IOException,
+            MessagingException {
         return addMessage(mbox, subject, Integer.toString(Mailbox.ID_FOLDER_INBOX));
     }
 
-    public static String addMessage(ZMailbox mbox, String subject, String folderId)
-    throws ServiceException, IOException, MessagingException {
+    public static String addMessage(ZMailbox mbox, String subject, String folderId) throws ServiceException,
+            IOException, MessagingException {
         String message = getTestMessage(subject);
         return mbox.addMessage(folderId, null, null, 0, message, true);
     }
 
     public static String addMessage(ZMailbox mbox, String subject, String folderId, String flags)
-    throws ServiceException, IOException, MessagingException {
+            throws ServiceException, IOException, MessagingException {
         String message = getTestMessage(subject);
         return mbox.addMessage(folderId, flags, null, 0, message, true);
     }
 
-    public static String addRawMessage(ZMailbox mbox, String rawMessage)
-    throws ServiceException {
+    public static String addRawMessage(ZMailbox mbox, String rawMessage) throws ServiceException {
         return mbox.addMessage(Integer.toString(Mailbox.ID_FOLDER_INBOX), null, null, 0, rawMessage, true);
     }
 
-    public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject)
-    throws Exception {
+    public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject) throws Exception {
         String body = getTestMessage(subject);
         sendMessage(senderMbox, recipientName, subject, body);
     }
 
     public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject, String body)
-    throws Exception {
+            throws Exception {
         sendMessage(senderMbox, recipientName, subject, body, null);
     }
 
-    public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject, String body, String attachmentUploadId)
-    throws Exception {
+    public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject, String body,
+            String attachmentUploadId) throws Exception {
         ZOutgoingMessage msg = getOutgoingMessage(recipientName, subject, body, attachmentUploadId);
         senderMbox.sendMessage(msg, null, false);
     }
 
-    public static void saveDraftAndSendMessage(ZMailbox senderMbox, String recipient, String subject, String body, String attachmentUploadId)
-    throws ServiceException {
+    public static void saveDraftAndSendMessage(ZMailbox senderMbox, String recipient, String subject, String body,
+            String attachmentUploadId) throws ServiceException {
         ZOutgoingMessage outgoingDraft = getOutgoingMessage(recipient, subject, body, attachmentUploadId);
         ZMessage draft = senderMbox.saveDraft(outgoingDraft, null, Integer.toString(Mailbox.ID_FOLDER_DRAFTS));
 
@@ -392,12 +373,11 @@ extends Assert {
         senderMbox.sendMessage(outgoing, null, false);
     }
 
-    public static ZOutgoingMessage getOutgoingMessage(String recipient, String subject, String body, String attachmentUploadId)
-    throws ServiceException {
+    public static ZOutgoingMessage getOutgoingMessage(String recipient, String subject, String body,
+            String attachmentUploadId) throws ServiceException {
         ZOutgoingMessage msg = new ZOutgoingMessage();
         List<ZEmailAddress> addresses = new ArrayList<ZEmailAddress>();
-        addresses.add(new ZEmailAddress(addDomainIfNecessary(recipient),
-            null, null, ZEmailAddress.EMAIL_TYPE_TO));
+        addresses.add(new ZEmailAddress(addDomainIfNecessary(recipient), null, null, ZEmailAddress.EMAIL_TYPE_TO));
         msg.setAddresses(addresses);
         msg.setSubject(subject);
         msg.setMessagePart(new MessagePart("text/plain", body));
@@ -440,9 +420,7 @@ extends Assert {
         return hits;
     }
 
-
-    public static List<String> search(ZMailbox mbox, String query, String type)
-    throws ServiceException {
+    public static List<String> search(ZMailbox mbox, String query, String type) throws ServiceException {
         List<String> ids = new ArrayList<String>();
         ZSearchParams params = new ZSearchParams(query);
         params.setTypes(type);
@@ -452,16 +430,14 @@ extends Assert {
         return ids;
     }
 
-    public static List<ZMessage> search(ZMailbox mbox, String query)
-    throws ServiceException {
+    public static List<ZMessage> search(ZMailbox mbox, String query) throws ServiceException {
         ZSearchParams params = new ZSearchParams(query);
         params.setTypes(ZSearchParams.TYPE_MESSAGE);
 
         return search(mbox, params);
     }
 
-    public static List<ZMessage> search(ZMailbox mbox, ZSearchParams params)
-    throws ServiceException {
+    public static List<ZMessage> search(ZMailbox mbox, ZSearchParams params) throws ServiceException {
         List<ZMessage> msgs = new ArrayList<ZMessage>();
         for (ZSearchHit hit : mbox.search(params).getHits()) {
             ZGetMessageParams msgParams = new ZGetMessageParams();
@@ -471,11 +447,10 @@ extends Assert {
         return msgs;
     }
 
-    public static List<String> searchMessageIds(ZMailbox mbox, ZSearchParams params)
-    throws ServiceException {
+    public static List<String> searchMessageIds(ZMailbox mbox, ZSearchParams params) throws ServiceException {
         List<String> msgsIds = new ArrayList<String>();
         ZSearchResult results = mbox.search(params);
-        for (ZSearchHit hit :results.getHits()) {
+        for (ZSearchHit hit : results.getHits()) {
             msgsIds.add(hit.getId());
         }
         return msgsIds;
@@ -484,8 +459,7 @@ extends Assert {
     /**
      * Gets the raw content of a message.
      */
-    public static String getContent(ZMailbox mbox, String msgId)
-    throws ServiceException {
+    public static String getContent(ZMailbox mbox, String msgId) throws ServiceException {
         ZGetMessageParams msgParams = new ZGetMessageParams();
         msgParams.setId(msgId);
         msgParams.setRawContent(true);
@@ -493,8 +467,7 @@ extends Assert {
         return msg.getContent();
     }
 
-    public static byte[] getContent(ZMailbox mbox, String msgId, String name)
-    throws ServiceException, IOException {
+    public static byte[] getContent(ZMailbox mbox, String msgId, String name) throws ServiceException, IOException {
         ZMessage msg = mbox.getMessageById(msgId);
         ZMimePart part = getPart(msg, name);
         if (part == null) {
@@ -517,21 +490,22 @@ extends Assert {
                 return part;
             }
         }
-        if (StringUtil.equalIgnoreCase(mimeStructure.getName(), name) ||
-            StringUtil.equalIgnoreCase(mimeStructure.getFileName(), name) ||
-            StringUtil.equalIgnoreCase(mimeStructure.getPartName(), name)) {
+        if (StringUtil.equalIgnoreCase(mimeStructure.getName(), name)
+                || StringUtil.equalIgnoreCase(mimeStructure.getFileName(), name)
+                || StringUtil.equalIgnoreCase(mimeStructure.getPartName(), name)) {
             return mimeStructure;
         }
         return null;
     }
 
     /**
-     * @param numMsgsExpected - 0 means don't expect a message to arrive before timeout_millis
+     * @param numMsgsExpected
+     *            - 0 means don't expect a message to arrive before timeout_millis
      * @param timeout_millis
      * @throws ServiceException
      */
     public static List<ZMessage> waitForMessages(ZMailbox mbox, String query, int numMsgsExpected, int timeout_millis)
-    throws ServiceException {
+            throws ServiceException {
         int orig_timeout_millis = TestUtil.getMailbox(mbox.getName()).index.waitForIndexing(timeout_millis);
         int pollInterval = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexPollingInterval, 500);
         List<ZMessage> msgs = Lists.newArrayListWithExpectedSize(0);
@@ -557,15 +531,14 @@ extends Assert {
             }
         }
         if (numMsgsExpected > 0) {
-            Assert.fail(String.format( "Message%s for query '%s' didn't arrive within %d millisecs.  %s",
-                        (numMsgsExpected == 1) ? "" : "s", query, orig_timeout_millis,
-                        "Either the MTA is not running or the test failed."));
+            Assert.fail(String.format("Message%s for query '%s' didn't arrive within %d millisecs.  %s",
+                    (numMsgsExpected == 1) ? "" : "s", query, orig_timeout_millis,
+                    "Either the MTA is not running or the test failed."));
         }
         return msgs;
     }
 
-    public static ZMessage waitForMessage(ZMailbox mbox, String query)
-    throws Exception {
+    public static ZMessage waitForMessage(ZMailbox mbox, String query) throws Exception {
         int timeout_millis = LC.zimbra_index_commit_wait.intValue();
         if(Provisioning.getInstance().getLocalServer().getIndexURL().indexOf("solrcloud:")>-1) {
             timeout_millis = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexReplicationTimeout, 10000);
@@ -609,8 +582,7 @@ extends Assert {
      * Returns a folder with the given path, or <code>null</code> if the folder
      * doesn't exist.
      */
-    public static Folder getFolderByPath(Mailbox mbox, String path)
-    throws Exception {
+    public static Folder getFolderByPath(Mailbox mbox, String path) throws Exception {
         Folder folder = null;
         try {
             folder = mbox.getFolderByPath(null, path);
@@ -623,13 +595,11 @@ extends Assert {
     }
 
     /**
-     * Delete all messages, tags and folders in the user's mailbox
-     * whose subjects contain the given substring.  For messages, the
-     * subject must contain subjectString as a separate word.  Tags
-     * and folders can have the string anywhere in the name.
+     * Delete all messages, tags and folders in the user's mailbox whose subjects contain the given substring. For
+     * messages, the subject must contain subjectString as a separate word. Tags and folders can have the string
+     * anywhere in the name.
      */
-    public static void deleteTestData(String userName, String subjectSubstring)
-    throws ServiceException {
+    public static void deleteTestData(String userName, String subjectSubstring) throws ServiceException {
         ZMailbox mbox = getZMailbox(userName);
 
         deleteMessages(mbox, "is:anywhere " + subjectSubstring);
@@ -688,8 +658,7 @@ extends Assert {
         adminMbox.emptyDumpster();
     }
 
-    private static void deleteMessages(ZMailbox mbox, String query)
-    throws ServiceException {
+    private static void deleteMessages(ZMailbox mbox, String query) throws ServiceException {
         // Delete messages
         ZSearchParams params = new ZSearchParams(query);
         params.setTypes(ZSearchParams.TYPE_MESSAGE);
@@ -708,8 +677,7 @@ extends Assert {
     /**
      * Sets up the environment for command-line unit tests.
      */
-    public static void cliSetup()
-    throws ServiceException {
+    public static void cliSetup() throws ServiceException {
         if (!sIsCliInitialized) {
             CliUtil.toolSetup();
             Provisioning.setInstance(newSoapProvisioning());
@@ -718,11 +686,17 @@ extends Assert {
         }
     }
 
-    public static SoapProvisioning newSoapProvisioning()
-    throws ServiceException {
+    public static SoapProvisioning newSoapProvisioning() throws ServiceException {
         SoapProvisioning sp = new SoapProvisioning();
         sp.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
         sp.soapZimbraAdminAuthenticate();
+        return sp;
+    }
+
+    public static SoapProvisioning newDelegatedSoapProvisioning(String login, String password) throws ServiceException {
+        SoapProvisioning sp = new SoapProvisioning();
+        sp.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
+        sp.soapAdminAuthenticate(login, password);
         return sp;
     }
 
@@ -733,14 +707,12 @@ extends Assert {
         junit.run(testClass);
     }
 
-
-    public static ZMailbox getZMailbox(String username)
-    throws ServiceException {
+    public static ZMailbox getZMailbox(String username) throws ServiceException {
         return getZMailbox(username, null);
     }
 
     public static ZMailbox getZMailbox(String username, String twoFactorCode, TrustedStatus trusted)
-    throws ServiceException {
+            throws ServiceException {
         ZMailbox.Options options = new ZMailbox.Options();
         options.setAccount(getAddress(username));
         options.setAccountBy(Key.AccountBy.name);
@@ -755,13 +727,11 @@ extends Assert {
         return ZMailbox.getMailbox(options);
     }
 
-    public static ZMailbox getZMailbox(String username, String scratchCode)
-    throws ServiceException {
+    public static ZMailbox getZMailbox(String username, String scratchCode) throws ServiceException {
         return getZMailbox(username, scratchCode, TrustedStatus.not_trusted);
     }
 
-    public static ZMailbox getZMailboxAsAdmin(String username)
-    throws ServiceException {
+    public static ZMailbox getZMailboxAsAdmin(String username) throws ServiceException {
         ZAuthToken adminAuthToken = newSoapProvisioning().getAuthToken();
         ZMailbox.Options options = new ZMailbox.Options(adminAuthToken, getSoapUrl());
         options.setTargetAccount(getAddress(username));
@@ -770,20 +740,16 @@ extends Assert {
     }
 
     /**
-     * Creates an account for the given username, with
-     * password set to {@link #DEFAULT_PASSWORD}.
+     * Creates an account for the given username, with password set to {@link #DEFAULT_PASSWORD}.
      */
-    public static Account createAccount(String username)
-    throws ServiceException {
+    public static Account createAccount(String username) throws ServiceException {
         return createAccount(username, null);
     }
 
     /**
-     * Creates an account for the given username, with
-     * password set to {@link #DEFAULT_PASSWORD}.
+     * Creates an account for the given username, with password set to {@link #DEFAULT_PASSWORD}.
      */
-    public static Account createAccount(String username, Map<String, Object> attrs)
-    throws ServiceException {
+    public static Account createAccount(String username, Map<String, Object> attrs) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         String address = getAddress(username);
         return prov.createAccount(address, DEFAULT_PASSWORD, attrs);
@@ -801,8 +767,7 @@ extends Assert {
     /**
      * Creates a DL with a given address
      */
-    public static DistributionList createDistributionList(String dlName)
-    throws ServiceException {
+    public static DistributionList createDistributionList(String dlName) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         String address = getAddress(dlName);
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -812,8 +777,7 @@ extends Assert {
     /**
      * Deletes the specified DL.
      */
-    public static void deleteDistributionList(String listName)
-    throws ServiceException {
+    public static void deleteDistributionList(String listName) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
 
         // If this code is running on the server, call SoapProvisioning explicitly
@@ -830,8 +794,7 @@ extends Assert {
     /*
      * Deletes the account for the given username.
      */
-    public static void deleteAccount(String username)
-    throws ServiceException {
+    public static void deleteAccount(String username) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
 
         // If this code is running on the server, call SoapProvisioning explicitly
@@ -886,8 +849,7 @@ extends Assert {
         return server.getAttr(attrName, null);
     }
 
-    public static void setServerAttr(String attrName, String attrValue)
-    throws ServiceException {
+    public static void setServerAttr(String attrName, String attrValue) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getLocalServer();
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -895,22 +857,19 @@ extends Assert {
         prov.modifyAttrs(server, attrs);
     }
 
-    public static String getAccountAttr(String userName, String attrName)
-    throws ServiceException {
+    public static String getAccountAttr(String userName, String attrName) throws ServiceException {
         String accountName = getAddress(userName);
         Account account = Provisioning.getInstance().getAccount(accountName);
         return account.getAttr(attrName);
     }
 
-    public static String[] getAccountMultiAttr(String userName, String attrName)
-    throws ServiceException {
+    public static String[] getAccountMultiAttr(String userName, String attrName) throws ServiceException {
         String accountName = getAddress(userName);
         Account account = Provisioning.getInstance().getAccount(accountName);
         return account.getMultiAttr(attrName);
     }
 
-    public static void setAccountAttr(String userName, String attrName, String attrValue)
-    throws ServiceException {
+    public static void setAccountAttr(String userName, String attrName, String attrValue) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, getAddress(userName));
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -918,8 +877,7 @@ extends Assert {
         prov.modifyAttrs(account, attrs);
     }
 
-    public static void setAccountAttr(String userName, String attrName, String[] attrValues)
-    throws ServiceException {
+    public static void setAccountAttr(String userName, String attrName, String[] attrValues) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, getAddress(userName));
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -927,13 +885,11 @@ extends Assert {
         prov.modifyAttrs(account, attrs);
     }
 
-    public static String getConfigAttr(String attrName)
-    throws ServiceException {
+    public static String getConfigAttr(String attrName) throws ServiceException {
         return Provisioning.getInstance().getConfig().getAttr(attrName, "");
     }
 
-    public static void setConfigAttr(String attrName, String attrValue)
-    throws ServiceException {
+    public static void setConfigAttr(String attrName, String attrValue) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Config config = prov.getConfig();
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -941,14 +897,12 @@ extends Assert {
         prov.modifyAttrs(config, attrs);
     }
 
-    public static String getDomainAttr(String userName, String attrName)
-    throws ServiceException {
+    public static String getDomainAttr(String userName, String attrName) throws ServiceException {
         Account account = getAccount(userName);
         return Provisioning.getInstance().getDomain(account).getAttr(attrName);
     }
 
-    public static void setDomainAttr(String userName, String attrName, Object attrValue)
-    throws ServiceException {
+    public static void setDomainAttr(String userName, String attrName, Object attrValue) throws ServiceException {
         Account account = getAccount(userName);
         Domain domain = Provisioning.getInstance().getDomain(account);
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -957,7 +911,7 @@ extends Assert {
     }
 
     public static void setDataSourceAttr(String userName, String dataSourceName, String attrName, String attrValue)
-    throws ServiceException {
+            throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = getAccount(userName);
         DataSource ds = prov.get(account, Key.DataSourceBy.name, dataSourceName);
@@ -969,8 +923,7 @@ extends Assert {
     /**
      * Verifies that a message is tagged.
      */
-    public static void verifyTag(ZMailbox mbox, ZMessage msg, String tagName)
-    throws Exception {
+    public static void verifyTag(ZMailbox mbox, ZMessage msg, String tagName) throws Exception {
         List<ZTag> tags = mbox.getTags(msg.getTagIds());
         for (ZTag tag : tags) {
             if (tag.getName().equals(tagName)) {
@@ -980,8 +933,7 @@ extends Assert {
         Assert.fail("Message not tagged with " + tagName);
     }
 
-    public static ZMessage getMessage(ZMailbox mbox, String query)
-    throws Exception {
+    public static ZMessage getMessage(ZMailbox mbox, String query) throws Exception {
         List<ZMessage> results = search(mbox, query);
         String errorMsg = String.format("Unexpected number of messages returned by query '%s'", query);
         Assert.assertEquals(errorMsg, 1, results.size());
@@ -997,13 +949,11 @@ extends Assert {
         Assert.assertTrue(errorMsg, flags.indexOf(flag.getFlagChar()) >= 0);
     }
 
-    public static ZFolder createFolder(ZMailbox mbox, String path)
-    throws ServiceException {
+    public static ZFolder createFolder(ZMailbox mbox, String path) throws ServiceException {
         return createFolder(mbox, path, ZFolder.View.message);
     }
 
-    public static ZFolder createFolder(ZMailbox mbox, String path, ZFolder.View view)
-    throws ServiceException {
+    public static ZFolder createFolder(ZMailbox mbox, String path, ZFolder.View view) throws ServiceException {
         String parentId = Integer.toString(Mailbox.ID_FOLDER_USER_ROOT);
         String name = null;
         int idxLastSlash = path.lastIndexOf('/');
@@ -1026,41 +976,38 @@ extends Assert {
         return mbox.createFolder(parentId, name, view, null, null, null);
     }
 
-    public static ZFolder createFolder(ZMailbox mbox, String parentId, String folderName)
-    throws ServiceException {
+    public static ZFolder createFolder(ZMailbox mbox, String parentId, String folderName) throws ServiceException {
         return mbox.createFolder(parentId, folderName, ZFolder.View.message, null, null, null);
     }
 
     /**
-     * Creates a mountpoint between two mailboxes.  The mountpoint gives the
-     * "to" user full rights on the folder.
+     * Creates a mountpoint between two mailboxes. The mountpoint gives the "to" user full rights on the folder.
      *
-     * @param remoteMbox remote mailbox
-     * @param remotePath remote folder path.  Folder is created if it doesn't exist.
-     * @param localMbox local mailbox
-     * @param mountpointName the name of the mountpoint folder.  The folder is created
-     * directly under the user root.
+     * @param remoteMbox
+     *            remote mailbox
+     * @param remotePath
+     *            remote folder path. Folder is created if it doesn't exist.
+     * @param localMbox
+     *            local mailbox
+     * @param mountpointName
+     *            the name of the mountpoint folder. The folder is created directly under the user root.
      */
-    public static ZMountpoint createMountpoint(ZMailbox remoteMbox, String remotePath,
-                                               ZMailbox localMbox, String mountpointName)
-    throws ServiceException {
+    public static ZMountpoint createMountpoint(ZMailbox remoteMbox, String remotePath, ZMailbox localMbox,
+            String mountpointName) throws ServiceException {
         ZFolder remoteFolder = remoteMbox.getFolderByPath(remotePath);
         if (remoteFolder == null) {
             remoteFolder = createFolder(remoteMbox, remotePath);
         }
         ZGetInfoResult remoteInfo = remoteMbox.getAccountInfo(true);
-        remoteMbox.modifyFolderGrant(
-            remoteFolder.getId(), GranteeType.all, null, "rwidx", null);
-        return localMbox.createMountpoint(Integer.toString(Mailbox.ID_FOLDER_USER_ROOT),
-            mountpointName, null, null, null,
-            OwnerBy.BY_ID, remoteInfo.getId(), SharedItemBy.BY_ID, remoteFolder.getId(), false);
+        remoteMbox.modifyFolderGrant(remoteFolder.getId(), GranteeType.all, null, "rwidx", null);
+        return localMbox.createMountpoint(Integer.toString(Mailbox.ID_FOLDER_USER_ROOT), mountpointName, null, null,
+                null, OwnerBy.BY_ID, remoteInfo.getId(), SharedItemBy.BY_ID, remoteFolder.getId(), false);
     }
 
     /**
      * Returns the data source with the given name.
      */
-    public static ZDataSource getDataSource(ZMailbox mbox, String name)
-    throws ServiceException {
+    public static ZDataSource getDataSource(ZMailbox mbox, String name) throws ServiceException {
         for (ZDataSource ds : mbox.getAllDataSources()) {
             if (ds.getName().equals(name)) {
                 return ds;
@@ -1070,20 +1017,18 @@ extends Assert {
     }
 
     /**
-     * Imports data from the given data source and updates state on both the local
-     * and remote mailboxes.
+     * Imports data from the given data source and updates state on both the local and remote mailboxes.
      */
     public static void importDataSource(ZDataSource dataSource, ZMailbox localMbox, ZMailbox remoteMbox)
-    throws Exception {
+            throws Exception {
         importDataSource(dataSource, localMbox, remoteMbox, true);
     }
 
     /**
-     * Imports data from the given data source and updates state on both the local
-     * and remote mailboxes.
+     * Imports data from the given data source and updates state on both the local and remote mailboxes.
      */
-    public static void importDataSource(ZDataSource dataSource, ZMailbox localMbox, ZMailbox remoteMbox, boolean expectedSuccess)
-    throws Exception {
+    public static void importDataSource(ZDataSource dataSource, ZMailbox localMbox, ZMailbox remoteMbox,
+            boolean expectedSuccess) throws Exception {
         List<ZDataSource> dataSources = new ArrayList<ZDataSource>();
         dataSources.add(dataSource);
         localMbox.importData(dataSources);
@@ -1121,8 +1066,7 @@ extends Assert {
     /**
      * Returns an authenticated transport for the <tt>zimbra</tt> account.
      */
-    public static SoapTransport getAdminSoapTransport()
-    throws SoapFaultException, IOException, ServiceException {
+    public static SoapTransport getAdminSoapTransport() throws SoapFaultException, IOException, ServiceException {
         SoapHttpTransport transport = new SoapHttpTransport(getAdminSoapUrl());
 
         // Create auth element
@@ -1138,12 +1082,11 @@ extends Assert {
         return transport;
     }
 
-
     /**
      * Returns an authenticated transport for the <tt>zimbra</tt> account.
      */
     public static SoapTransport getAdminSoapTransport(String adminName, String adminPassword)
-    throws SoapFaultException, IOException, ServiceException {
+            throws SoapFaultException, IOException, ServiceException {
         SoapHttpTransport transport = new SoapHttpTransport(getAdminSoapUrl());
 
         // Create auth element
@@ -1159,12 +1102,10 @@ extends Assert {
     }
 
     /**
-     * Assert the message contains the given sub-message, ignoring newlines.  Used
-     * for comparing equality of two messages, when one had <tt>Return-Path</tt> or
-     * other headers prepended.
+     * Assert the message contains the given sub-message, ignoring newlines. Used for comparing equality of two
+     * messages, when one had <tt>Return-Path</tt> or other headers prepended.
      */
-    public static void assertMessageContains(String message, String subMessage)
-    throws IOException {
+    public static void assertMessageContains(String message, String subMessage) throws IOException {
         BufferedReader msgReader = new BufferedReader(new StringReader(message));
         BufferedReader subReader = new BufferedReader(new StringReader(subMessage));
         String firstLine = subReader.readLine();
@@ -1181,7 +1122,7 @@ extends Assert {
         String context = String.format("Could not find '%s' in message:\n%s", firstLine, message);
         assertTrue(context, foundFirstLine);
 
-        while(true) {
+        while (true) {
             line = msgReader.readLine();
             String subLine = subReader.readLine();
             if (line == null || subLine == null) {
@@ -1203,7 +1144,8 @@ extends Assert {
         assertEquals(expected.getName(), actual.getName());
         List<Element> expectedChildren = expected.listElements();
         List<Element> actualChildren = actual.listElements();
-        String context = String.format("Element %s, expected:\n%s\nactual:\n%s", expected.getName(), expectedDump, actualDump);
+        String context = String.format("Element %s, expected:\n%s\nactual:\n%s", expected.getName(), expectedDump,
+                actualDump);
         assertEquals(context + " children", getElementNames(expectedChildren), getElementNames(actualChildren));
 
         // Compare child elements
@@ -1258,19 +1200,19 @@ extends Assert {
         return StringUtil.join(",", attrStrings);
     }
 
-    public static String getHeaderValue(ZMailbox mbox, ZMessage msg, String headerName)
-    throws Exception {
+    public static String getHeaderValue(ZMailbox mbox, ZMessage msg, String headerName) throws Exception {
         String content = msg.getContent();
         if (content == null) {
             content = getContent(mbox, msg.getId());
         }
         assertNotNull("Content was not fetched from the server", content);
-        MimeMessage mimeMsg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content.getBytes()));
+        MimeMessage mimeMsg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                content.getBytes()));
         return mimeMsg.getHeader(headerName, null);
     }
 
-    public static ZAppointmentResult createAppointment(ZMailbox mailbox, String subject, String attendee, Date startDate, Date endDate)
-    throws ServiceException {
+    public static ZAppointmentResult createAppointment(ZMailbox mailbox, String subject, String attendee,
+            Date startDate, Date endDate) throws ServiceException {
         ZInvite invite = new ZInvite();
         ZInvite.ZComponent comp = new ZComponent();
 
@@ -1303,15 +1245,14 @@ extends Assert {
         return mailbox.createAppointment(ZFolder.ID_CALENDAR, null, m, invite, null);
     }
 
-    public static void sendInviteReply(ZMailbox mbox, String inviteId, String organizer, String subject, ZMailbox.ReplyVerb replyVerb)
-    throws ServiceException {
+    public static void sendInviteReply(ZMailbox mbox, String inviteId, String organizer, String subject,
+            ZMailbox.ReplyVerb replyVerb) throws ServiceException {
         organizer = addDomainIfNecessary(organizer);
         ZOutgoingMessage msg = getOutgoingMessage(organizer, subject, "Reply to appointment " + inviteId, null);
         mbox.sendInviteReply(inviteId, "0", replyVerb, true, null, null, msg);
     }
 
-    public static ZFilterRule getFilterRule(ZMailbox mbox, String ruleName)
-    throws ServiceException {
+    public static ZFilterRule getFilterRule(ZMailbox mbox, String ruleName) throws ServiceException {
         for (ZFilterRule rule : mbox.getIncomingFilterRules(true).getRules()) {
             if (rule.getName().equals(ruleName)) {
                 return rule;
@@ -1320,21 +1261,19 @@ extends Assert {
         return null;
     }
 
-    public static ZDocument createDocument(ZMailbox mbox, String folderId, String name, String contentType, byte[] content)
-    throws ServiceException {
+    public static ZDocument createDocument(ZMailbox mbox, String folderId, String name, String contentType,
+            byte[] content) throws ServiceException {
         return createDocument(mbox, folderId, name, contentType, content, false);
     }
 
-    public static ZDocument createDocument(ZMailbox mbox, String folderId, String name,
-                                           String contentType, byte[] content, boolean isNote)
-    throws ServiceException {
+    public static ZDocument createDocument(ZMailbox mbox, String folderId, String name, String contentType,
+            byte[] content, boolean isNote) throws ServiceException {
         String attachId = mbox.uploadAttachment(name, content, contentType, 0);
         String docId = mbox.createDocument(folderId, name, attachId, isNote);
         return mbox.getDocument(docId);
     }
 
-    public static ZIdentity getDefaultIdentity(ZMailbox mbox)
-    throws ServiceException {
+    public static ZIdentity getDefaultIdentity(ZMailbox mbox) throws ServiceException {
         for (ZIdentity ident : mbox.getIdentities()) {
             if (ident.getName().equalsIgnoreCase("DEFAULT")) {
                 return ident;
@@ -1345,7 +1284,7 @@ extends Assert {
     }
 
     public static boolean checkLocalBlobs() {
-        //some tests check disk for blob files. these tests only work with FileBlobStore
+        // some tests check disk for blob files. these tests only work with FileBlobStore
         return StoreManager.getInstance() instanceof FileBlobStore;
     }
 
@@ -1379,7 +1318,8 @@ extends Assert {
         return testAuth(mbox, account, password, null);
     }
 
-    public static ZAuthResult testAuth(ZMailbox mbox, String account, String password, String twoFactorCode) throws ServiceException {
+    public static ZAuthResult testAuth(ZMailbox mbox, String account, String password, String twoFactorCode)
+            throws ServiceException {
         Options options = new Options();
         options.setAccount(account);
         options.setPassword(password);
@@ -1389,20 +1329,18 @@ extends Assert {
         return mbox.authByPassword(options, password);
     }
 
-    public static void updateMailItemChangeDateAndFlag (Mailbox mbox, int itemId, long changeDate, int flagValue) throws ServiceException {
-        DbConnection conn = DbPool.getConnection(mbox);;
+    public static void updateMailItemChangeDateAndFlag(Mailbox mbox, int itemId, long changeDate, int flagValue)
+            throws ServiceException {
+        DbConnection conn = DbPool.getConnection(mbox);
+        ;
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("UPDATE ")
-                .append(DbMailItem.getMailItemTableName(mbox))
-                .append(" SET change_date = ")
-                .append(changeDate);
+            sql.append("UPDATE ").append(DbMailItem.getMailItemTableName(mbox)).append(" SET change_date = ")
+                    .append(changeDate);
             if (flagValue > 0) {
-                sql.append(", flags = ")
-                    .append(flagValue);
+                sql.append(", flags = ").append(flagValue);
             }
-            sql.append(" WHERE id = ")
-                .append(itemId);
+            sql.append(" WHERE id = ").append(itemId);
             DbUtil.executeUpdate(conn, sql.toString());
         } finally {
             conn.commit();
@@ -1422,8 +1360,8 @@ extends Assert {
         return auth;
     }
 
-    protected static void setLCValue(KnownKey key, String newValue)
-            throws DocumentException, ConfigException, IOException, ServiceException {
+    protected static void setLCValue(KnownKey key, String newValue) throws DocumentException, ConfigException,
+            IOException, ServiceException {
         LocalConfig lc = new LocalConfig(null);
         if (newValue == null) {
             lc.remove(key.key());
@@ -1434,6 +1372,6 @@ extends Assert {
         SoapProvisioning prov = TestUtil.newSoapProvisioning();
         ReloadLocalConfigRequest req = new ReloadLocalConfigRequest();
         ReloadLocalConfigResponse resp = prov.invokeJaxb(req);
-        assertNotNull("ReloadLocalConfigResponse" , resp);
+        assertNotNull("ReloadLocalConfigResponse", resp);
     }
 }
