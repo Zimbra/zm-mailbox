@@ -133,6 +133,7 @@ public class ZimbraSuite extends TestSuite {
         sClasses.add(TestDomainAdmin.class);
         sClasses.add(TestTrashImapMessage.class);
         sClasses.add(TestSearchHeaders.class);
+        sClasses.add(TestServerEnumeration.class);
     }
 
     /**
@@ -191,8 +192,7 @@ public class ZimbraSuite extends TestSuite {
     }
 
     /**
-     * Runs the entire test suite and writes the output to the specified
-     * <code>OutputStream</code>.
+     * Runs the entire test suite and writes the output to the specified <code>OutputStream</code>.
      */
     public static TestResults runTestSuite() {
         return runTestsInternal(sClasses, null);
