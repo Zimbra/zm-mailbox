@@ -55,8 +55,11 @@ import com.zimbra.soap.admin.type.CacheEntryType;
 public class ModifyAccount extends AdminDocumentHandler {
 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ID };
+
     @Override
-    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+    protected String[] getProxiedAccountPath() {
+        return TARGET_ACCOUNT_PATH;
+    }
 
     /**
      * must be careful and only allow modifies to accounts/attrs domain admin has access to
@@ -94,25 +97,22 @@ public class ModifyAccount extends AdminDocumentHandler {
         long curQuota = account.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
 
         /*
-        // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager
-        // checkQuota is called only for domain based access manager, remove when we
-        // can totally deprecate domain based access manager
-        if (isDomainAdminOnly(zsc))
-            checkQuota(zsc, account, attrs);
+         * // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager // checkQuota is called
+         * only for domain based access manager, remove when we // can totally deprecate domain based access manager if
+         * (isDomainAdminOnly(zsc)) checkQuota(zsc, account, attrs);
          */
 
         /*
          * for bug 42896, the above is no longer true.
-         *
-         * For quota, we have to support the per admin limitation zimbraDomainAdminMaxMailQuota,
-         * until we come up with a framework to support constraints on a per admin basis.
-         *
+         * 
+         * For quota, we have to support the per admin limitation zimbraDomainAdminMaxMailQuota, until we come up with a
+         * framework to support constraints on a per admin basis.
+         * 
          * for now, always call checkQuota, which will check zimbraDomainAdminMaxMailQuota.
-         *
-         * If the access manager, and if we have come here, it has already passed the constraint
-         * checking, in the checkAccountRight call.   If it had violated any constraint, it would
-         * have errored out.  i.e. for zimbraMailQuota, both zimbraConstraint and zimbraDomainAdminMaxMailQuota
-         * are enforced.
+         * 
+         * If the access manager, and if we have come here, it has already passed the constraint checking, in the
+         * checkAccountRight call. If it had violated any constraint, it would have errored out. i.e. for
+         * zimbraMailQuota, both zimbraConstraint and zimbraDomainAdminMaxMailQuota are enforced.
          */
         checkQuota(zsc, account, attrs);
 
@@ -124,11 +124,11 @@ public class ModifyAccount extends AdminDocumentHandler {
 
         // get account again, in the case when zimbraCOSId or zimbraForeignPrincipal
         // is changed, the cache object(he one we are holding on to) would'd been
-        // flushed out from cache.  Get the account again to get the fresh one.
+        // flushed out from cache. Get the account again to get the fresh one.
         account = prov.get(AccountBy.id, id, zsc.getAuthToken());
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "ModifyAccount","name", account.getName()}, attrs));
+                new String[] { "cmd", "ModifyAccount", "name", account.getName() }, attrs));
 
         checkNewServer(zsc, context, account);
 
@@ -136,10 +136,10 @@ public class ModifyAccount extends AdminDocumentHandler {
         if (newQuota != curQuota) {
             // clear the quota cache
             AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
-            if (session != null)
+            if (session != null) {
                 GetQuotaUsage.clearCachedQuotaUsage(session);
+            }
         }
-
 
         Element response = zsc.createElement(AdminConstants.MODIFY_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, account);
@@ -148,21 +148,27 @@ public class ModifyAccount extends AdminDocumentHandler {
 
     static String getStringAttrNewValue(String attrName, Map<String, Object> attrs) throws ServiceException {
         Object object = attrs.get(attrName);
-        if (object == null) object = attrs.get("+" + attrName);
-        if (object == null) object = attrs.get("-" + attrName);
-        if (object == null) return null;
+        if (object == null) {
+            object = attrs.get("+" + attrName);
+        }
+        if (object == null) {
+            object = attrs.get("-" + attrName);
+        }
+        if (object == null) {
+            return null;
+        }
 
-        if (!(object instanceof String))
-            throw ServiceException.PERM_DENIED("can not modify " +  attrName + "(single valued attribute)");
-
+        if (!(object instanceof String)) {
+            throw ServiceException.PERM_DENIED("can not modify " + attrName + "(single valued attribute)");
+        }
         return (String) object;
     }
 
     private void checkQuota(ZimbraSoapContext zsc, Account account, Map<String, Object> attrs) throws ServiceException {
         String quotaAttr = getStringAttrNewValue(Provisioning.A_zimbraMailQuota, attrs);
-        if (quotaAttr == null)
-            return;  // not changing it
-
+        if (quotaAttr == null) {
+            return; // not changing it
+        }
         long quota;
 
         if (quotaAttr.equals("")) {
@@ -172,19 +178,21 @@ public class ModifyAccount extends AdminDocumentHandler {
             try {
                 quota = Long.parseLong(quotaAttr);
             } catch (NumberFormatException e) {
-                throw AccountServiceException.INVALID_ATTR_VALUE("can not modify mail quota (invalid format): "+quotaAttr, e);
+                throw AccountServiceException.INVALID_ATTR_VALUE("can not modify mail quota (invalid format): "
+                        + quotaAttr, e);
             }
         }
 
-        if (!canModifyMailQuota(zsc,  account, quota))
-            throw ServiceException.PERM_DENIED("can not modify mail quota, domain admin can only modify quota if " +
-                    "zimbraDomainAdminMaxMailQuota is set to 0 or set to a certain value and quota is less than that value.");
+        if (!canModifyMailQuota(zsc, account, quota))
+            throw ServiceException
+                    .PERM_DENIED("can not modify mail quota, domain admin can only modify quota if "
+                            + "zimbraDomainAdminMaxMailQuota is set to 0 or set to a certain value and quota is less than that value.");
     }
 
     private void checkCos(ZimbraSoapContext zsc, Account account, Map<String, Object> attrs) throws ServiceException {
         String newCosId = getStringAttrNewValue(Provisioning.A_zimbraCOSId, attrs);
         if (newCosId == null) {
-            return;  // not changing it
+            return; // not changing it
         }
 
         Provisioning prov = Provisioning.getInstance();
@@ -192,11 +200,11 @@ public class ModifyAccount extends AdminDocumentHandler {
             // they are unsetting it, so check the domain
             Domain domain = prov.getDomain(account);
             if (domain != null) {
-                newCosId = account.isIsExternalVirtualAccount() ?
-                        domain.getDomainDefaultExternalUserCOSId() : domain.getDomainDefaultCOSId();
-                        if (newCosId == null) {
-                            return;  // no domain cos, use the default COS, which is available to all
-                        }
+                newCosId = account.isIsExternalVirtualAccount() ? domain.getDomainDefaultExternalUserCOSId() : domain
+                        .getDomainDefaultCOSId();
+                if (newCosId == null) {
+                    return; // no domain cos, use the default COS, which is available to all
+                }
             }
         }
 
@@ -212,20 +220,16 @@ public class ModifyAccount extends AdminDocumentHandler {
     }
 
     /*
-     * if the account's home server is changed as a result of this command and the
-     * new server is no longer this server, need to send a flush cache command to the
-     * new server so we don't get into the following:
-     *
+     * if the account's home server is changed as a result of this command and the new server is no longer this server,
+     * need to send a flush cache command to the new server so we don't get into the following:
+     * 
      * account is on server A (this server)
-     *
-     * on server B:
-     *     zmprov ma {account} zimbraMailHost B
-     *     (the ma is proxied to server A;
-     *      and on server B, the account still appears to be on A)
-     *
-     *     zmprov ma {account} {any attr} {value}
-     *     ERROR: service.TOO_MANY_HOPS
-     *     Until the account is expired from cache on server B.
+     * 
+     * on server B: zmprov ma {account} zimbraMailHost B (the ma is proxied to server A; and on server B, the account
+     * still appears to be on A)
+     * 
+     * zmprov ma {account} {any attr} {value} ERROR: service.TOO_MANY_HOPS Until the account is expired from cache on
+     * server B.
      */
     private void checkNewServer(ZimbraSoapContext zsc, Map<String, Object> context, Account acct) {
         Server newServer = null;
@@ -240,12 +244,14 @@ public class ModifyAccount extends AdminDocumentHandler {
                     soapProv.soapSetURI(adminUrl);
                     soapProv.soapZimbraAdminAuthenticate();
                     soapProv.flushCache(CacheEntryType.account,
-                            new CacheEntry[]{new CacheEntry(CacheEntryBy.id, acct.getId())});
+                            new CacheEntry[] { new CacheEntry(CacheEntryBy.id, acct.getId()) });
                 }
             }
         } catch (ServiceException e) {
             // ignore any error and continue
-            ZimbraLog.mailbox.warn("cannot flush account cache on server " + (newServer==null?"":newServer.getName()) + " for " + acct.getName(), e);
+            ZimbraLog.mailbox.warn(
+                    "cannot flush account cache on server " + (newServer == null ? "" : newServer.getName()) + " for "
+                            + acct.getName(), e);
         }
     }
 
@@ -253,13 +259,13 @@ public class ModifyAccount extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_assignCos);
 
-        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY,
-                Admin.R_modifyAccount.getName(), "account") + "\n");
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, Admin.R_modifyAccount.getName(), "account")
+                + "\n");
 
-        notes.add("Notes on " + Provisioning.A_zimbraCOSId + ": " +
-                "If setting " + Provisioning.A_zimbraCOSId + ", needs the " + Admin.R_assignCos.getName() +
-                " right on the cos." +
-                "If removing " + Provisioning.A_zimbraCOSId + ", needs the " + Admin.R_assignCos.getName() +
-                " right on the domain default cos. (in domain attribute " + Provisioning.A_zimbraDomainDefaultCOSId +").");
+        notes.add("Notes on " + Provisioning.A_zimbraCOSId + ": " + "If setting " + Provisioning.A_zimbraCOSId
+                + ", needs the " + Admin.R_assignCos.getName() + " right on the cos." + "If removing "
+                + Provisioning.A_zimbraCOSId + ", needs the " + Admin.R_assignCos.getName()
+                + " right on the domain default cos. (in domain attribute " + Provisioning.A_zimbraDomainDefaultCOSId
+                + ").");
     }
 }
