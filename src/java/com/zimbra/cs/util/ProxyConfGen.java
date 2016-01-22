@@ -2188,15 +2188,18 @@ class WebZSSUpstreamEnablerVar extends WebEnablerVar {
 
 class WebSSLDhparamEnablerVar extends WebEnablerVar {
 
-    public WebSSLDhparamEnablerVar() throws ProxyConfException {
+    private ProxyConfVar webSslDhParamFile;
+
+    public WebSSLDhparamEnablerVar(ProxyConfVar webSslDhParamFile) throws ProxyConfException {
         super("web.ssl.dhparam.enabled", false,
                 "Indicates whether ssl_dhparam directive should be added or not");
+	this.webSslDhParamFile = webSslDhParamFile;
     }
 
     @Override
     public void update() {
-        String dhparam = serverSource.getAttr("zimbraReverseProxySSLDHParam");
-        if (dhparam == null || ProxyConfUtil.isEmptyString(dhparam)) {
+	String dhparam = (String)webSslDhParamFile.rawValue();
+        if (dhparam == null || ProxyConfUtil.isEmptyString(dhparam) || !(new File(dhparam).exists())) {
             mValue = false;
         } else {
             mValue = true;
@@ -2226,6 +2229,7 @@ public class ProxyConfGen
     private static String mDefaultSSLCrt = mConfDir + File.separator + "nginx.crt";
     private static String mDefaultSSLKey = mConfDir + File.separator + "nginx.key";
     private static String mDefaultSSLClientCertCa = mConfDir + File.separator + "nginx.client.ca.crt";
+    private static String mDefaultDhParamFile = mConfDir + File.separator + "dhparam.pem";
     private static String mConfIncludesDir = mConfDir + File.separator + mIncDir;
     private static String mDefaultConfIncludesDir = mConfIncludesDir + File.separator + "default";
     private static String mVhostConfIncludesDir = mConfIncludesDir + File.separator + "vhost";
@@ -3037,8 +3041,9 @@ public class ProxyConfGen
         mConfVars.put("web.xmpp.bosh.port", new ProxyConfVar("web.xmpp.bosh.port", "zimbraReverseProxyXmppBoshPort", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Port number of the external XMPP server where XMPP over BOSH requests need to be proxied"));
         mConfVars.put("web.xmpp.bosh.timeout", new TimeInSecVarWrapper(new ProxyConfVar("web.xmpp.bosh.timeout", "zimbraReverseProxyXmppBoshTimeout", new Long(60), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "the response timeout for an external XMPP/BOSH server")));
         mConfVars.put("web.xmpp.bosh.use_ssl", new ProxyConfVar("web.xmpp.bosh.use_ssl", "zimbraReverseProxyXmppBoshSSL", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether XMPP/Bosh uses SSL"));
-        mConfVars.put("web.ssl.dhparam.enabled", new WebSSLDhparamEnablerVar());
-        mConfVars.put("web.ssl.dhparam.file", new ProxyConfVar("web.ssl.dhparam.file", "zimbraReverseProxySSLDHParam", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Filename with DH parameters for EDH ciphers to be used by the proxy"));
+	ProxyConfVar webSslDhParamFile = new ProxyConfVar("web.ssl.dhparam.file", null, mDefaultDhParamFile, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Filename with DH parameters for EDH ciphers to be used by the proxy");
+        mConfVars.put("web.ssl.dhparam.enabled", new WebSSLDhparamEnablerVar(webSslDhParamFile));
+        mConfVars.put("web.ssl.dhparam.file", webSslDhParamFile);
         //Get the response headers list from globalconfig
         String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
         ArrayList<String> rhdr = new ArrayList<String>();
