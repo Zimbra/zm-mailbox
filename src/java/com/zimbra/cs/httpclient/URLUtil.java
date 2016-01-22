@@ -99,7 +99,6 @@ public class URLUtil {
             port = server.getMtaAuthPort();
             ZimbraLog.misc.warn("cannot determine server version; defaulting to port %d for MTA auth", port);
         }
-        server.getMtaAuthPort();
         StringBuffer sb = new StringBuffer(128);
         String path = AdminConstants.ADMIN_SERVICE_URI;
         sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(path);
