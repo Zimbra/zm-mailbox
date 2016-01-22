@@ -79,13 +79,28 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         return true;
     }
 
-    protected String[] getProxiedAccountPath()          { return null; }
-    protected String[] getProxiedAccountElementPath()   { return null; }
-    protected String[] getProxiedResourcePath()         { return null; }
-    protected String[] getProxiedResourceElementPath()  { return null; }
-    protected String[] getProxiedServerPath()           { return null; }
+    protected String[] getProxiedAccountPath() {
+        return null;
+    }
 
-    protected Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken) throws ServiceException {
+    protected String[] getProxiedAccountElementPath() {
+        return null;
+    }
+
+    protected String[] getProxiedResourcePath() {
+        return null;
+    }
+
+    protected String[] getProxiedResourceElementPath() {
+        return null;
+    }
+
+    protected String[] getProxiedServerPath() {
+        return null;
+    }
+
+    protected Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken)
+            throws ServiceException {
         Account acct = null;
 
         // first try getting it from master if not in cache
@@ -98,7 +113,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         return acct;
     }
 
-    private CalendarResource getCalendarResource(Provisioning prov, Key.CalendarResourceBy crBy, String value) throws ServiceException {
+    private CalendarResource getCalendarResource(Provisioning prov, Key.CalendarResourceBy crBy, String value)
+            throws ServiceException {
         CalendarResource cr = null;
 
         // first try getting it from master if not in cache
@@ -113,7 +129,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
 
     public static Entry pseudoTargetInSameDomainAsEmail(TargetType targetType, String emailAddr) {
         String parts[] = EmailUtil.getLocalPartAndDomain(emailAddr);
-        if (parts == null || parts.length <2) {
+        if (parts == null || parts.length < 2) {
             return null;
         }
         String domainStr = parts[1];
@@ -125,9 +141,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         }
     }
 
-    protected void defendAgainstAccountHarvestingWhenAbsent(AccountBy by,
-            String selectorKey, ZimbraSoapContext zsc, AccountHarvestingChecker checker)
-    throws ServiceException {
+    protected void defendAgainstAccountHarvestingWhenAbsent(AccountBy by, String selectorKey, ZimbraSoapContext zsc,
+            AccountHarvestingChecker checker) throws ServiceException {
         AuthToken authToken = zsc.getAuthToken();
         if (authToken.isAdmin()) {
             throw AccountServiceException.NO_SUCH_ACCOUNT(selectorKey);
@@ -135,7 +150,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (AccountBy.name.equals(by) && AuthToken.isAnyAdmin(authToken)) {
                 Entry pseudoTarget = pseudoTargetInSameDomainAsEmail(TargetType.account, selectorKey);
                 if (pseudoTarget != null) {
-                    checker.check((Account)pseudoTarget, selectorKey);
+                    checker.check((Account) pseudoTarget, selectorKey);
                     throw AccountServiceException.NO_SUCH_ACCOUNT(selectorKey); // passed the check
                 }
             }
@@ -144,8 +159,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     }
 
     protected void defendAgainstAccountHarvesting(Account account, AccountBy by, String selectorKey,
-            ZimbraSoapContext zsc, AccountHarvestingChecker checker)
-    throws ServiceException {
+            ZimbraSoapContext zsc, AccountHarvestingChecker checker) throws ServiceException {
         if (account == null) {
             defendAgainstAccountHarvestingWhenAbsent(by, selectorKey, zsc, checker);
             return;
@@ -153,18 +167,16 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         checker.check(account, selectorKey);
     }
 
-    protected void defendAgainstAccountHarvestingWhenAbsent(AccountBy by,
-            String selectorKey, ZimbraSoapContext zsc, Object needed)
-    throws ServiceException {
+    protected void defendAgainstAccountHarvestingWhenAbsent(AccountBy by, String selectorKey, ZimbraSoapContext zsc,
+            Object needed) throws ServiceException {
         defendAgainstAccountHarvestingWhenAbsent(by, selectorKey, zsc,
                 new AccountHarvestingCheckerUsingCheckAccountRight(zsc, needed));
     }
 
-    protected void defendAgainstAccountHarvesting(Account account, AccountBy by,
-            String selectorKey, ZimbraSoapContext zsc, Object needed)
-    throws ServiceException {
-        AccountHarvestingCheckerUsingCheckAccountRight checker =
-                new AccountHarvestingCheckerUsingCheckAccountRight(zsc, needed);
+    protected void defendAgainstAccountHarvesting(Account account, AccountBy by, String selectorKey,
+            ZimbraSoapContext zsc, Object needed) throws ServiceException {
+        AccountHarvestingCheckerUsingCheckAccountRight checker = new AccountHarvestingCheckerUsingCheckAccountRight(
+                zsc, needed);
         if (account == null) {
             defendAgainstAccountHarvestingWhenAbsent(by, selectorKey, zsc, checker);
             return;
@@ -172,13 +184,12 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         checker.check(account, selectorKey);
     }
 
-    protected void defendAgainstAccountOrCalendarResourceHarvestingWhenAbsent(AccountBy accountBy,
-            String selectorKey, ZimbraSoapContext zsc, AdminRight rightForAcct, AdminRight rightForCalRes)
-    throws ServiceException {
+    protected void defendAgainstAccountOrCalendarResourceHarvestingWhenAbsent(AccountBy accountBy, String selectorKey,
+            ZimbraSoapContext zsc, AdminRight rightForAcct, AdminRight rightForCalRes) throws ServiceException {
         try {
             CalendarResourceBy calResBy = CalendarResourceBy.fromString(accountBy.toString());
             defendAgainstCalResourceHarvestingWhenAbsent(calResBy, selectorKey, zsc,
-                 new CalResourceHarvestingCheckerUsingCheckCalendarResourceRight(zsc, rightForCalRes));
+                    new CalResourceHarvestingCheckerUsingCheckCalendarResourceRight(zsc, rightForCalRes));
         } catch (ServiceException e) {
             defendAgainstAccountHarvestingWhenAbsent(accountBy, selectorKey, zsc, rightForAcct);
         }
@@ -186,10 +197,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
 
     protected void defendAgainstAccountOrCalendarResourceHarvesting(Account account, AccountBy accountBy,
             String selectorKey, ZimbraSoapContext zsc, AdminRight rightForAcct, AdminRight rightForCalRes)
-    throws ServiceException {
+            throws ServiceException {
         if (account == null) {
-            defendAgainstAccountOrCalendarResourceHarvestingWhenAbsent(accountBy, selectorKey, zsc,
-                    rightForAcct, rightForCalRes);
+            defendAgainstAccountOrCalendarResourceHarvestingWhenAbsent(accountBy, selectorKey, zsc, rightForAcct,
+                    rightForCalRes);
         } else if (account.isCalendarResource()) {
             Provisioning prov = Provisioning.getInstance();
             CalendarResource resource = prov.get(CalendarResourceBy.id, account.getId());
@@ -200,9 +211,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         }
     }
 
-    protected void defendAgainstCalResourceHarvestingWhenAbsent(CalendarResourceBy by,
-            String selectorKey, ZimbraSoapContext zsc, CalResourceHarvestingChecker checker)
-    throws ServiceException {
+    protected void defendAgainstCalResourceHarvestingWhenAbsent(CalendarResourceBy by, String selectorKey,
+            ZimbraSoapContext zsc, CalResourceHarvestingChecker checker) throws ServiceException {
         AuthToken authToken = zsc.getAuthToken();
         if (authToken.isAdmin()) {
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(selectorKey);
@@ -210,7 +220,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (CalendarResourceBy.name.equals(by) && AuthToken.isAnyAdmin(authToken)) {
                 Entry pseudoTarget = pseudoTargetInSameDomainAsEmail(TargetType.calresource, selectorKey);
                 if (pseudoTarget != null) {
-                    checker.check((CalendarResource)pseudoTarget, selectorKey);
+                    checker.check((CalendarResource) pseudoTarget, selectorKey);
                     throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(selectorKey); // passed the check
                 }
             }
@@ -218,9 +228,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         throw ServiceException.DEFEND_CALENDAR_RESOURCE_HARVEST(selectorKey);
     }
 
-    protected void defendAgainstCalResourceHarvesting(CalendarResource calRes, CalendarResourceBy by, String selectorKey,
-            ZimbraSoapContext zsc, CalResourceHarvestingChecker checker)
-    throws ServiceException {
+    protected void defendAgainstCalResourceHarvesting(CalendarResource calRes, CalendarResourceBy by,
+            String selectorKey, ZimbraSoapContext zsc, CalResourceHarvestingChecker checker) throws ServiceException {
         if (calRes == null) {
             defendAgainstCalResourceHarvestingWhenAbsent(by, selectorKey, zsc, checker);
             return;
@@ -229,10 +238,9 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     }
 
     protected void defendAgainstCalResourceHarvesting(CalendarResource calRes, CalendarResourceBy by,
-            String selectorKey, ZimbraSoapContext zsc, Object needed)
-    throws ServiceException {
-        CalResourceHarvestingCheckerUsingCheckCalendarResourceRight checker =
-                new CalResourceHarvestingCheckerUsingCheckCalendarResourceRight(zsc, needed);
+            String selectorKey, ZimbraSoapContext zsc, Object needed) throws ServiceException {
+        CalResourceHarvestingCheckerUsingCheckCalendarResourceRight checker = new CalResourceHarvestingCheckerUsingCheckCalendarResourceRight(
+                zsc, needed);
         if (calRes == null) {
             defendAgainstCalResourceHarvestingWhenAbsent(by, selectorKey, zsc, checker);
             return;
@@ -353,12 +361,11 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         }
     }
 
-    protected class CalResourceHarvestingCheckerUsingCheckCalendarResourceRight
-    extends CalResourceHarvestingCheckerBase {
+    protected class CalResourceHarvestingCheckerUsingCheckCalendarResourceRight extends
+            CalResourceHarvestingCheckerBase {
         private Object needed = null;
 
-        public CalResourceHarvestingCheckerUsingCheckCalendarResourceRight(ZimbraSoapContext zsc,
-                Object needed) {
+        public CalResourceHarvestingCheckerUsingCheckCalendarResourceRight(ZimbraSoapContext zsc, Object needed) {
             super(zsc);
             this.needed = needed;
         }
@@ -421,7 +428,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         @Override
         protected void doRightsCheck(Group group) throws ServiceException {
             if (group.isDynamic()) {
-                checkDynamicGroupRight(zsc, (DynamicGroup)group, needed);
+                checkDynamicGroupRight(zsc, (DynamicGroup) group, needed);
             } else {
                 checkDistributionListRight(zsc, (DistributionList) group, needed);
             }
@@ -441,8 +448,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         private final List<String> getAttrs;
         private String currAttr;
 
-        public GroupHarvestingCheckerUsingGetAttrsPerms(ZimbraSoapContext zsc,
-                AttrRightChecker arc, List<String> getAttrs) {
+        public GroupHarvestingCheckerUsingGetAttrsPerms(ZimbraSoapContext zsc, AttrRightChecker arc,
+                List<String> getAttrs) {
             super(zsc);
             this.arc = arc;
             this.getAttrs = getAttrs;
@@ -492,9 +499,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         }
     }
 
-    protected void defendAgainstGroupHarvestingWhenAbsent(DistributionListBy dlBy,
-            String groupSelectorKey, ZimbraSoapContext zsc, GroupHarvestingChecker checker)
-    throws ServiceException {
+    protected void defendAgainstGroupHarvestingWhenAbsent(DistributionListBy dlBy, String groupSelectorKey,
+            ZimbraSoapContext zsc, GroupHarvestingChecker checker) throws ServiceException {
         AuthToken authToken = zsc.getAuthToken();
         if (authToken.isAdmin()) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(groupSelectorKey);
@@ -502,7 +508,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (DistributionListBy.name.equals(dlBy) && AuthToken.isAnyAdmin(authToken)) {
                 Entry pseudoTarget = pseudoTargetInSameDomainAsEmail(TargetType.dl, groupSelectorKey);
                 if (pseudoTarget != null) {
-                    checker.check((DistributionList)pseudoTarget, groupSelectorKey);
+                    checker.check((DistributionList) pseudoTarget, groupSelectorKey);
                     throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(groupSelectorKey); // passed the check
                 }
             }
@@ -511,8 +517,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     }
 
     protected void defendAgainstGroupHarvesting(Group group, DistributionListBy dlBy, String groupSelectorKey,
-            ZimbraSoapContext zsc, GroupHarvestingChecker checker)
-    throws ServiceException {
+            ZimbraSoapContext zsc, GroupHarvestingChecker checker) throws ServiceException {
         if (group == null) {
             defendAgainstGroupHarvestingWhenAbsent(dlBy, groupSelectorKey, zsc, checker);
             return;
@@ -520,23 +525,21 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         checker.check(group, groupSelectorKey);
     }
 
-    protected void defendAgainstGroupHarvestingWhenAbsent(DistributionListBy dlBy,
-            String groupSelectorKey, ZimbraSoapContext zsc, AdminRight dlRight)
-    throws ServiceException {
+    protected void defendAgainstGroupHarvestingWhenAbsent(DistributionListBy dlBy, String groupSelectorKey,
+            ZimbraSoapContext zsc, AdminRight dlRight) throws ServiceException {
         defendAgainstGroupHarvestingWhenAbsent(dlBy, groupSelectorKey, zsc,
                 new GroupHarvestingCheckerUsingCheckGroupRight(zsc, dlRight));
     }
 
-    protected void defendAgainstGroupHarvesting(Group group, DistributionListBy dlBy,
-            String groupSelectorKey, ZimbraSoapContext zsc, Object dynamicGroupNeeded, Object dlNeeded)
-    throws ServiceException {
+    protected void defendAgainstGroupHarvesting(Group group, DistributionListBy dlBy, String groupSelectorKey,
+            ZimbraSoapContext zsc, Object dynamicGroupNeeded, Object dlNeeded) throws ServiceException {
         if (group == null) {
             defendAgainstGroupHarvestingWhenAbsent(dlBy, groupSelectorKey, zsc,
                     new GroupHarvestingCheckerUsingCheckGroupRight(zsc, dlNeeded));
             return;
         }
-        GroupHarvestingCheckerUsingCheckGroupRight checker =
-                new GroupHarvestingCheckerUsingCheckGroupRight(zsc, group.isDynamic() ? dynamicGroupNeeded : dlNeeded);
+        GroupHarvestingCheckerUsingCheckGroupRight checker = new GroupHarvestingCheckerUsingCheckGroupRight(zsc,
+                group.isDynamic() ? dynamicGroupNeeded : dlNeeded);
         checker.check(group, groupSelectorKey);
     }
 
@@ -596,8 +599,9 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             xpath = getProxiedResourceElementPath();
             Element resourceElt = (xpath != null ? getXPathElement(request, xpath) : null);
             if (resourceElt != null) {
-                CalendarResource rsrc = getCalendarResource(prov, Key.CalendarResourceBy.fromString(
-                        resourceElt.getAttribute(AdminConstants.A_BY)), resourceElt.getText());
+                CalendarResource rsrc = getCalendarResource(prov,
+                        Key.CalendarResourceBy.fromString(resourceElt.getAttribute(AdminConstants.A_BY)),
+                        resourceElt.getText());
                 if (rsrc != null && !Provisioning.onLocalServer(rsrc, reasons)) {
                     if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
                         ZimbraLog.soap.info("Proxying request:ProxiedResourceElementPath=%s resourceElt=%s reasons:%s",
@@ -614,9 +618,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                 Server server = prov.get(Key.ServerBy.id, serverId);
                 if (server != null && !getLocalHostId().equalsIgnoreCase(server.getId())) {
                     if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
-                        ZimbraLog.soap.info(
-                            "Proxying request:ProxiedServerPath=%s serverId=%s server=%s server ID=%s != localHostId=%s",
-                            Joiner.on("/").join(xpath), serverId, server.getName(), server.getId(), getLocalHostId());
+                        ZimbraLog.soap
+                                .info("Proxying request:ProxiedServerPath=%s serverId=%s server=%s server ID=%s != localHostId=%s",
+                                        Joiner.on("/").join(xpath), serverId, server.getName(), server.getId(),
+                                        getLocalHostId());
                     }
                     return proxyRequest(request, context, server);
                 }
@@ -643,17 +648,16 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     }
 
     /*
-     * if specific attrs are requested on Get{ldap-object}:
-     * - INVALID_REQUEST is thrown if any of the requested attrs is not a valid attribute on the entry
-     * - PERM_DENIED is thrown if the authed account does not have get attr right for all the requested attrs.
-     *
-     * Because for the get{Object} calls, we want to be strict, as opposed to misleading the client that
-     * a requested attribute is not set on the entry.
-     *
-     * Note: the behavior is different than the behavior of SearchDirectory, in that:
-     *    - if any of the requested attrs is not a valid attribute on the entry: ignored
-     *    - if the authed account does not have get attr right for all the requested attrs: the entry is not included
-     *      in the response
+     * if specific attrs are requested on Get{ldap-object}: - INVALID_REQUEST is thrown if any of the requested attrs is
+     * not a valid attribute on the entry - PERM_DENIED is thrown if the authed account does not have get attr right for
+     * all the requested attrs.
+     * 
+     * Because for the get{Object} calls, we want to be strict, as opposed to misleading the client that a requested
+     * attribute is not set on the entry.
+     * 
+     * Note: the behavior is different than the behavior of SearchDirectory, in that: - if any of the requested attrs is
+     * not a valid attribute on the entry: ignored - if the authed account does not have get attr right for all the
+     * requested attrs: the entry is not included in the response
      */
     protected Set<String> getReqAttrs(String attrsStr, AttributeClass klass) throws ServiceException {
         if (attrsStr == null) {
@@ -669,8 +673,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (attrsOnEntry.contains(attr)) {
                 validAttrs.add(attr);
             } else {
-                throw ServiceException.INVALID_REQUEST("requested attribute " + attr +
-                        " is not on " + klass.name(), null);
+                throw ServiceException.INVALID_REQUEST("requested attribute " + attr + " is not on " + klass.name(),
+                        null);
             }
         }
 
@@ -700,25 +704,19 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         return AccessManager.getInstance().canModifyMailQuota(zsc.getAuthToken(), target, mailQuota);
     }
 
-
-
     /*
-     * TODO:  can't be private yet, still called from ZimbraAdminExt and ZimbraCustomerServices/hosted
-     *        Need to fix those callsite to call one of the check*** methods.
-     *
-     *        after that, move this method and related methods to AdminAccessControl and
-     *        only call this method from there.
+     * TODO: can't be private yet, still called from ZimbraAdminExt and ZimbraCustomerServices/hosted Need to fix those
+     * callsite to call one of the check*** methods.
+     * 
+     * after that, move this method and related methods to AdminAccessControl and only call this method from there.
      */
     public boolean canAccessEmail(ZimbraSoapContext zsc, String email) throws ServiceException {
         return canAccessDomain(zsc, NameUtil.EmailAddress.getDomainNameFromEmail(email));
     }
 
-
-
     /*
-     * ======================================================================
-     *     Connector methods between domain based access manager and
-     *     pure ACL based access manager.
+     * ====================================================================== Connector methods between domain based
+     * access manager and pure ACL based access manager.
      * ======================================================================
      */
 
@@ -729,41 +727,38 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * @param attrs
      * @throws ServiceException
      */
-    public void checkModifyAttrs(ZimbraSoapContext zsc, AttributeClass attrClass, Map<String, Object> attrs) throws ServiceException {
+    public void checkModifyAttrs(ZimbraSoapContext zsc, AttributeClass attrClass, Map<String, Object> attrs)
+            throws ServiceException {
         AdminAccessControl.getAdminAccessControl(zsc).checkModifyAttrs(attrClass, attrs);
     }
 
     /**
-     * This has to be called *after* the *can create* check.
-     * For domain based AccessManager, all attrs are allowed if the admin can create.
+     * This has to be called *after* the *can create* check. For domain based AccessManager, all attrs are allowed if
+     * the admin can create.
      */
-    protected void checkSetAttrsOnCreate(ZimbraSoapContext zsc, TargetType targetType, String entryName, Map<String, Object> attrs)
-        throws ServiceException {
+    protected void checkSetAttrsOnCreate(ZimbraSoapContext zsc, TargetType targetType, String entryName,
+            Map<String, Object> attrs) throws ServiceException {
         AdminAccessControl.getAdminAccessControl(zsc).checkSetAttrsOnCreate(targetType, entryName, attrs);
     }
 
-    protected boolean hasRightsToList(ZimbraSoapContext zsc, NamedEntry target,
-            AdminRight listRight, Object getAttrRight) throws ServiceException {
+    protected boolean hasRightsToList(ZimbraSoapContext zsc, NamedEntry target, AdminRight listRight,
+            Object getAttrRight) throws ServiceException {
         return AdminAccessControl.getAdminAccessControl(zsc).hasRightsToList(target, listRight, getAttrRight);
     }
 
-    protected boolean hasRightsToListCos(ZimbraSoapContext zsc, Cos target,
-            AdminRight listRight, Object getAttrRight) throws ServiceException {
+    protected boolean hasRightsToListCos(ZimbraSoapContext zsc, Cos target, AdminRight listRight, Object getAttrRight)
+            throws ServiceException {
         return AdminAccessControl.getAdminAccessControl(zsc).hasRightsToListCos(target, listRight, getAttrRight);
     }
 
     /**
-     * -------------------
-     * non-domained rights
-     * (i.e. not: account, calendar resource, distribution list, domain)
+     * ------------------- non-domained rights (i.e. not: account, calendar resource, distribution list, domain)
      *
-     * For domain based access manager, if the authed admin is domain admin only,
-     * it should have been rejected in SoapEngine.  So it should just return true
-     * here.  But we sanity check again, just in case.
-     * -------------------
+     * For domain based access manager, if the authed admin is domain admin only, it should have been rejected in
+     * SoapEngine. So it should just return true here. But we sanity check again, just in case. -------------------
      */
-    protected AdminAccessControl checkRight(ZimbraSoapContext zsc,
-        Map<String, Object> context, Entry target, Object needed) throws ServiceException {
+    protected AdminAccessControl checkRight(ZimbraSoapContext zsc, Map<String, Object> context, Entry target,
+            Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
 
         //
@@ -789,40 +784,34 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     }
 
     /**
-     * This API is for checking ACL rights only, domain based access manager
-     * will always return OK.  This should be called only when
+     * This API is for checking ACL rights only, domain based access manager will always return OK. This should be
+     * called only when
      *
-     * (1) domain based permission checking has passed.
-     * or
-     * (2) from SOAP handlers that are actually admin commands, but can't inherit
-     *     from AdminDocumentHanlder because it already inherited from otehr class,
-     *     e.g. SearchMultipleMailboxes.
-     *     This method is static just because of that.  Ideally it should call
-     *     the other checkRight API, which does sanity checking for domain admins
-     *     if the active AccessManager is a domain based access manager.  But that
-     *     API has other dependency on AdminDocumentHanlder/DocumentHandler instance
-     *     methods, also, the sanity is really not necessary, we should remove it
-     *     at some point when we can completely retire the domain based access
-     *     manager.
+     * (1) domain based permission checking has passed. or (2) from SOAP handlers that are actually admin commands, but
+     * can't inherit from AdminDocumentHanlder because it already inherited from otehr class, e.g.
+     * SearchMultipleMailboxes. This method is static just because of that. Ideally it should call the other checkRight
+     * API, which does sanity checking for domain admins if the active AccessManager is a domain based access manager.
+     * But that API has other dependency on AdminDocumentHanlder/DocumentHandler instance methods, also, the sanity is
+     * really not necessary, we should remove it at some point when we can completely retire the domain based access
+     * manager.
      *
-     *     TODO: find callsites of non AdminDocumentHanlder and call AdminAccessControl
-     *           directly, after this method can be protected and non-static
+     * TODO: find callsites of non AdminDocumentHanlder and call AdminAccessControl directly, after this method can be
+     * protected and non-static
      *
      * @param zsc
      * @param target
      * @param needed
      * @throws ServiceException
      */
-    public static AdminAccessControl checkRight(ZimbraSoapContext zsc, Entry target, Object needed) throws ServiceException {
+    public static AdminAccessControl checkRight(ZimbraSoapContext zsc, Entry target, Object needed)
+            throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         aac.checkRight(target, needed);
         return aac;
     }
 
     /*
-     * -------------
-     * cos right
-     * -------------
+     * ------------- cos right -------------
      */
     protected AdminAccessControl checkCosRight(ZimbraSoapContext zsc, Cos cos, Object needed) throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
@@ -831,22 +820,20 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     }
 
     /*
-     * -------------
-     * account right
-     * -------------
+     * ------------- account right -------------
      */
-    protected AdminAccessControl checkAccountRight(ZimbraSoapContext zsc, Account account, Object needed) throws ServiceException {
+    protected AdminAccessControl checkAccountRight(ZimbraSoapContext zsc, Account account, Object needed)
+            throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         aac.checkAccountRight(this, account, needed);
         return aac;
     }
 
     /*
-     * -----------------------
-     * calendar resource right
-     * -----------------------
+     * ----------------------- calendar resource right -----------------------
      */
-    protected AdminAccessControl checkCalendarResourceRight(ZimbraSoapContext zsc, CalendarResource cr, Object needed) throws ServiceException {
+    protected AdminAccessControl checkCalendarResourceRight(ZimbraSoapContext zsc, CalendarResource cr, Object needed)
+            throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         aac.checkCalendarResourceRight(this, cr, needed);
         return aac;
@@ -856,7 +843,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * convenient method for checking the admin login as right
      */
     protected AdminAccessControl checkAdminLoginAsRight(ZimbraSoapContext zsc, Provisioning prov, Account account)
-    throws ServiceException {
+            throws ServiceException {
         if (account.isCalendarResource()) {
             // need a CalendarResource instance for RightChecker
             CalendarResource resource = prov.get(Key.CalendarResourceBy.id, account.getId());
@@ -867,42 +854,35 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     }
 
     /*
-     * --------
-     * DL right
-     * --------
+     * -------- DL right --------
      */
-    protected AdminAccessControl checkDistributionListRight(ZimbraSoapContext zsc,
-            DistributionList dl, Object needed) throws ServiceException {
+    protected AdminAccessControl checkDistributionListRight(ZimbraSoapContext zsc, DistributionList dl, Object needed)
+            throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         aac.checkDistributionListRight(this, dl, needed);
         return aac;
     }
 
-
     /*
-     * --------
-     * Dynamic group right
-     * --------
+     * -------- Dynamic group right --------
      */
-    protected AdminAccessControl checkDynamicGroupRight(ZimbraSoapContext zsc,
-            DynamicGroup group, Object needed) throws ServiceException {
+    protected AdminAccessControl checkDynamicGroupRight(ZimbraSoapContext zsc, DynamicGroup group, Object needed)
+            throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         aac.checkDynamicGroupRight(this, group, needed);
         return aac;
     }
 
     /*
-     * ------------
-     * domain right
-     * ------------
+     * ------------ domain right ------------
      */
     /**
-     * called by handlers that need to check right on a domain for domain-ed objects:
-     * account, alias, cr, dl.
+     * called by handlers that need to check right on a domain for domain-ed objects: account, alias, cr, dl.
      *
      * Note: this method *do* check domain status.
      */
-    protected AdminAccessControl checkDomainRightByEmail(ZimbraSoapContext zsc, String email, AdminRight needed) throws ServiceException {
+    protected AdminAccessControl checkDomainRightByEmail(ZimbraSoapContext zsc, String email, AdminRight needed)
+            throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         aac.checkDomainRightByEmail(this, email, needed);
         return aac;
@@ -911,7 +891,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     /**
      * Note: this method do *not* check domain status.
      */
-    protected AdminAccessControl checkDomainRight(ZimbraSoapContext zsc, String domainName, Object needed) throws ServiceException {
+    protected AdminAccessControl checkDomainRight(ZimbraSoapContext zsc, String domainName, Object needed)
+            throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         aac.checkDomainRight(this, domainName, needed);
         return aac;
@@ -920,14 +901,15 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     /**
      * Note: this method do *not* check domain status.
      */
-    protected AdminAccessControl checkDomainRight(ZimbraSoapContext zsc, Domain domain, Object needed) throws ServiceException {
+    protected AdminAccessControl checkDomainRight(ZimbraSoapContext zsc, Domain domain, Object needed)
+            throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         aac.checkDomainRight(this, domain, needed);
         return aac;
     }
 
     // ==========================================
-    //    bookkeeping and documenting gadgets
+    // bookkeeping and documenting gadgets
     // ==========================================
 
     // book mark for callsites still needs ACL checking but is not done yet

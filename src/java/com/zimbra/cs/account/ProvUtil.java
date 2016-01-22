@@ -143,9 +143,9 @@ public class ProvUtil implements HttpDebugListener {
     private static final PrintStream errConsole = System.err;
 
     enum SoapDebugLevel {
-        none,    // no SOAP debug
-        normal,  // SOAP request and response payload
-        high;    // SOAP payload and http transport header
+        none, // no SOAP debug
+        normal, // SOAP request and response payload
+        high; // SOAP payload and http transport header
     }
 
     private boolean batchMode = false;
@@ -291,24 +291,15 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     public static enum Category {
-        ACCOUNT("help on account-related commands"),
-        CALENDAR("help on calendar resource-related commands"),
-        COMMANDS("help on all commands"),
-        CONFIG("help on config-related commands"),
-        COS("help on COS-related commands"),
-        DOMAIN("help on domain-related commands"),
-        FREEBUSY("help on free/busy-related commands"),
-        LIST("help on distribution list-related commands"),
-        LOG("help on logging commands"),
-        MISC("help on misc commands"),
-        MAILBOX("help on mailbox-related commands"),
-        REVERSEPROXY("help on reverse proxy related commands"),
-        RIGHT("help on right-related commands"),
-        SEARCH("help on search-related commands"),
-        SERVER("help on server-related commands"),
-        ALWAYSONCLUSTER("help on alwaysOnCluster-related commands"),
-        UCSERVICE("help on ucservice-related commands"),
-        SHARE("help on share related commands");
+        ACCOUNT("help on account-related commands"), CALENDAR("help on calendar resource-related commands"), COMMANDS(
+                "help on all commands"), CONFIG("help on config-related commands"), COS("help on COS-related commands"), DOMAIN(
+                "help on domain-related commands"), FREEBUSY("help on free/busy-related commands"), LIST(
+                "help on distribution list-related commands"), LOG("help on logging commands"), MISC(
+                "help on misc commands"), MAILBOX("help on mailbox-related commands"), REVERSEPROXY(
+                "help on reverse proxy related commands"), RIGHT("help on right-related commands"), SEARCH(
+                "help on search-related commands"), SERVER("help on server-related commands"), ALWAYSONCLUSTER(
+                "help on alwaysOnCluster-related commands"), UCSERVICE("help on ucservice-related commands"), SHARE(
+                "help on share related commands");
 
         private final String description;
 
@@ -322,15 +313,15 @@ public class ProvUtil implements HttpDebugListener {
 
         static void help(Category cat) {
             switch (cat) {
-                case CALENDAR:
-                    helpCALENDAR();
-                    break;
-                case RIGHT:
-                    helpRIGHT();
-                    break;
-                case LOG:
-                    helpLOG();
-                    break;
+            case CALENDAR:
+                helpCALENDAR();
+                break;
+            case RIGHT:
+                helpRIGHT();
+                break;
+            case LOG:
+                helpLOG();
+                break;
             }
         }
 
@@ -444,10 +435,10 @@ public class ProvUtil implements HttpDebugListener {
             }
             console.println("    {grantee-type} = " + gt.toString());
             console.println();
-            console.println("    {grantee-id|grantee-name} is required if grantee-type is one of: " +
-                    gtNeedsGranteeIdentity);
-            console.println("    {grantee-id|grantee-name} should not be specified if grantee-type is one of: " +
-                    gtNoGranteeId);
+            console.println("    {grantee-id|grantee-name} is required if grantee-type is one of: "
+                    + gtNeedsGranteeIdentity);
+            console.println("    {grantee-id|grantee-name} should not be specified if grantee-type is one of: "
+                    + gtNoGranteeId);
             if (secretPossible) {
                 console.println();
                 console.println("    {secret} is required if grantee-type is one of: " + gtNeedsSecret);
@@ -482,11 +473,13 @@ public class ProvUtil implements HttpDebugListener {
         boolean printRights;
         boolean secretPossible;
         boolean modifierPossible;
+
         RightCommandHelp(boolean printRights, boolean secretPossible, boolean modifierPossible) {
             this.printRights = printRights;
             this.secretPossible = secretPossible;
             this.modifierPossible = modifierPossible;
         }
+
         @Override
         public void printHelp() {
             Category.helpRIGHTCommand(printRights, secretPossible, modifierPossible);
@@ -497,9 +490,7 @@ public class ProvUtil implements HttpDebugListener {
         @Override
         public void printHelp() {
             /*
-             * copied from soap-admin.txt
-             * Not exactly match all types in MailboxIndex
-             * TODO: cleanup
+             * copied from soap-admin.txt Not exactly match all types in MailboxIndex TODO: cleanup
              */
             console.println();
             console.println("Valid types:");
@@ -518,163 +509,202 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     public enum Command {
-        ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
-        ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {trace|debug|info|warn|error}", Category.LOG, 3, 5),
-        ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
-        ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
-        AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
-        AUTO_PROV_CONTROL("autoProvControl", "apc", "{start|status|stop}", Category.COMMANDS, 1, 1),
-        CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
-        CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name (note:can only check internal user)} {right}",
-                Category.RIGHT, 3, 4, null, new RightCommandHelp(false, false, true)),
-                COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
-                COUNT_ACCOUNT("countAccount", "cta", "{domain|id}", Category.DOMAIN, 1, 1),
-                COUNT_OBJECTS("countObjects", "cto", "{" + CountObjectsType.names("|") + "} [-d {domain|id}] [-u {UCService|id}]", Category.MISC, 1, 4),
-                CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
-                CREATE_ALIAS_DOMAIN("createAliasDomain", "cad", "{alias-domain-name} {local-domain-name|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE),
-                CREATE_ALWAYSONCLUSTER("createAlwaysOnCluster", "caoc", "{name} [attr1 value1 [attr2 value2...]]", Category.ALWAYSONCLUSTER, 1, Integer.MAX_VALUE),
-                CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk", "{domain} {namemask} {number of accounts to create}", Category.MISC, 3, 3),
-                CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE),
-                CREATE_COS("createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]", Category.COS, 1, Integer.MAX_VALUE),
-                CREATE_DATA_SOURCE("createDataSource", "cds", "{name@domain} {ds-type} {ds-name} zimbraDataSourceEnabled {TRUE|FALSE} zimbraDataSourceFolderId {folder-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
-                CREATE_DISTRIBUTION_LIST("createDistributionList", "cdl", "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE),
-                CREATE_DYNAMIC_DISTRIBUTION_LIST("createDynamicDistributionList", "cddl", "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE),
-                CREATE_DISTRIBUTION_LISTS_BULK("createDistributionListsBulk", "cdlbulk"),
-                CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
-                CREATE_SERVER("createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
-                CREATE_UC_SERVICE("createUCService", "cucs", "{name} [attr1 value1 [attr2 value2...]]", Category.UCSERVICE, 1, Integer.MAX_VALUE),
-                CREATE_IDENTITY("createIdentity", "cid", "{name@domain} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
-                CREATE_SIGNATURE("createSignature", "csig", "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
-                CREATE_XMPP_COMPONENT("createXMPPComponent", "cxc", "{short-name} {domain}  {server} {classname} {category} {type} [attr value1 [attr2 value2...]]", Category.CONFIG, 6, Integer.MAX_VALUE),
-                DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}", Category.ACCOUNT, 1, 1),
-                DELETE_ALWAYSONCLUSTER("deleteAlwaysOnCluster", "daoc", "{name|id}", Category.ALWAYSONCLUSTER, 1, 1),
-                DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}", Category.CALENDAR, 1, 1),
-                DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS, 1, 1),
-                DELETE_DATA_SOURCE("deleteDataSource", "dds", "{name@domain|id} {ds-name|ds-id}", Category.ACCOUNT, 2, 2),
-                DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}", Category.LIST, 1, 1),
-                DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1),
-                DELETE_IDENTITY("deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),
-                DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
-                DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
-                DELETE_UC_SERVICE("deleteUCService", "ducs", "{name|id}", Category.UCSERVICE, 1, 1),
-                DELETE_XMPP_COMPONENT("deleteXMPPComponent", "dxc", "{xmpp-component-name}", Category.CONFIG, 1, 1),
-                DESCRIBE("describe", "desc", "[[-v] [-ni] [{entry-type}]] | [-a {attribute-name}]", Category.MISC, 0, Integer.MAX_VALUE, null, null, true),
-                EXIT("exit", "quit", "", Category.MISC, 0, 0),
-                FLUSH_CACHE("flushCache", "fc", "[-a] {"+CacheEntryType.names()+"|<extension-cache-type>} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
-                GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name|id|foreignPrincipal} {by} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
-                GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "[-f] {domain|id}", Category.MISC, 1, 2),
-                GET_ACCOUNT("getAccount", "ga", "[-e] {name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
-                GET_ALWAYSONCLUSTER("getAlwaysOnCluster", "gaoc", "{name|id} [attr1 [attr2...]]", Category.ALWAYSONCLUSTER, 1, Integer.MAX_VALUE),
-                GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id} [arg1 [arg2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
-                GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
-                GET_SIGNATURES("getSignatures", "gsig", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
-                GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
-                GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [-e] [-s server] [{domain}]", Category.ACCOUNT, 0, 5, Via.ldap),
-                GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "[-s/--server hostname] {name@domain|id}", Category.LOG, 1, 3),
-                GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "[-s/--server hostname]", Category.LOG, 0, 2),
-                GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v] [-e] [attr1 [attr2...]]", Category.ACCOUNT, 0, Integer.MAX_VALUE),
-                GET_ALL_ALWAYSONCLUSTERS("getAllAlwaysOnClusters", "gaaoc", "[-v]", Category.ALWAYSONCLUSTER, 0, 1),
-                GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [-e] [-s server] [{domain}]", Category.CALENDAR, 0, 5),
-                GET_ALL_CONFIG("getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE),
-                GET_ALL_COS("getAllCos", "gac", "[-v]", Category.COS, 0, 1),
-                GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[-v] [{domain}]", Category.LIST, 0, 2),
-                GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [-e] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
-                GET_ALL_EFFECTIVE_RIGHTS("getAllEffectiveRights", "gaer", "{grantee-type} {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 2, 4),
-                GET_ALL_FREEBUSY_PROVIDERS("getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1),
-                GET_ALL_RIGHTS("getAllRights", "gar", "[-v] [-t {target-type}] [-c " + RightClass.allValuesInString("|") + "]", Category.RIGHT, 0, 5),
-                GET_ALL_SERVERS("getAllServers", "gas", "[-v] [-e] [service]", Category.SERVER, 0, 3),
-                GET_ALL_UC_SERVICES("getAllUCServices", "gaucs", "[-v]", Category.UCSERVICE, 0, 3),
-                GET_ALL_XMPP_COMPONENTS("getAllXMPPComponents", "gaxcs", "", Category.CONFIG, 0, 0),
-                GET_AUTH_TOKEN_INFO("getAuthTokenInfo", "gati", "{auth-token}", Category.MISC, 1, 1),
-                GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id} [attr1 [attr2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE),
-                GET_CONFIG("getConfig", "gcf", "{name}", Category.CONFIG, 1, 1),
-                GET_COS("getCos", "gc", "{name|id} [attr1 [attr2...]]", Category.COS, 1, Integer.MAX_VALUE),
-                GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id} [attr1 [attr2...]]", Category.LIST, 1, Integer.MAX_VALUE),
-                GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
-                GET_DOMAIN("getDomain", "gd", "[-e] {domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
-                GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE),
-                GET_CONFIG_SMIME_CONFIG("getConfigSMIMEConfig", "gcsc", "[configName]", Category.DOMAIN, 0, 1),
-                GET_DOMAIN_SMIME_CONFIG("getDomainSMIMEConfig", "gdsc", "name|id [configName]", Category.DOMAIN, 1, 2),
-                GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]",
-                        Category.RIGHT, 1, 5, null, new RightCommandHelp(false, false, false)),
+        ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2), ADD_ACCOUNT_LOGGER(
+                "addAccountLogger", "aal",
+                "[-s/--server hostname] {name@domain|id} {logging-category} {trace|debug|info|warn|error}",
+                Category.LOG, 3, 5), ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla",
+                "{list@domain|id} {alias@domain}", Category.LIST, 2, 2), ADD_DISTRIBUTION_LIST_MEMBER(
+                "addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2,
+                Integer.MAX_VALUE), AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2,
+                2), AUTO_PROV_CONTROL("autoProvControl", "apc", "{start|status|stop}", Category.COMMANDS, 1, 1), CHECK_PASSWORD_STRENGTH(
+                "checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2), CHECK_RIGHT(
+                "checkRight",
+                "ckr",
+                "{target-type} [{target-id|target-name}] {grantee-id|grantee-name (note:can only check internal user)} {right}",
+                Category.RIGHT, 3, 4, null, new RightCommandHelp(false, false, true)), COPY_COS("copyCos", "cpc",
+                "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2), COUNT_ACCOUNT("countAccount", "cta",
+                "{domain|id}", Category.DOMAIN, 1, 1), COUNT_OBJECTS("countObjects", "cto", "{"
+                + CountObjectsType.names("|") + "} [-d {domain|id}] [-u {UCService|id}]", Category.MISC, 1, 4), CREATE_ACCOUNT(
+                "createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT,
+                2, Integer.MAX_VALUE), CREATE_ALIAS_DOMAIN("createAliasDomain", "cad",
+                "{alias-domain-name} {local-domain-name|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 2,
+                Integer.MAX_VALUE), CREATE_ALWAYSONCLUSTER("createAlwaysOnCluster", "caoc",
+                "{name} [attr1 value1 [attr2 value2...]]", Category.ALWAYSONCLUSTER, 1, Integer.MAX_VALUE), CREATE_BULK_ACCOUNTS(
+                "createBulkAccounts", "cabulk", "{domain} {namemask} {number of accounts to create}", Category.MISC, 3,
+                3), CREATE_CALENDAR_RESOURCE("createCalendarResource", "ccr",
+                "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE), CREATE_COS(
+                "createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]", Category.COS, 1, Integer.MAX_VALUE), CREATE_DATA_SOURCE(
+                "createDataSource",
+                "cds",
+                "{name@domain} {ds-type} {ds-name} zimbraDataSourceEnabled {TRUE|FALSE} zimbraDataSourceFolderId {folder-id} [attr1 value1 [attr2 value2...]]",
+                Category.ACCOUNT, 3, Integer.MAX_VALUE), CREATE_DISTRIBUTION_LIST("createDistributionList", "cdl",
+                "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE), CREATE_DYNAMIC_DISTRIBUTION_LIST(
+                "createDynamicDistributionList", "cddl", "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE), CREATE_DISTRIBUTION_LISTS_BULK(
+                "createDistributionListsBulk", "cdlbulk"), CREATE_DOMAIN("createDomain", "cd",
+                "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE), CREATE_SERVER(
+                "createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER, 1, Integer.MAX_VALUE), CREATE_UC_SERVICE(
+                "createUCService", "cucs", "{name} [attr1 value1 [attr2 value2...]]", Category.UCSERVICE, 1,
+                Integer.MAX_VALUE), CREATE_IDENTITY("createIdentity", "cid",
+                "{name@domain} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2,
+                Integer.MAX_VALUE), CREATE_SIGNATURE("createSignature", "csig",
+                "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2,
+                Integer.MAX_VALUE), CREATE_XMPP_COMPONENT("createXMPPComponent", "cxc",
+                "{short-name} {domain}  {server} {classname} {category} {type} [attr value1 [attr2 value2...]]",
+                Category.CONFIG, 6, Integer.MAX_VALUE), DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}",
+                Category.ACCOUNT, 1, 1), DELETE_ALWAYSONCLUSTER("deleteAlwaysOnCluster", "daoc", "{name|id}",
+                Category.ALWAYSONCLUSTER, 1, 1), DELETE_CALENDAR_RESOURCE("deleteCalendarResource", "dcr",
+                "{name@domain|id}", Category.CALENDAR, 1, 1), DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS,
+                1, 1), DELETE_DATA_SOURCE("deleteDataSource", "dds", "{name@domain|id} {ds-name|ds-id}",
+                Category.ACCOUNT, 2, 2), DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}",
+                Category.LIST, 1, 1), DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1), DELETE_IDENTITY(
+                "deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2), DELETE_SIGNATURE(
+                "deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2), DELETE_SERVER(
+                "deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1), DELETE_UC_SERVICE("deleteUCService", "ducs",
+                "{name|id}", Category.UCSERVICE, 1, 1), DELETE_XMPP_COMPONENT("deleteXMPPComponent", "dxc",
+                "{xmpp-component-name}", Category.CONFIG, 1, 1), DESCRIBE("describe", "desc",
+                "[[-v] [-ni] [{entry-type}]] | [-a {attribute-name}]", Category.MISC, 0, Integer.MAX_VALUE, null, null,
+                true), EXIT("exit", "quit", "", Category.MISC, 0, 0), FLUSH_CACHE("flushCache", "fc", "[-a] {"
+                + CacheEntryType.names() + "|<extension-cache-type>} [name1|id1 [name2|id2...]]", Category.MISC, 1,
+                Integer.MAX_VALUE), GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa",
+                "{domain|id} {name|id|foreignPrincipal} {by} {timestamp|0} {expires|0}", Category.MISC, 5, 6), GENERATE_DOMAIN_PRE_AUTH_KEY(
+                "generateDomainPreAuthKey", "gdpak", "[-f] {domain|id}", Category.MISC, 1, 2), GET_ACCOUNT(
+                "getAccount", "ga", "[-e] {name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE), GET_ALWAYSONCLUSTER(
+                "getAlwaysOnCluster", "gaoc", "{name|id} [attr1 [attr2...]]", Category.ALWAYSONCLUSTER, 1,
+                Integer.MAX_VALUE), GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id} [arg1 [arg2...]]",
+                Category.ACCOUNT, 1, Integer.MAX_VALUE), GET_IDENTITIES("getIdentities", "gid",
+                "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE), GET_SIGNATURES(
+                "getSignatures", "gsig", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE), GET_ACCOUNT_MEMBERSHIP(
+                "getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2), GET_ALL_ACCOUNTS(
+                "getAllAccounts", "gaa", "[-v] [-e] [-s server] [{domain}]", Category.ACCOUNT, 0, 5, Via.ldap), GET_ACCOUNT_LOGGERS(
+                "getAccountLoggers", "gal", "[-s/--server hostname] {name@domain|id}", Category.LOG, 1, 3), GET_ALL_ACCOUNT_LOGGERS(
+                "getAllAccountLoggers", "gaal", "[-s/--server hostname]", Category.LOG, 0, 2), GET_ALL_ADMIN_ACCOUNTS(
+                "getAllAdminAccounts", "gaaa", "[-v] [-e] [attr1 [attr2...]]", Category.ACCOUNT, 0, Integer.MAX_VALUE), GET_ALL_ALWAYSONCLUSTERS(
+                "getAllAlwaysOnClusters", "gaaoc", "[-v]", Category.ALWAYSONCLUSTER, 0, 1), GET_ALL_CALENDAR_RESOURCES(
+                "getAllCalendarResources", "gacr", "[-v] [-e] [-s server] [{domain}]", Category.CALENDAR, 0, 5), GET_ALL_CONFIG(
+                "getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE), GET_ALL_COS(
+                "getAllCos", "gac", "[-v]", Category.COS, 0, 1), GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists",
+                "gadl", "[-v] [{domain}]", Category.LIST, 0, 2), GET_ALL_DOMAINS("getAllDomains", "gad",
+                "[-v] [-e] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE), GET_ALL_EFFECTIVE_RIGHTS(
+                "getAllEffectiveRights", "gaer",
+                "{grantee-type} {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 2, 4), GET_ALL_FREEBUSY_PROVIDERS(
+                "getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1), GET_ALL_RIGHTS("getAllRights", "gar",
+                "[-v] [-t {target-type}] [-c " + RightClass.allValuesInString("|") + "]", Category.RIGHT, 0, 5), GET_ALL_SERVERS(
+                "getAllServers", "gas", "[-v] [-e] [service]", Category.SERVER, 0, 3), GET_ALL_UC_SERVICES(
+                "getAllUCServices", "gaucs", "[-v]", Category.UCSERVICE, 0, 3), GET_ALL_XMPP_COMPONENTS(
+                "getAllXMPPComponents", "gaxcs", "", Category.CONFIG, 0, 0), GET_AUTH_TOKEN_INFO("getAuthTokenInfo",
+                "gati", "{auth-token}", Category.MISC, 1, 1), GET_CALENDAR_RESOURCE("getCalendarResource", "gcr",
+                "{name@domain|id} [attr1 [attr2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE), GET_CONFIG(
+                "getConfig", "gcf", "{name}", Category.CONFIG, 1, 1), GET_COS("getCos", "gc",
+                "{name|id} [attr1 [attr2...]]", Category.COS, 1, Integer.MAX_VALUE), GET_DISTRIBUTION_LIST(
+                "getDistributionList", "gdl", "{list@domain|id} [attr1 [attr2...]]", Category.LIST, 1,
+                Integer.MAX_VALUE), GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm",
+                "{name@domain|id}", Category.LIST, 1, 1), GET_DOMAIN("getDomain", "gd",
+                "[-e] {domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE), GET_DOMAIN_INFO(
+                "getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2,
+                Integer.MAX_VALUE), GET_CONFIG_SMIME_CONFIG("getConfigSMIMEConfig", "gcsc", "[configName]",
+                Category.DOMAIN, 0, 1), GET_DOMAIN_SMIME_CONFIG("getDomainSMIMEConfig", "gdsc", "name|id [configName]",
+                Category.DOMAIN, 1, 2), GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger",
+                "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]",
+                Category.RIGHT, 1, 5, null, new RightCommandHelp(false, false, false)),
 
-                        // for testing the provisioning interface only, comment out after testing, the soap is only used by admin console
-                        GET_CREATE_OBJECT_ATTRS("getCreateObjectAttrs", "gcoa", "{target-type} {domain-id|domain-name} {cos-id|cos-name} {grantee-id|grantee-name}", Category.RIGHT, 3, 4),
+        // for testing the provisioning interface only, comment out after testing, the soap is only used by admin
+        // console
+        GET_CREATE_OBJECT_ATTRS("getCreateObjectAttrs", "gcoa",
+                "{target-type} {domain-id|domain-name} {cos-id|cos-name} {grantee-id|grantee-name}", Category.RIGHT, 3,
+                4),
 
-                        GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
-                        GET_GRANTS("getGrants", "gg", "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]",
-                                Category.RIGHT, 2, 7, null, new RightCommandHelp(false, false, false)),
-                                GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
-                                GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),
-                                GET_RIGHT("getRight", "gr", "{right} [-e] (whether to expand combo rights recursively)", Category.RIGHT, 1, 2),
-                                GET_RIGHTS_DOC("getRightsDoc", "grd", "[java packages]", Category.RIGHT, 0, Integer.MAX_VALUE),
-                                GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
-                                GET_UC_SERVICES("getUCService", "gucs", "[-e] {name|id} [attr1 [attr2...]]", Category.UCSERVICE, 1, Integer.MAX_VALUE),
-                                GET_SHARE_INFO("getShareInfo", "gsi", "{owner-name|owner-id}", Category.SHARE, 1, 1),
-                                GET_SPNEGO_DOMAIN("getSpnegoDomain", "gsd", "", Category.MISC, 0, 0),
-                                GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
-                                GRANT_RIGHT("grantRight", "grr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name} [secret]] {right}",
-                                        Category.RIGHT, 3, 6, null, new RightCommandHelp(false, true, true)),
-                                        HELP("help", "?", "commands", Category.MISC, 0, 1),
-                                        LDAP(".ldap", ".l"),
-                                        MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
-                                        MODIFY_ALWAYSONCLUSTER("modifyAlwaysOnCluster", "maoc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.ALWAYSONCLUSTER, 3, Integer.MAX_VALUE),
-                                        MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 3, Integer.MAX_VALUE),
-                                        MODIFY_CONFIG("modifyConfig", "mcf", "attr1 value1 [attr2 value2...]", Category.CONFIG, 2, Integer.MAX_VALUE),
-                                        MODIFY_COS("modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.COS, 3, Integer.MAX_VALUE),
-                                        MODIFY_DATA_SOURCE("modifyDataSource", "mds", "{name@domain|id} {ds-name|ds-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
-                                        MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST, 3, Integer.MAX_VALUE),
-                                        MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 3, Integer.MAX_VALUE),
-                                        MODIFY_CONFIG_SMIME_CONFIG("modifyConfigSMIMEConfig", "mcsc", "configName [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
-                                        MODIFY_DOMAIN_SMIME_CONFIG("modifyDomainSMIMEConfig", "mdsc", "name|id configName [attr2 value2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE),
-                                        MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
-                                        MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
-                                        MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
-                                        MODIFY_UC_SERVICE("modifyUCService", "mucs", "{name|id} [attr1 value1 [attr2 value2...]]", Category.UCSERVICE, 3, Integer.MAX_VALUE),
-                                        MODIFY_XMPP_COMPONENT("modifyXMPPComponent", "mxc", "{name@domain} [attr1 value1 [attr value2...]]", Category.CONFIG, 3, Integer.MAX_VALUE),
-                                        PUSH_FREEBUSY("pushFreebusy", "pfb", "[account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
-                                        PUSH_FREEBUSY_DOMAIN("pushFreebusyDomain", "pfbd", "{domain}", Category.FREEBUSY, 1, 1),
-                                        PURGE_ACCOUNT_CALENDAR_CACHE("purgeAccountCalendarCache", "pacc", "{name@domain|id} [...]", Category.CALENDAR, 1, Integer.MAX_VALUE),
-                                        PURGE_FREEBUSY_QUEUE("purgeFreebusyQueue", "pfbq", "[{provider-name}]", Category.FREEBUSY, 0, 1),
-                                        RECALCULATE_MAILBOX_COUNTS("recalculateMailboxCounts", "rmc", "{name@domain|id}", Category.MAILBOX, 1, 1),
-                                        REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
-                                        REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]", Category.LOG, 0, 4),
-                                        REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
-                                        REMOVE_DISTRIBUTION_LIST_MEMBER("removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}", Category.LIST, 2, Integer.MAX_VALUE),
-                                        REMOVE_CONFIG_SMIME_CONFIG("removeConfigSMIMEConfig", "rcsc", "configName", Category.DOMAIN, 1, 1),
-                                        REMOVE_DOMAIN_SMIME_CONFIG("removeDomainSMIMEConfig", "rdsc", "name|id configName", Category.DOMAIN, 2, 2),
-                                        RENAME_ACCOUNT("renameAccount", "ra", "{name@domain|id} {newName@domain}", Category.ACCOUNT, 2, 2),
-                                        RENAME_CALENDAR_RESOURCE("renameCalendarResource",  "rcr", "{name@domain|id} {newName@domain}", Category.CALENDAR, 2, 2),
-                                        RENAME_COS("renameCos", "rc", "{name|id} {newName}", Category.COS, 2, 2),
-                                        RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
-                                        RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
-                                        RENAME_UCSERVICE("renameUCService", "rucs", "{name|id} {newName}", Category.UCSERVICE, 2, 2),
-                                        REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {start|status|cancel} [{types|ids} {type or id} [,type or id...]]", Category.MAILBOX, 2, Integer.MAX_VALUE, null, new ReindexCommandHelp()),
-                                        COMPACT_INBOX_MAILBOX("compactIndexMailbox", "cim", "{name@domain|id} {start|status}", Category.MAILBOX, 2, Integer.MAX_VALUE),
-                                        VERIFY_INDEX("verifyIndex", "vi", "{name@domain|id}", Category.MAILBOX, 1, 1),
-                                        GET_INDEX_STATS("getIndexStats", "gis", "{name@domain|id}", Category.MAILBOX, 1, 1),
-                                        REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name}] {right}",
-                                                Category.RIGHT, 3, 5, null, new RightCommandHelp(false, false, true)),
-                                                SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
-                                                SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH, 1, Integer.MAX_VALUE, Via.ldap),
-                                                SEARCH_GAL("searchGal", "sg", "{domain} {name} [limit {limit}] [offset {offset}] [sortBy {attr}]", Category.SEARCH, 2, Integer.MAX_VALUE),
-                                                SELECT_MAILBOX("selectMailbox", "sm", "{account-name} [{zmmailbox commands}]", Category.MAILBOX, 1, Integer.MAX_VALUE),
-                                                SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}", Category.ACCOUNT, 2, 2),
-                                                SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
-                                                GET_ALL_MTA_AUTH_URLS("getAllMtaAuthURLs", "gamau", "", Category.SERVER, 0, 0),
-                                                GET_ALL_REVERSE_PROXY_URLS("getAllReverseProxyURLs", "garpu", "", Category.REVERSEPROXY, 0, 0),
-                                                GET_ALL_REVERSE_PROXY_BACKENDS("getAllReverseProxyBackends", "garpb", "", Category.REVERSEPROXY, 0, 0),
-                                                GET_ALL_REVERSE_PROXY_DOMAINS("getAllReverseProxyDomains", "garpd", "", Category.REVERSEPROXY, 0, 0, Via.ldap),
-                                                GET_ALL_MEMCACHED_SERVERS("getAllMemcachedServers", "gamcs", "", Category.SERVER, 0, 0),
-                                                RELOAD_MEMCACHED_CLIENT_CONFIG("reloadMemcachedClientConfig", "rmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
-                                                GET_MEMCACHED_CLIENT_CONFIG("getMemcachedClientConfig", "gmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
-                                                SOAP(".soap", ".s"),
-                                                SYNC_GAL("syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2),
-                                                UPDATE_PRESENCE_SESSION_ID("updatePresenceSessionId", "upsid", "{UC service name or id} {app-username} {app-password}", Category.MISC, 3, 3, Via.soap),
-                                                RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]", Category.LOG, 0, 2),
+        GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1), GET_GRANTS(
+                "getGrants",
+                "gg",
+                "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]",
+                Category.RIGHT, 2, 7, null, new RightCommandHelp(false, false, false)), GET_MAILBOX_INFO(
+                "getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1), GET_QUOTA_USAGE("getQuotaUsage", "gqu",
+                "{server}", Category.MAILBOX, 1, 1), GET_RIGHT("getRight", "gr",
+                "{right} [-e] (whether to expand combo rights recursively)", Category.RIGHT, 1, 2), GET_RIGHTS_DOC(
+                "getRightsDoc", "grd", "[java packages]", Category.RIGHT, 0, Integer.MAX_VALUE), GET_SERVER(
+                "getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE), GET_UC_SERVICES(
+                "getUCService", "gucs", "[-e] {name|id} [attr1 [attr2...]]", Category.UCSERVICE, 1, Integer.MAX_VALUE), GET_SHARE_INFO(
+                "getShareInfo", "gsi", "{owner-name|owner-id}", Category.SHARE, 1, 1), GET_SPNEGO_DOMAIN(
+                "getSpnegoDomain", "gsd", "", Category.MISC, 0, 0), GET_XMPP_COMPONENT("getXMPPComponent", "gxc",
+                "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE), GRANT_RIGHT("grantRight",
+                "grr",
+                "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name} [secret]] {right}",
+                Category.RIGHT, 3, 6, null, new RightCommandHelp(false, true, true)), HELP("help", "?", "commands",
+                Category.MISC, 0, 1), LDAP(".ldap", ".l"), MODIFY_ACCOUNT("modifyAccount", "ma",
+                "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE), MODIFY_ALWAYSONCLUSTER(
+                "modifyAlwaysOnCluster", "maoc", "{name|id} [attr1 value1 [attr2 value2...]]",
+                Category.ALWAYSONCLUSTER, 3, Integer.MAX_VALUE), MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",
+                "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 3, Integer.MAX_VALUE), MODIFY_CONFIG(
+                "modifyConfig", "mcf", "attr1 value1 [attr2 value2...]", Category.CONFIG, 2, Integer.MAX_VALUE), MODIFY_COS(
+                "modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.COS, 3, Integer.MAX_VALUE), MODIFY_DATA_SOURCE(
+                "modifyDataSource", "mds", "{name@domain|id} {ds-name|ds-id} [attr1 value1 [attr2 value2...]]",
+                Category.ACCOUNT, 4, Integer.MAX_VALUE), MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl",
+                "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST, 3, Integer.MAX_VALUE), MODIFY_DOMAIN(
+                "modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 3,
+                Integer.MAX_VALUE), MODIFY_CONFIG_SMIME_CONFIG("modifyConfigSMIMEConfig", "mcsc",
+                "configName [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE), MODIFY_DOMAIN_SMIME_CONFIG(
+                "modifyDomainSMIMEConfig", "mdsc", "name|id configName [attr2 value2...]]", Category.DOMAIN, 2,
+                Integer.MAX_VALUE), MODIFY_IDENTITY("modifyIdentity", "mid",
+                "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4,
+                Integer.MAX_VALUE), MODIFY_SIGNATURE("modifySignature", "msig",
+                "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4,
+                Integer.MAX_VALUE), MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]",
+                Category.SERVER, 3, Integer.MAX_VALUE), MODIFY_UC_SERVICE("modifyUCService", "mucs",
+                "{name|id} [attr1 value1 [attr2 value2...]]", Category.UCSERVICE, 3, Integer.MAX_VALUE), MODIFY_XMPP_COMPONENT(
+                "modifyXMPPComponent", "mxc", "{name@domain} [attr1 value1 [attr value2...]]", Category.CONFIG, 3,
+                Integer.MAX_VALUE), PUSH_FREEBUSY("pushFreebusy", "pfb", "[account-id ...]", Category.FREEBUSY, 1,
+                Integer.MAX_VALUE), PUSH_FREEBUSY_DOMAIN("pushFreebusyDomain", "pfbd", "{domain}", Category.FREEBUSY,
+                1, 1), PURGE_ACCOUNT_CALENDAR_CACHE("purgeAccountCalendarCache", "pacc", "{name@domain|id} [...]",
+                Category.CALENDAR, 1, Integer.MAX_VALUE), PURGE_FREEBUSY_QUEUE("purgeFreebusyQueue", "pfbq",
+                "[{provider-name}]", Category.FREEBUSY, 0, 1), RECALCULATE_MAILBOX_COUNTS("recalculateMailboxCounts",
+                "rmc", "{name@domain|id}", Category.MAILBOX, 1, 1), REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa",
+                "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2), REMOVE_ACCOUNT_LOGGER(
+                "removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]",
+                Category.LOG, 0, 4), REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla",
+                "{list@domain|id} {alias@domain}", Category.LIST, 2, 2), REMOVE_DISTRIBUTION_LIST_MEMBER(
+                "removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}", Category.LIST, 2,
+                Integer.MAX_VALUE), REMOVE_CONFIG_SMIME_CONFIG("removeConfigSMIMEConfig", "rcsc", "configName",
+                Category.DOMAIN, 1, 1), REMOVE_DOMAIN_SMIME_CONFIG("removeDomainSMIMEConfig", "rdsc",
+                "name|id configName", Category.DOMAIN, 2, 2), RENAME_ACCOUNT("renameAccount", "ra",
+                "{name@domain|id} {newName@domain}", Category.ACCOUNT, 2, 2), RENAME_CALENDAR_RESOURCE(
+                "renameCalendarResource", "rcr", "{name@domain|id} {newName@domain}", Category.CALENDAR, 2, 2), RENAME_COS(
+                "renameCos", "rc", "{name|id} {newName}", Category.COS, 2, 2), RENAME_DISTRIBUTION_LIST(
+                "renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2), RENAME_DOMAIN(
+                "renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap), RENAME_UCSERVICE(
+                "renameUCService", "rucs", "{name|id} {newName}", Category.UCSERVICE, 2, 2), REINDEX_MAILBOX(
+                "reIndexMailbox", "rim",
+                "{name@domain|id} {start|status|cancel} [{types|ids} {type or id} [,type or id...]]", Category.MAILBOX,
+                2, Integer.MAX_VALUE, null, new ReindexCommandHelp()), COMPACT_INBOX_MAILBOX("compactIndexMailbox",
+                "cim", "{name@domain|id} {start|status}", Category.MAILBOX, 2, Integer.MAX_VALUE), VERIFY_INDEX(
+                "verifyIndex", "vi", "{name@domain|id}", Category.MAILBOX, 1, 1), GET_INDEX_STATS("getIndexStats",
+                "gis", "{name@domain|id}", Category.MAILBOX, 1, 1), REVOKE_RIGHT("revokeRight", "rvr",
+                "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name}] {right}",
+                Category.RIGHT, 3, 5, null, new RightCommandHelp(false, false, true)), SEARCH_ACCOUNTS(
+                "searchAccounts",
+                "sa",
+                "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [sortAscending 0|1*] [domain {domain}]",
+                Category.SEARCH, 1, Integer.MAX_VALUE), SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr",
+                "[-v] domain attr op value [attr op value...]", Category.SEARCH, 1, Integer.MAX_VALUE, Via.ldap), SEARCH_GAL(
+                "searchGal", "sg", "{domain} {name} [limit {limit}] [offset {offset}] [sortBy {attr}]",
+                Category.SEARCH, 2, Integer.MAX_VALUE), SELECT_MAILBOX("selectMailbox", "sm",
+                "{account-name} [{zmmailbox commands}]", Category.MAILBOX, 1, Integer.MAX_VALUE), SET_ACCOUNT_COS(
+                "setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}", Category.ACCOUNT, 2, 2), SET_PASSWORD(
+                "setPassword", "sp", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2), GET_ALL_MTA_AUTH_URLS(
+                "getAllMtaAuthURLs", "gamau", "", Category.SERVER, 0, 0), GET_ALL_REVERSE_PROXY_URLS(
+                "getAllReverseProxyURLs", "garpu", "", Category.REVERSEPROXY, 0, 0), GET_ALL_REVERSE_PROXY_BACKENDS(
+                "getAllReverseProxyBackends", "garpb", "", Category.REVERSEPROXY, 0, 0), GET_ALL_REVERSE_PROXY_DOMAINS(
+                "getAllReverseProxyDomains", "garpd", "", Category.REVERSEPROXY, 0, 0, Via.ldap), GET_ALL_MEMCACHED_SERVERS(
+                "getAllMemcachedServers", "gamcs", "", Category.SERVER, 0, 0), RELOAD_MEMCACHED_CLIENT_CONFIG(
+                "reloadMemcachedClientConfig", "rmcc", "all | mailbox-server [...]", Category.MISC, 1,
+                Integer.MAX_VALUE, Via.soap), GET_MEMCACHED_CLIENT_CONFIG("getMemcachedClientConfig", "gmcc",
+                "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap), SOAP(".soap", ".s"), SYNC_GAL(
+                "syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2), UPDATE_PRESENCE_SESSION_ID(
+                "updatePresenceSessionId", "upsid", "{UC service name or id} {app-username} {app-password}",
+                Category.MISC, 3, 3, Via.soap), RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]",
+                Category.LOG, 0, 2),
 
-                                                RESET_LDAP_CLIENT("resetLdapClient", "rlc", "[-a]", Category.MISC, 0, 1),
-                                                MOVE_ACCOUNT("moveAccount", "mva", "{name@domain} {-t hostname} [--sticky {TRUE|FALSE}]", Category.ACCOUNT, 3, 6);
+        RESET_LDAP_CLIENT("resetLdapClient", "rlc", "[-a]", Category.MISC, 0, 1), MOVE_ACCOUNT("moveAccount", "mva",
+                "{name@domain} {-t hostname} [--sticky {TRUE|FALSE}]", Category.ACCOUNT, 3, 6);
 
         private String mName;
         private String mAlias;
@@ -690,23 +720,45 @@ public class ProvUtil implements HttpDebugListener {
             soap, ldap;
         }
 
-        public String getName() { return mName; }
-        public String getAlias() { return mAlias; }
-        public String getHelp() { return mHelp; }
-        public CommandHelp getExtraHelp() { return mExtraHelp; }
-        public Category getCategory() { return mCat; }
-        public boolean hasHelp() { return mHelp != null; }
+        public String getName() {
+            return mName;
+        }
+
+        public String getAlias() {
+            return mAlias;
+        }
+
+        public String getHelp() {
+            return mHelp;
+        }
+
+        public CommandHelp getExtraHelp() {
+            return mExtraHelp;
+        }
+
+        public Category getCategory() {
+            return mCat;
+        }
+
+        public boolean hasHelp() {
+            return mHelp != null;
+        }
+
         public boolean checkArgsLength(String args[]) {
             int len = args == null ? 0 : args.length - 1;
             return len >= mMinArgLength && len <= mMaxArgLength;
         }
-        public Via getVia() { return mVia; }
+
+        public Via getVia() {
+            return mVia;
+        }
+
         public boolean needsSchemaExtension() {
             return mNeedsSchemaExtension || (mCat == Category.RIGHT);
         }
 
         public boolean isDeprecated() {
-            return false;  // Used to return true if mCat was Category.NOTEBOOK - which has now been removed
+            return false; // Used to return true if mCat was Category.NOTEBOOK - which has now been removed
         }
 
         private Command(String name, String alias) {
@@ -714,14 +766,14 @@ public class ProvUtil implements HttpDebugListener {
             mAlias = alias;
         }
 
-        private Command(String name, String alias, String help, Category cat)  {
+        private Command(String name, String alias, String help, Category cat) {
             mName = name;
             mAlias = alias;
             mHelp = help;
             mCat = cat;
         }
 
-        private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength)  {
+        private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength) {
             mName = name;
             mAlias = alias;
             mHelp = help;
@@ -730,7 +782,8 @@ public class ProvUtil implements HttpDebugListener {
             mMaxArgLength = maxArgLength;
         }
 
-        private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength, Via via)  {
+        private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength,
+                Via via) {
             mName = name;
             mAlias = alias;
             mHelp = help;
@@ -741,7 +794,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength,
-                Via via, CommandHelp extraHelp)  {
+                Via via, CommandHelp extraHelp) {
             mName = name;
             mAlias = alias;
             mHelp = help;
@@ -753,7 +806,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength,
-                Via via, CommandHelp extraHelp, boolean needsSchemaExtension)  {
+                Via via, CommandHelp extraHelp, boolean needsSchemaExtension) {
             this(name, alias, help, cat, minArgLength, maxArgLength, via, extraHelp);
             mNeedsSchemaExtension = needsSchemaExtension;
         }
@@ -762,11 +815,11 @@ public class ProvUtil implements HttpDebugListener {
     private void addCommand(Command command) {
         String name = command.getName().toLowerCase();
         if (commandIndex.get(name) != null) {
-            throw new RuntimeException("duplicate command: "+name);
+            throw new RuntimeException("duplicate command: " + name);
         }
         String alias = command.getAlias().toLowerCase();
         if (commandIndex.get(alias) != null) {
-            throw new RuntimeException("duplicate command: "+alias);
+            throw new RuntimeException("duplicate command: " + alias);
         }
         commandIndex.put(name, command);
         commandIndex.put(alias, command);
@@ -784,11 +837,9 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     /**
-     * Commands that should always use LdapProv, but for convenience
-     * don't require the -l option specified.
+     * Commands that should always use LdapProv, but for convenience don't require the -l option specified.
      *
-     * Commands that must use -l (e.g. gaa) are indicated in the Via field
-     * of the command definition
+     * Commands that must use -l (e.g. gaa) are indicated in the Via field of the command definition
      */
     private boolean forceLdapButDontRequireUseLdapOption(Command command) {
         return (command == Command.DESCRIBE);
@@ -844,7 +895,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
-        String [] members;
+        String[] members;
         Account account;
         AccountLoggerOptions alo;
         command = lookupCommand(args[0]);
@@ -864,527 +915,530 @@ public class ProvUtil implements HttpDebugListener {
             loadLdapSchemaExtensionAttrs();
         }
         switch (command) {
-            case ADD_ACCOUNT_ALIAS:
-                prov.addAlias(lookupAccount(args[1]), args[2]);
-                break;
-            case ADD_ACCOUNT_LOGGER:
-                alo = parseAccountLoggerOptions(args);
-                if (!command.checkArgsLength(alo.args)) {
-                    usage();
-                    return true;
+        case ADD_ACCOUNT_ALIAS:
+            prov.addAlias(lookupAccount(args[1]), args[2]);
+            break;
+        case ADD_ACCOUNT_LOGGER:
+            alo = parseAccountLoggerOptions(args);
+            if (!command.checkArgsLength(alo.args)) {
+                usage();
+                return true;
+            }
+            doAddAccountLogger(alo);
+            break;
+        case AUTO_COMPLETE_GAL:
+            doAutoCompleteGal(args);
+            break;
+        case AUTO_PROV_CONTROL:
+            prov.autoProvControl(args[1]);
+            break;
+        case COPY_COS:
+            console.println(prov.copyCos(lookupCos(args[1]).getId(), args[2]).getId());
+            break;
+        case COUNT_ACCOUNT:
+            doCountAccount(args);
+            break;
+        case COUNT_OBJECTS:
+            doCountObjects(args);
+            break;
+        case CREATE_ACCOUNT:
+            console.println(prov.createAccount(args[1], args[2].equals("") ? null : args[2],
+                    getMapAndCheck(args, 3, true)).getId());
+            break;
+        case CREATE_ALIAS_DOMAIN:
+            console.println(doCreateAliasDomain(args[1], args[2], getMapAndCheck(args, 3, true)).getId());
+            break;
+        case CREATE_ALWAYSONCLUSTER:
+            console.println(prov.createAlwaysOnCluster(args[1], getMapAndCheck(args, 2, true)).getId());
+            break;
+        case CREATE_COS:
+            console.println(prov.createCos(args[1], getMapAndCheck(args, 2, true)).getId());
+            break;
+        case CREATE_DOMAIN:
+            console.println(prov.createDomain(args[1], getMapAndCheck(args, 2, true)).getId());
+            break;
+        case CREATE_IDENTITY:
+            prov.createIdentity(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3, true));
+            break;
+        case CREATE_SIGNATURE:
+            console.println(prov.createSignature(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3, true))
+                    .getId());
+            break;
+        case CREATE_DATA_SOURCE:
+            console.println(prov.createDataSource(lookupAccount(args[1]), DataSourceType.fromString(args[2]), args[3],
+                    getMapAndCheck(args, 4, true)).getId());
+            break;
+        case CREATE_SERVER:
+            console.println(prov.createServer(args[1], getMapAndCheck(args, 2, true)).getId());
+            break;
+        case CREATE_UC_SERVICE:
+            console.println(prov.createUCService(args[1], getMapAndCheck(args, 2, true)).getId());
+            break;
+        case CREATE_XMPP_COMPONENT:
+            doCreateXMPPComponent(args);
+            break;
+        case DESCRIBE:
+            doDescribe(args);
+            break;
+        case EXIT:
+            System.exit(errorOccursDuringInteraction ? 2 : 0);
+            break;
+        case FLUSH_CACHE:
+            doFlushCache(args);
+            break;
+        case GENERATE_DOMAIN_PRE_AUTH_KEY:
+            doGenerateDomainPreAuthKey(args);
+            break;
+        case GENERATE_DOMAIN_PRE_AUTH:
+            doGenerateDomainPreAuth(args);
+            break;
+        case GET_ACCOUNT:
+            doGetAccount(args);
+            break;
+        case GET_ACCOUNT_MEMBERSHIP:
+            doGetAccountMembership(args);
+            break;
+        case GET_ALWAYSONCLUSTER:
+            doGetAlwaysOnCluster(args);
+            break;
+        case GET_IDENTITIES:
+            doGetAccountIdentities(args);
+            break;
+        case GET_SIGNATURES:
+            doGetAccountSignatures(args);
+            break;
+        case GET_DATA_SOURCES:
+            doGetAccountDataSources(args);
+            break;
+        case GET_ACCOUNT_LOGGERS:
+            alo = parseAccountLoggerOptions(args);
+            if (!command.checkArgsLength(alo.args)) {
+                usage();
+                return true;
+            }
+            doGetAccountLoggers(alo);
+            break;
+        case GET_ALL_ACCOUNT_LOGGERS:
+            alo = parseAccountLoggerOptions(args);
+            if (!command.checkArgsLength(alo.args)) {
+                usage();
+                return true;
+            }
+            doGetAllAccountLoggers(alo);
+            break;
+        case GET_ALL_ACCOUNTS:
+            doGetAllAccounts(args);
+            break;
+        case GET_ALL_ADMIN_ACCOUNTS:
+            doGetAllAdminAccounts(args);
+            break;
+        case GET_ALL_ALWAYSONCLUSTERS:
+            doGetAllAlwaysOnClusters(args);
+            break;
+        case GET_ALL_CONFIG:
+            dumpAttrs(prov.getConfig().getAttrs(), getArgNameSet(args, 1));
+            break;
+        case GET_ALL_COS:
+            doGetAllCos(args);
+            break;
+        case GET_ALL_DOMAINS:
+            doGetAllDomains(args);
+            break;
+        case GET_ALL_FREEBUSY_PROVIDERS:
+            doGetAllFreeBusyProviders();
+            break;
+        case GET_ALL_RIGHTS:
+            doGetAllRights(args);
+            break;
+        case GET_ALL_SERVERS:
+            doGetAllServers(args);
+            break;
+        case GET_ALL_UC_SERVICES:
+            doGetAllUCServices(args);
+            break;
+        case GET_CONFIG:
+            doGetConfig(args);
+            break;
+        case GET_COS:
+            dumpCos(lookupCos(args[1]), getArgNameSet(args, 2));
+            break;
+        case GET_DISTRIBUTION_LIST_MEMBERSHIP:
+            doGetDistributionListMembership(lookupGroup(args[1]));
+            break;
+        case GET_DOMAIN:
+            doGetDomain(args);
+            break;
+        case GET_DOMAIN_INFO:
+            doGetDomainInfo(args);
+            break;
+        case GET_CONFIG_SMIME_CONFIG:
+            doGetConfigSMIMEConfig(args);
+            break;
+        case GET_DOMAIN_SMIME_CONFIG:
+            doGetDomainSMIMEConfig(args);
+            break;
+        case GET_FREEBUSY_QUEUE_INFO:
+            doGetFreeBusyQueueInfo(args);
+            break;
+        case GET_RIGHT:
+            doGetRight(args);
+            break;
+        case GET_RIGHTS_DOC:
+            doGetRightsDoc(args);
+            break;
+        case GET_SERVER:
+            doGetServer(args);
+            break;
+        case GET_UC_SERVICES:
+            dumpUCService(lookupUCService(args[1]), getArgNameSet(args, 2));
+            break;
+        case GET_XMPP_COMPONENT:
+            doGetXMPPComponent(args);
+            break;
+        case CHECK_RIGHT:
+            doCheckRight(args);
+            break;
+        case GET_ALL_EFFECTIVE_RIGHTS:
+            doGetAllEffectiveRights(args);
+            break;
+        case GET_EFFECTIVE_RIGHTS:
+            doGetEffectiveRights(args);
+            break;
+        case GET_CREATE_OBJECT_ATTRS:
+            doGetCreateObjectAttrs(args);
+            break;
+        case GET_GRANTS:
+            doGetGrants(args);
+            break;
+        case GRANT_RIGHT:
+            doGrantRight(args);
+            break;
+        case REVOKE_RIGHT:
+            doRevokeRight(args);
+            break;
+        case HELP:
+            doHelp(args);
+            break;
+        case MODIFY_ACCOUNT:
+            prov.modifyAttrs(lookupAccount(args[1]), getMapAndCheck(args, 2, false), true);
+            break;
+        case MODIFY_ALWAYSONCLUSTER:
+            prov.modifyAttrs(lookupAlwaysOnCluster(args[1]), getMapAndCheck(args, 2, false), true);
+            break;
+        case MODIFY_DATA_SOURCE:
+            account = lookupAccount(args[1]);
+            prov.modifyDataSource(account, lookupDataSourceId(account, args[2]), getMapAndCheck(args, 3, false));
+            break;
+        case MODIFY_IDENTITY:
+            account = lookupAccount(args[1]);
+            prov.modifyIdentity(account, args[2], getMapAndCheck(args, 3, false));
+            break;
+        case MODIFY_SIGNATURE:
+            account = lookupAccount(args[1]);
+            prov.modifySignature(account, lookupSignatureId(account, args[2]), getMapAndCheck(args, 3, false));
+            break;
+        case MODIFY_COS:
+            prov.modifyAttrs(lookupCos(args[1]), getMapAndCheck(args, 2, false), true);
+            break;
+        case MODIFY_CONFIG:
+            prov.modifyAttrs(prov.getConfig(), getMapAndCheck(args, 1, false), true);
+            break;
+        case MODIFY_DOMAIN:
+            prov.modifyAttrs(lookupDomain(args[1]), getMapAndCheck(args, 2, false), true);
+            break;
+        case MODIFY_CONFIG_SMIME_CONFIG:
+            doModifyConfigSMIMEConfig(args);
+            break;
+        case MODIFY_DOMAIN_SMIME_CONFIG:
+            doModifyDomainSMIMEConfig(args);
+            break;
+        case MODIFY_SERVER:
+            prov.modifyAttrs(lookupServer(args[1]), getMapAndCheck(args, 2, false), true);
+            break;
+        case MODIFY_UC_SERVICE:
+            prov.modifyAttrs(lookupUCService(args[1]), getMapAndCheck(args, 2, false), true);
+            break;
+        case DELETE_ACCOUNT:
+            doDeleteAccount(args);
+            break;
+        case DELETE_ALWAYSONCLUSTER:
+            prov.deleteAlwaysOnCluster(lookupAlwaysOnCluster(args[1]).getId());
+            break;
+        case DELETE_COS:
+            prov.deleteCos(lookupCos(args[1]).getId());
+            break;
+        case DELETE_DOMAIN:
+            prov.deleteDomain(lookupDomain(args[1]).getId());
+            break;
+        case DELETE_IDENTITY:
+            prov.deleteIdentity(lookupAccount(args[1]), args[2]);
+            break;
+        case DELETE_SIGNATURE:
+            account = lookupAccount(args[1]);
+            prov.deleteSignature(account, lookupSignatureId(account, args[2]));
+            break;
+        case DELETE_DATA_SOURCE:
+            account = lookupAccount(args[1]);
+            prov.deleteDataSource(account, lookupDataSourceId(account, args[2]));
+            break;
+        case DELETE_SERVER:
+            prov.deleteServer(lookupServer(args[1]).getId());
+            break;
+        case DELETE_UC_SERVICE:
+            prov.deleteUCService(lookupUCService(args[1]).getId());
+            break;
+        case DELETE_XMPP_COMPONENT:
+            prov.deleteXMPPComponent(lookupXMPPComponent(args[1]));
+            break;
+        case PUSH_FREEBUSY:
+            doPushFreeBusy(args);
+            break;
+        case PUSH_FREEBUSY_DOMAIN:
+            doPushFreeBusyForDomain(args);
+            break;
+        case PURGE_FREEBUSY_QUEUE:
+            doPurgeFreeBusyQueue(args);
+            break;
+        case PURGE_ACCOUNT_CALENDAR_CACHE:
+            doPurgeAccountCalendarCache(args);
+            break;
+        case REMOVE_ACCOUNT_ALIAS:
+            Account acct = lookupAccount(args[1], false);
+            prov.removeAlias(acct, args[2]);
+            // even if acct is null, we still invoke removeAlias and throw an exception afterwards.
+            // this is so dangling aliases can be cleaned up as much as possible
+            if (acct == null) {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(args[1]);
+            }
+            break;
+        case REMOVE_ACCOUNT_LOGGER:
+            alo = parseAccountLoggerOptions(args);
+            if (!command.checkArgsLength(alo.args)) {
+                usage();
+                return true;
+            }
+            doRemoveAccountLogger(alo);
+            break;
+        case REMOVE_CONFIG_SMIME_CONFIG:
+            doRemoveConfigSMIMEConfig(args);
+            break;
+        case REMOVE_DOMAIN_SMIME_CONFIG:
+            doRemoveDomainSMIMEConfig(args);
+            break;
+        case RENAME_ACCOUNT:
+            doRenameAccount(args);
+            break;
+        case RENAME_COS:
+            prov.renameCos(lookupCos(args[1]).getId(), args[2]);
+            break;
+        case RENAME_DOMAIN:
+            doRenameDomain(args);
+            break;
+        case RENAME_UCSERVICE:
+            prov.renameUCService(lookupUCService(args[1]).getId(), args[2]);
+            break;
+        case SET_ACCOUNT_COS:
+            prov.setCOS(lookupAccount(args[1]), lookupCos(args[2]));
+            break;
+        case SEARCH_ACCOUNTS:
+            doSearchAccounts(args);
+            break;
+        case SEARCH_GAL:
+            doSearchGal(args);
+            break;
+        case SYNC_GAL:
+            doSyncGal(args);
+            break;
+        case SET_PASSWORD:
+            SetPasswordResult result = prov.setPassword(lookupAccount(args[1]), args[2]);
+            if (result.hasMessage()) {
+                console.println(result.getMessage());
+            }
+            break;
+        case CHECK_PASSWORD_STRENGTH:
+            prov.checkPasswordStrength(lookupAccount(args[1]), args[2]);
+            console.println("Password passed strength check.");
+            break;
+        case CREATE_DISTRIBUTION_LIST:
+            console.println(prov.createGroup(args[1], getMapAndCheck(args, 2, true), false).getId());
+            break;
+        case CREATE_DYNAMIC_DISTRIBUTION_LIST:
+            console.println(prov.createGroup(args[1], getMapAndCheck(args, 2, true), true).getId());
+            break;
+        case CREATE_DISTRIBUTION_LISTS_BULK:
+            doCreateDistributionListsBulk(args);
+            break;
+        case GET_ALL_DISTRIBUTION_LISTS:
+            doGetAllDistributionLists(args);
+            break;
+        case GET_DISTRIBUTION_LIST:
+            dumpGroup(lookupGroup(args[1]), getArgNameSet(args, 2));
+            break;
+        case GET_ALL_XMPP_COMPONENTS:
+            doGetAllXMPPComponents();
+            break;
+        case MODIFY_DISTRIBUTION_LIST:
+            prov.modifyAttrs(lookupGroup(args[1]), getMapAndCheck(args, 2, false), true);
+            break;
+        case DELETE_DISTRIBUTION_LIST:
+            prov.deleteGroup(lookupGroup(args[1]).getId());
+            break;
+        case ADD_DISTRIBUTION_LIST_MEMBER:
+            members = new String[args.length - 2];
+            System.arraycopy(args, 2, members, 0, args.length - 2);
+            prov.addGroupMembers(lookupGroup(args[1]), members);
+            break;
+        case REMOVE_DISTRIBUTION_LIST_MEMBER:
+            members = new String[args.length - 2];
+            System.arraycopy(args, 2, members, 0, args.length - 2);
+            prov.removeGroupMembers(lookupGroup(args[1]), members);
+            break;
+        case CREATE_BULK_ACCOUNTS:
+            doCreateAccountsBulk(args);
+            break;
+        case ADD_DISTRIBUTION_LIST_ALIAS:
+            prov.addGroupAlias(lookupGroup(args[1]), args[2]);
+            break;
+        case REMOVE_DISTRIBUTION_LIST_ALIAS:
+            Group dl = lookupGroup(args[1], false);
+            // Even if dl is null, we still invoke removeAlias.
+            // This is so dangling aliases can be cleaned up as much as possible.
+            // If dl is null, the NO_SUCH_DISTRIBUTION_LIST thrown by SOAP will contain
+            // null as the dl identity, because SoapProvisioning sends no id to the server.
+            // In this case, we catch the NO_SUCH_DISTRIBUTION_LIST and throw another one
+            // with the named/id entered on the comand line.
+            try {
+                prov.removeGroupAlias(dl, args[2]);
+            } catch (ServiceException e) {
+                if (!(dl == null && AccountServiceException.NO_SUCH_DISTRIBUTION_LIST.equals(e.getCode()))) {
+                    throw e;
                 }
-                doAddAccountLogger(alo);
-                break;
-            case AUTO_COMPLETE_GAL:
-                doAutoCompleteGal(args);
-                break;
-            case AUTO_PROV_CONTROL:
-                prov.autoProvControl(args[1]);
-                break;
-            case COPY_COS:
-                console.println(prov.copyCos(lookupCos(args[1]).getId(), args[2]).getId());
-                break;
-            case COUNT_ACCOUNT:
-                doCountAccount(args);
-                break;
-            case COUNT_OBJECTS:
-                doCountObjects(args);
-                break;
-            case CREATE_ACCOUNT:
-                console.println(prov.createAccount(args[1], args[2].equals("")? null : args[2], getMapAndCheck(args, 3, true)).getId());
-                break;
-            case CREATE_ALIAS_DOMAIN:
-                console.println(doCreateAliasDomain(args[1], args[2], getMapAndCheck(args, 3, true)).getId());
-                break;
-            case CREATE_ALWAYSONCLUSTER:
-                console.println(prov.createAlwaysOnCluster(args[1], getMapAndCheck(args, 2, true)).getId());
-                break;
-            case CREATE_COS:
-                console.println(prov.createCos(args[1], getMapAndCheck(args, 2, true)).getId());
-                break;
-            case CREATE_DOMAIN:
-                console.println(prov.createDomain(args[1], getMapAndCheck(args, 2, true)).getId());
-                break;
-            case CREATE_IDENTITY:
-                prov.createIdentity(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3, true));
-                break;
-            case CREATE_SIGNATURE:
-                console.println(prov.createSignature(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3, true)).getId());
-                break;
-            case CREATE_DATA_SOURCE:
-                console.println(prov.createDataSource(lookupAccount(args[1]), DataSourceType.fromString(args[2]), args[3], getMapAndCheck(args, 4, true)).getId());
-                break;
-            case CREATE_SERVER:
-                console.println(prov.createServer(args[1], getMapAndCheck(args, 2, true)).getId());
-                break;
-            case CREATE_UC_SERVICE:
-                console.println(prov.createUCService(args[1], getMapAndCheck(args, 2, true)).getId());
-                break;
-            case CREATE_XMPP_COMPONENT:
-                doCreateXMPPComponent(args);
-                break;
-            case DESCRIBE:
-                doDescribe(args);
-                break;
-            case EXIT:
-                System.exit(errorOccursDuringInteraction?2:0);
-                break;
-            case FLUSH_CACHE:
-                doFlushCache(args);
-                break;
-            case GENERATE_DOMAIN_PRE_AUTH_KEY:
-                doGenerateDomainPreAuthKey(args);
-                break;
-            case GENERATE_DOMAIN_PRE_AUTH:
-                doGenerateDomainPreAuth(args);
-                break;
-            case GET_ACCOUNT:
-                doGetAccount(args);
-                break;
-            case GET_ACCOUNT_MEMBERSHIP:
-                doGetAccountMembership(args);
-                break;
-            case GET_ALWAYSONCLUSTER:
-                doGetAlwaysOnCluster(args);
-                break;
-            case GET_IDENTITIES:
-                doGetAccountIdentities(args);
-                break;
-            case GET_SIGNATURES:
-                doGetAccountSignatures(args);
-                break;
-            case GET_DATA_SOURCES:
-                doGetAccountDataSources(args);
-                break;
-            case GET_ACCOUNT_LOGGERS:
-                alo = parseAccountLoggerOptions(args);
-                if (!command.checkArgsLength(alo.args)) {
-                    usage();
-                    return true;
-                }
-                doGetAccountLoggers(alo);
-                break;
-            case GET_ALL_ACCOUNT_LOGGERS:
-                alo = parseAccountLoggerOptions(args);
-                if (!command.checkArgsLength(alo.args)) {
-                    usage();
-                    return true;
-                }
-                doGetAllAccountLoggers(alo);
-                break;
-            case GET_ALL_ACCOUNTS:
-                doGetAllAccounts(args);
-                break;
-            case GET_ALL_ADMIN_ACCOUNTS:
-                doGetAllAdminAccounts(args);
-                break;
-            case GET_ALL_ALWAYSONCLUSTERS:
-                doGetAllAlwaysOnClusters(args);
-                break;
-            case GET_ALL_CONFIG:
-                dumpAttrs(prov.getConfig().getAttrs(), getArgNameSet(args, 1));
-                break;
-            case GET_ALL_COS:
-                doGetAllCos(args);
-                break;
-            case GET_ALL_DOMAINS:
-                doGetAllDomains(args);
-                break;
-            case GET_ALL_FREEBUSY_PROVIDERS:
-                doGetAllFreeBusyProviders();
-                break;
-            case GET_ALL_RIGHTS:
-                doGetAllRights(args);
-                break;
-            case GET_ALL_SERVERS:
-                doGetAllServers(args);
-                break;
-            case GET_ALL_UC_SERVICES:
-                doGetAllUCServices(args);
-                break;
-            case GET_CONFIG:
-                doGetConfig(args);
-                break;
-            case GET_COS:
-                dumpCos(lookupCos(args[1]), getArgNameSet(args, 2));
-                break;
-            case GET_DISTRIBUTION_LIST_MEMBERSHIP:
-                doGetDistributionListMembership(lookupGroup(args[1]));
-                break;
-            case GET_DOMAIN:
-                doGetDomain(args);
-                break;
-            case GET_DOMAIN_INFO:
-                doGetDomainInfo(args);
-                break;
-            case GET_CONFIG_SMIME_CONFIG:
-                doGetConfigSMIMEConfig(args);
-                break;
-            case GET_DOMAIN_SMIME_CONFIG:
-                doGetDomainSMIMEConfig(args);
-                break;
-            case GET_FREEBUSY_QUEUE_INFO:
-                doGetFreeBusyQueueInfo(args);
-                break;
-            case GET_RIGHT:
-                doGetRight(args);
-                break;
-            case GET_RIGHTS_DOC:
-                doGetRightsDoc(args);
-                break;
-            case GET_SERVER:
-                doGetServer(args);
-                break;
-            case GET_UC_SERVICES:
-                dumpUCService(lookupUCService(args[1]), getArgNameSet(args, 2));
-                break;
-            case GET_XMPP_COMPONENT:
-                doGetXMPPComponent(args);
-                break;
-            case CHECK_RIGHT:
-                doCheckRight(args);
-                break;
-            case GET_ALL_EFFECTIVE_RIGHTS:
-                doGetAllEffectiveRights(args);
-                break;
-            case GET_EFFECTIVE_RIGHTS:
-                doGetEffectiveRights(args);
-                break;
-            case GET_CREATE_OBJECT_ATTRS:
-                doGetCreateObjectAttrs(args);
-                break;
-            case GET_GRANTS:
-                doGetGrants(args);
-                break;
-            case GRANT_RIGHT:
-                doGrantRight(args);
-                break;
-            case REVOKE_RIGHT:
-                doRevokeRight(args);
-                break;
-            case HELP:
-                doHelp(args);
-                break;
-            case MODIFY_ACCOUNT:
-                prov.modifyAttrs(lookupAccount(args[1]), getMapAndCheck(args,2, false), true);
-                break;
-            case MODIFY_ALWAYSONCLUSTER:
-                prov.modifyAttrs(lookupAlwaysOnCluster(args[1]), getMapAndCheck(args, 2, false), true);
-                break;
-            case MODIFY_DATA_SOURCE:
-                account = lookupAccount(args[1]);
-                prov.modifyDataSource(account, lookupDataSourceId(account, args[2]), getMapAndCheck(args,3, false));
-                break;
-            case MODIFY_IDENTITY:
-                account = lookupAccount(args[1]);
-                prov.modifyIdentity(account, args[2], getMapAndCheck(args,3, false));
-                break;
-            case MODIFY_SIGNATURE:
-                account = lookupAccount(args[1]);
-                prov.modifySignature(account, lookupSignatureId(account, args[2]), getMapAndCheck(args,3, false));
-                break;
-            case MODIFY_COS:
-                prov.modifyAttrs(lookupCos(args[1]), getMapAndCheck(args, 2, false), true);
-                break;
-            case MODIFY_CONFIG:
-                prov.modifyAttrs(prov.getConfig(), getMapAndCheck(args, 1, false), true);
-                break;
-            case MODIFY_DOMAIN:
-                prov.modifyAttrs(lookupDomain(args[1]), getMapAndCheck(args, 2, false), true);
-                break;
-            case MODIFY_CONFIG_SMIME_CONFIG:
-                doModifyConfigSMIMEConfig(args);
-                break;
-            case MODIFY_DOMAIN_SMIME_CONFIG:
-                doModifyDomainSMIMEConfig(args);
-                break;
-            case MODIFY_SERVER:
-                prov.modifyAttrs(lookupServer(args[1]), getMapAndCheck(args, 2, false), true);
-                break;
-            case MODIFY_UC_SERVICE:
-                prov.modifyAttrs(lookupUCService(args[1]), getMapAndCheck(args, 2, false), true);
-                break;
-            case DELETE_ACCOUNT:
-                doDeleteAccount(args);
-                break;
-            case DELETE_ALWAYSONCLUSTER:
-                prov.deleteAlwaysOnCluster(lookupAlwaysOnCluster(args[1]).getId());
-                break;
-            case DELETE_COS:
-                prov.deleteCos(lookupCos(args[1]).getId());
-                break;
-            case DELETE_DOMAIN:
-                prov.deleteDomain(lookupDomain(args[1]).getId());
-                break;
-            case DELETE_IDENTITY:
-                prov.deleteIdentity(lookupAccount(args[1]), args[2]);
-                break;
-            case DELETE_SIGNATURE:
-                account = lookupAccount(args[1]);
-                prov.deleteSignature(account, lookupSignatureId(account, args[2]));
-                break;
-            case DELETE_DATA_SOURCE:
-                account = lookupAccount(args[1]);
-                prov.deleteDataSource(account, lookupDataSourceId(account, args[2]));
-                break;
-            case DELETE_SERVER:
-                prov.deleteServer(lookupServer(args[1]).getId());
-                break;
-            case DELETE_UC_SERVICE:
-                prov.deleteUCService(lookupUCService(args[1]).getId());
-                break;
-            case DELETE_XMPP_COMPONENT:
-                prov.deleteXMPPComponent(lookupXMPPComponent(args[1]));
-                break;
-            case PUSH_FREEBUSY:
-                doPushFreeBusy(args);
-                break;
-            case PUSH_FREEBUSY_DOMAIN:
-                doPushFreeBusyForDomain(args);
-                break;
-            case PURGE_FREEBUSY_QUEUE:
-                doPurgeFreeBusyQueue(args);
-                break;
-            case PURGE_ACCOUNT_CALENDAR_CACHE:
-                doPurgeAccountCalendarCache(args);
-                break;
-            case REMOVE_ACCOUNT_ALIAS:
-                Account acct = lookupAccount(args[1], false);
-                prov.removeAlias(acct, args[2]);
-                // even if acct is null, we still invoke removeAlias and throw an exception afterwards.
-                // this is so dangling aliases can be cleaned up as much as possible
-                if (acct == null) {
-                    throw AccountServiceException.NO_SUCH_ACCOUNT(args[1]);
-                }
-                break;
-            case REMOVE_ACCOUNT_LOGGER:
-                alo = parseAccountLoggerOptions(args);
-                if (!command.checkArgsLength(alo.args)) {
-                    usage();
-                    return true;
-                }
-                doRemoveAccountLogger(alo);
-                break;
-            case REMOVE_CONFIG_SMIME_CONFIG:
-                doRemoveConfigSMIMEConfig(args);
-                break;
-            case REMOVE_DOMAIN_SMIME_CONFIG:
-                doRemoveDomainSMIMEConfig(args);
-                break;
-            case RENAME_ACCOUNT:
-                doRenameAccount(args);
-                break;
-            case RENAME_COS:
-                prov.renameCos(lookupCos(args[1]).getId(), args[2]);
-                break;
-            case RENAME_DOMAIN:
-                doRenameDomain(args);
-                break;
-            case RENAME_UCSERVICE:
-                prov.renameUCService(lookupUCService(args[1]).getId(), args[2]);
-                break;
-            case SET_ACCOUNT_COS:
-                prov.setCOS(lookupAccount(args[1]),lookupCos(args[2]));
-                break;
-            case SEARCH_ACCOUNTS:
-                doSearchAccounts(args);
-                break;
-            case SEARCH_GAL:
-                doSearchGal(args);
-                break;
-            case SYNC_GAL:
-                doSyncGal(args);
-                break;
-            case SET_PASSWORD:
-                SetPasswordResult result = prov.setPassword(lookupAccount(args[1]), args[2]);
-                if (result.hasMessage()) {
-                    console.println(result.getMessage());
-                }
-                break;
-            case CHECK_PASSWORD_STRENGTH:
-                prov.checkPasswordStrength(lookupAccount(args[1]), args[2]);
-                console.println("Password passed strength check.");
-                break;
-            case CREATE_DISTRIBUTION_LIST:
-                console.println(prov.createGroup(args[1], getMapAndCheck(args, 2, true), false).getId());
-                break;
-            case CREATE_DYNAMIC_DISTRIBUTION_LIST:
-                console.println(prov.createGroup(args[1], getMapAndCheck(args, 2, true), true).getId());
-                break;
-            case CREATE_DISTRIBUTION_LISTS_BULK:
-                doCreateDistributionListsBulk(args);
-                break;
-            case GET_ALL_DISTRIBUTION_LISTS:
-                doGetAllDistributionLists(args);
-                break;
-            case GET_DISTRIBUTION_LIST:
-                dumpGroup(lookupGroup(args[1]), getArgNameSet(args, 2));
-                break;
-            case GET_ALL_XMPP_COMPONENTS:
-                doGetAllXMPPComponents();
-                break;
-            case MODIFY_DISTRIBUTION_LIST:
-                prov.modifyAttrs(lookupGroup(args[1]), getMapAndCheck(args, 2, false), true);
-                break;
-            case DELETE_DISTRIBUTION_LIST:
-                prov.deleteGroup(lookupGroup(args[1]).getId());
-                break;
-            case ADD_DISTRIBUTION_LIST_MEMBER:
-                members = new String[args.length - 2];
-                System.arraycopy(args, 2, members, 0, args.length - 2);
-                prov.addGroupMembers(lookupGroup(args[1]), members);
-                break;
-            case REMOVE_DISTRIBUTION_LIST_MEMBER:
-                members = new String[args.length - 2];
-                System.arraycopy(args, 2, members, 0, args.length - 2);
-                prov.removeGroupMembers(lookupGroup(args[1]), members);
-                break;
-            case CREATE_BULK_ACCOUNTS:
-                doCreateAccountsBulk(args);
-                break;
-            case ADD_DISTRIBUTION_LIST_ALIAS:
-                prov.addGroupAlias(lookupGroup(args[1]), args[2]);
-                break;
-            case REMOVE_DISTRIBUTION_LIST_ALIAS:
-                Group dl = lookupGroup(args[1], false);
-                // Even if dl is null, we still invoke removeAlias.
-                // This is so dangling aliases can be cleaned up as much as possible.
-                // If dl is null, the NO_SUCH_DISTRIBUTION_LIST thrown by SOAP will contain
-                // null as the dl identity, because SoapProvisioning sends no id to the server.
-                // In this case, we catch the NO_SUCH_DISTRIBUTION_LIST and throw another one
-                // with the named/id entered on the comand line.
-                try {
-                    prov.removeGroupAlias(dl, args[2]);
-                } catch (ServiceException e) {
-                    if (!(dl == null && AccountServiceException.NO_SUCH_DISTRIBUTION_LIST.equals(e.getCode()))) {
-                        throw e;
-                    }
-                    // else eat the exception, we will throw below
-                }
-                if (dl == null) {
-                    throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(args[1]);
-                }
-                break;
-            case RENAME_DISTRIBUTION_LIST:
-                prov.renameGroup(lookupGroup(args[1]).getId(), args[2]);
-                break;
-            case CREATE_CALENDAR_RESOURCE:
-                console.println(prov.createCalendarResource(args[1], args[2].isEmpty() ? null : args[2],
-                        getMapAndCheck(args, 3, true)).getId());
-                break;
-            case DELETE_CALENDAR_RESOURCE:
-                prov.deleteCalendarResource(lookupCalendarResource(args[1]).getId());
-                break;
-            case MODIFY_CALENDAR_RESOURCE:
-                prov.modifyAttrs(lookupCalendarResource(args[1]), getMapAndCheck(args, 2, false), true);
-                break;
-            case RENAME_CALENDAR_RESOURCE:
-                prov.renameCalendarResource(lookupCalendarResource(args[1]).getId(), args[2]);
-                break;
-            case GET_CALENDAR_RESOURCE:
-                dumpCalendarResource(lookupCalendarResource(args[1]), true, getArgNameSet(args, 2));
-                break;
-            case GET_ALL_CALENDAR_RESOURCES:
-                doGetAllCalendarResources(args);
-                break;
-            case SEARCH_CALENDAR_RESOURCES:
-                doSearchCalendarResources(args);
-                break;
-            case GET_SHARE_INFO:
-                doGetShareInfo(args);
-                break;
-            case GET_SPNEGO_DOMAIN:
-                doGetSpnegoDomain();
-                break;
-            case GET_QUOTA_USAGE:
-                doGetQuotaUsage(args);
-                break;
-            case GET_MAILBOX_INFO:
-                doGetMailboxInfo(args);
-                break;
-            case REINDEX_MAILBOX:
-                doReIndexMailbox(args);
-                break;
-            case COMPACT_INBOX_MAILBOX:
-                doCompactIndexMailbox(args);
-                break;
-            case VERIFY_INDEX:
-                doVerifyIndex(args);
-                break;
-            case GET_INDEX_STATS:
-                doGetIndexStats(args);
-                break;
-            case RECALCULATE_MAILBOX_COUNTS:
-                doRecalculateMailboxCounts(args);
-                break;
-            case SELECT_MAILBOX:
-                if (!(prov instanceof SoapProvisioning)) {
-                    throwSoapOnly();
-                }
-                ZMailboxUtil util = new ZMailboxUtil();
-                util.setVerbose(verboseMode);
-                util.setDebug(debugLevel != SoapDebugLevel.none);
-                boolean smInteractive = interactiveMode && args.length < 3;
-                util.setInteractive(smInteractive);
-                util.selectMailbox(args[1], (SoapProvisioning) prov);
-                if (smInteractive) {
-                    util.interactive(cliReader);
-                } else if (args.length > 2){
-                    String newArgs[] = new String[args.length - 2];
-                    System.arraycopy(args, 2, newArgs, 0, newArgs.length);
-                    util.execute(newArgs);
-                } else {
-                    throw ZClientException.CLIENT_ERROR("command only valid in interactive mode or with arguments", null);
-                }
-                break;
-            case GET_ALL_MTA_AUTH_URLS:
-                doGetAllMtaAuthURLs();
-                break;
-            case GET_ALL_REVERSE_PROXY_URLS:
-                doGetAllReverseProxyURLs();
-                break;
-            case GET_ALL_REVERSE_PROXY_BACKENDS:
-                doGetAllReverseProxyBackends();
-                break;
-            case GET_ALL_REVERSE_PROXY_DOMAINS:
-                doGetAllReverseProxyDomains();
-                break;
-            case GET_ALL_MEMCACHED_SERVERS:
-                doGetAllMemcachedServers();
-                break;
-            case RELOAD_MEMCACHED_CLIENT_CONFIG:
-                doReloadMemcachedClientConfig(args);
-                break;
-            case GET_MEMCACHED_CLIENT_CONFIG:
-                doGetMemcachedClientConfig(args);
-                break;
-            case GET_AUTH_TOKEN_INFO:
-                doGetAuthTokenInfo(args);
-                break;
-            case UPDATE_PRESENCE_SESSION_ID:
-                doUpdatePresenceSessionId(args);
-                break;
-            case SOAP:
-                // HACK FOR NOW
-                SoapProvisioning sp = new SoapProvisioning();
-                sp.soapSetURI("https://localhost:" + serverPort + AdminConstants.ADMIN_SERVICE_URI);
-                sp.soapZimbraAdminAuthenticate();
-                prov = sp;
-                break;
-            case LDAP:
-                // HACK FOR NOW
-                prov = Provisioning.getInstance();
-                break;
-            case RESET_ALL_LOGGERS:
-                doResetAllLoggers(args);
-                break;
-            case RESET_LDAP_CLIENT:
-                doResetLdapClient(args);
-            case MOVE_ACCOUNT:
-                doMoveAccount(args);
-                break;
-            default:
-                return false;
+                // else eat the exception, we will throw below
+            }
+            if (dl == null) {
+                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(args[1]);
+            }
+            break;
+        case RENAME_DISTRIBUTION_LIST:
+            prov.renameGroup(lookupGroup(args[1]).getId(), args[2]);
+            break;
+        case CREATE_CALENDAR_RESOURCE:
+            console.println(prov.createCalendarResource(args[1], args[2].isEmpty() ? null : args[2],
+                    getMapAndCheck(args, 3, true)).getId());
+            break;
+        case DELETE_CALENDAR_RESOURCE:
+            prov.deleteCalendarResource(lookupCalendarResource(args[1]).getId());
+            break;
+        case MODIFY_CALENDAR_RESOURCE:
+            prov.modifyAttrs(lookupCalendarResource(args[1]), getMapAndCheck(args, 2, false), true);
+            break;
+        case RENAME_CALENDAR_RESOURCE:
+            prov.renameCalendarResource(lookupCalendarResource(args[1]).getId(), args[2]);
+            break;
+        case GET_CALENDAR_RESOURCE:
+            dumpCalendarResource(lookupCalendarResource(args[1]), true, getArgNameSet(args, 2));
+            break;
+        case GET_ALL_CALENDAR_RESOURCES:
+            doGetAllCalendarResources(args);
+            break;
+        case SEARCH_CALENDAR_RESOURCES:
+            doSearchCalendarResources(args);
+            break;
+        case GET_SHARE_INFO:
+            doGetShareInfo(args);
+            break;
+        case GET_SPNEGO_DOMAIN:
+            doGetSpnegoDomain();
+            break;
+        case GET_QUOTA_USAGE:
+            doGetQuotaUsage(args);
+            break;
+        case GET_MAILBOX_INFO:
+            doGetMailboxInfo(args);
+            break;
+        case REINDEX_MAILBOX:
+            doReIndexMailbox(args);
+            break;
+        case COMPACT_INBOX_MAILBOX:
+            doCompactIndexMailbox(args);
+            break;
+        case VERIFY_INDEX:
+            doVerifyIndex(args);
+            break;
+        case GET_INDEX_STATS:
+            doGetIndexStats(args);
+            break;
+        case RECALCULATE_MAILBOX_COUNTS:
+            doRecalculateMailboxCounts(args);
+            break;
+        case SELECT_MAILBOX:
+            if (!(prov instanceof SoapProvisioning)) {
+                throwSoapOnly();
+            }
+            ZMailboxUtil util = new ZMailboxUtil();
+            util.setVerbose(verboseMode);
+            util.setDebug(debugLevel != SoapDebugLevel.none);
+            boolean smInteractive = interactiveMode && args.length < 3;
+            util.setInteractive(smInteractive);
+            util.selectMailbox(args[1], (SoapProvisioning) prov);
+            if (smInteractive) {
+                util.interactive(cliReader);
+            } else if (args.length > 2) {
+                String newArgs[] = new String[args.length - 2];
+                System.arraycopy(args, 2, newArgs, 0, newArgs.length);
+                util.execute(newArgs);
+            } else {
+                throw ZClientException.CLIENT_ERROR("command only valid in interactive mode or with arguments", null);
+            }
+            break;
+        case GET_ALL_MTA_AUTH_URLS:
+            doGetAllMtaAuthURLs();
+            break;
+        case GET_ALL_REVERSE_PROXY_URLS:
+            doGetAllReverseProxyURLs();
+            break;
+        case GET_ALL_REVERSE_PROXY_BACKENDS:
+            doGetAllReverseProxyBackends();
+            break;
+        case GET_ALL_REVERSE_PROXY_DOMAINS:
+            doGetAllReverseProxyDomains();
+            break;
+        case GET_ALL_MEMCACHED_SERVERS:
+            doGetAllMemcachedServers();
+            break;
+        case RELOAD_MEMCACHED_CLIENT_CONFIG:
+            doReloadMemcachedClientConfig(args);
+            break;
+        case GET_MEMCACHED_CLIENT_CONFIG:
+            doGetMemcachedClientConfig(args);
+            break;
+        case GET_AUTH_TOKEN_INFO:
+            doGetAuthTokenInfo(args);
+            break;
+        case UPDATE_PRESENCE_SESSION_ID:
+            doUpdatePresenceSessionId(args);
+            break;
+        case SOAP:
+            // HACK FOR NOW
+            SoapProvisioning sp = new SoapProvisioning();
+            sp.soapSetURI("https://localhost:" + serverPort + AdminConstants.ADMIN_SERVICE_URI);
+            sp.soapZimbraAdminAuthenticate();
+            prov = sp;
+            break;
+        case LDAP:
+            // HACK FOR NOW
+            prov = Provisioning.getInstance();
+            break;
+        case RESET_ALL_LOGGERS:
+            doResetAllLoggers(args);
+            break;
+        case RESET_LDAP_CLIENT:
+            doResetLdapClient(args);
+        case MOVE_ACCOUNT:
+            doMoveAccount(args);
+            break;
+        default:
+            return false;
         }
         return true;
     }
@@ -1406,7 +1460,7 @@ public class ProvUtil implements HttpDebugListener {
             usage();
             return;
         }
-        dumpDomain(lookupDomain(args[i], prov, applyDefault), applyDefault, getArgNameSet(args, i+1));
+        dumpDomain(lookupDomain(args[i], prov, applyDefault), applyDefault, getArgNameSet(args, i + 1));
     }
 
     private void doGetDomainInfo(String[] args) throws ServiceException {
@@ -1437,8 +1491,8 @@ public class ProvUtil implements HttpDebugListener {
         Domain domain = lookupDomain(args[1]);
         lp.renameDomain(domain.getId(), args[2]);
         printOutput("domain " + args[1] + " renamed to " + args[2]);
-        printOutput("Note: use zmlocalconfig to check and update any localconfig settings referencing domain '" + args[1]
-            + "' on all servers.");
+        printOutput("Note: use zmlocalconfig to check and update any localconfig settings referencing domain '"
+                + args[1] + "' on all servers.");
         printOutput("Use /opt/zimbra/libexec/zmdkimkeyutil to recreate the DKIM entries for new domain name if required.");
     }
 
@@ -1488,8 +1542,8 @@ public class ProvUtil implements HttpDebugListener {
         ReIndexInfo.Progress progress = info.getProgress();
         console.printf("status: %s\n", info.getStatus());
         if (progress != null) {
-            console.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n",
-                    progress.getNumSucceeded(), progress.getNumFailed(), progress.getNumRemaining());
+            console.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n", progress.getNumSucceeded(),
+                    progress.getNumFailed(), progress.getNumRemaining());
         }
     }
 
@@ -1543,9 +1597,8 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     /**
-     * Handles an optional <tt>-s</tt> or <tt>--server</tt> argument that may be passed
-     * to the logging commands.  Returns an <tt>AccountLogggerOptions</tt> object that
-     * contains all arguments except the server option and value.
+     * Handles an optional <tt>-s</tt> or <tt>--server</tt> argument that may be passed to the logging commands. Returns
+     * an <tt>AccountLogggerOptions</tt> object that contains all arguments except the server option and value.
      */
     private AccountLoggerOptions parseAccountLoggerOptions(String[] args) throws ServiceException {
         AccountLoggerOptions alo = new AccountLoggerOptions();
@@ -1641,7 +1694,7 @@ public class ProvUtil implements HttpDebugListener {
         if (!(prov instanceof SoapProvisioning)) {
             throwSoapOnly();
         }
-        SoapProvisioning  sprov = (SoapProvisioning)prov;
+        SoapProvisioning sprov = (SoapProvisioning) prov;
         int argIdx = 1;
         boolean allServers = false;
         if (args.length >= 2 && args[argIdx].equals("-a")) {
@@ -1658,7 +1711,7 @@ public class ProvUtil implements HttpDebugListener {
             String password = "test123";
             String nameMask = args[2];
             int numAccounts = Integer.parseInt(args[3]);
-            for(int ix=0; ix < numAccounts; ix++) {
+            for (int ix = 0; ix < numAccounts; ix++) {
                 String name = nameMask + Integer.toString(ix) + "@" + domain;
                 Map<String, Object> attrs = new HashMap<String, Object>();
                 String displayName = nameMask + " N. " + Integer.toString(ix);
@@ -1694,7 +1747,7 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
 
-        dumpAccount(lookupAccount(args[acctPos], true, applyDefault), applyDefault, getArgNameSet(args, acctPos+1));
+        dumpAccount(lookupAccount(args[acctPos], true, applyDefault), applyDefault, getArgNameSet(args, acctPos + 1));
     }
 
     private void doGetAccountMembership(String[] args) throws ServiceException {
@@ -1709,16 +1762,16 @@ public class ProvUtil implements HttpDebugListener {
         Account account = lookupAccount(key);
         if (idsOnly) {
             Set<String> lists = prov.getGroups(account);
-            for (String id: lists) {
+            for (String id : lists) {
                 console.println(id);
             }
         } else {
-            HashMap<String,String> via = new HashMap<String, String>();
+            HashMap<String, String> via = new HashMap<String, String>();
             List<Group> groups = prov.getGroups(account, false, via);
-            for (Group group: groups) {
+            for (Group group : groups) {
                 String viaDl = via.get(group.getName());
                 if (viaDl != null) {
-                    console.println(group.getName()+" (via "+viaDl+")");
+                    console.println(group.getName() + " (via " + viaDl + ")");
                 } else {
                     console.println(group.getName());
                 }
@@ -1728,56 +1781,34 @@ public class ProvUtil implements HttpDebugListener {
 
     private static class ShareInfoVisitor implements PublishedShareInfoVisitor {
 
-        private static final String mFormat =
-                "%-36.36s %-15.15s %-15.15s %-5.5s %-20.20s %-10.10s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-15.15s %-15.15s\n";
+        private static final String mFormat = "%-36.36s %-15.15s %-15.15s %-5.5s %-20.20s %-10.10s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-15.15s %-15.15s\n";
 
         private static void printHeadings() {
-            console.printf(mFormat,
-                    "owner id",
-                    "owner email",
-                    "owner display",
-                    "id",
-                    "path",
-                    "view",
-                    "type",
-                    "rights",
-                    "mid",
-                    "gt",
-                    "grantee id",
-                    "grantee name",
-                    "grantee display");
+            console.printf(mFormat, "owner id", "owner email", "owner display", "id", "path", "view", "type", "rights",
+                    "mid", "gt", "grantee id", "grantee name", "grantee display");
 
-            console.printf(mFormat,
-                    "------------------------------------",      // owner id
-                    "---------------",                           // owner email
-                    "---------------",                           // owner display
-                    "-----",                                     // id
-                    "--------------------",                      // path
-                    "----------",                                // default view
-                    "----------",                                // type
-                    "----------",                                // rights
-                    "-----",                                     // mountpoint id if mounted
-                    "-----",                                     // grantee type
-                    "------------------------------------",      // grantee id
-                    "---------------",                           // grantee name
-                    "---------------");                          // grantee display
+            console.printf(mFormat, "------------------------------------", // owner id
+                    "---------------", // owner email
+                    "---------------", // owner display
+                    "-----", // id
+                    "--------------------", // path
+                    "----------", // default view
+                    "----------", // type
+                    "----------", // rights
+                    "-----", // mountpoint id if mounted
+                    "-----", // grantee type
+                    "------------------------------------", // grantee id
+                    "---------------", // grantee name
+                    "---------------"); // grantee display
         }
 
         @Override
         public void visit(ShareInfoData shareInfoData) throws ServiceException {
-            console.printf(mFormat,
-                    shareInfoData.getOwnerAcctId(),
-                    shareInfoData.getOwnerAcctEmail(),
-                    shareInfoData.getOwnerAcctDisplayName(),
-                    String.valueOf(shareInfoData.getItemId()),
-                    shareInfoData.getPath(),
-                    shareInfoData.getFolderDefaultView(),
-                    shareInfoData.getType().name(),
-                    shareInfoData.getRights(),
-                    shareInfoData.getMountpointId_zmprov_only(),
-                    shareInfoData.getGranteeType(),
-                    shareInfoData.getGranteeId(),
-                    shareInfoData.getGranteeName(),
+            console.printf(mFormat, shareInfoData.getOwnerAcctId(), shareInfoData.getOwnerAcctEmail(),
+                    shareInfoData.getOwnerAcctDisplayName(), String.valueOf(shareInfoData.getItemId()),
+                    shareInfoData.getPath(), shareInfoData.getFolderDefaultView(), shareInfoData.getType().name(),
+                    shareInfoData.getRights(), shareInfoData.getMountpointId_zmprov_only(),
+                    shareInfoData.getGranteeType(), shareInfoData.getGranteeId(), shareInfoData.getGranteeName(),
                     shareInfoData.getGranteeDisplayName());
         }
     };
@@ -1792,7 +1823,7 @@ public class ProvUtil implements HttpDebugListener {
         prov.getShareInfo(owner, new ShareInfoVisitor());
     }
 
-    private void doGetSpnegoDomain() throws ServiceException{
+    private void doGetSpnegoDomain() throws ServiceException {
         Config config = prov.getConfig();
         String spnegoAuthRealm = config.getSpnegoAuthRealm();
         if (spnegoAuthRealm != null) {
@@ -1830,9 +1861,9 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doDeleteAccount(String[] args) throws ServiceException {
         if (prov instanceof LdapProv) {
-            boolean confirmed = confirm("-l option is specified.  " +
-                    "Only the LDAP entry of the account will be deleted.\n" +
-                    "DB data of the account and associated blobs will not be deleted.\n");
+            boolean confirmed = confirm("-l option is specified.  "
+                    + "Only the LDAP entry of the account will be deleted.\n"
+                    + "DB data of the account and associated blobs will not be deleted.\n");
 
             if (!confirmed) {
                 console.println("aborted");
@@ -1842,8 +1873,8 @@ public class ProvUtil implements HttpDebugListener {
 
         String key = args[1];
         Account acct = lookupAccount(key);
-        if (key.equalsIgnoreCase(acct.getId()) || key.equalsIgnoreCase(acct.getName()) ||
-                acct.getName().equalsIgnoreCase(key + "@" + acct.getDomainName())) {
+        if (key.equalsIgnoreCase(acct.getId()) || key.equalsIgnoreCase(acct.getName())
+                || acct.getName().equalsIgnoreCase(key + "@" + acct.getDomainName())) {
             prov.deleteAccount(acct.getId());
         } else {
             throw ServiceException.INVALID_REQUEST(
@@ -1853,9 +1884,9 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doRenameAccount(String[] args) throws ServiceException {
         if (prov instanceof LdapProv) {
-            boolean confirmed = confirm("-l option is specified.  " +
-                    "Only the LDAP portion of the account will be deleted.\n" +
-                    "DB data of the account will not be renamed.\n");
+            boolean confirmed = confirm("-l option is specified.  "
+                    + "Only the LDAP portion of the account will be deleted.\n"
+                    + "DB data of the account will not be renamed.\n");
 
             if (!confirmed) {
                 console.println("aborted");
@@ -1883,8 +1914,8 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void dumpDataSource(DataSource dataSource, Set<String> argNameSet) throws ServiceException {
-        console.println("# name "+dataSource.getName());
-        console.println("# type "+dataSource.getType());
+        console.println("# name " + dataSource.getName());
+        console.println("# type " + dataSource.getType());
         Map<String, Object> attrs = dataSource.getAttrs();
         dumpAttrs(attrs, argNameSet);
         console.println();
@@ -1901,7 +1932,7 @@ public class ProvUtil implements HttpDebugListener {
     private void doGetDistributionListMembership(Group group) throws ServiceException {
         String[] members;
         if (group instanceof DynamicGroup) {
-            members = ((DynamicGroup)group).getAllMembers(true);
+            members = ((DynamicGroup) group).getAllMembers(true);
         } else {
             members = group.getAllMembers();
         }
@@ -1925,9 +1956,8 @@ public class ProvUtil implements HttpDebugListener {
     /**
      * prov is always LdapProv here
      */
-    private void doGetAllAccounts(LdapProv ldapProv, Domain domain, Server server,
-            final boolean verbose, final boolean applyDefault, final Set<String> attrNames)
-                    throws ServiceException {
+    private void doGetAllAccounts(LdapProv ldapProv, Domain domain, Server server, final boolean verbose,
+            final boolean applyDefault, final Set<String> attrNames) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             @Override
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
@@ -1940,7 +1970,7 @@ public class ProvUtil implements HttpDebugListener {
         };
 
         SearchAccountsOptions options = new SearchAccountsOptions();
-        if(domain != null) {
+        if (domain != null) {
             options.setDomain(domain);
         }
         options.setIncludeType(IncludeType.ACCOUNTS_ONLY);
@@ -2023,42 +2053,42 @@ public class ProvUtil implements HttpDebugListener {
         if (args[i].equals("-v")) {
             verbose = true;
             i++;
-            if (args.length < i-1) {
+            if (args.length < i - 1) {
                 usage();
                 return;
             }
         }
 
-        if (args.length < i+1) {
+        if (args.length < i + 1) {
             usage();
             return;
         }
 
         String query = args[i];
 
-        Map<String, Object> attrs = getMap(args, i+1);
+        Map<String, Object> attrs = getMap(args, i + 1);
         String limitStr = (String) attrs.get("limit");
         int limit = limitStr == null ? Integer.MAX_VALUE : Integer.parseInt(limitStr);
 
         String offsetStr = (String) attrs.get("offset");
         int offset = offsetStr == null ? 0 : Integer.parseInt(offsetStr);
 
-        String sortBy  = (String)attrs.get("sortBy");
-        String sortAscending  = (String) attrs.get("sortAscending");
+        String sortBy = (String) attrs.get("sortBy");
+        String sortAscending = (String) attrs.get("sortAscending");
         boolean isSortAscending = (sortAscending != null) ? "1".equalsIgnoreCase(sortAscending) : true;
 
         String[] attrsToGet = null;
 
         String typesStr = (String) attrs.get("types");
         if (typesStr == null) {
-            typesStr = SearchDirectoryOptions.ObjectType.accounts.name() + "," +
-                    SearchDirectoryOptions.ObjectType.aliases.name() + "," +
-                    SearchDirectoryOptions.ObjectType.distributionlists.name() + "," +
-                    SearchDirectoryOptions.ObjectType.dynamicgroups.name() + "," +
-                    SearchDirectoryOptions.ObjectType.resources.name();
+            typesStr = SearchDirectoryOptions.ObjectType.accounts.name() + ","
+                    + SearchDirectoryOptions.ObjectType.aliases.name() + ","
+                    + SearchDirectoryOptions.ObjectType.distributionlists.name() + ","
+                    + SearchDirectoryOptions.ObjectType.dynamicgroups.name() + ","
+                    + SearchDirectoryOptions.ObjectType.resources.name();
         }
 
-        String domainStr = (String)attrs.get("domain");
+        String domainStr = (String) attrs.get("domain");
 
         SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(attrsToGet);
         if (domainStr != null) {
@@ -2070,7 +2100,7 @@ public class ProvUtil implements HttpDebugListener {
         searchOpts.setSortAttr(sortBy);
 
         // if LdapClient is not initialized(the case for SoapProvisioning), FilterId
-        // is not initialized.  Use null for SoapProvisioning, it will be set to
+        // is not initialized. Use null for SoapProvisioning, it will be set to
         // FilterId.ADMIN_SEARCH in SearchDirectory soap handler.
         FilterId filterId = (prov instanceof LdapProv) ? FilterId.ADMIN_SEARCH : null;
         searchOpts.setFilterString(filterId, query);
@@ -2078,7 +2108,7 @@ public class ProvUtil implements HttpDebugListener {
 
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
 
-        for (int j=offset; j < offset+limit && j < accounts.size(); j++) {
+        for (int j = offset; j < offset + limit && j < accounts.size(); j++) {
             NamedEntry account = accounts.get(j);
             if (verbose) {
                 if (account instanceof Account) {
@@ -2098,7 +2128,7 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doSyncGal(String[] args) throws ServiceException {
         String domain = args[1];
-        String token = args.length  == 3 ? args[2] : "";
+        String token = args.length == 3 ? args[2] : "";
 
         Domain d = lookupDomain(domain);
 
@@ -2135,7 +2165,7 @@ public class ProvUtil implements HttpDebugListener {
         int limit = limitStr == null ? 0 : Integer.parseInt(limitStr);
         String offsetStr = (String) attrs.get("offset");
         int offset = offsetStr == null ? 0 : Integer.parseInt(offsetStr);
-        String sortBy = (String)attrs.get("sortBy");
+        String sortBy = (String) attrs.get("sortBy");
         Domain d = lookupDomain(domain);
 
         SearchGalResult result;
@@ -2189,7 +2219,8 @@ public class ProvUtil implements HttpDebugListener {
         String formatHeading = "%-20s %-40s %s\n";
         String format = "%-20s %-40s %d\n";
         console.printf(formatHeading, "cos name", "cos id", "# of accounts");
-        console.printf(formatHeading, "--------------------", "----------------------------------------", "--------------------");
+        console.printf(formatHeading, "--------------------", "----------------------------------------",
+                "--------------------");
         for (CountAccountResult.CountAccountByCos c : result.getCountAccountByCos()) {
             console.printf(format, c.getCosName(), c.getCosId(), c.getCount());
         }
@@ -2219,7 +2250,8 @@ public class ProvUtil implements HttpDebugListener {
                 domain = lookupDomain(args[idx]);
             } else if (arg.equals("-u")) {
                 if (ucService != null) {
-                    throw ServiceException.INVALID_REQUEST("UCService is already specified as:" + ucService.getName(), null);
+                    throw ServiceException.INVALID_REQUEST("UCService is already specified as:" + ucService.getName(),
+                            null);
                 }
                 idx++;
                 if (args.length <= idx) {
@@ -2293,7 +2325,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void dumpCos(Cos cos, Set<String> attrNames) throws ServiceException {
-        console.println("# name "+cos.getName());
+        console.println("# name " + cos.getName());
         Map<String, Object> attrs = cos.getAttrs();
         dumpAttrs(attrs, attrNames);
         console.println();
@@ -2345,7 +2377,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void dumpDomain(Domain domain, boolean expandConfig, Set<String> attrNames) throws ServiceException {
-        console.println("# name "+domain.getName());
+        console.println("# name " + domain.getName());
         Map<String, Object> attrs = domain.getAttrs(expandConfig);
         dumpAttrs(attrs, attrNames);
         console.println();
@@ -2355,7 +2387,7 @@ public class ProvUtil implements HttpDebugListener {
 
         String[] members;
         if (group instanceof DynamicGroup) {
-            members = ((DynamicGroup)group).getAllMembers(true);
+            members = ((DynamicGroup) group).getAllMembers(true);
         } else {
             members = group.getAllMembers();
         }
@@ -2377,7 +2409,7 @@ public class ProvUtil implements HttpDebugListener {
         dumpAttrs(attrs, null);
     }
 
-    private void doGetRight(String[] args) throws ServiceException, ArgException  {
+    private void doGetRight(String[] args) throws ServiceException, ArgException {
         boolean expandComboRight = false;
         String right = args[1];
         if (args.length > 2) {
@@ -2390,7 +2422,7 @@ public class ProvUtil implements HttpDebugListener {
         dumpRight(lookupRight(right), expandComboRight);
     }
 
-    private void doGetAllRights(String[] args) throws ServiceException, ArgException  {
+    private void doGetAllRights(String[] args) throws ServiceException, ArgException {
         boolean verbose = false;
         String targetType = null;
         String rightClass = null;
@@ -2447,16 +2479,15 @@ public class ProvUtil implements HttpDebugListener {
         console.println(indent + "       right type: " + right.getRightType().name());
 
         String targetType = right.getTargetTypeStr();
-        console.println(indent + "   target type(s): " + (targetType==null ? "" : targetType));
+        console.println(indent + "   target type(s): " + (targetType == null ? "" : targetType));
 
         String grantTargetType = right.getGrantTargetTypeStr();
-        console.println(indent + "grant target type: " +
-                (grantTargetType==null ? "(default)" : grantTargetType));
+        console.println(indent + "grant target type: " + (grantTargetType == null ? "(default)" : grantTargetType));
 
         console.println(indent + "      right class: " + right.getRightClass().name());
 
         if (right.isAttrRight()) {
-            AttrRight attrRight = (AttrRight)right;
+            AttrRight attrRight = (AttrRight) right;
             console.println();
             console.println(indent + "attributes:");
             if (attrRight.allAttrs()) {
@@ -2467,7 +2498,7 @@ public class ProvUtil implements HttpDebugListener {
                 }
             }
         } else if (right.isComboRight()) {
-            ComboRight comboRight = (ComboRight)right;
+            ComboRight comboRight = (ComboRight) right;
             console.println();
             console.println(indent + "rights:");
             dumpComboRight(comboRight, expandComboRight, indent, new HashSet<String>());
@@ -2506,7 +2537,7 @@ public class ProvUtil implements HttpDebugListener {
             seen.add(comboRight.getName());
 
             if (r.isComboRight() && expandComboRight) {
-                dumpComboRight((ComboRight)r, expandComboRight, indent2, seen);
+                dumpComboRight((ComboRight) r, expandComboRight, indent2, seen);
             }
 
             seen.clear();
@@ -2523,21 +2554,14 @@ public class ProvUtil implements HttpDebugListener {
         if (args.length > 1) {
             // args[0] is "grd", starting from args[1]
             packages = new String[args.length - 1];
-            for (int i=1; i<args.length; i++) {
-                packages[i-1] = args[i];
+            for (int i = 1; i < args.length; i++) {
+                packages[i - 1] = args[i];
                 argsDump.append(" " + args[i]);
             }
         } else {
-            packages = new String[] {
-                    "com.zimbra.cs.service.admin",
-                    "com.zimbra.bp",
-                    "com.zimbra.cert",
-                    "com.zimbra.cs.network",
-                    "com.zimbra.cs.network.license.service",
-                    "com.zimbra.cs.service.backup",
-                    "com.zimbra.cs.service.hsm",
-                    "com.zimbra.xmbxsearch"
-            };
+            packages = new String[] { "com.zimbra.cs.service.admin", "com.zimbra.bp", "com.zimbra.cert",
+                    "com.zimbra.cs.network", "com.zimbra.cs.network.license.service", "com.zimbra.cs.service.backup",
+                    "com.zimbra.cs.service.hsm", "com.zimbra.xmbxsearch" };
         }
 
         console.println("#");
@@ -2665,28 +2689,28 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void dumpServer(Server server, boolean expandConfig, Set<String> attrNames) throws ServiceException {
-        console.println("# name "+server.getName());
+        console.println("# name " + server.getName());
         Map<String, Object> attrs = server.getAttrs(expandConfig);
         dumpAttrs(attrs, attrNames);
         console.println();
     }
 
     private void dumpAlwaysOnCluster(AlwaysOnCluster cluster, Set<String> attrNames) throws ServiceException {
-        console.println("# name "+cluster.getName());
+        console.println("# name " + cluster.getName());
         Map<String, Object> attrs = cluster.getAttrs();
         dumpAttrs(attrs, attrNames);
         console.println();
     }
 
     private void dumpUCService(UCService ucService, Set<String> attrNames) throws ServiceException {
-        console.println("# name "+ucService.getName());
+        console.println("# name " + ucService.getName());
         Map<String, Object> attrs = ucService.getAttrs();
         dumpAttrs(attrs, attrNames);
         console.println();
     }
 
     private void dumpXMPPComponent(XMPPComponent comp, Set<String> attrNames) throws ServiceException {
-        console.println("# name "+comp.getName());
+        console.println("# name " + comp.getName());
         Map<String, Object> attrs = comp.getAttrs();
         dumpAttrs(attrs, attrNames);
         console.println();
@@ -2700,35 +2724,36 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void dumpAccount(Account account, boolean expandCos, Set<String> attrNames) throws ServiceException {
-        console.println("# name "+account.getName());
+        console.println("# name " + account.getName());
         Map<String, Object> attrs = account.getAttrs(expandCos);
         dumpAttrs(attrs, attrNames);
         console.println();
     }
 
-    private void dumpCalendarResource(CalendarResource resource, boolean expandCos, Set<String> attrNames) throws ServiceException {
-        console.println("# name "+resource.getName());
+    private void dumpCalendarResource(CalendarResource resource, boolean expandCos, Set<String> attrNames)
+            throws ServiceException {
+        console.println("# name " + resource.getName());
         Map<String, Object> attrs = resource.getAttrs(expandCos);
         dumpAttrs(attrs, attrNames);
         console.println();
     }
 
     private void dumpContact(GalContact contact) throws ServiceException {
-        console.println("# name "+contact.getId());
+        console.println("# name " + contact.getId());
         Map<String, Object> attrs = contact.getAttrs();
         dumpAttrs(attrs, null);
         console.println();
     }
 
     private void dumpIdentity(Identity identity, Set<String> attrNameSet) throws ServiceException {
-        console.println("# name "+identity.getName());
+        console.println("# name " + identity.getName());
         Map<String, Object> attrs = identity.getAttrs();
         dumpAttrs(attrs, attrNameSet);
         console.println();
     }
 
     private void dumpSignature(Signature signature, Set<String> attrNameSet) throws ServiceException {
-        console.println("# name "+signature.getName());
+        console.println("# name " + signature.getName());
         Map<String, Object> attrs = signature.getAttrs();
         dumpAttrs(attrs, attrNameSet);
         console.println();
@@ -2749,7 +2774,7 @@ public class ProvUtil implements HttpDebugListener {
                     attrName = specificAttr;
                 } else {
                     attrName = specificAttr.substring(0, colonAt);
-                    attrValue = specificAttr.substring(colonAt+1);
+                    attrValue = specificAttr.substring(colonAt + 1);
                     if (attrValue.length() < 1) {
                         throw ServiceException.INVALID_REQUEST("missing value for " + specificAttr, null);
                     }
@@ -2790,20 +2815,22 @@ public class ProvUtil implements HttpDebugListener {
                     for (int i = 0; i < sv.length; i++) {
                         String aSv = sv[i];
                         // don't print permission denied attr
-                        if (this.forceDisplayAttrValue || aSv.length() > 0 && (specificValues == null || specificValues.isEmpty() || specificValues.contains(aSv))) {
+                        if (this.forceDisplayAttrValue || aSv.length() > 0
+                                && (specificValues == null || specificValues.isEmpty() || specificValues.contains(aSv))) {
                             printAttr(name, aSv, i, isBinary, timestamp);
                         }
                     }
                 } else if (value instanceof String) {
                     // don't print permission denied attr
-                    if (this.forceDisplayAttrValue || ((String)value).length() > 0 && (specificValues == null || specificValues.isEmpty() || specificValues.contains(value))) {
-                        printAttr(name, (String)value, null, isBinary, timestamp);
+                    if (this.forceDisplayAttrValue || ((String) value).length() > 0
+                            && (specificValues == null || specificValues.isEmpty() || specificValues.contains(value))) {
+                        printAttr(name, (String) value, null, isBinary, timestamp);
                     }
                 }
             }
         }
 
-        //force display empty value attribute
+        // force display empty value attribute
         if (this.forceDisplayAttrValue) {
             for (String attr : specificAttrs) {
                 if (!attrs.containsKey(attr)) {
@@ -2829,7 +2856,7 @@ public class ProvUtil implements HttpDebugListener {
                 Map<String, Object> attrs = new HashMap<String, Object>();
                 String displayName = nameMask + " N. " + Integer.toString(i);
                 StringUtil.addToMultiMap(attrs, "displayName", displayName);
-                DistributionList dl  = prov.createDistributionList(name, attrs);
+                DistributionList dl = prov.createDistributionList(name, attrs);
                 console.println(dl.getId());
             }
         }
@@ -2945,12 +2972,11 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void doGetAllCalendarResources(Provisioning prov, Domain domain, Server server,
-            final boolean verbose, final boolean applyDefault) throws ServiceException {
+    private void doGetAllCalendarResources(Provisioning prov, Domain domain, Server server, final boolean verbose,
+            final boolean applyDefault) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             @Override
-            public void visit(com.zimbra.cs.account.NamedEntry entry)
-                    throws ServiceException {
+            public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
                 if (verbose) {
                     dumpCalendarResource((CalendarResource) entry, applyDefault, null);
                 } else {
@@ -2986,7 +3012,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         EntrySearchFilter.Multi multi = new EntrySearchFilter.Multi(false, EntrySearchFilter.AndOr.and);
-        for (; i < args.length; ) {
+        for (; i < args.length;) {
             String attr = args[i++];
             String op = args[i++];
             String value = args[i++];
@@ -3024,17 +3050,16 @@ public class ProvUtil implements HttpDebugListener {
 
     private Account lookupAccount(String key, boolean mustFind, boolean applyDefault) throws ServiceException {
         Account account;
-        if (applyDefault==true || (prov instanceof LdapProv)) {
+        if (applyDefault == true || (prov instanceof LdapProv)) {
             account = prov.getAccount(key);
         } else {
             /*
              * oops, do not apply default, and we are SoapProvisioning
-             *
-             * This a bit awkward because the applyDefault is controlled at the Entry.getAttrs, not at
-             * the provisioning interface.   But for SOAP, this needs to be passed to the get(AccountBy)
-             * method so it can set the flag in SOAP.   We do not want to add a provisioning method for
-             * this.  Instead, we make it a SOAPProvisioning only method.
-             *
+             * 
+             * This a bit awkward because the applyDefault is controlled at the Entry.getAttrs, not at the provisioning
+             * interface. But for SOAP, this needs to be passed to the get(AccountBy) method so it can set the flag in
+             * SOAP. We do not want to add a provisioning method for this. Instead, we make it a SOAPProvisioning only
+             * method.
              */
             SoapProvisioning soapProv = (SoapProvisioning) prov;
             account = soapProv.getAccount(key, applyDefault);
@@ -3075,7 +3100,7 @@ public class ProvUtil implements HttpDebugListener {
     private Domain lookupDomain(String key, Provisioning prov, boolean applyDefault) throws ServiceException {
         Domain domain;
         if (prov instanceof SoapProvisioning) {
-            SoapProvisioning soapProv = (SoapProvisioning)prov;
+            SoapProvisioning soapProv = (SoapProvisioning) prov;
             domain = soapProv.get(guessDomainBy(key), key, applyDefault);
         } else {
             domain = prov.get(guessDomainBy(key), key);
@@ -3205,7 +3230,6 @@ public class ProvUtil implements HttpDebugListener {
         return AccountBy.name;
     }
 
-
     public static Key.CosBy guessCosBy(String value) {
         if (Provisioning.isUUID(value)) {
             return Key.CosBy.id;
@@ -3303,27 +3327,24 @@ public class ProvUtil implements HttpDebugListener {
     /**
      * get map and check/warn deprecated attrs.
      */
-    private Map<String, Object> getMapAndCheck(String[] args, int offset, boolean isCreateCmd)
-            throws ArgException, ServiceException {
+    private Map<String, Object> getMapAndCheck(String[] args, int offset, boolean isCreateCmd) throws ArgException,
+            ServiceException {
         Map<String, Object> attrs = getAttrMap(args, offset, isCreateCmd);
         checkDeprecatedAttrs(attrs);
         return attrs;
     }
 
-
     /**
      * Convert an array of the form:
      *
-     *    a1 v1 a2 v2 a2 v3
+     * a1 v1 a2 v2 a2 v3
      *
      * to a map of the form:
      *
-     *    a1 -> v1
-     *    a2 -> [v2, v3]
+     * a1 -> v1 a2 -> [v2, v3]
      *
-     * For binary attribute, the argument following an attribute name will be treated as a
-     * file path and value for the attribute will be the base64 encoded string of the content
-     * of the file.
+     * For binary attribute, the argument following an attribute name will be treated as a file path and value for the
+     * attribute will be the base64 encoded string of the content of the file.
      */
     private Map<String, Object> keyValueArrayToMultiMap(String[] args, int offset, boolean isCreateCmd)
             throws IOException, ServiceException {
@@ -3332,46 +3353,46 @@ public class ProvUtil implements HttpDebugListener {
         Map<String, Object> attrs = new HashMap<String, Object>();
 
         String safeguarded_attrs_prop = LC.get("zmprov_safeguarded_attrs");
-        Set<String> safeguarded_attrs = safeguarded_attrs_prop == null ?
-                Sets.<String>newHashSet() : Sets.newHashSet(safeguarded_attrs_prop.toLowerCase().split(","));
-                Multiset<String> multiValAttrsToCheck = HashMultiset.create();
+        Set<String> safeguarded_attrs = safeguarded_attrs_prop == null ? Sets.<String> newHashSet() : Sets
+                .newHashSet(safeguarded_attrs_prop.toLowerCase().split(","));
+        Multiset<String> multiValAttrsToCheck = HashMultiset.create();
 
-                for (int i = offset; i < args.length; i += 2) {
-                    String n = args[i];
-                    if (i + 1 >= args.length) {
-                        throw new IllegalArgumentException("not enough arguments");
-                    }
-                    String v = args[i + 1];
-                    String attrName = n;
-                    if (n.charAt(0) == '+' || n.charAt(0) == '-') {
-                        attrName = attrName.substring(1);
-                    } else if (safeguarded_attrs.contains(attrName.toLowerCase()) && attrMgr.isMultiValued(attrName)) {
-                        multiValAttrsToCheck.add(attrName.toLowerCase());
-                    }
-                    if (needsBinaryIO(attrMgr, attrName) && v.length() > 0) {
-                        File file = new File(v);
-                        byte[] bytes = ByteUtil.getContent(file);
-                        v = ByteUtil.encodeLDAPBase64(bytes);
-                    }
-                    StringUtil.addToMultiMap(attrs, n, v);
+        for (int i = offset; i < args.length; i += 2) {
+            String n = args[i];
+            if (i + 1 >= args.length) {
+                throw new IllegalArgumentException("not enough arguments");
+            }
+            String v = args[i + 1];
+            String attrName = n;
+            if (n.charAt(0) == '+' || n.charAt(0) == '-') {
+                attrName = attrName.substring(1);
+            } else if (safeguarded_attrs.contains(attrName.toLowerCase()) && attrMgr.isMultiValued(attrName)) {
+                multiValAttrsToCheck.add(attrName.toLowerCase());
+            }
+            if (needsBinaryIO(attrMgr, attrName) && v.length() > 0) {
+                File file = new File(v);
+                byte[] bytes = ByteUtil.getContent(file);
+                v = ByteUtil.encodeLDAPBase64(bytes);
+            }
+            StringUtil.addToMultiMap(attrs, n, v);
+        }
+
+        if (!allowMultiValuedAttrReplacement && !isCreateCmd) {
+            for (Multiset.Entry<String> entry : multiValAttrsToCheck.entrySet()) {
+                if (entry.getCount() == 1) {
+                    // If multiple values are being assigned to an attr as part of the same command
+                    // then we don't consider it an unsafe replacement
+                    printError("error: cannot replace multi-valued attr value unless -r is specified");
+                    System.exit(2);
                 }
+            }
+        }
 
-                if (!allowMultiValuedAttrReplacement && !isCreateCmd) {
-                    for (Multiset.Entry<String> entry : multiValAttrsToCheck.entrySet()) {
-                        if (entry.getCount() == 1) {
-                            // If multiple values are being assigned to an attr as part of the same command
-                            // then we don't consider it an unsafe replacement
-                            printError("error: cannot replace multi-valued attr value unless -r is specified");
-                            System.exit(2);
-                        }
-                    }
-                }
-
-                return attrs;
+        return attrs;
     }
 
-    private Map<String, Object> getAttrMap(String[] args, int offset, boolean isCreateCmd)
-            throws ArgException, ServiceException {
+    private Map<String, Object> getAttrMap(String[] args, int offset, boolean isCreateCmd) throws ArgException,
+            ServiceException {
         try {
             return keyValueArrayToMultiMap(args, offset, isCreateCmd);
         } catch (IllegalArgumentException iae) {
@@ -3394,7 +3415,7 @@ public class ProvUtil implements HttpDebugListener {
             return null;
         }
         Set<String> result = new HashSet<String>();
-        for (int i=offset; i < args.length; i++) {
+        for (int i = offset; i < args.length; i++) {
             result.add(args[i].toLowerCase());
         }
         return result;
@@ -3423,8 +3444,13 @@ public class ProvUtil implements HttpDebugListener {
             } catch (ServiceException e) {
                 Throwable cause = e.getCause();
                 errorOccursDuringInteraction = true;
-                String errText = "ERROR: " + e.getCode() + " (" + e.getMessage() + ")" +
-                        (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");
+                String errText = "ERROR: "
+                        + e.getCode()
+                        + " ("
+                        + e.getMessage()
+                        + ")"
+                        + (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage()
+                                + ")");
                 printError(errText);
                 if (verboseMode) {
                     e.printStackTrace(errConsole);
@@ -3438,12 +3464,9 @@ public class ProvUtil implements HttpDebugListener {
     /**
      * Output binary attribute to file.
      *
-     * value is written to:
-     * {LC.zmprov_tmp_directory}/{attr-name}[_{index-if-multi-valued}]{timestamp}
+     * value is written to: {LC.zmprov_tmp_directory}/{attr-name}[_{index-if-multi-valued}]{timestamp}
      *
-     * e.g.
-     * /opt/zimbra/data/tmp/zmprov/zimbraFoo_20110202161621
-     * /opt/zimbra/data/tmp/zmprov/zimbraBar_0_20110202161507
+     * e.g. /opt/zimbra/data/tmp/zmprov/zimbraFoo_20110202161621 /opt/zimbra/data/tmp/zmprov/zimbraBar_0_20110202161507
      * /opt/zimbra/data/tmp/zmprov/zimbraBar_1_20110202161507
      */
     private void outputBinaryAttrToFile(String attrName, Integer idx, byte[] value, String timestamp)
@@ -3485,8 +3508,8 @@ public class ProvUtil implements HttpDebugListener {
                 // re-encode into 76 character blocks
                 String based64Chunked = new String(Base64.encodeBase64Chunked(binary));
                 // strip off the \n at the end
-                if (based64Chunked.charAt(based64Chunked.length() -1) == '\n') {
-                    based64Chunked = based64Chunked.substring(0, based64Chunked.length()-1);
+                if (based64Chunked.charAt(based64Chunked.length() - 1) == '\n') {
+                    based64Chunked = based64Chunked.substring(0, based64Chunked.length() - 1);
                 }
                 printOutput(attrName + ":: " + based64Chunked);
             }
@@ -3541,7 +3564,8 @@ public class ProvUtil implements HttpDebugListener {
         options.addOption("d", "debug", false, "debug mode (SOAP request and response payload)");
         options.addOption("D", "debughigh", false, "debug mode (SOAP req/resp payload and http headers)");
         options.addOption("m", "master", false, "use LDAP master (has to be used with --ldap)");
-        options.addOption("t", "temp", false, "write binary values to files in temporary directory specified in localconfig key zmprov_tmp_directory");
+        options.addOption("t", "temp", false,
+                "write binary values to files in temporary directory specified in localconfig key zmprov_tmp_directory");
         options.addOption("r", "replace", false, "allow replacement of multi-valued attr value");
         options.addOption("fd", "forcedisplay", false, "force display attr value");
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
@@ -3586,7 +3610,8 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         if (cl.hasOption(SoapCLI.O_AUTHTOKEN) && cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
-            printError("error: cannot specify " + SoapCLI.O_AUTHTOKEN + " when " + SoapCLI.O_AUTHTOKENFILE + " is specified");
+            printError("error: cannot specify " + SoapCLI.O_AUTHTOKEN + " when " + SoapCLI.O_AUTHTOKENFILE
+                    + " is specified");
             System.exit(2);
         }
         if (cl.hasOption(SoapCLI.O_AUTHTOKEN)) {
@@ -3690,8 +3715,8 @@ public class ProvUtil implements HttpDebugListener {
             }
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
-            String errText = "ERROR: " + e.getCode() + " (" + e.getMessage() + ")" +
-                    (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");
+            String errText = "ERROR: " + e.getCode() + " (" + e.getMessage() + ")"
+                    + (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");
 
             printError(errText);
 
@@ -3735,7 +3760,7 @@ public class ProvUtil implements HttpDebugListener {
                 for (String d : ai.getGlobalConfigValues()) {
                     sb.append(d + ",");
                 }
-                return sb.length() == 0 ? "" : sb.substring(0, sb.length()-1); // trim the ending ,
+                return sb.length() == 0 ? "" : sb.substring(0, sb.length() - 1); // trim the ending ,
             }
 
             static String formatRequiredIn(AttributeInfo ai) {
@@ -3748,7 +3773,7 @@ public class ProvUtil implements HttpDebugListener {
                 for (AttributeClass ac : requiredIn) {
                     sb.append(ac.name() + ",");
                 }
-                return sb.substring(0, sb.length()-1); // trim the ending ,
+                return sb.substring(0, sb.length() - 1); // trim the ending ,
             }
 
             static String formatOptionalIn(AttributeInfo ai) {
@@ -3760,7 +3785,7 @@ public class ProvUtil implements HttpDebugListener {
                 for (AttributeClass ac : optionalIn) {
                     sb.append(ac.name() + ",");
                 }
-                return sb.substring(0, sb.length()-1); // trim the ending ,
+                return sb.substring(0, sb.length() - 1); // trim the ending ,
             }
 
             static String formatFlags(AttributeInfo ai) {
@@ -3770,7 +3795,7 @@ public class ProvUtil implements HttpDebugListener {
                         sb.append(f.name() + ",");
                     }
                 }
-                return sb.length() == 0 ? "" : sb.substring(0, sb.length()-1); // trim the ending ,
+                return sb.length() == 0 ? "" : sb.substring(0, sb.length() - 1); // trim the ending ,
             }
 
             static String formatRequiresRestart(AttributeInfo ai) {
@@ -3781,84 +3806,84 @@ public class ProvUtil implements HttpDebugListener {
                         sb.append(ast.name() + ",");
                     }
                 }
-                return sb.length() == 0 ? "" : sb.substring(0, sb.length()-1); // trim the ending ,
+                return sb.length() == 0 ? "" : sb.substring(0, sb.length() - 1); // trim the ending ,
             }
 
             static String print(Field field, AttributeInfo ai) {
                 String out = null;
 
                 switch (field) {
-                    case type:
-                        out = ai.getType().getName();
-                        break;
-                    case value:
-                        out = ai.getValue();
-                        break;
-                    case callback:
-                        AttributeCallback acb = ai.getCallback();
-                        if (acb != null) {
-                            out = acb.getClass().getSimpleName();
+                case type:
+                    out = ai.getType().getName();
+                    break;
+                case value:
+                    out = ai.getValue();
+                    break;
+                case callback:
+                    AttributeCallback acb = ai.getCallback();
+                    if (acb != null) {
+                        out = acb.getClass().getSimpleName();
+                    }
+                    break;
+                case immutable:
+                    out = Boolean.toString(ai.isImmutable());
+                    break;
+                case cardinality:
+                    AttributeCardinality card = ai.getCardinality();
+                    if (card != null) {
+                        out = card.name();
+                    }
+                    break;
+                case requiredIn:
+                    out = formatRequiredIn(ai);
+                    break;
+                case optionalIn:
+                    out = formatOptionalIn(ai);
+                    break;
+                case flags:
+                    out = formatFlags(ai);
+                    break;
+                case defaults:
+                    out = formatDefaults(ai);
+                    break;
+                case min:
+                    long min = ai.getMin();
+                    if (min != Long.MIN_VALUE && min != Integer.MIN_VALUE) {
+                        out = Long.toString(min);
+                    }
+                    break;
+                case max:
+                    long max = ai.getMax();
+                    if (max != Long.MAX_VALUE && max != Integer.MAX_VALUE) {
+                        out = Long.toString(max);
+                    }
+                    break;
+                case id:
+                    int id = ai.getId();
+                    if (id != -1) {
+                        out = Integer.toString(ai.getId());
+                    }
+                    break;
+                case requiresRestart:
+                    out = formatRequiresRestart(ai);
+                    break;
+                case since:
+                    List<Version> since = ai.getSince();
+                    if (since != null) {
+                        StringBuilder sb = new StringBuilder();
+                        for (Version version : since) {
+                            sb.append(version.toString()).append(",");
                         }
-                        break;
-                    case immutable:
-                        out = Boolean.toString(ai.isImmutable());
-                        break;
-                    case cardinality:
-                        AttributeCardinality card = ai.getCardinality();
-                        if (card != null) {
-                            out = card.name();
-                        }
-                        break;
-                    case requiredIn:
-                        out = formatRequiredIn(ai);
-                        break;
-                    case optionalIn:
-                        out = formatOptionalIn(ai);
-                        break;
-                    case flags:
-                        out = formatFlags(ai);
-                        break;
-                    case defaults:
-                        out = formatDefaults(ai);
-                        break;
-                    case min:
-                        long min = ai.getMin();
-                        if (min != Long.MIN_VALUE && min != Integer.MIN_VALUE) {
-                            out = Long.toString(min);
-                        }
-                        break;
-                    case max:
-                        long max = ai.getMax();
-                        if (max != Long.MAX_VALUE && max != Integer.MAX_VALUE) {
-                            out = Long.toString(max);
-                        }
-                        break;
-                    case id:
-                        int id = ai.getId();
-                        if (id != -1) {
-                            out = Integer.toString(ai.getId());
-                        }
-                        break;
-                    case requiresRestart:
-                        out = formatRequiresRestart(ai);
-                        break;
-                    case since:
-                        List<Version> since = ai.getSince();
-                        if (since != null) {
-                            StringBuilder sb = new StringBuilder();
-                            for (Version version : since) {
-                                sb.append(version.toString()).append(",");
-                            }
-                            sb.setLength(sb.length() - 1);
-                            out = sb.toString();
-                        }
-                        break;
-                    case deprecatedSince:
-                        Version depreSince = ai.getDeprecatedSince();
-                        if (depreSince != null) {
-                            out = depreSince.toString();
-                        }
-                        break;
+                        sb.setLength(sb.length() - 1);
+                        out = sb.toString();
+                    }
+                    break;
+                case deprecatedSince:
+                    Version depreSince = ai.getDeprecatedSince();
+                    if (depreSince != null) {
+                        out = depreSince.toString();
+                    }
+                    break;
                 }
 
                 if (out == null) {
@@ -3885,7 +3910,7 @@ public class ProvUtil implements HttpDebugListener {
 
     static String formatLine(int width) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i< width; i++) {
+        for (int i = 0; i < width; i++) {
             sb.append("-");
         }
         return sb.toString();
@@ -3898,7 +3923,7 @@ public class ProvUtil implements HttpDebugListener {
                 sb.append(ac.name() + ",");
             }
         }
-        return sb.substring(0, sb.length()-1); // trim the ending ,
+        return sb.substring(0, sb.length() - 1); // trim the ending ,
     }
 
     private void descAttrsUsage(Exception e) {
@@ -3922,17 +3947,18 @@ public class ProvUtil implements HttpDebugListener {
 
         console.println("zmprov desc -ni -v account");
         console.println("    print attribute name and description of all non-inherited account attributes, ");
-        console.println("    that is, attributes that are on account but not on cos"+ "\n");
+        console.println("    that is, attributes that are on account but not on cos" + "\n");
 
         console.println("zmprov desc -ni domain");
         console.println("    print attribute name of all non-inherited domain attributes, ");
-        console.println("    that is, attributes that are on domain but not on global config"+ "\n");
+        console.println("    that is, attributes that are on domain but not on global config" + "\n");
 
-        /*  -only is *not* a documented option, we could expose it if we want,
-         *  handy for engineering tasks, not as useful for users
-         *
-        console.println("zmprov desc -only globalConfig");
-        console.println("    print attribute name of all attributes that are on global config only" + "\n");
+        /*
+         * -only is *not* a documented option, we could expose it if we want, handy for engineering tasks, not as useful
+         * for users
+         * 
+         * console.println("zmprov desc -only globalConfig");
+         * console.println("    print attribute name of all attributes that are on global config only" + "\n");
          */
 
         console.println("zmprov desc -a zimbraId");
@@ -3943,7 +3969,6 @@ public class ProvUtil implements HttpDebugListener {
 
         usage();
     }
-
 
     private DescribeArgs parseDescribeArgs(String[] args) throws ServiceException {
         DescribeArgs descArgs = new DescribeArgs();
@@ -3983,7 +4008,8 @@ public class ProvUtil implements HttpDebugListener {
                     throw ServiceException.INVALID_REQUEST("too many args", null);
                 }
                 if (descArgs.mAttrClass != null) {
-                    throw ServiceException.INVALID_REQUEST("entry type is already specified as " + descArgs.mAttrClass, null);
+                    throw ServiceException.INVALID_REQUEST("entry type is already specified as " + descArgs.mAttrClass,
+                            null);
                 }
                 AttributeClass ac = AttributeClass.fromString(args[i]);
                 if (ac == null || !ac.isProvisionable()) {
@@ -3994,7 +4020,8 @@ public class ProvUtil implements HttpDebugListener {
             i++;
         }
 
-        if ((descArgs.mNonInheritedOnly == true || descArgs.mOnThisObjectTypeOnly == true) && descArgs.mAttrClass == null) {
+        if ((descArgs.mNonInheritedOnly == true || descArgs.mOnThisObjectTypeOnly == true)
+                && descArgs.mAttrClass == null) {
             throw ServiceException.INVALID_REQUEST("-ni -only must be specified with an entry type", null);
         }
 
@@ -4013,7 +4040,7 @@ public class ProvUtil implements HttpDebugListener {
             return;
         }
 
-        SortedSet<String> attrs  = null;
+        SortedSet<String> attrs = null;
         String specificAttr = null;
 
         AttributeManager am = AttributeManager.getInstance();
@@ -4028,19 +4055,20 @@ public class ProvUtil implements HttpDebugListener {
                 Set<String> inheritFrom = null;
                 Set<String> netAttrs = null;
                 switch (descArgs.mAttrClass) {
-                    case account:
-                        netAttrs = new HashSet<String>(attrs);
-                        inheritFrom = new HashSet<String>(am.getAllAttrsInClass(AttributeClass.cos));
-                        netAttrs = SetUtil.subtract(netAttrs, inheritFrom);
-                        inheritFrom = new HashSet<String>(am.getAllAttrsInClass(AttributeClass.domain)); // for accountCosDomainInherited
-                        netAttrs = SetUtil.subtract(netAttrs, inheritFrom);
-                        break;
-                    case domain:
-                    case server:
-                        netAttrs = new HashSet<String>(attrs);
-                        inheritFrom = new HashSet<String>(am.getAllAttrsInClass(AttributeClass.globalConfig));
-                        netAttrs = SetUtil.subtract(netAttrs, inheritFrom);
-                        break;
+                case account:
+                    netAttrs = new HashSet<String>(attrs);
+                    inheritFrom = new HashSet<String>(am.getAllAttrsInClass(AttributeClass.cos));
+                    netAttrs = SetUtil.subtract(netAttrs, inheritFrom);
+                    inheritFrom = new HashSet<String>(am.getAllAttrsInClass(AttributeClass.domain)); // for
+                                                                                                     // accountCosDomainInherited
+                    netAttrs = SetUtil.subtract(netAttrs, inheritFrom);
+                    break;
+                case domain:
+                case server:
+                    netAttrs = new HashSet<String>(attrs);
+                    inheritFrom = new HashSet<String>(am.getAllAttrsInClass(AttributeClass.globalConfig));
+                    netAttrs = SetUtil.subtract(netAttrs, inheritFrom);
+                    break;
                 }
 
                 if (netAttrs != null) {
@@ -4057,8 +4085,8 @@ public class ProvUtil implements HttpDebugListener {
                     }
                     Set<AttributeClass> requiredIn = ai.getRequiredIn();
                     Set<AttributeClass> optionalIn = ai.getOptionalIn();
-                    if ((requiredIn == null || requiredIn.size() == 1) &&
-                            (optionalIn == null || optionalIn.size() == 1)) {
+                    if ((requiredIn == null || requiredIn.size() == 1)
+                            && (optionalIn == null || optionalIn.size() == 1)) {
                         netAttrs.add(attr);
                     }
                 }
@@ -4089,7 +4117,7 @@ public class ProvUtil implements HttpDebugListener {
                 console.println(ai.getName());
                 // description
                 String desc = ai.getDescription();
-                console.println(FileGenUtil.wrapComments((desc==null?"":desc), 70, "    "));
+                console.println(FileGenUtil.wrapComments((desc == null ? "" : desc), 70, "    "));
                 console.println();
 
                 for (DescribeArgs.Field f : DescribeArgs.Field.values()) {
@@ -4105,11 +4133,11 @@ public class ProvUtil implements HttpDebugListener {
                     console.println(attr + " (no attribute info)");
                     continue;
                 }
-                String attrName = ai.getName();  // camel case name
+                String attrName = ai.getName(); // camel case name
                 console.println(attrName);
                 if (descArgs.mVerbose) {
                     String desc = ai.getDescription();
-                    console.println(FileGenUtil.wrapComments((desc==null?"":desc), 70, "    ")  + "\n");
+                    console.println(FileGenUtil.wrapComments((desc == null ? "" : desc), 70, "    ") + "\n");
                 }
             }
         }
@@ -4138,14 +4166,14 @@ public class ProvUtil implements HttpDebugListener {
 
         if (args.length > argIdx) {
             entries = new CacheEntry[args.length - argIdx];
-            for (int i=argIdx; i<args.length; i++) {
+            for (int i = argIdx; i < args.length; i++) {
                 Key.CacheEntryBy entryBy;
                 if (Provisioning.isUUID(args[i])) {
                     entryBy = Key.CacheEntryBy.id;
                 } else {
                     entryBy = Key.CacheEntryBy.name;
                 }
-                entries[i-argIdx] = new CacheEntry(entryBy, args[i]);
+                entries[i - argIdx] = new CacheEntry(entryBy, args[i]);
             }
         }
 
@@ -4159,7 +4187,7 @@ public class ProvUtil implements HttpDebugListener {
         if (args.length == 3) {
             if (args[1].equals("-f")) {
                 force = true;
-            } else  {
+            } else {
                 usage();
                 return;
             }
@@ -4171,11 +4199,11 @@ public class ProvUtil implements HttpDebugListener {
         Domain domain = lookupDomain(key);
         String curPreAuthKey = domain.getAttr(Provisioning.A_zimbraPreAuthKey);
         if (curPreAuthKey != null && !force) {
-            throw ServiceException.INVALID_REQUEST("pre auth key exists for domain " + key +
-                    ", use command -f option to force overwriting the existing key", null);
+            throw ServiceException.INVALID_REQUEST("pre auth key exists for domain " + key
+                    + ", use command -f option to force overwriting the existing key", null);
         }
         String preAuthKey = PreAuthKey.generateRandomPreAuthKey();
-        HashMap<String,String> attrs = new HashMap<String,String>();
+        HashMap<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraPreAuthKey, preAuthKey);
         prov.modifyAttrs(domain, attrs);
         console.printf("preAuthKey: %s\n", preAuthKey);
@@ -4198,21 +4226,21 @@ public class ProvUtil implements HttpDebugListener {
             timestamp = System.currentTimeMillis();
         }
         long expires = Long.parseLong(args[5]);
-        HashMap<String,String> params = new HashMap<String,String>();
+        HashMap<String, String> params = new HashMap<String, String>();
         params.put("account", name);
         params.put("by", by);
-        params.put("timestamp", timestamp+"");
-        params.put("expires", expires+"");
+        params.put("timestamp", timestamp + "");
+        params.put("expires", expires + "");
         if (args.length == 7) {
             params.put("admin", args[6]);
         }
-        console.printf("account: %s\nby: %s\ntimestamp: %s\nexpires: %s\npreauth: %s\n",
-                name, by, timestamp, expires,PreAuthKey.computePreAuth(params, preAuthKey));
+        console.printf("account: %s\nby: %s\ntimestamp: %s\nexpires: %s\npreauth: %s\n", name, by, timestamp, expires,
+                PreAuthKey.computePreAuth(params, preAuthKey));
     }
 
     private void doGetAllMtaAuthURLs() throws ServiceException {
         List<Server> servers = prov.getAllServers();
-        for (Server server : servers ) {
+        for (Server server : servers) {
             boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraMtaAuthTarget, false);
             if (isTarget) {
                 String url = URLUtil.getMtaAuthURL(server) + " ";
@@ -4223,7 +4251,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doGetAllReverseProxyURLs() throws ServiceException {
-        String REVERSE_PROXY_PROTO = "";  // don't need proto for nginx.conf
+        String REVERSE_PROXY_PROTO = ""; // don't need proto for nginx.conf
         String REVERSE_PROXY_PATH = ExtensionDispatcherServlet.EXTENSION_PATH + "/nginx-lookup";
 
         List<Server> servers = prov.getAllMailClientServers();
@@ -4254,9 +4282,8 @@ public class ProvUtil implements HttpDebugListener {
             }
             MailMode mailMode = Provisioning.MailMode.fromString(mode);
 
-            boolean isPlain = (mailMode == Provisioning.MailMode.http ||
-                              (!LC.zimbra_require_interprocess_security.booleanValue() &&
-                              (mailMode == Provisioning.MailMode.mixed || mailMode == Provisioning.MailMode.both)));
+            boolean isPlain = (mailMode == Provisioning.MailMode.http || (!LC.zimbra_require_interprocess_security
+                    .booleanValue() && (mailMode == Provisioning.MailMode.mixed || mailMode == Provisioning.MailMode.both)));
 
             int backendPort;
             if (isPlain) {
@@ -4281,9 +4308,9 @@ public class ProvUtil implements HttpDebugListener {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             @Override
             public void visit(NamedEntry entry) throws ServiceException {
-                if (entry.getAttr(Provisioning.A_zimbraVirtualHostname) != null &&
-                        entry.getAttr(Provisioning.A_zimbraSSLPrivateKey) != null &&
-                        entry.getAttr(Provisioning.A_zimbraSSLCertificate) != null) {
+                if (entry.getAttr(Provisioning.A_zimbraVirtualHostname) != null
+                        && entry.getAttr(Provisioning.A_zimbraSSLPrivateKey) != null
+                        && entry.getAttr(Provisioning.A_zimbraSSLCertificate) != null) {
                     StringBuilder virtualHosts = new StringBuilder();
                     for (String vh : entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname)) {
                         virtualHosts.append(vh + " ");
@@ -4293,18 +4320,15 @@ public class ProvUtil implements HttpDebugListener {
             }
         };
 
-        prov.getAllDomains(visitor, new String[] {
-                Provisioning.A_zimbraVirtualHostname,
-                Provisioning.A_zimbraSSLPrivateKey,
-                Provisioning.A_zimbraSSLCertificate
-        });
+        prov.getAllDomains(visitor, new String[] { Provisioning.A_zimbraVirtualHostname,
+                Provisioning.A_zimbraSSLPrivateKey, Provisioning.A_zimbraSSLCertificate });
     }
 
     private void doGetAllMemcachedServers() throws ServiceException {
         List<Server> servers = prov.getAllServers(Provisioning.SERVICE_MEMCACHED);
-        for (Server server : servers ) {
-            console.print(server.getAttr(Provisioning.A_zimbraServiceHostname, "") + ":" +
-                    server.getAttr(Provisioning.A_zimbraMemcachedBindPort, "") + " ");
+        for (Server server : servers) {
+            console.print(server.getAttr(Provisioning.A_zimbraServiceHostname, "") + ":"
+                    + server.getAttr(Provisioning.A_zimbraMemcachedBindPort, "") + " ");
         }
         console.println();
     }
@@ -4349,7 +4373,8 @@ public class ProvUtil implements HttpDebugListener {
             boolean success = false;
             try {
                 SoapProvisioning sp = new SoapProvisioning();
-                sp.soapSetURI(Provisioning.getInstance().getLocalServer().getAdminServiceScheme() + hostname + ":" + port + AdminConstants.ADMIN_SERVICE_URI);
+                sp.soapSetURI(Provisioning.getInstance().getLocalServer().getAdminServiceScheme() + hostname + ":"
+                        + port + AdminConstants.ADMIN_SERVICE_URI);
                 if (debugLevel != SoapDebugLevel.none) {
                     sp.soapSetHttpTransportDebugListener(this);
                 }
@@ -4393,7 +4418,8 @@ public class ProvUtil implements HttpDebugListener {
             int port = server.getSecond();
             try {
                 SoapProvisioning sp = new SoapProvisioning();
-                sp.soapSetURI(Provisioning.getInstance().getLocalServer().getAdminServiceScheme() + hostname + ":" + port + AdminConstants.ADMIN_SERVICE_URI);
+                sp.soapSetURI(Provisioning.getInstance().getLocalServer().getAdminServiceScheme() + hostname + ":"
+                        + port + AdminConstants.ADMIN_SERVICE_URI);
                 if (debugLevel != SoapDebugLevel.none) {
                     sp.soapSetHttpTransportDebugListener(this);
                 }
@@ -4407,9 +4433,10 @@ public class ProvUtil implements HttpDebugListener {
                 MemcachedClientConfig config = sp.getMemcachedClientConfig();
                 String serverList = config.serverList != null ? config.serverList : "none";
                 if (verboseMode) {
-                    console.printf(hostnameFormat + " => serverList=[%s], hashAlgo=%s, binaryProto=%s, expiry=%ds, timeout=%dms\n",
-                            hostname, serverList, config.hashAlgorithm,
-                            config.binaryProtocol, config.defaultExpirySeconds, config.defaultTimeoutMillis);
+                    console.printf(hostnameFormat
+                            + " => serverList=[%s], hashAlgo=%s, binaryProto=%s, expiry=%ds, timeout=%dms\n", hostname,
+                            serverList, config.hashAlgorithm, config.binaryProtocol, config.defaultExpirySeconds,
+                            config.defaultTimeoutMillis);
                 } else if (config.serverList != null) {
                     if (DefaultHashAlgorithm.KETAMA_HASH.toString().equals(config.hashAlgorithm)) {
                         // Don't print the default hash algorithm to keep the output clutter-free.
@@ -4456,7 +4483,7 @@ public class ProvUtil implements HttpDebugListener {
             usage();
             return;
         }
-        dumpServer(lookupServer(args[i], applyDefault), applyDefault, getArgNameSet(args, i+1));
+        dumpServer(lookupServer(args[i], applyDefault), applyDefault, getArgNameSet(args, i + 1));
     }
 
     private void doGetAlwaysOnCluster(String[] args) throws ServiceException {
@@ -4476,15 +4503,15 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doCreateXMPPComponent(String[] args) throws ServiceException, ArgException {
-        //4 = class
-        //5 = category
-        //6 = type
-        Map<String,Object> map = getMapAndCheck(args, 7, true);
+        // 4 = class
+        // 5 = category
+        // 6 = type
+        Map<String, Object> map = getMapAndCheck(args, 7, true);
         map.put(Provisioning.A_zimbraXMPPComponentClassName, args[4]);
         map.put(Provisioning.A_zimbraXMPPComponentCategory, args[5]);
         map.put(Provisioning.A_zimbraXMPPComponentType, args[6]);
         Domain d = lookupDomain(args[2]);
-        String routableName = args[1]+"."+d.getName();
+        String routableName = args[1] + "." + d.getName();
         console.println(prov.createXMPPComponent(routableName, lookupDomain(args[2]), lookupServer(args[3]), map));
     }
 
@@ -4580,7 +4607,8 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void getRightArgs(RightArgs ra, boolean needGranteeType, boolean needSecret) throws ServiceException, ArgException {
+    private void getRightArgs(RightArgs ra, boolean needGranteeType, boolean needSecret) throws ServiceException,
+            ArgException {
         getRightArgsTarget(ra);
         getRightArgsGrantee(ra, needGranteeType, needSecret);
         getRightArgsRight(ra);
@@ -4599,14 +4627,14 @@ public class ProvUtil implements HttpDebugListener {
         boolean allow = prov.checkRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, granteeBy, ra.mGranteeIdOrName,
                 ra.mRight, attrs, via);
 
-        console.println(allow? "ALLOWED" : "DENIED");
+        console.println(allow ? "ALLOWED" : "DENIED");
         if (via.available()) {
             console.println("Via:");
             console.println("    target type  : " + via.getTargetType());
             console.println("    target       : " + via.getTargetName());
             console.println("    grantee type : " + via.getGranteeType());
             console.println("    grantee      : " + via.getGranteeName());
-            console.println("    right        : " + (via.isNegativeGrant()?"DENY ":"") + via.getRight());
+            console.println("    right        : " + (via.isNegativeGrant() ? "DENY " : "") + via.getRight());
             console.println();
         }
     }
@@ -4628,7 +4656,7 @@ public class ProvUtil implements HttpDebugListener {
         boolean expandGetAttrs = false;
 
         // if there are more args, see if they are expandSetAttrs/expandGetAttrs
-        for (int i= ra.mCurPos; i < args.length; i++) {
+        for (int i = ra.mCurPos; i < args.length; i++) {
             if ("expandSetAttrs".equals(args[i])) {
                 expandSetAttrs = true;
             } else if ("expandGetAttrs".equals(args[i])) {
@@ -4638,17 +4666,16 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
 
-        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null) ? null : guessGranteeBy(ra.mGranteeIdOrName);
 
-        RightCommand.AllEffectiveRights allEffRights = prov.getAllEffectiveRights(
-                ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
+        RightCommand.AllEffectiveRights allEffRights = prov.getAllEffectiveRights(ra.mGranteeType, granteeBy,
+                ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
 
-        console.println(allEffRights.granteeType() + " " +
-                allEffRights.granteeName() + "(" + allEffRights.granteeId() + ")" +
-                " has the following rights:");
+        console.println(allEffRights.granteeType() + " " + allEffRights.granteeName() + "(" + allEffRights.granteeId()
+                + ")" + " has the following rights:");
 
-        for (Map.Entry<TargetType, RightCommand.RightsByTargetType> rightsByTargetType :
-            allEffRights.rightsByTargetType().entrySet()) {
+        for (Map.Entry<TargetType, RightCommand.RightsByTargetType> rightsByTargetType : allEffRights
+                .rightsByTargetType().entrySet()) {
             RightCommand.RightsByTargetType rbtt = rightsByTargetType.getValue();
             if (!rbtt.hasNoRight()) {
                 dumpRightsByTargetType(rightsByTargetType.getKey(), rbtt, expandSetAttrs, expandGetAttrs);
@@ -4669,7 +4696,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         if (rbtt instanceof RightCommand.DomainedRightsByTargetType) {
-            RightCommand.DomainedRightsByTargetType domainedRights = (RightCommand.DomainedRightsByTargetType)rbtt;
+            RightCommand.DomainedRightsByTargetType domainedRights = (RightCommand.DomainedRightsByTargetType) rbtt;
 
             for (RightCommand.RightAggregation rightsByDomains : domainedRights.domains()) {
                 dumpRightAggregation(targetType, rightsByDomains, true, expandSetAttrs, expandGetAttrs);
@@ -4681,9 +4708,8 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void dumpRightAggregation(TargetType targetType,
-            RightCommand.RightAggregation rightAggr, boolean domainScope,
-            boolean expandSetAttrs, boolean expandGetAttrs) {
+    private void dumpRightAggregation(TargetType targetType, RightCommand.RightAggregation rightAggr,
+            boolean domainScope, boolean expandSetAttrs, boolean expandGetAttrs) {
         Set<String> entries = rightAggr.entries();
         RightCommand.EffectiveRights er = rightAggr.effectiveRights();
 
@@ -4715,7 +4741,7 @@ public class ProvUtil implements HttpDebugListener {
         boolean expandGetAttrs = false;
 
         // if there are more args, see if they are expandSetAttrs/expandGetAttrs
-        for (int i= ra.mCurPos; i < args.length; i++) {
+        for (int i = ra.mCurPos; i < args.length; i++) {
             if ("expandSetAttrs".equals(args[i])) {
                 expandSetAttrs = true;
             } else if ("expandGetAttrs".equals(args[i])) {
@@ -4726,17 +4752,18 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null) ? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         RightCommand.EffectiveRights effRights = prov.getEffectiveRights(ra.mTargetType, targetBy, ra.mTargetIdOrName,
                 granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
 
-        console.println("Account " + effRights.granteeName() + " has the following rights on target " +
-                effRights.targetType() + " " + effRights.targetName());
+        console.println("Account " + effRights.granteeName() + " has the following rights on target "
+                + effRights.targetType() + " " + effRights.targetName());
         dumpEffectiveRight(effRights, expandSetAttrs, expandGetAttrs);
     }
 
-    private void dumpEffectiveRight(RightCommand.EffectiveRights effRights, boolean expandSetAttrs, boolean expandGetAttrs) {
+    private void dumpEffectiveRight(RightCommand.EffectiveRights effRights, boolean expandSetAttrs,
+            boolean expandGetAttrs) {
 
         List<String> presetRights = effRights.presetRights();
         if (presetRights != null && presetRights.size() > 0) {
@@ -4755,7 +4782,8 @@ public class ProvUtil implements HttpDebugListener {
         console.println();
     }
 
-    private void displayAttrs(String op, boolean expandAll, boolean allAttrs, SortedMap<String, RightCommand.EffectiveAttr> attrs) {
+    private void displayAttrs(String op, boolean expandAll, boolean allAttrs,
+            SortedMap<String, RightCommand.EffectiveAttr> attrs) {
         if (!allAttrs && attrs.isEmpty()) {
             return;
         }
@@ -4777,7 +4805,7 @@ public class ProvUtil implements HttpDebugListener {
                 if (ea.getDefault().isEmpty()) {
                     console.printf(format, ea.getAttrName(), "");
                 } else {
-                    for (String v: ea.getDefault()) {
+                    for (String v : ea.getDefault()) {
                         if (first) {
                             console.printf(format, ea.getAttrName(), v);
                             first = false;
@@ -4825,8 +4853,8 @@ public class ProvUtil implements HttpDebugListener {
         console.println("Grantee: " + grantee);
         console.println();
 
-        RightCommand.EffectiveRights effRights = prov.getCreateObjectAttrs(targetType,
-                domainBy, domain, cosBy, cos, granteeBy, grantee);
+        RightCommand.EffectiveRights effRights = prov.getCreateObjectAttrs(targetType, domainBy, domain, cosBy, cos,
+                granteeBy, grantee);
         displayAttrs("set", true, effRights.canSetAllAttrs(), effRights.canSetAttrs());
     }
 
@@ -4848,7 +4876,8 @@ public class ProvUtil implements HttpDebugListener {
                     } else if ("0".equals(includeGroups)) {
                         granteeIncludeGroupsGranteeBelongs = false;
                     } else {
-                        throw ServiceException.INVALID_REQUEST("invalid value for the include group flag, must be 0 or 1", null);
+                        throw ServiceException.INVALID_REQUEST(
+                                "invalid value for the include group flag, must be 0 or 1", null);
                     }
                 }
             }
@@ -4857,32 +4886,22 @@ public class ProvUtil implements HttpDebugListener {
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
         GranteeBy granteeBy = (ra.mGranteeIdOrName == null) ? null : guessGranteeBy(ra.mGranteeIdOrName);
 
-        RightCommand.Grants grants = prov.getGrants(ra.mTargetType, targetBy, ra.mTargetIdOrName,
-                ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, granteeIncludeGroupsGranteeBelongs);
+        RightCommand.Grants grants = prov.getGrants(ra.mTargetType, targetBy, ra.mTargetIdOrName, ra.mGranteeType,
+                granteeBy, ra.mGranteeIdOrName, granteeIncludeGroupsGranteeBelongs);
 
         String format = "%-12.12s %-36.36s %-30.30s %-12.12s %-36.36s %-30.30s %s\n";
-        console.printf(format, "target type", "target id", "target name", "grantee type", "grantee id", "grantee name", "right");
-        console.printf(format,
-                "------------",
-                "------------------------------------",
-                "------------------------------",
-                "------------",
-                "------------------------------------",
-                "------------------------------",
-                "--------------------");
+        console.printf(format, "target type", "target id", "target name", "grantee type", "grantee id", "grantee name",
+                "right");
+        console.printf(format, "------------", "------------------------------------",
+                "------------------------------", "------------", "------------------------------------",
+                "------------------------------", "--------------------");
 
         for (RightCommand.ACE ace : grants.getACEs()) {
             // String deny = ace.deny()?"-":"";
             RightModifier rightModifier = ace.rightModifier();
-            String rm = (rightModifier==null)?"":String.valueOf(rightModifier.getModifier());
-            console.printf(format,
-                    ace.targetType(),
-                    ace.targetId(),
-                    ace.targetName(),
-                    ace.granteeType(),
-                    ace.granteeId(),
-                    ace.granteeName(),
-                    rm + ace.right());
+            String rm = (rightModifier == null) ? "" : String.valueOf(rightModifier.getModifier());
+            console.printf(format, ace.targetType(), ace.targetId(), ace.targetName(), ace.granteeType(),
+                    ace.granteeId(), ace.granteeName(), rm + ace.right());
         }
         console.println();
     }
@@ -4892,7 +4911,7 @@ public class ProvUtil implements HttpDebugListener {
         getRightArgs(ra, true, true);
 
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null) ? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         prov.grantRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName,
                 ra.mSecret, ra.mRight, ra.mRightModifier);
@@ -4903,7 +4922,7 @@ public class ProvUtil implements HttpDebugListener {
         getRightArgs(ra, true, false);
 
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null) ? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         prov.revokeRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName,
                 ra.mRight, ra.mRightModifier);
@@ -4911,7 +4930,6 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doGetAuthTokenInfo(String[] args) {
         String authToken = args[1];
-
         try {
             Map attrs = AuthToken.getInfo(authToken);
             List keys = new ArrayList(attrs.keySet());
@@ -4970,7 +4988,7 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doPushFreeBusy(String[] args) throws ServiceException, IOException {
         FbCli fbcli = new FbCli();
-        Map<String,HashSet<String>> accountMap = new HashMap<String,HashSet<String>>();
+        Map<String, HashSet<String>> accountMap = new HashMap<String, HashSet<String>>();
         for (int i = 1; i < args.length; i++) {
             String acct = args[i];
             Account account = prov.getAccountById(acct);
@@ -5016,7 +5034,7 @@ public class ProvUtil implements HttpDebugListener {
             String configName = smimeConfig.getKey();
             Map<String, Object> configAttrs = smimeConfig.getValue();
 
-            console.println("# name "+ configName);
+            console.println("# name " + configName);
             dumpAttrs(configAttrs, null);
             console.println();
         }
@@ -5098,7 +5116,7 @@ public class ProvUtil implements HttpDebugListener {
         if (args == null || args.length == 1 || cat == null) {
             console.println(" zmprov is used for provisioning. Try:");
             console.println("");
-            for (Category c: Category.values()) {
+            for (Category c : Category.values()) {
                 console.printf("     zmprov help %-15s %s\n", c.name().toLowerCase(), c.getDescription());
             }
 
@@ -5185,38 +5203,43 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    /** To remove a particular instance of an attribute, the prefix indicator '-' is used before the
-     * attribute name.  When the attribute name is started with one of the valid command arguments, such as
-     * -z or -a, the parser mistakenly divides it into two parts instead of treating as one parameter of
-     * the '-' and attribute name.<p>
+    /**
+     * To remove a particular instance of an attribute, the prefix indicator '-' is used before the attribute name. When
+     * the attribute name is started with one of the valid command arguments, such as -z or -a, the parser mistakenly
+     * divides it into two parts instead of treating as one parameter of the '-' and attribute name.
+     * <p>
      * This method detects such decapitated attribute, and recombines those two into one attribute name with '-'.
-     * @param parsedArgs [cmd-args] which are parsed by PosixParser
-     * @param options set of valid [args]
-     * @param args 
+     * 
+     * @param parsedArgs
+     *            [cmd-args] which are parsed by PosixParser
+     * @param options
+     *            set of valid [args]
+     * @param args
      * @throws ServiceException
      */
-    static private String [] recombineDecapitatedAttrs(String [] parsedArgs, Options options, String[] orgArgs) throws ServiceException {
+    static private String[] recombineDecapitatedAttrs(String[] parsedArgs, Options options, String[] orgArgs)
+            throws ServiceException {
         List<String> newArgs = new ArrayList<String>(parsedArgs.length);
         String headStr = null;
         for (int i = 0; i < parsedArgs.length; i++) {
             String arg = parsedArgs[i];
             if (arg.startsWith("-") && arg.length() == 2 && options.hasOption(arg)) {
-                // Detect legitimate POSIX style parameters even after operation command; 
+                // Detect legitimate POSIX style parameters even after operation command;
                 // such as "zmprov describe -a <attr>"
                 if (i < parsedArgs.length - 1) {
-                	boolean missParsed = false;
-                	String tmpParam = arg + parsedArgs[i+1];
-                	for (String orgArg : orgArgs) {
-                		if (orgArg.equals(tmpParam)) {
-                			missParsed = true;
-                			break;
-                		}
-                	}
-                	if (missParsed) {
-                		headStr = arg;
-                	} else {
-                        newArgs.add(arg);                		
-                	}
+                    boolean missParsed = false;
+                    String tmpParam = arg + parsedArgs[i + 1];
+                    for (String orgArg : orgArgs) {
+                        if (orgArg.equals(tmpParam)) {
+                            missParsed = true;
+                            break;
+                        }
+                    }
+                    if (missParsed) {
+                        headStr = arg;
+                    } else {
+                        newArgs.add(arg);
+                    }
                 } else {
                     newArgs.add(arg);
                 }
@@ -5247,20 +5270,19 @@ public class ProvUtil implements HttpDebugListener {
             targetServer = (String) commandParams.get("-t");
             String serverStickyness = Provisioning.FALSE;
             if (commandParams.containsKey("--sticky")) {
-                boolean temp = Boolean.parseBoolean( (String) commandParams.get("--sticky"));
+                boolean temp = Boolean.parseBoolean((String) commandParams.get("--sticky"));
                 serverStickyness = temp ? Provisioning.TRUE : Provisioning.FALSE;
             }
 
             boolean networkLicense = false;
 
-            if ( MoveAccountUtils.isSharedDbTheSame(sourceServer, targetServer)
-                && MoveAccountUtils.isSolrUrlTheSame(sourceServer, targetServer)) {
+            if (MoveAccountUtils.isSharedDbTheSame(sourceServer, targetServer)
+                    && MoveAccountUtils.isSolrUrlTheSame(sourceServer, targetServer)) {
                 try {
-                    MoveAccountUtils.updateHomeServerForAccount(prov, account, targetServer,
-                        serverStickyness);
+                    MoveAccountUtils.updateHomeServerForAccount(prov, account, targetServer, serverStickyness);
                 } catch (ServiceException e) {
-                    console.println("Error updating the home server to " + targetServer + " for the account " +
-                      accountName);
+                    console.println("Error updating the home server to " + targetServer + " for the account "
+                            + accountName);
                     prov.modifyAccountStatus(account, originalStatus);
                     prov.reload(account);
                 }
@@ -5270,15 +5292,15 @@ public class ProvUtil implements HttpDebugListener {
 
                 } else {
                     throw ServiceException.INVALID_REQUEST("Source server: " + sourceServer + " and target server: "
-                        + targetServer + " require moving of data and is not available in open source edition.", null);
+                            + targetServer + " require moving of data and is not available in open source edition.",
+                            null);
                 }
             }
         } else {
-            console.println("Invalid arg: target server not specified" );
+            console.println("Invalid arg: target server not specified");
             usage();
             return;
         }
     }
 
 }
-
