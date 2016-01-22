@@ -39,12 +39,14 @@ import com.zimbra.soap.admin.message.ModifyCalendarResourceRequest;
 public class ModifyCalendarResource extends AdminDocumentHandler {
 
     private static final String[] TARGET_RESOURCE_PATH = new String[] { AdminConstants.E_ID };
+
     @Override
-    protected String[] getProxiedResourcePath()  { return TARGET_RESOURCE_PATH; }
+    protected String[] getProxiedResourcePath() {
+        return TARGET_RESOURCE_PATH;
+    }
 
     /**
-     * must be careful and only allow modifies to
-     * calendar resources/attrs domain admin has access to
+     * must be careful and only allow modifies to calendar resources/attrs domain admin has access to
      */
     @Override
     public boolean domainAuthSufficient(Map context) {
@@ -77,7 +79,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
         prov.modifyAttrs(resource, attrs, true);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "ModifyCalendarResource", "name", resource.getName()}, attrs));
+                new String[] { "cmd", "ModifyCalendarResource", "name", resource.getName() }, attrs));
 
         Element response = zsc.createElement(AdminConstants.MODIFY_CALENDAR_RESOURCE_RESPONSE);
         ToXML.encodeCalendarResource(response, resource, true);
@@ -86,7 +88,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
 
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY,
-                Admin.R_modifyCalendarResource.getName(), "calendar resource"));
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, Admin.R_modifyCalendarResource.getName(),
+                "calendar resource"));
     }
 }
