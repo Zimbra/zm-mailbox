@@ -1015,7 +1015,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 s.append(' ').append(arg.name).append('=').append(arg.value);
             }
         }
-        ZimbraLog.misc.warn(s, ex);
+        ZimbraLog.misc.warn("ArchiveFormatter addError:%s", s, ex);
     }
 
     private Folder createParent(UserServletContext context, Map<Object, Folder> fmap, String path, MailItem.Type view)
@@ -1527,7 +1527,12 @@ public abstract class ArchiveFormatter extends Formatter {
                 addError(errs, e);
             }
         } catch (Exception e) {
-            addError(errs, FormatterServiceException.UNKNOWN_ERROR(id.path, e));
+            String path = id.path;
+            // When importing items into, e.g. the Inbox, often path is just "/Inbox" which isn't that useful
+            if ((aie != null) && !Strings.isNullOrEmpty(aie.getName())) {
+                path = aie.getName();
+            }
+            addError(errs, FormatterServiceException.UNKNOWN_ERROR(path, e));
         }
     }
 
