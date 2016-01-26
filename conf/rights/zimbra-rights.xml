@@ -777,7 +777,28 @@
     <desc>upload client software via Admin Console</desc>
 </right>
 
-<!-- 
+<!--
+========================================================
+                    archiving rights
+========================================================
+-->
+<right name="manageAccountArchives" type="preset" targetType="account">
+    <desc>create, enable and disable archiving for accounts</desc>
+</right>
+<right name="manageCalendarResourceArchives" type="preset" targetType="calresource">
+    <desc>create, enable and disable archiving for calendar resources</desc>
+</right>
+
+<!--
+========================================================
+                    sync rights
+========================================================
+-->
+<right name="remoteWipe" type="preset" targetType="account">
+    <desc>remotely wipe account's devices</desc>
+</right>
+
+<!--
 ========================================================
                     misc rights
 ========================================================
