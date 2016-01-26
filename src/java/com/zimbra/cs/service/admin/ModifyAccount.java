@@ -119,6 +119,13 @@ public class ModifyAccount extends AdminDocumentHandler {
         // check to see if cos is being changed, need right on new cos
         checkCos(zsc, account, attrs);
 
+        Server newServer = null;
+        String newServerName = getStringAttrNewValue(Provisioning.A_zimbraMailHost, attrs);
+        if (newServerName != null) {
+            newServer = Provisioning.getInstance().getServerByName(newServerName);
+            defendAgainstServerNameHarvesting(newServer, Key.ServerBy.name, newServerName, zsc, Admin.R_listServer);
+        }
+
         // pass in true to checkImmutable
         prov.modifyAttrs(account, attrs, true);
 
@@ -130,7 +137,9 @@ public class ModifyAccount extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] { "cmd", "ModifyAccount", "name", account.getName() }, attrs));
 
-        checkNewServer(zsc, context, account);
+        if (newServer != null) {
+            checkNewServer(zsc, context, account, newServer);
+        }
 
         long newQuota = account.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
         if (newQuota != curQuota) {
@@ -146,7 +155,7 @@ public class ModifyAccount extends AdminDocumentHandler {
         return response;
     }
 
-    static String getStringAttrNewValue(String attrName, Map<String, Object> attrs) throws ServiceException {
+    public static String getStringAttrNewValue(String attrName, Map<String, Object> attrs) throws ServiceException {
         Object object = attrs.get(attrName);
         if (object == null) {
             object = attrs.get("+" + attrName);
@@ -222,21 +231,18 @@ public class ModifyAccount extends AdminDocumentHandler {
     /*
      * if the account's home server is changed as a result of this command and the new server is no longer this server,
      * need to send a flush cache command to the new server so we don't get into the following:
-     * 
+     *
      * account is on server A (this server)
-     * 
+     *
      * on server B: zmprov ma {account} zimbraMailHost B (the ma is proxied to server A; and on server B, the account
      * still appears to be on A)
-     * 
+     *
      * zmprov ma {account} {any attr} {value} ERROR: service.TOO_MANY_HOPS Until the account is expired from cache on
      * server B.
      */
-    private void checkNewServer(ZimbraSoapContext zsc, Map<String, Object> context, Account acct) {
-        Server newServer = null;
+    private void checkNewServer(ZimbraSoapContext zsc, Map<String, Object> context, Account acct, Server newServer) {
         try {
             if (!Provisioning.onLocalServer(acct)) {
-                newServer = Provisioning.getInstance().getServer(acct);
-
                 // in the case when zimbraMailHost is being removed, newServer will be null
                 if (newServer != null) {
                     SoapProvisioning soapProv = new SoapProvisioning();
@@ -267,5 +273,7 @@ public class ModifyAccount extends AdminDocumentHandler {
                 + Provisioning.A_zimbraCOSId + ", needs the " + Admin.R_assignCos.getName()
                 + " right on the domain default cos. (in domain attribute " + Provisioning.A_zimbraDomainDefaultCOSId
                 + ").");
+        notes.add(String.format("When changing %s attribute, %s right on the server identified by new %s is required.",
+                Provisioning.A_zimbraMailHost, Admin.R_listServer, Provisioning.A_zimbraMailHost));
     }
 }

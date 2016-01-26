@@ -27,6 +27,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -246,6 +247,28 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             return;
         }
         checker.check(calRes, selectorKey);
+    }
+
+    protected void defendAgainstServerNameHarvesting(Server server, ServerBy by, String selectorKey,
+            ZimbraSoapContext zsc, AdminRight needed) throws ServiceException {
+        if (server == null) {
+            defendAgainstServerNameHarvestingWhenAbsent(by, selectorKey, zsc, needed);
+        } else {
+            checkRight(zsc, server, needed);
+        }
+    }
+
+    protected void defendAgainstServerNameHarvestingWhenAbsent(ServerBy by, String selectorKey, ZimbraSoapContext zsc,
+            AdminRight needed) throws ServiceException {
+        AuthToken authToken = zsc.getAuthToken();
+        if (authToken.isAdmin()) {
+            throw AccountServiceException.NO_SUCH_SERVER(selectorKey);
+        } else {
+            Entry psedoTarget = PseudoTarget.createPseudoTarget(Provisioning.getInstance(), TargetType.server, null,
+                    null, false, null, null);
+            checkRight(zsc, psedoTarget, needed);
+            throw AccountServiceException.NO_SUCH_SERVER(selectorKey);
+        }
     }
 
     protected interface AccountHarvestingChecker {

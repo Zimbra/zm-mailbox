@@ -30,7 +30,7 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 
 public class AdminRights {
 
-    ///// BEGIN-AUTO-GEN-REPLACE
+    // /// BEGIN-AUTO-GEN-REPLACE
 
 
     public static AdminRight R_accessGAL;
@@ -266,7 +266,9 @@ public class AdminRights {
     public static AdminRight R_listXMPPComponent;
     public static AdminRight R_listZimlet;
     public static AdminRight R_mailQueueRights;
+    public static AdminRight R_manageAccountArchives;
     public static AdminRight R_manageAccountLogger;
+    public static AdminRight R_manageCalendarResourceArchives;
     public static AdminRight R_manageCrossMailboxSearchTask;
     public static AdminRight R_manageMailQueue;
     public static AdminRight R_manageVolume;
@@ -293,6 +295,7 @@ public class AdminRights {
     public static AdminRight R_purgeMessages;
     public static AdminRight R_reindexCalendarResourceMailbox;
     public static AdminRight R_reindexMailbox;
+    public static AdminRight R_remoteWipe;
     public static AdminRight R_removeAccountAlias;
     public static AdminRight R_removeCalendarResourceAlias;
     public static AdminRight R_removeDistributionListAlias;
@@ -703,7 +706,9 @@ public class AdminRights {
         R_listXMPPComponent                    = rm.getAdminRight(Right.RT_listXMPPComponent);
         R_listZimlet                           = rm.getAdminRight(Right.RT_listZimlet);
         R_mailQueueRights                      = rm.getAdminRight(Right.RT_mailQueueRights);
+        R_manageAccountArchives                = rm.getAdminRight(Right.RT_manageAccountArchives);
         R_manageAccountLogger                  = rm.getAdminRight(Right.RT_manageAccountLogger);
+        R_manageCalendarResourceArchives       = rm.getAdminRight(Right.RT_manageCalendarResourceArchives);
         R_manageCrossMailboxSearchTask         = rm.getAdminRight(Right.RT_manageCrossMailboxSearchTask);
         R_manageMailQueue                      = rm.getAdminRight(Right.RT_manageMailQueue);
         R_manageVolume                         = rm.getAdminRight(Right.RT_manageVolume);
@@ -730,6 +735,7 @@ public class AdminRights {
         R_purgeMessages                        = rm.getAdminRight(Right.RT_purgeMessages);
         R_reindexCalendarResourceMailbox       = rm.getAdminRight(Right.RT_reindexCalendarResourceMailbox);
         R_reindexMailbox                       = rm.getAdminRight(Right.RT_reindexMailbox);
+        R_remoteWipe                           = rm.getAdminRight(Right.RT_remoteWipe);
         R_removeAccountAlias                   = rm.getAdminRight(Right.RT_removeAccountAlias);
         R_removeCalendarResourceAlias          = rm.getAdminRight(Right.RT_removeCalendarResourceAlias);
         R_removeDistributionListAlias          = rm.getAdminRight(Right.RT_removeDistributionListAlias);
@@ -906,5 +912,5 @@ public class AdminRights {
         R_viewGrants                           = rm.getAdminRight(Right.RT_viewGrants);
     }
 
-    ///// END-AUTO-GEN-REPLACE
+    // /// END-AUTO-GEN-REPLACE
 }

@@ -20,6 +20,7 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -74,6 +75,12 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
 
         CalendarResource resource = prov.get(CalendarResourceBy.id, id);
         defendAgainstCalResourceHarvesting(resource, CalendarResourceBy.id, id, zsc, attrs);
+
+        String newServer = ModifyAccount.getStringAttrNewValue(Provisioning.A_zimbraMailHost, attrs);
+        if (newServer != null) {
+            defendAgainstServerNameHarvesting(Provisioning.getInstance().getServerByName(newServer), Key.ServerBy.name,
+                    newServer, zsc, Admin.R_listServer);
+        }
 
         // pass in true to checkImmutable
         prov.modifyAttrs(resource, attrs, true);
