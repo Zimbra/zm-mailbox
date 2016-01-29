@@ -27367,6 +27367,160 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * This attribute is used for failed mailbox move. It indicates the time
+     * interval at which the cleanup task will be run.
+     *
+     * @return zimbraMailboxMoveFailedCleanupTaskIntervalInMin, or 30 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2080)
+    public int getMailboxMoveFailedCleanupTaskIntervalInMin() {
+        return getIntAttr(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskIntervalInMin, 30);
+    }
+
+    /**
+     * This attribute is used for failed mailbox move. It indicates the time
+     * interval at which the cleanup task will be run.
+     *
+     * @param zimbraMailboxMoveFailedCleanupTaskIntervalInMin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2080)
+    public void setMailboxMoveFailedCleanupTaskIntervalInMin(int zimbraMailboxMoveFailedCleanupTaskIntervalInMin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskIntervalInMin, Integer.toString(zimbraMailboxMoveFailedCleanupTaskIntervalInMin));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used for failed mailbox move. It indicates the time
+     * interval at which the cleanup task will be run.
+     *
+     * @param zimbraMailboxMoveFailedCleanupTaskIntervalInMin new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2080)
+    public Map<String,Object> setMailboxMoveFailedCleanupTaskIntervalInMin(int zimbraMailboxMoveFailedCleanupTaskIntervalInMin, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskIntervalInMin, Integer.toString(zimbraMailboxMoveFailedCleanupTaskIntervalInMin));
+        return attrs;
+    }
+
+    /**
+     * This attribute is used for failed mailbox move. It indicates the time
+     * interval at which the cleanup task will be run.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2080)
+    public void unsetMailboxMoveFailedCleanupTaskIntervalInMin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskIntervalInMin, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used for failed mailbox move. It indicates the time
+     * interval at which the cleanup task will be run.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2080)
+    public Map<String,Object> unsetMailboxMoveFailedCleanupTaskIntervalInMin(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskIntervalInMin, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute is used for failed mailbox move. It indicates the delay
+     * before the cleanup task is executed for the first time.
+     *
+     * @return zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, or 15 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2079)
+    public int getMailboxMoveFailedCleanupTaskStartDelayInMin() {
+        return getIntAttr(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, 15);
+    }
+
+    /**
+     * This attribute is used for failed mailbox move. It indicates the delay
+     * before the cleanup task is executed for the first time.
+     *
+     * @param zimbraMailboxMoveFailedCleanupTaskStartDelayInMin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2079)
+    public void setMailboxMoveFailedCleanupTaskStartDelayInMin(int zimbraMailboxMoveFailedCleanupTaskStartDelayInMin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, Integer.toString(zimbraMailboxMoveFailedCleanupTaskStartDelayInMin));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used for failed mailbox move. It indicates the delay
+     * before the cleanup task is executed for the first time.
+     *
+     * @param zimbraMailboxMoveFailedCleanupTaskStartDelayInMin new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2079)
+    public Map<String,Object> setMailboxMoveFailedCleanupTaskStartDelayInMin(int zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, Integer.toString(zimbraMailboxMoveFailedCleanupTaskStartDelayInMin));
+        return attrs;
+    }
+
+    /**
+     * This attribute is used for failed mailbox move. It indicates the delay
+     * before the cleanup task is executed for the first time.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2079)
+    public void unsetMailboxMoveFailedCleanupTaskStartDelayInMin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used for failed mailbox move. It indicates the delay
+     * before the cleanup task is executed for the first time.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2079)
+    public Map<String,Object> unsetMailboxMoveFailedCleanupTaskStartDelayInMin(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, "");
+        return attrs;
+    }
+
+    /**
      * if true, exclude blobs (HSM or not) from mailbox move
      *
      * @return zimbraMailboxMoveSkipBlobs, or false if unset
