@@ -85,6 +85,7 @@ SECTION mta DEPENDS amavis
 	VAR zimbraMilterServerBindPort
 	VAR zimbraMtaSmtpdMilters
 	VAR zimbraMtaNonSmtpdMilters
+	VAR zimbraSSLDHParam
 	LOCAL zimbra_server_hostname
 	if VAR zimbraMtaEnableSmtpdPolicyd
 		POSTCONF policy_time_limit				VAR zimbraMtaPolicyTimeLimit
@@ -172,6 +173,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_tls_ccert_verifydepth		VAR zimbraMtaSmtpdTlsCcertVerifydepth
 	POSTCONF smtpd_tls_cert_file			/opt/zimbra/conf/smtpd.crt
 	POSTCONF smtpd_tls_ciphers			VAR zimbraMtaSmtpdTlsCiphers
+	POSTCONF smtpd_tls_dh1024_param_file	MAPFILE zimbraSSLDHParam
 	POSTCONF smtpd_tls_exclude_ciphers		VAR zimbraMtaSmtpdTlsExcludeCiphers
 	POSTCONF smtpd_tls_key_file			/opt/zimbra/conf/smtpd.key
 	POSTCONF smtpd_tls_loglevel			VAR zimbraMtaSmtpdTlsLoglevel
@@ -403,7 +405,6 @@ SECTION proxy
     VAR zimbraReverseProxyXmppBoshRemoteHttpBindURL
     VAR zimbraReverseProxyXmppBoshHostname
     VAR zimbraReverseProxyXmppBoshPort
-    VAR zimbraReverseProxySSLDHParam
     VAR zimbraReverseProxyResponseHeaders
 	PROXYGEN
 	RESTART proxy
