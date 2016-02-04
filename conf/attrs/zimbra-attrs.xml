@@ -9165,12 +9165,20 @@ TODO: delete them permanently from here
   <globalConfigValue>5d</globalConfigValue>
   <desc>Value for postconf maximal_queue_lifetime</desc>
 </attr>
+
 <attr id="2079" name="zimbraMailboxMoveFailedCleanupTaskStartDelayInMin" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
   <globalConfigValue>15</globalConfigValue>
   <desc>This attribute is used for failed mailbox move. It indicates the delay before the cleanup task is executed for the first time. </desc>
 </attr>
+
 <attr id="2080" name="zimbraMailboxMoveFailedCleanupTaskIntervalInMin" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
   <globalConfigValue>30</globalConfigValue>
   <desc>This attribute is used for failed mailbox move. It indicates the time interval at which the cleanup task will be run.</desc>
 </attr>
+
+<attr id="2081" name="zimbraMtaCanonicalMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-scm.cf</globalConfigValue>
+  <desc>Value for postconf canonical_maps. Comma separated list.</desc>
+</attr>
+
 </attrs>
