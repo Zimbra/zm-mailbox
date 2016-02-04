@@ -10006,6 +10006,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaBrokenSaslAuthClients = "zimbraMtaBrokenSaslAuthClients";
 
     /**
+     * Value for postconf canonical_maps. Comma separated list.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public static final String A_zimbraMtaCanonicalMaps = "zimbraMtaCanonicalMaps";
+
+    /**
      * Value for postconf command_directory
      *
      * @since ZCS 8.5.0
