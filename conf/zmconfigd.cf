@@ -154,6 +154,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF notify_classes				VAR zimbraMtaNotifyClasses
 	POSTCONF queue_directory			VAR zimbraMtaQueueDirectory
 	POSTCONF smtpd_sasl_authenticated_header	VAR zimbraMtaSmtpdSaslAuthenticatedHeader
+	POSTCONF canonical_maps				VAR zimbraMtaCanonicalMaps
 	POSTCONF sender_canonical_maps			VAR zimbraMtaSenderCanonicalMaps
 	POSTCONF sendmail_path				VAR zimbraMtaSendmailPath
 	POSTCONF smtpd_banner				VAR zimbraMtaSmtpdBanner
@@ -171,7 +172,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_tls_ccert_verifydepth		VAR zimbraMtaSmtpdTlsCcertVerifydepth
 	POSTCONF smtpd_tls_cert_file			/opt/zimbra/conf/smtpd.crt
 	POSTCONF smtpd_tls_ciphers			VAR zimbraMtaSmtpdTlsCiphers
-	POSTCONF smtpd_tls_dh1024_param_file	MAPFILE zimbraSSLDHParam
+	POSTCONF smtpd_tls_dh1024_param_file		MAPFILE zimbraSSLDHParam
 	POSTCONF smtpd_tls_exclude_ciphers		VAR zimbraMtaSmtpdTlsExcludeCiphers
 	POSTCONF smtpd_tls_key_file			/opt/zimbra/conf/smtpd.key
 	POSTCONF smtpd_tls_loglevel			VAR zimbraMtaSmtpdTlsLoglevel
