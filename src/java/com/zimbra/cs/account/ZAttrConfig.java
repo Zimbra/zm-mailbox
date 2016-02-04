@@ -25644,13 +25644,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [always, reverse-proxied, wronghost]
      *
-     * @return zimbraMailReferMode, or ZAttrProvisioning.MailReferMode.wronghost if unset and/or has invalid value
+     * @return zimbraMailReferMode, or ZAttrProvisioning.MailReferMode.reverse_proxied if unset and/or has invalid value
      *
      * @since ZCS 5.0.3
      */
     @ZAttr(id=613)
     public ZAttrProvisioning.MailReferMode getMailReferMode() {
-        try { String v = getAttr(Provisioning.A_zimbraMailReferMode); return v == null ? ZAttrProvisioning.MailReferMode.wronghost : ZAttrProvisioning.MailReferMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MailReferMode.wronghost; }
+        try { String v = getAttr(Provisioning.A_zimbraMailReferMode); return v == null ? ZAttrProvisioning.MailReferMode.reverse_proxied : ZAttrProvisioning.MailReferMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MailReferMode.reverse_proxied; }
     }
 
     /**
@@ -25662,13 +25662,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [always, reverse-proxied, wronghost]
      *
-     * @return zimbraMailReferMode, or "wronghost" if unset
+     * @return zimbraMailReferMode, or "reverse-proxied" if unset
      *
      * @since ZCS 5.0.3
      */
     @ZAttr(id=613)
     public String getMailReferModeAsString() {
-        return getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
+        return getAttr(Provisioning.A_zimbraMailReferMode, "reverse-proxied");
     }
 
     /**
@@ -32424,6 +32424,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMtaBrokenSaslAuthClients(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaBrokenSaslAuthClients, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf canonical_maps. Comma separated list.
+     *
+     * @return zimbraMtaCanonicalMaps, or "proxy:ldap:/opt/zimbra/conf/ldap-scm.cf" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public String getMtaCanonicalMaps() {
+        return getAttr(Provisioning.A_zimbraMtaCanonicalMaps, "proxy:ldap:/opt/zimbra/conf/ldap-scm.cf");
+    }
+
+    /**
+     * Value for postconf canonical_maps. Comma separated list.
+     *
+     * @param zimbraMtaCanonicalMaps new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public void setMtaCanonicalMaps(String zimbraMtaCanonicalMaps) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaCanonicalMaps, zimbraMtaCanonicalMaps);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf canonical_maps. Comma separated list.
+     *
+     * @param zimbraMtaCanonicalMaps new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public Map<String,Object> setMtaCanonicalMaps(String zimbraMtaCanonicalMaps, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaCanonicalMaps, zimbraMtaCanonicalMaps);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf canonical_maps. Comma separated list.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public void unsetMtaCanonicalMaps() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaCanonicalMaps, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf canonical_maps. Comma separated list.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public Map<String,Object> unsetMtaCanonicalMaps(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaCanonicalMaps, "");
         return attrs;
     }
 
