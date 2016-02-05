@@ -134,6 +134,7 @@ public class ZimbraSuite extends TestSuite {
         sClasses.add(TestTrashImapMessage.class);
         sClasses.add(TestSearchHeaders.class);
         sClasses.add(TestServerEnumeration.class);
+        sClasses.add(TestLockoutMailbox.class);
     }
 
     /**

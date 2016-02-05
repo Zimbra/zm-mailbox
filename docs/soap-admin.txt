@@ -2906,3 +2906,19 @@ allServers:
 
 
 <ResetLdapClientResponse/>
+
+----------------------------
+<LockoutMailboxRequest op="{start|end}">
+  <account by="id|name">...</account>
+</LockoutMailboxRequest>
+
+<LockoutMailboxResponse/>
+
+
+Access:
+ - domain admin sufficient.
+ - requires moveAccountMailbox grant on target account.
+ - requires moveCalendarResourceMailbox grant on target calendar resource.
+ - requires moveMailboxFromServer grant on target server
+
+note: this request is by default proxied to the account's home server

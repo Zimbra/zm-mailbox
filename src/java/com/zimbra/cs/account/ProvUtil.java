@@ -63,12 +63,14 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.AccountLogger;
@@ -123,10 +125,13 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.zclient.ZMailboxUtil;
+import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.admin.message.LockoutMailboxRequest;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
+import com.zimbra.soap.type.AccountNameSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
 
@@ -680,7 +685,6 @@ public class ProvUtil implements HttpDebugListener {
         GET_CREATE_OBJECT_ATTRS("getCreateObjectAttrs", "gcoa",
                 "{target-type} {domain-id|domain-name} {cos-id|cos-name} {grantee-id|grantee-name}", Category.RIGHT, 3,
                 4),
-
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
         GET_GRANTS(
                "getGrants",
@@ -839,8 +843,9 @@ public class ProvUtil implements HttpDebugListener {
                "updatePresenceSessionId", "upsid", "{UC service name or id} {app-username} {app-password}",
                Category.MISC, 3, 3, Via.soap),
         RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]",
-               Category.LOG, 0, 2);
-        
+               Category.LOG, 0, 2),
+        UNLOCK_MAILBOX("unlockMailbox", "ulm", "{name@domain|id}", Category.MAILBOX, 1, 1, Via.soap);
+
         private String mName;
         private String mAlias;
         private String mHelp;
@@ -1573,10 +1578,50 @@ public class ProvUtil implements HttpDebugListener {
         case RESET_ALL_LOGGERS:
             doResetAllLoggers(args);
             break;
+        case UNLOCK_MAILBOX:
+            doUnlockMailbox(args);
+            break;
         default:
             return false;
         }
         return true;
+    }
+
+    private void doUnlockMailbox(String[] args) throws ServiceException {
+        String accountVal = null;
+        if(args.length > 0) {
+            accountVal = args[1];
+        } else {
+            usage();
+            return;
+        }
+
+        if(accountVal != null) {
+            Account acct = lookupAccount(accountVal); //will throw NO_SUCH_ACCOUNT if not found
+            if(!acct.getAccountStatus().isActive()) {
+                throw ServiceException.FAILURE(String.format("Cannot unlock mailbox for account %s. Account status must be %s. Curent account status is %s. "
+                        + "You must change the value of zimbraAccountStatus to '%s' first",
+                        accountVal, AccountStatus.active, acct.getAccountStatus(), AccountStatus.active), null);
+            }
+            String server = acct.getMailHost();
+            LockoutMailboxRequest req =  LockoutMailboxRequest.create(AccountNameSelector.fromName(acct.getName()));
+            req.setOperation(AdminConstants.A_END);
+            try {
+                String url = URLUtil.getAdminURL(server);
+                ZAuthToken token = ((SoapProvisioning)prov).getAuthToken();
+                SoapHttpTransport transport = new SoapHttpTransport(url);
+                transport.setAuthToken(token);
+                transport.invokeWithoutSession(JaxbUtil.jaxbToElement(req));
+            } catch (ServiceException e) {
+                if (ServiceException.UNKNOWN_DOCUMENT.equals(e.getCode())) {
+                    throw ServiceException.FAILURE("source server version does not support " + AdminConstants.LOCKOUT_MAILBOX_REQUEST, e);
+                } else {
+                    throw e;
+                }
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Error sending mailbox unload command for " + accountVal + " to " + server, e);
+            }
+        }
     }
 
     private void doGetDomain(String[] args) throws ServiceException {
