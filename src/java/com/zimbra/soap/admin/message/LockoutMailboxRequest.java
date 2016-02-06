@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.Name;
+import com.zimbra.soap.type.AccountNameSelector;
 
 /**
  * @zm-api-command-auth-required true
@@ -37,11 +37,10 @@ import com.zimbra.soap.admin.type.Name;
 public class LockoutMailboxRequest {
 
     /**
-     * @zm-api-field-tag account-email-address
-     * @zm-api-field-description Account email address
+     * @zm-api-field-description Account
      */
-    @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=true)
-    private Name account;
+    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
+    private AccountNameSelector account;
 
     /**
      * @zm-api-field-tag operation
@@ -54,16 +53,16 @@ public class LockoutMailboxRequest {
     private LockoutMailboxRequest() {
     }
 
-    private LockoutMailboxRequest(Name account) {
+    private LockoutMailboxRequest(AccountNameSelector account) {
         setAccount(account);
     }
 
-    public static LockoutMailboxRequest create(Name account) {
+    public static LockoutMailboxRequest create(AccountNameSelector account) {
         return new LockoutMailboxRequest(account);
     }
 
-    public void setAccount(Name account) { this.account = account; }
-    public Name getAccount() { return account; }
+    public void setAccount(AccountNameSelector account) { this.account = account; }
+    public AccountNameSelector getAccount() { return account; }
 
     public void setOperation(String operation) { this.operation = operation; }
     public String getOperation() { return operation; }
