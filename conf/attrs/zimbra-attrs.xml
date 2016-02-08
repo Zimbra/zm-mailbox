@@ -10504,7 +10504,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="2081" name="zimbraMtaCanonicalMaps" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
-  <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-scm.cf</globalConfigValue>
+  <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-canonical.cf</globalConfigValue>
   <desc>Value for postconf canonical_maps. Comma separated list.</desc>
 </attr>
 
