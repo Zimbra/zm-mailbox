@@ -38508,13 +38508,13 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf canonical_maps. Comma separated list.
      *
-     * @return zimbraMtaCanonicalMaps, or "proxy:ldap:/opt/zimbra/conf/ldap-scm.cf" if unset
+     * @return zimbraMtaCanonicalMaps, or "proxy:ldap:/opt/zimbra/conf/ldap-canonical.cf" if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2081)
     public String getMtaCanonicalMaps() {
-        return getAttr(Provisioning.A_zimbraMtaCanonicalMaps, "proxy:ldap:/opt/zimbra/conf/ldap-scm.cf");
+        return getAttr(Provisioning.A_zimbraMtaCanonicalMaps, "proxy:ldap:/opt/zimbra/conf/ldap-canonical.cf");
     }
 
     /**
