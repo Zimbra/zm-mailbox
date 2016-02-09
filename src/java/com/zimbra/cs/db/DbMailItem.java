@@ -2856,13 +2856,15 @@ public class DbMailItem {
         }
     }
 
-    public static Pair<List<Integer>, TypedIdList> getItemsChangedSinceDate(Mailbox mbox,
+    public static  List<Map<String,String>> getItemsChangedSinceDate(Mailbox mbox,
         MailItem.Type type,  int changeDate, Set<Integer> visible)
         throws ServiceException {
+        int lastDeleteSync = -1;
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache",
                 null);
         }
+        List<Map<String,String>> idList = new ArrayList<Map<String,String>>();
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -2870,7 +2872,7 @@ public class DbMailItem {
             String typeConstraint = type == MailItem.Type.UNKNOWN ? "type NOT IN "
                 + NON_SYNCABLE_TYPES : typeIn(type);
             String dateConstraint = changeDate > 0 ? "change_date > ? AND " : "";
-            stmt = conn.prepareStatement("SELECT id, type, folder_id, uuid" + " FROM "
+            stmt = conn.prepareStatement("SELECT id, type, parent_id, folder_id, prev_folders, date, mod_metadata, change_date" + " FROM "
                 + getMailItemTableName(mbox) + " WHERE " + IN_THIS_MAILBOX_AND
                 + dateConstraint + typeConstraint
                 + " ORDER BY mod_metadata, id");
@@ -2882,12 +2884,42 @@ public class DbMailItem {
             if (changeDate > 0) {
                 stmt.setInt(pos++, changeDate);
             }
-            return populateWithResultSetData(visible, stmt, -1);
+            ResultSet rs = null;
+            try {
+                rs = stmt.executeQuery();
+                while (rs.next()) {
+
+                    Map<String, String> resultData = new HashMap<String, String>();
+                    resultData.put("id", Integer.toString(rs.getInt(1)));
+                    resultData.put("type", Integer.toString(rs.getInt(2)));
+                    resultData.put("parent_id", Integer.toString(rs.getInt(3)));
+                    resultData.put("folder_id", Integer.toString(rs.getInt(4)));
+                    resultData.put("prev_folders", rs.getString(5));
+                    long temp = rs.getInt(6) * 1000L;
+                    resultData.put("date", Long.toString(temp));
+                    resultData.put("mod_metadata", Integer.toString(rs.getInt(7)));
+                    temp = rs.getInt(8) * 1000L;
+                    resultData.put("change_date", Long.toString(temp));
+                    if (visible == null || visible.contains(rs.getInt(3))) {
+                        idList.add(resultData);
+                    } else {
+                        int modSeq = rs.getInt(6);
+                        if (modSeq > lastDeleteSync) {
+                            idList.add(resultData);
+                        }
+                    }
+                }
+            }
+            finally {
+                DbPool.closeResults(rs);
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Getting items modified since " + changeDate, e);
         } finally {
             DbPool.closeStatement(stmt);
         }
+
+        return idList;
     }
 
     /**
