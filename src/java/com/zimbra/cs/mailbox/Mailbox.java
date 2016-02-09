@@ -9948,7 +9948,7 @@ public class Mailbox {
      * @param object
      * @return
      */
-    public Pair<List<Integer>, TypedIdList> getItemsChangedSince(
+    public List<Map<String,String>> getItemsChangedSince(
         OperationContext octxt,  int sinceDate) throws ServiceException {
     lock.lock(false);
     try {
@@ -9958,7 +9958,7 @@ public class Mailbox {
             beginReadTransaction("getModifiedItems", octxt);
 
             Set<Integer> folderIds = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
-            Pair<List<Integer>, TypedIdList> dataList = DbMailItem
+            List<Map<String,String>> dataList = DbMailItem
                             .getItemsChangedSinceDate(this, MailItem.Type.UNKNOWN,  sinceDate, folderIds);
             if (dataList == null) {
                 return null;
