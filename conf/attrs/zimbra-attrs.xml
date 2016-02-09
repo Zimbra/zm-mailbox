@@ -7777,7 +7777,6 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1548" name="zimbraMtaSenderCanonicalMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
-  <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-scm.cf</globalConfigValue>
   <desc>Value for postconf sender_canonical_maps. Comma separated list.</desc>
 </attr>
 
