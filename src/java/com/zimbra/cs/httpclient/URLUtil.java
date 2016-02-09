@@ -41,7 +41,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -147,8 +146,8 @@ public class URLUtil {
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
         int port;
         try {
-            Integer majorVersion = Integer.valueOf(BuildInfo.MAJORVERSION);
-            Integer minorVersion = Integer.valueOf(BuildInfo.MINORVERSION);
+            Integer majorVersion = server.getServerVersionMajor();
+            Integer minorVersion = server.getServerVersionMinor();
             if (majorVersion.equals(8)) {
                 port = minorVersion >= 7 ? server.getMtaAuthPort() : server.getAdminPort();
             } else if (majorVersion > 8) {
