@@ -520,6 +520,7 @@
           <include name="commons-cli*.jar"/>
           <include name="commons-codec*.jar"/>
           <include name="commons-collections*.jar"/>
+          <include name="commons-compress*.jar"/>
           <include name="commons-dbcp*.jar"/>
           <include name="commons-digester*.jar"/>
           <include name="commons-fileupload*.jar"/>
