@@ -274,10 +274,11 @@ public final class MailboxIndex {
                     String lcAddr = addr.getAddress().toLowerCase();
                     TermFieldEnumeration values = null;
                     try {
-                        values = searcher.getIndexReader().getTermsForField(LuceneFields.L_H_TO, lcAddr);
+                        values = searcher.getIndexReader().getTermsForField(LuceneFields.L_CONTACT_DATA, lcAddr);
                         if (values.hasMoreElements()) {
                             BrowseTerm term = values.nextElement();
                             if (term != null && lcAddr.equals(term.getText())) {
+                                ZimbraLog.index.debug("Contact = %s present in indexed items", lcAddr);
                                 return true;
                             }
                         }
@@ -291,6 +292,7 @@ public final class MailboxIndex {
             Closeables.closeQuietly(searcher);
         }
     }
+
 
     /**
      * Returns the maximum number of items to be batched in a single indexing pass. If a search comes in that requires
