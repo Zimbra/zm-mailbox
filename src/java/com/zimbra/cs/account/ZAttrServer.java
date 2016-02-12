@@ -57325,6 +57325,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. HTTP proxy is now required.. Orig desc:
      * Whether to enable HTTP proxy
      *
      * @return zimbraReverseProxyHttpEnabled, or false if unset
@@ -57337,6 +57338,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. HTTP proxy is now required.. Orig desc:
      * Whether to enable HTTP proxy
      *
      * @param zimbraReverseProxyHttpEnabled new value
@@ -57352,6 +57354,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. HTTP proxy is now required.. Orig desc:
      * Whether to enable HTTP proxy
      *
      * @param zimbraReverseProxyHttpEnabled new value
@@ -57368,6 +57371,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. HTTP proxy is now required.. Orig desc:
      * Whether to enable HTTP proxy
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -57382,6 +57386,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. HTTP proxy is now required.. Orig desc:
      * Whether to enable HTTP proxy
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -58448,6 +58453,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. IMAP/POP proxy is now required.. Orig desc:
      * Whether to enable IMAP/POP proxy
      *
      * @return zimbraReverseProxyMailEnabled, or true if unset
@@ -58460,6 +58466,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. IMAP/POP proxy is now required.. Orig desc:
      * Whether to enable IMAP/POP proxy
      *
      * @param zimbraReverseProxyMailEnabled new value
@@ -58475,6 +58482,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. IMAP/POP proxy is now required.. Orig desc:
      * Whether to enable IMAP/POP proxy
      *
      * @param zimbraReverseProxyMailEnabled new value
@@ -58491,6 +58499,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. IMAP/POP proxy is now required.. Orig desc:
      * Whether to enable IMAP/POP proxy
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -58505,6 +58514,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.7.0. IMAP/POP proxy is now required.. Orig desc:
      * Whether to enable IMAP/POP proxy
      *
      * @param attrs existing map to populate, or null to create a new map
