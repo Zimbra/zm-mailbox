@@ -13838,6 +13838,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyGenConfigPerVirtualHostname = "zimbraReverseProxyGenConfigPerVirtualHostname";
 
     /**
+     * Deprecated since: 8.7.0. HTTP proxy is now required.. Orig desc:
      * Whether to enable HTTP proxy
      *
      * @since ZCS 5.0.3
@@ -13990,6 +13991,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyLookupTarget = "zimbraReverseProxyLookupTarget";
 
     /**
+     * Deprecated since: 8.7.0. IMAP/POP proxy is now required.. Orig desc:
      * Whether to enable IMAP/POP proxy
      *
      * @since ZCS 5.0.3
