@@ -28589,146 +28589,122 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * This attribute is used for failed mailbox move. It indicates the time
-     * interval at which the cleanup task will be run.
-     *
-     * @return zimbraMailboxMoveFailedCleanupTaskIntervalInMin, or -1 if unset
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2080)
-    public int getMailboxMoveFailedCleanupTaskIntervalInMin() {
-        return getIntAttr(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskIntervalInMin, -1);
-    }
-
-    /**
-     * This attribute is used for failed mailbox move. It indicates the time
-     * interval at which the cleanup task will be run.
-     *
-     * @param zimbraMailboxMoveFailedCleanupTaskIntervalInMin new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2080)
-    public void setMailboxMoveFailedCleanupTaskIntervalInMin(int zimbraMailboxMoveFailedCleanupTaskIntervalInMin) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskIntervalInMin, Integer.toString(zimbraMailboxMoveFailedCleanupTaskIntervalInMin));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute is used for failed mailbox move. It indicates the time
-     * interval at which the cleanup task will be run.
-     *
-     * @param zimbraMailboxMoveFailedCleanupTaskIntervalInMin new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2080)
-    public Map<String,Object> setMailboxMoveFailedCleanupTaskIntervalInMin(int zimbraMailboxMoveFailedCleanupTaskIntervalInMin, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskIntervalInMin, Integer.toString(zimbraMailboxMoveFailedCleanupTaskIntervalInMin));
-        return attrs;
-    }
-
-    /**
-     * This attribute is used for failed mailbox move. It indicates the time
-     * interval at which the cleanup task will be run.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2080)
-    public void unsetMailboxMoveFailedCleanupTaskIntervalInMin() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskIntervalInMin, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute is used for failed mailbox move. It indicates the time
-     * interval at which the cleanup task will be run.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2080)
-    public Map<String,Object> unsetMailboxMoveFailedCleanupTaskIntervalInMin(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskIntervalInMin, "");
-        return attrs;
-    }
-
-    /**
      * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time.
+     * before the cleanup task is executed for the first time. It also
+     * indicates the time interval at which the cleanup task will be re-run
+     * in case cleanup does not take place in first attempt. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
-     * @return zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, or -1 if unset
+     * <p>Use getMailboxMoveFailedCleanupTaskIntervalAsString to access value as a string.
+     *
+     * @see #getMailboxMoveFailedCleanupTaskIntervalAsString()
+     *
+     * @return zimbraMailboxMoveFailedCleanupTaskInterval in millseconds, or -1 if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2079)
-    public int getMailboxMoveFailedCleanupTaskStartDelayInMin() {
-        return getIntAttr(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, -1);
+    public long getMailboxMoveFailedCleanupTaskInterval() {
+        return getTimeInterval(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskInterval, -1L);
     }
 
     /**
      * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time.
+     * before the cleanup task is executed for the first time. It also
+     * indicates the time interval at which the cleanup task will be re-run
+     * in case cleanup does not take place in first attempt. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
-     * @param zimbraMailboxMoveFailedCleanupTaskStartDelayInMin new value
+     * @return zimbraMailboxMoveFailedCleanupTaskInterval, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2079)
+    public String getMailboxMoveFailedCleanupTaskIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskInterval, null);
+    }
+
+    /**
+     * This attribute is used for failed mailbox move. It indicates the delay
+     * before the cleanup task is executed for the first time. It also
+     * indicates the time interval at which the cleanup task will be re-run
+     * in case cleanup does not take place in first attempt. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraMailboxMoveFailedCleanupTaskInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2079)
-    public void setMailboxMoveFailedCleanupTaskStartDelayInMin(int zimbraMailboxMoveFailedCleanupTaskStartDelayInMin) throws com.zimbra.common.service.ServiceException {
+    public void setMailboxMoveFailedCleanupTaskInterval(String zimbraMailboxMoveFailedCleanupTaskInterval) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, Integer.toString(zimbraMailboxMoveFailedCleanupTaskStartDelayInMin));
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskInterval, zimbraMailboxMoveFailedCleanupTaskInterval);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time.
+     * before the cleanup task is executed for the first time. It also
+     * indicates the time interval at which the cleanup task will be re-run
+     * in case cleanup does not take place in first attempt. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
-     * @param zimbraMailboxMoveFailedCleanupTaskStartDelayInMin new value
+     * @param zimbraMailboxMoveFailedCleanupTaskInterval new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2079)
-    public Map<String,Object> setMailboxMoveFailedCleanupTaskStartDelayInMin(int zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, Map<String,Object> attrs) {
+    public Map<String,Object> setMailboxMoveFailedCleanupTaskInterval(String zimbraMailboxMoveFailedCleanupTaskInterval, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, Integer.toString(zimbraMailboxMoveFailedCleanupTaskStartDelayInMin));
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskInterval, zimbraMailboxMoveFailedCleanupTaskInterval);
         return attrs;
     }
 
     /**
      * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time.
+     * before the cleanup task is executed for the first time. It also
+     * indicates the time interval at which the cleanup task will be re-run
+     * in case cleanup does not take place in first attempt. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2079)
-    public void unsetMailboxMoveFailedCleanupTaskStartDelayInMin() throws com.zimbra.common.service.ServiceException {
+    public void unsetMailboxMoveFailedCleanupTaskInterval() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, "");
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskInterval, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time.
+     * before the cleanup task is executed for the first time. It also
+     * indicates the time interval at which the cleanup task will be re-run
+     * in case cleanup does not take place in first attempt. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -28736,9 +28712,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2079)
-    public Map<String,Object> unsetMailboxMoveFailedCleanupTaskStartDelayInMin(Map<String,Object> attrs) {
+    public Map<String,Object> unsetMailboxMoveFailedCleanupTaskInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskStartDelayInMin, "");
+        attrs.put(Provisioning.A_zimbraMailboxMoveFailedCleanupTaskInterval, "");
         return attrs;
     }
 
@@ -35426,7 +35402,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=2081)
+    @ZAttr(id=2080)
     public String getMtaCanonicalMaps() {
         return getAttr(Provisioning.A_zimbraMtaCanonicalMaps, null);
     }
@@ -35439,7 +35415,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=2081)
+    @ZAttr(id=2080)
     public void setMtaCanonicalMaps(String zimbraMtaCanonicalMaps) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaCanonicalMaps, zimbraMtaCanonicalMaps);
@@ -35455,7 +35431,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=2081)
+    @ZAttr(id=2080)
     public Map<String,Object> setMtaCanonicalMaps(String zimbraMtaCanonicalMaps, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaCanonicalMaps, zimbraMtaCanonicalMaps);
@@ -35469,7 +35445,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=2081)
+    @ZAttr(id=2080)
     public void unsetMtaCanonicalMaps() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaCanonicalMaps, "");
@@ -35484,7 +35460,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=2081)
+    @ZAttr(id=2080)
     public Map<String,Object> unsetMtaCanonicalMaps(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaCanonicalMaps, "");
