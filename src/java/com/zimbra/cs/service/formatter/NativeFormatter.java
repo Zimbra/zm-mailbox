@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -55,6 +55,7 @@ import com.zimbra.common.util.ImageUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.convert.ConversionUnsupportedException;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -92,6 +93,7 @@ public final class NativeFormatter extends Formatter {
     public static final String ATTR_CONTENTURL = "contenturl";
     public static final String ATTR_CONTENTTYPE = "contenttype";
     public static final String ATTR_CONTENTLENGTH = "contentlength";
+    public static final String ATTR_LOCALE  = "locale";
 
     private static final Log log = LogFactory.getLog(NativeFormatter.class);
 
@@ -391,6 +393,13 @@ public final class NativeFormatter extends Formatter {
             ctxt.req.setAttribute(ATTR_CONTENTTYPE, ct);
             ctxt.req.setAttribute(ATTR_CONTENTURL, ctxt.req.getRequestURI());
             ctxt.req.setAttribute(ATTR_CONTENTLENGTH, length);
+            Account authAcct = ctxt.getAuthAccount();
+            if (null != authAcct) {
+                String locale = authAcct.getPrefLocale();
+                if (locale != null) {
+                    ctxt.req.setAttribute(ATTR_LOCALE, locale);
+                }
+            }
             RequestDispatcher dispatcher = ctxt.req.getRequestDispatcher(CONVERSION_PATH);
             dispatcher.forward(ctxt.req, ctxt.resp);
         } finally {
