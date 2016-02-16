@@ -8250,22 +8250,19 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailboxLocationBeforeMove = "zimbraMailboxLocationBeforeMove";
 
     /**
-     * This attribute is used for failed mailbox move. It indicates the time
-     * interval at which the cleanup task will be run.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2080)
-    public static final String A_zimbraMailboxMoveFailedCleanupTaskIntervalInMin = "zimbraMailboxMoveFailedCleanupTaskIntervalInMin";
-
-    /**
      * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time.
+     * before the cleanup task is executed for the first time. It also
+     * indicates the time interval at which the cleanup task will be re-run
+     * in case cleanup does not take place in first attempt. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2079)
-    public static final String A_zimbraMailboxMoveFailedCleanupTaskStartDelayInMin = "zimbraMailboxMoveFailedCleanupTaskStartDelayInMin";
+    public static final String A_zimbraMailboxMoveFailedCleanupTaskInterval = "zimbraMailboxMoveFailedCleanupTaskInterval";
 
     /**
      * if true, exclude blobs (HSM or not) from mailbox move
@@ -10010,7 +10007,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.7.0,9.0.0
      */
-    @ZAttr(id=2081)
+    @ZAttr(id=2080)
     public static final String A_zimbraMtaCanonicalMaps = "zimbraMtaCanonicalMaps";
 
     /**
