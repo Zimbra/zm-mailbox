@@ -43,6 +43,26 @@ import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.python.google.common.base.Strings;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.zimbra.common.calendar.ZoneInfoParser.Day;
+import com.zimbra.common.calendar.ZoneInfoParser.Day.DayType;
+import com.zimbra.common.calendar.ZoneInfoParser.Rule;
+import com.zimbra.common.calendar.ZoneInfoParser.RuleLine;
+import com.zimbra.common.calendar.ZoneInfoParser.TZDataParseException;
+import com.zimbra.common.calendar.ZoneInfoParser.Time;
+import com.zimbra.common.calendar.ZoneInfoParser.Until;
+import com.zimbra.common.calendar.ZoneInfoParser.Weekday;
+import com.zimbra.common.calendar.ZoneInfoParser.Zone;
+import com.zimbra.common.calendar.ZoneInfoParser.ZoneLine;
+
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Component;
@@ -63,26 +83,6 @@ import net.fortuna.ical4j.model.property.TzName;
 import net.fortuna.ical4j.model.property.TzOffsetFrom;
 import net.fortuna.ical4j.model.property.TzOffsetTo;
 import net.fortuna.ical4j.model.property.XProperty;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.python.google.common.base.Strings;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.zimbra.common.calendar.ZoneInfoParser.Day;
-import com.zimbra.common.calendar.ZoneInfoParser.Day.DayType;
-import com.zimbra.common.calendar.ZoneInfoParser.Rule;
-import com.zimbra.common.calendar.ZoneInfoParser.RuleLine;
-import com.zimbra.common.calendar.ZoneInfoParser.TZDataParseException;
-import com.zimbra.common.calendar.ZoneInfoParser.Time;
-import com.zimbra.common.calendar.ZoneInfoParser.Until;
-import com.zimbra.common.calendar.ZoneInfoParser.Weekday;
-import com.zimbra.common.calendar.ZoneInfoParser.Zone;
-import com.zimbra.common.calendar.ZoneInfoParser.ZoneLine;
 
 public class ZoneInfo2iCalendar {
 
@@ -1042,6 +1042,7 @@ public class ZoneInfo2iCalendar {
                             name.equalsIgnoreCase("Makefile") ||
                             name.equalsIgnoreCase("NEWS") ||
                             name.equalsIgnoreCase("README") ||
+                            name.equalsIgnoreCase("LICENSE") ||
                             name.equalsIgnoreCase("Theory") ||
                             name.equalsIgnoreCase("factory") ||
                             name.equalsIgnoreCase("leap-seconds.list")) {
