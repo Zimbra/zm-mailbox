@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.activation.DataSource;
 import javax.mail.internet.MimeUtility;
@@ -34,6 +35,8 @@ import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.IndexDocument;
@@ -62,6 +65,7 @@ public abstract class MimeHandler {
     private String contentType;
     private long size = -1;
     private String defaultCharset;
+    private String locale;
     private String partName; // dotted-number part name
 
     /** Returns <tt>true</tt> if a request for the handler to perform text
@@ -92,6 +96,25 @@ public abstract class MimeHandler {
 
     public void setDefaultCharset(String value) {
         defaultCharset = value;
+    }
+
+    protected Locale getLocale() {
+        if (locale != null) {
+            return Locale.forLanguageTag(locale);
+        }
+        try {
+            Locale loc = Provisioning.getInstance().getConfig().getLocale();
+            if (null != loc) {
+                ZimbraLog.misc.debug("Chose locale '%s' by zimbraLocale", loc);
+                return loc;
+            }
+        } catch (ServiceException e) {
+        }
+        return Locale.getDefault();
+    }
+
+    public void setLocale(String value) {
+        locale = value;
     }
 
     public String getDescription() {
