@@ -69,6 +69,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
@@ -127,10 +128,12 @@ import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.zclient.ZMailboxUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.LockoutMailboxRequest;
+import com.zimbra.soap.admin.message.UnregisterMailboxMoveOutRequest;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
+import com.zimbra.soap.admin.type.MailboxMoveSpec;
 import com.zimbra.soap.type.AccountNameSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
@@ -844,7 +847,7 @@ public class ProvUtil implements HttpDebugListener {
                Category.MISC, 3, 3, Via.soap),
         RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]",
                Category.LOG, 0, 2),
-        UNLOCK_MAILBOX("unlockMailbox", "ulm", "{name@domain|id}", Category.MAILBOX, 1, 1, Via.soap);
+        UNLOCK_MAILBOX("unlockMailbox", "ulm", "{name@domain|id} [hostname (When unlocking a mailbox after a failed move attempt provide the hostname of the server that was the target for the failed move. Otherwise, do not include hostname parameter)]", Category.MAILBOX, 1, 2, Via.soap);
 
         private String mName;
         private String mAlias;
@@ -1589,7 +1592,7 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doUnlockMailbox(String[] args) throws ServiceException {
         String accountVal = null;
-        if(args.length > 0) {
+        if(args.length > 1) {
             accountVal = args[1];
         } else {
             usage();
@@ -1604,7 +1607,8 @@ public class ProvUtil implements HttpDebugListener {
                         accountVal, AccountStatus.active, acct.getAccountStatus(), AccountStatus.active), null);
             }
             String server = acct.getMailHost();
-            LockoutMailboxRequest req =  LockoutMailboxRequest.create(AccountNameSelector.fromName(acct.getName()));
+            String accName = acct.getName();
+            LockoutMailboxRequest req =  LockoutMailboxRequest.create(AccountNameSelector.fromName(accName));
             req.setOperation(AdminConstants.A_END);
             try {
                 String url = URLUtil.getAdminURL(server);
@@ -1614,12 +1618,33 @@ public class ProvUtil implements HttpDebugListener {
                 transport.invokeWithoutSession(JaxbUtil.jaxbToElement(req));
             } catch (ServiceException e) {
                 if (ServiceException.UNKNOWN_DOCUMENT.equals(e.getCode())) {
-                    throw ServiceException.FAILURE("source server version does not support " + AdminConstants.LOCKOUT_MAILBOX_REQUEST, e);
+                    throw ServiceException.FAILURE("source server version does not support " + AdminConstants.E_LOCKOUT_MAILBOX_RESPONSE, e);
                 } else {
                     throw e;
                 }
             } catch (IOException e) {
-                throw ServiceException.FAILURE("Error sending mailbox unload command for " + accountVal + " to " + server, e);
+                throw ServiceException.FAILURE(String.format("Error sending %s request for %s to %s",AdminConstants.E_LOCKOUT_MAILBOX_RESPONSE, accountVal, server), e);
+            }
+
+            //unregister moveout if hostname is provided
+            if(args.length > 2) {
+                String targetServer = args[2];
+                try {
+                    UnregisterMailboxMoveOutRequest unregisterReq = UnregisterMailboxMoveOutRequest.create(MailboxMoveSpec.createForNameAndTarget(accName, targetServer));
+                    String url = URLUtil.getAdminURL(server);
+                    ZAuthToken token = ((SoapProvisioning)prov).getAuthToken();
+                    SoapHttpTransport transport = new SoapHttpTransport(url);
+                    transport.setAuthToken(token);
+                    transport.invokeWithoutSession(JaxbUtil.jaxbToElement(unregisterReq));
+                } catch (ServiceException e) {
+                    if (ServiceException.UNKNOWN_DOCUMENT.equals(e.getCode())) {
+                        throw ServiceException.FAILURE("target server version does not support " + BackupConstants.E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST, e);
+                    } else {
+                        throw e;
+                    }
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE(String.format("Error sending %s request for %s to %s",BackupConstants.E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST, accountVal, server), e);
+                }
             }
         }
     }
