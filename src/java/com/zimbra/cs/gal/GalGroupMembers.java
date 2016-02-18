@@ -315,7 +315,7 @@ public class GalGroupMembers {
         params.setResultCallback(callback);
 
         GalSearchControl gal = new GalSearchControl(params);
-        gal.search();
+        gal.search(false);
         return callback.getDLMembers();
     }
 

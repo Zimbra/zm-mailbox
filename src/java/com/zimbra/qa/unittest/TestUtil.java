@@ -150,6 +150,9 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.qa.unittest.prov.soap.SoapTest;
+import com.zimbra.soap.account.message.AuthRequest;
+import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.admin.message.GetAccountRequest;
 import com.zimbra.soap.admin.message.GetAccountResponse;
 import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
@@ -1373,5 +1376,15 @@ public class TestUtil extends Assert {
         ReloadLocalConfigRequest req = new ReloadLocalConfigRequest();
         ReloadLocalConfigResponse resp = prov.invokeJaxb(req);
         assertNotNull("ReloadLocalConfigResponse", resp);
+    }
+
+    public static SoapTransport authUser(String acctName, String password) throws Exception {
+        com.zimbra.soap.type.AccountSelector acct =
+            new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acctName);
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        AuthRequest req = new AuthRequest(acct, password);
+        AuthResponse resp = SoapTest.invokeJaxb(transport, req);
+        transport.setAuthToken(resp.getAuthToken());
+        return transport;
     }
 }

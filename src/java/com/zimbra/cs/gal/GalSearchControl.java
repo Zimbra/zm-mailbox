@@ -131,9 +131,12 @@ public class GalSearchControl {
     }
 
     public void search() throws ServiceException {
+        search(true);
+    }
 
+    public void search(boolean wildCardSearch) throws ServiceException {
         checkFeatureEnabled(null);
-
+        mParams.setWildCardSearch(wildCardSearch);
         String query = mParams.getQuery();
         // '.' is a special operator that matches everything.
         // We don't support it in auto-complete.
@@ -149,10 +152,14 @@ public class GalSearchControl {
         } catch (GalAccountNotConfiguredException e) {
             query = Strings.nullToEmpty(query);
             // fallback to ldap search
-            if (!query.endsWith("*"))
-                query = query + "*";
-            if (!query.startsWith("*"))
-                query = "*" + query;
+            if (wildCardSearch) {
+                if (!query.endsWith("*")) {
+                    query = query + "*";
+                }
+                if (!query.startsWith("*")) {
+                    query = "*" + query;
+                }
+            }
             mParams.setQuery(query);
             mParams.getResultCallback().reset(mParams);
             ldapSearch();

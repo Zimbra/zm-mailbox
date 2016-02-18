@@ -70,6 +70,8 @@ public class GalSearchParams {
     private MemberOfSelector mNeedIsMember;
     private boolean mNeedSMIMECerts;
     private boolean mFetchGroupMembers;
+    private boolean mWildCardSearch = true;
+
     private GalOp mOp;
 
     public GalSearchParams(Account account) {
@@ -331,7 +333,11 @@ public class GalSearchParams {
         if (GalSearchConfig.GalType.zimbra == mConfig.getGalType() && mExtraQueryCallback != null) {
             extraQuery = mExtraQueryCallback.getZimbraLdapSearchQuery();
         }
-        return GalUtil.expandFilter(mConfig.getTokenizeKey(), mConfig.getFilter(), mQuery, token, extraQuery);
+        String filterTemplate = mConfig.getFilter();
+        if (!mWildCardSearch) {
+           filterTemplate = filterTemplate.replaceAll("\\*", "");
+        }
+        return GalUtil.expandFilter(mConfig.getTokenizeKey(), filterTemplate, mQuery, token, extraQuery);
     }
 
     public void setGalSyncAccount(Account acct) {
@@ -369,6 +375,14 @@ public class GalSearchParams {
 
     public void setUserAgent(String ua) {
         mUserAgent = ua;
+    }
+
+    public boolean isWildCardSearch() {
+        return mWildCardSearch;
+    }
+
+    public void setWildCardSearch(boolean wildCardSearch) {
+        mWildCardSearch = wildCardSearch;
     }
 
     public String getUserInfo() {
