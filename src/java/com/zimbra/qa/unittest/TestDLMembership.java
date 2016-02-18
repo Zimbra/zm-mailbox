@@ -32,6 +32,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.qa.unittest.prov.soap.SoapTest;
+import com.zimbra.soap.account.message.GetDistributionListMembersRequest;
+import com.zimbra.soap.account.message.GetDistributionListMembersResponse;
 import com.zimbra.soap.admin.message.AddAccountAliasRequest;
 import com.zimbra.soap.admin.message.AddAccountAliasResponse;
 import com.zimbra.soap.admin.message.AddDistributionListMemberRequest;
@@ -45,11 +47,15 @@ import com.zimbra.soap.type.AccountSelector;
 
 public class TestDLMembership extends TestCase {
     private static String TEST_USER = "testuser1";
+    private static String TEST_USER2 = "testuser2";
     private static String TEST_ALIAS = "testalias1";
     private static String TEST_DL = "testdl1";
+    private static String TEST_DL2 = "estdl1";
 
     private static Account testUser;
+    private static Account testUser2;
     private static DistributionList testDL;
+    private static DistributionList testDL2;
 
     @Override
     @Before
@@ -57,8 +63,10 @@ public class TestDLMembership extends TestCase {
         cleanup();
         //create a user with an alias
         testUser = TestUtil.createAccount(TEST_USER);
+        testUser2 = TestUtil.createAccount(TEST_USER2);
         //create DL
         testDL = TestUtil.createDistributionList(TEST_DL);
+        testDL2 = TestUtil.createDistributionList(TEST_DL2);
     }
 
     @Override
@@ -70,6 +78,8 @@ public class TestDLMembership extends TestCase {
     private void cleanup() throws Exception {
         TestUtil.deleteDistributionList(TEST_DL);
         TestUtil.deleteAccount(TEST_USER);
+        TestUtil.deleteDistributionList(TEST_DL2);
+        TestUtil.deleteAccount(TEST_USER2);
     }
     @Test
     public void testAddMemberByName() {
@@ -95,6 +105,34 @@ public class TestDLMembership extends TestCase {
         }
     }
 
+    @Test
+    public void testGetDistributionListMembers() {
+        SoapTransport transport;
+        try {
+            transport = TestUtil.getAdminSoapTransport();
+            AddDistributionListMemberResponse addDLMemberResp = SoapTest.invokeJaxb(transport, new AddDistributionListMemberRequest(testDL.getId(),
+                    Collections.singleton(testUser.getName())));
+            AddDistributionListMemberResponse addDLMemberResp2 = SoapTest.invokeJaxb(transport, new AddDistributionListMemberRequest(testDL2.getId(),
+                Collections.singleton(testUser2.getName())));
+            assertNotNull("AddDistributionListMemberResponse cannot be null", addDLMemberResp);
+
+            //Verify GetDistributionListMembersRequest returns correct members.
+            SoapTransport transportAccount = TestUtil.authUser(testUser.getName(), TestUtil.DEFAULT_PASSWORD);
+            GetDistributionListMembersResponse resp = SoapTest.invokeJaxb(transportAccount,
+                new GetDistributionListMembersRequest(0, 0, testDL2.getName()));
+            List<String> dlInfoList = resp.getDlMembers();
+            assertFalse("Unexepcted member present",dlInfoList.contains(testUser.getName()));
+            assertTrue("DL member not present", dlInfoList.contains(testUser2.getName()));
+
+            resp = SoapTest.invokeJaxb(transportAccount,
+                new GetDistributionListMembersRequest(0, 0, testDL.getName()));
+            dlInfoList = resp.getDlMembers();
+            assertFalse("Unexepcted member present",dlInfoList.contains(testUser2.getName()));
+            assertTrue("DL member not present", dlInfoList.contains(testUser.getName()));
+         } catch (Exception e) {
+            fail(e.getLocalizedMessage());
+        }
+    }
 
     @Test
     public void testAddMemberByAlias() {
