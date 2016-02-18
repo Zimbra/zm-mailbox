@@ -10497,7 +10497,7 @@ TODO: delete them permanently from here
 
 <attr id="2079" name="zimbraMailboxMoveFailedCleanupTaskInterval" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
   <globalConfigValue>20m</globalConfigValue>
-  <desc>This attribute is used for failed mailbox move. It indicates the delay before the cleanup task is executed for the first time.
+  <desc>This attribute is used in the case of a failed mailbox move. It indicates the delay before the cleanup task is executed for the first time.
         It also indicates the time interval at which the cleanup task will be re-run in case cleanup does not take place in first attempt</desc>
 </attr>
 

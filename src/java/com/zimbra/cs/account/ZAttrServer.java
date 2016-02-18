@@ -30974,13 +30974,13 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time. It also
-     * indicates the time interval at which the cleanup task will be re-run
-     * in case cleanup does not take place in first attempt. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * This attribute is used in the case of a failed mailbox move. It
+     * indicates the delay before the cleanup task is executed for the first
+     * time. It also indicates the time interval at which the cleanup task
+     * will be re-run in case cleanup does not take place in first attempt.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * <p>Use getMailboxMoveFailedCleanupTaskIntervalAsString to access value as a string.
@@ -30997,13 +30997,13 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time. It also
-     * indicates the time interval at which the cleanup task will be re-run
-     * in case cleanup does not take place in first attempt. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * This attribute is used in the case of a failed mailbox move. It
+     * indicates the delay before the cleanup task is executed for the first
+     * time. It also indicates the time interval at which the cleanup task
+     * will be re-run in case cleanup does not take place in first attempt.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * @return zimbraMailboxMoveFailedCleanupTaskInterval, or "20m" if unset
@@ -31016,13 +31016,13 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time. It also
-     * indicates the time interval at which the cleanup task will be re-run
-     * in case cleanup does not take place in first attempt. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * This attribute is used in the case of a failed mailbox move. It
+     * indicates the delay before the cleanup task is executed for the first
+     * time. It also indicates the time interval at which the cleanup task
+     * will be re-run in case cleanup does not take place in first attempt.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * @param zimbraMailboxMoveFailedCleanupTaskInterval new value
@@ -31038,13 +31038,13 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time. It also
-     * indicates the time interval at which the cleanup task will be re-run
-     * in case cleanup does not take place in first attempt. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * This attribute is used in the case of a failed mailbox move. It
+     * indicates the delay before the cleanup task is executed for the first
+     * time. It also indicates the time interval at which the cleanup task
+     * will be re-run in case cleanup does not take place in first attempt.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * @param zimbraMailboxMoveFailedCleanupTaskInterval new value
@@ -31061,13 +31061,13 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time. It also
-     * indicates the time interval at which the cleanup task will be re-run
-     * in case cleanup does not take place in first attempt. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * This attribute is used in the case of a failed mailbox move. It
+     * indicates the delay before the cleanup task is executed for the first
+     * time. It also indicates the time interval at which the cleanup task
+     * will be re-run in case cleanup does not take place in first attempt.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31082,13 +31082,13 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * This attribute is used for failed mailbox move. It indicates the delay
-     * before the cleanup task is executed for the first time. It also
-     * indicates the time interval at which the cleanup task will be re-run
-     * in case cleanup does not take place in first attempt. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
+     * This attribute is used in the case of a failed mailbox move. It
+     * indicates the delay before the cleanup task is executed for the first
+     * time. It also indicates the time interval at which the cleanup task
+     * will be re-run in case cleanup does not take place in first attempt.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
