@@ -1445,6 +1445,29 @@ class ZMLookupHandlerVar extends ProxyConfVar{
     }
 }
 
+class ZMLookupAvailableVar extends ProxyConfVar {
+
+    public ZMLookupAvailableVar() {
+        super("lookup.available", null, false,
+                ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM,
+                "Indicates whether there are available lookup handlers or not");
+    }
+
+    @Override
+    public void update() throws ServiceException, ProxyConfException {
+        ZMLookupHandlerVar lhVar = new ZMLookupHandlerVar();
+        lhVar.update();
+        @SuppressWarnings("unchecked")
+        ArrayList<String> servers = (ArrayList<String>) lhVar.mValue;
+        if (servers.isEmpty()) {
+            mValue = false;
+        }
+        else {
+            mValue = true;
+        }
+    }
+}
+
 class ZMSSOCertAuthDefaultEnablerVar extends ProxyConfVar {
     public ZMSSOCertAuthDefaultEnablerVar() throws ProxyConfException {
         super("web.sso.certauth.default.enabled",
@@ -2967,6 +2990,7 @@ public class ProxyConfGen
         mConfVars.put("web.https.enabled", new HttpsEnablerVar());
         mConfVars.put("web.upstream.target", new WebProxyUpstreamTargetVar());
         mConfVars.put("web.upstream.webclient.target", new WebProxyUpstreamClientTargetVar());
+        mConfVars.put("lookup.available", new ZMLookupAvailableVar());
         mConfVars.put("zmlookup.:handlers", new ZMLookupHandlerVar());
         mConfVars.put("zmlookup.timeout", new ProxyConfVar("zmlookup.timeout", "zimbraReverseProxyRouteLookupTimeout", new Long(15000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "Time interval (ms) given to lookup handler to respond to route lookup request (after this time elapses, Proxy fails over to next handler, or fails the request if there are no more lookup handlers)"));
         mConfVars.put("zmlookup.retryinterval", new ProxyConfVar("zmlookup.retryinterval", "zimbraReverseProxyRouteLookupTimeoutCache", new Long(60000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER,"Time interval (ms) given to lookup handler to cache a failed response to route a previous lookup request (after this time elapses, Proxy retries this host)"));
@@ -3119,12 +3143,12 @@ public class ProxyConfGen
         zmLookupHandlers = (ArrayList<String>) mConfVars.get("zmlookup.:handlers").rawValue();
 
         if (webEnabled && (webUpstreamServers.size() == 0 || webUpstreamClientServers.size() == 0)) {
-            mLog.info("Web is enabled but there are no HTTP upstream webclient/mailclient servers (Config will not be written)");
+            mLog.info("Web is enabled but there are no HTTP upstream webclient/mailclient servers");
             validConf = false;
         }
 
         if (webEnabled && (webSSLUpstreamServers.size() == 0 || webSSLUpstreamClientServers.size() == 0)) {
-            mLog.info("Web is enabled but there are no HTTPS upstream webclient/mailclient servers (Config will not be written)");
+            mLog.info("Web is enabled but there are no HTTPS upstream webclient/mailclient servers");
             validConf = false;
         }
 
@@ -3265,10 +3289,8 @@ public class ProxyConfGen
         }
 
         if (!isWorkableConf()) {
-            mLog.error("Configuration is not valid because no route lookup handlers exist, or because no HTTP/HTTPS upstream servers were found");
-            mLog.error("Please ensure that the output of 'zmprov garpu/garpb' returns at least one entry");
-            exitCode = 1;
-            return(exitCode);
+            mLog.warn("Configuration is not valid because no route lookup handlers exist, or because no HTTP/HTTPS upstream servers were found");
+            mLog.warn("Please ensure that the output of 'zmprov garpu/garpb' returns at least one entry");
         }
 
         exitCode = 0;
