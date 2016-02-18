@@ -643,6 +643,37 @@ public class ElementTest {
         Assert.assertEquals("toString value unchanged", legacyElem.toString(), elem.toString());
     }
 
+    /**
+     * Validates that XML has valid set of characters.
+     * Supported Character range in XML : #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+     * Surrogate characters 0xFFFE and 0xFFFF are not supported.
+     */
+    @Test
+    public void checkForValidCharactersInXML() {
+        //Greek small letter Beta
+        Assert.assertTrue(XMLElement.isValidXmlCharacter('\u03B2'));
+
+        //Cyrillic Capital Letter Zhe
+        Assert.assertTrue(XMLElement.isValidXmlCharacter('\u0416'));
+
+        //Japanese KATAKANA LETTER GA
+        Assert.assertTrue(XMLElement.isValidXmlCharacter('\u30AC'));
+
+        //Following are some examples of Invalid characters in XML
+        Assert.assertFalse(XMLElement.isValidXmlCharacter('\u001A'));
+        Assert.assertFalse(XMLElement.isValidXmlCharacter('\u001B'));
+        Assert.assertFalse(XMLElement.isValidXmlCharacter('\u000C'));
+        Assert.assertFalse(XMLElement.isValidXmlCharacter('\uFFFF'));
+        Assert.assertFalse(XMLElement.isValidXmlCharacter('\uFFFE'));
+    }
+
+    @Test
+    public void checkForUnicodeSupplementaryChars() {
+        //Unicode Han Character 'U+2000B' ("\uD840\uDC0B")
+        String str = "\uD840\uDC0B";
+        Assert.assertTrue(XMLElement.isSupplementaryCharacter(str.charAt(0), str.charAt(1)));
+    }
+
     /** Ensure that we can reset the input stream */
     private static ByteArrayInputStream toBais(InputStream is) {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();

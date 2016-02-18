@@ -1902,9 +1902,13 @@ public abstract class Element implements Cloneable {
                                replacement = "&gt;";    break;
                     case '"':  if (!escapeQuotes)       continue;
                                replacement = "&quot;";  break;
-                    case 0x09:  case 0x0A:  case 0x0D:  continue;
-                    default:   if ((c <= 0xD7FF || c >= 0x20) && c != 0xFFFE && c != 0xFFFF && (c <= 0xFFFD || c >= 0xE000) && (c <= 0x10FFFF || c >= 0x10000))  continue;
-                               replacement = "?";       break;
+                    default :  //Unicode supplementary characters (UTF-16) - Japnese/Chinese characters
+                               if (i+1 < str.length() && isSupplementaryCharacter(c, str.charAt(i+1))) {
+                                   i++;
+                                   continue;
+                               }
+                               if (isValidXmlCharacter(c))  continue;
+                               replacement = "?";      break;
                 }
                 if (sb == null)
                     sb = new StringBuilder(str.substring(0, i));
@@ -1914,6 +1918,35 @@ public abstract class Element implements Cloneable {
                 last = i + 1;
             }
             return (sb == null ? str : sb.append(str.substring(last, i)).toString());
+        }
+
+        /**
+         * Supplementary characters : Always appear in pairs, as a high surrogate followed by a low surrogate
+         * @param first
+         * @param second
+         * @return true if passed set of characters are pair of supplementary character.
+         */
+        static boolean isSupplementaryCharacter(char first, char second) {
+            return Character.isHighSurrogate(first) && Character.isLowSurrogate(second);
+        }
+
+        static boolean isValidXmlCharacter(char ch) {
+            int codepoint = ch;
+            //Surrogate characters are NOT allowed
+            if (ch == 0xFFFE || ch == 0xFFFF) {
+                return false;
+            }
+
+            //Supported Character range in XML : #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+            if ((codepoint == 0x09) ||
+                    (codepoint == 0x0A) ||
+                    (codepoint == 0x0D) ||
+                    ((codepoint >= 0x20) && (codepoint <= 0xD7FF)) ||
+                    ((codepoint >= 0xE000) && (codepoint <= 0xFFFD)) ||
+                    ((codepoint >= 0x10000) && (codepoint <= 0x10FFFF))) {
+                return true;
+            }
+            return false;
         }
 
         @Override
