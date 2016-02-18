@@ -1618,12 +1618,12 @@ public class ProvUtil implements HttpDebugListener {
                 transport.invokeWithoutSession(JaxbUtil.jaxbToElement(req));
             } catch (ServiceException e) {
                 if (ServiceException.UNKNOWN_DOCUMENT.equals(e.getCode())) {
-                    throw ServiceException.FAILURE("source server version does not support " + AdminConstants.E_LOCKOUT_MAILBOX_RESPONSE, e);
+                    throw ServiceException.FAILURE("source server version does not support " + AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, e);
                 } else {
                     throw e;
                 }
             } catch (IOException e) {
-                throw ServiceException.FAILURE(String.format("Error sending %s request for %s to %s",AdminConstants.E_LOCKOUT_MAILBOX_RESPONSE, accountVal, server), e);
+                throw ServiceException.FAILURE(String.format("Error sending %s request for %s to %s",AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, accountVal, server), e);
             }
 
             //unregister moveout if hostname is provided
