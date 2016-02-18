@@ -23,7 +23,6 @@ SECTION amavis
 	VAR zimbraSpamTagPercent
 	VAR zimbraSpamSubjectTag
 	VAR zimbraAmavisQuarantineAccount
-	VAR zimbraAmavisDSPAMEnabled
 	VAR zimbraMtaMyNetworks
 	VAR zimbraDomainMandatoryMailSignatureEnabled
 	VAR zimbraIPMode
@@ -50,7 +49,6 @@ SECTION antivirus DEPENDS amavis
 
 SECTION antispam DEPENDS amavis
 	REWRITE conf/salocal.cf.in data/spamassassin/localrules/salocal.cf
-	REWRITE conf/dspam.conf.in conf/dspam.conf
 	VAR zimbraMtaMyNetworks
 	VAR zimbraMtaAntiSpamLockMethod
 	LOCAL antispam_mysql_enabled
@@ -303,7 +301,7 @@ SECTION mailbox
 	VAR zimbraImapSSLBindAddress
 	VAR zimbraImapSSLBindPort
 	VAR zimbraHttpNumThreads
-	VAR nio_imap_enabled
+	VAR zimbraImapNioEnabled
 	VAR zimbraSSLExcludeCipherSuites
 	VAR zimbraSSLExcludeCipherSuitesXML
 	VAR zimbraMailBindAddress
@@ -398,15 +396,30 @@ SECTION proxy
 	VAR zimbraReverseProxySSLECDHCurve
 	VAR zimbraReverseProxyUpstreamLoginServers
 	VAR zimbraReverseProxyUpstreamEwsServers
+	VAR zimbraReverseProxyLogToSyslog
 	VAR zimbraReverseProxySSLProtocols
+	VAR zimbraReverseProxyModSecurityEnabled
+	VAR zimbraReverseProxySSLStapling
+	VAR zimbraReverseProxySSLStaplingResponderURL
+	VAR zimbraReverseProxySPDYEnabled
 	VAR zimbraReverseProxySSLSessionTimeout
-    VAR zimbraReverseProxySSLSessionCacheSize
+	VAR zimbraReverseProxySSLSessionCacheSize
+	VAR zimbraReverseProxyLimitReqZoneRate
+	VAR zimbraReverseProxyLimitReqZoneSize
+	VAR zimbraReverseProxyRestrictedIPs
+	VAR zimbraReverseProxyBlockedURLs
+	VAR zimbraReverseProxyBlockedUserAgents	
+	VAR zimbraReverseProxyZSSHostname
 	VAR zimbraReverseProxyZmlookupCachingEnabled
+	VAR zimbraReverseProxySNIEnabled
 	VAR zimbraReverseProxyXmppBoshLocalHttpBindURL
-    VAR zimbraReverseProxyXmppBoshRemoteHttpBindURL
-    VAR zimbraReverseProxyXmppBoshHostname
-    VAR zimbraReverseProxyXmppBoshPort
-    VAR zimbraReverseProxyResponseHeaders
+	VAR zimbraReverseProxyXmppBoshRemoteHttpBindURL
+	VAR zimbraReverseProxyXmppBoshHostname
+	VAR zimbraReverseProxyXmppBoshPort
+	VAR zimbraReverseProxyPageSpeedEnabled
+	VAR zimbraReverseProxyPageSpeedRespectVary
+	VAR zimbraReverseProxyPageSpeedDisallowedURLs
+	VAR zimbraReverseProxyResponseHeaders
 	PROXYGEN
 	RESTART proxy
 
