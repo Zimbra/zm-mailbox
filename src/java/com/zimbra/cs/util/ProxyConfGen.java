@@ -1447,7 +1447,7 @@ class ZMLookupHandlerVar extends ProxyConfVar{
 
 class ZMLookupAvailableVar extends ProxyConfVar {
 
-    public ZMLookupAvailableVar() {
+    public ZMLookupAvailableVar() throws ProxyConfException {
         super("lookup.available", null, false,
                 ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM,
                 "Indicates whether there are available lookup handlers or not");
