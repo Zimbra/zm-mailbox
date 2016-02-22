@@ -31,6 +31,7 @@ import org.apache.commons.codec.binary.Hex;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.StringUtil;
 
 @SuppressWarnings("serial")
 public class ServiceException extends Exception {
@@ -63,6 +64,7 @@ public class ServiceException extends Exception {
     protected String mCode;
     private List<Argument> mArgs;
     private String mId;
+    private String mThreadName;
 
     public static final String HOST                  = "host";
     public static final String URL                   = "url";
@@ -197,6 +199,18 @@ public class ServiceException extends Exception {
 
     protected void setId(String id) { mId = id; }
 
+    private void setThreadName() {
+        String threadName = Thread.currentThread().getName();
+        if (!StringUtil.isNullOrEmpty(threadName)) {
+            threadName = threadName.split(":")[0];
+        }
+        mThreadName = threadName + ":"+ System.currentTimeMillis() + ":" + ID_KEY;
+    }
+
+    public String getThreadName() {
+        return mThreadName;
+    }
+
     protected ServiceException(String message, String code, boolean isReceiversFault, Throwable cause, Argument... arguments) {
         super(message, cause);
         List<Argument> argList = (arguments == null ? Collections.<Argument>emptyList() : Arrays.asList(arguments));
@@ -223,6 +237,7 @@ public class ServiceException extends Exception {
         }
 
         setId();
+        setThreadName();
     }
 
     public String getCode() {

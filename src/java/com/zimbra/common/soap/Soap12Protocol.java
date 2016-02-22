@@ -115,8 +115,8 @@ class Soap12Protocol extends SoapProtocol {
         if (LC.soap_fault_include_stack_trace.booleanValue())
             error.addUniqueElement(ZimbraNamespace.E_TRACE).setText(ExceptionToString.ToString(e));
         else
-            error.addUniqueElement(ZimbraNamespace.E_TRACE).setText(e.getId());
-        
+            error.addUniqueElement(ZimbraNamespace.E_TRACE).setText(e.getThreadName());
+
         for (ServiceException.Argument arg : e.getArgs()) {
             if (arg.externalVisible()) {
                 Element val = error.addElement(ZimbraNamespace.E_ARGUMENT);

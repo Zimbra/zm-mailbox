@@ -85,7 +85,7 @@ public class SoapJSProtocol extends SoapProtocol {
         if (LC.soap_fault_include_stack_trace.booleanValue())
             eError.addAttribute(ZimbraNamespace.E_TRACE.getName(), ExceptionToString.ToString(e));
         else
-            eError.addAttribute(ZimbraNamespace.E_TRACE.getName(), e.getId());
+            eError.addAttribute(ZimbraNamespace.E_TRACE.getName(), e.getThreadName());
 
         for (ServiceException.Argument arg : e.getArgs()) {
             if (arg.externalVisible()) {
