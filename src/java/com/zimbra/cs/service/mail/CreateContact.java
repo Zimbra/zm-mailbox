@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -33,8 +33,8 @@ import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
@@ -42,7 +42,9 @@ import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.ContactGroup;
+import com.zimbra.cs.mailbox.ContactGroup.Member;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.DocumentDataSource;
 import com.zimbra.cs.mailbox.MailItem;
@@ -52,19 +54,17 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MessageDataSource;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Contact.Attachment;
-import com.zimbra.cs.mailbox.ContactGroup.Member;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedContact.FieldDelta;
 import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.type.ModifyGroupMemberOperation;
@@ -111,7 +111,7 @@ public class CreateContact extends MailDocumentHandler  {
                 migrateFromDlist(pc);
             }
         }
-        
+
         List<Contact> contacts = createContacts(octxt, mbox, iidFolder, pclist, tags);
         Contact con = null;
         if (contacts.size() > 0)
@@ -140,23 +140,23 @@ public class CreateContact extends MailDocumentHandler  {
         Map<String, Object> fields = new HashMap<String, Object>();
         List<Attachment> attachments = new ArrayList<Attachment>();
         boolean isContactGroup = false;
-        
+        Mailbox mbox = getRequestedMailbox(zsc);
         for (Element elt : cn.listElements(MailConstants.E_ATTRIBUTE)) {
             String name = elt.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
             if (name.trim().equals("")) {
                 throw ServiceException.INVALID_REQUEST("at least one contact field name is blank", null);
             }
-            
+
             // do not allow specifying groupMember as attribute directly
             disallowGroupMemberAttr(name);
-            
+
             Attachment attach = parseAttachment(elt, name, zsc, octxt, existing);
             if (attach == null) {
                 disallowOperation(elt);
 
                 String value = elt.getText();
                 StringUtil.addToMultiMap(fields, name, value);
-                
+
                 if (ContactConstants.A_type.equals(name) && ContactConstants.TYPE_GROUP.equals(value)) {
                     isContactGroup = true;
                 }
@@ -164,7 +164,7 @@ public class CreateContact extends MailDocumentHandler  {
                 attachments.add(attach);
             }
         }
-        
+
         // parse contact group members
         ContactGroup contactGroup = null;
         for (Element elt : cn.listElements(MailConstants.E_CONTACT_GROUP_MEMBER)) {
@@ -173,9 +173,9 @@ public class CreateContact extends MailDocumentHandler  {
                 throw ServiceException.INVALID_REQUEST(MailConstants.E_CONTACT_GROUP_MEMBER +
                         " is only allowed for contact group", null);
             }
-            
+
             disallowOperation(elt);
-            
+
             if (contactGroup == null) {
                 contactGroup = ContactGroup.init(existing, true);
                 if (existing != null) {
@@ -184,9 +184,17 @@ public class CreateContact extends MailDocumentHandler  {
             }
             String memberType = elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE);
             String memberValue = elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE);
-                
+
             Member.Type type = Member.Type.fromSoap(memberType);
-            contactGroup.addMember(type, memberValue);
+            // bug 98526: remove account ID from item ID when it references the local account
+            String contactId = memberValue;
+            if (type == Member.Type.CONTACT_REF) {
+                ItemId iid = new ItemId(memberValue, mbox.getAccountId());
+                if (iid.getAccountId().equals(mbox.getAccountId())) {
+                    contactId = String.valueOf(iid.getId());
+                }
+            }
+            contactGroup.addMember(type, contactId);
         }
         if (contactGroup != null) {
             fields.put(ContactConstants.A_groupMember, contactGroup);
@@ -194,7 +202,7 @@ public class CreateContact extends MailDocumentHandler  {
 
         return new Pair<Map<String,Object>, List<Attachment>>(fields, attachments);
     }
-    
+
     static void disallowOperation(Element elt) throws ServiceException {
         String opStr = elt.getAttribute(MailConstants.A_OPERATION, null);
         if (opStr != null) {
@@ -202,10 +210,10 @@ public class CreateContact extends MailDocumentHandler  {
                     " is not allowed", null);
         }
     }
-    
+
     static void disallowGroupMemberAttr(String attrName) throws ServiceException {
         if (attrName.trim().equals(ContactConstants.A_groupMember)) {
-            throw ServiceException.INVALID_REQUEST(ContactConstants.A_groupMember + 
+            throw ServiceException.INVALID_REQUEST(ContactConstants.A_groupMember +
                     " cannot be specified as an attribute", null);
         }
     }
@@ -213,10 +221,11 @@ public class CreateContact extends MailDocumentHandler  {
     static ParsedContact parseContactMergeMode(
             Element cn, ZimbraSoapContext zsc, OperationContext octxt, Contact existing)
     throws ServiceException {
+        Mailbox mbox = getRequestedMailbox(zsc);
         ParsedContact.FieldDeltaList deltaList = new ParsedContact.FieldDeltaList();
         List<Attachment> attachments = new ArrayList<Attachment>();
         boolean isContactGroup = false;
-        
+
         for (Element elt : cn.listElements(MailConstants.E_ATTRIBUTE)) {
             String name = elt.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
             if (name.trim().equals(""))
@@ -228,7 +237,7 @@ public class CreateContact extends MailDocumentHandler  {
                 ParsedContact.FieldDelta.Op op = FieldDelta.Op.fromString(opStr);
                 String value = elt.getText();
                 deltaList.addAttrDelta(name, value, op);
-                
+
                 if (ContactConstants.A_type.equals(name) && ContactConstants.TYPE_GROUP.equals(value) &&
                         ParsedContact.FieldDelta.Op.REMOVE != op) {
                     isContactGroup = true;
@@ -244,25 +253,35 @@ public class CreateContact extends MailDocumentHandler  {
                 throw ServiceException.INVALID_REQUEST(MailConstants.E_CONTACT_GROUP_MEMBER +
                         " is only allowed for contact group", null);
             }
-            
+
             String opStr = elt.getAttribute(MailConstants.A_OPERATION);
             ModifyGroupMemberOperation groupMemberOp = ModifyGroupMemberOperation.fromString(opStr);
-            
+
             if (ModifyGroupMemberOperation.RESET.equals(groupMemberOp)) {
                 discardExistingMembers = true;
             } else {
                 ParsedContact.FieldDelta.Op op = FieldDelta.Op.fromString(opStr);
-                ContactGroup.Member.Type memberType = 
+                ContactGroup.Member.Type memberType =
                     ContactGroup.Member.Type.fromSoap(elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, null));
                 String memberValue = elt.getAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, null);
-                
+
                 if (memberType == null) {
                     throw ServiceException.INVALID_REQUEST("missing member type", null);
                 }
                 if (StringUtil.isNullOrEmpty(memberValue)) {
                     throw ServiceException.INVALID_REQUEST("missing member value", null);
                 }
-                deltaList.addGroupMemberDelta(memberType, memberValue, op);
+                // bug 98526: remove account ID from item ID when it references the local account
+                String contactId = memberValue;
+                if (memberType == ContactGroup.Member.Type.CONTACT_REF) {
+                    ItemId iid = new ItemId(memberValue, mbox.getAccountId());
+                    if (!iid.getAccountId().equals(mbox.getAccountId())) {
+                        contactId = memberValue;
+                    } else {
+                        contactId = String.valueOf(iid.getId());
+                    }
+                }
+                deltaList.addGroupMemberDelta(memberType, contactId, op);
             }
         }
 
@@ -438,7 +457,7 @@ public class CreateContact extends MailDocumentHandler  {
 
     static boolean needToMigrateDlist(ZimbraSoapContext zsc) throws ServiceException {
         String ua = zsc.getUserAgent();
-        //bug 73326, backward compatible for migrating contact group. 
+        //bug 73326, backward compatible for migrating contact group.
         //This is only for the *old* migration client, the *new* migration client will eventually use new API.
         if ("Zimbra Systems Client".equals(ua)) {
             return true;
@@ -466,12 +485,12 @@ public class CreateContact extends MailDocumentHandler  {
     static void migrateFromDlist(ParsedContact pc) throws ServiceException {
         /*
          * replace groupMember with dlist data
-         * 
-         * Note: if the user had also used new clients to manipulate group members 
-         *       all ref members will be lost, since all dlist members will be 
+         *
+         * Note: if the user had also used new clients to manipulate group members
+         *       all ref members will be lost, since all dlist members will be
          *       migrated as INLINE members.
          *       if dlist is an empty string, the group will become an empty group.
-         *       
+         *
          *       This is the expected behavior.
          */
         Map<String, String> fields = pc.getFields();
