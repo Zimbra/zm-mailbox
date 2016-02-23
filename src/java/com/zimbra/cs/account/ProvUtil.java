@@ -68,7 +68,9 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.AccountLogger;
@@ -105,6 +107,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -123,10 +126,15 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.zclient.ZMailboxUtil;
+import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.admin.message.LockoutMailboxRequest;
+import com.zimbra.soap.admin.message.UnregisterMailboxMoveOutRequest;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
+import com.zimbra.soap.admin.type.MailboxMoveSpec;
+import com.zimbra.soap.type.AccountNameSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
 
@@ -785,8 +793,9 @@ public class ProvUtil implements HttpDebugListener {
                 "updatePresenceSessionId", "upsid", "{UC service name or id} {app-username} {app-password}", Category.MISC, 3, 3, Via.soap), 
         RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]", Category.LOG, 0, 2),
         RESET_LDAP_CLIENT("resetLdapClient", "rlc", "[-a]", Category.MISC, 0, 1),
-        MOVE_ACCOUNT("moveAccount", "mva", "{name@domain} {-t hostname} [--sticky {TRUE|FALSE}]", Category.ACCOUNT, 3, 6);
-
+        MOVE_ACCOUNT("moveAccount", "mva", "{name@domain} {-t hostname} [--sticky {TRUE|FALSE}]", Category.ACCOUNT, 3, 6),
+        UNLOCK_MAILBOX("unlockMailbox", "ulm", "{name@domain|id} [hostname (When unlocking a mailbox after a failed move attempt provide the hostname of the server that was the target for the failed move. Otherwise, do not include hostname parameter)]", Category.MAILBOX, 1, 2, Via.soap);
+        
         private String mName;
         private String mAlias;
         private String mHelp;
@@ -1518,10 +1527,72 @@ public class ProvUtil implements HttpDebugListener {
         case MOVE_ACCOUNT:
             doMoveAccount(args);
             break;
+        case UNLOCK_MAILBOX:
+            doUnlockMailbox(args);
+            break;
         default:
             return false;
         }
         return true;
+    }
+
+    private void doUnlockMailbox(String[] args) throws ServiceException {
+        String accountVal = null;
+        if(args.length > 1) {
+            accountVal = args[1];
+        } else {
+            usage();
+            return;
+        }
+
+        if(accountVal != null) {
+            Account acct = lookupAccount(accountVal); //will throw NO_SUCH_ACCOUNT if not found
+            if(!acct.getAccountStatus().isActive()) {
+                throw ServiceException.FAILURE(String.format("Cannot unlock mailbox for account %s. Account status must be %s. Curent account status is %s. "
+                        + "You must change the value of zimbraAccountStatus to '%s' first",
+                        accountVal, AccountStatus.active, acct.getAccountStatus(), AccountStatus.active), null);
+            }
+            String server = acct.getMailHost();
+            String accName = acct.getName();
+            LockoutMailboxRequest req =  LockoutMailboxRequest.create(AccountNameSelector.fromName(accName));
+            req.setOperation(AdminConstants.A_END);
+            try {
+                String url = URLUtil.getAdminURL(server);
+                ZAuthToken token = ((SoapProvisioning)prov).getAuthToken();
+                SoapHttpTransport transport = new SoapHttpTransport(url);
+                transport.setAuthToken(token);
+                transport.invokeWithoutSession(JaxbUtil.jaxbToElement(req));
+            } catch (ServiceException e) {
+                if (ServiceException.UNKNOWN_DOCUMENT.equals(e.getCode())) {
+                    throw ServiceException.FAILURE("source server version does not support " + AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, e);
+                } else {
+                    throw e;
+                }
+            } catch (IOException e) {
+                throw ServiceException.FAILURE(String.format("Error sending %s request for %s to %s",AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, accountVal, server), e);
+            }
+
+            //unregister moveout if hostname is provided
+            if(args.length > 2) {
+                String targetServer = args[2];
+                try {
+                    UnregisterMailboxMoveOutRequest unregisterReq = UnregisterMailboxMoveOutRequest.create(MailboxMoveSpec.createForNameAndTarget(accName, targetServer));
+                    String url = URLUtil.getAdminURL(server);
+                    ZAuthToken token = ((SoapProvisioning)prov).getAuthToken();
+                    SoapHttpTransport transport = new SoapHttpTransport(url);
+                    transport.setAuthToken(token);
+                    transport.invokeWithoutSession(JaxbUtil.jaxbToElement(unregisterReq));
+                } catch (ServiceException e) {
+                    if (ServiceException.UNKNOWN_DOCUMENT.equals(e.getCode())) {
+                        throw ServiceException.FAILURE("target server version does not support " + BackupConstants.E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST, e);
+                    } else {
+                        throw e;
+                    }
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE(String.format("Error sending %s request for %s to %s",BackupConstants.E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST, accountVal, server), e);
+                }
+            }
+        }
     }
 
     private void doGetDomain(String[] args) throws ServiceException {
