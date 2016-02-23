@@ -37727,13 +37727,13 @@ public abstract class ZAttrServer extends NamedEntry {
      * Deprecated since: 8.7.0. HTTP proxy is now required.. Orig desc:
      * Whether to enable HTTP proxy
      *
-     * @return zimbraReverseProxyHttpEnabled, or false if unset
+     * @return zimbraReverseProxyHttpEnabled, or true if unset
      *
      * @since ZCS 5.0.3
      */
     @ZAttr(id=628)
     public boolean isReverseProxyHttpEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraReverseProxyHttpEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyHttpEnabled, true);
     }
 
     /**
