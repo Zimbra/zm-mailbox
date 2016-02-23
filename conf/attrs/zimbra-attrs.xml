@@ -3353,7 +3353,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="628" name="zimbraReverseProxyHttpEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.3" deprecatedSince="8.7.0">
-  <globalConfigValue>FALSE</globalConfigValue>
+  <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to enable HTTP proxy</desc>
   <deprecateDesc>HTTP proxy is now required.</deprecateDesc>
 </attr>
