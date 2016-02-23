@@ -456,9 +456,8 @@ public class DefangFilter extends DefaultFilter {
     }
 
     private static final Pattern COMMENT = Pattern.compile(DebugConfig.defangComment);
-    // matches functions (like url(), expression(), etc), except rgb()
-    private static final Pattern STYLE_UNWANTED_FUNC =
-            Pattern.compile(DebugConfig.defangStyleUnwantedFunc, Pattern.CASE_INSENSITIVE);
+    protected static final Pattern STYLE_UNWANTED_FUNC =
+            Pattern.compile(DebugConfig.defangStyleUnwantedFunc, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern STYLE_UNWANTED_IMPORT = Pattern.compile(
         DebugConfig.defangStyleUnwantedImport, Pattern.CASE_INSENSITIVE);
 
