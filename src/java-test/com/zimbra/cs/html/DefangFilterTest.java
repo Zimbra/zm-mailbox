@@ -55,12 +55,88 @@ public class DefangFilterTest {
     @Test
     public void testBug37098() throws Exception {
         String fileName = "bug_37098.txt";
-        InputStream htmlStream = getHtmlBody(fileName);
+        try (InputStream htmlStream = getHtmlBody(fileName)) {
+            String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+            // Make sure it didn't delete ftp://
+            Assert.assertTrue(result.contains("ftp://ftp.perftech.com/hidden/aaeon/cpupins.jpg"));
+        }
+    }
 
-        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
-        // Make sure it didn't delete ftp://
-        Assert.assertTrue(result.contains("ftp://ftp.perftech.com/hidden/aaeon/cpupins.jpg"));
+    private void defangHtmlString(String html, String expected) throws IOException {
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        Assert.assertEquals("Defanged HTML result", expected,
+            DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true));
+    }
 
+    public void defangStyleUnwantedFunc(String styleValue, String expected) throws Exception {
+        String after = DefangFilter.STYLE_UNWANTED_FUNC.matcher(styleValue).replaceAll("");
+        Assert.assertEquals("StyleUnwantedFunc result", expected, after);
+    }
+
+    /* Cut down version of original Bug 101227 test data which was significantly larger */
+    private static final String urlWithInlinePNG =
+            "background-image:\n  url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+/AA\n" +
+            "WAP457/97wejL8Ovcj5LuH/FEVEf7d+/etuVtN/OIknPPDGFlCoJlWx/lkf/78/mGP2zUhTzC0AAAAASUVORK5CYII=');\n" +
+            "    background-repeat: no-repeat; background-position: center;";
+
+    private static final String defangedUrlWithInlinePNG =
+            "background-image:\n  ;\n" + "    background-repeat: no-repeat; background-position: center;";
+
+    private static String htmlTemplateForUrlWithInlinePNG =
+            "<td style=\"%s\n\"></td>";
+
+    /* Verified in Firefox that multi-line url with this html displays the background image
+     * (give a valid paper.gif file from http://www.w3schools.com/cssref/paper.gif)
+     * So we definitely should be stripping out multi-line functions
+     */
+    private static String templateHtmlWithNonInlinedBackgroundImageURL =
+            "<html><head><style>\n" +
+            "body  {\n" +
+            "    background-image: %s;\n" +
+            "    background-color: #cccccc;\n" +
+            "}\n" +
+            "</style>\n" +
+            "</head>\n" +
+            "<body><h1>Hello World!</h1></body>\n" +
+            "</html>\n";
+    private static String nonInlinedBackgroundImageURL =
+            "url(\n" +
+            "            \"paper.gif\"\n" +
+            "            )";
+
+    /* Bug 101227 CPU load & latency when open mail with data:image/png:base64 inline image
+     *  Need multi-line url() detection.
+     */
+    @Test
+    public void testStyleValueContainingMultiLineUrl() throws Exception {
+        defangStyleUnwantedFunc(urlWithInlinePNG, defangedUrlWithInlinePNG);
+    }
+
+    @Test
+    public void testHtmlWithStyleValueContainingMultiLineUrl() throws Exception {
+        defangHtmlString(String.format(htmlTemplateForUrlWithInlinePNG, urlWithInlinePNG),
+                String.format(htmlTemplateForUrlWithInlinePNG, defangedUrlWithInlinePNG));
+        defangHtmlString(
+                String.format(templateHtmlWithNonInlinedBackgroundImageURL, nonInlinedBackgroundImageURL),
+                String.format(templateHtmlWithNonInlinedBackgroundImageURL, ""));
+    }
+
+    @Test
+    public void testDefangStyleUnwantedFunc() throws Exception {
+        String before = "background: #e7e7e7; background-image:url('http://example.com/image/k-hdr.jpg');height=";
+        defangStyleUnwantedFunc(before, "background: #e7e7e7; background-image:;height=");
+        before = "@media (max-width: 480px) {.body{font-size: 0.938em;} }";
+        defangStyleUnwantedFunc(before, before);
+        before = "@media all and (max-width: 699px) and (min-width: 520px)";
+        defangStyleUnwantedFunc(before, before);
+        before = "@media (orientation:portrait)";
+        defangStyleUnwantedFunc(before, before);
+        before = "@media (min-width: 700px), handheld and (orientation: landscape) { ... }";
+        defangStyleUnwantedFunc(before, before);
+        before = "@media not screen and (color), print and (color)";
+        defangStyleUnwantedFunc(before, before);
+        before = "@media (max-width 480px) {.body{font-size: 0.938em;} }";
+        defangStyleUnwantedFunc(before, before);
     }
 
     /**
