@@ -9254,8 +9254,7 @@ public class ZAttrProvisioning {
 
     /**
      * Maximum total size of a mail message that can be synced to device
-     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
-     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     * without truncation. 0 means no limit
      *
      * @since ZCS 8.0.8,8.5.0
      */
