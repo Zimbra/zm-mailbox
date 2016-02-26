@@ -20,6 +20,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -170,7 +171,7 @@ public class LdapServerPool {
                 }
             }
         } else {
-            Set<Pair<String, Integer>> hostsAndPorts = new HashSet<>();
+            Set<Pair<String, Integer>> hostsAndPorts = new LinkedHashSet<>();
             for (LDAPURL url : urls) {
                 InetAddress[] addrs = InetAddress.getAllByName(url.getHost());
                 if (addrs.length == 1) {

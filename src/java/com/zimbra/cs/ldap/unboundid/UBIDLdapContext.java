@@ -221,7 +221,15 @@ public class UBIDLdapContext extends ZLdapContext {
         return conn;
     }
 
+    private String getConnectedHostname() {
+        if (conn != null) {
+            return conn.getConnectedAddress() + ":" + conn.getConnectedPort();
+        }
+        return "";
+    }
+
     private LdapException mapToLdapException(String message, LDAPException e) {
+        message = message + ": ldap host="+ getConnectedHostname();
         if (ResultCode.TIMEOUT == e.getResultCode()) {
             this.closeContext(true); //force connection to be terminated
         }
