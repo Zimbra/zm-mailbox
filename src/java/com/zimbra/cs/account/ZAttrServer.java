@@ -19292,8 +19292,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Maximum total size of a mail message that can be synced to device
-     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
-     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     * without truncation. 0 means no limit
      *
      * @return zimbraMobileMaxMessageSize, or 10240000 if unset
      *
@@ -19306,8 +19305,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Maximum total size of a mail message that can be synced to device
-     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
-     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     * without truncation. 0 means no limit
      *
      * @param zimbraMobileMaxMessageSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19323,8 +19321,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Maximum total size of a mail message that can be synced to device
-     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
-     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     * without truncation. 0 means no limit
      *
      * @param zimbraMobileMaxMessageSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19341,8 +19338,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Maximum total size of a mail message that can be synced to device
-     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
-     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     * without truncation. 0 means no limit
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -19357,8 +19353,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Maximum total size of a mail message that can be synced to device
-     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
-     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     * without truncation. 0 means no limit
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
