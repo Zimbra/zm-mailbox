@@ -8050,7 +8050,7 @@ TODO: delete them permanently from here
 
 <attr id="1596" name="zimbraMobileMaxMessageSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.0.8, 8.5.0" requiresRestart="mailbox">
   <globalConfigValue>10240000</globalConfigValue>
-  <desc>Maximum total size of a mail message that can be synced to device without truncation. It cannot be larger than zimbraMTAMaxMessageSize. 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller</desc>
+  <desc>Maximum total size of a mail message that can be synced to device without truncation. 0 means no limit</desc>
 </attr>
 
 <attr id="1597" name="zimbraDNSTCPUpstream" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
