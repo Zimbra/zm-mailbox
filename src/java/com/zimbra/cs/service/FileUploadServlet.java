@@ -490,6 +490,14 @@ public class FileUploadServlet extends ZimbraServlet {
                     return;
                 }
                 csrfCheckComplete = true;
+            } else {
+                mLog.info("The auth token is CSRF enabled : %s, but no CSRF token is provided. Failing request.", at.isCsrfTokenEnabled());
+                drainRequestStream(req);
+                mLog.debug("CSRF token validation failed for account: %s"
+                    + ", Auth token is CSRF enabled:  %s" + "CSRF token is: %s", at,
+                    at.isCsrfTokenEnabled(), csrfToken);
+                sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
+                return;
             }
         } else {
             csrfCheckComplete = true;
