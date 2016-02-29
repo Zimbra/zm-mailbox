@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -75,6 +75,27 @@ public class SoapTest extends ProvTest {
         transport.setHttpDebugListener(soapDebugListener);
 
         AuthRequest req = new AuthRequest(acct, password);
+        AuthResponse resp = invokeJaxb(transport, req);
+        transport.setAuthToken(resp.getAuthToken());
+        return transport;
+    }
+
+    /**
+     * @param name
+     * @param csrfEnabled
+     * @return
+     * @throws IOException
+     * @throws ServiceException
+     */
+   public static SoapTransport authUser(String acctName, boolean csrfEnabled) throws ServiceException, IOException {
+        com.zimbra.soap.type.AccountSelector acct =
+            new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acctName);
+
+        SoapHttpTransport transport = new SoapHttpTransport("http://localhost:7070/service/soap/");
+        transport.setHttpDebugListener(soapDebugListener);
+
+        AuthRequest req = new AuthRequest(acct, PASSWORD);
+        req.setCsrfSupported(csrfEnabled);
         AuthResponse resp = invokeJaxb(transport, req);
         transport.setAuthToken(resp.getAuthToken());
         return transport;

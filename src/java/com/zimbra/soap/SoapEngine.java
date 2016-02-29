@@ -314,15 +314,29 @@ public class SoapEngine {
         //Check if this handler requires authentication.
         //Do not perform CSRF checks for handlers that do not require authentication
         DocumentHandler handler = dispatcher.getHandler(doc);
-        boolean doCsrfCheck = handler != null ? handler.needsAuth(context)
-                && servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null : false;
-        if (doCsrfCheck) {
-            doCsrfCheck = (Boolean) servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
+        boolean doCsrfCheck = false;
+        if (servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null) {
+            doCsrfCheck =  (Boolean) servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
+        }
+
+        if (handler == null) {
+            //no CSRF check if handler is null and is not a Batch request. Only Batch Request will not have a
+            // handler, all other request should be mapped to a Handler
+            if (!doc.getName().equals("BatchRequest")) {
+                doCsrfCheck =  false;
+            } else {
+                LOG.info("Only BatchRequest does not have a handler mapped to it. Request: %s, does not have a "
+                    + "handler, log for future handling.", path);
+            }
+        } else {
             if (doc.getName().equals("AuthRequest")) {
                 // this is a Auth request, no CSRF validation happens
                 doCsrfCheck = false;
+            } else {
+                doCsrfCheck = doCsrfCheck && handler.needsAuth(context);
             }
         }
+
         if (doCsrfCheck) {
             try {
                 HttpServletRequest httpReq = (HttpServletRequest) servReq;
