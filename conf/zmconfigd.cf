@@ -1,3 +1,7 @@
+SECTION dhparam
+	VAR zimbraSSLDHParam
+	MAPFILE zimbraSSLDHParam
+
 SECTION amavis
 	REWRITE conf/amavisd.conf.in conf/amavisd.conf
 	POSTCONF content_filter
@@ -61,7 +65,7 @@ SECTION antispam DEPENDS amavis
 SECTION archiving DEPENDS amavis
 	RESTART archiving mta
 
-SECTION mta DEPENDS amavis
+SECTION mta DEPENDS amavis dhparam
 	LOCAL postjournal_enabled
 	REWRITE common/conf/master.cf.in common/conf/master.cf
 	REWRITE common/conf/tag_as_foreign.re.in common/conf/tag_as_foreign.re
@@ -172,7 +176,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_tls_ccert_verifydepth		VAR zimbraMtaSmtpdTlsCcertVerifydepth
 	POSTCONF smtpd_tls_cert_file			/opt/zimbra/conf/smtpd.crt
 	POSTCONF smtpd_tls_ciphers			VAR zimbraMtaSmtpdTlsCiphers
-	POSTCONF smtpd_tls_dh1024_param_file		MAPFILE zimbraSSLDHParam
+	POSTCONF smtpd_tls_dh1024_param_file		MAPLOCAL zimbraSSLDHParam
 	POSTCONF smtpd_tls_exclude_ciphers		VAR zimbraMtaSmtpdTlsExcludeCiphers
 	POSTCONF smtpd_tls_key_file			/opt/zimbra/conf/smtpd.key
 	POSTCONF smtpd_tls_loglevel			VAR zimbraMtaSmtpdTlsLoglevel
@@ -337,8 +341,8 @@ SECTION zimbraAdmin
 SECTION zimlet
 	REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml
 	RESTART mailboxd
-	
-SECTION proxy
+
+SECTION proxy DEPENDS dhparam
 	LOCAL ldap_url
 	VAR getAllMemcachedServers
 	VAR getAllReverseProxyBackends
@@ -420,10 +424,12 @@ SECTION proxy
 	VAR zimbraReverseProxyPageSpeedRespectVary
 	VAR zimbraReverseProxyPageSpeedDisallowedURLs
 	VAR zimbraReverseProxyResponseHeaders
+	VAR zimbraSSLDHParam
 	PROXYGEN
 	RESTART proxy
 
-SECTION ldap
+SECTION ldap DEPENDS dhparam
+	VAR zimbraSSLDHParam
 	LOCAL ldap_common_loglevel
 	LOCAL ldap_common_require_tls
 	LOCAL ldap_common_threads
@@ -442,6 +448,7 @@ SECTION ldap
 	LDAP ldap_common_require_tls LOCAL ldap_common_require_tls
 	LDAP ldap_common_threads LOCAL ldap_common_threads
 	LDAP ldap_common_tlsciphersuite LOCAL ldap_common_tlsciphersuite
+	LDAP ldap_common_tlsdhparamfile MAPLOCAL zimbraSSLDHParam
 	LDAP ldap_common_tlsprotocolmin LOCAL ldap_common_tlsprotocolmin
 	LDAP ldap_common_toolthreads LOCAL ldap_common_toolthreads
 	LDAP ldap_common_writetimeout LOCAL ldap_common_writetimeout
