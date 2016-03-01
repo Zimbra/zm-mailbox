@@ -38,7 +38,6 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.Element;
 
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +48,8 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log.Level;
@@ -805,7 +806,7 @@ public class DavServlet extends ZimbraServlet {
             case DavProtocol.STATUS_MULTI_STATUS:
                 // rewrite the <href> element in the response to point to local mountpoint.
                 try {
-                    Document response = com.zimbra.common.soap.Element.getSAXReader().read(in);
+                    Document response = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(in);
                     Element top = response.getRootElement();
                     for (Object responseObj : top.elements(DavElements.E_RESPONSE)) {
                         if (!(responseObj instanceof Element)) {
@@ -818,11 +819,11 @@ public class DavServlet extends ZimbraServlet {
                         }
                     }
                     if (ZimbraLog.dav.isDebugEnabled()) {
-                        ZimbraLog.dav.debug("PROXY RESPONSE:\n"+new String(DomUtil.getBytes(response), "UTF-8"));
+                        ZimbraLog.dav.debug("PROXY RESPONSE:\n%s", new String(DomUtil.getBytes(response), "UTF-8"));
                     }
                     DomUtil.writeDocumentToStream(response, ctxt.getResponse().getOutputStream());
                     ctxt.responseSent();
-                } catch (DocumentException e) {
+                } catch (XmlParseException e) {
                     ZimbraLog.dav.warn("proxy request failed", e);
                     return false;
                 }

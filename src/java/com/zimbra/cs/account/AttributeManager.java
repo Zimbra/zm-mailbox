@@ -18,6 +18,8 @@
 package com.zimbra.cs.account;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,13 +31,13 @@ import java.util.Set;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
@@ -220,25 +222,25 @@ public class AttributeManager {
         File[] files = fdir.listFiles();
         for (File file : files) {
             if (!file.getPath().endsWith(".xml")) {
-                ZimbraLog.misc.warn("while loading attrs, ignoring not .xml file: " + file);
+                ZimbraLog.misc.warn("while loading attrs, ignoring not .xml file: %s", file);
                 continue;
             }
             if (!file.isFile()) {
-                ZimbraLog.misc.warn("while loading attrs, ignored non-file: " + file);
+                ZimbraLog.misc.warn("while loading attrs, ignored non-file: %s", file);
             }
-            try {
-                SAXReader reader = new SAXReader();
-                Document doc = reader.read(file);
+            try (FileInputStream fis = new FileInputStream(file)) {
+                Document doc = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(fis);
                 Element root = doc.getRootElement();
-                if (root.getName().equals(E_ATTRS))
-                    loadAttrs(file);
-                else if (root.getName().equals(E_OBJECTCLASSES))
-                    loadObjectClasses(file);
-                else
-                    ZimbraLog.misc.warn("while loading attrs, ignored unknown file: " + file);
+                if (root.getName().equals(E_ATTRS)) {
+                    loadAttrs(file, doc);
+                } else if (root.getName().equals(E_OBJECTCLASSES)) {
+                    loadObjectClasses(file, doc);
+                } else {
+                    ZimbraLog.misc.warn("while loading attrs, ignored unknown file: %s", file);
+                }
 
-            } catch (DocumentException de) {
-                throw ServiceException.FAILURE("error loading attrs file: " + file, de);
+            } catch (IOException | XmlParseException ex) {
+                throw ServiceException.FAILURE("error loading attrs file: " + file, ex);
             }
         }
     }
@@ -285,9 +287,7 @@ public class AttributeManager {
         }
     }
 
-    private void loadAttrs(File file) throws DocumentException {
-        SAXReader reader = new SAXReader();
-        Document doc = reader.read(file);
+    private void loadAttrs(File file, Document doc) {
         Element root = doc.getRootElement();
 
         if (!root.getName().equals(E_ATTRS)) {
@@ -673,9 +673,7 @@ public class AttributeManager {
 
     }
 
-    private void loadObjectClasses(File file) throws DocumentException {
-        SAXReader reader = new SAXReader();
-        Document doc = reader.read(file);
+    private void loadObjectClasses(File file, Document doc) {
         Element root = doc.getRootElement();
 
         if (!root.getName().equals(E_OBJECTCLASSES)) {

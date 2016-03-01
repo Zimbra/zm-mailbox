@@ -19,6 +19,7 @@ package com.zimbra.cs.dav.resource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,7 +29,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Attribute;
-import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.dom4j.io.OutputFormat;
@@ -42,6 +42,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -374,7 +375,7 @@ public abstract class MailItemResource extends DavResource {
         return new ItemId(mOwnerId, mId);
     }
 
-    private Map<QName,Element> getDeadProps(DavContext ctxt, MailItem item) throws DocumentException, IOException, ServiceException {
+    private Map<QName,Element> getDeadProps(DavContext ctxt, MailItem item) throws IOException, ServiceException {
         HashMap<QName,Element> props = new HashMap<QName,Element>();
         Mailbox mbox = item.getMailbox();
         Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
@@ -385,17 +386,18 @@ public abstract class MailItemResource extends DavResource {
             return props;
         if (configVal.length() == 0)
             return props;
-        ByteArrayInputStream in = new ByteArrayInputStream(configVal.getBytes("UTF-8"));
-        org.dom4j.Document doc = com.zimbra.common.soap.Element.getSAXReader().read(in);
+        ByteArrayInputStream in = new ByteArrayInputStream(configVal.getBytes(StandardCharsets.UTF_8));
+        org.dom4j.Document doc = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(in);
         Element e = doc.getRootElement();
         if (e == null)
             return props;
-        for (Object obj : e.elements())
+        for (Object obj : e.elements()) {
             if (obj instanceof Element) {
                 Element elem = (Element) obj;
                 elem.detach();
                 props.put(elem.getQName(), elem);
             }
+        }
         return props;
     }
 

@@ -18,6 +18,8 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,11 +41,9 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
-import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
 import com.google.common.collect.ImmutableList;
@@ -52,6 +52,8 @@ import com.google.common.collect.TreeMultimap;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
@@ -95,10 +97,10 @@ public class RightManager {
     private static RightManager mInstance;
 
     // keep the map sorted so "zmmailbox lp" can display in alphabetical order
-    private Map<String, UserRight> sUserRights = new TreeMap<String, UserRight>();
-    private Map<String, AdminRight> sAdminRights = new TreeMap<String, AdminRight>();
-    private Map<String, Help> sHelp = new TreeMap<String, Help>();
-    private Map<String, UI> sUI = new TreeMap<String, UI>();
+    private final Map<String, UserRight> sUserRights = new TreeMap<String, UserRight>();
+    private final Map<String, AdminRight> sAdminRights = new TreeMap<String, AdminRight>();
+    private final Map<String, Help> sHelp = new TreeMap<String, Help>();
+    private final Map<String, UI> sUI = new TreeMap<String, UI>();
 
     static private class CoreRightDefFiles {
         private static final HashSet<String> sCoreRightDefFiles = new HashSet<String>();
@@ -167,7 +169,7 @@ public class RightManager {
             throw ServiceException.FAILURE("rights directory is not a directory: " + dir, null);
         }
 
-        ZimbraLog.acl.debug("Loading rights from " + fdir.getAbsolutePath());
+        ZimbraLog.acl.debug("Loading rights from %s", fdir.getAbsolutePath());
 
         File[] files = fdir.listFiles();
         List<File> yetToProcess = new ArrayList<File>(Arrays.asList(files));
@@ -177,7 +179,7 @@ public class RightManager {
             File file = yetToProcess.get(0);
 
             if (!file.getPath().endsWith(".xml") || !file.isFile()) {
-                ZimbraLog.acl.warn("while loading rights, ignoring none .xml file or sub folder: " + file);
+                ZimbraLog.acl.warn("while loading rights, ignoring none .xml file or sub folder: %s", file);
                 yetToProcess.remove(file);
                 continue;
             }
@@ -192,8 +194,8 @@ public class RightManager {
                     yetToProcess.remove(file);
                     yetToProcess.add(file);
                 }
-            } catch (DocumentException de) {
-                throw ServiceException.PARSE_ERROR("error loading rights file: " + file, de);
+            } catch (XmlParseException | FileNotFoundException e) {
+                throw ServiceException.PARSE_ERROR("error loading rights file: " + file, e);
             }
         }
     }
@@ -431,9 +433,16 @@ public class RightManager {
     }
 
     private boolean loadSystemRights(File file, List<File> processedFiles, File[] allFiles)
-    throws DocumentException, ServiceException {
-        SAXReader reader = new SAXReader();
-        Document doc = reader.read(file);
+    throws ServiceException, FileNotFoundException {
+        Document doc;
+        try (FileInputStream fis = new FileInputStream(file)) {
+            doc = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(fis);
+        } catch (FileNotFoundException e) {
+            throw e;
+        } catch (IOException e) {
+            ZimbraLog.acl.debug("Problem parsing file %s", file, e);
+            throw ServiceException.PARSE_ERROR("Problem parsing file for system rights", null);
+        }
         Element root = doc.getRootElement();
         if (!root.getName().equals(E_RIGHTS)) {
             throw ServiceException.PARSE_ERROR("root tag is not " + E_RIGHTS, null);
@@ -484,7 +493,7 @@ public class RightManager {
             } else if (elem.getName().equals(E_RIGHT)) {
                 if (!seenRight) {
                     seenRight = true;
-                    ZimbraLog.acl.debug("Loading " + file.getAbsolutePath());
+                    ZimbraLog.acl.debug("Loading %s", file.getAbsolutePath());
                 }
                 loadRight(elem, file, allowPresetRight);
             } else if (elem.getName().equals(E_HELP)) {
@@ -922,6 +931,8 @@ public class RightManager {
                 }
             }
         }
+
+
 
         private static void genDomainAdminSetAttrsRights(String outFile, String templateFile)
         throws Exception {
