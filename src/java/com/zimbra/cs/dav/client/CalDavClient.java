@@ -30,6 +30,7 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext.Depth;
@@ -74,26 +75,31 @@ public class CalDavClient extends WebDavClient {
         try {
             m = executeFollowRedirect(propfind);
             int status = m.getStatusCode();
-            if (status >= 400)
+            if (status >= 400) {
                 return null;
-            Document doc = com.zimbra.common.soap.Element.getSAXReader().read(m.getResponseBodyAsStream());
+            }
+            Document doc = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(m.getResponseBodyAsStream());
             Element top = doc.getRootElement();
             for (Object obj : top.elements(DavElements.E_RESPONSE)) {
                 if (obj instanceof Element) {
                     DavObject davObject = new DavObject((Element)obj);
                     Element e = davObject.getProperty(DavElements.E_CURRENT_USER_PRINCIPAL);
-                    if (e != null)
+                    if (e != null) {
                         return e.getStringValue().trim();
+                    }
                 }
             }
         } catch (Exception e) {
+            ZimbraLog.dav.debug("Exception thrown getting Current User Principal", e);
             return null;
         } finally {
-            if (m != null)
+            if (m != null) {
                 m.releaseConnection();
+            }
         }
         return null;
     }
+
     public void login(String defaultPrincipalUrl) throws IOException, DavException {
         String principalUrl = getCurrentUserPrincipal();
         if (principalUrl == null) {

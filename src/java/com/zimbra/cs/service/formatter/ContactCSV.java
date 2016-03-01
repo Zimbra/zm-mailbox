@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
@@ -45,6 +44,8 @@ import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Contact;
@@ -68,10 +69,10 @@ public final class ContactCSV {
     private int lineNumber;
     private int currContactStartLineNum;
     private ArrayList<String> fieldNames; // Names of fields from first line in CSV file
-    private boolean detectFieldSeparator;
+    private final boolean detectFieldSeparator;
     private boolean knowFieldSeparator;
     private char fieldSeparator;
-    
+
     private Mailbox mbox = null;
     private OperationContext octxt = null;
 
@@ -102,11 +103,11 @@ public final class ContactCSV {
     private ContactCSV() {
         this(DEFAULT_FIELD_SEPARATOR, true);
     }
-    
+
     public ContactCSV(Mailbox mbox, OperationContext octxt) {
-    	this(DEFAULT_FIELD_SEPARATOR, true);
-    	this.mbox = mbox;
-    	this.octxt = octxt;
+        this(DEFAULT_FIELD_SEPARATOR, true);
+        this.mbox = mbox;
+        this.octxt = octxt;
     }
 
     private ContactCSV(char defaultFieldSeparator, boolean detectFieldSeparator) {
@@ -285,7 +286,7 @@ public final class ContactCSV {
             }
             if (field.length() > ContactConstants.MAX_FIELD_NAME_LENGTH) {
                 // doesn't look a CSV file
-                throw new ParseException(String.format("invalid format - header field %d of %d is too long (length=%d)", 
+                throw new ParseException(String.format("invalid format - header field %d of %d is too long (length=%d)",
                         i + 1, fieldNames.size(), field.length()));
             }
         }
@@ -765,8 +766,8 @@ public final class ContactCSV {
      * a new entry must use a unique case-insensitive key
      */
     private static class ContactMap {
-        private Map<String, String> contacts;
-        private Set<String> seenFields;
+        private final Map<String, String> contacts;
+        private final Set<String> seenFields;
 
         public ContactMap() {
             contacts = new HashMap<String, String>();
@@ -948,14 +949,16 @@ public final class ContactCSV {
         }
     }
 
-    private static void readMappingFile(String mappingFile) throws IOException, DocumentException {
-        readMapping(new FileInputStream(mappingFile));
+    private static void readMappingFile(String mappingFile) throws IOException, XmlParseException {
+        try (FileInputStream fis = new FileInputStream(mappingFile)) {
+            readMapping(fis);
+        }
     }
 
-    private static void readMapping(InputStream is) throws DocumentException {
+    private static void readMapping(InputStream is) throws XmlParseException {
         delimiterInfo = new HashMap<String,Character>();
         dateOrderInfo = new HashMap<String,String>();
-        Element root = com.zimbra.common.soap.Element.getSAXReader().read(is).getRootElement();
+        Element root = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(is).getRootElement();
         for (Iterator elements = root.elementIterator(); elements.hasNext(); ) {
             Element elem = (Element) elements.next();
             if (elem.getQName().equals(FIELDS)) {
@@ -1196,7 +1199,7 @@ public final class ContactCSV {
         return formats.toArray(new String[0]);
     }
 
-    public static void main(String args[]) throws IOException, DocumentException {
+    public static void main(String args[]) throws IOException, XmlParseException {
         ZimbraLog.toolSetupLog4jConsole("INFO", true, false);
         //String mappingFile = LC.zimbra_csv_mapping_file.value();
         if (args.length > 0) {

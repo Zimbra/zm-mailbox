@@ -37,7 +37,6 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
@@ -45,6 +44,8 @@ import com.google.common.base.Strings;
 import com.google.common.net.HttpHeaders;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
@@ -99,14 +100,14 @@ public class WebDavClient {
                 throw new DavException("DAV server returned an error: "+status, status);
             }
 
-            Document doc = com.zimbra.common.soap.Element.getSAXReader().read(m.getResponseBodyAsStream());
+            Document doc = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(m.getResponseBodyAsStream());
             Element top = doc.getRootElement();
             for (Object obj : top.elements(DavElements.E_RESPONSE)) {
                 if (obj instanceof Element) {
                     ret.add(new DavObject((Element)obj));
                 }
             }
-        } catch (DocumentException e) {
+        } catch (XmlParseException e) {
             throw new DavException("can't parse response", e);
         } finally {
             if (m != null) {

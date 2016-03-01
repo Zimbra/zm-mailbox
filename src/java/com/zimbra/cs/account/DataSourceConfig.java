@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,40 +16,35 @@
  */
 package com.zimbra.cs.account;
 
-import org.dom4j.io.SAXReader;
-import org.dom4j.Element;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Attribute;
-
-import com.zimbra.cs.mailclient.imap.Atom;
-import com.zimbra.cs.mailclient.imap.Flags;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.dom4j.Attribute;
+import org.dom4j.Document;
+import org.dom4j.Element;
+
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.soap.XmlParseException;
+import com.zimbra.cs.mailclient.imap.Atom;
+import com.zimbra.cs.mailclient.imap.Flags;
 
 public final class DataSourceConfig {
     private boolean syncAllFolders = true;
 
-    private List<Service> services;
+    private final List<Service> services;
 
     private static final String SYNC_ALL_FOLDERS = "syncAllFolders";
     private static final String SERVICE = "service";
-    
+
     public static DataSourceConfig read(File file) throws IOException {
-        SAXReader reader = new SAXReader();
-        reader.setIgnoreComments(true);
-        FileInputStream is = new FileInputStream(file);
-        try {
-            Document doc = reader.read(is);
+        try (FileInputStream is = new FileInputStream(file)) {
+            Document doc = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(is);
             return new DataSourceConfig().read(doc.getRootElement());
-        } catch (DocumentException e) {
+        } catch (XmlParseException e) {
             throw invalidConfig(e.getMessage());
-        } finally {
-            is.close();
         }
     }
 
@@ -101,7 +96,7 @@ public final class DataSourceConfig {
         private boolean saveToSent = true;
         private String calDavTargetUrl;
         private String calDavPrincipalPath;
-        private List<Folder> folders;
+        private final List<Folder> folders;
 
         private static final String NAME = "name";
         private static final String SAVE_TO_SENT = "saveToSent";

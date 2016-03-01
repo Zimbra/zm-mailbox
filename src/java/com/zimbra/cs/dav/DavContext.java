@@ -32,7 +32,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -42,6 +41,8 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMountpoint;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -461,10 +462,10 @@ public class DavContext {
             return mRequestMsg;
         try {
             if (hasRequestMessage()) {
-                mRequestMsg = com.zimbra.common.soap.Element.getSAXReader().read(getUpload().getInputStream());
+                mRequestMsg = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(getUpload().getInputStream());
                 return mRequestMsg;
             }
-        } catch (DocumentException e) {
+        } catch (XmlParseException e) {
             throw new DavException("unable to parse request message", HttpServletResponse.SC_BAD_REQUEST, e);
         } catch (IOException e) {
             throw new DavException("can't read uploaded file", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
