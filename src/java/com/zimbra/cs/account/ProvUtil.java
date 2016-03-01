@@ -1590,6 +1590,16 @@ public class ProvUtil implements HttpDebugListener {
         return true;
     }
 
+    private void sendMailboxLockoutRequest(String acctName, String server, String operation) throws ServiceException, IOException {
+        LockoutMailboxRequest req =  LockoutMailboxRequest.create(AccountNameSelector.fromName(acctName));
+        req.setOperation(operation);
+        String url = URLUtil.getAdminURL(server);
+        ZAuthToken token = ((SoapProvisioning)prov).getAuthToken();
+        SoapHttpTransport transport = new SoapHttpTransport(url);
+        transport.setAuthToken(token);
+        transport.invokeWithoutSession(JaxbUtil.jaxbToElement(req));
+    }
+
     private void doUnlockMailbox(String[] args) throws ServiceException {
         String accountVal = null;
         if(args.length > 1) {
@@ -1606,28 +1616,33 @@ public class ProvUtil implements HttpDebugListener {
                         + "You must change the value of zimbraAccountStatus to '%s' first",
                         accountVal, AccountStatus.active, acct.getAccountStatus(), AccountStatus.active), null);
             }
-            String server = acct.getMailHost();
             String accName = acct.getName();
-            LockoutMailboxRequest req =  LockoutMailboxRequest.create(AccountNameSelector.fromName(accName));
-            req.setOperation(AdminConstants.A_END);
+            String server = acct.getMailHost();
             try {
-                String url = URLUtil.getAdminURL(server);
-                ZAuthToken token = ((SoapProvisioning)prov).getAuthToken();
-                SoapHttpTransport transport = new SoapHttpTransport(url);
-                transport.setAuthToken(token);
-                transport.invokeWithoutSession(JaxbUtil.jaxbToElement(req));
+                sendMailboxLockoutRequest(accName, server, AdminConstants.A_END);
             } catch (ServiceException e) {
                 if (ServiceException.UNKNOWN_DOCUMENT.equals(e.getCode())) {
                     throw ServiceException.FAILURE("source server version does not support " + AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, e);
+                } else if (ServiceException.NOT_FOUND.equals(e.getCode())) { //if mailbox is not locked, move on
+                    printOutput("Warning: " + e.getMessage());
                 } else {
                     throw e;
                 }
             } catch (IOException e) {
-                throw ServiceException.FAILURE(String.format("Error sending %s request for %s to %s",AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, accountVal, server), e);
+                throw ServiceException.FAILURE(String.format("Error sending %s (operation = %s) request for %s to %s",AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, AdminConstants.A_END, accountVal, server), e);
             }
 
             //unregister moveout if hostname is provided
             if(args.length > 2) {
+                //set account status to maintenance and lock the mailbox to avoid race conditions
+                acct.setAccountStatus(AccountStatus.maintenance);
+                try {
+                    sendMailboxLockoutRequest(accName, server, AdminConstants.A_START);
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE(String.format("Error sending %s (opertion = %s) request for %s to %s.\n Warning: Account is left in maintenance state!",AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, AdminConstants.A_START, accountVal, server), e);
+                }
+
+                //unregister moveout via SOAP
                 String targetServer = args[2];
                 try {
                     UnregisterMailboxMoveOutRequest unregisterReq = UnregisterMailboxMoveOutRequest.create(MailboxMoveSpec.createForNameAndTarget(accName, targetServer));
@@ -1638,12 +1653,28 @@ public class ProvUtil implements HttpDebugListener {
                     transport.invokeWithoutSession(JaxbUtil.jaxbToElement(unregisterReq));
                 } catch (ServiceException e) {
                     if (ServiceException.UNKNOWN_DOCUMENT.equals(e.getCode())) {
-                        throw ServiceException.FAILURE("target server version does not support " + BackupConstants.E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST, e);
+                        throw ServiceException.FAILURE(String.format("target server version does not support %s.", BackupConstants.E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST), e);
                     } else {
-                        throw e;
+                        throw ServiceException.FAILURE("Failed to unregister mailbox moveout", e);
                     }
                 } catch (IOException e) {
-                    throw ServiceException.FAILURE(String.format("Error sending %s request for %s to %s",BackupConstants.E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST, accountVal, server), e);
+                    throw ServiceException.FAILURE(String.format("Error sending %s request for %s to %s.",BackupConstants.E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST, accountVal, server), e);
+                } finally {
+                    //unlock mailbox object and end account maintenance even if failed to unregister moveout
+                    try {
+                        sendMailboxLockoutRequest(accName, server, AdminConstants.A_END);
+                    } catch (ServiceException e) {
+                        //print error messages, but don't throw any more exceptions, because we have to set account status back to 'active'
+                        if (ServiceException.UNKNOWN_DOCUMENT.equals(e.getCode())) {
+                            printError("source server version does not support " + AdminConstants.E_LOCKOUT_MAILBOX_REQUEST);
+                        } else {
+                            printError(String.format("Error: failed to unregister mailbox moveout.\n Exception: %s.", e.getMessage()));
+                        }
+                    } catch (IOException e) {
+                        printError(String.format("Error sending %s (operation = %s) request for %s to %s after unregistering moveout. Exception: %s", AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, AdminConstants.A_END, accountVal, server, e.getMessage()));
+                    }
+                    //end account maintenance
+                    acct.setAccountStatus(AccountStatus.active);
                 }
             }
         }

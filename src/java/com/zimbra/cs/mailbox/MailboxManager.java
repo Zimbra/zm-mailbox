@@ -965,7 +965,7 @@ public class MailboxManager {
         ZimbraLog.mailbox.debug("undoing lockout for account %s", accountId);
         MailboxMaintenance maintenance = maintenanceLocks.remove(accountId);
         if (maintenance == null) {
-            throw ServiceException.FAILURE("No lock known for account " + accountId, null);
+            throw ServiceException.NOT_FOUND("No lock known for account " + accountId, null);
         }
         if (endMaintenance) {
             maintenance.registerAllowedThread(Thread.currentThread());
