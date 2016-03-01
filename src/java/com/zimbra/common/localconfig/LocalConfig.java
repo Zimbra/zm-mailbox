@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,13 +17,13 @@
 
 package com.zimbra.common.localconfig;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.File;
 import java.io.PrintStream;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,8 +34,9 @@ import java.util.Set;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.L10nUtil;
 
@@ -61,8 +62,8 @@ public class LocalConfig {
         return mConfigFile;
     }
 
-    private Map<String, String> mConfiguredKeys = new HashMap<String, String>();
-    private Map<String, String> mExpanded = new HashMap<String, String>();
+    private final Map<String, String> mConfiguredKeys = new HashMap<String, String>();
+    private final Map<String, String> mExpanded = new HashMap<String, String>();
 
     public void set(String key, String value) {
         mConfiguredKeys.put(key, value);
@@ -169,18 +170,22 @@ public class LocalConfig {
 
         File cf = new File(mConfigFile);
         if (cf.exists() && cf.canRead()) {
-            SAXReader reader = new SAXReader();
-            Document document = reader.read(cf);
-            Element root = document.getRootElement();
+            try (FileInputStream fis = new FileInputStream(cf)) {
+                Document document = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(fis);
+                Element root = document.getRootElement();
 
-            if (!root.getName().equals(E_LOCALCONFIG))
-                throw new DocumentException("config file " + mConfigFile + " root tag is not " + E_LOCALCONFIG);
+                if (!root.getName().equals(E_LOCALCONFIG))
+                    throw new DocumentException("config file " + mConfigFile + " root tag is not " + E_LOCALCONFIG);
 
-            for (Iterator<?> iter = root.elementIterator(E_KEY); iter.hasNext(); ) {
-                Element ekey = (Element) iter.next();
-                String key = ekey.attributeValue(A_NAME);
-                String value = ekey.elementText(E_VALUE);
-                set(key, value);
+                for (Iterator<?> iter = root.elementIterator(E_KEY); iter.hasNext(); ) {
+                    Element ekey = (Element) iter.next();
+                    String key = ekey.attributeValue(A_NAME);
+                    String value = ekey.elementText(E_VALUE);
+                    set(key, value);
+                }
+            } catch (IOException | XmlParseException e) {
+                Logging.warn(String.format("Problem parsing local config file '%s'", cf), e);
+                throw new DocumentException(String.format("Problem parsing local config file '%s'", cf));
             }
         } else {
             Logging.warn("local config file `" + cf + "' is not readable");
@@ -223,10 +228,10 @@ public class LocalConfig {
                 if (!key.isReloadable()) {
                     ps.println("* Changes are in effect after server restart.");
                 }
-                
+
             }
 
-            
+
         }
     }
 

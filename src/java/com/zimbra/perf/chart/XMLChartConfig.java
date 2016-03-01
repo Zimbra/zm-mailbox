@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,6 +18,7 @@
 package com.zimbra.perf.chart;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -26,7 +27,9 @@ import java.util.List;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
+
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.soap.XmlParseException;
 
 public class XMLChartConfig {
 
@@ -156,25 +159,27 @@ public class XMLChartConfig {
 
     /**
      * Loads chart settings from the specified XML file.
-     * 
+     *
      * @throws IOException
      *             if there was an error reading the file
      * @throws DocumentException
      *             if there was an error parsing the file
+     * @throws XmlParseException
      * @throws IllegalArgumentException
      *             if any attribute has invalid value
      */
     public static List<ChartSettings> load(File xmlFile)
-            throws IOException, DocumentException {
+            throws IOException, DocumentException, XmlParseException {
         List<ChartSettings> charts = new ArrayList<ChartSettings>();
-        SAXReader reader = com.zimbra.common.soap.Element.getSAXReader();
-        Document document = reader.read(xmlFile);
+        Document document;
+        try (FileInputStream fis = new FileInputStream(xmlFile)) {
+            document = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(fis);
+        }
         Element chartsElem = document.getRootElement();
-        if (!chartsElem.getName().equals(E_CHARTS))
-            throw new DocumentException("Missing <" + E_CHARTS
-                    + "> root element");
-        for (Iterator iter = chartsElem.elementIterator(E_CHART);
-                iter.hasNext();) {
+        if (!chartsElem.getName().equals(E_CHARTS)) {
+            throw new DocumentException("Missing <" + E_CHARTS + "> root element");
+        }
+        for (Iterator iter = chartsElem.elementIterator(E_CHART); iter.hasNext();) {
             Element chartElem = (Element) iter.next();
             String chartTitle = getAttr(chartElem, A_CHART_TITLE);
             String category = getAttr(chartElem, A_CHART_CATEGORY, "unknown");
@@ -201,7 +206,7 @@ public class XMLChartConfig {
             if (topPlotStr != null)
                 topPlots = Integer.parseInt(topPlotStr);
             topPlotStr = getAttr(chartElem, A_CHART_TOP_PLOTS_TYPE, "max");
-            
+
             ChartSettings.TopPlotsType topPlotsType =
                 ChartSettings.TopPlotsType.valueOf(topPlotStr.toUpperCase());
 

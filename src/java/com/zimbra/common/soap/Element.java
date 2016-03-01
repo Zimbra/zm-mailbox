@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,7 +19,6 @@ package com.zimbra.common.soap;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,13 +32,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.dom4j.DocumentFactory;
 import org.dom4j.QName;
-import org.dom4j.io.SAXContentHandler;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -662,45 +655,6 @@ public abstract class Element implements Cloneable {
     public static Element parseXML(String xml)
     throws XmlParseException {
         return W3cDomUtil.parseXML(xml, XMLElement.mFactory);
-    }
-
-    public static org.dom4j.io.SAXReader getSAXReader() {
-        return getSAXReader(null);
-    }
-
-    public static org.dom4j.io.SAXReader getSAXReader(org.dom4j.DocumentFactory fact) {
-        return fact != null ? new SAXReader(fact) : new SAXReader();
-    }
-
-    public static class SAXReader extends org.dom4j.io.SAXReader {
-        public SAXReader() {
-            super();
-        }
-
-        public SAXReader(DocumentFactory factory) {
-            super(factory);
-        }
-
-        /** Factory Method to allow user derived SAXContentHandler objects to be used. */
-        @Override
-        protected SAXContentHandler createContentHandler(XMLReader reader) {
-            return new SAXContentHandler(getDocumentFactory(), getDispatchHandler()) {
-                @Override
-                public void startDTD(String name, String publicId, String systemId) throws SAXException {
-                    throw new SAXException("inline DTD not allowed");
-                }
-            };
-        }
-
-        @Override
-        protected EntityResolver createDefaultEntityResolver(String documentSystemId) {
-            return new EntityResolver() {
-                @Override
-                public InputSource resolveEntity(String publicId, String systemId) {
-                    return new InputSource(new StringReader(""));
-                }
-            };
-        }
     }
 
     public static Element convertDOM(org.dom4j.Element d4root) {

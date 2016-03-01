@@ -28,6 +28,9 @@ import java.io.OutputStream;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -37,12 +40,17 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.dom4j.DocumentFactory;
+import org.dom4j.io.DOMReader;
+import org.dom4j.io.SAXReader;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.SAXParseException;
 
 import com.google.common.base.Strings;
@@ -87,7 +95,41 @@ public class W3cDomUtil {
         return w3DomBuilderTL.get();
     }
 
-    /** Cache one DocumentBuilder per thread to avoid unnecessarily recreating them for every XML parse. */
+    public static SAXParser getDom4jSAXParserWhichUsesSecureProcessing() throws XmlParseException {
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setXIncludeAware(false);
+        factory.setValidating(false);
+        try {
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        } catch (SAXNotRecognizedException | SAXNotSupportedException | ParserConfigurationException ex) {
+            ZimbraLog.misc.error("Problem setting up SAXParser which supports secure XML processing", ex);
+            throw XmlParseException.PARSE_ERROR();
+        }
+        try {
+            return factory.newSAXParser();
+        } catch (ParserConfigurationException | SAXException e) {
+            ZimbraLog.misc.error("Problem setting up SAXParser", e);
+            throw XmlParseException.PARSE_ERROR();
+        }
+    };
+
+    public static SAXReader getDom4jSAXReaderWhichUsesSecureProcessing()
+    throws XmlParseException, SAXException {
+        return getDom4jSAXReaderWhichUsesSecureProcessing(null);
+    }
+
+    public static SAXReader getDom4jSAXReaderWhichUsesSecureProcessing(DocumentFactory fact)
+    throws XmlParseException, SAXException {
+        SAXReader dom4jSAXReader = new SAXReader(getDom4jSAXParserWhichUsesSecureProcessing().getXMLReader());
+        if (null != fact) {
+            dom4jSAXReader.setDocumentFactory(fact);
+        }
+        return dom4jSAXReader;
+    }
+
+    /** Cache one Transformer per thread to avoid unnecessarily recreating them for every XML parse. */
     private static final ThreadLocal<Transformer> transformerTL = new ThreadLocal<Transformer>() {
         @Override
         protected Transformer initialValue() {
@@ -227,6 +269,16 @@ public class W3cDomUtil {
             logParseProblem(e);
             throw XmlParseException.PARSE_ERROR();
         }
+    }
+
+    /**
+     * Note: DOCTYPE is disallowed for reasons of security and protection against denial of service
+     * @throws XmlParseException
+     */
+    public static org.dom4j.Document parseXMLToDom4jDocUsingSecureProcessing(InputStream is) throws XmlParseException {
+        org.w3c.dom.Document w3cDoc =W3cDomUtil.parseXMLToDoc(is);
+        DOMReader reader = new DOMReader();
+        return reader.read(w3cDoc);
     }
 
     private static void logParseProblem(Exception e) {

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.log4j.BasicConfigurator;
@@ -31,6 +32,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.dom4j.DocumentException;
 import org.dom4j.QName;
+import org.dom4j.io.SAXReader;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,6 +45,7 @@ import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  */
@@ -147,11 +150,75 @@ public class ElementTest {
     };
 
     /**
-     * Used to be {@code Element.parseXML (InputStream is, ElementFactory factory)}
+     * Safer version of what used to be {@code Element.parseXML (InputStream is, ElementFactory factory)}
+     * @throws SAXException
+     * @throws XmlParseException
      */
     public static Element parseXMLusingDom4j(InputStream is, ElementFactory factory)
-    throws org.dom4j.DocumentException {
-        return Element.convertDOM(Element.getSAXReader(mDocumentFactory.get()).read(is).getRootElement(), factory);
+    throws org.dom4j.DocumentException, XmlParseException, SAXException {
+        return Element.convertDOM(W3cDomUtil.getDom4jSAXReaderWhichUsesSecureProcessing(
+                mDocumentFactory.get()).read(is).getRootElement(), factory);
+    }
+
+    private static String provisioningXMLTemplate =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "##DOCTYPE##" +
+            "<ZCSImport>\n" +
+            "<ImportUsers>\n" +
+            "<User>\n" +
+            "<sn>Test</sn>\n" +
+            "<givenName>Account</givenName>\n" +
+            "<displayName>Test Account##ENTITY_REF##</displayName>\n" +
+            "<RemoteEmailAddress>taccount@example.com</RemoteEmailAddress>\n" +
+            "<password>test123</password>\n" +
+            "<zimbraPasswordMustChange>TRUE</zimbraPasswordMustChange>\n" +
+            "</User>\n" +
+            "</ImportUsers>\n" +
+            "</ZCSImport>";
+
+    private static String provisioningXMLWithNoEntityRefNoDocType =
+            provisioningXMLTemplate.replace("##DOCTYPE##", "").replace("##ENTITY_REF##", "");
+
+    private static String provisioningXMLWithEntityRefButNoDecl =
+            provisioningXMLTemplate.replace("##DOCTYPE##", "").replace("##ENTITY_REF##", "&xxe;");
+
+    private static String provisioningXMLWithEntityRefAndDecl =
+            provisioningXMLTemplate.replace("##DOCTYPE##",
+                                            "<!DOCTYPE foo [ \n" +
+                                            "   <!ELEMENT foo ANY >\n" +
+                                            "   <!ENTITY xxe SYSTEM \"file:///etc/hosts\" >]>\n")
+                                   .replace("##ENTITY_REF##", "&xxe;");
+
+    @Test
+    public void dom4jSAXReaderWhichUsesSecureProcessing()
+    throws XmlParseException, SAXException, DocumentException {
+        org.dom4j.io.SAXReader dom4jSAXReader;
+        org.dom4j.Document doc;
+
+        dom4jSAXReader = W3cDomUtil.getDom4jSAXReaderWhichUsesSecureProcessing();
+        doc = dom4jSAXReader.read(
+                new ByteArrayInputStream(provisioningXMLWithNoEntityRefNoDocType.getBytes(StandardCharsets.UTF_8)));
+        Assert.assertNotNull("org.dom4j.Document object should not be null", doc);
+        Assert.assertEquals("Round tripped XML", provisioningXMLWithNoEntityRefNoDocType, doc.asXML());
+
+        dom4jSAXReader = W3cDomUtil.getDom4jSAXReaderWhichUsesSecureProcessing();
+        try {
+            doc = dom4jSAXReader.read(
+                    new ByteArrayInputStream(provisioningXMLWithEntityRefButNoDecl.getBytes(StandardCharsets.UTF_8)));
+            Assert.assertNotNull("org.dom4j.Document object should not be null", doc);
+            Assert.fail("DocumentException should have been thrown");
+        } catch (DocumentException de) {
+            Assert.assertTrue(de.getMessage().contains("The entity \"xxe\" was referenced, but not declared."));
+        }
+
+        dom4jSAXReader = W3cDomUtil.getDom4jSAXReaderWhichUsesSecureProcessing();
+        try {
+        doc = dom4jSAXReader.read(
+                new ByteArrayInputStream(provisioningXMLWithEntityRefAndDecl.getBytes(StandardCharsets.UTF_8)));
+        } catch (DocumentException de) {
+            Assert.assertTrue(de.getMessage().contains("DOCTYPE is disallowed when the feature " +
+                    "\"http://apache.org/xml/features/disallow-doctype-decl\" set to true"));
+        }
     }
 
     private static final String testXml =
@@ -268,10 +335,11 @@ public class ElementTest {
 
     /**
      * Validate that the new {@code Element.parseXML} produces the same Element structure as the old one
+     * @throws SAXException
      */
     @Test
     public void getInfoRequestSOAP()
-    throws DocumentException, XmlParseException {
+    throws DocumentException, XmlParseException, SAXException {
         getInfoReqBais.reset();
         Element legacyElem = parseXMLusingDom4j(getInfoReqBais, Element.XMLElement.mFactory);
         getInfoReqBais.reset();
@@ -282,10 +350,11 @@ public class ElementTest {
 
     /**
      * Validate that the new {@code Element.parseXML} produces the same Element structure as the old one
+     * @throws SAXException
      */
     @Test
     public void getInfoResponseSOAP()
-    throws DocumentException, XmlParseException {
+    throws DocumentException, XmlParseException, SAXException {
         getInfoRespBais.reset();
         Element legacyElem = parseXMLusingDom4j(getInfoRespBais, Element.XMLElement.mFactory);
         getInfoRespBais.reset();
@@ -296,7 +365,7 @@ public class ElementTest {
 
     @Test
     public void parseTestXmlFromFile()
-    throws URISyntaxException, DocumentException, FileNotFoundException, ServiceException {
+    throws URISyntaxException, DocumentException, FileNotFoundException, ServiceException, SAXException {
         getInfoRespBais.reset();
         Element legacyElem = parseXMLusingDom4j(getInfoRespBais, Element.XMLElement.mFactory);
         URL xmlUrl = ElementTest.class.getResource("GetInfoResponseSOAP.xml");
@@ -320,10 +389,11 @@ public class ElementTest {
     /**
      * Validate that the new {@code Element.parseXML} produces the same Element structure as the old one
      * when the input text is XHTML
+     * @throws SAXException
      */
     @Test
     public void xhtml()
-    throws DocumentException, XmlParseException {
+    throws DocumentException, XmlParseException, SAXException {
         ByteArrayInputStream bais = toBais(ElementTest.class.getResourceAsStream("xhtml.html"));
         Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
         bais.reset();
@@ -378,10 +448,12 @@ public class ElementTest {
      * the old code swapped the order of the attributes.  This should not make any effective difference
      * and DOM does not make any guarantees with regard to attribute order, so xml:lang attribute removed to keep test
      * for success simple.
+     * @throws SAXException
+     * @throws XmlParseException
      */
     // Enable for comparison @Test
     public void legacyWrappedXhtmlWithCdata()
-    throws DocumentException {
+    throws DocumentException, XmlParseException, SAXException {
         ByteArrayInputStream bais = toBais(ElementTest.class.getResourceAsStream("wrappedXhtml.xml"));
         Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
         Assert.assertEquals("Legacy top node name", "xml", legacyElem.getName());
@@ -406,10 +478,11 @@ public class ElementTest {
 
     /**
      * input text contains xhtml which only has one sub-element - i.e. it isn't mixed text
+     * @throws SAXException
      */
     @Test
     public void wrappedXhtmlWithSingleElem()
-    throws DocumentException, XmlParseException {
+    throws DocumentException, XmlParseException, SAXException {
         logInfo("Source TEXT:\n%1$s", wrappedXhtmlSingleElem);
         ByteArrayInputStream bais = new ByteArrayInputStream(wrappedXhtmlSingleElem.getBytes());
         Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
@@ -432,10 +505,12 @@ public class ElementTest {
 
     /**
      * Old behavior when the input text contains xhtml which only has one sub-element - i.e. it isn't mixed text
+     * @throws SAXException
+     * @throws XmlParseException
      */
     // Enable for comparison @Test
     public void legacyWrappedXhtmlWithSingleElem()
-    throws DocumentException {
+    throws DocumentException, XmlParseException, SAXException {
         logInfo("Source TEXT:\n%1$s", wrappedXhtmlSingleElem);
         ByteArrayInputStream bais = new ByteArrayInputStream(wrappedXhtmlSingleElem.getBytes());
         Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
@@ -463,10 +538,11 @@ public class ElementTest {
     /**
      * Validate that the new {@code Element.parseXML} produces the same Element structure as the old one
      * when the input text contains xhtml which only contains text
+     * @throws SAXException
      */
     @Test
     public void wrappedXhtmlWithTextContentOnly()
-    throws DocumentException, XmlParseException {
+    throws DocumentException, XmlParseException, SAXException {
         logInfo("Source TEXT:\n%1$s", wrappedXhtmlTextContentOnly);
         ByteArrayInputStream bais = new ByteArrayInputStream(wrappedXhtmlTextContentOnly.getBytes());
         Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
@@ -631,10 +707,11 @@ public class ElementTest {
     /**
      * Validate that the new {@code Element.parseXML} produces the same Element structure as the old one
      * when the input text contains CDATA
+     * @throws SAXException
      */
     @Test
     public void cdata()
-    throws DocumentException, XmlParseException {
+    throws DocumentException, XmlParseException, SAXException {
         ByteArrayInputStream bais = new ByteArrayInputStream(xmlCdata.getBytes());
         Element legacyElem = parseXMLusingDom4j(bais, Element.XMLElement.mFactory);
         bais.reset();
@@ -711,7 +788,7 @@ public class ElementTest {
 
     // Enable for performance comparison @Test
     public void iterGetInfoResponseSOAP_OLD()
-    throws DocumentException, SAXException, IOException {
+    throws DocumentException, SAXException, IOException, XmlParseException {
         for (int i = 0;i< maxiter; i++) {
             getInfoRespBais.reset();
             parseXMLusingDom4j(getInfoRespBais, Element.XMLElement.mFactory);
@@ -744,4 +821,71 @@ public class ElementTest {
             Element.parseXML(bais);
         }
     }
+
+    /*
+     * Bug 103996.  Replaced code which used to do XML parsing using a mechanism similar to
+     * how oldUnsafeSAXParsingPerformance does it (some code used a slightly safer variant of SAXReader
+     * which used to be in Element) Most new code uses code similar to
+     * parseXMLToDom4jDocUsingSecureProcessingPerformance, which is significantly faster (because was doing
+     * SAX parsing when creating a DOM - using the info that the target is a DOM clearly allows for faster
+     * processing) SoapHttpTransport.SAXResponseHandler is the only exception, which now uses code more
+     * similar to dom4jSAXReaderWhichUsesSecureProcessingPerformance.  This appears to only be used in
+     * ZimbraOffline.  The code is slower here (although other runs had a smaller gap in difference).
+     * Submitted Bugzilla Bug 104175 suggesting investigating replacing use of this code with more modern,
+     * higher performing code.
+     * Run times:
+     *     dom4jSAXReaderWhichUsesSecureProcessingPerformance #ELAPSED_TIME=42897ms (15:39:47.656-15:40:30.553)
+     *     oldUnsafeSAXParsingPerformance #ELAPSED_TIME=25847ms (15:40:30.554-15:40:56.401)
+     *     parseXMLToDom4jDocUsingSecureProcessingPerformance #ELAPSED_TIME=1843ms (15:40:56.403-15:40:58.246)
+     */
+    // Enable for performance comparison @Test
+    public void dom4jSAXReaderWhichUsesSecureProcessingPerformance()
+    throws XmlParseException, SAXException, DocumentException {
+        ByteArrayInputStream bais = new ByteArrayInputStream(
+                provisioningXMLWithNoEntityRefNoDocType.getBytes(StandardCharsets.UTF_8));
+        org.dom4j.io.SAXReader dom4jSAXReader;
+        org.dom4j.Document doc = null;
+        long start = System.currentTimeMillis();
+        for (int i = 0;i< maxiter; i++) {
+            bais.reset();
+            dom4jSAXReader = W3cDomUtil.getDom4jSAXReaderWhichUsesSecureProcessing();
+            doc = dom4jSAXReader.read(bais);
+            Assert.assertEquals("Round tripped XML", provisioningXMLWithNoEntityRefNoDocType, doc.asXML());
+        }
+        ZimbraLog.test.info("dom4jSAXReaderWhichUsesSecureProcessingPerformance %s",
+                ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
+    }
+
+    // Enable for performance comparison @Test
+    public void oldUnsafeSAXParsingPerformance() throws XmlParseException, SAXException, DocumentException {
+        ByteArrayInputStream bais = new ByteArrayInputStream(
+                provisioningXMLWithNoEntityRefNoDocType.getBytes(StandardCharsets.UTF_8));
+        org.dom4j.Document doc;
+        long start = System.currentTimeMillis();
+        for (int i = 0;i< maxiter; i++) {
+            bais.reset();
+            SAXReader reader = new SAXReader();
+            doc = reader.read(bais);
+            Assert.assertEquals("Round tripped XML", provisioningXMLWithNoEntityRefNoDocType, doc.asXML());
+        }
+        ZimbraLog.test.info("oldUnsafeSAXParsingPerformance %s",
+                ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
+    }
+
+    // Enable for performance comparison @Test
+    public void parseXMLToDom4jDocUsingSecureProcessingPerformance()
+    throws XmlParseException, SAXException, DocumentException {
+        ByteArrayInputStream bais = new ByteArrayInputStream(
+                provisioningXMLWithNoEntityRefNoDocType.getBytes(StandardCharsets.UTF_8));
+        org.dom4j.Document doc = null;
+        long start = System.currentTimeMillis();
+        for (int i = 0;i< maxiter; i++) {
+            bais.reset();
+            doc = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(bais);
+            Assert.assertEquals("Round tripped XML", provisioningXMLWithNoEntityRefNoDocType, doc.asXML());
+        }
+        ZimbraLog.test.info("parseXMLToDom4jDocUsingSecureProcessingPerformance %s",
+                ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
+    }
+
 }

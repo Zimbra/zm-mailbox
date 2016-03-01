@@ -46,6 +46,7 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.dom4j.DocumentException;
 import org.dom4j.ElementHandler;
 import org.dom4j.io.SAXReader;
+import org.xml.sax.SAXException;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.httpclient.HttpProxyConfig;
@@ -66,7 +67,7 @@ public class SoapHttpTransport extends SoapTransport {
     private boolean mKeepAlive = defaultKeepAlive;
     private int mRetryCount = defaultRetryCount;
     private int mTimeout = defaultTimeout;
-    private String mUri;
+    private final String mUri;
     private static boolean defaultKeepAlive = LC.httpclient_soaphttptransport_keepalive_connections.booleanValue();
     private static int defaultRetryCount = LC.httpclient_soaphttptransport_retry_count.intValue();
     private static int defaultTimeout = LC.httpclient_soaphttptransport_so_timeout.intValue();
@@ -329,14 +330,18 @@ public class SoapHttpTransport extends SoapTransport {
 
         @Override
         public void process(Reader src) throws ServiceException {
-            SAXReader reader = com.zimbra.common.soap.Element.getSAXReader();
-            for(Map.Entry<String, ElementHandler> entry : handlers.entrySet()) {
-                reader.addHandler(entry.getKey(), entry.getValue());
-            }
-
+            SAXReader reader;
             try {
+                // This code is slower than less safe code used prior to 8.7 but appears to only be used
+                // in ZimbraOffline.  Submitted Bugzilla Bug 104175 suggesting investigating replacing use of this
+                // code with more modern, higher performing code.
+                reader = W3cDomUtil.getDom4jSAXReaderWhichUsesSecureProcessing();
+                for(Map.Entry<String, ElementHandler> entry : handlers.entrySet()) {
+                    reader.addHandler(entry.getKey(), entry.getValue());
+                }
                 reader.read(src);
-            } catch (DocumentException e) {
+            } catch (XmlParseException | SAXException | DocumentException e) {
+                ZimbraLog.misc.debug("Problem processing XML", e);
                 throw ServiceException.SAX_READER_ERROR(e.getMessage(), e.getCause());
             }
         }
