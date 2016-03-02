@@ -11,32 +11,31 @@
 
   <display-name>Zimbra Service</display-name>
   <description>SOAP Service</description>
-  
+
   <filter>
     <filter-name>DoSFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.DoSFilter</filter-class>
     <async-supported>true</async-supported>
 
     <init-param>
-     <param-name>delayMs</param-name>
-     <param-value>%%zimbraHttpDosFilterDelayMillis%%</param-value>
+      <param-name>delayMs</param-name>
+      <param-value>%%zimbraHttpDosFilterDelayMillis%%</param-value>
     </init-param>
 
     <init-param>
-     <param-name>maxRequestsPerSec</param-name>
-     <param-value>%%zimbraHttpDosFilterMaxRequestsPerSec%%</param-value>
+      <param-name>maxRequestsPerSec</param-name>
+      <param-value>%%zimbraHttpDosFilterMaxRequestsPerSec%%</param-value>
     </init-param>
 
     <init-param>
-     <param-name>remotePort</param-name>
-     <param-value>true</param-value>
+      <param-name>remotePort</param-name>
+      <param-value>true</param-value>
     </init-param>
-    
+
     <init-param>
-     <param-name>maxRequestMs</param-name>
-     <param-value>9223372036854775807</param-value>
-    </init-param>    
-    
+      <param-name>maxRequestMs</param-name>
+      <param-value>9223372036854775807</param-value>
+    </init-param>
   </filter>
 
   <filter-mapping>
@@ -54,41 +53,40 @@
     <filter-name>ZimbraInvalidLoginFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
-  
+
   <filter>
     <filter-name>ZimbraQoSFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.ZimbraQoSFilter</filter-class>
     <async-supported>true</async-supported>
   </filter>
-  
+
   <filter-mapping>
     <filter-name>ZimbraQoSFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
-  
+
   <filter>
     <filter-name>ThrottlingFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.ThrottlingFilter</filter-class>
     <async-supported>true</async-supported>
   </filter>
+
   <filter-mapping>
     <filter-name>ThrottlingFilter</filter-name>
     <url-pattern>/zimlet/*</url-pattern>
   </filter-mapping>
-  
+
   <filter>
     <filter-name>ContextPathBasedThreadPoolBalancerFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.ContextPathBasedThreadPoolBalancerFilter</filter-class>
     <async-supported>true</async-supported>
-    
     <init-param>
-     <param-name>suspendMs</param-name>
-     <param-value>1000</param-value>
+      <param-name>suspendMs</param-name>
+      <param-value>1000</param-value>
     </init-param>
-    
     <init-param>
-     <param-name>Rules</param-name>
-     <param-value>%%list VAR:zimbraHttpContextPathBasedThreadPoolBalancingFilterRules , %%</param-value>
+      <param-name>Rules</param-name>
+      <param-value>%%list VAR:zimbraHttpContextPathBasedThreadPoolBalancingFilterRules , %%</param-value>
     </init-param>
   </filter>
 
@@ -102,6 +100,7 @@
     <filter-class>com.zimbra.cs.servlet.ETagHeaderFilter</filter-class>
     <async-supported>true</async-supported>
   </filter>
+
   <filter-mapping>
     <filter-name>ETagHeaderFilter</filter-name>
     <url-pattern>/*</url-pattern>
@@ -111,12 +110,10 @@
     <filter-name>SpnegoFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.SpnegoFilter</filter-class>
     <async-supported>true</async-supported>
-    
     <init-param>
       <param-name>passThruOnFailureUri</param-name>
       <param-value>/service/spnego</param-value>
     </init-param>
-
     <init-param>
       <param-name>error401Page</param-name>
       <param-value>/spnego/error401.jsp</param-value>
@@ -133,6 +130,7 @@
     <filter-class>com.zimbra.cs.servlet.SetHeaderFilter</filter-class>
     <async-supported>true</async-supported>
   </filter>
+
   <filter-mapping>
     <filter-name>SetHeaderFilter</filter-name>
     <url-pattern>/*</url-pattern>
@@ -147,6 +145,7 @@
       <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
     </init-param>
   </filter>
+
   <filter-mapping>
     <filter-name>ZimletFilter</filter-name>
     <url-pattern>/zimlet/*</url-pattern>
@@ -157,47 +156,51 @@
     <filter-class>com.zimbra.common.filters.Base64Filter</filter-class>
     <async-supported>true</async-supported>
   </filter>
+
   <filter-mapping>
     <filter-name>Base64Filter</filter-name>
     <url-pattern>/user/*</url-pattern>
   </filter-mapping>
+
   <filter-mapping>
     <filter-name>Base64Filter</filter-name>
     <url-pattern>/home/*</url-pattern>
   </filter-mapping>
-  
+
   <filter>
     <filter-name>RequestStringFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.RequestStringFilter</filter-class>
     <async-supported>true</async-supported>
   </filter>
+
   <filter-mapping>
     <filter-name>RequestStringFilter</filter-name>
     <url-pattern>/*</url-pattern>
-  </filter-mapping> 
-   
+  </filter-mapping>
+
   <filter>
     <filter-name>CsrfFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.CsrfFilter</filter-class>
     <async-supported>true</async-supported>
     <init-param>
-        <param-name>csrf.req.check</param-name>
-        <param-value>true</param-value>
+      <param-name>csrf.req.check</param-name>
+      <param-value>true</param-value>
     </init-param>
     <init-param>
-        <!-- A comma separated list like www.abc.com, www.xyz.com -->
-        <param-name>allowed.referrer.host</param-name>
-        <param-value />
+      <!-- A comma separated list like www.abc.com, www.xyz.com -->
+      <param-name>allowed.referrer.host</param-name>
+      <param-value />
     </init-param>
-    </filter>
-    <filter-mapping>
-        <filter-name>CsrfFilter</filter-name>
-        <url-pattern>/admin/soap/*</url-pattern>
-        <url-pattern>/soap/*</url-pattern>
-        <url-pattern>/user/*</url-pattern>
-        <url-pattern>/home/*</url-pattern>
-        <url-pattern>/upload</url-pattern>
-    </filter-mapping>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>CsrfFilter</filter-name>
+    <url-pattern>/admin/soap/*</url-pattern>
+    <url-pattern>/soap/*</url-pattern>
+    <url-pattern>/user/*</url-pattern>
+    <url-pattern>/home/*</url-pattern>
+    <url-pattern>/upload</url-pattern>
+  </filter-mapping>
 
   <servlet>
     <servlet-name>FirstServlet</servlet-name>
@@ -341,7 +344,7 @@
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
-  
+
   <servlet>
     <servlet-name>ExternalUserProvServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.ExternalUserProvServlet</servlet-class>
@@ -380,7 +383,7 @@
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
-  
+
   <servlet>
     <servlet-name>PublicICalServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.PublicICalServlet</servlet-class>
@@ -435,7 +438,7 @@
     </init-param>
     <load-on-startup>9</load-on-startup>
   </servlet>
-  
+
   <servlet>
     <servlet-name>DavWellKnownServlet</servlet-name>
     <servlet-class>com.zimbra.cs.dav.service.DavWellKnownServlet</servlet-class>
@@ -457,7 +460,7 @@
     </init-param>
   </servlet>
 
-   <servlet>
+  <servlet>
     <servlet-name>AdminFileDownload</servlet-name>
     <servlet-class>com.zimbra.cs.service.admin.AdminFileDownload</servlet-class>
     <async-supported>true</async-supported>
@@ -485,29 +488,29 @@
       <param-name>allowed.ports</param-name>
       <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
     </init-param>
-  <!--
-  <init-param>
-    <description>The initial size of the resource cache.</description>
-    <param-name>resource-cache-size</param-name>
-    <param-value>1000</param-value>
-  </init-param>
-  -->
-  <init-param>
-    <description>
+    <!--
+    <init-param>
+      <description>The initial size of the resource cache.</description>
+      <param-name>resource-cache-size</param-name>
+      <param-value>1000</param-value>
+    </init-param>
+    -->
+    <init-param>
+      <description>
       The temp directory of the resource cache. The servlet creates
       a "zimletres" sub-directory in the specified directory. So you
       should NOT append that to the directory.
       NOTE: The special string "${webapp}" can be used to specify
       the webapp/service/ directory. It should ONLY be used at the
       beginning of the parameter value.
-    </description>
-    <param-name>resource-cache-dir</param-name>
-    <param-value>${webapp}/../../work/resource-cache</param-value>
-  </init-param>
-  <init-param>
-    <param-name>shouldSupportGzip</param-name>
-    <param-value>%%zimbraWebGzipEnabled%%</param-value>
-  </init-param>
+      </description>
+      <param-name>resource-cache-dir</param-name>
+      <param-value>${webapp}/../../work/resource-cache</param-value>
+    </init-param>
+    <init-param>
+      <param-name>shouldSupportGzip</param-name>
+      <param-value>%%zimbraWebGzipEnabled%%</param-value>
+    </init-param>
   </servlet>
 
   <servlet>
@@ -529,7 +532,7 @@
     <load-on-startup>11</load-on-startup>
     <async-supported>true</async-supported>
   </servlet>
-  
+
   <servlet>
     <servlet-name>AutoDiscoverServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.AutoDiscoverServlet</servlet-class>
@@ -605,7 +608,7 @@
     <servlet-name>PreAuthServlet</servlet-name>
     <url-pattern>/preauth</url-pattern>
   </servlet-mapping>
-  
+
   <servlet-mapping>
     <servlet-name>ExternalUserProvServlet</servlet-name>
     <url-pattern>/extuserprov/*</url-pattern>
@@ -627,12 +630,12 @@
     <servlet-name>SpnegoAuthServlet</servlet-name>
     <url-pattern>/spnego/</url-pattern>
   </servlet-mapping>
-  
+
   <servlet-mapping>
     <servlet-name>SpnegoAuthServlet</servlet-name>
     <url-pattern>/spnego</url-pattern>
   </servlet-mapping>
-  
+
   <servlet-mapping>
     <servlet-name>FileUploadServlet</servlet-name>
     <url-pattern>/upload</url-pattern>
@@ -653,10 +656,10 @@
     <url-pattern>/collectldapconfig/*</url-pattern>
   </servlet-mapping>
 
-    <servlet-mapping>
-        <servlet-name>AdminFileDownload</servlet-name>
-        <url-pattern>/afd/*</url-pattern>
-    </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>AdminFileDownload</servlet-name>
+    <url-pattern>/afd/*</url-pattern>
+  </servlet-mapping>
 
   <servlet-mapping>
     <servlet-name>ProxyServlet</servlet-name>
@@ -667,7 +670,7 @@
     <servlet-name>DavServlet</servlet-name>
     <url-pattern>/dav/*</url-pattern>
   </servlet-mapping>
-  
+
   <servlet-mapping>
     <servlet-name>DavWellKnownServlet</servlet-name>
     <url-pattern>/.well-known/*</url-pattern>
@@ -700,20 +703,20 @@
     <servlet-class>org.eclipse.jetty.jsp.JettyJspServlet</servlet-class>
     <async-supported>true</async-supported>
     <init-param>
-        <param-name>fork</param-name>
-        <param-value>false</param-value>
+      <param-name>fork</param-name>
+      <param-value>false</param-value>
     </init-param>
     <init-param>
-        <param-name>xpoweredBy</param-name>
-        <param-value>false</param-value>
+      <param-name>xpoweredBy</param-name>
+      <param-value>false</param-value>
     </init-param>
     <init-param>
-        <param-name>trimSpaces</param-name>
-        <param-value>true</param-value>
+      <param-name>trimSpaces</param-name>
+      <param-value>true</param-value>
     </init-param>
     <init-param>
-        <param-name>classpath</param-name>
-        <param-value>?</param-value>
+      <param-name>classpath</param-name>
+      <param-value>?</param-value>
     </init-param>
     <load-on-startup>0</load-on-startup>
   </servlet>
@@ -726,7 +729,6 @@
     <url-pattern>/error/attachment_blocked.jsp</url-pattern>
     <url-pattern>/error/sfdc_preauth.jsp</url-pattern>
   </servlet-mapping>
-
   <env-entry>
     <description>
         Zimbra Services Installed on the server.
