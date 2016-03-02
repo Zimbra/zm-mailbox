@@ -161,7 +161,6 @@ import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.cs.gal.GalSyncToken;
-import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.IAttributes.CheckBinary;
 import com.zimbra.cs.ldap.LdapClient;
@@ -3868,11 +3867,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
         AttributeManager.getInstance().preModify(serverAttrs, null, callbackContext, true);
-
-        String authHost = (String)serverAttrs.get(A_zimbraMtaAuthHost);
-        if (authHost != null) {
-            serverAttrs.put(A_zimbraMtaAuthURL, URLUtil.getMtaAuthURL(authHost));
-        }
 
         ZLdapContext zlc = null;
         try {
