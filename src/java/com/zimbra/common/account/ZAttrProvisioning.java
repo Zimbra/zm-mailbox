@@ -11105,24 +11105,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkLicense = "zimbraNetworkLicense";
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the body of an email notification message
+     * Template used to construct the body of an email notification message.
+     * This attribute is ignored when zimbraNewMailNotificationMessage is
+     * set.
      */
     @ZAttr(id=152)
     public static final String A_zimbraNewMailNotificationBody = "zimbraNewMailNotificationBody";
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the sender of an email notification message
+     * Template used to construct the sender of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      */
     @ZAttr(id=150)
     public static final String A_zimbraNewMailNotificationFrom = "zimbraNewMailNotificationFrom";
 
     /**
-     * Template used to construct an email notification message. Sample
-     * configuration: From: Postmaster
+     * Template used to construct an email notification message. When this
+     * attribute is not set, email notification message is composed using
+     * zimbraNewMailNotificationBody, zimbraNewMailNotificationFrom and
+     * zimbraNewMailNotificationSubject attributes. Use this attribute when
+     * you need to specify custom email headers such as charset and
+     * content-type. Sample configuration: From: Postmaster
      * &lt;postmaster@${RECIPIENT_DOMAIN}&gt;${NEWLINE}To:
      * &lt;${RECIPIENT_ADDRESS}&gt;${NEWLINE}Subject: New message received at
      * ${RECIPIENT_ADDRESS}${NEWLINE}Date: ${DATE}${NEWLINE}Content-Type:
@@ -11136,9 +11140,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNewMailNotificationMessage = "zimbraNewMailNotificationMessage";
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the subject of an email notification message
+     * Template used to construct the subject of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      */
     @ZAttr(id=151)
     public static final String A_zimbraNewMailNotificationSubject = "zimbraNewMailNotificationSubject";
