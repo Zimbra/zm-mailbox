@@ -32022,9 +32022,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the body of an email notification message
+     * Template used to construct the body of an email notification message.
+     * This attribute is ignored when zimbraNewMailNotificationMessage is
+     * set.
      *
      * @return zimbraNewMailNotificationBody, or "New message received at ${RECIPIENT_ADDRESS}.${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}" if unset
      */
@@ -32034,9 +32034,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the body of an email notification message
+     * Template used to construct the body of an email notification message.
+     * This attribute is ignored when zimbraNewMailNotificationMessage is
+     * set.
      *
      * @param zimbraNewMailNotificationBody new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32049,9 +32049,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the body of an email notification message
+     * Template used to construct the body of an email notification message.
+     * This attribute is ignored when zimbraNewMailNotificationMessage is
+     * set.
      *
      * @param zimbraNewMailNotificationBody new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32065,9 +32065,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the body of an email notification message
+     * Template used to construct the body of an email notification message.
+     * This attribute is ignored when zimbraNewMailNotificationMessage is
+     * set.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -32079,9 +32079,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the body of an email notification message
+     * Template used to construct the body of an email notification message.
+     * This attribute is ignored when zimbraNewMailNotificationMessage is
+     * set.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -32094,9 +32094,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the sender of an email notification message
+     * Template used to construct the sender of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      *
      * @return zimbraNewMailNotificationFrom, or "Postmaster <postmaster@${RECIPIENT_DOMAIN}>" if unset
      */
@@ -32106,9 +32106,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the sender of an email notification message
+     * Template used to construct the sender of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      *
      * @param zimbraNewMailNotificationFrom new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32121,9 +32121,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the sender of an email notification message
+     * Template used to construct the sender of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      *
      * @param zimbraNewMailNotificationFrom new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32137,9 +32137,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the sender of an email notification message
+     * Template used to construct the sender of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -32151,9 +32151,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the sender of an email notification message
+     * Template used to construct the sender of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -32166,8 +32166,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Template used to construct an email notification message. Sample
-     * configuration: From: Postmaster
+     * Template used to construct an email notification message. When this
+     * attribute is not set, email notification message is composed using
+     * zimbraNewMailNotificationBody, zimbraNewMailNotificationFrom and
+     * zimbraNewMailNotificationSubject attributes. Use this attribute when
+     * you need to specify custom email headers such as charset and
+     * content-type. Sample configuration: From: Postmaster
      * &lt;postmaster@${RECIPIENT_DOMAIN}&gt;${NEWLINE}To:
      * &lt;${RECIPIENT_ADDRESS}&gt;${NEWLINE}Subject: New message received at
      * ${RECIPIENT_ADDRESS}${NEWLINE}Date: ${DATE}${NEWLINE}Content-Type:
@@ -32185,8 +32189,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Template used to construct an email notification message. Sample
-     * configuration: From: Postmaster
+     * Template used to construct an email notification message. When this
+     * attribute is not set, email notification message is composed using
+     * zimbraNewMailNotificationBody, zimbraNewMailNotificationFrom and
+     * zimbraNewMailNotificationSubject attributes. Use this attribute when
+     * you need to specify custom email headers such as charset and
+     * content-type. Sample configuration: From: Postmaster
      * &lt;postmaster@${RECIPIENT_DOMAIN}&gt;${NEWLINE}To:
      * &lt;${RECIPIENT_ADDRESS}&gt;${NEWLINE}Subject: New message received at
      * ${RECIPIENT_ADDRESS}${NEWLINE}Date: ${DATE}${NEWLINE}Content-Type:
@@ -32207,8 +32215,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Template used to construct an email notification message. Sample
-     * configuration: From: Postmaster
+     * Template used to construct an email notification message. When this
+     * attribute is not set, email notification message is composed using
+     * zimbraNewMailNotificationBody, zimbraNewMailNotificationFrom and
+     * zimbraNewMailNotificationSubject attributes. Use this attribute when
+     * you need to specify custom email headers such as charset and
+     * content-type. Sample configuration: From: Postmaster
      * &lt;postmaster@${RECIPIENT_DOMAIN}&gt;${NEWLINE}To:
      * &lt;${RECIPIENT_ADDRESS}&gt;${NEWLINE}Subject: New message received at
      * ${RECIPIENT_ADDRESS}${NEWLINE}Date: ${DATE}${NEWLINE}Content-Type:
@@ -32230,8 +32242,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Template used to construct an email notification message. Sample
-     * configuration: From: Postmaster
+     * Template used to construct an email notification message. When this
+     * attribute is not set, email notification message is composed using
+     * zimbraNewMailNotificationBody, zimbraNewMailNotificationFrom and
+     * zimbraNewMailNotificationSubject attributes. Use this attribute when
+     * you need to specify custom email headers such as charset and
+     * content-type. Sample configuration: From: Postmaster
      * &lt;postmaster@${RECIPIENT_DOMAIN}&gt;${NEWLINE}To:
      * &lt;${RECIPIENT_ADDRESS}&gt;${NEWLINE}Subject: New message received at
      * ${RECIPIENT_ADDRESS}${NEWLINE}Date: ${DATE}${NEWLINE}Content-Type:
@@ -32251,8 +32267,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Template used to construct an email notification message. Sample
-     * configuration: From: Postmaster
+     * Template used to construct an email notification message. When this
+     * attribute is not set, email notification message is composed using
+     * zimbraNewMailNotificationBody, zimbraNewMailNotificationFrom and
+     * zimbraNewMailNotificationSubject attributes. Use this attribute when
+     * you need to specify custom email headers such as charset and
+     * content-type. Sample configuration: From: Postmaster
      * &lt;postmaster@${RECIPIENT_DOMAIN}&gt;${NEWLINE}To:
      * &lt;${RECIPIENT_ADDRESS}&gt;${NEWLINE}Subject: New message received at
      * ${RECIPIENT_ADDRESS}${NEWLINE}Date: ${DATE}${NEWLINE}Content-Type:
@@ -32273,9 +32293,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the subject of an email notification message
+     * Template used to construct the subject of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      *
      * @return zimbraNewMailNotificationSubject, or "New message received at ${RECIPIENT_ADDRESS}" if unset
      */
@@ -32285,9 +32305,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the subject of an email notification message
+     * Template used to construct the subject of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      *
      * @param zimbraNewMailNotificationSubject new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32300,9 +32320,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the subject of an email notification message
+     * Template used to construct the subject of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      *
      * @param zimbraNewMailNotificationSubject new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32316,9 +32336,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the subject of an email notification message
+     * Template used to construct the subject of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -32330,9 +32350,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Deprecated since: 8.7.0. Deprecated in favor of the
-     * zimbraNewMailNotificationMessage. Orig desc: template used to
-     * construct the subject of an email notification message
+     * Template used to construct the subject of an email notification
+     * message. This attribute is ignored when
+     * zimbraNewMailNotificationMessage is set.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
