@@ -941,22 +941,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether GAL features are enabled</desc>
 </attr>
 
-<attr id="150" name="zimbraNewMailNotificationFrom" type="string" max="1000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="8.7.0">
+<attr id="150" name="zimbraNewMailNotificationFrom" type="string" max="1000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>Postmaster &lt;postmaster@${RECIPIENT_DOMAIN}&gt;</defaultCOSValue>
-  <desc>template used to construct the sender of an email notification message</desc>
-  <deprecateDesc>Deprecated in favor of the zimbraNewMailNotificationMessage</deprecateDesc>
+  <desc>Template used to construct the sender of an email notification message. This attribute is ignored when zimbraNewMailNotificationMessage is set.</desc>
 </attr>
 
-<attr id="151" name="zimbraNewMailNotificationSubject" type="string" max="1000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="8.7.0">
+<attr id="151" name="zimbraNewMailNotificationSubject" type="string" max="1000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>New message received at ${RECIPIENT_ADDRESS}</defaultCOSValue>
-  <desc>template used to construct the subject of an email notification message</desc>
-  <deprecateDesc>Deprecated in favor of the zimbraNewMailNotificationMessage</deprecateDesc>
+  <desc>Template used to construct the subject of an email notification message. This attribute is ignored when zimbraNewMailNotificationMessage is set.</desc>
 </attr>
 
-<attr id="152" name="zimbraNewMailNotificationBody" type="string" max="10000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="8.7.0">
+<attr id="152" name="zimbraNewMailNotificationBody" type="string" max="10000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>New message received at ${RECIPIENT_ADDRESS}.${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}</defaultCOSValue>
-  <desc>template used to construct the body of an email notification message</desc>
-  <deprecateDesc>Deprecated in favor of the zimbraNewMailNotificationMessage</deprecateDesc>
+  <desc>Template used to construct the body of an email notification message. This attribute is ignored when zimbraNewMailNotificationMessage is set.</desc>
 </attr>
 
 <attr id="153" name="zimbraGalLdapAttrMap" type="string" max="4096" cardinality="multi" optionalIn="globalConfig,domain,galDataSource" flags="domainInherited">
@@ -10203,7 +10200,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="2019" name="zimbraNewMailNotificationMessage" type="string" max="10000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.7.0,9.0.0">
-  <desc>Template used to construct an email notification message.
+  <desc>Template used to construct an email notification message. When this attribute is not set, email notification message is composed using zimbraNewMailNotificationBody, zimbraNewMailNotificationFrom and zimbraNewMailNotificationSubject attributes. Use this attribute when you need to specify custom email headers such as charset and content-type.
   Sample configuration: From: Postmaster &lt;postmaster@${RECIPIENT_DOMAIN}&gt;${NEWLINE}To: &lt;${RECIPIENT_ADDRESS}&gt;${NEWLINE}Subject: New message received at ${RECIPIENT_ADDRESS}${NEWLINE}Date: ${DATE}${NEWLINE}Content-Type: text/plain${NEWLINE}${NEWLINE}New message received at ${RECIPIENT_ADDRESS}.${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}</desc>
 </attr>
 
