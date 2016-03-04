@@ -61,6 +61,7 @@ import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapException.LdapInvalidAttrValueException;
 import com.zimbra.cs.ldap.LdapException.LdapSizeLimitExceededException;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapUsage;
@@ -641,6 +642,7 @@ public abstract class AutoProvision {
             zlc = LdapClient.getExternalContext(config, LdapUsage.AUTO_PROVISION_ADMIN_SEARCH);
 
             String searchFilter = null;
+            String searchFilterWithoutLastPolling = null;
 
             if (name != null) {
                 if (searchFilterTemplate == null) {
@@ -658,6 +660,7 @@ public abstract class AutoProvision {
                 }
                 searchFilter = LdapUtil.computeDn("*", searchFilterTemplate);
                 if (createTimestampLaterThan != null) {
+                    searchFilterWithoutLastPolling = searchFilter;
                     // searchFilter = "(&" + searchFilter + "(createTimestamp>=" + createTimestampLaterThan + "))";
                     searchFilter = "(&" + searchFilter +
                             ZLdapFilterFactory.getInstance().createdLaterOrEqual(createTimestampLaterThan).toFilterString() + ")";
@@ -666,10 +669,26 @@ public abstract class AutoProvision {
             }
 
             zFilter = ZLdapFilterFactory.getInstance().fromFilterString(filterId, searchFilter);
-            SearchLdapOptions searchOptions = new SearchLdapOptions(searchBase, zFilter,
+            SearchLdapOptions searchOptions;
+            try {
+                searchOptions = new SearchLdapOptions(searchBase, zFilter,
                     returnAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, ldapVisitor);
-
-            zlc.searchPaged(searchOptions);
+                zlc.searchPaged(searchOptions);
+            } catch (LdapInvalidAttrValueException eav) {
+                ZimbraLog.autoprov.info("Retrying ldap search query with createTimestamp in seconds.");
+                if (searchFilterWithoutLastPolling != null && createTimestampLaterThan != null) {
+                    createTimestampLaterThan = createTimestampLaterThan.replaceAll("\\..*Z$", "Z");
+                    // searchFilter = "(&" + searchFilter + "(createTimestamp>=" + createTimestampLaterThan + "))";
+                    searchFilter = "(&" + searchFilter +
+                            ZLdapFilterFactory.getInstance().createdLaterOrEqual(createTimestampLaterThan).toFilterString() + ")";
+                    ZimbraLog.autoprov.info("new searchFilter = %s", searchFilter);
+                    filterId = FilterId.AUTO_PROVISION_SEARCH_CREATED_LATERTHAN;
+                }
+                zFilter = ZLdapFilterFactory.getInstance().fromFilterString(filterId, searchFilter);
+                searchOptions = new SearchLdapOptions(searchBase, zFilter,
+                    returnAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, ldapVisitor);
+                zlc.searchPaged(searchOptions);
+            }
         } catch (LdapSizeLimitExceededException e) {
             hitSizeLimitExceededException = true;
             if (wantPartialResult) {
