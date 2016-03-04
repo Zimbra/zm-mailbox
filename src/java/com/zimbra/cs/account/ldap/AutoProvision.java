@@ -679,7 +679,7 @@ public abstract class AutoProvision {
                 if (searchFilterWithoutLastPolling != null && createTimestampLaterThan != null) {
                     createTimestampLaterThan = createTimestampLaterThan.replaceAll("\\..*Z$", "Z");
                     // searchFilter = "(&" + searchFilter + "(createTimestamp>=" + createTimestampLaterThan + "))";
-                    searchFilter = "(&" + searchFilter +
+                    searchFilter = "(&" + searchFilterWithoutLastPolling +
                             ZLdapFilterFactory.getInstance().createdLaterOrEqual(createTimestampLaterThan).toFilterString() + ")";
                     ZimbraLog.autoprov.info("new searchFilter = %s", searchFilter);
                     filterId = FilterId.AUTO_PROVISION_SEARCH_CREATED_LATERTHAN;
