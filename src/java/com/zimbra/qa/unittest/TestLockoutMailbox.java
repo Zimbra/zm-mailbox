@@ -20,11 +20,13 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.index.solr.SolrCloudIndex;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.service.admin.LockoutMailbox;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.admin.message.GrantRightRequest;
 import com.zimbra.soap.admin.message.GrantRightResponse;
 import com.zimbra.soap.admin.message.LockoutMailboxRequest;
@@ -51,10 +53,13 @@ public class TestLockoutMailbox extends TestCase {
     private Account domainAdmin = null;
     private SoapProvisioning adminSoapProv = null;
     private SoapProvisioning delegatedSoapProv = null;
+    private boolean originalLCSetting = false;
 
     @Before
     public void setUp() throws Exception {
         cleanup();
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         adminSoapProv = TestUtil.newSoapProvisioning();
         TestJaxbProvisioning.ensureDomainExists(MY_DOMAIN);
         TestJaxbProvisioning.ensureDomainExists(OFFLIMITS_DOMAIN);
@@ -65,6 +70,7 @@ public class TestLockoutMailbox extends TestCase {
     @After
     public void tearDown() throws Exception {
         cleanup();
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanup() throws Exception {
@@ -86,8 +92,8 @@ public class TestLockoutMailbox extends TestCase {
     @Test
     public void testLockout() throws Exception {
         Mailbox mbox = TestUtil.getMailbox(MY_USER);
-        TestUtil.addMessage(mbox, "test");
-        TestUtil.waitForMessage(TestUtil.getZMailbox(MY_USER), "test");
+        TestUtil.sendMessage(TestUtil.getZMailbox(MY_USER), MY_USER, "Cranberry sauce");
+        TestUtil.waitForMessage(TestUtil.getZMailbox(MY_USER), "Cranberry sauce");
         assertFalse("mailbox should not be locked yet",
                 MailboxManager.getInstance().isMailboxLockedOut(mbox.getAccountId()));
         LockoutMailboxRequest req = LockoutMailboxRequest.create(AccountNameSelector.fromName(MY_USER));
@@ -100,8 +106,8 @@ public class TestLockoutMailbox extends TestCase {
     @Test
     public void testUnlock() throws Exception {
         Mailbox mbox = TestUtil.getMailbox(MY_USER);
-        TestUtil.addMessage(mbox, "test");
-        TestUtil.waitForMessage(TestUtil.getZMailbox(MY_USER), "test");
+        TestUtil.sendMessage(TestUtil.getZMailbox(MY_USER), MY_USER, "Cranberry sauce");
+        TestUtil.waitForMessage(TestUtil.getZMailbox(MY_USER), "Cranberry sauce");
         assertFalse("mailbox should not be locked yet",
                 MailboxManager.getInstance().isMailboxLockedOut(mbox.getAccountId()));
         MailboxManager.getInstance().lockoutMailbox(mbox.getAccountId());
@@ -117,9 +123,8 @@ public class TestLockoutMailbox extends TestCase {
 
     @Test
     public void testLockAccountEnumeration() throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(MY_USER);
-        TestUtil.addMessage(mbox, "test");
-        TestUtil.waitForMessage(TestUtil.getZMailbox(MY_USER), "test");
+        TestUtil.sendMessage(TestUtil.getZMailbox(MY_USER), MY_USER, "Cranberry sauce");
+        TestUtil.waitForMessage(TestUtil.getZMailbox(MY_USER), "Cranberry sauce");
         List<AdminRight> relatedRights = new ArrayList<AdminRight>();
         List<String> notes = new ArrayList<String>();
         AdminDocumentHandler handler = new LockoutMailbox();
@@ -137,9 +142,8 @@ public class TestLockoutMailbox extends TestCase {
 
     @Test
     public void testLockoutSufficientPermissions() throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(MY_USER);
-        TestUtil.addMessage(mbox, "test");
-        TestUtil.waitForMessage(TestUtil.getZMailbox(MY_USER), "test");
+        TestUtil.sendMessage(TestUtil.getZMailbox(MY_USER), MY_USER, "Cranberry sauce");
+        TestUtil.waitForMessage(TestUtil.getZMailbox(MY_USER), "Cranberry sauce");
         List<AdminRight> relatedRights = new ArrayList<AdminRight>();
         List<String> notes = new ArrayList<String>();
         AdminDocumentHandler handler = new LockoutMailbox();
@@ -167,9 +171,8 @@ public class TestLockoutMailbox extends TestCase {
 
     @Test
     public void testLockoutAsGlobalAdmin() throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(MY_USER);
-        TestUtil.addMessage(mbox, "test");
-        TestUtil.waitForMessage(TestUtil.getZMailbox(MY_USER), "test");
+        TestUtil.sendMessage(TestUtil.getZMailbox(MY_USER), MY_USER, "Cranberry sauce");
+        TestUtil.waitForMessage(TestUtil.getZMailbox(MY_USER), "Cranberry sauce");
         LockoutMailboxRequest req = LockoutMailboxRequest.create(AccountNameSelector.fromName(MY_USER));
         req.setOperation(AdminConstants.A_START);
         try {
@@ -230,5 +233,4 @@ public class TestLockoutMailbox extends TestCase {
         GrantRightResponse grResp = adminSoapProv.invokeJaxb(new GrantRightRequest(target, grantee, right));
         assertNotNull("GrantRightResponse for " + right.getValue(), grResp);
     }
-
 }
