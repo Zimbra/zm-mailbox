@@ -18,12 +18,15 @@
 package com.zimbra.qa.unittest;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
 import com.zimbra.client.ZEmailAddress;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -42,43 +45,23 @@ extends TestCase {
 
     private DbConnection mConn;
     private Mailbox mMbox;
-    private String mOriginalFromAddress;
-    private String mOriginalFromDisplay;
-    private String mOriginalReplyEnabled;
-    private String mOriginalFromDate;
-    private String mOriginalUntilDate;
-    private String mOriginalAllowAnyFrom;
-    private String mOriginalReplyToAddress;
-    private String mOriginalReplyToDisplay;
-    private String mOriginalReplyToEnabled;
 
     private static String NAME_PREFIX = TestOutOfOffice.class.getSimpleName();
-    private static String RECIPIENT_NAME = "user1";
-    private static String SENDER_NAME = "user2";
+    private static String RECIPIENT_NAME = "testoutofoffice-recipient";
+    private static String SENDER_NAME = "testoutofoffice-sender";
     private static String RECIPIENT1_ADDRESS = "TestOutOfOffice1@example.zimbra.com";
     private static String RECIPIENT2_ADDRESS = "TestOutOfOffice2@example.zimbra.com";
 
     @Override
     protected void setUp() throws Exception {
-        super.setUp();
-
+        cleanupAccounts();
+        TestUtil.createAccount(RECIPIENT_NAME);
+        TestUtil.createAccount(SENDER_NAME);
+        TestUtil.sendMessage(TestUtil.getZMailbox(SENDER_NAME), RECIPIENT_NAME, "message to init recipient's mailbox");
+        TestUtil.sendMessage(TestUtil.getZMailbox(RECIPIENT_NAME), SENDER_NAME, "message to init sender's mailbox");
         mMbox = TestUtil.getMailbox(RECIPIENT_NAME);
         mConn = DbPool.getConnection();
-
-        Account recipient = TestUtil.getAccount(RECIPIENT_NAME);
-        mOriginalFromAddress = recipient.getPrefFromAddress();
-        mOriginalFromDisplay = recipient.getPrefFromDisplay();
-        mOriginalAllowAnyFrom = TestUtil.getAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraAllowAnyFromAddress);
-        mOriginalReplyEnabled =
-            TestUtil.getAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled);
-        mOriginalFromDate = recipient.getPrefOutOfOfficeFromDateAsString();
-        mOriginalUntilDate = recipient.getPrefOutOfOfficeUntilDateAsString();
-        mOriginalReplyToAddress = recipient.getPrefReplyToAddress();
-        mOriginalReplyToDisplay = recipient.getPrefReplyToDisplay();
-        mOriginalReplyToEnabled = TestUtil.getAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefReplyToEnabled);
-
-        cleanUp();
-}
+    }
 
     public void testRowExists() throws Exception {
         long fiveDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 5) - 100000;
@@ -191,6 +174,37 @@ extends TestCase {
         assertEquals(newReplyToDisplay, replyToAddress.getPersonal());
     }
 
+    /**
+     * Tests fix for bug 26818 (OOO message does not work when
+     * "Don't keep a local copy of messages" is checked)
+     *
+     * @throws Exception
+     */
+    public void testOOOWhenForwardNoDelivery() throws Exception {
+
+        Account recipientAcct = TestUtil.getAccount(RECIPIENT_NAME);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, ProvisioningConstants.TRUE);
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, "I am OOO");
+        attrs.put(Provisioning.A_zimbraPrefMailForwardingAddress, "abc@xyz.com");
+        attrs.put(Provisioning.A_zimbraPrefMailLocalDeliveryDisabled, ProvisioningConstants.TRUE);
+        Provisioning.getInstance().modifyAttrs(recipientAcct, attrs);
+
+        ZMailbox senderMbox = TestUtil.getZMailbox(SENDER_NAME);
+        ZMailbox recipMbox = TestUtil.getZMailbox(RECIPIENT_NAME);
+
+        String subject = NAME_PREFIX + " testOOOWhenForwardNoDelivery";
+
+        // Send the message
+        TestUtil.sendMessage(senderMbox, RECIPIENT_NAME, subject, "testing");
+
+        // Make sure message was not delivered since local delivery is disabled
+        assertEquals(0, TestUtil.search(recipMbox, "in:inbox subject:'" + subject + "'").size());
+
+        // But check for out-of-office reply
+        TestUtil.waitForMessage(senderMbox, "in:inbox subject:'" + subject + "'");
+    }
+
     private ZEmailAddress getAddress(ZMessage msg, String type) {
         for (ZEmailAddress address : msg.getEmailAddresses()) {
             if (address.getType().equals(type)) {
@@ -203,29 +217,12 @@ extends TestCase {
     @Override
     public void tearDown()
     throws Exception {
-        cleanUp();
         DbPool.quietClose(mConn);
-
-        Account recipient = TestUtil.getAccount(RECIPIENT_NAME);
-        recipient.setPrefFromAddress(mOriginalFromAddress);
-        recipient.setPrefFromDisplay(mOriginalFromDisplay);
-        TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraAllowAnyFromAddress, mOriginalAllowAnyFrom);
-
-        TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, mOriginalReplyEnabled);
-        TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeFromDate, mOriginalFromDate);
-        TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeUntilDate, mOriginalUntilDate);
-        recipient.setPrefReplyToAddress(mOriginalReplyToAddress);
-        recipient.setPrefReplyToDisplay(mOriginalReplyToDisplay);
-        TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefReplyToEnabled, mOriginalReplyToEnabled);
-
-        super.tearDown();
+        cleanupAccounts();
     }
 
-    private void cleanUp()
-    throws Exception {
-        DbOutOfOffice.clear(mConn, mMbox);
-        mConn.commit();
-        TestUtil.deleteTestData(SENDER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(RECIPIENT_NAME, NAME_PREFIX);
+    private void cleanupAccounts() throws Exception {
+        TestUtil.deleteAccount(SENDER_NAME);
+        TestUtil.deleteAccount(RECIPIENT_NAME);
     }
 }

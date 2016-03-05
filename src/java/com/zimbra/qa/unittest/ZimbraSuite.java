@@ -35,7 +35,7 @@ import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.qa.unittest.server.TestCalDavImportServer;
 import com.zimbra.qa.unittest.server.TestDataSourceServer;
 import com.zimbra.qa.unittest.server.TestDocumentServer;
-import com.zimbra.qa.unittest.server.TestNotificationServer;
+import com.zimbra.qa.unittest.server.TestNewMailNotification;
 import com.zimbra.qa.unittest.server.TestPop3ImportServer;
 
 /**
@@ -84,8 +84,8 @@ public class ZimbraSuite extends TestSuite {
         sClasses.add(TestImap.class);
         sClasses.add(TestImapImport.class);
         sClasses.add(TestImapOneWayImport.class);
-        sClasses.add(TestNotification.class);
-        sClasses.add(TestNotificationServer.class);
+        sClasses.add(TestMessageIntercept.class);
+        sClasses.add(TestNewMailNotification.class);
         sClasses.add(TestMaxMessageSize.class);
         sClasses.add(TestMetadata.class);
         sClasses.add(TestSoap.class);
