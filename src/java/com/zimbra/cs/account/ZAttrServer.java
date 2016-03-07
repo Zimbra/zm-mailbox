@@ -25463,6 +25463,150 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf postscreen_dnsbl_max_ttl.
+     *
+     * @return zimbraMtaPostscreenDnsblMaxTTL, or "${postscreen_dnsbl_ttl?{$postscreen_dnsbl_ttl}:{1}}h" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2083)
+    public String getMtaPostscreenDnsblMaxTTL() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblMaxTTL, "${postscreen_dnsbl_ttl?{$postscreen_dnsbl_ttl}:{1}}h");
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_max_ttl.
+     *
+     * @param zimbraMtaPostscreenDnsblMaxTTL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2083)
+    public void setMtaPostscreenDnsblMaxTTL(String zimbraMtaPostscreenDnsblMaxTTL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblMaxTTL, zimbraMtaPostscreenDnsblMaxTTL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_max_ttl.
+     *
+     * @param zimbraMtaPostscreenDnsblMaxTTL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2083)
+    public Map<String,Object> setMtaPostscreenDnsblMaxTTL(String zimbraMtaPostscreenDnsblMaxTTL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblMaxTTL, zimbraMtaPostscreenDnsblMaxTTL);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_max_ttl.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2083)
+    public void unsetMtaPostscreenDnsblMaxTTL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblMaxTTL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_max_ttl.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2083)
+    public Map<String,Object> unsetMtaPostscreenDnsblMaxTTL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblMaxTTL, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_min_ttl.
+     *
+     * @return zimbraMtaPostscreenDnsblMinTTL, or "60s" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2082)
+    public String getMtaPostscreenDnsblMinTTL() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblMinTTL, "60s");
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_min_ttl.
+     *
+     * @param zimbraMtaPostscreenDnsblMinTTL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2082)
+    public void setMtaPostscreenDnsblMinTTL(String zimbraMtaPostscreenDnsblMinTTL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblMinTTL, zimbraMtaPostscreenDnsblMinTTL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_min_ttl.
+     *
+     * @param zimbraMtaPostscreenDnsblMinTTL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2082)
+    public Map<String,Object> setMtaPostscreenDnsblMinTTL(String zimbraMtaPostscreenDnsblMinTTL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblMinTTL, zimbraMtaPostscreenDnsblMinTTL);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_min_ttl.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2082)
+    public void unsetMtaPostscreenDnsblMinTTL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblMinTTL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_min_ttl.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2082)
+    public Map<String,Object> unsetMtaPostscreenDnsblMinTTL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblMinTTL, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf postscreen_dnsbl_reply_map. Single valued, comma
      * separated list.
      *
@@ -29046,6 +29190,137 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtp_tls_dane_insecure_mx_policy.
+     *
+     * <p>Valid values: [dane, encrypt, may]
+     *
+     * @return zimbraMtaSmtpTlsDaneInsecureMXPolicy, or ZAttrProvisioning.MtaSmtpTlsDaneInsecureMXPolicy.dane if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2085)
+    public ZAttrProvisioning.MtaSmtpTlsDaneInsecureMXPolicy getMtaSmtpTlsDaneInsecureMXPolicy() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaSmtpTlsDaneInsecureMXPolicy); return v == null ? ZAttrProvisioning.MtaSmtpTlsDaneInsecureMXPolicy.dane : ZAttrProvisioning.MtaSmtpTlsDaneInsecureMXPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaSmtpTlsDaneInsecureMXPolicy.dane; }
+    }
+
+    /**
+     * Value for postconf smtp_tls_dane_insecure_mx_policy.
+     *
+     * <p>Valid values: [dane, encrypt, may]
+     *
+     * @return zimbraMtaSmtpTlsDaneInsecureMXPolicy, or "dane" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2085)
+    public String getMtaSmtpTlsDaneInsecureMXPolicyAsString() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpTlsDaneInsecureMXPolicy, "dane");
+    }
+
+    /**
+     * Value for postconf smtp_tls_dane_insecure_mx_policy.
+     *
+     * <p>Valid values: [dane, encrypt, may]
+     *
+     * @param zimbraMtaSmtpTlsDaneInsecureMXPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2085)
+    public void setMtaSmtpTlsDaneInsecureMXPolicy(ZAttrProvisioning.MtaSmtpTlsDaneInsecureMXPolicy zimbraMtaSmtpTlsDaneInsecureMXPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsDaneInsecureMXPolicy, zimbraMtaSmtpTlsDaneInsecureMXPolicy.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_tls_dane_insecure_mx_policy.
+     *
+     * <p>Valid values: [dane, encrypt, may]
+     *
+     * @param zimbraMtaSmtpTlsDaneInsecureMXPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2085)
+    public Map<String,Object> setMtaSmtpTlsDaneInsecureMXPolicy(ZAttrProvisioning.MtaSmtpTlsDaneInsecureMXPolicy zimbraMtaSmtpTlsDaneInsecureMXPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsDaneInsecureMXPolicy, zimbraMtaSmtpTlsDaneInsecureMXPolicy.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_tls_dane_insecure_mx_policy.
+     *
+     * <p>Valid values: [dane, encrypt, may]
+     *
+     * @param zimbraMtaSmtpTlsDaneInsecureMXPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2085)
+    public void setMtaSmtpTlsDaneInsecureMXPolicyAsString(String zimbraMtaSmtpTlsDaneInsecureMXPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsDaneInsecureMXPolicy, zimbraMtaSmtpTlsDaneInsecureMXPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_tls_dane_insecure_mx_policy.
+     *
+     * <p>Valid values: [dane, encrypt, may]
+     *
+     * @param zimbraMtaSmtpTlsDaneInsecureMXPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2085)
+    public Map<String,Object> setMtaSmtpTlsDaneInsecureMXPolicyAsString(String zimbraMtaSmtpTlsDaneInsecureMXPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsDaneInsecureMXPolicy, zimbraMtaSmtpTlsDaneInsecureMXPolicy);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_tls_dane_insecure_mx_policy.
+     *
+     * <p>Valid values: [dane, encrypt, may]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2085)
+    public void unsetMtaSmtpTlsDaneInsecureMXPolicy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsDaneInsecureMXPolicy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_tls_dane_insecure_mx_policy.
+     *
+     * <p>Valid values: [dane, encrypt, may]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2085)
+    public Map<String,Object> unsetMtaSmtpTlsDaneInsecureMXPolicy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsDaneInsecureMXPolicy, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtp_tls_loglevel. Defaults to 0. Valid range is
      * 0-4
      *
@@ -29529,6 +29804,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtp_transport_rate_delay.
+     *
+     * @return zimbraMtaSmtpTransportRateDelay, or "$default_transport_rate_delay" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public String getMtaSmtpTransportRateDelay() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpTransportRateDelay, "$default_transport_rate_delay");
+    }
+
+    /**
+     * Value for postconf smtp_transport_rate_delay.
+     *
+     * @param zimbraMtaSmtpTransportRateDelay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public void setMtaSmtpTransportRateDelay(String zimbraMtaSmtpTransportRateDelay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTransportRateDelay, zimbraMtaSmtpTransportRateDelay);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_transport_rate_delay.
+     *
+     * @param zimbraMtaSmtpTransportRateDelay new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public Map<String,Object> setMtaSmtpTransportRateDelay(String zimbraMtaSmtpTransportRateDelay, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTransportRateDelay, zimbraMtaSmtpTransportRateDelay);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_transport_rate_delay.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public void unsetMtaSmtpTransportRateDelay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTransportRateDelay, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_transport_rate_delay.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public Map<String,Object> unsetMtaSmtpTransportRateDelay(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTransportRateDelay, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtpd_banner
      *
      * @return zimbraMtaSmtpdBanner, or "$myhostname ESMTP $mail_name" if unset
@@ -29597,6 +29944,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaSmtpdBanner(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdBanner, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_client_auth_rate_limit.
+     *
+     * @return zimbraMtaSmtpdClientAuthRateLimit, or 0 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2084)
+    public int getMtaSmtpdClientAuthRateLimit() {
+        return getIntAttr(Provisioning.A_zimbraMtaSmtpdClientAuthRateLimit, 0);
+    }
+
+    /**
+     * Value for postconf smtpd_client_auth_rate_limit.
+     *
+     * @param zimbraMtaSmtpdClientAuthRateLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2084)
+    public void setMtaSmtpdClientAuthRateLimit(int zimbraMtaSmtpdClientAuthRateLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdClientAuthRateLimit, Integer.toString(zimbraMtaSmtpdClientAuthRateLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_client_auth_rate_limit.
+     *
+     * @param zimbraMtaSmtpdClientAuthRateLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2084)
+    public Map<String,Object> setMtaSmtpdClientAuthRateLimit(int zimbraMtaSmtpdClientAuthRateLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdClientAuthRateLimit, Integer.toString(zimbraMtaSmtpdClientAuthRateLimit));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_client_auth_rate_limit.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2084)
+    public void unsetMtaSmtpdClientAuthRateLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdClientAuthRateLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_client_auth_rate_limit.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2084)
+    public Map<String,Object> unsetMtaSmtpdClientAuthRateLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdClientAuthRateLimit, "");
         return attrs;
     }
 
