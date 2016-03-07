@@ -216,6 +216,7 @@ SECTION mta DEPENDS amavis dhparam
 	POSTCONF always_add_missing_headers		VAR zimbraMtaAlwaysAddMissingHeaders
 	POSTCONF smtpd_sasl_security_options		VAR zimbraMtaSmtpdSaslSecurityOptions
 	POSTCONF smtpd_sasl_tls_security_options	VAR zimbraMtaSmtpdSaslTlsSecurityOptions
+	POSTCONF smtpd_client_auth_rate_limit		VAR zimbraMtaSmtpdClientAuthRateLimit
 	POSTCONF smtp_helo_name				VAR zimbraMtaSmtpHeloName
 	POSTCONF smtp_cname_overrides_servername	VAR zimbraMtaSmtpCnameOverridesServername
 	POSTCONF smtp_sasl_auth_enable			VAR zimbraMtaSmtpSaslAuthEnable
@@ -226,9 +227,11 @@ SECTION mta DEPENDS amavis dhparam
 	POSTCONF smtp_tls_security_level		VAR zimbraMtaSmtpTlsSecurityLevel
 	POSTCONF smtp_tls_loglevel			VAR zimbraMtaSmtpTlsLoglevel
 	POSTCONF smtp_tls_ciphers			VAR zimbraMtaSmtpTlsCiphers
+	POSTCONF smtp_tls_dane_insecure_mx_policy	VAR zimbraMtaSmtpTlsDaneInsecureMXPolicy
 	POSTCONF smtp_tls_mandatory_ciphers		VAR zimbraMtaSmtpTlsMandatoryCiphers
 	POSTCONF smtp_tls_mandatory_protocols		VAR zimbraMtaSmtpMandatoryTlsProtocols
 	POSTCONF smtp_tls_protocols			VAR zimbraMtaSmtpTlsProtocols
+	POSTCONF smtp_transport_rate_delay		VAR zimbraMtaSmtpTransportRateDelay
 	POSTCONF smtp_sasl_mechanism_filter		VAR zimbraMtaSmtpSaslMechanismFilter
 	POSTCONF smtp_sasl_password_maps		VAR zimbraMtaSmtpSaslPasswordMaps
 	POSTCONF milter_connect_timeout			VAR zimbraMtaMilterConnectTimeout
@@ -254,6 +257,8 @@ SECTION mta DEPENDS amavis dhparam
 	POSTCONF postscreen_dnsbl_sites			VAR zimbraMtaPostscreenDnsblSites
 	POSTCONF postscreen_dnsbl_threshold		VAR zimbraMtaPostscreenDnsblThreshold
 	POSTCONF postscreen_dnsbl_ttl			VAR zimbraMtaPostscreenDnsblTTL
+	POSTCONF postscreen_dnsbl_max_ttl		VAR zimbraMtaPostscreenDnsblMaxTTL
+	POSTCONF postscreen_dnsbl_min_ttl		VAR zimbraMtaPostscreenDnsblMinTTL
 	POSTCONF postscreen_dnsbl_whitelist_threshold	VAR zimbraMtaPostscreenDnsblWhitelistThreshold
 	POSTCONF postscreen_greet_action		VAR zimbraMtaPostscreenGreetAction
 	POSTCONF postscreen_greet_ttl			VAR zimbraMtaPostscreenGreetTTL
