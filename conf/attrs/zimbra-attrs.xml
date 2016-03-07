@@ -10503,4 +10503,29 @@ TODO: delete them permanently from here
   <desc>Value for postconf canonical_maps. Comma separated list.</desc>
 </attr>
 
+<attr id="2081" name="zimbraMtaSmtpTransportRateDelay" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
+  <globalConfigValue>$default_transport_rate_delay</globalConfigValue>
+  <desc>Value for postconf smtp_transport_rate_delay.</desc>
+</attr>
+
+<attr id="1928" name="zimbraMtaPostscreenDnsblMinTTL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
+  <globalConfigValue>60s</globalConfigValue>
+  <desc>Value for postconf postscreen_dnsbl_min_ttl.</desc>
+</attr>
+
+<attr id="1928" name="zimbraMtaPostscreenDnsblMaxTTL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
+  <globalConfigValue>${postscreen_dnsbl_ttl?{$postscreen_dnsbl_ttl}:{1}}h</globalConfigValue>
+  <desc>Value for postconf postscreen_dnsbl_max_ttl.</desc>
+</attr>
+
+<attr id="1928" name="zimbraMtaSmtpdClientAuthRateLimit" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Value for postconf smtpd_client_auth_rate_limit.</desc>
+</attr>
+
+<attr id="1928" name="zimbraMtaSmtpTlsDaneInsecureMXPolicy" type="enum" value="may,encrypt,dane" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0,9.0.0">
+  <globalConfigValue>dane</globalConfigValue>
+  <desc>Value for postconf smtp_tls_dane_insecure_mx_policy.</desc>
+</attr>
+
 </attrs>
