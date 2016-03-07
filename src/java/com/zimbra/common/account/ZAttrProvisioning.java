@@ -1412,6 +1412,24 @@ public class ZAttrProvisioning {
         public boolean isNull_() { return this == null_;}
     }
 
+    public static enum MtaSmtpTlsDaneInsecureMXPolicy {
+        dane("dane"),
+        may("may"),
+        encrypt("encrypt");
+        private String mValue;
+        private MtaSmtpTlsDaneInsecureMXPolicy(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpTlsDaneInsecureMXPolicy fromString(String s) throws ServiceException {
+            for (MtaSmtpTlsDaneInsecureMXPolicy value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDane() { return this == dane;}
+        public boolean isMay() { return this == may;}
+        public boolean isEncrypt() { return this == encrypt;}
+    }
+
     public static enum MtaSmtpTlsMandatoryCiphers {
         export("export"),
         high("high"),
@@ -10427,6 +10445,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaPostscreenDnsblAction = "zimbraMtaPostscreenDnsblAction";
 
     /**
+     * Value for postconf postscreen_dnsbl_max_ttl.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2083)
+    public static final String A_zimbraMtaPostscreenDnsblMaxTTL = "zimbraMtaPostscreenDnsblMaxTTL";
+
+    /**
+     * Value for postconf postscreen_dnsbl_min_ttl.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2082)
+    public static final String A_zimbraMtaPostscreenDnsblMinTTL = "zimbraMtaPostscreenDnsblMinTTL";
+
+    /**
      * Value for postconf postscreen_dnsbl_reply_map. Single valued, comma
      * separated list.
      *
@@ -10649,6 +10683,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1532)
     public static final String A_zimbraMtaSmtpdBanner = "zimbraMtaSmtpdBanner";
+
+    /**
+     * Value for postconf smtpd_client_auth_rate_limit.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2084)
+    public static final String A_zimbraMtaSmtpdClientAuthRateLimit = "zimbraMtaSmtpdClientAuthRateLimit";
 
     /**
      * Value for postconf smtpd_client_port_logging. Defaults to no
@@ -10956,6 +10998,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpTlsCiphers = "zimbraMtaSmtpTlsCiphers";
 
     /**
+     * Value for postconf smtp_tls_dane_insecure_mx_policy.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2085)
+    public static final String A_zimbraMtaSmtpTlsDaneInsecureMXPolicy = "zimbraMtaSmtpTlsDaneInsecureMXPolicy";
+
+    /**
      * Value for postconf smtp_tls_loglevel. Defaults to 0. Valid range is
      * 0-4
      *
@@ -10995,6 +11045,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1527)
     public static final String A_zimbraMtaSmtpTlsSecurityLevel = "zimbraMtaSmtpTlsSecurityLevel";
+
+    /**
+     * Value for postconf smtp_transport_rate_delay.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2081)
+    public static final String A_zimbraMtaSmtpTransportRateDelay = "zimbraMtaSmtpTransportRateDelay";
 
     /**
      * Deprecated since: 8.7.0_BETA2. use zimbraMtaSmtpdSoftErrorLimit
