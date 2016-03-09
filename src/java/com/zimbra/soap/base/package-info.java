@@ -15,9 +15,6 @@
  * ***** END LICENSE BLOCK *****
  */
 @XmlSchema(
-    xmlns = {
-        @XmlNs(prefix="zimbra", namespaceURI = "urn:zimbra")
-    },
     namespace = "urn:zimbra",
     elementFormDefault = XmlNsForm.QUALIFIED
 )

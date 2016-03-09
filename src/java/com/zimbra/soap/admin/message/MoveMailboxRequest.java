@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,15 +17,18 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.BackupConstants;
+import com.zimbra.common.soap.ClusterConstants;
 import com.zimbra.soap.admin.type.MoveMailboxInfo;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
+import com.zimbra.soap.type.ClusterSelector;
 
 /**
  * @zm-api-command-network-edition
@@ -54,8 +57,10 @@ public class MoveMailboxRequest {
      * @zm-api-field-description Specification for the account move
      */
     @ZimbraUniqueElement
-    @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=true)
+    @XmlElement(name=AccountConstants.E_ACCOUNT /* account */, required=true)
     private MoveMailboxInfo account;
+    @XmlElement(name=ClusterConstants.E_CLUSTER, required=false)
+    private ClusterSelector cluster;
 
     private MoveMailboxRequest() {
     }
@@ -64,18 +69,44 @@ public class MoveMailboxRequest {
         setAccount(account);
     }
 
+    private MoveMailboxRequest(MoveMailboxInfo account, ClusterSelector cs) {
+        setAccount(account);
+        setCluster(cs);
+    }
+
+
+    /**
+     * @param cluster the cluster to set
+     */
+    public void setCluster(ClusterSelector cluster) {
+        this.cluster = cluster;
+    }
+
     public static MoveMailboxRequest create(MoveMailboxInfo account) {
         return new MoveMailboxRequest(account);
     }
 
+    public static MoveMailboxRequest create(MoveMailboxInfo account, ClusterSelector cs) {
+        return new MoveMailboxRequest(account, cs);
+    }
+
     public void setAccount(MoveMailboxInfo account) { this.account = account; }
     public MoveMailboxInfo getAccount() { return account; }
+
+
+    /**
+     * @return the cluster
+     */
+    public ClusterSelector getCluster() {
+        return cluster;
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
             .add("account", account);
     }
+
 
     @Override
     public String toString() {

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.VolumeIdAndProgress;
@@ -32,6 +33,7 @@ import com.zimbra.soap.admin.type.VolumeIdAndProgress;
 public class DedupeBlobsResponse {
 
     @XmlEnum
+    @XmlType(namespace="urn:zimbraAdmin")
     public static enum DedupStatus {
         running,
         stopped
@@ -42,34 +44,34 @@ public class DedupeBlobsResponse {
      */
     @XmlAttribute(name=AdminConstants.A_STATUS, required=false)
     private DedupStatus status;
-    
+
     @XmlAttribute(name=AdminConstants.A_TOTAL_SIZE, required=false)
     private Long totalSize;
-   
+
     @XmlAttribute(name=AdminConstants.A_TOTAL_COUNT, required=false)
     private Integer totalCount;
 
     @XmlElement(name=AdminConstants.E_VOLUME_BLOBS_PROGRESS, required=false)
     private VolumeIdAndProgress[] volumeBlobsProgress;
-    
+
     @XmlElement(name=AdminConstants.E_BLOB_DIGESTS_PROGRESS , required=false)
     private VolumeIdAndProgress[] blobDigestsProgress;
 
     public DedupeBlobsResponse() {
     }
-    
+
     public void setStatus(DedupStatus status) {
         this.status = status;
     }
-   
+
     public void setTotalCount(int count) {
         this.totalCount = count;
     }
-    
+
     public void setTotalSize(long size) {
         this.totalSize = size;
     }
-    
+
     public void setVolumeBlobsProgress(VolumeIdAndProgress[] progress) {
         this.volumeBlobsProgress = progress;
     }
@@ -77,19 +79,19 @@ public class DedupeBlobsResponse {
     public void setBlobDigestsProgress(VolumeIdAndProgress[] progress) {
         this.blobDigestsProgress = progress;
     }
-    
+
     public DedupStatus getStatus() {
         return status;
     }
-    
+
     public Integer getTotalCount() {
         return totalCount;
     }
-    
+
     public Long getTotalSize() {
         return totalSize;
     }
-    
+
     public VolumeIdAndProgress[] getVolumeBlobsProgress() {
         return volumeBlobsProgress;
     }

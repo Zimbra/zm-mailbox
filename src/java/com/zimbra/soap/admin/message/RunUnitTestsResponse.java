@@ -51,21 +51,30 @@ public class RunUnitTestsResponse {
     private final int numFailed;
 
     /**
+     * @zm-api-field-tag num-failed
+     * @zm-api-field-description Number of failed tests
+     */
+    @XmlAttribute(name=AdminConstants.A_NUM_SKIPPED, required=true)
+    private final int numSkipped;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private RunUnitTestsResponse() {
-        this((TestResultInfo) null, -1, -1);
+        this((TestResultInfo) null, -1, -1, -1);
     }
 
     public RunUnitTestsResponse(TestResultInfo results,
-                int numExecuted, int numFailed) {
-        this.results = results;
-        this.numExecuted = numExecuted;
-        this.numFailed = numFailed;
-    }
-
+            int numExecuted, int numFailed, int numSkipped) {
+	    this.results = results;
+	    this.numExecuted = numExecuted;
+	    this.numFailed = numFailed;
+	    this.numSkipped = numSkipped;
+	}
+    
     public TestResultInfo getResults() { return results; }
     public int getNumExecuted() { return numExecuted; }
     public int getNumFailed() { return numFailed; }
+    public int getNumSkipped() { return numSkipped; }
 }

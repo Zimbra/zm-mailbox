@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,11 +17,11 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -52,14 +52,14 @@ public class ModifyContactGroupMember {
      *      <td> inlined member (member name and email address is embeded in the contact group)</td> </tr>
      * </table>
      */
-    @XmlAttribute(name=MailConstants.A_CONTACT_GROUP_MEMBER_TYPE /* type */, required=true)
+    @XmlAttribute(name=MailConstants.A_CONTACT_GROUP_MEMBER_TYPE /* type */, required=false)
     private String type;
 
     /**
      * @zm-api-field-tag member-value
      * @zm-api-field-description Member value
      * <table>
-     * <tr> <td> <b>type="C"</b> </td> 
+     * <tr> <td> <b>type="C"</b> </td>
      *      <td> Item ID of another contact.  If the referenced contact is in a shared folder, the item ID must be
      *           qualified by zimbraId of the owner.  e.g. {zimbraId}:{itemId} </td> </tr>
      * <tr> <td> <b>type="G"</b> </td> <td> GAL entry reference (returned in SearchGalResponse) </td> </tr>
@@ -67,7 +67,7 @@ public class ModifyContactGroupMember {
      *      <td> name and email address in the form of: <b>"{name}" &lt;{email}></b> </td> </tr>
      * </table>
      */
-    @XmlAttribute(name=MailConstants.A_CONTACT_GROUP_MEMBER_VALUE /* value */, required=true)
+    @XmlAttribute(name=MailConstants.A_CONTACT_GROUP_MEMBER_VALUE /* value */, required=false)
     private String value;
 
     public ModifyContactGroupMember() {

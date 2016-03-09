@@ -71,10 +71,10 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlType(propOrder = {"version", "accountId", "accountName", "crumb", "lifetime", "adminDelegated", "restUrl",
         "quotaUsed", "previousSessionTime", "lastWriteAccessTime", "recentMessageCount", "cos", "prefs", "attrs",
         "zimlets", "props", "identities", "signatures", "dataSources", "childAccounts", "discoveredRights",
-        "soapURL", "publicURL", "changePasswordURL", "license", "adminURL", "boshURL"})
+        "soapURL", "publicURL", "changePasswordURL", "license", "adminURL"})
 @JsonPropertyOrder({"version", "id", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "attSizeLimit",
         "rest", "used", "prevSession", "accessed", "recent", "cos", "prefs", "attrs", "zimlets", "props", "identities",
-        "signatures", "dataSources", "childAccounts", "rights", "soapURL", "publicURL", "license", "adminURL", "boshURL"})
+        "signatures", "dataSources", "childAccounts", "rights", "soapURL", "publicURL", "license", "adminURL"})
 public final class GetInfoResponse {
 
     /**
@@ -304,14 +304,6 @@ public final class GetInfoResponse {
     private String adminURL;
 
     /**
-     * @zm-api-field-tag bosh-url
-     * @zm-api-field-description Proxy URL for accessing XMPP over BOSH. Should be returned only when zimbraFeatureChatEnabled is set to TRUE for Account/COS
-     */
-    @XmlElement(name=AccountConstants.E_BOSH_URL /* boshURL */, required=false)
-    @ZimbraJsonAttribute
-    private String boshURL;
-
-    /**
      * @zm-api-field-description License information.  Only present for Network Edition
      */
     @ZimbraUniqueElement
@@ -438,7 +430,6 @@ public final class GetInfoResponse {
     public void setPublicURL(String publicURL) { this.publicURL = publicURL; }
     public void setChangePasswordURL(String changePasswordURL) { this.changePasswordURL = changePasswordURL; }
     public void setAdminURL(String adminURL) { this.adminURL = adminURL; }
-    public void setBOSHURL(String boshURL) { this.boshURL = boshURL; }
     public void setLicense(LicenseInfo license) { this.license = license; }
 
     public Long getAttachmentSizeLimit() { return attachmentSizeLimit; }
@@ -455,8 +446,7 @@ public final class GetInfoResponse {
     public Long getLastWriteAccessTime() { return lastWriteAccessTime; }
     public Integer getRecentMessageCount() { return recentMessageCount; }
     public String getAdminURL() { return adminURL; }
-    public String getBOSHURL() { return boshURL; }
-    
+
     public Cos getCos() { return cos; }
     public List<Pref> getPrefs() {
         return Collections.unmodifiableList(prefs);
@@ -531,7 +521,6 @@ public final class GetInfoResponse {
             .add("childAccounts", childAccounts)
             .add("soapURL", soapURL)
             .add("publicURL", publicURL)
-            .add("boshURL", boshURL)
             .add("changePasswordURL", changePasswordURL)
             .add("license", license);
     }

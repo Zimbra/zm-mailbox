@@ -16,9 +16,6 @@
  */
 
 @XmlSchema(
-    xmlns = {
-        @XmlNs(prefix="sync", namespaceURI = "urn:zimbraSync")
-    },
     namespace = "urn:zimbraSync",
     elementFormDefault = XmlNsForm.QUALIFIED
 )
