@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
@@ -29,6 +30,9 @@ public class EnableTwoFactorAuthResponse {
     @XmlElement(name=AccountConstants.E_TWO_FACTOR_SCRATCH_CODE, type=String.class)
     private List<String> scratchCodes;
 
+    @XmlElement(name=HeaderConstants.E_CSRFTOKEN /* CSRF token*/, required=false)
+    private String csrfToken;
+
     public String getSecret() { return secret; }
     public void setSecret(String secret) { this.secret = secret; }
 
@@ -37,4 +41,7 @@ public class EnableTwoFactorAuthResponse {
 
     public AuthToken getAuthToken() { return authToken; }
     public EnableTwoFactorAuthResponse setAuthToken(AuthToken authToken) { this.authToken = authToken; return this; }
+
+    public String getCsrfToken() { return csrfToken; }
+    public EnableTwoFactorAuthResponse setCsrfToken(String csrfToken) { this.csrfToken = csrfToken; return this; }
 }
