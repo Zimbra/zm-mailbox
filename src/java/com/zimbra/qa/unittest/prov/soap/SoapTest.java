@@ -87,7 +87,7 @@ public class SoapTest extends ProvTest {
      * @throws IOException
      * @throws ServiceException
      */
-   public static SoapTransport authUser(String acctName, boolean csrfEnabled) throws ServiceException, IOException {
+   public static SoapTransport authUser(String acctName, boolean csrfEnabled, boolean setCsrfToken) throws ServiceException, IOException {
         com.zimbra.soap.type.AccountSelector acct =
             new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acctName);
 
@@ -98,6 +98,9 @@ public class SoapTest extends ProvTest {
         req.setCsrfSupported(csrfEnabled);
         AuthResponse resp = invokeJaxb(transport, req);
         transport.setAuthToken(resp.getAuthToken());
+        if (setCsrfToken) {
+            transport.setCsrfToken(resp.getCsrfToken());
+        }
         return transport;
     }
 
