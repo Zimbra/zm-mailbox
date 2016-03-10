@@ -18,7 +18,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -31,7 +30,7 @@ import com.zimbra.soap.account.type.Signature;
  * @author zimbra
  *
  */
-public class TestBatchRequest extends SoapTest {
+public class TestCsrfRequest extends SoapTest {
     private static SoapProvTestUtil provUtil;
     private static Provisioning prov;
     private static Domain domain;
@@ -49,49 +48,105 @@ public class TestBatchRequest extends SoapTest {
     }
 
     @Test
-    public void batchReqWithoutCsrfToken() throws Exception {
+    public void getCreateSigWithAuthAndCsrfDisabled() throws Exception {
         Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
-        boolean csrfEnabled = Boolean.TRUE;
+        boolean csrfEnabled = Boolean.FALSE;
         SoapTransport transport = authUser(acct.getName(), csrfEnabled, Boolean.FALSE);
 
-        Element request = new Element.XMLElement(ZimbraNamespace.E_BATCH_REQUEST);
-        String sigContent = "xss&lt;script&gt;alert(\"XSS\")&lt;/script&gt;&lt;a href=javascript:alert(\"XSS\")&gt;&lt;";
 
-        Signature sig = new Signature("test_id", "testSig", sigContent, "text/html");
-        CreateSignatureRequest req = new CreateSignatureRequest(sig);
-        SoapProtocol proto = SoapProtocol.Soap12;
-        Element sigReq = JaxbUtil.jaxbToElement(req, proto.getFactory());
-        request.addElement(sigReq);
-        try {
-            transport.invoke(request, false, false, null);
-        } catch (SoapFaultException e) {
-            assertNotNull(e);
-            Assert.assertEquals(true, e.getCode().contains("AUTH_REQUIRED"));
-        }
-    }
-
-    @Test
-    public void batchReqWithCsrfToken() throws Exception {
-        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
-        boolean csrfEnabled = Boolean.TRUE;
-        SoapTransport transport = authUser(acct.getName(), csrfEnabled, Boolean.TRUE);
-
-        Element request = new Element.XMLElement(ZimbraNamespace.E_BATCH_REQUEST);
         String sigContent = "xss&lt;script&gt;alert(\"XSS\")&lt;/script&gt;&lt;a href=javascript:alert(\"XSS\")&gt;&lt;";
 
         Signature sig = new Signature(null, "testSig", sigContent, "text/html");
         CreateSignatureRequest req = new CreateSignatureRequest(sig);
         SoapProtocol proto = SoapProtocol.Soap12;
         Element sigReq = JaxbUtil.jaxbToElement(req, proto.getFactory());
-        request.addElement(sigReq);
+
         try {
-            Element sigResp = transport.invoke(request, false, false, null);
-            String sigt = sigResp.getElement("CreateSignatureResponse").getElement("signature").getAttribute("id");
+            Element element = transport.invoke(sigReq, false, false, null);
+            String sigt = element.getElement("signature").getAttribute("id");
             assertNotNull(sigt);
         } catch (SoapFaultException e) {
+            e.printStackTrace();
             assertNull(e);
 
         }
     }
 
+
+    @Test
+    public void getCreateSigWithAuthAndCsrfEnabledNoCsrfToken() throws Exception {
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
+        boolean csrfEnabled = Boolean.TRUE;
+        SoapTransport transport = authUser(acct.getName(), csrfEnabled, Boolean.FALSE);
+
+
+        String sigContent = "xss&lt;script&gt;alert(\"XSS\")&lt;/script&gt;&lt;a href=javascript:alert(\"XSS\")&gt;&lt;";
+
+        Signature sig = new Signature(null, "testSig", sigContent, "text/html");
+        CreateSignatureRequest req = new CreateSignatureRequest(sig);
+        SoapProtocol proto = SoapProtocol.Soap12;
+        Element sigReq = JaxbUtil.jaxbToElement(req, proto.getFactory());
+
+        try {
+            Element element = transport.invoke(sigReq, false, false, null);
+
+        } catch (SoapFaultException e) {
+            assertNotNull(e);
+            Assert.assertEquals(true, e.getCode().contains("AUTH_REQUIRED"));
+
+        }
+    }
+
+    @Test
+    public void getCreateSigWithAuthAndCsrfEnabledAndCsrfToken() throws Exception {
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
+        boolean csrfEnabled = Boolean.TRUE;
+        SoapTransport transport = authUser(acct.getName(), csrfEnabled, Boolean.TRUE);
+
+
+        String sigContent = "xss&lt;script&gt;alert(\"XSS\")&lt;/script&gt;&lt;a href=javascript:alert(\"XSS\")&gt;&lt;";
+
+        Signature sig = new Signature(null, "testSig", sigContent, "text/html");
+        CreateSignatureRequest req = new CreateSignatureRequest(sig);
+        SoapProtocol proto = SoapProtocol.Soap12;
+        Element sigReq = JaxbUtil.jaxbToElement(req, proto.getFactory());
+
+        try {
+            Element element = transport.invoke(sigReq, false, false, null);
+            String sigt = element.getElement("signature").getAttribute("id");
+            assertNotNull(sigt);
+        } catch (SoapFaultException e) {
+            assertNull(e);
+        }
+    }
+
+
+    @Test
+    public void getCreateSigWithAuthAndCsrfEnabledAndInvalidCsrfToken() throws Exception {
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
+        boolean csrfEnabled = Boolean.TRUE;
+        SoapTransport transport = authUser(acct.getName(), csrfEnabled, Boolean.TRUE);
+        String temp = transport.getCsrfToken().substring(7);
+        transport.setCsrfToken(temp);
+
+
+
+        String sigContent = "xss&lt;script&gt;alert(\"XSS\")&lt;/script&gt;&lt;a href=javascript:alert(\"XSS\")&gt;&lt;";
+
+        Signature sig = new Signature(null, "testSig", sigContent, "text/html");
+        CreateSignatureRequest req = new CreateSignatureRequest(sig);
+        SoapProtocol proto = SoapProtocol.Soap12;
+        Element sigReq = JaxbUtil.jaxbToElement(req, proto.getFactory());
+
+        try {
+            Element element = transport.invoke(sigReq, false, false, null);
+            String sigt = element.getElement("signature").getAttribute("id");
+            assertNull(sigt);
+        } catch (SoapFaultException e) {
+            assertNotNull(e);
+            Assert.assertEquals(true, e.getCode().contains("AUTH_REQUIRED"));
+        }
+    }
+
 }
+

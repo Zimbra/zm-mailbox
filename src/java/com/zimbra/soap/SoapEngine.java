@@ -309,14 +309,24 @@ public class SoapEngine {
         if (doc == null) {
             return soapFaultEnv(soapProto, "SOAP exception", ServiceException.INVALID_REQUEST("No SOAP body", null));
         }
+
         ServletRequest servReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
 
         //Check if this handler requires authentication.
         //Do not perform CSRF checks for handlers that do not require authentication
         DocumentHandler handler = dispatcher.getHandler(doc);
+        ZimbraSoapContext zsc = null;
+        Element ectxt = soapProto.getHeader(envelope, HeaderConstants.CONTEXT);
+        try {
+            zsc = new ZimbraSoapContext(ectxt, doc.getQName(), handler, context, soapProto);
+        } catch (ServiceException e) {
+            return soapFaultEnv(soapProto, "unable to construct SOAP context", e);
+        }
         boolean doCsrfCheck = false;
         if (servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null) {
             doCsrfCheck =  (Boolean) servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
+        } else if (zsc.getAuthToken() != null  && zsc.getAuthToken().isCsrfTokenEnabled()) {
+            doCsrfCheck = true;
         }
 
         if (handler == null) {
@@ -346,7 +356,7 @@ public class SoapEngine {
                     Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
                     csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
                 }
-                AuthToken authToken = CsrfUtil.getAuthTokenFromReq(httpReq);
+                AuthToken authToken = zsc.getAuthToken();
                 if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
                     LOG.debug("CSRF token validation failed for account. " + authToken
                         + ", Auth token is CSRF enabled: " + authToken.isCsrfTokenEnabled()
@@ -361,13 +371,7 @@ public class SoapEngine {
                 return soapFaultEnv(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
             }
         }
-        ZimbraSoapContext zsc = null;
-        Element ectxt = soapProto.getHeader(envelope, HeaderConstants.CONTEXT);
-        try {
-            zsc = new ZimbraSoapContext(ectxt, doc.getQName(), handler, context, soapProto);
-        } catch (ServiceException e) {
-            return soapFaultEnv(soapProto, "unable to construct SOAP context", e);
-        }
+
         SoapProtocol responseProto = zsc.getResponseProtocol();
 
         String rid = zsc.getRequestedAccountId();
