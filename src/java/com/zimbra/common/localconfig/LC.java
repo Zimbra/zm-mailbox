@@ -424,8 +424,9 @@ public final class LC {
     public static final KnownKey ldap_common_writetimeout = KnownKey.newKey(360);
     public static final KnownKey ldap_common_tlsprotocolmin = KnownKey.newKey("3.1");
     public static final KnownKey ldap_common_tlsciphersuite = KnownKey.newKey("MEDIUM:HIGH");
-    public static final KnownKey ldap_db_maxsize = KnownKey.newKey(85899345920L);
     public static final KnownKey ldap_db_envflags = KnownKey.newKey("writemap nometasync");
+    public static final KnownKey ldap_db_maxsize = KnownKey.newKey(85899345920L);
+    public static final KnownKey ldap_db_rtxnsize = KnownKey.newKey(0);
     public static final KnownKey ldap_accesslog_maxsize = KnownKey.newKey(85899345920L);
     public static final KnownKey ldap_accesslog_envflags = KnownKey.newKey("writemap nometasync");
     public static final KnownKey ldap_overlay_syncprov_checkpoint = KnownKey.newKey("20 10");
