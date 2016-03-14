@@ -21,10 +21,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.owasp.html.PolicyFactory;
+import org.owasp.html.Sanitizers;
+
 import com.zimbra.common.account.SignatureUtil;
+import com.zimbra.common.account.ZAttrProvisioning;
 
 public class Signature extends AccountProperty {
 
+    private static final PolicyFactory sanitizer = Sanitizers.FORMATTING.and(Sanitizers.STYLES).and(Sanitizers.LINKS);
     public Signature(Account acct, String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(acct, name, id, attrs, null, prov);
     }
@@ -64,8 +69,12 @@ public class Signature extends AccountProperty {
             Map.Entry entry = (Map.Entry)it.next();
 
             String content = getAttr((String)entry.getKey());
-            if (content != null)
+            if (content != null) {
+                if (entry.getKey().equals(ZAttrProvisioning.A_zimbraPrefMailSignatureHTML)) {
+                    content = sanitizer.sanitize(content);
+                }
                 contents.add(new SignatureContent((String)entry.getValue(), content));
+            }
         }
 
         return contents;
