@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,10 +23,12 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -55,6 +57,9 @@ public class MockHttpServletRequest implements HttpServletRequest {
     int port = 0;
     String remoteAddr = null;
     HashMap<String, String> headers = new HashMap<String, String>();
+    private List<Cookie> cookies = new ArrayList<Cookie>();
+    HashMap<String, Object> attributes = new HashMap<String, Object>();
+
 
     public MockHttpServletRequest(byte[] body, URL url, String ctype) {
         this(body, url, ctype, 0, null, null);
@@ -72,7 +77,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
 
     @Override
     public Object getAttribute(String name) {
-        return null;
+        return this.attributes.get(name);
     }
 
     @Override
@@ -231,7 +236,8 @@ public class MockHttpServletRequest implements HttpServletRequest {
     }
 
     @Override
-    public void setAttribute(String name, Object o) {
+    public void setAttribute(String name, Object value) {
+        this.attributes.put(name, value);
     }
 
     @Override
@@ -250,7 +256,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
 
     @Override
     public Cookie[] getCookies() {
-        return null;
+        return cookies.toArray(new Cookie [1]);
     }
 
     @Override
@@ -280,7 +286,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getMethod() {
-        return null;
+        return "post";
     }
 
     @Override
@@ -434,5 +440,9 @@ public class MockHttpServletRequest implements HttpServletRequest {
     @Override
     public <T extends HttpUpgradeHandler> T upgrade(Class<T> arg0) throws IOException, ServletException {
         return null;
+    }
+
+    public void setCookies(Cookie cookie) {
+        cookies.add(cookie);
     }
 }

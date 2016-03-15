@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,7 +19,9 @@ package com.zimbra.cs.service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.ServletOutputStream;
@@ -29,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class MockHttpServletResponse implements HttpServletResponse {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
+    private List<Cookie> cookies = new ArrayList<Cookie>();
 
     @Override
     public void flushBuffer() throws IOException {
@@ -115,7 +118,8 @@ public class MockHttpServletResponse implements HttpServletResponse {
     }
 
     @Override
-    public void addCookie(Cookie arg0) {
+    public void addCookie(Cookie cookie) {
+        this.cookies.add(cookie);
     }
 
     @Override
