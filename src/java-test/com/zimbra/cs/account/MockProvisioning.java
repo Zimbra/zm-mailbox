@@ -352,7 +352,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void authAccount(Account acct, String password, Protocol proto, Map<String, Object> authCtxt) {
-        throw new UnsupportedOperationException();
+
     }
 
     @Override
