@@ -41,6 +41,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
@@ -351,7 +352,7 @@ public class SoapEngine {
             try {
                 HttpServletRequest httpReq = (HttpServletRequest) servReq;
                 // Bug: 96167 SoapEngine should be able to read CSRF token from HTTP headers
-                String csrfToken = httpReq.getHeader(CsrfFilter.CSRF_TOKEN);
+                String csrfToken = httpReq.getHeader(Constants.CSRF_TOKEN);
                 if (StringUtil.isNullOrEmpty(csrfToken)) {
                     Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
                     csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);

@@ -51,6 +51,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
@@ -572,7 +573,7 @@ public class UserServlet extends ZimbraServlet {
             }
 
             if (doCsrfCheck) {
-                String csrfToken = req.getHeader(CsrfFilter.CSRF_TOKEN);
+                String csrfToken = req.getHeader(Constants.CSRF_TOKEN);
                 if (log.isDebugEnabled()) {
                     String paramValue = req.getParameter(QP_AUTH);
                     log.debug(
