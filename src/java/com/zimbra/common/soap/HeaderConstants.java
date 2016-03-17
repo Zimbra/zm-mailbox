@@ -34,6 +34,7 @@ public final class HeaderConstants {
     public static final String E_NO_NOTIFY  = "nonotify";
     public static final String E_NO_SESSION = "nosession";
     public static final String E_SESSION    = "session";
+
     @Deprecated
     public static final String E_SESSION_ID    = "sessionId";
     public static final String A_ACCOUNT_ID = "acct";
