@@ -17,13 +17,14 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -36,6 +37,12 @@ public class AuthResponse {
      */
     @XmlElement(name=AdminConstants.E_AUTH_TOKEN /* authToken */, required=true)
     private String authToken;
+
+    /**
+     * @zm-api-field-description if client is CSRF token enabled , the CSRF token Returned only when client says it is CSRF enabled .
+     */
+    @XmlElement(name = HeaderConstants.E_CSRFTOKEN /* CSRF token */, required = false)
+    private String csrfToken;
 
     /**
      * @zm-api-field-tag auth-lifetime
@@ -63,4 +70,20 @@ public class AuthResponse {
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
+
+    /**
+     * @return the csrfToken
+     */
+    public String getCsrfToken() {
+        return csrfToken;
+    }
+
+    /**
+     * @param csrfToken
+     *            the csrfToken to set
+     */
+    public void setCsrfToken(String csrfToken) {
+        this.csrfToken = csrfToken;
+    }
+
 }
