@@ -112,6 +112,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.Pair;
@@ -2271,7 +2272,7 @@ public class ZMailbox implements ToZJSONObject {
         int statusCode;
         try {
             if (mCsrfToken != null) {
-                post.setRequestHeader("X-Zimbra-Csrf-Token", mCsrfToken);
+                post.setRequestHeader(Constants.CSRF_TOKEN, mCsrfToken);
             }
             post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
             statusCode = HttpClientUtil.executeMethod(client, post);
@@ -2315,6 +2316,9 @@ public class ZMailbox implements ToZJSONObject {
         int statusCode;
         try {
             post = HttpClientUtil.addInputStreamToHttpMethod(post, in, contentLength, contentType);
+            if (mCsrfToken != null) {
+                post.addRequestHeader(Constants.CSRF_TOKEN, this.mCsrfToken);
+            }
             statusCode = HttpClientUtil.executeMethod(client, post);
 
             // parse the response
