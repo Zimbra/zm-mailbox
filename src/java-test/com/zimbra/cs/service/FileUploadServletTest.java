@@ -42,10 +42,9 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.account.Auth;
@@ -56,7 +55,6 @@ import com.zimbra.soap.SoapServlet;
 public class FileUploadServletTest {
     private static FileUploadServlet servlet;
     private static Account testAccount;
-    private static final String accountId = "11122233-1111-1111-1111-111222333444";
 
     @BeforeClass
     public static void init() throws Exception {
@@ -75,8 +73,6 @@ public class FileUploadServletTest {
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         prov.createAccount("test2@zimbra.com", "secret", attrs);
-
-
     }
 
     @Before
@@ -90,13 +86,9 @@ public class FileUploadServletTest {
     @After
     public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
-
     }
 
-
-
     public static final String boundary = "----WebKitFormBoundaryBf0g3B57jaNA7SC6";
-
     public static final String filename1 = "\u6771\u65e5\u672c\u5927\u9707\u707d.txt";
     public static final String filename2 = "\u6771\u5317\u5730\u65b9\u592a\u5e73\u6d0b\u6c96\u5730\u9707.txt";
     public static final String content1 = "3 \u6708 11 \u65e5\u5348\u5f8c 2 \u6642 46 \u5206\u3054\u308d\u3001\u30de\u30b0\u30cb\u30c1\u30e5\u30fc\u30c9 9.0";
@@ -123,13 +115,11 @@ public class FileUploadServletTest {
         return bb.append("--").append(boundary).append("--\r\n");
     }
 
-
-
     private List<Upload> uploadForm(byte[] form) throws Exception {
         URL url = new URL("http://localhost:7070/service/upload?fmt=extended");
         MockHttpServletRequest req = new MockHttpServletRequest(form, url, "multipart/form-data; boundary=" + boundary);
         MockHttpServletResponse resp = new MockHttpServletResponse();
-        return servlet.handleMultipartUpload(req, resp, "extended", testAccount, false, null, false);
+        return servlet.handleMultipartUpload(req, resp, "extended", testAccount, false, null, true);
     }
 
     private void compareUploads(Upload up, String expectedFilename, byte[] expectedContent) throws Exception {
@@ -224,24 +214,18 @@ public class FileUploadServletTest {
 
         byte [] form = bb.toByteArray();
         HashMap<String, String> headers = new HashMap<String, String>();
-        boolean csrfEnabled = Boolean.TRUE;
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-//
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
-        com.zimbra.common.soap.Element a = req.addElement(AccountConstants.E_ACCOUNT);
+        com.zimbra.common.soap.Element a = req.addUniqueElement(AccountConstants.E_ACCOUNT);
         a.addAttribute(AccountConstants.A_BY, "name");
         a.setText(acct.getName());
-        req.addElement(AccountConstants.E_PASSWORD).setText("secret");
+        req.addUniqueElement(AccountConstants.E_PASSWORD).setText("secret");
         Element response = new Auth().handle(req, ServiceTestUtil.getRequestContext(acct));
         String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
 
-
-
-
         MockHttpServletRequest mockreq = new MockHttpServletRequest(form, url, "multipart/form-data; boundary=" + boundary,
             7070, "test", headers);
-        mockreq.setAttribute(CsrfFilter.CSRF_TOKEN_CHECK, Boolean.TRUE);
+        mockreq.setAttribute(CsrfFilter.CSRF_TOKEN_CHECK, Boolean.FALSE);
 
         Cookie cookie = new Cookie( "ZM_AUTH_TOKEN", authToken);
         mockreq.setCookies(cookie);
@@ -266,16 +250,14 @@ public class FileUploadServletTest {
 
         byte [] form = bb.toByteArray();
         HashMap<String, String> headers = new HashMap<String, String>();
-        boolean csrfEnabled = Boolean.TRUE;
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
         req.addAttribute(AccountConstants.A_CSRF_SUPPORT, "1");
-        com.zimbra.common.soap.Element a = req.addElement(AccountConstants.E_ACCOUNT);
+        com.zimbra.common.soap.Element a = req.addUniqueElement(AccountConstants.E_ACCOUNT);
         a.addAttribute(AccountConstants.A_BY, "name");
         a.setText(acct.getName());
-        req.addElement(AccountConstants.E_PASSWORD).setText("secret");
+        req.addUniqueElement(AccountConstants.E_PASSWORD).setText("secret");
         Map<String, Object>context = ServiceTestUtil.getRequestContext(acct);
         MockHttpServletRequest authReq = (MockHttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
         authReq.setAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled, Boolean.TRUE);
@@ -284,9 +266,7 @@ public class FileUploadServletTest {
         Element response = new Auth().handle(req, context);
         String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         String csrfToken = response.getElement("csrfToken").getText();
-        headers.put(CsrfFilter.CSRF_TOKEN, csrfToken);
-
-
+        headers.put(Constants.CSRF_TOKEN, csrfToken);
 
         MockHttpServletRequest mockreq = new MockHttpServletRequest(form, url, "multipart/form-data; boundary=" + boundary,
             7070, "test", headers);
@@ -315,16 +295,13 @@ public class FileUploadServletTest {
 
         byte [] form = bb.toByteArray();
         HashMap<String, String> headers = new HashMap<String, String>();
-        boolean csrfEnabled = Boolean.TRUE;
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-//
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
         req.addAttribute(AccountConstants.A_CSRF_SUPPORT, "1");
-        com.zimbra.common.soap.Element a = req.addElement(AccountConstants.E_ACCOUNT);
+        com.zimbra.common.soap.Element a = req.addUniqueElement(AccountConstants.E_ACCOUNT);
         a.addAttribute(AccountConstants.A_BY, "name");
         a.setText(acct.getName());
-        req.addElement(AccountConstants.E_PASSWORD).setText("secret");
+        req.addUniqueElement(AccountConstants.E_PASSWORD).setText("secret");
         Map<String, Object>context = ServiceTestUtil.getRequestContext(acct);
         MockHttpServletRequest authReq = (MockHttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
         authReq.setAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled, Boolean.TRUE);
@@ -332,10 +309,6 @@ public class FileUploadServletTest {
         authReq.setAttribute(CsrfFilter.CSRF_SALT,nonceGen.nextInt() + 1);
         Element response = new Auth().handle(req, context);
         String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
-        String csrfToken = response.getElement("csrfToken").getText();
-
-
-
 
         MockHttpServletRequest mockreq = new MockHttpServletRequest(form, url, "multipart/form-data; boundary=" + boundary,
             7070, "test", headers);
@@ -357,16 +330,14 @@ public class FileUploadServletTest {
     public void testFileUploadAuthTokenCsrfEnabled2() throws Exception {
 
         HashMap<String, String> headers = new HashMap<String, String>();
-        boolean csrfEnabled = Boolean.TRUE;
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
         req.addAttribute(AccountConstants.A_CSRF_SUPPORT, "1");
-        com.zimbra.common.soap.Element a = req.addElement(AccountConstants.E_ACCOUNT);
+        com.zimbra.common.soap.Element a = req.addUniqueElement(AccountConstants.E_ACCOUNT);
         a.addAttribute(AccountConstants.A_BY, "name");
         a.setText(acct.getName());
-        req.addElement(AccountConstants.E_PASSWORD).setText("secret");
+        req.addUniqueElement(AccountConstants.E_PASSWORD).setText("secret");
         Map<String, Object>context = ServiceTestUtil.getRequestContext(acct);
         MockHttpServletRequest authReq = (MockHttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
         authReq.setAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled, Boolean.TRUE);
@@ -375,7 +346,6 @@ public class FileUploadServletTest {
         Element response = new Auth().handle(req, context);
         String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         String csrfToken = response.getElement("csrfToken").getText();
-
 
         URL url = new URL("http://localhost:7070/service/upload?lbfums=");
         ByteBuilder bb = new ByteBuilder(CharsetUtil.UTF_8);
@@ -387,7 +357,6 @@ public class FileUploadServletTest {
         endForm(bb);
 
         byte [] form = bb.toByteArray();
-
 
         MockHttpServletRequest mockreq = new MockHttpServletRequest(form, url, "multipart/form-data; boundary=" + boundary,
             7070, "test", headers);

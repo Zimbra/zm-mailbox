@@ -55,7 +55,6 @@ public class CsrfFilter implements Filter {
      */
     public static final String CSRF_SALT = "CSRF_SALT";
     private String[] allowedRefHosts = null;
-    public static final String CSRF_TOKEN = "X-Zimbra-Csrf-Token";
     public static final String AUTH_TOKEN = "AuthToken";
     public static final String CSRF_TOKEN_CHECK = "CsrfTokenCheck";
     public static final String CSRF_TOKEN_VALID = "CsrfTokenValid";
@@ -165,6 +164,7 @@ public class CsrfFilter implements Filter {
                 // post request and Auth token is CSRF enabled
                 req.setAttribute(CSRF_TOKEN_CHECK, Boolean.TRUE);
             } else {
+                req.setAttribute(CSRF_TOKEN_CHECK, Boolean.FALSE);
                 ZimbraLog.misc.debug("CSRF check will not be done for URI : %s", req.getRequestURI());
             }
             chain.doFilter(req, resp);

@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.fileupload.FileItem;
 
 import com.google.common.base.Joiner;
 import com.google.common.net.HttpHeaders;
@@ -62,7 +63,7 @@ public final class CsrfUtil {
     protected static final String C_ID  = "id";
     protected static final String C_EXP = "exp";
     protected static final String C_SALT_ID = "sid";
-
+    protected static final String PARAM_CSRF_TOKEN = "csrfToken";
 
     /**
      * Private constructor.
@@ -568,6 +569,23 @@ public final class CsrfUtil {
         String encoded = key.getVersion() + "_" + hmac + "_" + data;
         return encoded;
 
+    }
+
+    public static boolean checkCsrfInMultipartFilleUpload(List<FileItem> items, AuthToken at) {
+        for (FileItem item : items) {
+            if (item.isFormField()) {
+                if (item.getFieldName().equals(PARAM_CSRF_TOKEN)) {
+                    if (item.getSize() < 128) { // if the value is larger, it is not a CSRF token
+                        String csrfToken = item.getString();
+                        if (CsrfUtil.isValidCsrfToken(csrfToken, at)) {
+                            return true;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        return false;
     }
 
     public static void main(String args[])

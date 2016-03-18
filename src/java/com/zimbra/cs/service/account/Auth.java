@@ -36,6 +36,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraCookie;
@@ -455,7 +456,7 @@ public class Auth extends AccountDocumentHandler {
                 authTokenExpiration, tokenSalt, at);
             Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
             csrfResponse.addText(token);
-            httpResp.setHeader(CsrfFilter.CSRF_TOKEN, token);
+            httpResp.setHeader(Constants.CSRF_TOKEN, token);
         }
         if (td != null) {
             td.encode(httpResp, response, ZimbraCookie.secureCookie(httpReq));
