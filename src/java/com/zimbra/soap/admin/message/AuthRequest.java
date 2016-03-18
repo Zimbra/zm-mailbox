@@ -49,6 +49,15 @@ public class AuthRequest {
     @XmlAttribute(name=AdminConstants.A_PERSIST_AUTH_TOKEN_COOKIE /* persistAuthTokenCookie */, required=false)
     private ZmBoolean persistAuthTokenCookie;
 
+    /**
+     * @zm-api-field-description controls whether the client supports CSRF token <br/>
+     *                           0: (default)<br />
+     *                           Client does not support CSRF token<br />
+     *                           1: The client supports CSRF token. <br />
+     */
+    @XmlAttribute(name = AccountConstants.A_CSRF_SUPPORT /* support CSRF Token */, required = false)
+    private ZmBoolean csrfSupported;
+
     // TODO: authToken can be more complex than this and needs to be extendable.
     /**
      * @zm-api-field-description An authToken can be passed instead of account/password/name to validate an
@@ -138,5 +147,20 @@ public class AuthRequest {
     }
     public String getVirtualHost() {
         return virtualHost;
+    }
+
+    /**
+     * @return the csrfSupported
+     */
+    public boolean getCsrfSupported() {
+        return ZmBoolean.toBool(csrfSupported);
+    }
+
+    /**
+     * @param csrfSupported
+     *            the csrfSupported to set
+     */
+    public void setCsrfSupported(Boolean csrfSupported) {
+        this.csrfSupported = ZmBoolean.fromBool(csrfSupported);
     }
 }
