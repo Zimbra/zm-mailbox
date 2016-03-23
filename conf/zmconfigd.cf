@@ -35,7 +35,7 @@ SECTION amavis
 	VAR zimbraAmavisFinalSpamDestiny
 	VAR zimbraAmavisLogLevel
 	VAR zimbraAmavisSALogLevel
-	VAR zimbraAmavisExternalDisclaimerOnly
+	VAR zimbraAmavisOutboundDisclaimersOnly
 	RESTART antivirus amavis mta
 
 SECTION antivirus DEPENDS amavis
