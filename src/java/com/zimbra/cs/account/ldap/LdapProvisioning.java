@@ -4253,6 +4253,23 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
      }
 
+    private void removeAttrsForServer(String[] attributes, String serverName) throws ServiceException {
+        // Remove attrs from global config
+        Map<String, Object> configAttrs = new HashMap<String, Object>();
+        for (String attribute: attributes) {
+            StringUtil.addToMultiMap(configAttrs, "-" + attribute, serverName);
+        }
+        modifyAttrs(getConfig(), configAttrs);
+        // Remove attrs from all proxy servers
+        for (Server server: getAllServers(Provisioning.SERVICE_PROXY)) {
+            Map<String, Object> serverAttrs = new HashMap<String, Object>();
+            for (String attribute: attributes) {
+                StringUtil.addToMultiMap(serverAttrs, "-" + attribute, serverName);
+            }
+            modifyAttrs(server, serverAttrs);
+        }
+     }
+
     private static class CountingVisitor extends SearchLdapVisitor {
         long numAccts = 0;
 
@@ -4294,6 +4311,18 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             throw ServiceException.INVALID_REQUEST("There are " + numAcctsOnServer +
                     " account(s) on this server.", null);
         }
+
+        String monitorHost = getConfig().getAttr(Provisioning.A_zimbraLogHostname);
+        String serverName = server.getName();
+        if (monitorHost != null && monitorHost.trim().equals(serverName)) {
+            throw ServiceException.INVALID_REQUEST("zimbraLogHostname is set to " + serverName, null);
+        }
+        String[] attributesToRemove = {
+            Provisioning.A_zimbraReverseProxyAvailableLookupTargets, 
+            Provisioning.A_zimbraReverseProxyUpstreamEwsServers,
+            Provisioning.A_zimbraReverseProxyUpstreamLoginServers
+        };
+        removeAttrsForServer(attributesToRemove, server.getName());
 
         ZLdapContext zlc = null;
         try {
