@@ -8489,7 +8489,7 @@ TODO: delete them permanently from here
   <desc>whether two-factor authentication is enabled by the user</desc>
 </attr>
 
-<attr id="1820" name="zimbraFeatureTwoFactorAuthRequired" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInherited" callback="TwoFactorAuthStatus" since="8.7.0,9.0.0">
+<attr id="1820" name="zimbraFeatureTwoFactorAuthRequired" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInherited,accountInfo" callback="TwoFactorAuthStatus" since="8.7.0,9.0.0">
   <desc>whether two-factor authentication is required</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
