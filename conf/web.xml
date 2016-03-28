@@ -3,11 +3,10 @@
   Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
 -->
 
-<!DOCTYPE web-app
-    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
-    "http://java.sun.com/dtd/web-app_2_3.dtd">
-
-<web-app>
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+    version="2.4">
 
   <display-name>Zimbra Service</display-name>
   <description>SOAP Service</description>
@@ -19,12 +18,12 @@
 
     <init-param>
       <param-name>delayMs</param-name>
-      <param-value>%%zimbraHttpDosFilterDelayMillis%%</param-value>
+      <param-value>-1</param-value>
     </init-param>
 
     <init-param>
       <param-name>maxRequestsPerSec</param-name>
-      <param-value>%%zimbraHttpDosFilterMaxRequestsPerSec%%</param-value>
+      <param-value>30</param-value>
     </init-param>
 
     <init-param>
@@ -86,7 +85,7 @@
     </init-param>
     <init-param>
       <param-name>Rules</param-name>
-      <param-value>%%list VAR:zimbraHttpContextPathBasedThreadPoolBalancingFilterRules , %%</param-value>
+      <param-value>/service:max=10%, /soap:max=40%, /zimbra:max=40%</param-value>
     </init-param>
   </filter>
 
@@ -142,7 +141,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
   </filter>
 
@@ -217,7 +216,7 @@
     <load-on-startup>2</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7072, 7443</param-value>
+      <param-value>80, 443, 7070, 7071, 7072, 7443</param-value>
     </init-param>
   </servlet>
 
@@ -227,7 +226,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443</param-value>
+      <param-value>80, 443, 7070, 7071, 7443</param-value>
     </init-param>
   </servlet>
 
@@ -237,7 +236,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443</param-value>
+      <param-value>80, 443, 7070, 7071, 7443</param-value>
     </init-param>
   </servlet>
 
@@ -247,7 +246,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443</param-value>
+      <param-value>80, 443, 7070, 7071, 7443</param-value>
     </init-param>
   </servlet>
 
@@ -257,7 +256,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443</param-value>
+      <param-value>80, 443, 7070, 7443</param-value>
     </init-param>
     <!-- User command handlers only -->
     <init-param>
@@ -277,7 +276,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraAdminPort%%, %%zimbraMtaAuthPort%%, 7071, 7073</param-value>
+      <param-value>7071, 7073</param-value>
     </init-param>
     <!-- Admin servlet allows both admin and user commands -->
     <init-param>
@@ -301,7 +300,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
   </servlet>
 
@@ -311,7 +310,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
     <init-param>
       <param-name>errorpage.attachment.blocked</param-name>
@@ -326,7 +325,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
     <init-param>
       <param-name>errorpage.attachment.blocked</param-name>
@@ -341,7 +340,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
@@ -352,19 +351,18 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
 
-  <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
   <servlet>
     <servlet-name>CertAuthServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.CertAuthServlet</servlet-class>
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailSSLClientCertPort%%, 9443</param-value>
+      <param-value>9443</param-value>
     </init-param>
     <init-param>
       <param-name>errorpage.forbidden</param-name>
@@ -372,7 +370,6 @@
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
-  %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
 
   <servlet>
     <servlet-name>SpnegoAuthServlet</servlet-name>
@@ -380,7 +377,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
@@ -391,7 +388,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
@@ -402,7 +399,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
     <load-on-startup>6</load-on-startup>
   </servlet>
@@ -413,7 +410,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraAdminPort%%, 7071</param-value>
+      <param-value>7071</param-value>
     </init-param>
     <load-on-startup>7</load-on-startup>
   </servlet>
@@ -424,7 +421,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070</param-value>
+      <param-value>80, 443, 7070</param-value>
     </init-param>
     <load-on-startup>8</load-on-startup>
   </servlet>
@@ -435,7 +432,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070</param-value>
+      <param-value>443, 7070, 7071, 7443</param-value>
     </init-param>
     <load-on-startup>9</load-on-startup>
   </servlet>
@@ -446,7 +443,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070</param-value>
+      <param-value>443, 7070, 7071, 7443</param-value>
     </init-param>
     <load-on-startup>9</load-on-startup>
   </servlet>
@@ -457,7 +454,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraAdminPort%%, 7071</param-value>
+      <param-value>7071</param-value>
     </init-param>
   </servlet>
 
@@ -467,7 +464,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraAdminPort%%, 7071</param-value>
+      <param-value>7071</param-value>
     </init-param>
   </servlet>
 
@@ -477,7 +474,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraAdminPort%%, 7071</param-value>
+      <param-value>7071</param-value>
     </init-param>
   </servlet>
 
@@ -487,7 +484,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
     <!--
     <init-param>
@@ -508,10 +505,7 @@
       <param-name>resource-cache-dir</param-name>
       <param-value>${webapp}/../../work/resource-cache</param-value>
     </init-param>
-    <init-param>
-      <param-name>shouldSupportGzip</param-name>
-      <param-value>%%zimbraWebGzipEnabled%%</param-value>
-    </init-param>
+    <load-on-startup>10</load-on-startup>
   </servlet>
 
   <servlet>
@@ -540,7 +534,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443</param-value>
+      <param-value>80, 443, 7070, 7071, 7443</param-value>
     </init-param>
     <load-on-startup>12</load-on-startup>
   </servlet>
@@ -615,7 +609,6 @@
     <url-pattern>/extuserprov/*</url-pattern>
   </servlet-mapping>
 
-  <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
   <servlet-mapping>
     <servlet-name>CertAuthServlet</servlet-name>
     <url-pattern>/certauth/*</url-pattern>
@@ -625,7 +618,6 @@
     <servlet-name>CertAuthServlet</servlet-name>
     <url-pattern>/certauth</url-pattern>
   </servlet-mapping>
-  %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
 
   <servlet-mapping>
     <servlet-name>SpnegoAuthServlet</servlet-name>
@@ -736,54 +728,7 @@
     </description>
     <env-entry-name>zimbraServicesEnabled</env-entry-name>
     <env-entry-type>java.lang.String</env-entry-type>
-    <env-entry-value>%%list VAR:zimbraServiceEnabled ,%%</env-entry-value>
+    <env-entry-value>service,zimbra,zimbraAdmin,zimlet,mailbox</env-entry-value>
   </env-entry>
-
-  <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect%%
-     <security-constraint>
-        <web-resource-collection>
-        <web-resource-name>force https</web-resource-name>
-            <url-pattern>/service/user/*</url-pattern>
-        </web-resource-collection>
-        <user-data-constraint>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>
-    </security-constraint>
-     <security-constraint>
-        <web-resource-collection>
-        <web-resource-name>force https</web-resource-name>
-            <url-pattern>/user/*</url-pattern>
-        </web-resource-collection>
-        <user-data-constraint>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>
-    </security-constraint>
-     <security-constraint>
-        <web-resource-collection>
-        <web-resource-name>force https</web-resource-name>
-            <url-pattern>/service/home/*</url-pattern>
-        </web-resource-collection>
-        <user-data-constraint>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>
-    </security-constraint>
-    <security-constraint>
-        <web-resource-collection>
-        <web-resource-name>force https</web-resource-name>
-            <url-pattern>/home/*</url-pattern>
-        </web-resource-collection>
-        <user-data-constraint>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>
-    </security-constraint>
-    <security-constraint>
-        <web-resource-collection>
-        <web-resource-name>force https</web-resource-name>
-            <url-pattern>/dav/*</url-pattern>
-        </web-resource-collection>
-        <user-data-constraint>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>
-    </security-constraint>
-  %%comment VAR:zimbraMailMode,<!--,https,redirect%% HTTPSEND -->
+  <!--  additional servlets -->
 </web-app>
