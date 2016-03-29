@@ -64,6 +64,7 @@ public class AccountServiceException extends ServiceException {
     public static final String MEMBER_EXISTS      = "account.MEMBER_EXISTS";
     public static final String NO_SUCH_MEMBER     = "account.NO_SUCH_MEMBER";
     public static final String ACCOUNT_EXISTS     = "account.ACCOUNT_EXISTS";
+    public static final String ALIAS_EXISTS       = "account.ALIAS_EXISTS";
     public static final String DOMAIN_EXISTS      = "account.DOMAIN_EXISTS";
     public static final String DOMAIN_NOT_EMPTY   = "account.DOMAIN_NOT_EMPTY";
     public static final String COS_EXISTS         = "account.COS_EXISTS";
@@ -405,5 +406,9 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException TWO_FACTOR_AUTH_REQUIRED() {
         return new AccountServiceException("two-factor auth required", TWO_FACTOR_AUTH_REQUIRED, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException ALIAS_EXISTS(String name) {
+        return new AccountServiceException("email address alias already exists: "+name, ALIAS_EXISTS, SENDERS_FAULT, null);
     }
 }

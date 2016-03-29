@@ -3259,7 +3259,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 // check up front if any of renamed aliases already exists in the new domain
                 // (if domain also got changed)
                 if (domainChanged && addressExistsUnderDN(zlc, newDomainDN, aliasNewAddrs)) {
-                    throw AccountServiceException.ACCOUNT_EXISTS(newName);
+                    throw AccountServiceException.ALIAS_EXISTS(Arrays.toString(aliasNewAddrs));
                 }
 
                 // if any of the renamed aliases clashes with the account's new name,
