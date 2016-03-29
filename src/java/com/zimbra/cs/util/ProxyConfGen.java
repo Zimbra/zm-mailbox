@@ -590,6 +590,29 @@ class WebUpstreamClientServersVar extends ProxyConfVar {
     }
 }
 
+class ZMWebAvailableVar extends ProxyConfVar {
+
+    public ZMWebAvailableVar() {
+        super("web.available", null, false,
+                ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM,
+                "Indicates whether there are available web client servers or not");
+    }
+
+    @Override
+    public void update() throws ServiceException, ProxyConfException {
+        WebUpstreamClientServersVar lhVar = new WebUpstreamClientServersVar();
+        lhVar.update();
+        @SuppressWarnings("unchecked")
+        ArrayList<String> servers = (ArrayList<String>) lhVar.mValue;
+        if (servers.isEmpty()) {
+            mValue = false;
+        }
+        else {
+            mValue = true;
+        }
+    }
+}
+
 class WebSSLUpstreamClientServersVar extends ProxyConfVar {
 
     public WebSSLUpstreamClientServersVar() {
@@ -2572,6 +2595,7 @@ public class ProxyConfGen
         mConfVars.put("web.upstream.target", new WebProxyUpstreamTargetVar());
         mConfVars.put("web.upstream.webclient.target", new WebProxyUpstreamClientTargetVar());
         mConfVars.put("lookup.available", new ZMLookupAvailableVar());
+        mConfVars.put("web.available", new ZMWebAvailableVar());
         mConfVars.put("zmlookup.:handlers", new ZMLookupHandlerVar());
         mConfVars.put("zmlookup.timeout", new ProxyConfVar("zmlookup.timeout", "zimbraReverseProxyRouteLookupTimeout", new Long(15000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "Time interval (ms) given to lookup handler to respond to route lookup request (after this time elapses, Proxy fails over to next handler, or fails the request if there are no more lookup handlers)"));
         mConfVars.put("zmlookup.retryinterval", new ProxyConfVar("zmlookup.retryinterval", "zimbraReverseProxyRouteLookupTimeoutCache", new Long(60000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER,"Time interval (ms) given to lookup handler to cache a failed response to route a previous lookup request (after this time elapses, Proxy retries this host)"));
