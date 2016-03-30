@@ -57,7 +57,6 @@ public class CsrfFilter implements Filter {
     private String[] allowedRefHosts = null;
     public static final String AUTH_TOKEN = "AuthToken";
     public static final String CSRF_TOKEN_CHECK = "CsrfTokenCheck";
-    public static final String CSRF_TOKEN_VALID = "CsrfTokenValid";
     protected int maxCsrfTokenValidityInMs;
     private Random nonceGen = null;
 
