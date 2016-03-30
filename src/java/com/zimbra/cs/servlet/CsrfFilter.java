@@ -155,7 +155,7 @@ public class CsrfFilter implements Filter {
         }
 
         if (!csrfCheckEnabled) {
-            req.setAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled, Boolean.FALSE);
+            req.setAttribute(CSRF_TOKEN_CHECK, Boolean.FALSE);
             chain.doFilter(req, resp);
         } else {
             req.setAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled, Boolean.TRUE);
