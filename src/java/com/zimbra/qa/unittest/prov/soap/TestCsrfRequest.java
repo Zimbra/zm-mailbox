@@ -8,6 +8,10 @@ package com.zimbra.qa.unittest.prov.soap;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import junit.framework.Assert;
 
 import org.junit.AfterClass;
@@ -123,10 +127,13 @@ public class TestCsrfRequest extends SoapTest {
 
     @Test
     public void getCreateSigWithAuthAndCsrfEnabledAndInvalidCsrfToken() throws Exception {
+        Map<String, Object>attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenCheckEnabled, "TRUE");
+        prov.modifyAttrs(prov.getConfig(), attrs, true);
         Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
         boolean csrfEnabled = Boolean.TRUE;
         SoapTransport transport = authUser(acct.getName(), csrfEnabled, Boolean.TRUE);
-        String temp = transport.getCsrfToken().substring(7);
+        String temp =  transport.getCsrfToken().substring(7);
         transport.setCsrfToken(temp);
 
 
@@ -145,6 +152,37 @@ public class TestCsrfRequest extends SoapTest {
         } catch (SoapFaultException e) {
             assertNotNull(e);
             Assert.assertEquals(true, e.getCode().contains("AUTH_REQUIRED"));
+        }
+    }
+
+
+    @Test
+    public void getCreateSigWithCsrfFeatureDisbaledAndAuthTokenIsCsrfEnabled() throws Exception {
+
+        Map<String, Object>attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenCheckEnabled, "FALSE");
+        prov.modifyAttrs(prov.getConfig(), attrs, true);
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
+
+        boolean csrfEnabled = Boolean.TRUE;
+        SoapTransport transport = authUser(acct.getName(), csrfEnabled, Boolean.FALSE);
+
+
+        String sigContent = "xss&lt;script&gt;alert(\"XSS\")&lt;/script&gt;&lt;a href=javascript:alert(\"XSS\")&gt;&lt;";
+
+        Signature sig = new Signature(null, "testSig", sigContent, "text/html");
+        CreateSignatureRequest req = new CreateSignatureRequest(sig);
+        SoapProtocol proto = SoapProtocol.Soap12;
+        Element sigReq = JaxbUtil.jaxbToElement(req, proto.getFactory());
+
+        try {
+            Element element = transport.invoke(sigReq, false, false, null);
+            String sigt = element.getElement("signature").getAttribute("id");
+            assertNotNull(sigt);
+        } catch (SoapFaultException e) {
+            e.printStackTrace();
+            assertNull(e);
+
         }
     }
 
