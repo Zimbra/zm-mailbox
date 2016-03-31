@@ -64,6 +64,7 @@ public final class CertMgrConstants {
     public static final String E_cert = "cert";
     public static final String E_rootCA = "rootCA";
     public static final String E_intermediateCA = "intermediateCA";
+    public static final String E_SKIP_CLEANUP = "skipCleanup";
 
     // GenerateCSR
     public static final String E_SUBJECT_ALT_NAME = "SubjectAltName" ;
