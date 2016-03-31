@@ -71,16 +71,16 @@ public class GenCSRRequest implements CertSubjectAttrs {
 
     /**
      * @zm-api-field-tag digest
-     * @zm-api-field-description digest.  Default value "sha1"
+     * @zm-api-field-description digest. Default value: "SHA256"
      */
     @XmlAttribute(name=CertMgrConstants.E_DIGEST /* digest */, required=false)
     private String digest;
 
     /**
      * @zm-api-field-tag key-size
-     * @zm-api-field-description Key size - 1024 or 2048
+     * @zm-api-field-description Key size. Default value: 2048. Minimum allowed value: 2048.
      */
-    @XmlAttribute(name=CertMgrConstants.E_KEYSIZE /* keysize */, required=true)
+    @XmlAttribute(name = CertMgrConstants.E_KEYSIZE /* keysize */, required = false)
     private String keySize;
 
     /**

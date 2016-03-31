@@ -34,6 +34,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.CertMgrConstants;
 import com.zimbra.soap.admin.type.CSRSubject;
 import com.zimbra.soap.admin.type.CommCert;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @zm-api-command-auth-required true
@@ -69,15 +70,14 @@ public class InstallCertRequest {
 
     /**
      * @zm-api-field-tag validation-days
-     * @zm-api-field-description Validation days: required.  Number of the validation days of the self signed
-     * certificate,
+     * @zm-api-field-description Validation days: required. Number of the validation days of the self signed certificate
      */
     @XmlElement(name=CertMgrConstants.E_VALIDATION_DAYS /* validation_days */, required=false)
     private String validationDays;
 
     /**
      * @zm-api-field-tag digest
-     * @zm-api-field-description digest.  Default value "sha1"
+     * @zm-api-field-description digest. Default value: "SHA256"
      */
     @XmlElement(name=CertMgrConstants.E_DIGEST /* digest */, required=false)
     private String digest;
@@ -96,10 +96,17 @@ public class InstallCertRequest {
 
     /**
      * @zm-api-field-tag
-     * @zm-api-field-description Key Size: 1024|2048, key length of the self-signed certificate
+     * @zm-api-field-description Key length of the self-signed certificate. Default value: 2048. Minimum allowed value: 2048
      */
     @XmlElement(name=CertMgrConstants.E_KEYSIZE /* keysize */, required=false)
     private String keySize;
+
+    /**
+     * @zm-api-field-tag skipCleanup
+     * @zm-api-field-description Flag whether or not to delete temporary files. This should be used only for testing and troubleshooting.
+     */
+    @XmlAttribute(name = CertMgrConstants.E_SKIP_CLEANUP /* skipCleanup */, required = false)
+    private ZmBoolean skipCleanup;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -112,6 +119,7 @@ public class InstallCertRequest {
     public InstallCertRequest(String server, String type) {
         this.server = server;
         this.type = type;
+        this.skipCleanup = ZmBoolean.FALSE;
     }
 
     public void setCommCert(CommCert commCert) { this.commCert = commCert; }
@@ -143,6 +151,13 @@ public class InstallCertRequest {
     }
     public String getKeySize() { return keySize; }
 
+    public void setSkipCleanup(Boolean val) {
+        this.skipCleanup = ZmBoolean.fromBool(val);
+    }
+
+    public Boolean getSkipCleanup() {
+        return ZmBoolean.toBool(skipCleanup);
+    }
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
