@@ -2353,7 +2353,7 @@ public class ZMailbox implements ToZJSONObject {
 
     private static Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
 
-    private String getAttachmentId(String result) throws ZClientException {
+    public static String getAttachmentId(String result) throws ZClientException {
         if (result.startsWith(HttpServletResponse.SC_OK+"")) {
             Matcher m = sAttachmentId.matcher(result);
             return m.find() ? m.group(1) : null;
