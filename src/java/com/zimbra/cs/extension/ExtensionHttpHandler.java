@@ -28,6 +28,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.service.admin.AdminAccessControl;
 
 /**
  * HTTP handler for an extension. HTTP GET and POST requests are dispatched to the handler
@@ -103,6 +106,22 @@ public abstract class ExtensionHttpHandler {
      * mail SSL port.
      */
     public boolean hideFromDefaultPorts() {
-    	return false;
+        return false;
+    }
+
+    /**
+     * This API is for checking ACL rights for REST handlers that are added through server extensions.
+     *
+     * @param authToken
+     * @param target
+     * @param needed
+     * @return
+     * @throws ServiceException
+     */
+    protected static AdminAccessControl checkRight(AuthToken authToken, Entry target, Object needed)
+            throws ServiceException {
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(authToken);
+        aac.checkRight(target, needed);
+        return aac;
     }
 }

@@ -108,8 +108,8 @@ public class ZimbraServlet extends HttpServlet {
         return getRealmHeader(realm);
     }
 
-    protected static final String ZIMBRA_FAULT_CODE_HEADER    = "X-Zimbra-Fault-Code";
-    protected static final String ZIMBRA_FAULT_MESSAGE_HEADER = "X-Zimbra-Fault-Message";
+    public static final String ZIMBRA_FAULT_CODE_HEADER = "X-Zimbra-Fault-Code";
+    public static final String ZIMBRA_FAULT_MESSAGE_HEADER = "X-Zimbra-Fault-Message";
 
     private static final int MAX_PROXY_HOPCOUNT = 3;
 

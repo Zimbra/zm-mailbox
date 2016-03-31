@@ -148,10 +148,18 @@ import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.admin.message.GetAccountRequest;
 import com.zimbra.soap.admin.message.GetAccountResponse;
+import com.zimbra.soap.admin.message.GrantRightRequest;
+import com.zimbra.soap.admin.message.GrantRightResponse;
 import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
 import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 import com.zimbra.soap.admin.type.Attr;
+import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
+import com.zimbra.soap.admin.type.GranteeSelector;
+import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
+import com.zimbra.soap.admin.type.RightModifierInfo;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.TargetBy;
+import com.zimbra.soap.type.TargetType;
 
 /**
  * @author bburtin
@@ -1314,5 +1322,20 @@ public class TestUtil extends Assert {
         AuthResponse resp = SoapTest.invokeJaxb(transport, req);
         transport.setAuthToken(resp.getAuthToken());
         return transport;
+    }
+
+    public static void grantRightToAdmin(SoapProvisioning adminSoapProv, TargetType targetType, String targetName,
+            String granteeName, String rightName) throws ServiceException {
+        GranteeSelector grantee = new GranteeSelector(com.zimbra.soap.type.GranteeType.usr, GranteeBy.name, granteeName);
+        EffectiveRightsTargetSelector target = null;
+        if (targetName == null) {
+            target = new EffectiveRightsTargetSelector(targetType, null, null);
+        } else {
+            target = new EffectiveRightsTargetSelector(targetType, TargetBy.name, targetName);
+        }
+    
+        RightModifierInfo right = new RightModifierInfo(rightName);
+        GrantRightResponse grResp = adminSoapProv.invokeJaxb(new GrantRightRequest(target, grantee, right));
+        assertNotNull("GrantRightResponse for " + right.getValue(), grResp);
     }
 }
