@@ -21,6 +21,7 @@
  */
 package com.zimbra.cs.account;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 
 /**
@@ -120,7 +121,7 @@ public class AccountServiceException extends ServiceException {
         private final String mAcctName;  // real account name
 
         private AuthFailedServiceException(String acctName, String namePassedIn, String reason, String code, boolean isReceiversFault, Throwable cause) {
-            super("authentication failed for [" + namePassedIn + "]", code, isReceiversFault, cause);
+            super("authentication failed for [" + Strings.nullToEmpty(namePassedIn) + "]", code, isReceiversFault, cause);
             mReason = reason;
             mAcctName = acctName;
         }
