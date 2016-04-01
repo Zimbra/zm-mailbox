@@ -571,7 +571,7 @@ public final class CsrfUtil {
 
     }
 
-    public static boolean checkCsrfInMultipartFilleUpload(List<FileItem> items, AuthToken at) {
+    public static boolean checkCsrfInMultipartFileUpload(List<FileItem> items, AuthToken at) {
         for (FileItem item : items) {
             if (item.isFormField()) {
                 if (item.getFieldName().equals(PARAM_CSRF_TOKEN)) {
@@ -579,6 +579,8 @@ public final class CsrfUtil {
                         String csrfToken = item.getString();
                         if (CsrfUtil.isValidCsrfToken(csrfToken, at)) {
                             return true;
+                        } else {
+                            ZimbraLog.misc.debug("Csrf token : %s recd in file upload is invalid.", csrfToken);
                         }
                     }
                     break;
