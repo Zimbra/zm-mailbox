@@ -18,15 +18,22 @@
 package com.zimbra.cs.account.ldap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.PasswordUtil.SSHA512;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.ldap.LdapDateUtil;
 
@@ -125,16 +132,69 @@ public class LdapLockoutPolicy {
         }
     }
 
+    private static class PasswordLockoutCache {
+        private static long maxCacheSize = DebugConfig.invalidPasswordMaxCacheSize;
+        private static int cacheExpiryInMinute = DebugConfig.invalidPasswordCacheExpirationInMinutes;
+        private static Cache<String, List<String>> cache =
+            CacheBuilder.newBuilder().maximumSize(maxCacheSize).expireAfterWrite(cacheExpiryInMinute, TimeUnit.MINUTES).build();
+
+        private static boolean suppressPasswordLockOut(Account acct, String protocol, String password) {
+            if (!(StringUtil.isNullOrEmpty(password) || StringUtil.isNullOrEmpty(protocol))) {
+                if (acct.isPasswordLockoutSuppressionEnabled()) {
+                    for (String suppressionProtocol : acct.getPasswordLockoutSuppressionProtocolsAsString()) {
+                        if (protocol.equalsIgnoreCase(suppressionProtocol)) {
+                            List<String> pwds = cache.getIfPresent(acct.getId());
+                            if (pwds != null) {
+                                for (String pwd : pwds) {
+                                    if (SSHA512.verifySSHA512(pwd, password)) {
+                                        return true;
+                                    }
+                                }
+                                int maxCacheSize = acct.getPasswordLockoutSuppressionCacheSize();
+                                if (acct.isTwoFactorAuthEnabled()) {
+                                    if (acct.getAppSpecificPassword() != null) {
+                                        maxCacheSize = maxCacheSize + acct.getAppSpecificPassword().length;
+                                    }
+                                }
+                                int cacheSize = pwds.size();
+                                ZimbraLog.account.debug("Password lockout suppression cache size = %s (max = %s)", cacheSize, maxCacheSize);
+                                if (cacheSize < maxCacheSize) {
+                                    pwds.add(SSHA512.generateSSHA512(password, null));
+                                    ZimbraLog.account.debug("Added entry in password lockout cache");
+                                }
+                            } else {
+                                List<String> passwords = Collections.synchronizedList(new ArrayList<String>());
+                                passwords.add(SSHA512.generateSSHA512(password, null));
+                                ZimbraLog.account.debug("Created entry in password lockout cache");
+                                cache.put(acct.getId(), passwords);
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
     public void failedLogin() {
-        failedLogin(failedLogins);
+        failedLogin(failedLogins, null, null);
     }
 
     public void failedSecondFactorLogin() {
-        failedLogin(twoFactorFailedLogins);
+        failedLogin(twoFactorFailedLogins, null, null);
     }
 
-    private void failedLogin(FailedLoginState login) {
+    public void failedLogin(String protocol, String password) {
+        failedLogin(failedLogins, protocol, password);
+    }
+
+    private void failedLogin(FailedLoginState login, String protocol, String password) {
         if (!mEnabled || !login.mEnabled) return;
+
+        if (PasswordLockoutCache.suppressPasswordLockOut(mAccount, protocol, password)) {
+            ZimbraLog.security.info("Suppressed password lockout.");
+            return;
+        }
         Map<String, Object> attrs = new HashMap<String,Object>();
 
         int totalFailures = login.updateFailureTimes(attrs);
