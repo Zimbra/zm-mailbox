@@ -311,6 +311,14 @@ public final class DebugConfig {
     public static int numberOfConsecutiveSymbolsInSenderName =
             value("debug_number_of_consecutive_symbols_in_sender_name", 3);
 
+    // not more than 10000 entries.
+    public static long invalidPasswordMaxCacheSize =
+        value("debug_invalid_password_cache_max_size", 10000);
+
+    //default 2 days.
+    public static int invalidPasswordCacheExpirationInMinutes =
+        value("debug_invalid_password_cache_expiration_in_minutes", 2880);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);

@@ -1512,6 +1512,30 @@ public class ZAttrProvisioning {
         public boolean isNone() { return this == none;}
     }
 
+    public static enum PasswordLockoutSuppressionProtocols {
+        http_basic("http_basic"),
+        zsync("zsync"),
+        imap("imap"),
+        pop3("pop3"),
+        http_dav("http_dav"),
+        soap("soap");
+        private String mValue;
+        private PasswordLockoutSuppressionProtocols(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PasswordLockoutSuppressionProtocols fromString(String s) throws ServiceException {
+            for (PasswordLockoutSuppressionProtocols value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isHttp_basic() { return this == http_basic;}
+        public boolean isZsync() { return this == zsync;}
+        public boolean isImap() { return this == imap;}
+        public boolean isPop3() { return this == pop3;}
+        public boolean isHttp_dav() { return this == http_dav;}
+        public boolean isSoap() { return this == soap;}
+    }
+
     public static enum PrefBriefcaseReadingPaneLocation {
         bottom("bottom"),
         off("off"),
@@ -11454,6 +11478,38 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=380)
     public static final String A_zimbraPasswordLockoutMaxFailures = "zimbraPasswordLockoutMaxFailures";
+
+    /**
+     * Number of invalid passwords kept in a cache per account. Any number of
+     * login attempts using password present in cache will be considered as
+     * single failed attempt. If Twofactor authentication enabled the cache
+     * size will be sum of zimbraPasswordLockoutSuppressionCacheSize and
+     * number of application specific password generated.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2086)
+    public static final String A_zimbraPasswordLockoutSuppressionCacheSize = "zimbraPasswordLockoutSuppressionCacheSize";
+
+    /**
+     * If TRUE it will not increment the repeated failed login attempt using
+     * old or invalid password from
+     * zimbraPasswordLockoutSuppressionProtocols.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2087)
+    public static final String A_zimbraPasswordLockoutSuppressionEnabled = "zimbraPasswordLockoutSuppressionEnabled";
+
+    /**
+     * Protocols for which repeated failed login attempts with same password
+     * considered as single failure. Supported protocols
+     * zsync,imap,pop3,http_basic,http_dav,soap.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2088)
+    public static final String A_zimbraPasswordLockoutSuppressionProtocols = "zimbraPasswordLockoutSuppressionProtocols";
 
     /**
      * maximum days between password changes
