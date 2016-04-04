@@ -5583,7 +5583,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 verifyPasswordInternal(acct, password, authMech, authCtxt);
                 lockoutPolicy.successfulLogin();
             } catch (AccountServiceException e) {
-               lockoutPolicy.failedLogin();
+                String protocol = null;
+                if (authCtxt != null) {
+                    if (authCtxt.get(AuthContext.AC_PROTOCOL) != null) {
+                        protocol = authCtxt.get(AuthContext.AC_PROTOCOL).toString();
+                    }
+                }
+                lockoutPolicy.failedLogin(protocol, password);
                 // re-throw original exception
                 throw e;
             }

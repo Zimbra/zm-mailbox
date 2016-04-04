@@ -18,38 +18,38 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.PreAuthKey;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.cs.client.LmcSession;
-import com.zimbra.cs.client.soap.LmcSearchRequest;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
+import com.zimbra.common.account.ZAttrProvisioning.PasswordLockoutSuppressionProtocols;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.PreAuthKey;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.client.LmcSession;
+import com.zimbra.cs.client.soap.LmcSearchRequest;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.type.PreAuth;
 import com.zimbra.soap.type.AccountSelector;
-import com.zimbra.common.util.ZimbraLog;
 
 public class TestAuthentication extends TestCase {
     private static String USER_NAME = "testauthentication";
@@ -256,6 +256,62 @@ public class TestAuthentication extends TestCase {
         assertFalse("new auth token should not be expired yet", at.isExpired());
     }
 
+    public void testAccountLockout() throws Exception {
+        String wrongPassword1 = "test1234";
+        String wrongPassword2 = "test12345";
+        Account acct = TestUtil.getAccount(USER_NAME);
+        acct.setPasswordLockoutMaxFailures(2);
+
+        acct.setPasswordLockoutEnabled(true);
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        AccountSelector acctSel = new AccountSelector(com.zimbra.soap.type.AccountBy.name, acct.getName());
+        AuthRequest req = new AuthRequest(acctSel, wrongPassword1);
+
+        // Verify lockout happen after 2 invalid login using same password.
+        Element resp;
+        try {
+            resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+        } catch (ServiceException e) {}
+        try {
+            resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+        } catch (ServiceException e) {}
+        Assert.assertTrue("account is not lockedout", verifyLockedoutAndReactivateAccount(acct, transport));
+
+        // Add Soap protocol to PasswordLockoutSuppressionProtocols
+        acct.setPasswordLockoutSuppressionProtocols(PasswordLockoutSuppressionProtocols.soap);
+        // Verify lock out should not happen after 2 invalid login using same password and next login with different invalid password should be locked out.
+        try {
+            resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+        } catch (ServiceException e) {}
+        try {
+            resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+        } catch (ServiceException e) {}
+        try {
+            resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+        } catch (ServiceException e) {}
+        try {
+            resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+       } catch (ServiceException e) {}
+       Assert.assertTrue("account is not active", acct.getAccountStatus().equals(AccountStatus.active));
+       req = new AuthRequest(acctSel, wrongPassword2);
+       try {
+           resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+       } catch (ServiceException e) {}
+       Assert.assertTrue("account is not lockedout", verifyLockedoutAndReactivateAccount(acct, transport));
+
+       acct.setPasswordLockoutSuppressionEnabled(false);
+    }
+
+    static boolean verifyLockedoutAndReactivateAccount(Account acct, SoapHttpTransport transport) throws Exception {
+        boolean isLockedOut = acct.getAccountStatus().equals(AccountStatus.lockout);
+        if (isLockedOut) {
+            acct.setAccountStatusAsString("active");
+            AccountSelector acctSel = new AccountSelector(com.zimbra.soap.type.AccountBy.name, acct.getName());
+            AuthRequest req = new AuthRequest(acctSel, "test123");
+            transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+        }
+        return isLockedOut;
+    }
     /**
      * Deletes the account and the associated mailbox.
      */

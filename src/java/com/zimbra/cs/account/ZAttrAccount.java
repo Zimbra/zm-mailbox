@@ -33633,6 +33633,311 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Number of invalid passwords kept in a cache per account. Any number of
+     * login attempts using password present in cache will be considered as
+     * single failed attempt. If Twofactor authentication enabled the cache
+     * size will be sum of zimbraPasswordLockoutSuppressionCacheSize and
+     * number of application specific password generated.
+     *
+     * @return zimbraPasswordLockoutSuppressionCacheSize, or 1 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2086)
+    public int getPasswordLockoutSuppressionCacheSize() {
+        return getIntAttr(Provisioning.A_zimbraPasswordLockoutSuppressionCacheSize, 1);
+    }
+
+    /**
+     * Number of invalid passwords kept in a cache per account. Any number of
+     * login attempts using password present in cache will be considered as
+     * single failed attempt. If Twofactor authentication enabled the cache
+     * size will be sum of zimbraPasswordLockoutSuppressionCacheSize and
+     * number of application specific password generated.
+     *
+     * @param zimbraPasswordLockoutSuppressionCacheSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2086)
+    public void setPasswordLockoutSuppressionCacheSize(int zimbraPasswordLockoutSuppressionCacheSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionCacheSize, Integer.toString(zimbraPasswordLockoutSuppressionCacheSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of invalid passwords kept in a cache per account. Any number of
+     * login attempts using password present in cache will be considered as
+     * single failed attempt. If Twofactor authentication enabled the cache
+     * size will be sum of zimbraPasswordLockoutSuppressionCacheSize and
+     * number of application specific password generated.
+     *
+     * @param zimbraPasswordLockoutSuppressionCacheSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2086)
+    public Map<String,Object> setPasswordLockoutSuppressionCacheSize(int zimbraPasswordLockoutSuppressionCacheSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionCacheSize, Integer.toString(zimbraPasswordLockoutSuppressionCacheSize));
+        return attrs;
+    }
+
+    /**
+     * Number of invalid passwords kept in a cache per account. Any number of
+     * login attempts using password present in cache will be considered as
+     * single failed attempt. If Twofactor authentication enabled the cache
+     * size will be sum of zimbraPasswordLockoutSuppressionCacheSize and
+     * number of application specific password generated.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2086)
+    public void unsetPasswordLockoutSuppressionCacheSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionCacheSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of invalid passwords kept in a cache per account. Any number of
+     * login attempts using password present in cache will be considered as
+     * single failed attempt. If Twofactor authentication enabled the cache
+     * size will be sum of zimbraPasswordLockoutSuppressionCacheSize and
+     * number of application specific password generated.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2086)
+    public Map<String,Object> unsetPasswordLockoutSuppressionCacheSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionCacheSize, "");
+        return attrs;
+    }
+
+    /**
+     * If TRUE it will not increment the repeated failed login attempt using
+     * old or invalid password from
+     * zimbraPasswordLockoutSuppressionProtocols.
+     *
+     * @return zimbraPasswordLockoutSuppressionEnabled, or true if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2087)
+    public boolean isPasswordLockoutSuppressionEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPasswordLockoutSuppressionEnabled, true);
+    }
+
+    /**
+     * If TRUE it will not increment the repeated failed login attempt using
+     * old or invalid password from
+     * zimbraPasswordLockoutSuppressionProtocols.
+     *
+     * @param zimbraPasswordLockoutSuppressionEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2087)
+    public void setPasswordLockoutSuppressionEnabled(boolean zimbraPasswordLockoutSuppressionEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionEnabled, zimbraPasswordLockoutSuppressionEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE it will not increment the repeated failed login attempt using
+     * old or invalid password from
+     * zimbraPasswordLockoutSuppressionProtocols.
+     *
+     * @param zimbraPasswordLockoutSuppressionEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2087)
+    public Map<String,Object> setPasswordLockoutSuppressionEnabled(boolean zimbraPasswordLockoutSuppressionEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionEnabled, zimbraPasswordLockoutSuppressionEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * If TRUE it will not increment the repeated failed login attempt using
+     * old or invalid password from
+     * zimbraPasswordLockoutSuppressionProtocols.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2087)
+    public void unsetPasswordLockoutSuppressionEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE it will not increment the repeated failed login attempt using
+     * old or invalid password from
+     * zimbraPasswordLockoutSuppressionProtocols.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2087)
+    public Map<String,Object> unsetPasswordLockoutSuppressionEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Protocols for which repeated failed login attempts with same password
+     * considered as single failure. Supported protocols
+     * zsync,imap,pop3,http_basic,http_dav,soap.
+     *
+     * <p>Valid values: [http_basic, pop3, soap, http_dav, imap, zsync]
+     *
+     * @return zimbraPasswordLockoutSuppressionProtocols, or empty array if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2088)
+    public String[] getPasswordLockoutSuppressionProtocolsAsString() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraPasswordLockoutSuppressionProtocols); return value.length > 0 ? value : new String[] {"zsync"};
+    }
+
+    /**
+     * Protocols for which repeated failed login attempts with same password
+     * considered as single failure. Supported protocols
+     * zsync,imap,pop3,http_basic,http_dav,soap.
+     *
+     * <p>Valid values: [http_basic, pop3, soap, http_dav, imap, zsync]
+     *
+     * @param zimbraPasswordLockoutSuppressionProtocols new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2088)
+    public void setPasswordLockoutSuppressionProtocols(ZAttrProvisioning.PasswordLockoutSuppressionProtocols zimbraPasswordLockoutSuppressionProtocols) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionProtocols, zimbraPasswordLockoutSuppressionProtocols.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Protocols for which repeated failed login attempts with same password
+     * considered as single failure. Supported protocols
+     * zsync,imap,pop3,http_basic,http_dav,soap.
+     *
+     * <p>Valid values: [http_basic, pop3, soap, http_dav, imap, zsync]
+     *
+     * @param zimbraPasswordLockoutSuppressionProtocols new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2088)
+    public Map<String,Object> setPasswordLockoutSuppressionProtocols(ZAttrProvisioning.PasswordLockoutSuppressionProtocols zimbraPasswordLockoutSuppressionProtocols, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionProtocols, zimbraPasswordLockoutSuppressionProtocols.toString());
+        return attrs;
+    }
+
+    /**
+     * Protocols for which repeated failed login attempts with same password
+     * considered as single failure. Supported protocols
+     * zsync,imap,pop3,http_basic,http_dav,soap.
+     *
+     * <p>Valid values: [http_basic, pop3, soap, http_dav, imap, zsync]
+     *
+     * @param zimbraPasswordLockoutSuppressionProtocols new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2088)
+    public void setPasswordLockoutSuppressionProtocolsAsString(String[] zimbraPasswordLockoutSuppressionProtocols) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionProtocols, zimbraPasswordLockoutSuppressionProtocols);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Protocols for which repeated failed login attempts with same password
+     * considered as single failure. Supported protocols
+     * zsync,imap,pop3,http_basic,http_dav,soap.
+     *
+     * <p>Valid values: [http_basic, pop3, soap, http_dav, imap, zsync]
+     *
+     * @param zimbraPasswordLockoutSuppressionProtocols new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2088)
+    public Map<String,Object> setPasswordLockoutSuppressionProtocolsAsString(String[] zimbraPasswordLockoutSuppressionProtocols, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionProtocols, zimbraPasswordLockoutSuppressionProtocols);
+        return attrs;
+    }
+
+    /**
+     * Protocols for which repeated failed login attempts with same password
+     * considered as single failure. Supported protocols
+     * zsync,imap,pop3,http_basic,http_dav,soap.
+     *
+     * <p>Valid values: [http_basic, pop3, soap, http_dav, imap, zsync]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2088)
+    public void unsetPasswordLockoutSuppressionProtocols() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionProtocols, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Protocols for which repeated failed login attempts with same password
+     * considered as single failure. Supported protocols
+     * zsync,imap,pop3,http_basic,http_dav,soap.
+     *
+     * <p>Valid values: [http_basic, pop3, soap, http_dav, imap, zsync]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2088)
+    public Map<String,Object> unsetPasswordLockoutSuppressionProtocols(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordLockoutSuppressionProtocols, "");
+        return attrs;
+    }
+
+    /**
      * maximum days between password changes
      *
      * @return zimbraPasswordMaxAge, or 0 if unset
