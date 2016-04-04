@@ -10528,4 +10528,21 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtp_tls_dane_insecure_mx_policy.</desc>
 </attr>
 
+<attr id="2086" name="zimbraPasswordLockoutSuppressionCacheSize" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.7.0,9.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>Number of invalid passwords kept in a cache per account. Any number of login attempts using password present in cache will be considered as single failed attempt.
+    If Twofactor authentication enabled the cache size will be sum of zimbraPasswordLockoutSuppressionCacheSize and number of application specific password generated.
+  </desc>
+</attr>
+
+<attr id="2087" name="zimbraPasswordLockoutSuppressionEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.7.0,9.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>If TRUE it will not increment the repeated failed login attempt using old or invalid password from zimbraPasswordLockoutSuppressionProtocols.</desc>
+</attr>
+
+<attr id="2088" name="zimbraPasswordLockoutSuppressionProtocols" value="zsync,imap,pop3,http_basic,http_dav,soap" type="enum" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.7.0,9.0.0">
+  <defaultCOSValue>zsync</defaultCOSValue>
+  <desc>Protocols for which repeated failed login attempts with same password considered as single failure. Supported protocols zsync,imap,pop3,http_basic,http_dav,soap.</desc>
+</attr>
+
 </attrs>
