@@ -222,6 +222,7 @@ public abstract class TwoFactorAuth implements SecondFactor {
 
         public abstract void twoFactorAuthEnabled(Account acct);
         public abstract void twoFactorAuthDisabled(Account acct);
+        public abstract void appSpecificPasswordRevoked(Account acct, String appName);
 
         public static void register(String name, TwoFactorChangeListener listener) {
             if (listeners.containsKey(name)) {
@@ -242,6 +243,13 @@ public abstract class TwoFactorAuth implements SecondFactor {
             for (Map.Entry<String, TwoFactorChangeListener> entry: listeners.entrySet()) {
                 TwoFactorChangeListener listener = entry.getValue();
                 listener.twoFactorAuthDisabled(acct);
+            }
+        }
+
+        public static void revokeAppPassword(Account acct, String appName) {
+            for (Map.Entry<String, TwoFactorChangeListener> entry: listeners.entrySet()) {
+                TwoFactorChangeListener listener = entry.getValue();
+                listener.appSpecificPasswordRevoked(acct, appName);
             }
         }
     }
