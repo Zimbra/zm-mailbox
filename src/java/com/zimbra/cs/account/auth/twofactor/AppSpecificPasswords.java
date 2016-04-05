@@ -11,4 +11,5 @@ public interface AppSpecificPasswords extends SecondFactor {
     public Set<AppSpecificPasswordData> getPasswords() throws ServiceException;
     public void revoke(String appName) throws ServiceException;
     public void revokeAll() throws ServiceException;
+    public String getAppNameByPassword(String password) throws ServiceException;
 }
