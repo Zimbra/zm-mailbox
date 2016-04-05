@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.Cache;
@@ -143,30 +145,42 @@ public class LdapLockoutPolicy {
                 if (acct.isPasswordLockoutSuppressionEnabled()) {
                     for (String suppressionProtocol : acct.getPasswordLockoutSuppressionProtocolsAsString()) {
                         if (protocol.equalsIgnoreCase(suppressionProtocol)) {
-                            List<String> pwds = cache.getIfPresent(acct.getId());
-                            if (pwds != null) {
-                                for (String pwd : pwds) {
-                                    if (SSHA512.verifySSHA512(pwd, password)) {
-                                        return true;
+                            List<String> pwds = null;
+                            try {
+                                pwds = cache.get(acct.getId(), new Callable<List<String>>() {
+                                    @Override
+                                    public List<String> call() throws Exception {
+                                        return new ArrayList<String>();
                                     }
-                                }
-                                int maxCacheSize = acct.getPasswordLockoutSuppressionCacheSize();
-                                if (acct.isTwoFactorAuthEnabled()) {
-                                    if (acct.getAppSpecificPassword() != null) {
-                                        maxCacheSize = maxCacheSize + acct.getAppSpecificPassword().length;
-                                    }
-                                }
+                                });
+                            } catch (ExecutionException e) {
+                                ZimbraLog.account.warn("Error while retrieving invalid password cache entry", e);
+                                return false;
+                            }
+                            synchronized (pwds) {
                                 int cacheSize = pwds.size();
-                                ZimbraLog.account.debug("Password lockout suppression cache size = %s (max = %s)", cacheSize, maxCacheSize);
-                                if (cacheSize < maxCacheSize) {
+                                if (cacheSize == 0) {
                                     pwds.add(SSHA512.generateSSHA512(password, null));
-                                    ZimbraLog.account.debug("Added entry in password lockout cache");
+                                    ZimbraLog.account.debug("Created entry in password lockout cache");
+                                } else {
+                                    for (String pwd : pwds) {
+                                        if (SSHA512.verifySSHA512(pwd, password)) {
+                                            return true;
+                                        }
+                                    }
+                                    int maxCacheSize = acct.getPasswordLockoutSuppressionCacheSize();
+                                    if (acct.isTwoFactorAuthEnabled()) {
+                                        if (acct.isFeatureAppSpecificPasswordsEnabled() &&
+                                            acct.getAppSpecificPassword() != null) {
+                                            maxCacheSize = maxCacheSize + acct.getAppSpecificPassword().length;
+                                        }
+                                    }
+                                    ZimbraLog.account.debug("Password lockout suppression cache size = %s (max = %s)", cacheSize, maxCacheSize);
+                                    if (cacheSize < maxCacheSize) {
+                                        pwds.add(SSHA512.generateSSHA512(password, null));
+                                        ZimbraLog.account.debug("Added entry in password lockout cache");
+                                    }
                                 }
-                            } else {
-                                List<String> passwords = Collections.synchronizedList(new ArrayList<String>());
-                                passwords.add(SSHA512.generateSSHA512(password, null));
-                                ZimbraLog.account.debug("Created entry in password lockout cache");
-                                cache.put(acct.getId(), passwords);
                             }
                         }
                     }
