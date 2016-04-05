@@ -41,6 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
@@ -1826,6 +1827,31 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
+    }
+
+    public String getConfig(OperationContext octxt, Pattern pattern) throws ServiceException {
+
+        String previousDeviceId = null;
+        if (!hasFullAccess()) {
+            return null;
+        }
+        if (mData.configKeys == null)/* || !mData.configKeys.contains(section)) */{
+            return null;
+        } else {
+
+            for (String key : mData.configKeys) {
+                if (pattern.matcher(key).matches()) {
+                    previousDeviceId = key;
+                    if (previousDeviceId.indexOf(":") != -1) {
+                        int index = previousDeviceId.indexOf(":");
+                        previousDeviceId = previousDeviceId.substring(0, index);
+                    }
+                    break;
+                }
+            }
+        }
+
+        return previousDeviceId;
     }
 
     /** Sets the configuration info for the given section.  We segment the
