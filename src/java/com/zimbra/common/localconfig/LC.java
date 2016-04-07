@@ -774,6 +774,7 @@ public final class LC {
     public static final KnownKey zmconfigd_interval = KnownKey.newKey(60);
     public static final KnownKey zmconfigd_log_level = KnownKey.newKey(3);
     public static final KnownKey zmconfigd_listen_port = KnownKey.newKey(7171);
+    public static final KnownKey zmconfigd_max_failed_restarts = KnownKey.newKey(3);
     public static final KnownKey zmconfigd_startup_pause = KnownKey.newKey(60);
 
     public static final KnownKey zimbra_configrewrite_timeout = KnownKey.newKey(120);
