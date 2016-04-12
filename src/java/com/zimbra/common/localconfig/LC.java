@@ -200,6 +200,15 @@ public final class LC {
     public static final KnownKey zimbra_mailbox_throttle_reap_interval = KnownKey.newKey(60000);
 
     @Reloadable
+    public static final KnownKey zimbra_password_lockout_suppression_enabled = KnownKey.newKey(true);
+
+    @Reloadable
+    public static final KnownKey zimbra_password_lockout_suppression_protocols = KnownKey.newKey("zsync");
+
+    @Reloadable
+    public static final KnownKey zimbra_password_lockout_suppression_cache_size = KnownKey.newKey(1);
+
+    @Reloadable
     public static final KnownKey zimbra_mailbox_lock_max_waiting_threads = KnownKey.newKey(15);
 
     @Reloadable

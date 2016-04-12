@@ -281,6 +281,14 @@ public final class DebugConfig {
     public static final int numberOfThreadsToUseForDomainAdminCountObjects =
             value ("debug_number_of_threads_to_use_for_domain_admin_count_objects", 3);
 
+    // not more than 10000 entries.
+    public static long invalidPasswordMaxCacheSize =
+        value("debug_invalid_password_cache_max_size", 10000);
+
+    //default 2 days.
+    public static int invalidPasswordCacheExpirationInMinutes =
+        value("debug_invalid_password_cache_expiration_in_minutes", 2880);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
