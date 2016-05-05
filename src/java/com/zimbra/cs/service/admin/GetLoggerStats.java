@@ -31,7 +31,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -392,7 +391,7 @@ public class GetLoggerStats extends AdminDocumentHandler {
     static Iterator<String> execfetch(String... args) throws ServiceException {
         BufferedReader in = null;
         try {
-            final Socket socket = new Socket(InetAddress.getByName(null), LC.logger_zmrrdfetch_port.intValue()); // TODO magic number, move to localconfig
+            final Socket socket = new Socket(InetAddress.getByName("127.0.0.1"), LC.logger_zmrrdfetch_port.intValue());
             final PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "utf-8"));
             
             StringBuilder cmdline = new StringBuilder();
