@@ -16,20 +16,22 @@
  */
 package com.zimbra.cs.account;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.owasp.html.PolicyFactory;
-import org.owasp.html.Sanitizers;
-
 import com.zimbra.common.account.SignatureUtil;
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.html.BrowserDefang;
+import com.zimbra.cs.html.DefangFactory;
 
 public class Signature extends AccountProperty implements Comparable {
 
-    private static final PolicyFactory sanitizer = Sanitizers.FORMATTING.and(Sanitizers.STYLES).and(Sanitizers.LINKS);
     public Signature(Account acct, String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(acct, name, id, attrs, null, prov);
     }
@@ -64,14 +66,21 @@ public class Signature extends AccountProperty implements Comparable {
 
     public Set<SignatureContent> getContents() {
         Set<SignatureContent> contents = new HashSet<SignatureContent>();
-
+        BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
         for (Iterator it = SignatureUtil.ATTR_TYPE_MAP.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry)it.next();
 
             String content = getAttr((String)entry.getKey());
             if (content != null) {
                 if (entry.getKey().equals(ZAttrProvisioning.A_zimbraPrefMailSignatureHTML)) {
-                    content = sanitizer.sanitize(content);
+
+                    StringReader reader = new StringReader(content);
+                    try {
+                        content = defanger.defang(reader, false);
+                    } catch (IOException e) {
+                       ZimbraLog.misc.info("Error sanitizing html signature: %s", content);
+                    }
+
                 }
                 contents.add(new SignatureContent((String)entry.getValue(), content));
             }

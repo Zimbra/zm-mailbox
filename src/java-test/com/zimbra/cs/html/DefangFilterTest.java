@@ -1266,5 +1266,18 @@ public class DefangFilterTest {
         Assert.assertTrue(!result.contains("&#64;zimbra"));
     }
 
+    @Test
+    /**
+     * Verify that a new line in a html based signature is maintained after passing through the defanger.
+     * @throws Exception
+     */
+    public void testBug104666() throws Exception {
+        String html = "<div></div><div></div><div id=\"5589f382-9e9b-47cd-ab09-3ea973fd4f6a\" data-marker=\"__SIG_PRE__\">"
+            + "<div>LIne 1</div>" + "</div>" + "<div>Line 2</div>" + "</div>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.equals("<div>LIne 1</div></div><div>Line 2</div>"));
+    }
 
 }
