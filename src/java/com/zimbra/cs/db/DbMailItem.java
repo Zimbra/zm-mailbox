@@ -1904,16 +1904,23 @@ public class DbMailItem {
         }
     }
 
-    public static TypedIdList readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
+    public static TypedIdList readTombstones(Mailbox mbox, long lastSync, boolean equalModSeq) throws ServiceException {
         TypedIdList tombstones = new TypedIdList();
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT type, ids, sequence FROM " + getTombstoneTableName(mbox) +
+            if (equalModSeq) {
+                stmt = conn.prepareStatement("SELECT type, ids, sequence FROM " + getTombstoneTableName(mbox) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "sequence >= ? AND ids IS NOT NULL" +
+                        " ORDER BY sequence");
+            } else {
+                stmt = conn.prepareStatement("SELECT type, ids, sequence FROM " + getTombstoneTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "sequence > ? AND ids IS NOT NULL" +
                         " ORDER BY sequence");
+            }
+
             Db.getInstance().enableStreaming(stmt);
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
@@ -1950,6 +1957,10 @@ public class DbMailItem {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
+    }
+
+    public static TypedIdList readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
+            return readTombstones(mbox, lastSync, Boolean.FALSE);
     }
 
     /**
