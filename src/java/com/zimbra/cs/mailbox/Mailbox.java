@@ -3661,7 +3661,7 @@ public class Mailbox {
         }
     }
 
-    public TypedIdList getTombstones(int lastSync) throws ServiceException {
+    public TypedIdList getTombstones(int lastSync, boolean equalModSeq) throws ServiceException {
         lock.lock(false);
         try {
             if (!isTrackingSync()) {
@@ -3673,7 +3673,7 @@ public class Mailbox {
             boolean success = false;
             try {
                 beginReadTransaction("getTombstones", null);
-                TypedIdList tombstones = DbMailItem.readTombstones(this, lastSync);
+                TypedIdList tombstones = DbMailItem.readTombstones(this, lastSync, equalModSeq);
                 success = true;
                 return tombstones;
             } finally {
@@ -3682,6 +3682,10 @@ public class Mailbox {
         } finally {
             lock.release();
         }
+    }
+
+    public TypedIdList getTombstones(int lastSync) throws ServiceException {
+        return getTombstones(lastSync, Boolean.FALSE);
     }
 
     public List<Integer> getDumpsterItems(int lastSync, int folderId, int maxTrack) throws ServiceException {
