@@ -24,6 +24,8 @@ import java.io.IOException;
 
 import org.apache.commons.compress.utils.IOUtils;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
@@ -41,17 +43,23 @@ public enum SimiojConnector {
      * @return Currently, name of the file which contains a serialization of the Redolog entry.
      * @throws IOException
      */
-    public String submit(RedoableOp op) throws IOException {
+    public String submit(RedoableOp op) throws ServiceException {
         if (!simiojOpsDir.isDirectory()) {
             simiojOpsDir.mkdir();
         }
-        File submitFile = File.createTempFile("redo" + Integer.toString(op.getChangeId()) + "-", ".log", simiojOpsDir);
+        File submitFile;
+        try {
+            submitFile = File.createTempFile("redo" + Integer.toString(op.getChangeId()) + "-", ".log", simiojOpsDir);
         op.start(System.currentTimeMillis());
         try (FileOutputStream fos = new FileOutputStream(submitFile)) {
             IOUtils.copy(op.getInputStream(), fos);
             fos.flush();
         }
         return submitFile.getPath();
+        } catch (IOException e) {
+            ZimbraLog.mailbox.info("Problem submitting operation to the RAFT op=%s", op, e);
+            throw ServiceException.FAILURE("Problem committing operation", e);
+        }
     }
 
     /**
@@ -64,13 +72,17 @@ public enum SimiojConnector {
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public RedoableOp waitForCommit(String raftLogEntryIndex) throws FileNotFoundException, IOException {
+    public RedoableOp waitForCommit(String raftLogEntryIndex) throws ServiceException {
         File opFile = new File(raftLogEntryIndex);
+        RedoableOp op = null;
         try (FileInputStream fis = new FileInputStream(opFile)) {
             RedoLogInput rli = new RedoLogInput(fis);
-            RedoableOp op = RedoableOp.deserializeOp(rli);
+            op = RedoableOp.deserializeOp(rli);
             op.opType = RedoableOp.OP_TYPE.SIMIOJ_LEADER;
             return op;
+        } catch (IOException e) {
+            ZimbraLog.mailbox.info("Problem retrieving from the RAFT op=%s", op, e);
+            throw ServiceException.FAILURE("Problem committing operation - stage 2", e);
         }
     }
 }

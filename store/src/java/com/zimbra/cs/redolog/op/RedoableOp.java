@@ -37,7 +37,6 @@ import java.util.Map;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoCommitCallback;
@@ -71,9 +70,11 @@ public abstract class RedoableOp {
     private int mChangeId = -1;
     private int mChangeConstraint;
     private int mMailboxId;
-    private RedoLogManager mRedoLogMgr;
+    private final RedoLogManager mRedoLogMgr;
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
     RedoCommitCallback mCommitCallback;
+    public enum OP_TYPE { NORMAL, SIMIOJ_LEADER, SIMIOJ_FOLLOWER };
+    public OP_TYPE opType = RedoableOp.OP_TYPE.SIMIOJ_LEADER;
 
     protected RedoableOp(MailboxOperation op) {
         mOperation = op;
@@ -203,7 +204,7 @@ public abstract class RedoableOp {
      * operations should be excluded from initial crash recovery and run after
      * startup procedure finishes.  Note this treatment is possible only for
      * independent operations, i.e. no other operation during crash recovery
-     * should depend on having this operation done first. 
+     * should depend on having this operation done first.
      * @return
      */
     public boolean deferCrashRecovery() {
@@ -312,7 +313,7 @@ public abstract class RedoableOp {
     public MailboxOperation getOperation() {
         return mOperation;
     }
-    
+
     /**
      * Repeat the operation.
      */
@@ -422,7 +423,7 @@ public abstract class RedoableOp {
 
     /**
      * Returns the entire redoable op data as an <tt>InputStream</tt>.
-     * Includes the result of {@link #getAdditionalDataStream()}. 
+     * Includes the result of {@link #getAdditionalDataStream()}.
      */
     public InputStream getInputStream() throws IOException {
         synchronized (mSBAVGuard) {

@@ -244,6 +244,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
+import com.zimbra.cs.simioj.SimiojConnector;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.MailboxBlob;
@@ -7920,8 +7921,10 @@ public class Mailbox implements MailboxStore {
 
     public Folder createFolder(OperationContext octxt, String name, int parentId, Folder.FolderOptions fopt)
     throws ServiceException {
-        CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, fopt);
-        return createFolder(octxt, redoRecorder, name, parentId, fopt);
+        CreateFolder createFolderOp = new CreateFolder(mId, name, parentId, fopt);
+        String opFolderName = SimiojConnector.INSTANCE.submit(createFolderOp);
+        CreateFolder opFromSimioj = (CreateFolder) SimiojConnector.INSTANCE.waitForCommit(opFolderName);
+        return createFolder(octxt, opFromSimioj, name, parentId, fopt);
     }
 
     /**
