@@ -7886,10 +7886,9 @@ public class Mailbox implements MailboxStore {
         return createFolder(octxt, name, parentId, fopt);
     }
 
-    public Folder createFolder(OperationContext octxt, String name, int parentId, Folder.FolderOptions fopt)
+    public Folder createFolder(OperationContext octxt, CreateFolder redoRecorder, String name, int parentId,
+            Folder.FolderOptions fopt)
     throws ServiceException {
-        CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, fopt);
-
         boolean success = false;
         try {
             beginTransaction("createFolder", octxt, redoRecorder);
@@ -7897,7 +7896,8 @@ public class Mailbox implements MailboxStore {
 
             int folderId;
             String uuid;
-            if (redoPlayer == null) {
+            // The leader definitely needs to choose any UUIDs.  In theory, the folderId would end up being the same.
+            if ((redoPlayer == null) || RedoableOp.OP_TYPE.SIMIOJ_LEADER.equals(redoPlayer.opType)) {
                 folderId = getNextItemId(ID_AUTO_INCREMENT);
                 uuid = Strings.emptyToNull(fopt.getUuid()) == null ? UUIDUtil.generateUUID() : fopt.getUuid();
             } else {
@@ -7906,7 +7906,8 @@ public class Mailbox implements MailboxStore {
             }
 
             Folder folder = Folder.create(folderId, uuid, this, getFolderById(parentId), name, fopt.getAttributes(),
-                    fopt.getDefaultView(), fopt.getFlags(), fopt.getColor(), fopt.getDate(), fopt.getUrl(), fopt.getCustomMetadata());
+                    fopt.getDefaultView(), fopt.getFlags(), fopt.getColor(), fopt.getDate(), fopt.getUrl(),
+                    fopt.getCustomMetadata());
 
             redoRecorder.setFolderIdAndUuid(folder.getId(), folder.getUuid());
             success = true;
@@ -7915,6 +7916,12 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
+    }
+
+    public Folder createFolder(OperationContext octxt, String name, int parentId, Folder.FolderOptions fopt)
+    throws ServiceException {
+        CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, fopt);
+        return createFolder(octxt, redoRecorder, name, parentId, fopt);
     }
 
     /**
