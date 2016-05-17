@@ -129,8 +129,15 @@ public class DbMailItem {
     }
 
     public void create(UnderlyingData data) throws ServiceException {
-        if (data.id <= 0 || data.folderId <= 0 || data.parentId == 0) {
-            throw ServiceException.FAILURE("invalid data for DB item create", null);
+        if (data.id <= 0) {
+            throw ServiceException.FAILURE(String.format("invalid data for DB item create - id=%s", data.id), null);
+        }
+        if (data.folderId <= 0) {
+            throw ServiceException.FAILURE(
+                    String.format("invalid data for DB item create - folderId=%s", data.folderId), null);
+        }
+        if (data.parentId == 0) {
+            throw ServiceException.FAILURE("invalid data for DB item create - parentId is 0", null);
         }
         assert mailbox.isNewItemIdValid(data.id) : "[bug 46549] illegal id for mail item";   //temporarily for bug 46549
         checkNamingConstraint(mailbox, data.folderId, data.name, data.id);
