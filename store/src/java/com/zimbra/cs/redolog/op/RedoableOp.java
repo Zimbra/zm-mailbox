@@ -74,7 +74,7 @@ public abstract class RedoableOp {
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
     RedoCommitCallback mCommitCallback;
     public enum OP_TYPE { NORMAL, SIMIOJ_LEADER, SIMIOJ_FOLLOWER };
-    public OP_TYPE opType = RedoableOp.OP_TYPE.SIMIOJ_LEADER;
+    public OP_TYPE opType = RedoableOp.OP_TYPE.NORMAL;
 
     protected RedoableOp(MailboxOperation op) {
         mOperation = op;
