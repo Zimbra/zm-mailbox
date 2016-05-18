@@ -47,7 +47,8 @@ public class OperationContext implements OpContext {
     private String     mRequestedAccountId;
     private String     mAuthTokenAccountId;
     private Map<String, OperationContextData> contextData;
-
+    private boolean simiojCommit;
+    
     boolean changetype = CHECK_CREATED;
     int     change = -1;
 
@@ -130,6 +131,10 @@ public class OperationContext implements OpContext {
 
     public boolean needRedo() {
         return player == null || !player.getUnloggedReplay();
+    }
+
+    public boolean isSimiojCommit() {
+        return player != null && simiojCommit == true;
     }
 
     public Account getAuthenticatedUser() {
@@ -233,5 +238,9 @@ public class OperationContext implements OpContext {
 
     public void setmAuthTokenAccountId(String mAuthTokenAccountId) {
         this.mAuthTokenAccountId = mAuthTokenAccountId;
+    }
+
+    public void setSimiojCommit(boolean bool) {
+        this.simiojCommit = bool;
     }
 }

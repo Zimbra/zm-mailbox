@@ -46,6 +46,7 @@ import java.util.regex.Pattern;
 import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -5957,8 +5958,32 @@ public class Mailbox implements MailboxStore {
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, DeliveryOptions dopt, DeliveryContext dctxt, Message.DraftInfo dinfo)
     throws IOException, ServiceException {
-        return addMessage(octxt, pm, dopt.getFolderId(), dopt.getNoICal(), dopt.getFlags(), dopt.getTags(),
-                          dopt.getConversationId(), dopt.getRecipientEmail(), dinfo, dopt.getCustomMetadata(), dctxt);
+        if (octxt == null || octxt.isSimiojCommit()) {
+            // If we're executing the operation via the RedoableOp.run() method, or Simioj is not being used,
+            // execute the operation on the mailbox like before
+            return addMessage(octxt, pm, dopt.getFolderId(), dopt.getNoICal(), dopt.getFlags(), dopt.getTags(),
+                    dopt.getConversationId(), dopt.getRecipientEmail(), dinfo, dopt.getCustomMetadata(), dctxt);
+        } else {
+            // Otherwise, construct a RedoableOp, send it to Simioj, wait for the operation to be logged by followers,
+            // and call its run() method
+            CreateMessage createMessage = createAddMessageRedologEntry(pm, dopt.getFolderId(), dopt.getNoICal(), dopt.getFlags(), dopt.getTags(), dopt.getConversationId(),
+                    dopt.getRecipientEmail(), dopt.getCustomMetadata(), dctxt);
+            return (Message) runWithSimioj(createMessage);
+
+        }
+    }
+
+    private Object runWithSimioj(RedoableOp operationToSubmit) throws ServiceException {
+        String opFolderName = SimiojConnector.INSTANCE.submit(operationToSubmit);
+        ZimbraLog.mailbox.info("submitted operation to Simioj: %s", operationToSubmit);
+        RedoableOp op = SimiojConnector.INSTANCE.waitForCommit(opFolderName);
+        ZimbraLog.mailbox.info("retrieved operation from Simioj: %s", op);
+        try {
+            return op.run();
+        } catch (Exception e) {
+            // probably shouldn't wrap Exception this way, but for now this avoids messing with exception signatures
+            throw ServiceException.FAILURE("failure running Simioj operation", e);
+        }
     }
 
     private Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags,
@@ -6037,6 +6062,45 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    @VisibleForTesting
+    public CreateMessage createAddMessageRedologEntry(ParsedMessage pm, int folderId, boolean noICal,
+            int flags, String[] tags, int conversationId, String rcptEmail,
+            CustomMetadata customData, DeliveryContext dctxt) throws ServiceException, IOException {
+        if (dctxt == null) {
+            dctxt = new DeliveryContext();
+        }
+        Blob blob = dctxt.getIncomingBlob();
+        if (blob == null) {
+            InputStream in = null;
+            try {
+                in = pm.getRawInputStream();
+                blob = StoreManager.getInstance().storeIncoming(in);
+            } finally {
+                ByteUtil.closeStream(in);
+            }
+            dctxt.setIncomingBlob(blob);
+        }
+        String digest;
+        int msgSize;
+        try {
+            digest = blob.getDigest();
+            msgSize = (int) blob.getRawSize();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to get message properties.", e);
+        }
+        CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, pm.getReceivedDate(), dctxt.getShared(),
+                digest, msgSize, folderId, noICal, flags, tags, customData);
+        int messageId = getNextItemId(ID_AUTO_INCREMENT);
+        redoRecorder.setMessageId(messageId);
+        if (dctxt.getShared()) {
+            redoRecorder.setMessageLinkInfo(blob.getPath());
+        } else {
+            // Store the blob data inside the CreateMessage op.
+            redoRecorder.setMessageBodyInfo(blob.getFile());
+        }
+        return redoRecorder;
+    }
+
     private Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
             int flags, String[] tags, int conversationId, String rcptEmail, Message.DraftInfo dinfo,
             CustomMetadata customData, DeliveryContext dctxt, StagedBlob staged)
@@ -6052,7 +6116,7 @@ public class Mailbox implements MailboxStore {
 
         CreateMessage redoPlayer = (octxt == null ? null : (CreateMessage) octxt.getPlayer());
         boolean needRedo = needRedo(octxt, redoPlayer);
-        boolean isRedo = redoPlayer != null;
+        boolean isRedo = redoPlayer != null && !octxt.isSimiojCommit();
 
         Blob blob = dctxt.getIncomingBlob();
         if (blob == null) {

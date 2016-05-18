@@ -560,4 +560,13 @@ public abstract class RedoableOp {
     public boolean isDeleteOp() {
         return false;
     }
+
+    /**
+     * Run the operation for the first time. This is distinct from redoing the operation, and is meant to be used by Simioj.
+     * This is currently a stub instead of an abstract method so that all subclasses of RedoableOp don't need to be updated.
+     * @returns Object; subclasses can restrict this (e.g. CreateMessage.run() returns Message)
+     */
+    public Object run() throws Exception {
+        return null;
+    }
 }

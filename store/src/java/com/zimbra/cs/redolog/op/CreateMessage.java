@@ -43,6 +43,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.util.TagUtil;
@@ -85,6 +86,8 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
 
     private byte mMsgBodyType;
     private String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
+
+    private StoreIncomingBlob blobRedoOp;
     // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file
 
     public CreateMessage() {
@@ -478,11 +481,9 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             .setCustomMetadata(mExtendedData);
     }
 
-    @Override
-    public void redo() throws Exception {
+    private Message createMessageCommon(OperationContext octxt) throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        OperationContext octxt = getOperationContext();
 
         if (mTags == null && mTagIds != null) {
             mTags = TagUtil.tagIdStringToNames(mbox, octxt, mTagIds);
@@ -505,11 +506,11 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                     .setSize(mMsgSize)
                     .setDigest(mDigest);
                 pm = new ParsedMessage(opt);
-                mbox.addMessage(octxt, pm, getDeliveryOptions(), dctxt);
+                return mbox.addMessage(octxt, pm, getDeliveryOptions(), dctxt);
             } catch (MailServiceException e) {
                 if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                     mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);
-                    return;
+                    return null;
                 } else {
                     throw e;
                 }
@@ -526,11 +527,11 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                 if (mData.getLength() != mMsgSize) {
                     in = new GZIPInputStream(in);
                 }
-                mbox.addMessage(octxt, in, mMsgSize, mReceivedDate, getDeliveryOptions(), dctxt);
+                return mbox.addMessage(octxt, in, mMsgSize, mReceivedDate, getDeliveryOptions(), dctxt);
             } catch (MailServiceException e) {
                 if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                     mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);
-                    return;
+                    return null;
                 } else {
                     throw e;
                 }
@@ -538,5 +539,18 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                 ByteUtil.closeStream(in);
             }
         }
+    }
+
+    @Override
+    public Message run() throws Exception {
+        OperationContext octxt = getOperationContext();
+        octxt.setSimiojCommit(true);
+        return createMessageCommon(octxt);
+    }
+
+    @Override
+    public void redo() throws Exception {
+        OperationContext octxt = getOperationContext();
+        createMessageCommon(octxt);
     }
 }

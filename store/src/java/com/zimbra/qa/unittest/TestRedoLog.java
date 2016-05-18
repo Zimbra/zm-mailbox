@@ -48,8 +48,11 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.redolog.RedoPlayer;
 import com.zimbra.cs.redolog.op.CreateFolder;
+import com.zimbra.cs.redolog.op.CreateMessage;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.util.RedoLogVerify;
 import com.zimbra.cs.simioj.SimiojConnector;
@@ -181,6 +184,21 @@ public class TestRedoLog {
                 obj instanceof CreateFolder);
     }
 
+    public void testSimiojAddMessage() throws Exception {
+    	Mailbox sourceMbox = TestUtil.getMailbox(USER_NAME);
+    	ParsedMessageOptions opt = new ParsedMessageOptions()
+    	.setContent(new String("test").getBytes())
+        .setReceivedDate(System.currentTimeMillis())
+        .setAttachmentIndexing(sourceMbox.attachmentsIndexingEnabled());
+    	ParsedMessage pm = new ParsedMessage(opt);
+    	CreateMessage op = sourceMbox.createAddMessageRedologEntry(pm, 1, true, 0, null, -1, "user2@ubuntu.local", null, null);
+    	String opFolderName = SimiojConnector.INSTANCE.submit(op);
+        RedoableOp obj = SimiojConnector.INSTANCE.waitForCommit(opFolderName);
+        assertTrue(String.format("Class %s should be CreateMessage", obj.getClass().getName()),
+                obj instanceof CreateMessage);
+    	
+    }
+    
     @Override public void tearDown()
     throws Exception {
         cleanUp();
