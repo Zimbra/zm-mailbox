@@ -168,8 +168,7 @@ public class CreateFolder extends RedoableOp {
         fopt.setUrl(url).setDefaultView(defaultView).setUuid(folderUuid).setCustomMetadata(custom);
 
         try {
-            CreateFolder createFolderOp = new CreateFolder(mailbox.getId(), name, parentId, fopt);
-            mailbox.createFolder(getOperationContext(), createFolderOp, name, parentId, fopt);
+            mailbox.createFolder(getOperationContext(), name, parentId, fopt);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {
@@ -178,5 +177,6 @@ public class CreateFolder extends RedoableOp {
                 throw e;
             }
         }
+
     }
 }

@@ -18,7 +18,6 @@ package com.zimbra.cs.simioj;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -41,24 +40,22 @@ public enum SimiojConnector {
      * Demo version.  Imagine the real final version would return something like the RAFT log entry index.
      * @param op
      * @return Currently, name of the file which contains a serialization of the Redolog entry.
-     * @throws IOException
      */
     public String submit(RedoableOp op) throws ServiceException {
         if (!simiojOpsDir.isDirectory()) {
             simiojOpsDir.mkdir();
         }
-        File submitFile;
         try {
-            submitFile = File.createTempFile("redo" + Integer.toString(op.getChangeId()) + "-", ".log", simiojOpsDir);
-        op.start(System.currentTimeMillis());
-        try (FileOutputStream fos = new FileOutputStream(submitFile)) {
-            IOUtils.copy(op.getInputStream(), fos);
-            fos.flush();
-        }
-        return submitFile.getPath();
+            File submitFile = File.createTempFile(String.format("mb%d-", op.getMailboxId()), ".log", simiojOpsDir);
+            op.start(System.currentTimeMillis());
+            try (FileOutputStream fos = new FileOutputStream(submitFile)) {
+                IOUtils.copy(op.getInputStream(), fos);
+                fos.flush();
+            }
+            return submitFile.getPath();
         } catch (IOException e) {
             ZimbraLog.mailbox.info("Problem submitting operation to the RAFT op=%s", op, e);
-            throw ServiceException.FAILURE("Problem committing operation", e);
+            throw ServiceException.FAILURE("Problem committing operation to cluster", e);
         }
     }
 
@@ -67,10 +64,9 @@ public enum SimiojConnector {
      * Expecting that in the real version, one argument would be the RAFT log entry index.
      * This method would only complete when Simioj has both committed that to the RAFT and persisted it to
      * the DB on the leader.  The return object would be whatever is appropriate for providing info on
-     * the log entry.  For instance, for a CreateFolder operation, it would either be a Folder object or
-     * an object that had a Folder object as a member.
-     * @throws IOException
-     * @throws FileNotFoundException
+     * the log entry.  For instance, for a CreateFolder operation, it might either contain a Folder object or
+     * a cut down version of the Folder object containing necessary information like newly created UUIDs.
+     * @param raftLogEntryIndex - currently name of the file containing a redo log entry
      */
     public RedoableOp waitForCommit(String raftLogEntryIndex) throws ServiceException {
         File opFile = new File(raftLogEntryIndex);
@@ -82,7 +78,7 @@ public enum SimiojConnector {
             return op;
         } catch (IOException e) {
             ZimbraLog.mailbox.info("Problem retrieving from the RAFT op=%s", op, e);
-            throw ServiceException.FAILURE("Problem committing operation - stage 2", e);
+            throw ServiceException.FAILURE("Problem committing operation  to cluster- stage 2", e);
         }
     }
 }
