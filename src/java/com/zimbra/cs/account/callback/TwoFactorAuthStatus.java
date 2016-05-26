@@ -2,6 +2,7 @@ package com.zimbra.cs.account.callback;
 
 import java.util.Map;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -30,6 +31,8 @@ public class TwoFactorAuthStatus extends AttributeCallback {
             } else if (attrName.equals(Provisioning.A_zimbraTwoFactorAuthEnabled) && !is2faAvailable(account, attrsToModify)
                     && setting) {
                 throw ServiceException.FAILURE("cannot enable two-factor auth because it is not available on this account", null);
+            } else if (attrName.equals(Provisioning.A_zimbraTwoFactorAuthEnabled) && setting && !has2faSecret(account, attrsToModify)) {
+                throw ServiceException.FAILURE("cannot enable two-factor auth because a shared secret is unavailable", null);
             }
         } else if (entry instanceof Cos) {
             Cos cos = (Cos) entry;
@@ -43,6 +46,10 @@ public class TwoFactorAuthStatus extends AttributeCallback {
                 cos.unsetTwoFactorAuthLastReset();
             }
         }
+    }
+
+    private boolean has2faSecret(Account account, Map attrsToModify) {
+        return !Strings.isNullOrEmpty(account.getTwoFactorAuthSecret());
     }
 
     private boolean setting2faAttr(Map attrs, String attr, String value) {
