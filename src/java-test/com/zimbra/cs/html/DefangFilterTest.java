@@ -1280,4 +1280,42 @@ public class DefangFilterTest {
         Assert.assertTrue(result.equals("<div>LIne 1</div></div><div>Line 2</div>"));
     }
 
+    @Test
+    /**
+     * Verify that a new line in a html based signature is maintained after passing through the defanger.
+     * @throws Exception
+     */
+    public void testBug105001() throws Exception {
+        String html =  "<html><body><div> <a href=\"javascript\n: alert('XSS')\">XSS LINK</a>" +
+            "<br data-mce-bogus=\"1\"></div></div></body></html>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href=\"vbscript\n\n:alert(parent.csrfToken)\">CLICK</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("VBSCRIPT-BLOCKED"));
+
+        html = "<a href=\"Vbscr&amp;#0009;ip&#009;t\n\n:alert(parent.csrfToken)\">CLICK</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("VBSCRIPT-BLOCKED"));
+
+        html = "<a href=\"Vbscr&amp;#0009;ip&#009;t\r\n:alert(parent.csrfToken)\">CLICK</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("VBSCRIPT-BLOCKED"));
+
+        html = "<a href=\"Vbscr&amp;#0009;ip&#009;t\r&#009\n:alert(parent.csrfToken)\">CLICK</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("VBSCRIPT-BLOCKED"));
+    }
+
 }
