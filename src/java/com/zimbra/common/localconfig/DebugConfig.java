@@ -220,9 +220,9 @@ public final class DebugConfig {
     public static final String defangAvScriptTag = value("defang_av_script_tag",
             "</?script/?>");
     public static final String defangAvJavascript = value("defang_av_javascript",
-            "^\\s*javascript:");
+            "^\\s*javascript\\s*:");
     public static final String defangAvVbscript = value("defang_av_vbscript",
-        "^\\s*vbscript:");
+        "^\\s*vbscript\\s*:");
     public static final String defangAvTab = value("defang_av_tab",
         "^*((&|&amp;)((Tab;)|(#[0]*9;)))|(\t)");
     public static final String defangACanAllowScripts = value("defang_a_scripts",
