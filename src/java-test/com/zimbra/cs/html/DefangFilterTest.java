@@ -1277,7 +1277,7 @@ public class DefangFilterTest {
         InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
-        Assert.assertTrue(result.equals("<div>LIne 1</div></div><div>Line 2</div>"));
+        Assert.assertTrue(result.contains("<div>LIne 1</div></div><div>Line 2</div>"));
     }
 
     @Test
