@@ -359,7 +359,7 @@ public class SoapEngine {
                 }
                 AuthToken authToken = zsc.getAuthToken();
                 if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
-                    LOG.debug("CSRF token validation failed for account. " + authToken
+                    LOG.info("CSRF token validation failed for account. " + authToken
                         + ", Auth token is CSRF enabled: " + authToken.isCsrfTokenEnabled()
                         + "CSRF token is: " + csrfToken);
                     return soapFaultEnv(soapProto, "cannot dispatch request",
@@ -368,7 +368,7 @@ public class SoapEngine {
             } catch (ServiceException e) {
                 // we came here which implies clients supports CSRF authorization
                 // and CSRF token is generated
-                LOG.debug("Error during CSRF validation.", e);
+                LOG.info("Error during CSRF validation.", e);
                 return soapFaultEnv(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
             }
         }
