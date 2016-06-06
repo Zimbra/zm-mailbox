@@ -208,7 +208,7 @@ public final class DebugConfig {
     public static final String defangValidImgFile = value(
             "defang_valid_img_file", "\\.(jpg|jpeg|png|gif|bmp|aspx)((\\?)?)");
     public static final String defangValidIntImg = value(
-            "defang_valid_int_img", "^data:image/|^cid:");
+            "defang_valid_int_img", "^data\\s*:image/|^cid:");
 
     public static final String defangValidConvertdFile = value(
             "defang_valid_convertd_file",
