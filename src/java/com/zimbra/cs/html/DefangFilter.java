@@ -751,7 +751,7 @@ public class DefangFilter extends DefaultFilter {
             if (AV_JAVASCRIPT.matcher(result).find())
                 result = AV_JAVASCRIPT.matcher(result).replaceAll("JAVASCRIPT-BLOCKED:");
             else if (!VALID_INT_IMG.matcher(result).find()) {
-                result = result.replaceAll("(?i)data:", "DATAURI-BLOCKED:");
+                result = result.replaceAll("(?i)data\\s*:", "DATAURI-BLOCKED:");
             }
             if (AV_VBSCRIPT.matcher(result).find()) {
                 result = AV_VBSCRIPT.matcher(result).replaceAll("VBSCRIPT-BLOCKED:");
