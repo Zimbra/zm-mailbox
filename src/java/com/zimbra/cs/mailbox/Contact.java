@@ -366,6 +366,12 @@ public class Contact extends MailItem {
         return getFileAsString(fields, false);
     }
 
+    public static boolean isUrlField(String field) {
+        return ContactConstants.A_homeURL.equalsIgnoreCase(field)
+            || ContactConstants.A_otherURL.equalsIgnoreCase(field)
+            || ContactConstants.A_workURL.equalsIgnoreCase(field);
+    }
+
     private static String getFileAsString(Map<String, String> fields,
             boolean phonetic) throws ServiceException {
 
