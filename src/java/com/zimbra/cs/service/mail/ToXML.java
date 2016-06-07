@@ -100,6 +100,7 @@ import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.gal.GalGroupMembers.ContactDLMembers;
 import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
+import com.zimbra.cs.html.DefangFilter;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.SearchParams;
@@ -835,6 +836,9 @@ public final class ToXML {
         if (Contact.isMultiValueAttr(value)) {
             try {
                 for (String v : Contact.parseMultiValueAttr(value)) {
+                    if (Contact.isUrlField(name)) {
+                        v = DefangFilter.sanitize(v, true);
+                    }
                     elem.addKeyValuePair(name, v);
                 }
                 return;
@@ -854,6 +858,9 @@ public final class ToXML {
                 }
             }
         } else {
+            if (Contact.isUrlField(name)) {
+                value = DefangFilter.sanitize(value, true);
+            }
             elem.addKeyValuePair(name, value);
         }
     }

@@ -729,22 +729,15 @@ public class DefangFilter extends DefaultFilter {
         }
         return false;
     }
-    /**
-     * sanitize an attr value. For now, this means stirpping out Java Script entity tags &{...},
-     * and <script> tags.
-     *
-     *
-     */
-    private void sanitizeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
-        String value = attributes.getValue(i);
-        String result = value;
+
+    public static String sanitize(String result, boolean isAllowedScript) {
         if (!(IMG_SKIP_OWASPSANITIZE.matcher(result).find())) {
             result = sanitizer.sanitize(result);
         }
         result = AV_JS_ENTITY.matcher(result).replaceAll("JS-ENTITY-BLOCKED");
         result = AV_SCRIPT_TAG.matcher(result).replaceAll("SCRIPT-TAG-BLOCKED");
 
-        if (ATTRIBUTES_CAN_ALLOW_SCRIPTS.contains(aName.toLowerCase())) {
+        if (isAllowedScript) {
             if (AV_TAB.matcher(result).find()) {
                 result = AV_TAB.matcher(result).replaceAll("");
             }
@@ -757,6 +750,19 @@ public class DefangFilter extends DefaultFilter {
                 result = AV_VBSCRIPT.matcher(result).replaceAll("VBSCRIPT-BLOCKED:");
             }
         }
+        return result;
+    }
+    /**
+     * sanitize an attr value. For now, this means stirpping out Java Script entity tags &{...},
+     * and <script> tags.
+     *
+     *
+     */
+    private void sanitizeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
+        String value = attributes.getValue(i);
+        boolean canAllowScript = ATTRIBUTES_CAN_ALLOW_SCRIPTS.contains(aName.toLowerCase());
+        String result = sanitize(value, canAllowScript);
+
         if (aName.equalsIgnoreCase("style")) {
             result = sanitizeStyleValue(value);
         }
