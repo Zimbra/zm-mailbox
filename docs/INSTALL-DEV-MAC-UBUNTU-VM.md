@@ -309,7 +309,9 @@ an exemption for your server:
         $ zmprov mcf zimbraHttpDosFilterMaxRequestsPerSec 200
         $ zmprov mcf +zimbraHttpThrottleSafeIPs {your VM IP}
 
-Surprisingly, you may still get 429 errors, but setting those config values helps. The client will typically load without errors if you try again.
+Note: You may need to add the version of your IP that ends in ".1" instead of the actual one (due to how NAT works). For example, if your VM's
+IP is 172.16.226.189, you may need to whitelist 172.16.226.1 instead. If you get 429 responses, check /opt/zimbra/log/jetty.out for "DOS ALERT"
+and whitelist the IP you see there.
 
 Your VM will not work while you are using a VPN (like the Synacor one) that does not support split tunneling. You will not be able to SSH into it,
 or even ping it. Even the loopback address 127.0.0.1 will not be available. You'll need to disconnect from the VPN to use your VM.
