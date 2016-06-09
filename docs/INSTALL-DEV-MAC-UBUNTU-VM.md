@@ -89,59 +89,16 @@ Follow the instructions for APT. The {distro} is 'trusty'.
 
         $ sudo apt-get install helix-cli
 
-3. Copy your SSH keys (public and private) to `/home/zimbra/.ssh/` on the VM. You may want to copy your local `.ssh` directory over.
-Your keys are in `id_rsa` and `id_rsa.pub`, but it might be handy to also have the `config` and `known_hosts` files. (Note: I was not able to get
-copy/paste working, so I used ftp via an external domain of mine.) You should now be able to use `scp` to copy files between your Mac and
-the VM.
-
-[ TODO: If you get copy/paste working, please edit this document with instructions. ]
-
-4. Set up your environment variables (may be different depending on your office location and SSH set up):
+3. Set up your environment variables (may be different depending on your office location and SSH set up):
 
 Add the following content to `/home/zimbra/.profile`:
 
-    export P4PORT=1066
-    export P4HOST=p4proxy.eng.zimbra.com
+    export P4HOST=perforce.zimbra.com:1066
     export P4USER={your p4 username}
-    export P4CONFIG=.p4config
+    export P4CONFIG=~/.p4config
     export P4EDITOR=/usr/bin/vi
     export PATH=$PATH:/opt/zimbra/bin:$HOME/bin
     export ZIMBRA_HOSTNAME={your computer name}.local
-    alias ssh_p4='ssh -f -N p4'
-    alias ssh_web='ssh -f -N web'
-    alias ssh_rb='ssh -f -N rb'
-    alias ssh_all='ssh_p4; ssh_web; ssh_rb'
-
-The `ssh_p4` alias is the only one you really need. The other two are only needed if you want to browse *.eng.zimbra.com from your VM, or post reviews from it.
-
-5. Set up SSH configuration for accessing servers behind the firewall (if you haven't copied over your `~/.ssh/config` file):
-
-Add the following content to `/home/zimbra/.ssh/config`:
-
-    Host *
-      User {your user name on fence-new}
-      IdentityFile ~/.ssh/id_rsa
-      ForwardAgent yes
-      ServerAliveInterval 30
-      ServerAliveCountMax 120
-
-    Host p4
-      Hostname fence-new.zimbra.com
-      LocalForward 1066 perforce.zimbra.com:1066
-
-    Host web
-      Hostname fence-new.zimbra.com
-      DynamicForward 8787
-
-    Host rb
-      Hostname fence-new.zimbra.com
-      LocalForward 8080 reviewboard.eng.zimbra.com:80
-
-6. Load new environment settings and start SSH tunnel to perforce:
-
-        $ source ~/.profile
-        $ ssh_all
-
 
 ## Install VMWare Tools
 
