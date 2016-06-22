@@ -27,6 +27,7 @@ SECTION amavis
 	VAR zimbraSpamTagPercent
 	VAR zimbraSpamSubjectTag
 	VAR zimbraAmavisQuarantineAccount
+	VAR zimbraAmavisDSPAMEnabled
 	VAR zimbraMtaMyNetworks
 	VAR zimbraDomainMandatoryMailSignatureEnabled
 	VAR zimbraIPMode
@@ -53,6 +54,7 @@ SECTION antivirus DEPENDS amavis
 
 SECTION antispam DEPENDS amavis
 	REWRITE conf/salocal.cf.in data/spamassassin/localrules/salocal.cf
+	REWRITE conf/dspam.conf.in conf/dspam.conf
 	VAR zimbraMtaMyNetworks
 	VAR zimbraMtaAntiSpamLockMethod
 	LOCAL antispam_mysql_enabled
@@ -65,7 +67,7 @@ SECTION antispam DEPENDS amavis
 SECTION archiving DEPENDS amavis
 	RESTART archiving mta
 
-SECTION mta DEPENDS amavis dhparam
+SECTION mta DEPENDS amavis
 	LOCAL postjournal_enabled
 	MAPLOCAL zimbraSSLDHParam
 	REWRITE common/conf/master.cf.in common/conf/master.cf
@@ -310,7 +312,7 @@ SECTION mailbox
 	VAR zimbraImapSSLBindAddress
 	VAR zimbraImapSSLBindPort
 	VAR zimbraHttpNumThreads
-	VAR zimbraImapNioEnabled
+	VAR nio_imap_enabled
 	VAR zimbraSSLExcludeCipherSuites
 	VAR zimbraSSLExcludeCipherSuitesXML
 	VAR zimbraMailBindAddress
@@ -347,7 +349,7 @@ SECTION zimlet
 	REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml
 	RESTART mailboxd
 
-SECTION proxy DEPENDS dhparam
+SECTION proxy
 	LOCAL ldap_url
 	MAPLOCAL zimbraSSLDHParam
 	VAR getAllMemcachedServers
@@ -406,34 +408,19 @@ SECTION proxy DEPENDS dhparam
 	VAR zimbraReverseProxySSLECDHCurve
 	VAR zimbraReverseProxyUpstreamLoginServers
 	VAR zimbraReverseProxyUpstreamEwsServers
-	VAR zimbraReverseProxyLogToSyslog
 	VAR zimbraReverseProxySSLProtocols
-	VAR zimbraReverseProxyModSecurityEnabled
-	VAR zimbraReverseProxySSLStapling
-	VAR zimbraReverseProxySSLStaplingResponderURL
-	VAR zimbraReverseProxySPDYEnabled
 	VAR zimbraReverseProxySSLSessionTimeout
-	VAR zimbraReverseProxySSLSessionCacheSize
-	VAR zimbraReverseProxyLimitReqZoneRate
-	VAR zimbraReverseProxyLimitReqZoneSize
-	VAR zimbraReverseProxyRestrictedIPs
-	VAR zimbraReverseProxyBlockedURLs
-	VAR zimbraReverseProxyBlockedUserAgents	
-	VAR zimbraReverseProxyZSSHostname
+    VAR zimbraReverseProxySSLSessionCacheSize
 	VAR zimbraReverseProxyZmlookupCachingEnabled
-	VAR zimbraReverseProxySNIEnabled
 	VAR zimbraReverseProxyXmppBoshLocalHttpBindURL
-	VAR zimbraReverseProxyXmppBoshRemoteHttpBindURL
-	VAR zimbraReverseProxyXmppBoshHostname
-	VAR zimbraReverseProxyXmppBoshPort
-	VAR zimbraReverseProxyPageSpeedEnabled
-	VAR zimbraReverseProxyPageSpeedRespectVary
-	VAR zimbraReverseProxyPageSpeedDisallowedURLs
-	VAR zimbraReverseProxyResponseHeaders
+    VAR zimbraReverseProxyXmppBoshRemoteHttpBindURL
+    VAR zimbraReverseProxyXmppBoshHostname
+    VAR zimbraReverseProxyXmppBoshPort
+    VAR zimbraReverseProxyResponseHeaders
 	PROXYGEN
 	RESTART proxy
 
-SECTION ldap DEPENDS dhparam
+SECTION ldap
 	LOCAL ldap_common_loglevel
 	LOCAL ldap_common_require_tls
 	LOCAL ldap_common_threads
