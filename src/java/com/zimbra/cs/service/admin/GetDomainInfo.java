@@ -62,7 +62,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
         AuthToken at = lc.getAuthToken();
-        boolean hasAdminAuth = at != null && at.isAdmin();
+        boolean hasAuth = at != null;
 
 
         boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
@@ -77,7 +77,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
         if (domain == null && domainBy != Key.DomainBy.name && domainBy != Key.DomainBy.virtualHostname) {
             // domain not found, and we don't have info for walking up sub domains
             // return attributes on global config
-            toXML(response, prov.getConfig(), applyConfig, hasAdminAuth);
+            toXML(response, prov.getConfig(), applyConfig, hasAuth);
         } else {
             /*
              * for all the attrs we can return (like login/logout URL), start stripping off
@@ -105,9 +105,9 @@ public class GetDomainInfo extends AdminDocumentHandler {
             }
 
             if (domain != null)
-                toXML(response, domain, applyConfig, hasAdminAuth);
+                toXML(response, domain, applyConfig, hasAuth);
             else
-                toXML(response, prov.getConfig(), applyConfig, hasAdminAuth);
+                toXML(response, prov.getConfig(), applyConfig, hasAuth);
         }
 
         return response;
@@ -126,9 +126,9 @@ public class GetDomainInfo extends AdminDocumentHandler {
         }
     }
 
-    private void toXML(Element e, Entry entry, boolean applyConfig, boolean hasAdminAuth) throws ServiceException {
+    private void toXML(Element e, Entry entry, boolean applyConfig, boolean hasAuth) throws ServiceException {
         Element domain = e.addElement(AdminConstants.E_DOMAIN);
-        if (!hasAdminAuth) {
+        if (!hasAuth) {
             domain.addAttribute(AdminConstants.A_NAME, "VALUE-BLOCKED");
             domain.addAttribute(AdminConstants.A_ID, "VALUE-BLOCKED");
             if (entry != null) {
