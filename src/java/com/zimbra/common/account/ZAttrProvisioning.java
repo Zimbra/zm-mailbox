@@ -1100,6 +1100,20 @@ public class ZAttrProvisioning {
         public boolean isNo() { return this == no;}
     }
 
+    public static enum MtaPostscreenUpstreamProxyProtocol {
+        haproxy("haproxy");
+        private String mValue;
+        private MtaPostscreenUpstreamProxyProtocol(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPostscreenUpstreamProxyProtocol fromString(String s) throws ServiceException {
+            for (MtaPostscreenUpstreamProxyProtocol value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isHaproxy() { return this == haproxy;}
+    }
+
     public static enum MtaPropagateUnmatchedExtensions {
         virtual("virtual"),
         generic("generic"),
@@ -10597,6 +10611,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1938)
     public static final String A_zimbraMtaPostscreenPipeliningTTL = "zimbraMtaPostscreenPipeliningTTL";
+
+    /**
+     * Value for postconf postscreen_upstream_proxy_protocol.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2089)
+    public static final String A_zimbraMtaPostscreenUpstreamProxyProtocol = "zimbraMtaPostscreenUpstreamProxyProtocol";
 
     /**
      * Value for postconf postscreen_watchdog_timeout.
