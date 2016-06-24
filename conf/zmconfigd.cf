@@ -270,6 +270,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF postscreen_pipelining_action	VAR zimbraMtaPostscreenPipeliningAction
 	POSTCONF postscreen_pipelining_enable	VAR zimbraMtaPostscreenPipeliningEnable
 	POSTCONF postscreen_pipelining_ttl		VAR zimbraMtaPostscreenPipeliningTTL
+	POSTCONF postscreen_upstream_proxy_protocol	VAR zimbraMtaPostscreenUpstreamProxyProtocol
 	POSTCONF postscreen_watchdog_timeout	VAR zimbraMtaPostscreenWatchdogTimeout
 	POSTCONF postscreen_whitelist_interfaces	VAR zimbraMtaPostscreenWhitelistInterfaces
 	RESTART mta
