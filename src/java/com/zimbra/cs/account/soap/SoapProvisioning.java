@@ -232,6 +232,7 @@ public class SoapProvisioning extends Provisioning {
     private int mRetryCount;
     private SoapHttpTransport mTransport;
     private ZAuthToken mAuthToken;
+    private String mCsrfToken;
     private long mAuthTokenLifetime;
     private long mAuthTokenExpiration;
     private DebugListener mDebugListener;
@@ -384,6 +385,12 @@ public class SoapProvisioning extends Provisioning {
         mAuthToken = authToken;
         if (mTransport != null)
             mTransport.setAuthToken(authToken);
+    }
+
+    public void setCsrfToken(String csrfToken) {
+        mCsrfToken = csrfToken;
+        if (mTransport != null)
+            mTransport.setCsrfToken(csrfToken);
     }
 
     /**
