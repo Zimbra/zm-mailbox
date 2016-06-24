@@ -56093,6 +56093,137 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Value for postconf postscreen_upstream_proxy_protocol.
+     *
+     * <p>Valid values: [haproxy]
+     *
+     * @return zimbraMtaPostscreenUpstreamProxyProtocol, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2089)
+    public ZAttrProvisioning.MtaPostscreenUpstreamProxyProtocol getMtaPostscreenUpstreamProxyProtocol() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaPostscreenUpstreamProxyProtocol); return v == null ? null : ZAttrProvisioning.MtaPostscreenUpstreamProxyProtocol.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * Value for postconf postscreen_upstream_proxy_protocol.
+     *
+     * <p>Valid values: [haproxy]
+     *
+     * @return zimbraMtaPostscreenUpstreamProxyProtocol, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2089)
+    public String getMtaPostscreenUpstreamProxyProtocolAsString() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenUpstreamProxyProtocol, null);
+    }
+
+    /**
+     * Value for postconf postscreen_upstream_proxy_protocol.
+     *
+     * <p>Valid values: [haproxy]
+     *
+     * @param zimbraMtaPostscreenUpstreamProxyProtocol new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2089)
+    public void setMtaPostscreenUpstreamProxyProtocol(ZAttrProvisioning.MtaPostscreenUpstreamProxyProtocol zimbraMtaPostscreenUpstreamProxyProtocol) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenUpstreamProxyProtocol, zimbraMtaPostscreenUpstreamProxyProtocol.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_upstream_proxy_protocol.
+     *
+     * <p>Valid values: [haproxy]
+     *
+     * @param zimbraMtaPostscreenUpstreamProxyProtocol new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2089)
+    public Map<String,Object> setMtaPostscreenUpstreamProxyProtocol(ZAttrProvisioning.MtaPostscreenUpstreamProxyProtocol zimbraMtaPostscreenUpstreamProxyProtocol, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenUpstreamProxyProtocol, zimbraMtaPostscreenUpstreamProxyProtocol.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_upstream_proxy_protocol.
+     *
+     * <p>Valid values: [haproxy]
+     *
+     * @param zimbraMtaPostscreenUpstreamProxyProtocol new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2089)
+    public void setMtaPostscreenUpstreamProxyProtocolAsString(String zimbraMtaPostscreenUpstreamProxyProtocol) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenUpstreamProxyProtocol, zimbraMtaPostscreenUpstreamProxyProtocol);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_upstream_proxy_protocol.
+     *
+     * <p>Valid values: [haproxy]
+     *
+     * @param zimbraMtaPostscreenUpstreamProxyProtocol new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2089)
+    public Map<String,Object> setMtaPostscreenUpstreamProxyProtocolAsString(String zimbraMtaPostscreenUpstreamProxyProtocol, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenUpstreamProxyProtocol, zimbraMtaPostscreenUpstreamProxyProtocol);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_upstream_proxy_protocol.
+     *
+     * <p>Valid values: [haproxy]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2089)
+    public void unsetMtaPostscreenUpstreamProxyProtocol() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenUpstreamProxyProtocol, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_upstream_proxy_protocol.
+     *
+     * <p>Valid values: [haproxy]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2089)
+    public Map<String,Object> unsetMtaPostscreenUpstreamProxyProtocol(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenUpstreamProxyProtocol, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf postscreen_watchdog_timeout.
      *
      * @return zimbraMtaPostscreenWatchdogTimeout, or "10s" if unset
