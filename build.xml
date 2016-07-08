@@ -1,4 +1,4 @@
-<project name="ZimbraSoap" default="jar">
+<project name="zm-soap" default="jar" xmlns:ivy="antlib:org.apache.ivy.ant">
 
   <import file="../zm-zcs/ant-global.xml"/>
 
@@ -6,7 +6,6 @@
   <property name="jar.file" value="zimbrasoap.jar"/>
   <property name="metro.jars.dir" location="jars/metro"/>
   <property name="xml.schema.dir" location="${build.classes.dir}/com/zimbra/soap"/>
-  <property name="TESTNAME" value="com.zimbra.soap.admin.GetServerTest"/>
 
   <!-- START ZimbraSoapDocs Properties -->
   <property name="zimbra.service.wsdl.file" location="${build.classes.dir}/com/zimbra/soap/ZimbraService.wsdl"/>
@@ -25,18 +24,6 @@
   <property name="soapdocs.test.classes.dir" location="${build.dir}/soapdocs-test-classes"/>
   <!-- END   ZimbraSoapDocs Properties -->
 
-  <path id="all.java.path">
-    <pathelement location="${src.java.dir}"/>
-  </path>
-
-  <path id="class.path">
-    <pathelement location="${common.classes.dir}"/>
-    <pathelement location="${build.classes.dir}"/>
-    <fileset dir="${common.jars.dir}">
-      <include name="**/*.jar"/>
-    </fileset>
-  </path>
-
   <path id="jaxws.classpath">
     <fileset dir="${metro.jars.dir}">
       <include name="**/*.jar"/>
@@ -47,8 +34,13 @@
     <path refid="class.path"/>
   </path>
 
-  <path id="soapdocs.class.path">
+  <path id="run.class.path">
+    <pathelement location="${build.classes.dir}"/>
     <path refid="class.path"/>
+  </path>
+
+  <path id="soapdocs.class.path">
+    <path refid="run.class.path"/>
     <pathelement location="${soapdocs.classes.dir}"/>
     <fileset dir="${common.jars.dir}">
       <include name="**/freemarker*.jar"/>
@@ -83,20 +75,9 @@
     <classpath refid="jaxws.classpath"/>
   </taskdef>
 
-  <taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
-    <classpath refid="jaxws.classpath"/>
-  </taskdef>
-
   <!-- Targets -->
   <target name="build-init">
     <mkdir dir="${build.classes.dir}"/>
-  </target>
-
-  <target name="compile" depends="build-init" description="Compiles the source code">
-    <ant dir="${common.dir}" target="jar" inheritAll="false"/>
-    <javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}">
-      <src refid="all.java.path"/>
-    </javac>
   </target>
 
   <target name="jar" depends="compile,generate-schema,wsdl-file" description="Creates the jar file">
@@ -105,13 +86,9 @@
     </antcall>
   </target>
 
-  <target name="clean" description="Removes build files">
-    <delete dir="${build.dir}"/>
-  </target>
-
   <target name="wsdl-file" depends="compile,generate-schema">
     <mkdir dir="${xml.schema.dir}"/>
-    <java classname="com.zimbra.soap.util.WsdlGenerator" classpathref="class.path" fork="true" failonerror="true">
+    <java classname="com.zimbra.soap.util.WsdlGenerator" classpathref="run.class.path" fork="true" failonerror="true">
       <arg line="-output.dir ${xml.schema.dir}"/>
     </java>
   </target>
@@ -144,7 +121,7 @@
     <replaceregexp match="(tns|zimbra*|ns[0-9]):zmBoolean" replace="xs:boolean" flags="g" byline="true">
       <fileset dir="${xml.schema.dir}" includes="*.xsd"/>
     </replaceregexp>
-    <java classname="com.zimbra.soap.util.XsdCleaner" classpathref="class.path" fork="true" failonerror="true">
+    <java classname="com.zimbra.soap.util.XsdCleaner" classpathref="run.class.path" fork="true" failonerror="true">
       <arg line="--dir ${xml.schema.dir}"/>
     </java>
   </target>
@@ -155,22 +132,6 @@
 
   <target name="zimbra-identity" depends="check-zimbra-identity" unless="ssh.zimbra.identity.present">
     <exec failonerror="true" executable="/opt/zimbra/bin/zmsshkeygen"/>
-  </target>
-
-  <!-- e.g. ant -DTESTNAME=com.zimbra.soap.admin.GetServerTest one-test -->
-  <target name="one-test" depends="test-compile" description="Run unit tests">
-    <delete dir="${test.dir}-one" quiet="true"/>
-    <mkdir dir="${test.dir}-one/output"/>
-    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}-one">
-      <classpath refid="test.class.path"/>
-      <classpath path="${test.classes.dir}"/>
-      <assertions>
-        <enable/>
-      </assertions>
-      <formatter type="xml"/>
-      <test name="${TESTNAME}" todir="${test.dir}-one/output"/>
-    </junit>
-    <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
   <!-- Use Mac OS X (Snow Leopard/Lion) or, if using another platform, resolve classpath issues related to
