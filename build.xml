@@ -7,6 +7,9 @@
   <property name="metro.jars.dir" location="jars/metro"/>
   <property name="xml.schema.dir" location="${build.classes.dir}/com/zimbra/soap"/>
 
+  <!-- implementation.title is used by the "zimbra-jar" target -->
+  <property name="implementation.title" value="Zimbra Soap"/>
+
   <!-- START ZimbraSoapDocs Properties -->
   <property name="zimbra.service.wsdl.file" location="${build.classes.dir}/com/zimbra/soap/ZimbraService.wsdl"/>
   <property name="soapdocs.templates.dir" location="soapdocs/templates"/>
@@ -80,11 +83,7 @@
     <mkdir dir="${build.classes.dir}"/>
   </target>
 
-  <target name="jar" depends="compile,generate-schema,wsdl-file" description="Creates the jar file">
-    <antcall target="zimbra-jar">
-      <param name="implementation.title" value="Zimbra Soap"/>
-    </antcall>
-  </target>
+  <target name="jar" depends="compile,generate-schema,wsdl-file,zimbra-jar" description="Creates the jar"/>
 
   <target name="wsdl-file" depends="compile,generate-schema">
     <mkdir dir="${xml.schema.dir}"/>
