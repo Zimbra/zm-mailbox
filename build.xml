@@ -27,23 +27,8 @@
   <property name="soapdocs.test.classes.dir" location="${build.dir}/soapdocs-test-classes"/>
   <!-- END   ZimbraSoapDocs Properties -->
 
-  <path id="jaxws.classpath">
-    <fileset dir="${metro.jars.dir}">
-      <include name="**/*.jar"/>
-    </fileset>
-  </path>
-
-  <path id="test.class.path">
-    <path refid="class.path"/>
-  </path>
-
-  <path id="run.class.path">
-    <pathelement location="${build.classes.dir}"/>
-    <path refid="class.path"/>
-  </path>
-
   <path id="soapdocs.class.path">
-    <path refid="run.class.path"/>
+    <path refid="test.class.path"/>
     <pathelement location="${soapdocs.classes.dir}"/>
     <fileset dir="${common.jars.dir}">
       <include name="**/freemarker*.jar"/>
@@ -74,56 +59,8 @@
     </fileset>
   </path>
 
-  <taskdef name="schemagen" classname="com.sun.tools.jxc.SchemaGenTask">
-    <classpath refid="jaxws.classpath"/>
-  </taskdef>
-
   <!-- Targets -->
-  <target name="build-init">
-    <mkdir dir="${build.classes.dir}"/>
-  </target>
-
-  <target name="jar" depends="compile,generate-schema,wsdl-file,zimbra-jar" description="Creates the jar"/>
-
-  <target name="wsdl-file" depends="compile,generate-schema">
-    <mkdir dir="${xml.schema.dir}"/>
-    <java classname="com.zimbra.soap.util.WsdlGenerator" classpathref="run.class.path" fork="true" failonerror="true">
-      <arg line="-output.dir ${xml.schema.dir}"/>
-    </java>
-  </target>
-
-  <target name="check-schema-done">
-    <uptodate property="schema.build.notrequired" targetFile="${xml.schema.dir}/zimbra.xsd">
-      <srcfiles dir="${src.java.dir}" includes="**/*.java"/>
-    </uptodate>
-  </target>
-
-  <target name="generate-schema" depends="compile,check-schema-done" unless="schema.build.notrequired">
-    <mkdir dir="${xml.schema.dir}"/>
-    <schemagen srcdir="${src.java.dir}" destdir="${xml.schema.dir}">
-      <classpath refid="class.path"/>
-      <exclude name="com/zimbra/soap/*.java"/>
-      <exclude name="com/zimbra/soap/util/**"/>
-      <exclude name="com/zimbra/soap/json/**"/>
-      <schema namespace="urn:zimbra" file="zimbra.xsd"/>
-      <schema namespace="urn:zimbraAccount" file="zimbraAccount.xsd"/>
-      <schema namespace="urn:zimbraAdmin" file="zimbraAdmin.xsd"/>
-      <schema namespace="urn:zimbraAdminExt" file="zimbraAdminExt.xsd"/>
-      <schema namespace="urn:zimbraMail" file="zimbraMail.xsd"/>
-      <schema namespace="urn:zimbraSync" file="zimbraSync.xsd"/>
-      <schema namespace="urn:zimbraRepl" file="zimbraRepl.xsd"/>
-      <schema namespace="urn:zimbraVoice" file="zimbraVoice.xsd"/>
-      <schema namespace="" file="extras.xsd"/>
-    </schemagen>
-    <!-- fixup usage of zmBoolean - the valid values for zmBoolean and xs:boolean are the same,
-         zmBoolean is only used to force the use of "1" and "0" instead of true and false -->
-    <replaceregexp match="(tns|zimbra*|ns[0-9]):zmBoolean" replace="xs:boolean" flags="g" byline="true">
-      <fileset dir="${xml.schema.dir}" includes="*.xsd"/>
-    </replaceregexp>
-    <java classname="com.zimbra.soap.util.XsdCleaner" classpathref="run.class.path" fork="true" failonerror="true">
-      <arg line="--dir ${xml.schema.dir}"/>
-    </java>
-  </target>
+  <target name="jar" depends="compile,zimbra-jar" description="Creates the jar"/>
 
   <target name="check-zimbra-identity">
     <available file="/opt/zimbra/.ssh/zimbra_identity" property="ssh.zimbra.identity.present"/>
