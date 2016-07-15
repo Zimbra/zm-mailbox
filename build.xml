@@ -4,11 +4,10 @@
 
   <!-- Properties -->
   <property name="jar.file" value="zimbrasoap.jar"/>
-  <property name="metro.jars.dir" location="jars/metro"/>
   <property name="xml.schema.dir" location="${build.classes.dir}/com/zimbra/soap"/>
 
   <!-- implementation.title is used by the "zimbra-jar" target -->
-  <property name="implementation.title" value="Zimbra Soap"/>
+  <property name="implementation.title" value="zm-soap"/>
 
   <!-- START ZimbraSoapDocs Properties -->
   <property name="zimbra.service.wsdl.file" location="${build.classes.dir}/com/zimbra/soap/ZimbraService.wsdl"/>
@@ -27,6 +26,18 @@
   <property name="soapdocs.test.classes.dir" location="${build.dir}/soapdocs-test-classes"/>
   <!-- END   ZimbraSoapDocs Properties -->
 
+  <target name="resolve-tools" depends="init-ivy" description="resolve javatool dependencies">
+    <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
+    <ivy:resolve file="ivy-tools.xml" />
+    <ivy:cachepath pathid="tools.ext.class.path" />
+  </target>
+
+  <path id="tools.class.path">
+    <path refid="tools.ext.class.path"/>
+    <pathelement location="${build.classes.dir}" />
+  </path>
+
+
   <path id="soapdocs.class.path">
     <path refid="test.class.path"/>
     <pathelement location="${soapdocs.classes.dir}"/>
@@ -42,7 +53,6 @@
   </path>
 
   <path id="soapdocs.doclet.class.path">
-    <path refid="jaxws.classpath"/>
     <fileset file="soapdocs.jar"/>
     <fileset dir="soapdocs/jars">
       <include name="**/*.jar"/>
@@ -58,9 +68,42 @@
       <include name="**/freemarker*.jar"/>
     </fileset>
   </path>
+  <path id="jar.path">
+        <fileset dir="${build.dir}">
+          <include name="${jar.file}"/>
+        </fileset>
+  </path>
 
   <!-- Targets -->
-  <target name="jar" depends="compile,zimbra-jar" description="Creates the jar"/>
+  <target name="jar" depends="compile,wsdl-file,zimbra-jar" description="Creates the jar"/>
+
+  <target name="wsdl-file" depends="compile,generate-schema">
+    <mkdir dir="${xml.schema.dir}"/>
+    <java classname="com.zimbra.soap.util.WsdlGenerator" classpathref="test.class.path" fork="true" failonerror="true">
+      <arg line="-output.dir ${xml.schema.dir}"/>
+    </java>
+  </target>
+
+  <target name="check-schema-done">
+    <uptodate property="schema.build.notrequired" targetFile="${xml.schema.dir}/zimbra.xsd">
+      <srcfiles dir="${src.java.dir}" includes="**/*.java"/>
+    </uptodate>
+  </target>
+
+  <target name="generate-schema" depends="compile,check-schema-done,resolve-tools" unless="schema.build.notrequired">
+    <mkdir dir="${xml.schema.dir}"/>
+    <java classname="com.zimbra.soap.util.Jaxb2Xsds" classpathref="test.class.path" fork="true" failonerror="true">
+      <arg line="--dir ${xml.schema.dir}"/>
+    </java>
+    <!-- fixup usage of zmBoolean - the valid values for zmBoolean and xs:boolean are the same,
+         zmBoolean is only used to force the use of "1" and "0" instead of true and false -->
+    <replaceregexp match="(tns|zimbra*|ns[0-9]):zmBoolean" replace="xs:boolean" flags="g" byline="true">
+      <fileset dir="${xml.schema.dir}" includes="*.xsd"/>
+    </replaceregexp>
+    <java classname="com.zimbra.soap.util.XsdCleaner" classpathref="tools.class.path" fork="true" failonerror="true">
+      <arg line="--dir ${xml.schema.dir}"/>
+    </java>
+  </target>
 
   <target name="check-zimbra-identity">
     <available file="/opt/zimbra/.ssh/zimbra_identity" property="ssh.zimbra.identity.present"/>
