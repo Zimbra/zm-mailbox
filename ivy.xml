@@ -7,6 +7,9 @@
   <dependency org="junit" name="junit" rev="4.8.2" />
   <dependency org="guava" name="guava" rev="13.0.1" />
   <dependency org="dom4j" name="dom4j" rev="1.5.2" />
+  <!-- Without this, dom4j pulls in an ancient version of xerces -->
+  <dependency org="xerces" name="xercesImpl" rev="2.9.1"/>
+  <dependency org="xerces" name="xmlParserAPIs" rev="2.6.2"/>
   <dependency org="log4j" name="log4j" rev="1.2.17" />
   <dependency org="org.codehaus.jackson" name="jackson-core-asl" rev="1.9.2" />
   <dependency org="org.codehaus.jackson" name="jackson-mapper-asl" rev="1.9.2" />
