@@ -1,5 +1,12 @@
 <project name="zm-soap" default="jar" xmlns:ivy="antlib:org.apache.ivy.ant">
 
+  <!-- Most interesting targets:
+       jar                     - source package which is part of the product.
+       package-docs            - SOAP API documentation and changelog.  Should be posted to Wiki
+                     https://wiki.zimbra.com/wiki/SOAP_API_Reference_Material_Beginning_with_ZCS_8.0
+       update-baseline-apidesc - Run this and checkin the results after a major release.
+                                 Future changelog info will be relative to this
+    -->
   <import file="../zm-zcs/ant-global.xml"/>
 
   <!-- Properties -->
@@ -15,7 +22,6 @@
   <property name="soapdocs.output.dir" location="${build.dir}/docs/soap"/>
   <property name="soapdocs.src.dir" location="soapdocs/src/java"/>
   <property name="soapdocs.classes.dir" location="${build.dir}/soap-doc-classes"/>
-  <property name="soapdocs.jar" location="soapdocs/jars/ZmApiDoclet.jar"/>
   <property name="soapdocs.apidesc.file" location="${build.dir}/soapapi-desc.json"/>
   <property name="soapdocs.apidesc.baseline.file" location="soapdocs/baseline-soapapi-desc.json.gz"/>
   <property name="soapapi.changelog.output.dir" location="${soapdocs.output.dir}/api-changelog"/>
@@ -37,41 +43,32 @@
     <pathelement location="${build.classes.dir}" />
   </path>
 
+  <target name="resolve-soapdocs" depends="init-ivy" description="resolve soapdocs dependencies">
+    <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
+    <ivy:resolve file="ivy-soapdocs.xml" />
+    <ivy:cachepath pathid="soapdocs.ext.class.path" />
+  </target>
 
   <path id="soapdocs.class.path">
     <path refid="test.class.path"/>
     <pathelement location="${soapdocs.classes.dir}"/>
-    <fileset dir="${common.jars.dir}">
-      <include name="**/freemarker*.jar"/>
-      <include name="**/commons-lang-*.jar"/>
-      <include name="**/commons-cli-*.jar"/>
-    </fileset>
-    <!-- A hack that finds tools.jar on Mac OS X Mountain Lion/Java 7.  May not work elsewhere -->
+    <path refid="soapdocs.ext.class.path"/>
+    <!-- tools.jar Needed for the doclet API -->
     <fileset dir="${java.home}/..">
       <include name="**/tools.jar"/>
     </fileset>
   </path>
 
+  <target name="resolve-soapdoclet" depends="init-ivy" description="resolve Soap Docs Doclet dependencies">
+    <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
+    <ivy:resolve file="ivy-soapdoclet.xml" />
+    <ivy:cachepath pathid="soapdoclet.ext.class.path" />
+  </target>
+
   <path id="soapdocs.doclet.class.path">
-    <fileset file="soapdocs.jar"/>
-    <fileset dir="soapdocs/jars">
-      <include name="**/*.jar"/>
-    </fileset>
-    <pathelement location="${build.classes.dir}"/>
-    <pathelement location="${common.classes.dir}"/>
-    <fileset dir="${common.jars.dir}">
-      <include name="log4j*.jar"/>
-      <include name="dom4j*.jar"/>
-      <include name="jackson*.jar"/>
-      <include name="guava*.jar"/>
-      <include name="**/commons-lang-*.jar"/>
-      <include name="**/freemarker*.jar"/>
-    </fileset>
-  </path>
-  <path id="jar.path">
-        <fileset dir="${build.dir}">
-          <include name="${jar.file}"/>
-        </fileset>
+    <path refid="test.class.path"/>
+    <path refid="soapdoclet.ext.class.path"/>
+    <pathelement location="${soapdocs.classes.dir}"/>
   </path>
 
   <!-- Targets -->
@@ -113,24 +110,12 @@
     <exec failonerror="true" executable="/opt/zimbra/bin/zmsshkeygen"/>
   </target>
 
-  <!-- Use Mac OS X (Snow Leopard/Lion) or, if using another platform, resolve classpath issues related to
-       usage of the doclet API.
-       Doclet API classes are normally packaged in tools.jar - but Mac OS X does it differently. -->
-  <target name="soap-api-doc-compile" depends="compile">
+  <target name="soap-api-doc-compile" depends="compile,resolve-soapdocs">
     <mkdir dir="${soapdocs.classes.dir}"/>
     <javac srcdir="${soapdocs.src.dir}" destdir="${soapdocs.classes.dir}" debug="true" classpathref="soapdocs.class.path" target="${javac.target}"/>
-    <echo>"If soap-api-doc source has changed, execute task 'soap-api-doc-jar' and checkin the new jar"</echo>
   </target>
 
-  <!-- Packages up a jar for use from generate-soap-api-doc -->
-  <target name="soap-api-doc-jar" depends="soap-api-doc-compile">
-    <delete file="${soapdocs.jar}" quiet="true"/>
-    <jar destfile="${soapdocs.jar}" basedir="${soapdocs.classes.dir}"/>
-  </target>
-
-  <!-- The javadoc task must have resolved any doclet API usage classpath related issues in order to run.
-       so this task should execute successfully on any platform  -->
-  <target name="generate-soap-api-doc" depends="compile">
+  <target name="generate-soap-api-doc" depends="soap-api-doc-compile, resolve-soapdoclet">
     <delete dir="${soapdocs.output.dir}" quiet="true"/>
     <mkdir dir="${soapdocs.output.dir}"/>
     <javadoc doclet="com.zimbra.doc.soap.doclet.ZmApiDoclet" access="private" docletpathref="soapdocs.doclet.class.path" classpathref="soapdocs.doclet.class.path">
@@ -151,13 +136,15 @@
     </javadoc>
   </target>
 
+  <target name="package-docs" depends="package-soap-api-doc, package-soap-api-changelog"/>
+
   <target name="package-soap-api-doc" depends="generate-soap-api-doc">
     <zip destfile="${soapapi.doc.file}" basedir="${soapdocs.output.dir}">
       <include name="api-reference/**"/>
     </zip>
   </target>
 
-  <target name="generate-soap-api-changelog" depends="generate-soap-api-doc,soap-api-doc-compile">
+  <target name="generate-soap-api-changelog" depends="generate-soap-api-doc">
     <delete dir="${soapapi.changelog.output.dir}" quiet="true"/>
     <mkdir dir="${soapapi.changelog.output.dir}"/>
     <copy todir="${soapapi.changelog.output.dir}">
