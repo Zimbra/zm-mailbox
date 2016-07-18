@@ -1,328 +1,142 @@
-<project name="ZimbraSoap" default="jar">
+<project name="zm-soap" default="jar" xmlns:ivy="antlib:org.apache.ivy.ant">
 
-  <import file="../ant-global.xml" />
+  <!-- Most interesting targets:
+       jar                     - source package which is part of the product.
+       package-docs            - SOAP API documentation and changelog.  Should be posted to Wiki
+                     https://wiki.zimbra.com/wiki/SOAP_API_Reference_Material_Beginning_with_ZCS_8.0
+       update-baseline-apidesc - Run this and checkin the results after a major release.
+                                 Future changelog info will be relative to this
+    -->
+  <import file="../zm-zcs/ant-global.xml"/>
 
   <!-- Properties -->
-
-  <property name="jar.file" value="zimbrasoap.jar" />
-
-  <property name="wsdl.test.dir" location="${build.dir}/wsdl-test"/>
-  <property name="wsdl.test.src.dir" location="src/wsdl-test"/>
-  <property name="wsdl.generated.test.src.root"
-      location="${wsdl.test.src.dir}/generated"/>
-  <property name="wsdl.test.classes.dir" location="${build.dir}/wsdl-test-classes"/>
-  <property name="wsdl.generated.test.classes.root"
-      location="${wsdl.test.classes.dir}/generated"/>
-
-  <property name="metro.jars.dir" location="jars/metro"/>
-
+  <property name="jar.file" value="zimbrasoap.jar"/>
   <property name="xml.schema.dir" location="${build.classes.dir}/com/zimbra/soap"/>
 
-  <property name="TESTNAME" value="com.zimbra.soap.admin.GetServerTest" />
-  <property name="WSDLTEST" value="com.zimbra.soap.account.WSDLAuthRequestTest" />
+  <!-- implementation.title is used by the "zimbra-jar" target -->
+  <property name="implementation.title" value="zm-soap"/>
+
   <!-- START ZimbraSoapDocs Properties -->
-  <property name="zimbra.service.wsdl.file" location="${build.classes.dir}/com/zimbra/soap/ZimbraService.wsdl" />
-  <property name="soapdocs.templates.dir" location="soapdocs/templates" />
-  <property name="soapdocs.output.dir" location="${build.dir}/docs/soap" />
+  <property name="zimbra.service.wsdl.file" location="${build.classes.dir}/com/zimbra/soap/ZimbraService.wsdl"/>
+  <property name="soapdocs.templates.dir" location="soapdocs/templates"/>
+  <property name="soapdocs.output.dir" location="${build.dir}/docs/soap"/>
   <property name="soapdocs.src.dir" location="soapdocs/src/java"/>
   <property name="soapdocs.classes.dir" location="${build.dir}/soap-doc-classes"/>
-  <property name="soapdocs.jar" location="soapdocs/jars/ZmApiDoclet.jar"/>
-  <property name="soapdocs.apidesc.file" location="${build.dir}/soapapi-desc.json" />
+  <property name="soapdocs.apidesc.file" location="${build.dir}/soapapi-desc.json"/>
   <property name="soapdocs.apidesc.baseline.file" location="soapdocs/baseline-soapapi-desc.json.gz"/>
-  <property name="soapapi.changelog.output.dir" location="${soapdocs.output.dir}/api-changelog" />
-  <property name="soapapi.doc.file" location="${build.dir}/docs/soapapi-zimbra-doc.zip" />
-  <property name="soapapi.changelog.file" location="${build.dir}/docs/soapapi-changelog.zip" />
+  <property name="soapapi.changelog.output.dir" location="${soapdocs.output.dir}/api-changelog"/>
+  <property name="soapapi.doc.file" location="${build.dir}/docs/soapapi-zimbra-doc.zip"/>
+  <property name="soapapi.changelog.file" location="${build.dir}/docs/soapapi-changelog.zip"/>
   <property name="soapdocs.test.dir" location="${build.dir}/soapdocs-test"/>
   <property name="soapdocs.test.src.dir" location="soapdocs/src/java-test"/>
   <property name="soapdocs.test.classes.dir" location="${build.dir}/soapdocs-test-classes"/>
   <!-- END   ZimbraSoapDocs Properties -->
 
+  <target name="resolve-tools" depends="init-ivy" description="resolve javatool dependencies">
+    <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
+    <ivy:resolve file="ivy-tools.xml" />
+    <ivy:cachepath pathid="tools.ext.class.path" />
+  </target>
 
-  <path id="all.java.path">
-    <pathelement location="${src.java.dir}" />
-  </path>
-
-  <path id="class.path">
-    <pathelement location="${common.classes.dir}"/>
+  <path id="tools.class.path">
+    <path refid="tools.ext.class.path"/>
     <pathelement location="${build.classes.dir}" />
-    <fileset dir="${common.jars.dir}">
-        <include name="**/*.jar"/>
-    </fileset>
   </path>
 
-  <path id="jaxws.classpath">
-    <fileset dir="${metro.jars.dir}">
-        <include name="**/*.jar"/>
-    </fileset>
-  </path>
-
-  <path id="test.class.path">
-    <path refid="class.path"/>
-  </path>
-
-  <!-- WSDL client side tests should be Zimbra code independant -->
-  <path id="wsdl.test.class.path">
-    <path refid="jaxws.classpath"/>
-    <pathelement location="${build.classes.dir}" />
-    <fileset dir="${common.jars.dir}">
-        <include name="**/guava*.jar"/>
-        <include name="**/log4j*.jar"/>
-        <include name="**/junit*.jar"/>
-        <exclude name="**/junit*-src.jar"/>
-        <exclude name="**/junit*-javadoc.jar"/>
-    </fileset> 
-  </path>
+  <target name="resolve-soapdocs" depends="init-ivy" description="resolve soapdocs dependencies">
+    <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
+    <ivy:resolve file="ivy-soapdocs.xml" />
+    <ivy:cachepath pathid="soapdocs.ext.class.path" />
+  </target>
 
   <path id="soapdocs.class.path">
-    <path refid="class.path"/>
-    <pathelement location="${soapdocs.classes.dir}" />
-    <fileset dir="${common.jars.dir}">
-        <include name="**/freemarker*.jar"/>
-        <include name="**/commons-lang-*.jar"/>
-        <include name="**/commons-cli-*.jar"/>
-    </fileset>
-    <!-- A hack that finds tools.jar on Mac OS X Mountain Lion/Java 7.  May not work elsewhere -->
+    <path refid="test.class.path"/>
+    <pathelement location="${soapdocs.classes.dir}"/>
+    <path refid="soapdocs.ext.class.path"/>
+    <!-- tools.jar Needed for the doclet API -->
     <fileset dir="${java.home}/..">
-        <include name="**/tools.jar"/>
+      <include name="**/tools.jar"/>
     </fileset>
   </path>
+
+  <target name="resolve-soapdoclet" depends="init-ivy" description="resolve Soap Docs Doclet dependencies">
+    <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
+    <ivy:resolve file="ivy-soapdoclet.xml" />
+    <ivy:cachepath pathid="soapdoclet.ext.class.path" />
+  </target>
 
   <path id="soapdocs.doclet.class.path">
-    <path refid="jaxws.classpath"/>
-    <fileset file="soapdocs.jar"/>
-    <fileset dir="soapdocs/jars">
-        <include name="**/*.jar"/>
-    </fileset>
-    <pathelement location="${build.classes.dir}" />
-    <pathelement location="${common.classes.dir}" />
-    <fileset dir="${common.jars.dir}">
-        <include name="log4j*.jar"/>
-        <include name="dom4j*.jar"/>
-        <include name="jackson*.jar"/>
-        <include name="guava*.jar"/>
-        <include name="**/commons-lang-*.jar"/>
-        <include name="**/freemarker*.jar"/>
-    </fileset>
+    <path refid="test.class.path"/>
+    <path refid="soapdoclet.ext.class.path"/>
+    <pathelement location="${soapdocs.classes.dir}"/>
   </path>
 
-  <taskdef name="schemagen" classname="com.sun.tools.jxc.SchemaGenTask">
-    <classpath refid="jaxws.classpath"/>
-  </taskdef>
-
-  <taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
-      <classpath refid="jaxws.classpath"/>
-  </taskdef>
-
   <!-- Targets -->
-  <target name="build-init">
-    <mkdir dir="${build.classes.dir}" />
-  </target>
-
-  <target name="compile" depends="build-init" description="Compiles the source code">
-    <ant dir="${common.dir}" target="jar" inheritAll="false"/>
-    <javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}">
-      <src refid="all.java.path" />
-    </javac>
-  </target>
-
-    <target name="jar" depends="compile,generate-schema,wsdl-file" description="Creates the jar file">
-        <antcall target="zimbra-jar">
-            <param name="implementation.title" value="Zimbra Soap"/>
-        </antcall>
-    </target>
-
-  <target name="clean" description="Removes build files">
-    <delete dir="${build.dir}" />
-  </target>
+  <target name="jar" depends="compile,wsdl-file,zimbra-jar" description="Creates the jar"/>
 
   <target name="wsdl-file" depends="compile,generate-schema">
     <mkdir dir="${xml.schema.dir}"/>
-    <java classname="com.zimbra.soap.util.WsdlGenerator" classpathref="class.path" fork="true" failonerror="true">
-            <arg line="-output.dir ${xml.schema.dir}"/>
+    <java classname="com.zimbra.soap.util.WsdlGenerator" classpathref="test.class.path" fork="true" failonerror="true">
+      <arg line="-output.dir ${xml.schema.dir}"/>
     </java>
   </target>
 
   <target name="check-schema-done">
     <uptodate property="schema.build.notrequired" targetFile="${xml.schema.dir}/zimbra.xsd">
-        <srcfiles dir="${src.java.dir}" includes="**/*.java"/>
+      <srcfiles dir="${src.java.dir}" includes="**/*.java"/>
     </uptodate>
   </target>
 
-  <target name="generate-schema" depends="compile,check-schema-done" unless="schema.build.notrequired">
+  <target name="generate-schema" depends="compile,check-schema-done,resolve-tools" unless="schema.build.notrequired">
     <mkdir dir="${xml.schema.dir}"/>
-    <schemagen srcdir="${src.java.dir}" destdir="${xml.schema.dir}">
-      <classpath refid="class.path"/>
-      <exclude name="com/zimbra/soap/*.java"/>
-      <exclude name="com/zimbra/soap/util/**"/>
-      <exclude name="com/zimbra/soap/json/**"/>
-      <schema namespace="urn:zimbra" file="zimbra.xsd" />
-      <schema namespace="urn:zimbraAccount" file="zimbraAccount.xsd" />
-      <schema namespace="urn:zimbraAdmin" file="zimbraAdmin.xsd" />
-      <schema namespace="urn:zimbraAdminExt" file="zimbraAdminExt.xsd" />
-      <schema namespace="urn:zimbraMail" file="zimbraMail.xsd" />
-      <schema namespace="urn:zimbraSync" file="zimbraSync.xsd" />
-      <schema namespace="urn:zimbraRepl" file="zimbraRepl.xsd" />
-      <schema namespace="urn:zimbraVoice" file="zimbraVoice.xsd" />
-      <schema namespace="" file="extras.xsd" />
-    </schemagen>
+    <java classname="com.zimbra.soap.util.Jaxb2Xsds" classpathref="test.class.path" fork="true" failonerror="true">
+      <arg line="--dir ${xml.schema.dir}"/>
+    </java>
     <!-- fixup usage of zmBoolean - the valid values for zmBoolean and xs:boolean are the same,
          zmBoolean is only used to force the use of "1" and "0" instead of true and false -->
     <replaceregexp match="(tns|zimbra*|ns[0-9]):zmBoolean" replace="xs:boolean" flags="g" byline="true">
       <fileset dir="${xml.schema.dir}" includes="*.xsd"/>
     </replaceregexp>
-    <java classname="com.zimbra.soap.util.XsdCleaner" classpathref="class.path" fork="true" failonerror="true">
-            <arg line="--dir ${xml.schema.dir}"/>
+    <java classname="com.zimbra.soap.util.XsdCleaner" classpathref="tools.class.path" fork="true" failonerror="true">
+      <arg line="--dir ${xml.schema.dir}"/>
     </java>
   </target>
 
-  <!-- used to build WSDL client support artifacts for a particular service -->
-  <macrodef name="service-client-support">
-    <attribute name="svcname"/>
-    <attribute name="pathelem"/>
-    <attribute name="svcclassname"/>
-
-    <sequential>
-        <mkdir dir="${wsdl.test.classes.dir}"/>
-        <delete dir="${wsdl.generated.test.src.root}/@{pathelem}client"/>
-        <!-- extension="true|false" - allow vendor extensions -->
-        <wsimport   wsdl="${xml.schema.dir}/@{svcname}.wsdl"
-                    destdir="${wsdl.test.classes.dir}"
-                    sourcedestdir="${wsdl.test.src.dir}"
-                    keep="false">
-                    <!-- package="com.zimbra.@{pathelem}client.wsimport.generated" -->
-                    <binding dir="${wsdl.test.src.dir}" includes="*-@{pathelem}.xml"/>
-            <produces dir="${wsdl.test.src.dir}"
-                includes="com/zimbra/generated/@{pathelem}client/**/*.java"/>
-        </wsimport>
-        <!-- Bug 58024 java.util.logging implicated in changing process default charset.
-             Change the autogenerated file which uses logging to use log4j instead. -->
-        <replace file="${wsdl.generated.test.src.root}/@{pathelem}client/ws/service/@{svcclassname}.java">
-            <replacefilter token="java.util.logging.Logger"
-                           value="org.apache.log4j.Logger"/>
-            <replacefilter token="logger.warning"
-                           value="logger.warn"/>
-        </replace>
-        <!-- force re-compile with modified source. -->
-        <delete file="${wsdl.generated.test.classes.root}/@{pathelem}client/ws/service/@{svcclassname}.class"/>
-    </sequential>
-  </macrodef>
-
-  <target name="wsdl-client-support" depends="jar">
-      <service-client-support svcname="ZimbraService" pathelem="zcs" svcclassname="ZcsService"/>
-  </target>
-
   <target name="check-zimbra-identity">
-      <available file="/opt/zimbra/.ssh/zimbra_identity" property="ssh.zimbra.identity.present"/>
+    <available file="/opt/zimbra/.ssh/zimbra_identity" property="ssh.zimbra.identity.present"/>
   </target>
 
   <target name="zimbra-identity" depends="check-zimbra-identity" unless="ssh.zimbra.identity.present">
-      <exec failonerror="true" executable="/opt/zimbra/bin/zmsshkeygen"/>
+    <exec failonerror="true" executable="/opt/zimbra/bin/zmsshkeygen"/>
   </target>
 
-  <target name="wsdl-test-compile" depends="compile,wsdl-client-support">
-    <mkdir dir="${wsdl.test.classes.dir}"/>
-    <javac srcdir="${wsdl.test.src.dir}" destdir="${wsdl.test.classes.dir}"
-      debug="true" classpathref="wsdl.test.class.path" target="${javac.target}"/>
-    <copy todir="${wsdl.test.classes.dir}">
-      <fileset dir="${wsdl.test.src.dir}" excludes="**/*.java"/>
-    </copy>
-  </target>
-
-  <!-- WSDL client tests that require ZimbraServer installed and some setup in place -->
-  <target name="wsdl-test" depends="wsdl-test-compile,zimbra-identity" description="Run WSDL client unit tests">
-    <delete dir="${wsdl.test.dir}" quiet="true"/>
-    <mkdir dir="${wsdl.test.dir}/output"/>
-    <mkdir dir="${wsdl.test.dir}/report"/>
-    <junit printsummary="on" fork="yes" forkmode="once" failureproperty="wsdl.junit.failure" tempdir="${wsdl.test.dir}">
-      <classpath refid="wsdl.test.class.path"/>
-      <classpath path="${wsdl.test.classes.dir}"/>
-      <assertions><enable/></assertions>
-      <formatter type="xml"/>
-      <batchtest todir="${wsdl.test.dir}/output">
-        <fileset dir="${wsdl.test.src.dir}">
-          <include name="**/*Test.java"/>
-          <!-- Some JAXB source filenames end in Test.java and need to be excluded -->
-          <exclude name="generated/**/*Test.java"/>
-        </fileset>
-      </batchtest>
-    </junit>
-    <junitreport todir="${wsdl.test.dir}/report">
-      <fileset dir="${wsdl.test.dir}/output"/>
-      <report todir="${wsdl.test.dir}/report"/>
-    </junitreport>
-    <echo>WSDL Test Report: ${wsdl.test.dir}/report/index.html</echo>
-    <fail if="wsdl.junit.failure" message="WSDL Unit test failed"/>
-  </target>
-
-  <!-- e.g. ant -DWSDLTEST=com.zimbra.soap.account.WSDLAuthRequestTest one-wsdl-test -->
-  <target name="one-wsdl-test" depends="wsdl-test-compile" description="Run a single unit test">
-    <delete dir="${wsdl.test.dir}-one" quiet="true"/>
-    <mkdir dir="${wsdl.test.dir}-one/output"/>
-    <junit printsummary="on" failureproperty="junit.failure" tempdir="${wsdl.test.dir}-one">
-      <classpath refid="wsdl.test.class.path"/>
-      <classpath path="${wsdl.test.classes.dir}"/>
-      <assertions><enable/></assertions>
-      <formatter type="xml"/>
-      <test name="${WSDLTEST}" todir="${wsdl.test.dir}-one/output" />
-    </junit>
-    <fail if="junit.failure" message="Unit test failed"/>
-  </target>
-
-  <!-- e.g. ant -DTESTNAME=com.zimbra.soap.admin.GetServerTest one-test -->
-  <target name="one-test" depends="test-compile" description="Run unit tests">
-    <delete dir="${test.dir}-one" quiet="true"/>
-    <mkdir dir="${test.dir}-one/output"/>
-    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}-one">
-      <classpath refid="test.class.path"/>
-      <classpath path="${test.classes.dir}"/>
-      <assertions><enable/></assertions>
-      <formatter type="xml"/>
-      <test name="${TESTNAME}" todir="${test.dir}-one/output" />
-    </junit>
-    <fail if="junit.failure" message="Unit test failed"/>
-  </target>
-
-  <!-- Use Mac OS X (Snow Leopard/Lion) or, if using another platform, resolve classpath issues related to
-       usage of the doclet API.
-       Doclet API classes are normally packaged in tools.jar - but Mac OS X does it differently. -->
-  <target name="soap-api-doc-compile" depends="compile">
+  <target name="soap-api-doc-compile" depends="compile,resolve-soapdocs">
     <mkdir dir="${soapdocs.classes.dir}"/>
-    <javac srcdir="${soapdocs.src.dir}" destdir="${soapdocs.classes.dir}"
-      debug="true" classpathref="soapdocs.class.path" target="${javac.target}"/>
-    <echo>"If soap-api-doc source has changed, execute task 'soap-api-doc-jar' and checkin the new jar"</echo>
+    <javac srcdir="${soapdocs.src.dir}" destdir="${soapdocs.classes.dir}" debug="true" classpathref="soapdocs.class.path" target="${javac.target}"/>
   </target>
 
-  <!-- Packages up a jar for use from generate-soap-api-doc -->
-  <target name="soap-api-doc-jar" depends="soap-api-doc-compile">
-    <delete file="${soapdocs.jar}" quiet="true"/>
-    <jar destfile="${soapdocs.jar}" basedir="${soapdocs.classes.dir}"/>
-  </target>
-
-  <!-- The javadoc task must have resolved any doclet API usage classpath related issues in order to run.
-       so this task should execute successfully on any platform  -->
-  <target name="generate-soap-api-doc" depends="compile">
+  <target name="generate-soap-api-doc" depends="soap-api-doc-compile, resolve-soapdoclet">
     <delete dir="${soapdocs.output.dir}" quiet="true"/>
-    <mkdir dir="${soapdocs.output.dir}" />
-    <javadoc doclet="com.zimbra.doc.soap.doclet.ZmApiDoclet"
-        access="private"
-        docletpathref="soapdocs.doclet.class.path"
-        classpathref="soapdocs.doclet.class.path">
-        <doclet name="com.zimbra.doc.soap.doclet.ZmApiDoclet">
-            <param name="--templates-dir" value="${soapdocs.templates.dir}"/>
-            <param name="--output-dir" value="${soapdocs.output.dir}"/>
-            <param name="--apidesc-json" value="${soapdocs.apidesc.file}"/>
-            <param name="--build-version" value="${zimbra.buildinfo.version}"/>
-            <param name="--build-date" value="${zimbra.buildinfo.date}"/>
-        </doclet>
-        <packageset dir="${src.java.dir}" defaultexcludes="yes">
-            <include name="com/zimbra/soap/*/message/**"/>
-            <include name="com/zimbra/soap/*/type/**"/>
-            <include name="com/zimbra/soap/base/**"/>
-            <include name="com/zimbra/soap/header/**"/>
-            <include name="com/zimbra/soap/type/**"/>
-        </packageset>
+    <mkdir dir="${soapdocs.output.dir}"/>
+    <javadoc doclet="com.zimbra.doc.soap.doclet.ZmApiDoclet" access="private" docletpathref="soapdocs.doclet.class.path" classpathref="soapdocs.doclet.class.path">
+      <doclet name="com.zimbra.doc.soap.doclet.ZmApiDoclet">
+        <param name="--templates-dir" value="${soapdocs.templates.dir}"/>
+        <param name="--output-dir" value="${soapdocs.output.dir}"/>
+        <param name="--apidesc-json" value="${soapdocs.apidesc.file}"/>
+        <param name="--build-version" value="${zimbra.buildinfo.version}"/>
+        <param name="--build-date" value="${zimbra.buildinfo.date}"/>
+      </doclet>
+      <packageset dir="${src.java.dir}" defaultexcludes="yes">
+        <include name="com/zimbra/soap/*/message/**"/>
+        <include name="com/zimbra/soap/*/type/**"/>
+        <include name="com/zimbra/soap/base/**"/>
+        <include name="com/zimbra/soap/header/**"/>
+        <include name="com/zimbra/soap/type/**"/>
+      </packageset>
     </javadoc>
   </target>
+
+  <target name="package-docs" depends="package-soap-api-doc, package-soap-api-changelog"/>
 
   <target name="package-soap-api-doc" depends="generate-soap-api-doc">
     <zip destfile="${soapapi.doc.file}" basedir="${soapdocs.output.dir}">
@@ -330,19 +144,19 @@
     </zip>
   </target>
 
-  <target name="generate-soap-api-changelog" depends="generate-soap-api-doc,soap-api-doc-compile">
+  <target name="generate-soap-api-changelog" depends="generate-soap-api-doc">
     <delete dir="${soapapi.changelog.output.dir}" quiet="true"/>
-    <mkdir dir="${soapapi.changelog.output.dir}" />
+    <mkdir dir="${soapapi.changelog.output.dir}"/>
     <copy todir="${soapapi.changelog.output.dir}">
-        <fileset dir="${soapdocs.templates.dir}/changelog">
-            <exclude name="**/*.ftl"/>
-        </fileset>
+      <fileset dir="${soapdocs.templates.dir}/changelog">
+        <exclude name="**/*.ftl"/>
+      </fileset>
     </copy>
     <java classname="com.zimbra.doc.soap.changelog.SoapApiChangeLog" classpathref="soapdocs.class.path" fork="true" failonerror="true">
-        <arg line="--output-dir ${soapapi.changelog.output.dir}"/>
-        <arg line="--templates-dir ${soapdocs.templates.dir}"/>
-        <arg line="--baseline-apidesc ${soapdocs.apidesc.baseline.file}"/>
-        <arg line="--current-apidesc ${soapdocs.apidesc.file}"/>
+      <arg line="--output-dir ${soapapi.changelog.output.dir}"/>
+      <arg line="--templates-dir ${soapdocs.templates.dir}"/>
+      <arg line="--baseline-apidesc ${soapdocs.apidesc.baseline.file}"/>
+      <arg line="--current-apidesc ${soapdocs.apidesc.file}"/>
     </java>
   </target>
 
@@ -352,15 +166,13 @@
     </zip>
   </target>
 
-  <target name="update-baseline-apidesc" depends="generate-soap-api-doc"
-      description="Update the baseline description of the SOAP API used by target generate-soap-api-changelog">
-      <gzip src="${soapdocs.apidesc.file}" destfile="${soapdocs.apidesc.baseline.file}"/>
+  <target name="update-baseline-apidesc" depends="generate-soap-api-doc" description="Update the baseline description of the SOAP API used by target generate-soap-api-changelog">
+    <gzip src="${soapdocs.apidesc.file}" destfile="${soapdocs.apidesc.baseline.file}"/>
   </target>
 
   <target name="soapdocs-test-compile" depends="soap-api-doc-compile">
     <mkdir dir="${soapdocs.test.classes.dir}"/>
-    <javac srcdir="${soapdocs.test.src.dir}" destdir="${soapdocs.test.classes.dir}"
-      debug="true" classpathref="soapdocs.class.path" target="${javac.target}"/>
+    <javac srcdir="${soapdocs.test.src.dir}" destdir="${soapdocs.test.classes.dir}" debug="true" classpathref="soapdocs.class.path" target="${javac.target}"/>
     <copy todir="${soapdocs.test.classes.dir}">
       <fileset dir="${soapdocs.test.src.dir}" excludes="**/*.java"/>
     </copy>
@@ -373,7 +185,9 @@
     <junit printsummary="on" fork="yes" forkmode="once" failureproperty="soapdocs.junit.failure" tempdir="${soapdocs.test.dir}">
       <classpath refid="soapdocs.class.path"/>
       <classpath path="${soapdocs.test.classes.dir}"/>
-      <assertions><enable/></assertions>
+      <assertions>
+        <enable/>
+      </assertions>
       <formatter type="xml"/>
       <batchtest todir="${soapdocs.test.dir}/output">
         <fileset dir="${soapdocs.test.src.dir}">

@@ -3,7 +3,7 @@ ant "test" target
 These tests do not require Zimbra to be installed on the system under test.
 Useful for exercising marshaling and unmarshaling for JAXB objects under src/java/
 
-ant "wsdl-test" target
+ant "wsdl-test" target (see the zm-wsdl-test repository)
 ======================
 These tests require Zimbra Network to be installed on the system under test with standard test users in place.
 One way to achieve this is to do:

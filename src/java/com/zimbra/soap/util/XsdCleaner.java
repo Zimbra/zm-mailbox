@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -47,7 +47,6 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.util.ZimbraLog;
 
 
@@ -265,15 +264,11 @@ public class XsdCleaner {
     }
 
     public static Document parseXML(File file) throws FileNotFoundException {
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(file);
-            return parseXML(new FileInputStream(file));
+        try (FileInputStream fis = new FileInputStream(file)) {
+            return parseXML(fis);
         } catch (SAXException | IOException e) {
             LOG.error("XsdCleaner:Problem parsing " + file.getPath(), e);
             return null;
-        } finally {
-            Closeables.closeQuietly(fis);
         }
     }
 
@@ -298,13 +293,9 @@ public class XsdCleaner {
     }
 
     public static void asXML(File outfile, Node node, boolean indent, boolean omitXmlDecl)
-    throws FileNotFoundException, TransformerException {
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(outfile);
+    throws TransformerException, IOException {
+        try (FileOutputStream fos = new FileOutputStream(outfile)) {
             asXML(fos, node, indent, omitXmlDecl);
-        } finally {
-            Closeables.closeQuietly(fos);
         }
     }
 
