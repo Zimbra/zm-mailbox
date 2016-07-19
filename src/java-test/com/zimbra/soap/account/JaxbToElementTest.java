@@ -34,6 +34,9 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 
+import org.custommonkey.xmlunit.DetailedDiff;
+import org.custommonkey.xmlunit.XMLAssert;
+import org.custommonkey.xmlunit.XMLUnit;
 import org.dom4j.QName;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -104,6 +107,7 @@ import junit.framework.Assert;
  * @author Gren Elliot
  */
 public class JaxbToElementTest {
+    private static String getInfoResponseXMLfileName = "GetInfoResponse.xml";
     private static Unmarshaller unmarshaller;
     // one run with iterationNum = 80000:
     //     elementToJaxbTest time="30.013" (using w3c dom document)
@@ -147,7 +151,7 @@ public class JaxbToElementTest {
         if (getInfoRespJaxb == null) {
             getGetInfoResponseUnmarshaller();
             getInfoRespJaxb = (GetInfoResponse) unmarshaller.unmarshal(
-                JaxbToElementTest.class.getResourceAsStream("GetInfoResponse.xml"));
+                JaxbToElementTest.class.getResourceAsStream(getInfoResponseXMLfileName));
         }
         return getInfoRespJaxb;
     }
@@ -172,9 +176,9 @@ public class JaxbToElementTest {
 
     public static String getTestInfoResponseXml() throws IOException {
         if (getInfoResponseXml == null) {
-            InputStream is = JaxbToElementTest.class.getResourceAsStream(
-                    "GetInfoResponse.xml");
-            getInfoResponseXml = streamToString(is, Charsets.UTF_8);
+            try (InputStream is = JaxbToElementTest.class.getResourceAsStream(getInfoResponseXMLfileName)) {
+                getInfoResponseXml = streamToString(is, Charsets.UTF_8);
+            }
             getInfoResponseXml = stripXmlCommentsOut(getInfoResponseXml);
         }
         return getInfoResponseXml;
@@ -182,9 +186,9 @@ public class JaxbToElementTest {
 
     public static String getTestInfoResponseJson() throws IOException {
         if (getInfoResponseJSON == null) {
-            InputStream is = JaxbToElementTest.class.getResourceAsStream(
-                    "GetInfoResponse.json");
-            getInfoResponseJSON = streamToString(is, Charsets.UTF_8);
+            try (InputStream is = JaxbToElementTest.class.getResourceAsStream("GetInfoResponse.json")) {
+                getInfoResponseJSON = streamToString(is, Charsets.UTF_8);
+            }
         }
         return getInfoResponseJSON;
     }
@@ -205,13 +209,18 @@ public class JaxbToElementTest {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
             String actual = el.prettyPrint();
-            // TODO: At present some stuff is wrong/missing
-            // so just check the first part.
-            Assert.assertEquals(getInfoResponseXml.substring(0, 1000),
-                    actual.substring(0, 1000));
-            // validateLongString("XML response differs from expected\n",
-            //     getInfoResponseXml, actual,
-            //             "GetInfoResponse.xml", "/tmp/GetInfoResponse.xml");
+            String expected = getInfoResponseXml;
+            DetailedDiff myDiff = new DetailedDiff(XMLUnit.compareXML(expected, actual));
+            List allDifferences = myDiff.getAllDifferences();
+            if (allDifferences.size() > 0) {
+                ZimbraLog.test.debug("Iteration:%s - %s differences found.  Compare below with '%s'\n%s\n",
+                        cnt, allDifferences.size(), getInfoResponseXMLfileName, actual);
+                int diffnum = 0;
+                for (Object obj : allDifferences) {
+                    ZimbraLog.test.info("Difference:%s [%s]", diffnum++, obj);
+                }
+                XMLAssert.assertXMLEqual(expected, actual);
+            }
         }
     }
 
@@ -766,7 +775,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         Element elem2 = JaxbUtil.jaxbToElement(rp, XMLElement.mFactory);
         String eXml2 = elem2.toString();
         ZimbraLog.test.debug("Round tripped retentionPolicy.xml from Element:\n%s", eXml2);
-        Assert.assertEquals("elementToJaxb RetentionPolicy Xml after", eXml, eXml2);
+        XMLAssert.assertXMLEqual(eXml, eXml2);
     }
 
     @Test
@@ -778,9 +787,12 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         attrs.put("key2", "value2 wonderful");
         id.setAttrs(attrs);
         CreateIdentityRequest request = new CreateIdentityRequest(id);
-        Assert.assertEquals("toString output",
-            "CreateIdentityRequest{identity=Identity{a=[Attr{name=key2, value=value2 wonderful}, Attr{name=key1, value=value1}], name=hello, id=null}}",
-            request.toString());
+        String toString = request.toString();
+        Assert.assertTrue("toString start chars", toString.startsWith("CreateIdentityRequest{identity=Identity{a="));
+        Assert.assertTrue("toString key1", toString.contains("Attr{name=key1, value=value1}"));
+        Assert.assertTrue("toString key2", toString.contains("Attr{name=key2, value=value2 wonderful}"));
+        Assert.assertTrue("toString name", toString.contains("name=hello"));
+        Assert.assertTrue("toString id", toString.contains("id=null"));
     }
 
     /*
