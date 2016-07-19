@@ -1493,9 +1493,32 @@ header="X-Spam-Score"/>
 
     /**
      * How to achieve a wrapped list where no element for the wrapper will appear in the XML if the list is empty.
+     * This no longer works!  Fortunately, looks like we don't use any classes similar to WrapperAbsentIfEmpty
+     * at the moment.
+     * For JUDASPRIEST/Java 7 setNumbers is called with 2 integers.  For main/Java 8
+     * it is called with an empty list.
+     *     WrapperAbsentIfEmpty.setNumbers(List<Integer>) line: 51
+     *     WrapperAbsentIfEmpty$JaxbAccessorM_getNumbers_setNumbers_java_util_List.set(Object, Object) line: 60
+     *     Lister$CollectionLister<BeanT,T>.startPacking(BeanT, Accessor<BeanT,T>) line: 298
+     *     Lister$CollectionLister<BeanT,T>.startPacking(Object, Accessor) line: 269
+     *     Scope<BeanT,PropT,ItemT,PackT>.start(Accessor<BeanT,PropT>, Lister<BeanT,PropT,ItemT,PackT>) line: 142
+     *     ArrayERProperty$ItemsLoader.startElement(UnmarshallingContext$State, TagName) line: 119
+     *     UnmarshallingContext._startElement(TagName) line: 501
+     *     UnmarshallingContext.startElement(TagName) line: 480
+     *     InterningXmlVisitor.startElement(TagName) line: 75
+     *     SAXConnector.startElement(String, String, String, Attributes) line: 150
+     *     DOMScanner.visit(Element) line: 244
+     *     DOMScanner.visit(Node) line: 281
+     *     DOMScanner.visit(Element) line: 250
+     *     DOMScanner.scan(Element) line: 127
+     *     UnmarshallerImpl.unmarshal0(Node, JaxBeanInfo) line: 369
+     *     UnmarshallerImpl.unmarshal(Node, Class<T>) line: 348
+     *     JaxbUtil.rawW3cDomDocToJaxb(Document, Class<?>, boolean) line: 1420
+     *     JaxbUtil.w3cDomDocToJaxb(Document, Class<?>, boolean) line: 1392
+     *     JaxbUtil.elementToJaxb(Element, Class<?>) line: 1438
+     *     JaxbToJsonTest.wrapperAbsentIfEmpty() line: 1516
      */
-    @Test
-    @Ignore
+    @Ignore("Bug:95509 - this is hypothetical functionality that isn't currently used, so low priority") @Test
     public void wrapperAbsentIfEmpty() throws Exception {
         WrapperAbsentIfEmpty jaxb = new  WrapperAbsentIfEmpty();
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
@@ -1503,7 +1526,8 @@ header="X-Spam-Score"/>
         logDebug("JSONElement from JAXB (empty numbers)--> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertNull("original getNumbers (empty list)", jaxb.getNumbers());
         Assert.assertNull("JSON roundtripped getNumbers (empty list)", roundtripped.getNumbers());
-        Assert.assertEquals("JSON for empty Numbers", "{\n  \"_jsns\": \"urn:zimbraTest\"\n}", jsonJaxbElem.prettyPrint());
+        Assert.assertEquals("JSON for empty Numbers",
+                "{\n  \"_jsns\": \"urn:zimbraTest\"\n}", jsonJaxbElem.prettyPrint());
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
         logDebug("XmlElement from JAXB (empty numbers) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         WrapperAbsentIfEmpty roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, WrapperAbsentIfEmpty.class);
@@ -1516,6 +1540,7 @@ header="X-Spam-Score"/>
         roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, WrapperAbsentIfEmpty.class);
         logDebug("JSONElement from JAXB (empty numbers)--> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertEquals("original size of Numbers (2 numbers)", 2, jaxb.getNumbers().size());
+        Assert.assertNotNull("XML roundtripped getNumbers (when 2 numbers in list)", roundtrippedX.getNumbers());
         Assert.assertEquals("JSON roundtripped size of Numbers (2 numbers)", 2, roundtripped.getNumbers().size());
         xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
         logDebug("XmlElement from JAXB (empty numbers) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
