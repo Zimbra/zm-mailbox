@@ -1,32 +1,15 @@
-<project name="ZimbraClient" default="jar">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="ZimbraClient" default="jar">
 
-    <import file="../ant-global.xml"/>    
+	<import file="../zm-zcs/ant-global.xml" />
 
-    <!-- Properties -->
+	<!-- Properties -->
 
-    <property name="jar.file" value="zimbraclient.jar" />
+	<property name="jar.file" value="zimbraclient.jar" />
 
-    <path id="class.path">
-        <pathelement location="${build.classes.dir}" />
-        <pathelement location="${common.classes.dir}" />
-        <pathelement location="${soap.classes.dir}" />
-        <fileset dir="${common.jars.dir}">
-            <include name="**/*.jar" />
-        </fileset>
-        <fileset dir="${common.internal.jars.dir}">
-            <include name="**/*.jar" />
-        </fileset>
-    </path>
 
-    <!-- Targets -->
-    <target name="compile-dependencies">
-        <ant dir="${common.dir}" target="jar" inheritAll="false"/>
-        <ant dir="${soap.dir}" target="jar" inheritAll="false"/>
-    </target>
-
-    <target name="jar" depends="compile-dependencies,compile" description="Creates the jar file">
-        <antcall target="zimbra-jar">
-            <param name="implementation.title" value="Zimbra Client"/>
-        </antcall>
-    </target>
+	<target name="jar" depends="compile" description="Creates the jar file">
+		<antcall target="zimbra-jar">
+			<param name="implementation.title" value="Zimbra Client" />
+		</antcall>
+	</target>
 </project>
