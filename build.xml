@@ -1,26 +1,15 @@
 <project name="ZimbraCommon" default="jar">
 
-  <import file="../ant-global.xml"/>    
-
+  <import file="../zm-zcs/ant-global.xml"/>
   <!-- Properties -->
 
   <property name="jar.file" value="zimbracommon.jar" />
-
-  <path id="class.path">
-    <pathelement location="${build.classes.dir}" />
-    <fileset dir="jars">
-    	<include name="**/*.jar" />
-    </fileset>
-    <fileset dir="jars-test/easymock-3.0">
-  		<include name="**/*.jar" />
-    </fileset>
-    <fileset dir="jars-internal/jars"><include name="**/*.jar" /></fileset>
-  </path>
-
+  
   <!-- Targets -->
   <target name="jar" depends="compile" description="Creates the jar file">
       <antcall target="zimbra-jar">
           <param name="implementation.title" value="Zimbra Common"/>
       </antcall>
   </target>
+
 </project>

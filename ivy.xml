@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<ivy-module version="2.0"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+ <info organisation="com.zimbra" module="zm-common" status="release">
+ </info>
+ <dependencies>
+  <dependency org="commons-codec" name="commons-codec" rev="1.7" />
+  <dependency org="commons-httpclient" name="commons-httpclient" rev="3.1" />
+  <dependency org="commons-lang" name="commons-lang" rev="2.6" />
+  <dependency org="dom4j" name="dom4j" rev="1.5.2" />
+  <dependency org="ical4j" name="ical4j" rev="0.9.16-patched" />
+  <dependency org="junit" name="junit" rev="4.8.2" />
+  <dependency org="log4j" name="log4j" rev="1.2.16" />
+  <dependency org="javax.mail" name="mail" rev="1.4.5" />
+  <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z" />
+  <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" />
+  <dependency org="xerces" name="xercesImpl" rev="2.9.1" />
+  <dependency org="com.zimbra" name="zimbranative" rev="8.8.0" />
+  <dependency org="org.jfree" name="jfreechart" rev="1.0.14" />
+  <dependency org="org.jfree" name="jcommon" rev="1.0.23" />
+  <dependency org="org.json" name="json" rev="20090211" />
+  <dependency org="spy" name="spymemcached" rev="2.6" />
+  <dependency org="org.python" name="jython-standalone" rev="2.5.2" />
+  <dependency org="com.google.guava" name="guava" rev="13.0.1" />
+  <dependency org="commons-cli" name="commons-cli" rev="1.2" />
+  <dependency org="com.ibm.icu" name="icu4j" rev="4.8.1.1" />
+  <dependency org="org.easymock" name="easymock" rev="3.0" />
+  <dependency org="cglib" name="cglib" rev="2.2.2" />
+  <dependency org="asm" name="asm" rev="3.3.1" /> 
+  <dependency org="org.eclipse.jetty" name="jetty-rewrite" rev="9.3.5.v20151012" />
+  <dependency org="org.eclipse.jetty" name="jetty-util" rev="9.3.5.v20151012" />
+ </dependencies>
+</ivy-module>
