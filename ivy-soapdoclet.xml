@@ -9,7 +9,7 @@
   <dependency org="org.codehaus.jackson" name="jackson-core-asl" rev="1.9.2" />
   <dependency org="org.codehaus.jackson" name="jackson-mapper-asl" rev="1.9.2" />
   <dependency org="org.codehaus.jackson" name="jackson-xc" rev="1.9.2" />
-  <dependency org="guava" name="guava" rev="13.0.1" />
+  <dependency org="com.google.guava" name="guava" rev="13.0.1"/>
   <dependency org="commons-lang" name="commons-lang" rev="2.6"/>
   <dependency org="org.freemarker" name="freemarker" rev="2.3.19"/>
   <dependency org="zimbracommon" name="zimbracommon" rev="1.0" />
