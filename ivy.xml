@@ -16,7 +16,6 @@
   <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z" />
   <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" />
   <dependency org="xerces" name="xercesImpl" rev="2.9.1" />
-  <dependency org="com.zimbra" name="zimbranative" rev="8.8.0" />
   <dependency org="org.jfree" name="jfreechart" rev="1.0.14" />
   <dependency org="org.jfree" name="jcommon" rev="1.0.23" />
   <dependency org="org.json" name="json" rev="20090211" />
@@ -30,5 +29,6 @@
   <dependency org="asm" name="asm" rev="3.3.1" /> 
   <dependency org="org.eclipse.jetty" name="jetty-rewrite" rev="9.3.5.v20151012" />
   <dependency org="org.eclipse.jetty" name="jetty-util" rev="9.3.5.v20151012" />
+  <dependency org="zimbra-native" name="zimbra-native" rev="1.0" />
  </dependencies>
 </ivy-module>
