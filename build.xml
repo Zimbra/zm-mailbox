@@ -1,9 +1,6 @@
-<project name="ZimbraCommon" default="jar">
+<project name="zm-common" default="jar">
 
   <import file="../zm-zcs/ant-global.xml"/>
-  <!-- Properties -->
-
-  <property name="jar.file" value="zimbracommon.jar" />
   
   <!-- Targets -->
   <target name="jar" depends="compile" description="Creates the jar file">
