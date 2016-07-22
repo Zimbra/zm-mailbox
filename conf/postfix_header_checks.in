@@ -1,4 +1,0 @@
-%%uncomment VAR:zimbraMtaBlockedExtension%%/filename=\"?(.*)\.(%%list VAR:zimbraMtaBlockedExtension |%%)\"?$/
-%%uncomment VAR:zimbraMtaBlockedExtension%%	REJECT For security reasons we reject attachments of this type
-%%uncomment VAR:zimbraMtaBlockedExtension%%/^\s*Content-(Disposition|Type).*name\s*=\s*"?(.+\.(%%list VAR:zimbraMtaBlockedExtension |%%))"?\s*$/
-%%uncomment VAR:zimbraMtaBlockedExtension%%	REJECT Attachment type not allowed. File "$2" has the unacceptable extension "$3"
