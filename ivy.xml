@@ -5,6 +5,8 @@
  <info organisation="com.zimbra" module="zm-store" status="release">
  </info>
  <dependencies>
+  <dependency org="org.slf4j" name="slf4j-api" rev="1.6.4"/>
+  <dependency org="org.slf4j" name="slf4j-log4j12" rev="1.6.4"/>
   <dependency org="junit" name="junit" rev="4.8.2" />
   <dependency org="javax.mail" name="mail" rev="1.4.5" />
   <dependency org="jaxen" name="jaxen" rev="1.1-beta-10"/>
@@ -31,6 +33,7 @@
   <dependency org="org.apache.lucene" name="lucene-core" rev="3.5.0"/>
   <dependency org="org.apache.lucene" name="lucene-analyzers" rev="3.5.0" />
   <dependency org="org.apache.zookeeper" name="zookeeper" rev="3.4.5"/>
+  <dependency org="com.101tec" name="zkclient" rev="0.1.0"/>
   <dependency org="commons-lang" name="commons-lang" rev="2.6"/>
   <dependency org="org.apache.james" name="apache-jsieve-core" rev="0.5"/>
   <dependency org="xerces" name="xercesImpl" rev="2.9.1"/>

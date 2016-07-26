@@ -1,10 +1,9 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="ZimbraServer" default="jar">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="zm-store" default="jar">
 
     <import file="../zm-zcs/ant-global.xml"/>
 	<property name="config.dir" location="conf" />
 	<property name="warfilename" value="service.war"/>
     <property name="warfile" location="${build.dir}/${warfilename}"/>
-    <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
 	<condition property="production.suffix" value=".production" else="">
 	            <isset property="is-production"/>
 	        </condition>
@@ -34,7 +33,6 @@
 		<mkdir dir="${build.classes.dir}" />
 		<mkdir dir="${generated.java.dir}" />
 		<mkdir dir="${build.dir}/data" />
-		<mkdir dir="${aux.jars.dir}" />
 		<antcall target="make-dirs">
 			<param name="base.dir" value="${dist.dir}" />
 		</antcall>
@@ -147,8 +145,6 @@
 
 	<target name="jar" depends="generate-buildinfo,compile" description="Creates the jar file">
 		<antcall target="zimbra-jar">
-			<param name="jar.file" value="zimbrastore.jar" />
-			<!-- zimbra-jar expects the filename without the path -->
 			<param name="implementation.title" value="Zimbra Server" />
 		</antcall>
 	</target>
@@ -159,50 +155,54 @@
 
 	<!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
 
-	<target name="war" depends="jar">
+	<target name="war" depends="jar,set-dev-version">
+		<echo>packaging ${build.dir}/${jar.file} into ${warfile}</echo>
+		<delete dir="${build.tmp.dir}" /> <!-- delete anything that may have been left over, e.g.: older versions of same libs -->
+		<ivy:install organisation="org.slf4j" module="slf4j-api" revision="1.6.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.slf4j" module="slf4j-log4j12" revision="1.6.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.apache.james" module="apache-jsieve-core" revision="0.5" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.apache.lucene" module="lucene-core" revision="3.5.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.apache.lucene" module="lucene-analyzers" revision="3.5.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="ant-tar-patched" module="ant-tar-patched" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.apache.mina" module="mina-core" revision="2.0.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="ews_2010" module="ews_2010" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.apache.zookeeper" module="zookeeper" revision="3.4.5" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="com.101tec" module="zkclient" revision="0.1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.apache.curator" module="curator-recipes" revision="2.0.1-incubating" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.apache.curator" module="curator-client" revision="2.0.1-incubating" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.apache.curator" module="curator-x-discovery" revision="2.0.1-incubating" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.apache.curator" module="curator-framework" revision="2.0.1-incubating" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.codehaus.jackson" module="jackson-core-asl" revision="1.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.codehaus.jackson" module="jackson-smile" revision="1.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.codehaus.jackson" module="jackson-mapper-asl" revision="1.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="org.codehaus.jackson" module="jackson-xc" revision="1.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="asm" module="asm" revision="3.3.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="net.sf.ehcache" module="ehcache-core" revision="2.5.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="oauth" module="oauth" revision="1.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="com.googlecode.owasp-java-html-sanitizer" module="owasp-java-html-sanitizer" revision="r239" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="zimbrasoap" module="zimbrasoap" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="zimbraclient" module="zimbraclient" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="zimbracommon" module="zimbracommon" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+		<ivy:install organisation="zimbra-native" module="zimbra-native" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
 		<war warfile="${warfile}" webxml="${war.web.xml}">
 			<fileset dir="WebRoot" />
-			<lib file="${soap.jarfile}" />
-			<lib file="${client.jarfile}" />
-			<lib file="${jarfile}" />
-			<lib dir="${common.jars.dir}">
-				<include name="slf4j*.jar" />
-				<include name="*jsieve*.jar" />
-				<include name="lucene*.jar" />
-				<include name="ant-tar*.jar" />
-				<include name="mina-*.jar" />
-				<include name="ews*.jar" />
-				<include name="cassandra-*.jar" />
-				<include name="hector-*.jar" />
-				<include name="zkclient-*.jar" />
-				<include name="zookeeper-*.jar" />
-				<include name="curator-*.jar" />
-				<include name="perf4j-*.jar" />
-				<include name="libthrift-*.jar" />
-				<include name="high-scale-lib-*.jar" />
-				<include name="jackson-*.jar" />
-				<include name="hadoop-*.jar" />
-				<include name="hbase-*.jar" />
-				<include name="ehcache-*.jar" />
-				<include name="jersey-*.jar" />
-				<include name="asm-*.jar" />
-				<include name="jsr*.jar" />
-				<include name="cxf-*.jar" />
-				<include name="javax.ws.rs-api-*.jar" />
-				<include name="httpasyncclient-*.jar" />
-				<include name="httpclient-*.jar" />
-				<include name="httpcore-*.jar" />
-				<include name="neethi-*.jar" />
-				<include name="objenesis-*.jar" />
-				<include name="spring-*.jar" />
-				<include name="woodstox-core-asl-*.jar" />
-				<include name="wsdl4j-*.jar" />
-				<include name="xmlschema-core-*.jar" />
-				<include name="stax2-api-*.jar" />
-				<include name="oauth*.jar" />
-				<include name="owasp*.jar" />
-			</lib>
-			<lib dir="${aux.jars.dir}" includes="*.jar" />
+			<lib file="${build.dir}/${jar.file}" />
+			<lib dir="${build.tmp.dir}" includes="*.jar" />
+				<!--include name="jersey-*.jar" / --> <!-- only used by zm-openoffice-store -->
+				<!-- include name="jsr*.jar" / --> <!-- only used by zm-ews-store -->
+				<!-- include name="cxf-*.jar" / --> <!-- only used by zm-ews-store -->
+				<!-- include name="javax.ws.rs-api-*.jar" / --> <!-- only used by zm-openoffice-store -->
+				<!-- include name="httpasyncclient-*.jar" / --> <!-- only used by zm-ews-store -->
+				<!-- include name="httpclient-*.jar" / --> <!-- only used by zm-ews-store -->
+				<!-- include name="httpcore-*.jar" / --> <!-- only used by zm-ews-store -->
+				<!-- include name="neethi-*.jar" / --> <!-- only used by zm-ews-store -->
+				<!-- include name="objenesis-*.jar" / --> <!-- only used by zm-openoffice-store and zm-ews-store -->
+				<!-- include name="spring-*.jar" / --> <!-- only used by zm-ews-store -->
+				<!-- include name="woodstox-core-asl-*.jar" / --> <!-- only used by zm-ews-store -->
+				<!-- include name="wsdl4j-*.jar" / --> <!-- only used by zm-ews-store -->
+				<!-- include name="xmlschema-core-*.jar" / --> <!-- only used by zm-ews-store -->
+				<!-- include name="stax2-api-*.jar" / --> <!-- only used by zm-ews-store -->
+			<!-- /lib -->
 			<classes dir="${config.dir}" includes="sieveConfig.xml" />
 			<classes dir="${config.dir}" includes="cxf.xml" />
 		</war>
