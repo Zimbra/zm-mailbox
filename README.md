@@ -38,8 +38,7 @@
         - add `export ANT_OPTS=-Ddev.home=/home/zimbra`
 6. Change permissions on files and folders that you will be updating. E.g.:
 
-        chmod o+w /opt/zimbra/lib/jars
-        chmod o+w /opt/zimbra/lib/jars/*.jar
+        chmod -R o+w /opt/zimbra/lib/
         
     (note, if you run `zmfixperms`, these permission changes will get overwritten)
 
