@@ -39,6 +39,7 @@
 6. Change permissions on files and folders that you will be updating. E.g.:
 
         chmod -R o+w /opt/zimbra/lib/
+        chmod -R o+w /opt/zimbra/jetty/
         
     (note, if you run `zmfixperms`, these permission changes will get overwritten)
 
