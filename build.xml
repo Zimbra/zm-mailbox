@@ -1,28 +1,7 @@
 <project name="ZimbraNative" default="jar">
 
-    <import file="../ant-global.xml" />
-    
-	<property name="jar.file" value="zimbra-native.jar" />
-
-	<path id="all.java.path">
-		<pathelement location="${src.java.dir}" />
-	</path>
-
-	<target name="build-init">
-		<mkdir dir="${build.classes.dir}" />
-	</target>
-
-	<target name="compile" depends="build-init" description="Compiles the source code">
-		<javac destdir="${build.classes.dir}" debug="true" target="${javac.target}">
-			<src refid="all.java.path" />
-		</javac>
-		<javah class="com.zimbra.znative.IO" outputfile="${build.dir}/IO.h" classpath="${build.dir}/classes" />
-		<javah class="com.zimbra.znative.Process" outputfile="${build.dir}/Process.h" classpath="${build.dir}/classes" />
-		<javah class="com.zimbra.znative.ProcessorUsage" outputfile="${build.dir}/ProcessorUsage.h" classpath="${build.dir}/classes" />
-		<javah class="com.zimbra.znative.ResourceUsage" outputfile="${build.dir}/ResourceUsage.h" classpath="${build.dir}/classes" />
-		<javah class="com.zimbra.znative.Util" outputfile="${build.dir}/Util.h" classpath="${build.dir}/classes" />
-		<javah class="com.zimbra.znative.ProxyInfo" outputfile="${build.dir}/ProxyInfo.h" classpath="${build.dir}/classes" />
-	</target>
+    <import file="../zm-zcs/ant-global.xml" />
+    <property name="jar.file" value="zimbra-native.jar" />
 
     <target name="jar" depends="compile" description="Creates the jar file">
         <antcall target="zimbra-jar">
@@ -30,8 +9,4 @@
         </antcall>
     </target>
 
-	<target name="clean" description="Removes build files and undeploys extension">
-		<delete dir="${build.dir}" />
-	</target>
-	
 </project>
