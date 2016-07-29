@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <project xmlns:ivy="antlib:org.apache.ivy.ant" name="zm-store" default="jar">
   <import file="../zm-zcs/ant-global.xml"/>
-  <property name="jetty.home.dir" location="${zimbra.home.dir}/jetty"/>
-  <property name="jetty.webapps.dir" location="${jetty.home.dir}/webapps"/>
   <property name="service.webapp.dir" location="${jetty.webapps.dir}/service"/>
   <property name="config.dir" location="conf"/>
   <property name="warfilename" value="service.war"/>
@@ -45,7 +43,6 @@
   </target>
   <target name="build-init" description="Creates directories required for compiling">
     <mkdir dir="${build.classes.dir}"/>
-    <mkdir dir="${generated.java.dir}"/>
     <mkdir dir="${build.dir}/data"/>
     <antcall target="make-dirs">
       <param name="base.dir" value="${dist.dir}"/>
@@ -120,6 +117,7 @@
     </antcall>
     <antcall target="generate-provisioning"/>
   </target>
+  <!-- TODO: bugzilla # 106116 -->
   <path id="p4-prov-files">
     <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrAccount.java"/>
     <pathelement location="${src.java.dir}/com/zimbra/cs/account/ZAttrCalendarResource.java"/>
@@ -209,17 +207,6 @@
     <ivy:install organisation="zimbrasoap" module="zimbrasoap" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="zimlettaglib" module="zimlettaglib" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="zimbraclient" module="zimbraclient" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <!--<ivy:install organisation="org.apache.httpcomponents" module="httpasyncclient" revision="4.0-beta3" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-		<ivy:install organisation="org.apache.httpcomponents" module="httpclient" revision="4.2.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-		<ivy:install organisation="org.apache.httpcomponents" module="httpcore" revision="4.2.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-		<ivy:install organisation="org.apache.httpcomponents" module="httpcore-nio" revision="4.2.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-		<ivy:install organisation="org.apache.cxf" module="cxf-api" revision="2.7.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-		<ivy:install organisation="org.apache.cxf" module="cxf-rt-bindings-soap" revision="2.7.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-		<ivy:install organisation="org.apache.cxf" module="cxf-rt-frontend-jaxws" revision="2.7.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-		<ivy:install organisation="org.apache.cxf" module="cxf-rt-transports-http" revision="2.7.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-		<ivy:install organisation="org.apache.neethi" module="neethi" revision="3.0.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-		<ivy:install organisation="org.codehaus.woodstox" module="stax2-api" revision="3.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-		<ivy:install organisation="org.codehaus.woodstox" module="woodstox-core-asl" revision="4.2.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/> -->
     <war warfile="${warfile}" webxml="${war.web.xml}">
       <fileset dir="WebRoot"/>
       <lib file="${build.dir}/${jar.file}"/>
