@@ -1,7 +1,6 @@
-<project name="ZimbraNative" default="jar">
+<project name="zm-native" default="jar">
 
     <import file="../zm-zcs/ant-global.xml" />
-    <property name="jar.file" value="zimbra-native.jar" />
 
     <target name="jar" depends="compile" description="Creates the jar file">
         <antcall target="zimbra-jar">
