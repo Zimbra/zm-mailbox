@@ -53,4 +53,22 @@
         zmprov ms ubuntu2.local zimbraDNSMasterIP 172.16.150.1
 
 9. You are ready to build zimbra code and test your changes
-  
+
+## Adding LDAP attributes
+
+1. Clone zm-ldap-utilities and zm-common repositories
+2. Add new XML to zm-store/conf/attrs/zimbra-attrs.xml
+3. Invoke `ant generate-getters` from zm-store/build.xml
+4. Invoke `ant clean compile test` to make sure everything went OK
+5. `chmod -R o+w /opt/zimbra/common/etc/openldap/schema`
+   `chmod o+w /opt/zimbra/conf/zimbra.ldif`
+6. Invoke `ant deploy publish-local` from zm-common/build.xml
+   
+   Note 1: until zm-common compiles with Java8, you need to switch to Java7 and run `ant jar` from zm-common/build.xml before step 6 and then switch back to Java8.
+   e.g.: `export PATH=/home/zimbra/jdk1.7.0_79/bin/:$PATH` and `export JAVA_HOME=/home/zimbra/jdk1.7.0_79/`
+   
+   Note 2: until all ivy.xml files are using zm-common instead of zimbracommon as a dependency, you will need to clear your ivy cache before step 7. 
+   e.g.: `rm -r /home/zimbra/.ivy2/cache/zimbracommon/`
+     
+7. Invoke `ant deploy update-ldap-schema` from zm-store/build.xml
+8. At this point your zimbra server should be running and working with the new LDAP attributes that you added to zimbra-attrs.xml. Check that new LDAP attributes work by modifying them with `zmprov`    
