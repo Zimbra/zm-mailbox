@@ -14,7 +14,7 @@
     <ant dir="${server.dir}" target="stop-webserver" inheritAll="false"/>
     <delete verbose="true">
       <fileset dir="${common.jars.dir}" includes="zm-common*.jar,zimbracommon*.jar"/>
-      <fileset dir="${jetty.common.jars.dir}" includes="zm-soap*.jar,zimbracommon*.jar"/>
+      <fileset dir="${jetty.common.jars.dir}" includes="zm-common*.jar,zimbracommon*.jar"/>
     </delete>
   </target>
 
