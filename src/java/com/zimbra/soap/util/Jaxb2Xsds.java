@@ -19,6 +19,7 @@ package com.zimbra.soap.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -31,8 +32,9 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.header.HeaderContext;
 
 /**
  */
@@ -92,8 +94,13 @@ public class Jaxb2Xsds {
         }
     }
 
+    /**
+     * Create XSDs for all reachable objects from either the requests and responses or the HeaderContext
+     */
     public static void createXsds() {
-        ImmutableList<Class<?>> classList = JaxbUtil.getJaxbRequestAndResponseClasses();
+        List<Class<?>> classList = Lists.newArrayList();
+        classList.addAll(JaxbUtil.getJaxbRequestAndResponseClasses());
+        classList.add(HeaderContext.class);
         JAXBContext jaxbContext;
         try {
             jaxbContext = JAXBContext.newInstance(classList.toArray(new Class[classList.size()]));
