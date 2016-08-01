@@ -72,3 +72,8 @@
      
 7. Invoke `ant deploy update-ldap-schema` from zm-store/build.xml
 8. At this point your zimbra server should be running and working with the new LDAP attributes that you added to zimbra-attrs.xml. Check that new LDAP attributes work by modifying them with `zmprov`    
+9. Commit java changes in zm-store and zm-common as well as changes to zimbra-attrs.xml. You should split this into 3 commits
+   - commit changes to java files in zm-common
+   - commit changes to java files in zm-store
+   - commit changes to zimbra-attrs.xml in zm-store
+10. Create 2 pull requests: one pull request for your changes to zm-common and another pull request for your changes in zm-store
