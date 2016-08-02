@@ -1478,7 +1478,7 @@ public class RightCommand {
             String code = e.getCode();
             if (AccountServiceException.NO_SUCH_ACCOUNT.equals(code) ||
                 AccountServiceException.NO_SUCH_DISTRIBUTION_LIST.equals(code) ||
-                AccountServiceException.NO_SUCH_DOMAIN.equals(code)) {
+                Constants.ERROR_CODE_NO_SUCH_DOMAIN.equals(code)) {
 
                 ZimbraLog.acl.warn("revokeRight: no such grantee " + grantee);
 

@@ -60,6 +60,7 @@ import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
@@ -1338,7 +1339,7 @@ public class SoapProvisioning extends Provisioning {
             DomainInfo domainInfo = resp.getDomain();
             return domainInfo == null ? null : new SoapDomain(domainInfo, this);
         } catch (ServiceException e) {
-            if (e.getCode().equals(AccountServiceException.NO_SUCH_DOMAIN))
+            if (e.getCode().equals(Constants.ERROR_CODE_NO_SUCH_DOMAIN))
                 return null;
             else
                 throw e;
@@ -1360,7 +1361,7 @@ public class SoapProvisioning extends Provisioning {
                 invokeJaxb(new GetDomainRequest(domSel, applyDefault));
             return new SoapDomain(resp.getDomain(), this);
         } catch (ServiceException e) {
-            if (e.getCode().equals(AccountServiceException.NO_SUCH_DOMAIN))
+            if (e.getCode().equals(Constants.ERROR_CODE_NO_SUCH_DOMAIN))
                 return null;
             else
                 throw e;

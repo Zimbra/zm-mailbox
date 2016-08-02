@@ -23,6 +23,7 @@ package com.zimbra.cs.account;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 
 /**
  * @author schemers
@@ -45,7 +46,6 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SMIME_CONFIG    = "account.NO_SMIME_CONFIG";
     public static final String NO_SUCH_ACCOUNT    = "account.NO_SUCH_ACCOUNT";
     public static final String NO_SUCH_ALIAS      = "account.NO_SUCH_ALIAS";
-    public static final String NO_SUCH_DOMAIN     = "account.NO_SUCH_DOMAIN";
     public static final String NO_SUCH_COS        = "account.NO_SUCH_COS";
     public static final String NO_SUCH_GRANT      = "account.NO_SUCH_GRANT";
     public static final String NO_SUCH_IDENTITY   = "account.NO_SUCH_IDENTITY";
@@ -216,7 +216,7 @@ public class AccountServiceException extends ServiceException {
     }
 
     public static AccountServiceException NO_SUCH_DOMAIN(String name) {
-        return new AccountServiceException("no such domain: "+name, NO_SUCH_DOMAIN, SENDERS_FAULT, null);
+        return new AccountServiceException("no such domain: "+name, Constants.ERROR_CODE_NO_SUCH_DOMAIN, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException DOMAIN_NOT_EMPTY(String name, Exception e) {
