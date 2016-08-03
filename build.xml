@@ -99,7 +99,7 @@
     </echo>
     <javac includeantruntime="false" destdir="${build.classes.dir}" debug="true" target="${javac.target}" srcdir="${build.dir}/buildinfo"/>
   </target>
-  <target name="generate-getters" depends="resolve" description="generate methods for attributes in zimbra-attrs.xml">
+  <target name="generate-getters" depends="compile,resolve" description="generate methods for attributes in zimbra-attrs.xml">
     <antcall target="generate-getter">
       <param name="getter.class" value="account"/>
       <param name="getter.output" value="ZAttrAccount.java"/>
