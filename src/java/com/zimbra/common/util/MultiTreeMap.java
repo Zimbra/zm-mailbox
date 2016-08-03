@@ -61,9 +61,4 @@ public class MultiTreeMap<K,V> extends TreeMap<K,Collection<V>> /* implements Mu
 		return null;
 	}
 	
-	public void remove(K key, V value) {
-		Collection<V> v = super.get(key);
-		if (v != null)
-			v.remove(value);
-	}
 }
