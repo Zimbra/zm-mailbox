@@ -37,4 +37,5 @@ public class Constants {
     public static final int SECONDS_PER_MONTH = SECONDS_PER_DAY * 31;
 
     public static final String CSRF_TOKEN = "X-Zimbra-Csrf-Token";
+    public static final String ERROR_CODE_NO_SUCH_DOMAIN = "account.NO_SUCH_DOMAIN";
 }
