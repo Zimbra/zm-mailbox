@@ -1,6 +1,6 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant" name="zm-client" default="jar">
   <import file="../zm-zcs/ant-global.xml"/>
-  <target name="deploy" depends="jar,set-dev-version">
+  <target name="deploy" depends="jar,set-dev-version,undeploy">
     <ant dir="${server.dir}" target="stop-webserver" inheritAll="false"/>
     <!-- untill zm* scripts are fixed to use versioned zm* jars, we have to deploy this with jar with a fixed name -->
     <copy file="${build.dir}/${jar.file}" tofile="${common.jars.dir}/zimbraclient.jar"/>
