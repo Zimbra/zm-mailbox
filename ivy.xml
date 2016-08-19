@@ -2,7 +2,7 @@
 <ivy-module version="2.0"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
- <info organisation="com.zimbra" module="zm-client" status="release">
+ <info organisation="zimbra" module="zm-client" status="release">
  </info>
  <dependencies>
   <dependency org="junit" name="junit" rev="4.8.2" />
@@ -14,7 +14,7 @@
   <dependency org="org.json" name="json" rev="20090211" />
   <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" />
   <dependency org="commons-httpclient" name="commons-httpclient" rev="3.1" />
-  <dependency org="zimbracommon" name="zimbracommon" rev="1.0" />
-  <dependency org="zimbrasoap" name="zimbrasoap" rev="1.0" /> 
+  <dependency org="zimbra" name="zm-common" rev="latest.integration" />
+  <dependency org="zimbra" name="zm-soap" rev="latest.integration" /> 
  </dependencies>
 </ivy-module>
