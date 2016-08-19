@@ -2,7 +2,7 @@
 <ivy-module version="2.0"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
- <info organisation="com.zimbra" module="zm-soap" status="release" />
+ <info organisation="zimbra" module="zm-soap" status="release" />
  <dependencies>
   <dependency org="junit" name="junit" rev="4.8.2" />
   <dependency org="xmlunit" name="xmlunit" rev="1.6"/>
@@ -17,6 +17,6 @@
   <dependency org="org.codehaus.jackson" name="jackson-core-asl" rev="1.9.2" />
   <dependency org="org.codehaus.jackson" name="jackson-mapper-asl" rev="1.9.2" />
   <dependency org="org.codehaus.jackson" name="jackson-xc" rev="1.9.2" />
-  <dependency org="zimbracommon" name="zimbracommon" rev="1.0" />
+  <dependency org="zimbra" name="zm-common" rev="latest.integration" />
  </dependencies>
 </ivy-module>
