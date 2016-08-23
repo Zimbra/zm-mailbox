@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -874,7 +875,7 @@ public class AttributeManagerUtil {
 
     private static void generateEnum(StringBuilder result, AttributeInfo ai) throws ServiceException {
 
-        Map<String,String> values = new HashMap<String, String>();
+        Map<String,String> values = new LinkedHashMap<String, String>();
         for (String v : ai.getEnumSet()) {
             values.put(v, StringUtil.escapeJavaIdentifier(v));
         }

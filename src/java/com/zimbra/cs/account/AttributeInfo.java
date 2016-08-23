@@ -18,7 +18,7 @@
 package com.zimbra.cs.account;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,8 +63,9 @@ public class AttributeInfo {
     /** sort order */
     private final AttributeOrder mOrder;
 
+    // LinkedHashSet used to increase predictability of generated source files
     /** for enums */
-    private HashSet<String> mEnumSet;
+    private LinkedHashSet<String> mEnumSet;
 
     /** for regex */
     private Pattern mRegex;
@@ -233,7 +234,7 @@ public class AttributeInfo {
             break;
         case TYPE_ENUM:
             String enums[] = value.split(",");
-            mEnumSet = new HashSet<String>(enums.length);
+            mEnumSet = new LinkedHashSet<String>(enums.length);
             for (int i=0; i < enums.length; i++) {
                 mEnumSet.add(enums[i]);
             }
