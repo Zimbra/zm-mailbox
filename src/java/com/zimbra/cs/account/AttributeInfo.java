@@ -61,7 +61,7 @@ public class AttributeInfo {
     protected AttributeType mType;
 
     /** sort order */
-    private AttributeOrder mOrder;
+    private final AttributeOrder mOrder;
 
     /** for enums */
     private HashSet<String> mEnumSet;
@@ -70,49 +70,49 @@ public class AttributeInfo {
     private Pattern mRegex;
 
     /** for holding initial value string */
-    private String mValue;
+    private final String mValue;
 
     /** attribute callback */
-    private AttributeCallback mCallback;
+    private final AttributeCallback mCallback;
 
     /** whether this attribute can be modified directly */
-    private boolean mImmutable;
+    private final boolean mImmutable;
 
-    private AttributeCardinality mCardinality;
+    private final AttributeCardinality mCardinality;
 
-    private Set<AttributeClass> mRequiredInClasses;
+    private final Set<AttributeClass> mRequiredInClasses;
 
-    private Set<AttributeClass> mOptionalInClasses;
+    private final Set<AttributeClass> mOptionalInClasses;
 
-    private Set<AttributeFlag> mFlags;
+    private final Set<AttributeFlag> mFlags;
 
-    private List<String> mGlobalConfigValues;
+    private final List<String> mGlobalConfigValues;
 
-    private List<String> mGlobalConfigValuesUpgrade;
+    private final List<String> mGlobalConfigValuesUpgrade;
 
     protected List<String> mDefaultCOSValues;
 
-    private List<String> mDefaultExternalCOSValues;
+    private final List<String> mDefaultExternalCOSValues;
 
-    private List<String> mDefaultCOSValuesUpgrade;
+    private final List<String> mDefaultCOSValuesUpgrade;
 
     private long mMin = Long.MIN_VALUE, mMax = Long.MAX_VALUE;
 
     private String mMinDuration = null, mMaxDuration = null;
 
-    private int mId;
+    private final int mId;
 
-    private String mParentOid;
+    private final String mParentOid;
 
-    private int mGroupId;
+    private final int mGroupId;
 
-    private String mDescription;
+    private final String mDescription;
 
-    private List<AttributeServerType> mRequiresRestart;
+    private final List<AttributeServerType> mRequiresRestart;
 
-    private List<Version> mSince;
+    private final List<Version> mSince;
 
-    private Version mDeprecatedSince;
+    private final Version mDeprecatedSince;
 
     private static Integer parseInt(String value) {
         try {
@@ -320,30 +320,36 @@ public class AttributeInfo {
         case TYPE_CERTIFICATE:
             byte[] binary = ByteUtil.decodeLDAPBase64(value);
             if (binary.length > mMax)
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+binary.length+") larger than max allowed: "+mMax, null);
+                throw AccountServiceException.INVALID_ATTR_VALUE(
+                        mName+" value length("+binary.length+") larger than max allowed: "+mMax, null);
             return;
         case TYPE_DURATION:
             if (!DURATION_PATTERN.matcher(value).matches())
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName + " " + DURATION_PATTERN_DOC, null);
             long l = DateUtil.getTimeInterval(value, 0);
             if (l < mMin)
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" is shorter than minimum allowed: "+mMinDuration, null);
+                throw AccountServiceException.INVALID_ATTR_VALUE(
+                        mName+" is shorter than minimum allowed: "+mMinDuration, null);
             if (l > mMax)
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" is longer than max allowed: "+mMaxDuration, null);
+                throw AccountServiceException.INVALID_ATTR_VALUE(
+                        mName+" is longer than max allowed: "+mMaxDuration, null);
             return;
         case TYPE_EMAIL:
             if (value.length() > mMax)
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);
+                throw AccountServiceException.INVALID_ATTR_VALUE(
+                        mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);
             validEmailAddress(value, false);
             return;
         case TYPE_EMAILP:
             if (value.length() > mMax)
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);
+                throw AccountServiceException.INVALID_ATTR_VALUE(
+                        mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);
             validEmailAddress(value, true);
             return;
         case TYPE_CS_EMAILP:
             if (value.length() > mMax)
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);
+                throw AccountServiceException.INVALID_ATTR_VALUE(
+                        mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);
             String[] emails = value.split(",");
             for (String email : emails)
                 validEmailAddress(email, true);
@@ -357,7 +363,8 @@ public class AttributeInfo {
             if (GENTIME_PATTERN.matcher(value).matches())
                 return;
             else
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid generalized time: yyyyMMddHHmmssZ or yyyyMMddHHmmss.SSSZ", null);
+                throw AccountServiceException.INVALID_ATTR_VALUE(
+                        mName+" must be a valid generalized time: yyyyMMddHHmmssZ or yyyyMMddHHmmss.SSSZ", null);
         case TYPE_ID:
             // For bug 21776 we check format for id only if the Provisioning class mandates
             // that all attributes of type id must be an UUID.
@@ -373,9 +380,11 @@ public class AttributeInfo {
             try {
                 int v = Integer.parseInt(value);
                 if (v < mMin)
-                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller than minimum allowed: "+mMin, null);
+                    throw AccountServiceException.INVALID_ATTR_VALUE(
+                            mName+" value("+v+") smaller than minimum allowed: "+mMin, null);
                 if (v > mMax)
-                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger than max allowed: "+mMax, null);
+                    throw AccountServiceException.INVALID_ATTR_VALUE(
+                            mName+" value("+v+") larger than max allowed: "+mMax, null);
                 return;
             } catch (NumberFormatException e) {
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid integer: "+value, e);
@@ -384,9 +393,11 @@ public class AttributeInfo {
             try {
                 long v = Long.parseLong(value);
                 if (v < mMin)
-                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller than minimum allowed: "+mMin, null);
+                    throw AccountServiceException.INVALID_ATTR_VALUE(
+                            mName+" value("+v+") smaller than minimum allowed: "+mMin, null);
                 if (v > mMax)
-                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger than max allowed: "+mMax, null);
+                    throw AccountServiceException.INVALID_ATTR_VALUE(
+                            mName+" value("+v+") larger than max allowed: "+mMax, null);
                 return;
             } catch (NumberFormatException e) {
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid long: "+value, e);
@@ -406,7 +417,8 @@ public class AttributeInfo {
         case TYPE_CSTRING:
         case TYPE_PHONE:
             if (value.length() > mMax)
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);
+                throw AccountServiceException.INVALID_ATTR_VALUE(
+                        mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);
             // TODO
             return;
         case TYPE_REGEX:
