@@ -2,7 +2,7 @@
 <ivy-module version="2.0"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
- <info organisation="com.zimbra" module="zm-common" status="release">
+ <info organisation="zimbra" module="zm-common" status="integration">
  </info>
  <dependencies>
   <dependency org="commons-codec" name="commons-codec" rev="1.7" />
@@ -29,6 +29,6 @@
   <dependency org="asm" name="asm" rev="3.3.1" /> 
   <dependency org="org.eclipse.jetty" name="jetty-rewrite" rev="9.3.5.v20151012" />
   <dependency org="org.eclipse.jetty" name="jetty-util" rev="9.3.5.v20151012" />
-  <dependency org="zimbra-native" name="zimbra-native" rev="1.0" />
+  <dependency org="zimbra" name="zm-native" rev="latest.integration" />
  </dependencies>
 </ivy-module>
