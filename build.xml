@@ -51,10 +51,6 @@
     <path refid="test.class.path"/>
     <pathelement location="${soapdocs.classes.dir}"/>
     <path refid="soapdocs.ext.class.path"/>
-    <!-- tools.jar Needed for the doclet API -->
-    <fileset dir="${java.home}/..">
-      <include name="**/tools.jar"/>
-    </fileset>
   </path>
 
   <target name="resolve-soapdoclet" depends="init-ivy" description="resolve Soap Docs Doclet dependencies">
