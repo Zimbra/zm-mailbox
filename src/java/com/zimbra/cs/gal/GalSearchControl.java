@@ -496,7 +496,7 @@ public class GalSearchControl {
                 continue;
             }
 
-            if (galMode != null && !galMode.toString().equals(ds.getAttr(Provisioning.A_zimbraGalType))) {
+            if (galMode != null && !((galMode.toString().equals("both") || (galMode.toString().equals(ds.getAttr(Provisioning.A_zimbraGalType)))))) {
                 ZimbraLog.gal.debug("skipping datasource %s: wrong zimbraGalType %s expected %s", ds.getName(), ds.getAttr(Provisioning.A_zimbraGalType), galMode.toString());
                 continue;
             }
