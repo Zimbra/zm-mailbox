@@ -5691,6 +5691,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraEmptyFolderOpTimeout = "zimbraEmptyFolderOpTimeout";
 
     /**
+     * Class name of the ephemeral backend implementation
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public static final String A_zimbraEphemeralStorageClassName = "zimbraEphemeralStorageClassName";
+
+    /**
      * URL for posting error report popped up in WEB client
      *
      * @since ZCS 6.0.5
