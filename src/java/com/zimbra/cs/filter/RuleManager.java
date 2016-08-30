@@ -21,6 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -299,8 +300,25 @@ public final class RuleManager {
         OperationContext octxt, Mailbox mailbox, ParsedMessage pm, int size, String recipient,
         DeliveryContext sharedDeliveryCtxt, int incomingFolderId, boolean noICal)
     throws ServiceException {
-        return applyRulesToIncomingMessage(octxt, mailbox, pm, size, recipient, sharedDeliveryCtxt, incomingFolderId, noICal, true);
+        return applyRulesToIncomingMessage(octxt, mailbox, pm, size, recipient, null, sharedDeliveryCtxt, incomingFolderId, noICal, true);
     }
+
+    public static List<ItemId> applyRulesToIncomingMessage(
+            OperationContext octxt,
+            Mailbox mailbox, ParsedMessage pm, int size, String recipient,
+            DeliveryContext sharedDeliveryCtxt, int incomingFolderId, boolean noICal,
+            boolean allowFilterToMountpoint)
+        throws ServiceException {
+        return applyRulesToIncomingMessage(octxt, mailbox, pm, size, recipient, null, sharedDeliveryCtxt, incomingFolderId, noICal, allowFilterToMountpoint);
+    }
+
+    public static List<ItemId> applyRulesToIncomingMessage(
+			OperationContext octxt, Mailbox mailbox, ParsedMessage pm, int size, String recipient,
+			LmtpEnvelope env,
+			DeliveryContext sharedDeliveryCtxt, int incomingFolderId, boolean noICal)
+	    throws ServiceException {
+	        return applyRulesToIncomingMessage(octxt, mailbox, pm, size, recipient, env, sharedDeliveryCtxt, incomingFolderId, noICal, true);
+		}
 
     /**
      * Adds a message to a mailbox.  If filter rules exist, processes
@@ -312,6 +330,7 @@ public final class RuleManager {
     public static List<ItemId> applyRulesToIncomingMessage(
         OperationContext octxt,
         Mailbox mailbox, ParsedMessage pm, int size, String recipient,
+        LmtpEnvelope env,
         DeliveryContext sharedDeliveryCtxt, int incomingFolderId, boolean noICal,
         boolean allowFilterToMountpoint)
     throws ServiceException {
@@ -319,6 +338,7 @@ public final class RuleManager {
         IncomingMessageHandler handler = new IncomingMessageHandler(
             octxt, sharedDeliveryCtxt, mailbox, recipient, pm, size, incomingFolderId, noICal);
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
+        mailAdapter.setEnvelope(env);
         mailAdapter.setAllowFilterToMountpoint(allowFilterToMountpoint);
 
         try {
