@@ -67,6 +67,15 @@ public class EphemeralStore {
         }
     }
 
+    public boolean hasKey(String key, EphemeralLocation location) throws ServiceException {
+        backend.open();
+        try {
+            return backend.hasKey(key, location);
+        } finally {
+            backend.close();
+        }
+    }
+
     public void purgeExpired(String key, EphemeralLocation location)
             throws ServiceException {
         backend.open();
