@@ -85,7 +85,7 @@ public class EphemeralInput {
     }
 
     public Long getExpiration() {
-        return expiration.getMillis();
+        return expiration == null ? null : expiration.getMillis();
     }
 
     public boolean isDynamic() {
