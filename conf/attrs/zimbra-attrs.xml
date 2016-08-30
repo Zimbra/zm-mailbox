@@ -9284,6 +9284,11 @@ TODO: delete them permanently from here
   <desc>enable OCSP support for SMIME.</desc>
 </attr>
 
+<attr id="2995" name="zimbraEphemeralStorageClassName" type="string" cardinality="single" optionalIn="globalConfig" since="8.7.0">
+  <desc>Class name of the ephemeral backend implementation</desc>
+  <globalConfigValue>com.zimbra.cs.account.ephemeral.LdapEphemeralBackend</globalConfigValue>
+</attr>
+
 <attr id="2996" name="zimbraReverseProxyIPLoginImapLimit" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="8.7.0">
   <globalConfigValue>0</globalConfigValue>
   <desc>Sets the upper limit on logins from a remote IP via IMAP

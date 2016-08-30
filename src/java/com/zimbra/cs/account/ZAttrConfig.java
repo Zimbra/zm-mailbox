@@ -14213,6 +14213,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Class name of the ephemeral backend implementation
+     *
+     * @return zimbraEphemeralStorageClassName, or "com.zimbra.cs.account.ephemeral.LdapEphemeralBackend" if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public String getEphemeralStorageClassName() {
+        return getAttr(Provisioning.A_zimbraEphemeralStorageClassName, "com.zimbra.cs.account.ephemeral.LdapEphemeralBackend");
+    }
+
+    /**
+     * Class name of the ephemeral backend implementation
+     *
+     * @param zimbraEphemeralStorageClassName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public void setEphemeralStorageClassName(String zimbraEphemeralStorageClassName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEphemeralStorageClassName, zimbraEphemeralStorageClassName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Class name of the ephemeral backend implementation
+     *
+     * @param zimbraEphemeralStorageClassName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public Map<String,Object> setEphemeralStorageClassName(String zimbraEphemeralStorageClassName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEphemeralStorageClassName, zimbraEphemeralStorageClassName);
+        return attrs;
+    }
+
+    /**
+     * Class name of the ephemeral backend implementation
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public void unsetEphemeralStorageClassName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEphemeralStorageClassName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Class name of the ephemeral backend implementation
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public Map<String,Object> unsetEphemeralStorageClassName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEphemeralStorageClassName, "");
+        return attrs;
+    }
+
+    /**
      * URL for posting error report popped up in WEB client
      *
      * @return zimbraErrorReportUrl, or null if unset

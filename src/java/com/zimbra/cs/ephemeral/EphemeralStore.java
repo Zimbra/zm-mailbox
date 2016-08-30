@@ -1,8 +1,8 @@
 package com.zimbra.cs.ephemeral;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.extension.ExtensionUtil;
 
 /** Singleton representing the entry point into ephemeral storage.
@@ -82,7 +82,7 @@ public class EphemeralStore {
             synchronized (EphemeralStore.class) {
                 if (singleton == null) {
                     EphemeralBackend backend;
-                    String className = LC.zimbra_class_ephemeral_store_backend.value();
+                    String className = Provisioning.getInstance().getConfig().getEphemeralStorageClassName();
                     if (className != null && !className.equals("")) {
                         Class<?> klass = null;
                         try {
