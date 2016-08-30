@@ -6,7 +6,7 @@
   <!-- omits dom4j which pulls in an old version of Xerces whose
        DocumentBuilderFactory class doesn't have method setFeature(String, boolean) -->
   <dependencies>
-    <dependency org="log4j" name="log4j" rev="1.2.17" />
+    <dependency org="log4j" name="log4j" rev="1.2.16" />
     <dependency org="zimbra" name="zm-common" rev="latest.integration" />
   </dependencies>
 </ivy-module>

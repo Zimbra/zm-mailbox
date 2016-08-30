@@ -30,7 +30,7 @@
   <property name="soapdocs.test.classes.dir" location="${build.dir}/soapdocs-test-classes"/>
   <!-- END   ZimbraSoapDocs Properties -->
 
-  <target name="resolve-tools" depends="init-ivy" description="resolve javatool dependencies">
+  <target name="resolve-tools" depends="init-ivy">
     <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
     <ivy:resolve file="ivy-tools.xml" />
     <ivy:cachepath pathid="tools.ext.class.path" />
@@ -41,7 +41,7 @@
     <pathelement location="${build.classes.dir}" />
   </path>
 
-  <target name="resolve-soapdocs" depends="init-ivy" description="resolve soapdocs dependencies">
+  <target name="resolve-soapdocs" depends="init-ivy">
     <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
     <ivy:resolve file="ivy-soapdocs.xml" />
     <ivy:cachepath pathid="soapdocs.ext.class.path" />
@@ -51,13 +51,9 @@
     <path refid="test.class.path"/>
     <pathelement location="${soapdocs.classes.dir}"/>
     <path refid="soapdocs.ext.class.path"/>
-    <!-- tools.jar Needed for the doclet API -->
-    <fileset dir="${java.home}/..">
-      <include name="**/tools.jar"/>
-    </fileset>
   </path>
 
-  <target name="resolve-soapdoclet" depends="init-ivy" description="resolve Soap Docs Doclet dependencies">
+  <target name="resolve-soapdoclet" depends="init-ivy">
     <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
     <ivy:resolve file="ivy-soapdoclet.xml" />
     <ivy:cachepath pathid="soapdoclet.ext.class.path" />
@@ -72,7 +68,7 @@
   <!-- Targets -->
   <target name="jar" depends="compile,wsdl-file,zimbra-jar" description="Creates the jar"/>
 
-  <target name="wsdl-file" depends="compile,generate-schema">
+  <target name="wsdl-file" depends="compile,generate-schema" description="Generates WSDL file">
     <mkdir dir="${xml.schema.dir}"/>
     <java classname="com.zimbra.soap.util.WsdlGenerator" classpathref="test.class.path" fork="true" failonerror="true">
       <arg line="-output.dir ${xml.schema.dir}"/>
@@ -85,7 +81,8 @@
     </uptodate>
   </target>
 
-  <target name="generate-schema" depends="compile,check-schema-done,resolve-tools" unless="schema.build.notrequired">
+  <target name="generate-schema" depends="compile,check-schema-done,resolve-tools" unless="schema.build.notrequired"
+      description="Generates .xsd files referenced from WSDL">
     <mkdir dir="${xml.schema.dir}"/>
     <java classname="com.zimbra.soap.util.Jaxb2Xsds" classpathref="test.class.path" fork="true" failonerror="true">
       <arg line="--dir ${xml.schema.dir}"/>
@@ -134,7 +131,7 @@
     </javadoc>
   </target>
 
-  <target name="package-docs" depends="package-soap-api-doc, package-soap-api-changelog"/>
+  <target name="package-docs" depends="package-soap-api-doc, package-soap-api-changelog" description="Create API docs"/>
 
   <target name="package-soap-api-doc" depends="generate-soap-api-doc">
     <zip destfile="${soapapi.doc.file}" basedir="${soapdocs.output.dir}">
@@ -164,7 +161,7 @@
     </zip>
   </target>
 
-  <target name="update-baseline-apidesc" depends="generate-soap-api-doc" description="Update the baseline description of the SOAP API used by target generate-soap-api-changelog">
+  <target name="update-baseline-apidesc" depends="generate-soap-api-doc" description="Update baseline description of SOAP API">
     <gzip src="${soapdocs.apidesc.file}" destfile="${soapdocs.apidesc.baseline.file}"/>
   </target>
 
@@ -214,7 +211,7 @@
   </target>
 
   <!-- relies on undeploy to stop the webserver -->
-  <target name="deploy" depends="jar,set-dev-version,undeploy">
+  <target name="deploy" depends="jar,set-dev-version,undeploy" description="Deploy">
     <!-- until zm* scripts are fixed to use versioned zm* jars, we have to deploy this jar with a fixed name -->
     <copy file="${build.dir}/${jar.file}" tofile="${common.jars.dir}/zimbrasoap.jar"/>
     <copy file="${build.dir}/${jar.file}" tofile="${jetty.webapps.dir}/zimbra/WEB-INF/lib/${jar.file}"/>
