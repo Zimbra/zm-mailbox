@@ -34,7 +34,7 @@ public abstract class EphemeralStore {
             throws ServiceException;
 
     /**
-     * Set a value for a key if the key the does not exist, or overwrites
+     * Set a value for a key if the key does not exist, or overwrites
      * otherwise. If the key is multi-valued, all original values are deleted.
      *
      * @param input
@@ -45,7 +45,7 @@ public abstract class EphemeralStore {
             throws ServiceException;
 
     /**
-     * Set a value for a key if the key the does not exist, or add another value
+     * Set a value for a key if the key does not exist, or add another value
      * otherwise. If this value already exists, the expiration is updated if one
      * is provided.
      *
