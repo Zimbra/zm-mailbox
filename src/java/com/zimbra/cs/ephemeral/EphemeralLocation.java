@@ -7,7 +7,7 @@ package com.zimbra.cs.ephemeral;
  *
  * The only method, getLocation(), returns an array of Strings representing
  * a hierarchy under which the key/value pair is stored. It is up to
- * the @EphemeralBackend implementation to decide how to use this,
+ * the @EphemeralStore implementation to decide how to use this,
  * be it accessing the appropriate database, constructing a key hierarchy,
  * or something else.
  *

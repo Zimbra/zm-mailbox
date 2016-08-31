@@ -103,7 +103,7 @@ public abstract class EphemeralStore {
 
     public static void registerFactory(String prefix, String klass) {
         if (factories.containsKey(prefix)) {
-            ZimbraLog.ephemeral.warn("Replacing ephemeral backend factory class '%s' registered for '%s' with '%s'",
+            ZimbraLog.ephemeral.warn("Replacing ephemeral factory class '%s' registered for '%s' with '%s'",
                     factories.get(prefix), prefix, klass);
         }
         factories.put(prefix,  klass);
