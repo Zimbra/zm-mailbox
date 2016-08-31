@@ -128,6 +128,7 @@ public abstract class EphemeralStore {
     public static final void setFactory(Class<? extends Factory> factoryClass) {
         try {
             factory = factoryClass.newInstance();
+            factory.startup();
             ZimbraLog.ephemeral.info("using ephemeral store factory %s", factoryClass.getDeclaringClass().getSimpleName());
         } catch (InstantiationException | IllegalAccessException e) {
             Zimbra.halt("Unable to initialize EphemeralStore factory " + factoryClass.getDeclaringClass().getSimpleName(), e);
@@ -152,6 +153,7 @@ public abstract class EphemeralStore {
     public static interface Factory {
 
         EphemeralStore getStore();
-
+        void startup();
+        void shudown();
     }
 }
