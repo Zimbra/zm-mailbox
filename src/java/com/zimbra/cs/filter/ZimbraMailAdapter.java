@@ -64,13 +64,16 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import org.apache.jsieve.mail.optional.EnvelopeAccessors;
+import com.zimbra.cs.lmtpserver.LmtpAddress;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 
 /**
  * Sieve evaluation engine adds a list of {@link org.apache.jsieve.mail.Action}s
  * that have matched the filter conditions to this object
  * and invokes its {@link #executeActions()} method.
  */
-public class ZimbraMailAdapter implements MailAdapter {
+public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors{
     private Mailbox mailbox;
     private FilterHandler handler;
     private String[] tags;
@@ -100,6 +103,8 @@ public class ZimbraMailAdapter implements MailAdapter {
     private SieveContext context;
 
     private boolean discardActionPresent = false;
+
+    private LmtpEnvelope envelope = null;
 
     public ZimbraMailAdapter(Mailbox mailbox, FilterHandler handler) {
         this.mailbox = mailbox;
@@ -607,5 +612,64 @@ public class ZimbraMailAdapter implements MailAdapter {
 
     public void setDiscardActionPresent() {
         discardActionPresent = true;
+    }
+
+
+    public void setEnvelope(LmtpEnvelope env) {
+        this.envelope  = env;
+    }
+
+    @Override
+    public List<String> getEnvelope(String name) throws SieveMailException {
+        return getMatchingEnvelope(name);
+    }
+
+    @Override
+    public List<String> getEnvelopeNames() throws SieveMailException {
+        List<String> result = new ArrayList<String>();
+        if (envelope.hasRecipients()) {
+            result.add("to");
+        }
+        if (envelope.hasSender()) {
+            result.add("from");
+        }
+        return result;
+    }
+
+    @Override
+    public List<String> getMatchingEnvelope(String name)
+        throws SieveMailException {
+        List<String> result = Lists.newArrayListWithExpectedSize(2);
+        if (envelope == null) {
+            return result;
+        }
+
+        if (name.compareToIgnoreCase("to") == 0) {
+            /* RFC 5228 5.4. Test envelope
+             * ---
+             * If the SMTP transaction involved several RCPT commands, only the data
+             * from the RCPT command that caused delivery to this user is available
+             * in the "to" part of the envelope.
+             * ---
+             * Return only the address who is currently being processed.
+             */
+            List<LmtpAddress> recipients = envelope.getRecipients();
+            try {
+                String myaddress = mailbox.getAccount().getMail();
+                if (!myaddress.isEmpty()) {
+                    for (LmtpAddress recipient: recipients) {
+                        if (myaddress.toUpperCase().startsWith(recipient.getEmailAddress().toUpperCase())) {
+                            result.add(recipient.getEmailAddress());
+                        }
+                    }
+                }
+            } catch (ServiceException e) {
+                // nothing to do with this exception. Just return an empty list
+            }
+        } else {
+            LmtpAddress sender = envelope.getSender();
+            result.add(sender.getEmailAddress());
+        }
+        return result;
     }
 }

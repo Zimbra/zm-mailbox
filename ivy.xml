@@ -69,6 +69,7 @@
   <dependency org="org.hsqldb" name="hsqldb" rev="2.2.9" />
   <dependency org="org.hsqldb" name="sqltool" rev="2.2.9" />
   <dependency org="org.easymock" name="easymock" rev="3.0" />
+  <dependency org="commons-logging" name="commons-logging" rev="1.1.1"/>
   <dependency org="zimbra" name="zm-common" rev="latest.integration" />
   <dependency org="zimbra" name="zm-soap" rev="latest.integration" /> 
   <dependency org="zimbra" name="zm-client" rev="latest.integration" /> 
