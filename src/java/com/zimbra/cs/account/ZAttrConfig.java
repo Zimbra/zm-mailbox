@@ -14219,7 +14219,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2094)
+    @ZAttr(id=2095)
     public String getEphemeralBackendURL() {
         return getAttr(Provisioning.A_zimbraEphemeralBackendURL, "ldap://default");
     }
@@ -14232,7 +14232,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2094)
+    @ZAttr(id=2095)
     public void setEphemeralBackendURL(String zimbraEphemeralBackendURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEphemeralBackendURL, zimbraEphemeralBackendURL);
@@ -14248,7 +14248,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2094)
+    @ZAttr(id=2095)
     public Map<String,Object> setEphemeralBackendURL(String zimbraEphemeralBackendURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEphemeralBackendURL, zimbraEphemeralBackendURL);
@@ -14262,7 +14262,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2094)
+    @ZAttr(id=2095)
     public void unsetEphemeralBackendURL() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEphemeralBackendURL, "");
@@ -14277,7 +14277,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2094)
+    @ZAttr(id=2095)
     public Map<String,Object> unsetEphemeralBackendURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEphemeralBackendURL, "");
