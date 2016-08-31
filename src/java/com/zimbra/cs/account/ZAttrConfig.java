@@ -14213,64 +14213,64 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Class name of the ephemeral backend implementation
+     * URL of ephemeral storage backend
      *
-     * @return zimbraEphemeralStorageClassName, or "com.zimbra.cs.account.ephemeral.LdapEphemeralBackend" if unset
+     * @return zimbraEphemeralBackendURL, or "ldap://default" if unset
      *
      * @since ZCS 8.7.0
      */
     @ZAttr(id=2094)
-    public String getEphemeralStorageClassName() {
-        return getAttr(Provisioning.A_zimbraEphemeralStorageClassName, "com.zimbra.cs.account.ephemeral.LdapEphemeralBackend");
+    public String getEphemeralBackendURL() {
+        return getAttr(Provisioning.A_zimbraEphemeralBackendURL, "ldap://default");
     }
 
     /**
-     * Class name of the ephemeral backend implementation
+     * URL of ephemeral storage backend
      *
-     * @param zimbraEphemeralStorageClassName new value
+     * @param zimbraEphemeralBackendURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.7.0
      */
     @ZAttr(id=2094)
-    public void setEphemeralStorageClassName(String zimbraEphemeralStorageClassName) throws com.zimbra.common.service.ServiceException {
+    public void setEphemeralBackendURL(String zimbraEphemeralBackendURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEphemeralStorageClassName, zimbraEphemeralStorageClassName);
+        attrs.put(Provisioning.A_zimbraEphemeralBackendURL, zimbraEphemeralBackendURL);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Class name of the ephemeral backend implementation
+     * URL of ephemeral storage backend
      *
-     * @param zimbraEphemeralStorageClassName new value
+     * @param zimbraEphemeralBackendURL new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.7.0
      */
     @ZAttr(id=2094)
-    public Map<String,Object> setEphemeralStorageClassName(String zimbraEphemeralStorageClassName, Map<String,Object> attrs) {
+    public Map<String,Object> setEphemeralBackendURL(String zimbraEphemeralBackendURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEphemeralStorageClassName, zimbraEphemeralStorageClassName);
+        attrs.put(Provisioning.A_zimbraEphemeralBackendURL, zimbraEphemeralBackendURL);
         return attrs;
     }
 
     /**
-     * Class name of the ephemeral backend implementation
+     * URL of ephemeral storage backend
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.7.0
      */
     @ZAttr(id=2094)
-    public void unsetEphemeralStorageClassName() throws com.zimbra.common.service.ServiceException {
+    public void unsetEphemeralBackendURL() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEphemeralStorageClassName, "");
+        attrs.put(Provisioning.A_zimbraEphemeralBackendURL, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Class name of the ephemeral backend implementation
+     * URL of ephemeral storage backend
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -14278,9 +14278,9 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.7.0
      */
     @ZAttr(id=2094)
-    public Map<String,Object> unsetEphemeralStorageClassName(Map<String,Object> attrs) {
+    public Map<String,Object> unsetEphemeralBackendURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEphemeralStorageClassName, "");
+        attrs.put(Provisioning.A_zimbraEphemeralBackendURL, "");
         return attrs;
     }
 
