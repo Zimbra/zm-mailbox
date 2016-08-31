@@ -3,6 +3,7 @@ package com.zimbra.cs.ephemeral;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -108,7 +109,7 @@ public abstract class EphemeralStore {
         factories.put(prefix,  klass);
     }
 
-    public static final void setFactory(String factoryClassName) {
+    private static final void setFactory(String factoryClassName) {
         if (factoryClassName == null) {
             Zimbra.halt("no EphemeralStore specified");
         }
@@ -125,6 +126,7 @@ public abstract class EphemeralStore {
         setFactory(factoryClass);
     }
 
+    @VisibleForTesting
     public static final void setFactory(Class<? extends Factory> factoryClass) {
         try {
             factory = factoryClass.newInstance();
