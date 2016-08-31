@@ -48,6 +48,7 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSession;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.mailbox.MailboxIndex;
@@ -260,6 +261,8 @@ public final class Zimbra {
         }
 
         ZimbraHttpConnectionManager.startReaperThread();
+
+        EphemeralStore.registerFactory("ldap", LdapEphemeralStore.Factory.class.getName());
 
         ExtensionUtil.initAll();
 
