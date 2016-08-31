@@ -98,8 +98,8 @@ public class EphemeralInput {
      *
      */
     public static class Expiration {
-        private Long expiresIn;
-        private TimeUnit unit;
+        protected Long expiresIn;
+        protected TimeUnit unit;
 
         public Expiration(Long expiresIn, TimeUnit unit) {
             this.expiresIn = expiresIn;
