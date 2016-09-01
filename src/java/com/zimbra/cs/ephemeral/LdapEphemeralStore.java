@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
@@ -17,16 +18,22 @@ import com.zimbra.cs.account.Provisioning;
 public class LdapEphemeralStore extends EphemeralStore {
 
     private AttributeEncoder attributeEncoder;
+    private AbstractLdapHelper helper;
 
     public LdapEphemeralStore() {
+        this(new ZimbraLdapHelper());
+    }
+
+    public LdapEphemeralStore(AbstractLdapHelper helper) {
         attributeEncoder = new ExpirationEncoder();
+        this.helper = helper;
     }
 
     @Override
-    public EphemeralResult get(String key, EphemeralLocation target)
+    public EphemeralResult get(String key, EphemeralLocation location)
             throws ServiceException {
-        Entry entry = ldapLocationToEntry(target);
-        String[] values = entry.getMultiAttr(key);
+        helper.setLocation(location);
+        String[] values = helper.getMultiAttr(key);
         EphemeralKeyValuePair[] parsed = new EphemeralKeyValuePair[values.length];
         for (int i = 0; i < values.length; i++) {
             parsed[i] = attributeEncoder.decode(key, values[i]);
@@ -37,52 +44,49 @@ public class LdapEphemeralStore extends EphemeralStore {
     @Override
     public void set(EphemeralInput input, EphemeralLocation location)
             throws ServiceException {
-        Entry entry = ldapLocationToEntry(location);
+        helper.setLocation(location);
         Pair<String, String> ldapData = attributeEncoder.encode(input, location);
-        Map<String, String> attrs = new HashMap<String, String>();
-        attrs.put(ldapData.getFirst(), ldapData.getSecond());
-        Provisioning.getInstance().modifyAttrs(entry, attrs);
+        helper.addChange(ldapData.getFirst(), ldapData.getSecond());
+        helper.executeChange();
     }
 
     @Override
     public void update(EphemeralInput input, EphemeralLocation location)
             throws ServiceException {
-        Entry entry = ldapLocationToEntry(location);
+        helper.setLocation(location);
         Pair<String, String> ldapData = attributeEncoder.encode(input, location);
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + ldapData.getFirst(), ldapData.getSecond());
-        Provisioning.getInstance().modifyAttrs(entry, attrs);
-
+        helper.addChange("+" + ldapData.getFirst(), ldapData.getSecond());
+        helper.executeChange();
     }
 
     @Override
     public void delete(String key, EphemeralLocation location)
             throws ServiceException {
-        Entry entry = ldapLocationToEntry(location);
-        String[] vals = entry.getMultiAttr(key);
-        deleteInternal(entry, key, Arrays.asList(vals));
+        helper.setLocation(location);
+        String[] vals = helper.getMultiAttr(key);
+        deleteInternal(helper, key, Arrays.asList(vals));
     }
 
     @Override
-    public void deleteValue(String key, String valueToDelete, EphemeralLocation target)
+    public void deleteValue(String key, String valueToDelete, EphemeralLocation location)
             throws ServiceException {
-        Entry entry = ldapLocationToEntry(target);
+        helper.setLocation(location);
         // have to take into account that values may have expiration encoded in
         List<String> toDelete = new LinkedList<String>();
-        for (String val: entry.getMultiAttr(key)) {
+        for (String val: helper.getMultiAttr(key)) {
             String parsedValue = attributeEncoder.decode(key, val).getValue();
             if (parsedValue.equals(valueToDelete)) {
                 toDelete.add(val);
             }
         }
-        deleteInternal(entry, key, toDelete);
+        deleteInternal(helper, key, toDelete);
     }
 
     @Override
     public void purgeExpired(String key, EphemeralLocation location)
             throws ServiceException {
-        Entry entry = ldapLocationToEntry(location);
-        String[] values = entry.getMultiAttr(key);
+        helper.setLocation(location);
+        String[] values = helper.getMultiAttr(key);
         List<String> purged = new LinkedList<String>();
         for (String ldapValue: values) {
             EphemeralKeyValuePair parsed = attributeEncoder.decode(key, ldapValue);
@@ -90,32 +94,23 @@ public class LdapEphemeralStore extends EphemeralStore {
             if (expiry != null && System.currentTimeMillis() > expiry) {
                 String value = parsed.getValue();
                 ZimbraLog.ephemeral.info("purging ephemeral value %s for key %s", key, value);
-                purged.add(value);
+                purged.add(ldapValue);
             }
         }
-        deleteInternal(entry, key, purged);
+        deleteInternal(helper, key, purged);
     }
 
     @Override
     public boolean hasKey(String keyName, EphemeralLocation location)
             throws ServiceException {
-        Entry entry = ldapLocationToEntry(location);
-        return !Strings.isNullOrEmpty(entry.getAttr(keyName));
+        return !Strings.isNullOrEmpty(helper.getAttr(keyName));
     }
 
-    private void deleteInternal(Entry entry, String key, List<String> values) throws ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
+    private void deleteInternal(AbstractLdapHelper helper, String key, List<String> values) throws ServiceException {
         for (String val: values) {
-            StringUtil.addToMultiMap(attrs, "-" + key, val);
+            helper.addChange("-" + key, val);
         }
-        Provisioning.getInstance().modifyAttrs(entry, attrs);
-    }
-
-    private Entry ldapLocationToEntry(EphemeralLocation location) throws ServiceException {
-        if (!(location instanceof LdapEntryLocation)) {
-            throw ServiceException.FAILURE("LdapEphemeralBackend can only be used with LdapEntryLocation", null);
-        }
-        return ((LdapEntryLocation) location).getEntry();
+        helper.executeChange();
     }
 
     public static class Factory implements EphemeralStore.Factory {
@@ -130,5 +125,71 @@ public class LdapEphemeralStore extends EphemeralStore {
 
         @Override
         public void shudown() {}
+    }
+
+    /**
+     * Abstract helper class that accumulates an LDAP-style attribute map.
+     * Subclasses specify what to do with this map, given an @EphemeralLocation,
+     * as well as fetching values from this location.
+     */
+    @VisibleForTesting
+    static abstract class AbstractLdapHelper {
+        protected Map<String, Object> attrs;
+
+        public AbstractLdapHelper() {
+            attrs = new HashMap<String, Object>();
+        }
+
+        void addChange(String attr, String value) {
+            StringUtil.addToMultiMap(attrs, attr, value);
+        }
+
+        void reset() {
+            attrs.clear();
+        }
+
+        abstract void setLocation(EphemeralLocation location) throws ServiceException;
+
+        abstract String getAttr(String key) throws ServiceException;
+
+        abstract String[] getMultiAttr(String key) throws ServiceException;
+
+        abstract void executeChange() throws ServiceException;
+    }
+
+    /**
+     * Implementation of AbstractHelper that passes the attribute map to Provisioning.modifyAttrs(),
+     * routing attribute changes back to the existing LDAP system.
+     */
+    private static class ZimbraLdapHelper extends AbstractLdapHelper {
+        private Entry entry;
+
+        @Override
+        void setLocation(EphemeralLocation location) throws ServiceException {
+            entry = locationToEntry(location);
+        }
+
+        @Override
+        String getAttr(String key) throws ServiceException {
+            return entry.getAttr(key);
+        }
+
+        @Override
+        String[] getMultiAttr(String key) throws ServiceException {
+            return entry.getMultiAttr(key);
+        }
+
+        @Override
+        void executeChange() throws ServiceException {
+            Provisioning.getInstance().modifyAttrs(entry, attrs);
+            reset();
+        }
+
+        protected Entry locationToEntry(EphemeralLocation location) throws ServiceException {
+            if (!(location instanceof LdapEntryLocation)) {
+                throw ServiceException.FAILURE("LdapEphemeralBackend can only be used with LdapEntryLocation", null);
+            }
+            return ((LdapEntryLocation) location).getEntry();
+        }
     }
 }
