@@ -14132,6 +14132,38 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyInactivityTimeout = "zimbraReverseProxyInactivityTimeout";
 
     /**
+     * Sets the upper limit on logins from a remote IP via IMAP to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2096)
+    public static final String A_zimbraReverseProxyIPLoginImapLimit = "zimbraReverseProxyIPLoginImapLimit";
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based IMAP login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public static final String A_zimbraReverseProxyIPLoginImapLimitTime = "zimbraReverseProxyIPLoginImapLimitTime";
+
+    /**
      * Sets the upper limit on logins from a remote IP via POP or IMAP to
      * this proxy server after which login is rejected with an appropriate
      * protocol specific bye response. This counter is cumulative for all
@@ -14164,6 +14196,38 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=623)
     public static final String A_zimbraReverseProxyIPLoginLimitTime = "zimbraReverseProxyIPLoginLimitTime";
+
+    /**
+     * Sets the upper limit on logins from a remote IP via POP3 to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public static final String A_zimbraReverseProxyIPLoginPop3Limit = "zimbraReverseProxyIPLoginPop3Limit";
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based POP3 login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2099)
+    public static final String A_zimbraReverseProxyIPLoginPop3LimitTime = "zimbraReverseProxyIPLoginPop3LimitTime";
 
     /**
      * The error message with which a connection attempt from an IP address
