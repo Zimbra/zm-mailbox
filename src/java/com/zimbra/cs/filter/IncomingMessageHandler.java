@@ -19,6 +19,8 @@ package com.zimbra.cs.filter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.ErejectException;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
@@ -154,6 +156,17 @@ public final class IncomingMessageHandler implements FilterHandler {
         FilterUtil.notify(
                 octxt, mailbox, parsedMessage, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
     }
+
+    @Override
+    public void reject(String reason, LmtpEnvelope envelope) throws ServiceException, MessagingException {
+        FilterUtil.reject(octxt, mailbox, parsedMessage, reason, envelope);
+    }
+
+    @Override
+    public void ereject(LmtpEnvelope envelope) throws ErejectException {
+		throw new ErejectException(
+				"'ereject' action refuses delivery of a message. Sieve rule evaluation is cancelled");
+	}
 
     @Override
     public int getMessageSize() {

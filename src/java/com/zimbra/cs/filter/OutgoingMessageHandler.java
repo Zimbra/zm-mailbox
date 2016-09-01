@@ -26,6 +26,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -120,6 +121,16 @@ public final class OutgoingMessageHandler implements FilterHandler {
             throws ServiceException, MessagingException {
         FilterUtil.notify(
                 octxt, mailbox, parsedMessage, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
+    }
+
+    @Override
+    public void reject(String reason, LmtpEnvelope envelope) {
+        ZimbraLog.filter.debug("Ignoring attempt to reject outgoing message");
+    }
+
+    @Override
+    public void ereject(LmtpEnvelope envelope) {
+        ZimbraLog.filter.debug("Ignoring attempt to perform 'ereject' command on outgoing message");
     }
 
     @Override

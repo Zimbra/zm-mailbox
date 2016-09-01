@@ -27,6 +27,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -217,6 +218,16 @@ public final class ExistingMessageHandler implements FilterHandler {
     public void notify(
             String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders) {
         ZimbraLog.filter.debug("Ignoring attempt to notify for existing message %d", messageId);
+    }
+
+    @Override
+    public void reject(String reason, LmtpEnvelope envelope) {
+        ZimbraLog.filter.debug("Ignoring attempt to reject delivery of a message %d", messageId);
+    }
+
+    @Override
+    public void ereject(LmtpEnvelope envelope) {
+        ZimbraLog.filter.debug("Ignoring attempt to perform 'ereject' command for existing message %d", messageId);
     }
 
     @Override

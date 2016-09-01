@@ -204,12 +204,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors{
 
             if (getDeliveryActions().isEmpty()) {
                 // i.e. no keep/fileinto/redirect actions
-                if (getReplyNotifyActions().isEmpty()) {
+                if (getReplyNotifyRejectActions().isEmpty()) {
                     // if only flag/tag actions are present, we keep the message even if discard
                     // action is present
                     explicitKeep();
                 } else if (!discardActionPresent) {
-                    // else if reply/notify actions are present and there's no discard, do sort
+                    // else if reply/notify/reject/ereject actions are present and there's no discard, do sort
                     // of implicit keep
                     explicitKeep();
                 }
@@ -278,6 +278,28 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors{
                         ZimbraLog.filter.warn("Unable to notify.", e);
                         explicitKeep();
                     }
+                } else if (action instanceof ActionReject) {
+                    ActionReject reject = (ActionReject) action;
+                    ZimbraLog.filter.debug("Refusing delivery of a message", reject.getMessage());
+                    try {
+                        handler.reject(reject.getMessage(), envelope);
+                        handler.discard();
+                    } catch (Exception e) {
+                        ZimbraLog.filter.info("Unable to reject.", e);
+                        explicitKeep();
+                    }
+                } else if (action instanceof ActionEreject) {
+                    ActionEreject ereject = (ActionEreject) action;
+                    ZimbraLog.filter.debug("Refusing delivery of a message at the protocol level");
+                    try {
+                        handler.ereject(envelope);
+                    } catch (ErejectException e) {
+                        // 'ereject' action executed
+                        throw e;
+                    } catch (Exception e) {
+                        ZimbraLog.filter.warn("Unable to ereject.", e);
+                        explicitKeep();
+                    }
                 }
             }
 
@@ -326,10 +348,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors{
         return actions;
     }
 
-    private List<Action> getReplyNotifyActions() {
+    private List<Action> getReplyNotifyRejectActions() {
         List<Action> actions = new ArrayList<Action>();
         for (Action action : this.actions) {
-            if (action instanceof ActionReply || action instanceof ActionNotify) {
+            if (action instanceof ActionReply || action instanceof ActionNotify
+               || action instanceof ActionReject || action instanceof ActionEreject) {
                 actions.add(action);
             }
         }
