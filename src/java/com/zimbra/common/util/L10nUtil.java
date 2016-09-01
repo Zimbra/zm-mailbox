@@ -270,7 +270,11 @@ public class L10nUtil {
         spnego_browser_setup_wiki,
 
         errorTitle,
-        zipFile
+        zipFile,
+        
+        //sieve
+        seiveRejectMDNSubject,
+        seiveRejectMDNErrorMsg
 
         // add other messages in the future...
     }
