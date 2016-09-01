@@ -210,7 +210,8 @@ public class LdapEphemeralStoreTest {
 
     /**
      * encoder that doesn't do anything with the expiration; needed for inner InMemoryEphemeralStore
-     * used by MockLdapHelper, so that the
+     * used by MockLdapHelper, so that the encoded value can be extracted from the memory store
+     * without being decoded prematurely
      */
     static class DummyAttributeEncoder extends AttributeEncoder {
 

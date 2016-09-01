@@ -169,7 +169,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         public void startup() {}
 
         @Override
-        public void shudown() {
+        public void shutdown() {
             instance = null;
         }
     }

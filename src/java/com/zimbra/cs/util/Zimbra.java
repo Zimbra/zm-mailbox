@@ -469,7 +469,7 @@ public final class Zimbra {
         } catch (Exception ignored) {
         }
 
-        EphemeralStore.getFactory().shudown();
+        EphemeralStore.getFactory().shutdown();
     }
 
     public static synchronized boolean started() {

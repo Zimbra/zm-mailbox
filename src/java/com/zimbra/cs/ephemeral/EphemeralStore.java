@@ -165,6 +165,6 @@ public abstract class EphemeralStore {
 
         EphemeralStore getStore();
         void startup();
-        void shudown();
+        void shutdown();
     }
 }

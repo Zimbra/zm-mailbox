@@ -123,7 +123,7 @@ public class LdapEphemeralStore extends EphemeralStore {
         public void startup() {}
 
         @Override
-        public void shudown() {}
+        public void shutdown() {}
     }
 
     /**

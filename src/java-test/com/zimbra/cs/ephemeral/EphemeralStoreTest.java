@@ -24,7 +24,7 @@ public class EphemeralStoreTest {
 
     @After
     public void tearDown() throws Exception {
-        EphemeralStore.getFactory().shudown();
+        EphemeralStore.getFactory().shutdown();
     }
 
     @Test
