@@ -17,7 +17,6 @@ import com.zimbra.cs.account.Provisioning;
 
 public class LdapEphemeralStore extends EphemeralStore {
 
-    private AttributeEncoder attributeEncoder;
     private AbstractLdapHelper helper;
 
     public LdapEphemeralStore() {
@@ -25,8 +24,8 @@ public class LdapEphemeralStore extends EphemeralStore {
     }
 
     public LdapEphemeralStore(AbstractLdapHelper helper) {
-        attributeEncoder = new ExpirationEncoder();
         this.helper = helper;
+        setAttributeEncoder(new ExpirationEncoder());
     }
 
     @Override
@@ -36,7 +35,7 @@ public class LdapEphemeralStore extends EphemeralStore {
         String[] values = helper.getMultiAttr(key);
         EphemeralKeyValuePair[] parsed = new EphemeralKeyValuePair[values.length];
         for (int i = 0; i < values.length; i++) {
-            parsed[i] = attributeEncoder.decode(key, values[i]);
+            parsed[i] = getAttributeEncoder().decode(key, values[i]);
         }
         return new EphemeralResult(parsed);
     }
@@ -45,7 +44,7 @@ public class LdapEphemeralStore extends EphemeralStore {
     public void set(EphemeralInput input, EphemeralLocation location)
             throws ServiceException {
         helper.setLocation(location);
-        Pair<String, String> ldapData = attributeEncoder.encode(input, location);
+        Pair<String, String> ldapData = getAttributeEncoder().encode(input, location);
         helper.addChange(ldapData.getFirst(), ldapData.getSecond());
         helper.executeChange();
     }
@@ -54,7 +53,7 @@ public class LdapEphemeralStore extends EphemeralStore {
     public void update(EphemeralInput input, EphemeralLocation location)
             throws ServiceException {
         helper.setLocation(location);
-        Pair<String, String> ldapData = attributeEncoder.encode(input, location);
+        Pair<String, String> ldapData = getAttributeEncoder().encode(input, location);
         helper.addChange("+" + ldapData.getFirst(), ldapData.getSecond());
         helper.executeChange();
     }
@@ -74,7 +73,7 @@ public class LdapEphemeralStore extends EphemeralStore {
         // have to take into account that values may have expiration encoded in
         List<String> toDelete = new LinkedList<String>();
         for (String val: helper.getMultiAttr(key)) {
-            String parsedValue = attributeEncoder.decode(key, val).getValue();
+            String parsedValue = getAttributeEncoder().decode(key, val).getValue();
             if (parsedValue.equals(valueToDelete)) {
                 toDelete.add(val);
             }
@@ -89,7 +88,7 @@ public class LdapEphemeralStore extends EphemeralStore {
         String[] values = helper.getMultiAttr(key);
         List<String> purged = new LinkedList<String>();
         for (String ldapValue: values) {
-            EphemeralKeyValuePair parsed = attributeEncoder.decode(key, ldapValue);
+            EphemeralKeyValuePair parsed = getAttributeEncoder().decode(key, ldapValue);
             Long expiry  = parsed.getExpires();
             if (expiry != null && System.currentTimeMillis() > expiry) {
                 String value = parsed.getValue();

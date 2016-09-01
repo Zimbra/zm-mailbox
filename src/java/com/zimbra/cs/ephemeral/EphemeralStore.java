@@ -20,6 +20,7 @@ public abstract class EphemeralStore {
 
     private static Map<String, String> factories = new HashMap<String, String>();
     private static Factory factory;
+    protected AttributeEncoder encoder;
 
     /**
      * Get the value for a key. If key does not exist, returns an empty
@@ -135,6 +136,14 @@ public abstract class EphemeralStore {
         } catch (InstantiationException | IllegalAccessException e) {
             Zimbra.halt("Unable to initialize EphemeralStore factory " + factoryClass.getDeclaringClass().getSimpleName(), e);
         }
+    }
+
+    public void setAttributeEncoder(AttributeEncoder encoder) {
+        this.encoder = encoder;
+    }
+
+    public AttributeEncoder getAttributeEncoder() {
+        return encoder;
     }
 
     public static Factory getFactory() throws ServiceException {

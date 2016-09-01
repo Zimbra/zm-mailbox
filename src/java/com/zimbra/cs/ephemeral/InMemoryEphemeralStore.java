@@ -14,11 +14,9 @@ public class InMemoryEphemeralStore extends EphemeralStore {
 
     private Map<String, Map<String, Object>> storeMap;
 
-    private AttributeEncoder encoder;
-
     public InMemoryEphemeralStore() {
-        encoder = new ExpirationEncoder();
         storeMap = new HashMap<String, Map<String, Object>>();
+        setAttributeEncoder(new ExpirationEncoder());
     }
 
     @Override
@@ -29,13 +27,13 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         if (value == null) {
             return EphemeralResult.emptyResult(key);
         } else if (value instanceof String) {
-            EphemeralKeyValuePair entry = encoder.decode(key, (String) value);
+            EphemeralKeyValuePair entry = getAttributeEncoder().decode(key, (String) value);
             return new EphemeralResult(entry);
         } else if (value instanceof String[]) {
             String[] values = (String[]) value;
             EphemeralKeyValuePair[] entries = new EphemeralKeyValuePair[values.length];
             for (int i = 0; i < values.length; i++) {
-                entries[i] = encoder.decode(key, values[i]);
+                entries[i] = getAttributeEncoder().decode(key, values[i]);
             }
             return new EphemeralResult(entries);
         } else {
@@ -47,7 +45,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
     public void set(EphemeralInput attribute, EphemeralLocation target)
             throws ServiceException {
         String key = attribute.getKey();
-        String value = encoder.encode(attribute, target).getSecond();
+        String value = getAttributeEncoder().encode(attribute, target).getSecond();
         Map<String, Object> map = getSpecifiedMap(target);
         map.remove(key);
         StringUtil.addToMultiMap(map, key, value);
@@ -58,7 +56,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
             throws ServiceException {
         Map<String, Object> map = getSpecifiedMap(target);
         String key = attribute.getKey();
-        String value = encoder.encode(attribute, target).getSecond();
+        String value = getAttributeEncoder().encode(attribute, target).getSecond();
         StringUtil.addToMultiMap(map, key, value);
     }
 
@@ -87,7 +85,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         }
         List<String> valuesAfterRemoval = new ArrayList<String>();
         for (String v: values) {
-            if (!encoder.decode(key, v).getValue().equals(valueToDelete)) {
+            if (!getAttributeEncoder().decode(key, v).getValue().equals(valueToDelete)) {
                 valuesAfterRemoval.add(v);
             }
         }
@@ -117,7 +115,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         List<String> purged = new LinkedList<String>();
         List<String> remaining = new LinkedList<String>();
         for (String v: values) {
-             EphemeralKeyValuePair entry = encoder.decode(key, v);
+             EphemeralKeyValuePair entry = getAttributeEncoder().decode(key, v);
              if (entry.getExpires() < System.currentTimeMillis()) {
                  purged.add(entry.getValue());
              } else {
