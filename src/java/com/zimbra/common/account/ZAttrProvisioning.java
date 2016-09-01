@@ -14993,6 +14993,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
 
     /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public static final String A_zimbraSieveRejectEnabled = "zimbraSieveRejectEnabled";
+
+    /**
      * Unique ID for an signature
      */
     @ZAttr(id=490)
