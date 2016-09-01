@@ -2,7 +2,7 @@
 <ivy-module version="2.0"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
- <info organisation="zimbra" module="zm-store" status="release">
+ <info organisation="zimbra" module="zm-store" status="integration">
  </info>
  <dependencies>
   <dependency org="org.slf4j" name="slf4j-api" rev="1.6.4"/>
