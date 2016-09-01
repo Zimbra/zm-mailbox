@@ -62821,6 +62821,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @return zimbraSieveRejectEnabled, or true if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public boolean isSieveRejectEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSieveRejectEnabled, true);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @param zimbraSieveRejectEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public void setSieveRejectEnabled(boolean zimbraSieveRejectEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, zimbraSieveRejectEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @param zimbraSieveRejectEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public Map<String,Object> setSieveRejectEnabled(boolean zimbraSieveRejectEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, zimbraSieveRejectEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public void unsetSieveRejectEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2094)
+    public Map<String,Object> unsetSieveRejectEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, "");
+        return attrs;
+    }
+
+    /**
      * background color for chameleon skin for the domain
      *
      * @return zimbraSkinBackgroundColor, or null if unset
