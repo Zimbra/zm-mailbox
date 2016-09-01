@@ -20,7 +20,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 
 /**
  * Handler class for jSieve's configuration map, such as CommandMap & TestMap.
@@ -48,6 +50,21 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("reply", com.zimbra.cs.filter.jsieve.Reply.class.getName());
         mCommandMap.put("notify", com.zimbra.cs.filter.jsieve.Notify.class.getName());
         mCommandMap.put("discard", com.zimbra.cs.filter.jsieve.Discard.class.getName());
+        mCommandMap.put("ereject", com.zimbra.cs.filter.jsieve.Ereject.class.getName());
+
+        boolean isRejectSupported = true;
+        try {
+            isRejectSupported = Provisioning.getInstance().getConfig().getBooleanAttr(
+                Provisioning.A_zimbraSieveRejectEnabled, true);
+        } catch (ServiceException e) {
+            // 'reject' action is supported as default
+        }
+        if (isRejectSupported) {
+            mCommandMap.put("reject", com.zimbra.cs.filter.jsieve.Reject.class.getName());
+        } else {
+            // Disable the 'reject' action defined by the jSieve library
+            mCommandMap.remove("reject");
+        }
 
         return mCommandMap;
     }

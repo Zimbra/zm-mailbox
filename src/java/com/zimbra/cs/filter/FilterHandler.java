@@ -24,6 +24,8 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.ErejectException;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
@@ -100,4 +102,14 @@ interface FilterHandler {
      */
     abstract void notify(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes,
             List<String> origHeaders) throws ServiceException, MessagingException;
+
+    /**
+     * Rejects delivery of a message.
+     */
+    abstract void reject(String reason, LmtpEnvelope envelope) throws ServiceException, MessagingException;
+
+    /**
+     * Execute erejects action.
+     */
+    abstract void ereject(LmtpEnvelope envelope) throws ErejectException;
 }

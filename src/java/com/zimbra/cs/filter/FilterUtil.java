@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,10 +31,13 @@ import javax.mail.Address;
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
@@ -46,14 +50,19 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZInternetHeader;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.ErejectException;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Folder;
@@ -245,6 +254,7 @@ public final class FilterUtil {
     public static final String HEADER_FORWARDED = "X-Zimbra-Forwarded";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
+    public static final String HEADER_RETURN_PATH = "Return-Path";
 
     public static void redirect(OperationContext octxt, Mailbox sourceMbox, MimeMessage msg, String destinationAddress)
     throws ServiceException {
@@ -460,6 +470,88 @@ public final class FilterUtil {
         mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
         mailSender.sendMimeMessage(octxt, mailbox, notification);
     }
+
+    public static void reject(OperationContext octxt, Mailbox mailbox, ParsedMessage parsedMessage,
+                              String reason, LmtpEnvelope envelope)
+      throws MessagingException, ServiceException {
+        MimeMessage mimeMessage = parsedMessage.getMimeMessage();
+        if (isMailLoop(mailbox, mimeMessage)) {
+            // Detected a mail loop.  Do not send MDN, but just discard the message
+            String error = String.format("Detected a mail loop for message %s. No MDN sent.",
+                Mime.getMessageID(mimeMessage));
+            ZimbraLog.filter.info(error);
+            throw ServiceException.FAILURE(error, null);
+        }
+        String reportTo = null;
+        if (envelope != null && envelope.hasSender()) {
+            reportTo = envelope.getSender().getEmailAddress();
+        }
+        if (reportTo == null || reportTo.isEmpty()) {
+            String [] returnPath = mimeMessage.getHeader(HEADER_RETURN_PATH);
+            if (returnPath == null || returnPath.length == 0) {
+                // RFC 5429 2.2.1.
+                // >> Note that according to [MDN], Message Disposition Notifications MUST
+                // >> NOT be generated if the MAIL FROM (or Return-Path) is empty.
+                throw new MessagingException("Neither 'envelope from' nor 'Return-Path' specified. Can't locate the address to reject to (No MDN sent)");
+            } else {
+                // At least one 'return-path' should exist.
+                reportTo = returnPath[0];
+            }
+        }
+
+        Account owner = mailbox.getAccount();
+        Locale locale = owner.getLocale();
+        String charset = owner.getPrefMailDefaultCharset();
+        if (charset == null) {
+            charset = MimeConstants.P_CHARSET_UTF8;
+        }
+
+        SMTPMessage report = new SMTPMessage(JMSession.getSmtpSession());
+
+        // add the forwarded header account names to detect the mail loop between accounts
+        for (String headerFwdAccountName : Mime.getHeaders(mimeMessage, HEADER_FORWARDED)) {
+            report.addHeader(HEADER_FORWARDED, headerFwdAccountName);
+        }
+        report.addHeader(HEADER_FORWARDED, owner.getName());
+
+        // MDN header
+        report.setEnvelopeFrom("<>");
+        report.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(reportTo));
+        String subject = L10nUtil.getMessage(MsgKey.seiveRejectMDNSubject, locale);
+        report.setSubject(subject);
+        report.setSentDate(new Date());
+        InternetAddress address = new JavaMailInternetAddress(owner.getName());
+        report.setFrom(address);
+
+        MimeMultipart multi = new ZMimeMultipart("report");
+        // part 1: human-readable notification
+        String text = L10nUtil.getMessage(MsgKey.seiveRejectMDNErrorMsg, locale) + "\n" + reason;
+        MimeBodyPart mpText = new ZMimeBodyPart();
+        mpText.setText(text, CharsetUtil.checkCharset(text, charset));
+        multi.addBodyPart(mpText);
+
+        // part 2: disposition notification
+        StringBuilder mdn = new StringBuilder();
+        mdn.append("Final-Recipient: rfc822;").append(owner.getName()).append("\r\n");
+        mdn.append("Disposition: automatic-action/MDN-sent-automatically");
+        mdn.append("; deleted\r\n");
+
+        MimeBodyPart mpMDN = new ZMimeBodyPart();
+        mpMDN.setText(mdn.toString(), MimeConstants.P_CHARSET_UTF8);
+        mpMDN.setHeader("Content-Type", "message/disposition-notification; charset=utf-8");
+        multi.addBodyPart(mpMDN);
+
+        // Assemble the MDN
+        report.setContent(multi);
+        report.setHeader("Content-Type", multi.getContentType() + "; report-type=disposition-notification");
+        report.saveChanges();
+
+        MailSender mailSender = mailbox.getMailSender().setSaveToSent(false);
+        mailSender.setRecipients(reportTo);
+        mailSender.setEnvelopeFrom("<>");
+        mailSender.sendMimeMessage(octxt, mailbox, report);
+    }
+
 
     /**
      * Gets appropriate charset for the given data. The charset preference order is:

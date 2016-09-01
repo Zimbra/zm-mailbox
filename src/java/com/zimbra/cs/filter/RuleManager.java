@@ -17,10 +17,12 @@
 
 package com.zimbra.cs.filter;
 
+import com.zimbra.common.service.DeliveryServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -338,7 +340,6 @@ public final class RuleManager {
         IncomingMessageHandler handler = new IncomingMessageHandler(
             octxt, sharedDeliveryCtxt, mailbox, recipient, pm, size, incomingFolderId, noICal);
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
-        mailAdapter.setEnvelope(env);
         mailAdapter.setAllowFilterToMountpoint(allowFilterToMountpoint);
 
         try {
@@ -361,6 +362,8 @@ public final class RuleManager {
                 // multiple fileinto may result in multiple copies of the messages in different folders
                 addedMessageIds = mailAdapter.getAddedMessageIds();
             }
+        } catch (ErejectException ex) {
+            throw DeliveryServiceException.DELIVERY_REJECTED(ex.getMessage(), ex);
         } catch (Exception e) {
             ZimbraLog.filter.warn("An error occurred while processing filter rules. Filing message to %s.",
                 handler.getDefaultFolderPath(), e);
