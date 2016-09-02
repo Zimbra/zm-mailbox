@@ -90,13 +90,16 @@ public class LdapEphemeralStore extends EphemeralStore {
         helper.setLocation(location);
         String[] values = helper.getMultiAttr(key);
         List<String> purged = new LinkedList<String>();
+        AttributeEncoder encoder = getAttributeEncoder();
         for (String ldapValue: values) {
-            EphemeralKeyValuePair parsed = getAttributeEncoder().decode(key, ldapValue);
-            Long expiry  = parsed.getExpires();
-            if (expiry != null && System.currentTimeMillis() > expiry) {
-                String value = parsed.getValue();
-                ZimbraLog.ephemeral.info("purging ephemeral value %s for key %s", key, value);
-                purged.add(ldapValue);
+            EphemeralKeyValuePair entry = encoder.decode(key, ldapValue);
+            if (entry instanceof ExpirableEphemeralKeyValuePair) {
+                Long expiry  = ((ExpirableEphemeralKeyValuePair) entry).getExpiration();
+                if (expiry != null && System.currentTimeMillis() > expiry) {
+                    String value = entry.getValue();
+                    ZimbraLog.ephemeral.info("purging ephemeral value '%s' for key '%s'", key, value);
+                    purged.add(ldapValue);
+                }
             }
         }
         deleteInternal(helper, key, purged);

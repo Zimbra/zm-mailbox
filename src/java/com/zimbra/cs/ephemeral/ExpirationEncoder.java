@@ -12,7 +12,7 @@ package com.zimbra.cs.ephemeral;
 public class ExpirationEncoder extends AttributeEncoder {
 
     @Override
-    public EphemeralKeyValuePair decode(String key, String value) {
+    public ExpirableEphemeralKeyValuePair decode(String key, String value) {
         // does this value have an expiry associated with it?
         int i = value.lastIndexOf("|");
         Long expires = null;
@@ -24,7 +24,7 @@ public class ExpirationEncoder extends AttributeEncoder {
                 // value stays as the original
             }
         }
-        return new EphemeralKeyValuePair(key, value, expires);
+        return new ExpirableEphemeralKeyValuePair(key, value, expires);
     }
 
     @Override

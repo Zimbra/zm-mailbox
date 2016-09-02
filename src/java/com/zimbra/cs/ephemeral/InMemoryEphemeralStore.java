@@ -86,11 +86,15 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         Multimap<String, String> map = getSpecifiedMap(target);
         Collection<String> values = map.get(key);
         List<String> toDelete = new LinkedList<String>();
+        AttributeEncoder encoder = getAttributeEncoder();
         for (String v: values) {
-             EphemeralKeyValuePair entry = getAttributeEncoder().decode(key, v);
-             if (entry.getExpires() < System.currentTimeMillis()) {
-                 toDelete.add(v);
-             }
+            EphemeralKeyValuePair entry = encoder.decode(key, v);
+            if (entry instanceof ExpirableEphemeralKeyValuePair) {
+                ExpirableEphemeralKeyValuePair expirableEntry = (ExpirableEphemeralKeyValuePair) entry;
+                if (expirableEntry.getExpiration() < System.currentTimeMillis()) {
+                    toDelete.add(v);
+                }
+            }
         }
         for (String v: toDelete) {
             map.remove(key, v);
