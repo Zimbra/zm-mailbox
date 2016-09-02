@@ -22,9 +22,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -81,6 +83,8 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private FilterHandler handler;
     private String[] tags;
     private boolean allowFilterToMountpoint = true;
+    private Map<String, String> variables = new HashMap<String, String>();
+    private List<String> matchedValues = new ArrayList<String>();
 
     /**
      * Keeps track of folders into which we filed messages, so we don't file twice
@@ -233,6 +237,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
                     String folderPath = fileinto.getDestination();
+                    folderPath = FilterUtil.replaceVariables(this.variables, this.matchedValues, folderPath);
                     try {
                         if (!allowFilterToMountpoint && isMountpoint(mailbox, folderPath)) {
                             ZimbraLog.filter.info("Filing to mountpoint \"%s\" is not allowed.  Filing to the default folder instead.",
@@ -697,5 +702,25 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             result.add(sender.getEmailAddress());
         }
         return result;
+    }
+    
+    public String getVariable(String key) {
+        return variables.get(key);
+    }
+
+    public void addVariable(String key, String value) {
+        this.variables.put(key, value);
+    }
+
+    public List<String> getMatchedValues() {
+        return matchedValues;
+    }
+
+    public void setMatchedValues(List<String> matchedValues) {
+        this.matchedValues = matchedValues;
+    }
+
+    public Map<String, String> getVariables() {
+        return variables;
     }
 }
