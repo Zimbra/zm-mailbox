@@ -9242,7 +9242,7 @@ TODO: delete them permanently from here
 
 <attr id="2095" name="zimbraMailSieveNotifyActionRFCCompliant" type="boolean" cardinality="single" optionalIn="globalConfig" since="8.7.0">
   <globalConfigValue>FALSE</globalConfigValue>
-  <desc>Whether the RFC compliant 'notify' is used.  If TRUE, ZCS parses the 'notify' action parameters based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS treates the 'notify' action parameters with Zimbra specific format</desc>
+  <desc>Whether the RFC compliant 'notify' is used.  If TRUE, ZCS parses the 'notify' action parameters based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS treats the 'notify' action parameters with Zimbra specific format</desc>
 </attr>
 
 </attrs>

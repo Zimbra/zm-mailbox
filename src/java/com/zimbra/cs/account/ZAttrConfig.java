@@ -26836,7 +26836,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
      * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treates the
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
      * &#039;notify&#039; action parameters with Zimbra specific format
      *
      * @return zimbraMailSieveNotifyActionRFCCompliant, or false if unset
@@ -26851,7 +26851,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
      * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treates the
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
      * &#039;notify&#039; action parameters with Zimbra specific format
      *
      * @param zimbraMailSieveNotifyActionRFCCompliant new value
@@ -26869,7 +26869,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
      * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treates the
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
      * &#039;notify&#039; action parameters with Zimbra specific format
      *
      * @param zimbraMailSieveNotifyActionRFCCompliant new value
@@ -26888,7 +26888,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
      * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treates the
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
      * &#039;notify&#039; action parameters with Zimbra specific format
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26905,7 +26905,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
      * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treates the
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
      * &#039;notify&#039; action parameters with Zimbra specific format
      *
      * @param attrs existing map to populate, or null to create a new map
