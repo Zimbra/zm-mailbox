@@ -52429,6 +52429,230 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Sets the upper limit on logins from a remote IP via IMAP to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @return zimbraReverseProxyIPLoginImapLimit, or 0 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2096)
+    public int getReverseProxyIPLoginImapLimit() {
+        return getIntAttr(Provisioning.A_zimbraReverseProxyIPLoginImapLimit, 0);
+    }
+
+    /**
+     * Sets the upper limit on logins from a remote IP via IMAP to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @param zimbraReverseProxyIPLoginImapLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2096)
+    public void setReverseProxyIPLoginImapLimit(int zimbraReverseProxyIPLoginImapLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimit, Integer.toString(zimbraReverseProxyIPLoginImapLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the upper limit on logins from a remote IP via IMAP to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @param zimbraReverseProxyIPLoginImapLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2096)
+    public Map<String,Object> setReverseProxyIPLoginImapLimit(int zimbraReverseProxyIPLoginImapLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimit, Integer.toString(zimbraReverseProxyIPLoginImapLimit));
+        return attrs;
+    }
+
+    /**
+     * Sets the upper limit on logins from a remote IP via IMAP to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2096)
+    public void unsetReverseProxyIPLoginImapLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the upper limit on logins from a remote IP via IMAP to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2096)
+    public Map<String,Object> unsetReverseProxyIPLoginImapLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimit, "");
+        return attrs;
+    }
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based IMAP login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @return zimbraReverseProxyIPLoginImapLimitTime, or 3600 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public int getReverseProxyIPLoginImapLimitTime() {
+        return getIntAttr(Provisioning.A_zimbraReverseProxyIPLoginImapLimitTime, 3600);
+    }
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based IMAP login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @param zimbraReverseProxyIPLoginImapLimitTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public void setReverseProxyIPLoginImapLimitTime(int zimbraReverseProxyIPLoginImapLimitTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimitTime, Integer.toString(zimbraReverseProxyIPLoginImapLimitTime));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based IMAP login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @param zimbraReverseProxyIPLoginImapLimitTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public Map<String,Object> setReverseProxyIPLoginImapLimitTime(int zimbraReverseProxyIPLoginImapLimitTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimitTime, Integer.toString(zimbraReverseProxyIPLoginImapLimitTime));
+        return attrs;
+    }
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based IMAP login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public void unsetReverseProxyIPLoginImapLimitTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimitTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based IMAP login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public Map<String,Object> unsetReverseProxyIPLoginImapLimitTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimitTime, "");
+        return attrs;
+    }
+
+    /**
      * Sets the upper limit on logins from a remote IP via POP or IMAP to
      * this proxy server after which login is rejected with an appropriate
      * protocol specific bye response. This counter is cumulative for all
@@ -52659,6 +52883,230 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxyIPLoginLimitTime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginLimitTime, "");
+        return attrs;
+    }
+
+    /**
+     * Sets the upper limit on logins from a remote IP via POP3 to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @return zimbraReverseProxyIPLoginPop3Limit, or 0 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public int getReverseProxyIPLoginPop3Limit() {
+        return getIntAttr(Provisioning.A_zimbraReverseProxyIPLoginPop3Limit, 0);
+    }
+
+    /**
+     * Sets the upper limit on logins from a remote IP via POP3 to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @param zimbraReverseProxyIPLoginPop3Limit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public void setReverseProxyIPLoginPop3Limit(int zimbraReverseProxyIPLoginPop3Limit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3Limit, Integer.toString(zimbraReverseProxyIPLoginPop3Limit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the upper limit on logins from a remote IP via POP3 to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @param zimbraReverseProxyIPLoginPop3Limit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public Map<String,Object> setReverseProxyIPLoginPop3Limit(int zimbraReverseProxyIPLoginPop3Limit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3Limit, Integer.toString(zimbraReverseProxyIPLoginPop3Limit));
+        return attrs;
+    }
+
+    /**
+     * Sets the upper limit on logins from a remote IP via POP3 to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public void unsetReverseProxyIPLoginPop3Limit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3Limit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the upper limit on logins from a remote IP via POP3 to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public Map<String,Object> unsetReverseProxyIPLoginPop3Limit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3Limit, "");
+        return attrs;
+    }
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based POP3 login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @return zimbraReverseProxyIPLoginPop3LimitTime, or 3600 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2099)
+    public int getReverseProxyIPLoginPop3LimitTime() {
+        return getIntAttr(Provisioning.A_zimbraReverseProxyIPLoginPop3LimitTime, 3600);
+    }
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based POP3 login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @param zimbraReverseProxyIPLoginPop3LimitTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2099)
+    public void setReverseProxyIPLoginPop3LimitTime(int zimbraReverseProxyIPLoginPop3LimitTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3LimitTime, Integer.toString(zimbraReverseProxyIPLoginPop3LimitTime));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based POP3 login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @param zimbraReverseProxyIPLoginPop3LimitTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2099)
+    public Map<String,Object> setReverseProxyIPLoginPop3LimitTime(int zimbraReverseProxyIPLoginPop3LimitTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3LimitTime, Integer.toString(zimbraReverseProxyIPLoginPop3LimitTime));
+        return attrs;
+    }
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based POP3 login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2099)
+    public void unsetReverseProxyIPLoginPop3LimitTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3LimitTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based POP3 login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2099)
+    public Map<String,Object> unsetReverseProxyIPLoginPop3LimitTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3LimitTime, "");
         return attrs;
     }
 
