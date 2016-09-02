@@ -42,7 +42,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
     public void set(EphemeralInput attribute, EphemeralLocation target)
             throws ServiceException {
         String key = attribute.getKey();
-        String value = getAttributeEncoder().encode(attribute, target).getSecond();
+        String value = getAttributeEncoder().encodeValue(attribute, target);
         Multimap<String, String> map = getSpecifiedMap(target);
         map.removeAll(key);
         map.put(key, value);
@@ -53,7 +53,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
             throws ServiceException {
         Multimap<String, String> map = getSpecifiedMap(target);
         String key = attribute.getKey();
-        String value = getAttributeEncoder().encode(attribute, target).getSecond();
+        String value = getAttributeEncoder().encodeValue(attribute, target);
         map.put(key, value);
     }
 

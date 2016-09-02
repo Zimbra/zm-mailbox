@@ -11,7 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.ephemeral.AttributeEncodersTest.TestExpiration;
 import com.zimbra.cs.ephemeral.EphemeralStoreTest.TestLocation;
@@ -216,15 +215,20 @@ public class LdapEphemeralStoreTest {
     static class DummyAttributeEncoder extends AttributeEncoder {
 
         @Override
-        public Pair<String, String> encode(EphemeralInput input,
+        public String encodeKey(EphemeralInput input,
                 EphemeralLocation target) {
-            return new Pair<String, String>(input.getKey(), String.valueOf(input.getValue()));
+            return input.getKey();
+        }
+
+        @Override
+        public String encodeValue(EphemeralInput input,
+                EphemeralLocation target) {
+            return String.valueOf(input.getValue());
         }
 
         @Override
         public EphemeralKeyValuePair decode(String key, String value) {
             return new EphemeralKeyValuePair(key, value);
         }
-
     }
 }

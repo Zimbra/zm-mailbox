@@ -1,8 +1,8 @@
 package com.zimbra.cs.ephemeral;
 
-import com.zimbra.common.util.Pair;
 
-/** A class that encodes the expiration of an attribute in the value itself,
+/**
+ * A class that encodes the expiration of an attribute in the value itself,
  * for use with backends that don't support automatic key expiry.
  * It should be noted that the expiration input is relative,
  * while the stored value is milliseconds since the epoch.
@@ -10,18 +10,6 @@ import com.zimbra.common.util.Pair;
  *
  */
 public class ExpirationEncoder extends AttributeEncoder {
-
-    @Override
-    public Pair<String, String> encode(EphemeralInput input, EphemeralLocation target) {
-        String key = input.getKey();
-        Object value = input.getValue();
-        Long expires = input.getExpiration();
-        if (expires != null && expires > 0L) {
-            value = String.format("%s|%s", String.valueOf(value), String.valueOf(expires));
-        }
-        // dynamic key aren't supported, so the isDynamic() flag isn't used here
-        return new Pair<String, String>(key, String.valueOf(value));
-    }
 
     @Override
     public EphemeralKeyValuePair decode(String key, String value) {
@@ -37,5 +25,23 @@ public class ExpirationEncoder extends AttributeEncoder {
             }
         }
         return new EphemeralKeyValuePair(key, value, expires);
+    }
+
+    @Override
+    public String encodeKey(EphemeralInput input, EphemeralLocation target) {
+        return input.getKey();
+    }
+
+    @Override
+    public String encodeValue(EphemeralInput input, EphemeralLocation target) {
+        Object value = input.getValue();
+        Long expires = input.getExpiration();
+        String encoded;
+        if (expires != null && expires > 0L) {
+            encoded = String.format("%s|%s", String.valueOf(value), String.valueOf(expires));
+        } else {
+            encoded = String.valueOf(value);
+        }
+        return encoded;
     }
 }

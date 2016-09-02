@@ -9,7 +9,6 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Entry;
@@ -44,8 +43,10 @@ public class LdapEphemeralStore extends EphemeralStore {
     public void set(EphemeralInput input, EphemeralLocation location)
             throws ServiceException {
         helper.setLocation(location);
-        Pair<String, String> ldapData = getAttributeEncoder().encode(input, location);
-        helper.addChange(ldapData.getFirst(), ldapData.getSecond());
+        AttributeEncoder encoder = getAttributeEncoder();
+        String key = encoder.encodeKey(input, location);
+        String value = encoder.encodeValue(input, location);
+        helper.addChange(key, value);
         helper.executeChange();
     }
 
@@ -53,8 +54,10 @@ public class LdapEphemeralStore extends EphemeralStore {
     public void update(EphemeralInput input, EphemeralLocation location)
             throws ServiceException {
         helper.setLocation(location);
-        Pair<String, String> ldapData = getAttributeEncoder().encode(input, location);
-        helper.addChange("+" + ldapData.getFirst(), ldapData.getSecond());
+        AttributeEncoder encoder = getAttributeEncoder();
+        String key = encoder.encodeKey(input, location);
+        String value = encoder.encodeValue(input, location);
+        helper.addChange("+" + key, value);
         helper.executeChange();
     }
 

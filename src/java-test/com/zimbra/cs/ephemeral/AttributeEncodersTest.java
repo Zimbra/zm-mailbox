@@ -6,7 +6,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
-import com.zimbra.common.util.Pair;
 import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
 import com.zimbra.cs.ephemeral.EphemeralStoreTest.TestLocation;
 
@@ -30,9 +29,9 @@ public class AttributeEncodersTest {
         ExpirationEncoder encoder = new ExpirationEncoder();
         EphemeralInput input = new EphemeralInput("foo", "bar");
         input.setExpiration(new TestExpiration(1L, TimeUnit.SECONDS));
-        Pair<String, String> keyValue = encoder.encode(input, new TestLocation());
-        assertEquals("foo", keyValue.getFirst());
-        String value = keyValue.getSecond();
+        String key = encoder.encodeKey(input, new TestLocation());
+        assertEquals("foo", key);
+        String value = encoder.encodeValue(input, new TestLocation());
         String[] split = value.split("\\|");
         assertEquals(2, split.length);
         assertEquals("bar", split[0]);
