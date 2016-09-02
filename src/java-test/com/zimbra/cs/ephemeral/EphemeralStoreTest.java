@@ -1,5 +1,6 @@
 package com.zimbra.cs.ephemeral;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -95,6 +96,31 @@ public class EphemeralStoreTest {
         assertEquals(intValue, store.get("integer", target).getIntValue());
         assertEquals(boolValue, store.get("boolean", target).getBoolValue());
         assertEquals(longValue, store.get("long", target).getLongValue());
+    }
+
+    @Test
+    public void testIncorrectDataTypes() throws Exception {
+        EphemeralLocation target = new TestLocation();
+        store.set(new EphemeralInput("foo", "bar"), target);
+        store.update(new EphemeralInput("foo", "1"), target);
+        store.update(new EphemeralInput("foo", "true"), target);
+        EphemeralResult result = store.get("foo", target);
+
+        assertEquals((Integer) null, result.getIntValue());
+        assertEquals(new Integer(1), result.getIntValue(1));
+        assertArrayEquals(new Integer[] {null, 1, null}, result.getIntValues());
+        assertArrayEquals(new Integer[] {0, 1, 0}, result.getIntValues(0));
+
+        assertEquals((Boolean) null, store.get("foo", target).getBoolValue());
+        assertEquals(true, store.get("foo", target).getBoolValue(true));
+        assertArrayEquals(new Boolean[] {null, null, true}, result.getBoolValues());
+        assertArrayEquals(new Boolean[] {false, false, true}, result.getBoolValues(false));
+
+
+        assertEquals((Long) null, store.get("foo", target).getLongValue());
+        assertEquals(new Long(1), store.get("foo", target).getLongValue(1L));
+        assertArrayEquals(new Long[] {null, 1L, null}, result.getLongValues());
+        assertArrayEquals(new Long[] {0L, 1L, 0L}, result.getLongValues(0L));
     }
 
     @Test
