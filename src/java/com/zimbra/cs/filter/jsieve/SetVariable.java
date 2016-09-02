@@ -28,9 +28,7 @@ public class SetVariable extends AbstractCommand {
 	protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context)
 			throws SieveException {
 		List<Argument> args = arguments.getArgumentList();
-		if (args.size() != 2) {
-			throw new SyntaxException("Exactly 2 argument permitted. Found " + args.size());
-		}
+		this.validateArguments(arguments, context);
 
 		if (!(mail instanceof ZimbraMailAdapter)) {
 			return null;
@@ -44,7 +42,6 @@ public class SetVariable extends AbstractCommand {
 			value = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), value);
 		}
 		mailAdapter.addVariable(key, value);
-		mail.addAction(new ActionVariableExp(key, value));
 		return null;
 	}
 

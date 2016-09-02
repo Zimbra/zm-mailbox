@@ -78,7 +78,7 @@ import com.zimbra.cs.lmtpserver.LmtpEnvelope;
  * that have matched the filter conditions to this object
  * and invokes its {@link #executeActions()} method.
  */
-public class ZimbraMailAdapter implements MailAdapter {
+public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private Mailbox mailbox;
     private FilterHandler handler;
     private String[] tags;
