@@ -5,7 +5,7 @@ import com.zimbra.common.util.Pair;
 /** A class that encodes the expiration of an attribute in the value itself,
  * for use with backends that don't support automatic key expiry.
  * It should be noted that the expiration input is relative,
- * while the stored value is millisenconds since the epoch.
+ * while the stored value is milliseconds since the epoch.
  * @author iraykin
  *
  */
