@@ -51,6 +51,8 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("notify", com.zimbra.cs.filter.jsieve.Notify.class.getName());
         mCommandMap.put("discard", com.zimbra.cs.filter.jsieve.Discard.class.getName());
         mCommandMap.put("ereject", com.zimbra.cs.filter.jsieve.Ereject.class.getName());
+        mCommandMap.put("set", com.zimbra.cs.filter.jsieve.SetVariable.class.getName());
+        mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
 
         boolean isRejectSupported = true;
         try {
@@ -81,6 +83,7 @@ public class JsieveConfigMapHandler {
         mTestMap.put("me", com.zimbra.cs.filter.jsieve.MeTest.class.getName());
         mTestMap.put("invite", com.zimbra.cs.filter.jsieve.InviteTest.class.getName());
         mTestMap.put("mime_header", com.zimbra.cs.filter.jsieve.MimeHeaderTest.class.getName());
+        mTestMap.put("header", com.zimbra.cs.filter.jsieve.VariableHeader.class.getName());
         mTestMap.put("current_time", com.zimbra.cs.filter.jsieve.CurrentTimeTest.class.getName());
         mTestMap.put("current_day_of_week", com.zimbra.cs.filter.jsieve.CurrentDayOfWeekTest.class.getName());
         mTestMap.put("conversation", com.zimbra.cs.filter.jsieve.ConversationTest.class.getName());

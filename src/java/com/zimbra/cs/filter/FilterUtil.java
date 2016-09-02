@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.Header;
@@ -654,6 +656,24 @@ public final class FilterUtil {
         Set<String> tags = Sets.newHashSet(tags1);
         tags.addAll(Arrays.asList(tags2));
         return tags.toArray(new String[tags.size()]);
+    }
+
+    public static String replaceVariables(Map<String, String> variables, List<String> matchedValues, String varName) {
+        if (!varName.startsWith("${")) {
+            return varName;
+        }
+        String temp = varName.substring(2, varName.indexOf("}"));
+        if (variables.containsKey(temp)) {
+            temp = variables.get(temp);
+        }
+        temp = "${" + temp + "}";
+        for (int i = 0; i < matchedValues.size(); ++i) {
+            String pattern = "{" + i + "}";
+            if (temp.contains(pattern)) {
+                temp = temp.replaceAll(pattern, matchedValues.get(i));
+            }
+        }
+        return temp;
     }
 }
 
