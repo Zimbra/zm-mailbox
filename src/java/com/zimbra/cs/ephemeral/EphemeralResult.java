@@ -2,7 +2,10 @@ package com.zimbra.cs.ephemeral;
 
 import java.util.List;
 
+import org.apache.commons.lang.BooleanUtils;
+
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * A wrapper class for results retrieved from @EphemeralStore.
@@ -62,51 +65,85 @@ public class EphemeralResult {
     }
 
     public Integer getIntValue() {
-        return isEmpty() ? null : Integer.valueOf(values[0]);
+        try {
+            return isEmpty() ? null : Integer.valueOf(values[0]);
+        } catch (NumberFormatException e) {
+            ZimbraLog.ephemeral.warn("value '%s' cannot be converted to an integer, returning null", values[0]);
+            return null;
+        }
     }
 
     public Integer getIntValue(Integer defaultValue) {
-        return isEmpty() ? defaultValue : Integer.valueOf(values[0]);
+        try {
+            return isEmpty() ? defaultValue : Integer.valueOf(values[0]);
+        } catch (NumberFormatException e) {
+            ZimbraLog.ephemeral.warn("value '%s' cannot be converted to an integer, returning default value", values[0]);
+            return defaultValue;
+        }
     }
 
     public Integer[] getIntValues() {
-        return isEmpty() ? new Integer[0] : convertToInts();
+        try {
+            return isEmpty() ? new Integer[0] : convertToInts(null);
+        } catch (NumberFormatException e) {
+            return new Integer[0];
+        }
     }
 
     public Integer[] getIntValues(Integer defaultValue) {
-        return isEmpty() ? new Integer[] {defaultValue} : convertToInts();
+        return isEmpty() ? new Integer[] {defaultValue} : convertToInts(defaultValue);
     }
 
     public Long getLongValue() {
-        return isEmpty() ? null : Long.valueOf(values[0]);
+        try {
+            return isEmpty() ? null : Long.valueOf(values[0]);
+        } catch (NumberFormatException e) {
+            ZimbraLog.ephemeral.warn("value '%s' cannot be converted to a long, returning null", values[0]);
+            return null;
+        }
     }
 
     public Long getLongValue(Long defaultValue) {
-        return isEmpty() ? defaultValue : Long.valueOf(values[0]);
+        try {
+            return isEmpty() ? defaultValue : Long.valueOf(values[0]);
+        } catch (NumberFormatException e) {
+            ZimbraLog.ephemeral.warn("value '%s' cannot be converted to a long, returning default value", values[0]);
+            return defaultValue;
+        }
     }
 
     public Long[] getLongValues() {
-        return isEmpty() ? new Long[0] : convertToLongs();
+        return isEmpty() ? new Long[0] : convertToLongs(null);
     }
 
     public Long[] getLongValues(Long defaultValue) {
-        return isEmpty() ? new Long[] {defaultValue} : convertToLongs();
+        return isEmpty() ? new Long[] {defaultValue} : convertToLongs(defaultValue);
     }
 
     public Boolean getBoolValue() {
-        return isEmpty() ? null : Boolean.valueOf(values[0]);
+        try {
+            return isEmpty() ? null : stringToBool(values[0]);
+        } catch (IllegalArgumentException e) {
+            ZimbraLog.ephemeral.warn("value '%s' cannot be converted to a boolean, returning null", values[0]);
+            return null;
+        }
     }
 
     public Boolean getBoolValue(Boolean defaultValue) {
-        return isEmpty() ? defaultValue : Boolean.valueOf(values[0]);
+        try {
+            return isEmpty() ? defaultValue : stringToBool(values[0]);
+        } catch (IllegalArgumentException e) {
+            ZimbraLog.ephemeral.warn("value '%s' cannot be converted to a boolean, returning default value", values[0]);
+            return defaultValue;
+        }
     }
 
     public Boolean[] getBoolValues() {
-        return isEmpty() ? new Boolean[0] : convertToBools();
+        return isEmpty() ? new Boolean[0] : convertToBools(null);
     }
 
     public Boolean[] getBoolValues(Boolean defaultValue) {
-        return isEmpty() ? new Boolean[] {defaultValue} : convertToBools();
+        return isEmpty() ? new Boolean[] {defaultValue} : convertToBools(defaultValue);
     }
 
     public boolean isMultiValued() {
@@ -130,27 +167,46 @@ public class EphemeralResult {
         return values == null || values.length == 0;
     }
 
-    private Integer[] convertToInts() {
+    private Integer[] convertToInts(Integer defaultValue) {
         Integer[] integers = new Integer[values.length];
         for (int i = 0; i < values.length; i++ ) {
-            integers[i] = Integer.valueOf(values[i]);
+            try {
+                integers[i] = Integer.valueOf(values[i]);
+            } catch (NumberFormatException e) {
+                ZimbraLog.ephemeral.warn("value '%s' cannot be converted to an integer, using default", values[i]);
+                integers[i] = defaultValue;
+            }
         }
         return integers;
     }
 
-    private Long[] convertToLongs() {
+    private Long[] convertToLongs(Long defaultValue) {
         Long[] longs = new Long[values.length];
         for (int i = 0; i < values.length; i++ ) {
-            longs[i] = Long.valueOf(values[i]);
+            try {
+                longs[i] = Long.valueOf(values[i]);
+            } catch (NumberFormatException e) {
+                ZimbraLog.ephemeral.warn("value '%s' cannot be converted to a long, using default", values[i]);
+                longs[i] = defaultValue;
+            }
         }
         return longs;
     }
 
-    private Boolean[] convertToBools() {
+    private Boolean[] convertToBools(Boolean defaultValue) {
         Boolean[] bools = new Boolean[values.length];
         for (int i = 0; i < values.length; i++ ) {
-            bools[i] = Boolean.valueOf(values[i]);
+            try {
+                bools[i] = stringToBool(values[i]);
+            } catch (IllegalArgumentException e) {
+                ZimbraLog.ephemeral.warn("value '%s' cannot be converted to a boolean, using default", values[i]);
+                bools[i] = defaultValue;
+            }
         }
         return bools;
+    }
+
+    private Boolean stringToBool(String s) {
+        return BooleanUtils.toBooleanObject(s.toLowerCase(), "true", "false", "null");
     }
 }
