@@ -39,12 +39,15 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.cs.filter.jsieve.ActionNotify;
 import com.zimbra.cs.filter.jsieve.ActionReply;
+import com.zimbra.cs.filter.jsieve.ActionEreject;
+import com.zimbra.cs.filter.jsieve.ErejectException;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.jsieve.mail.ActionKeep;
 import org.apache.jsieve.mail.ActionRedirect;
+import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
@@ -73,7 +76,7 @@ import com.zimbra.cs.lmtpserver.LmtpEnvelope;
  * that have matched the filter conditions to this object
  * and invokes its {@link #executeActions()} method.
  */
-public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors{
+public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private Mailbox mailbox;
     private FilterHandler handler;
     private String[] tags;
