@@ -14213,6 +14213,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * URL of ephemeral storage backend
+     *
+     * @return zimbraEphemeralBackendURL, or "ldap://default" if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2095)
+    public String getEphemeralBackendURL() {
+        return getAttr(Provisioning.A_zimbraEphemeralBackendURL, "ldap://default");
+    }
+
+    /**
+     * URL of ephemeral storage backend
+     *
+     * @param zimbraEphemeralBackendURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2095)
+    public void setEphemeralBackendURL(String zimbraEphemeralBackendURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEphemeralBackendURL, zimbraEphemeralBackendURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of ephemeral storage backend
+     *
+     * @param zimbraEphemeralBackendURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2095)
+    public Map<String,Object> setEphemeralBackendURL(String zimbraEphemeralBackendURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEphemeralBackendURL, zimbraEphemeralBackendURL);
+        return attrs;
+    }
+
+    /**
+     * URL of ephemeral storage backend
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2095)
+    public void unsetEphemeralBackendURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEphemeralBackendURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of ephemeral storage backend
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2095)
+    public Map<String,Object> unsetEphemeralBackendURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEphemeralBackendURL, "");
+        return attrs;
+    }
+
+    /**
      * URL for posting error report popped up in WEB client
      *
      * @return zimbraErrorReportUrl, or null if unset
