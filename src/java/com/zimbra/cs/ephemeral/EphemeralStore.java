@@ -57,7 +57,7 @@ public abstract class EphemeralStore {
             throws ServiceException;
 
     /**
-     * Delete the specified key.
+     * Delete the specified key, and all associated values.
      *
      * @param key
      * @param location
@@ -68,7 +68,7 @@ public abstract class EphemeralStore {
 
     /**
      * Delete specified value for a key. If the value does not exist, do
-     * nothing. If no values for the key remain, delete the key.
+     * nothing.
      *
      * @param key
      * @param value
@@ -78,24 +78,24 @@ public abstract class EphemeralStore {
     public abstract void deleteValue(String key, String value, EphemeralLocation location)
             throws ServiceException;
 
+
+    /**
+     * Check whether the specified key exists in the target location.
+     *
+     * @param key
+     * @param location
+     * @return
+     * @throws ServiceException
+     */
+    public abstract boolean hasKey(String key, EphemeralLocation location)
+            throws ServiceException;
+
     /**
      * Delete keys that have passed their expiration. If the backend natively
      * supports key expiry, this may do nothing.
      *
      * @param key
      * @param location
-     * @throws ServiceException
-     */
-    public abstract boolean hasKey(String key, EphemeralLocation location)
-            throws ServiceException;
-
-
-    /**
-     * Check whether the specified key exists.
-     *
-     * @param key
-     * @param location
-     * @return
      * @throws ServiceException
      */
     public abstract void purgeExpired(String key, EphemeralLocation location)
