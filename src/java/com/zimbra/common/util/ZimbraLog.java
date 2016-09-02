@@ -456,6 +456,11 @@ public final class ZimbraLog {
     public static final Log smime = LogFactory.getLog("zimbra.smime");
 
     /**
+     * the "zimbra.ephemeral" logger. For ephemeral store-related events.
+     */
+    public static final Log ephemeral = LogFactory.getLog("zimbra.ephemeral");
+
+    /**
      * Maps the log category name to its description.
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
