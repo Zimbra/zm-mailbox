@@ -20,6 +20,7 @@ public abstract class EphemeralStore {
 
     private static Map<String, String> factories = new HashMap<String, String>();
     private static Factory factory;
+    protected AttributeEncoder encoder;
 
     /**
      * Get the value for a key. If key does not exist, returns an empty
@@ -137,6 +138,14 @@ public abstract class EphemeralStore {
         }
     }
 
+    public void setAttributeEncoder(AttributeEncoder encoder) {
+        this.encoder = encoder;
+    }
+
+    public AttributeEncoder getAttributeEncoder() {
+        return encoder;
+    }
+
     public static Factory getFactory() throws ServiceException {
         if (factory == null) {
             String factoryClass = null;
@@ -156,6 +165,6 @@ public abstract class EphemeralStore {
 
         EphemeralStore getStore();
         void startup();
-        void shudown();
+        void shutdown();
     }
 }
