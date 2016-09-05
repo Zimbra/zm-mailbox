@@ -16,7 +16,9 @@
  */
 package com.zimbra.cs.filter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -74,4 +76,20 @@ public class FilterUtilTest {
 
     }
 
+    
+    
+    public void testVariableReplacement() {
+    	Map<String, String> variables = new HashMap<String, String>();
+    	variables.put("var", "hello");
+    	List<String> matchedValues = new ArrayList<String>();
+    	String varValue = FilterUtil.replaceVariables(variables, matchedValues, "${var}");
+    	Assert.assertEquals("hello", varValue);
+    	
+    	
+    	matchedValues = new ArrayList<String>();
+    	matchedValues.add("test1");
+    	matchedValues.add("test2");
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${0}");
+    	Assert.assertEquals("test1", varValue);
+    }
 }
