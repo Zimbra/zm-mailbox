@@ -34,6 +34,9 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.W3cDomUtil;
@@ -84,6 +87,13 @@ public class AttributeManager {
     private static final String E_DEFAULT_EXTERNAL_COS_VALUE = "defaultExternalCOSValue";
     private static final String E_DEFAULT_COS_VALUE_UPGRADE = "defaultCOSValueUpgrade";
 
+    private static final Set<AttributeFlag> allowedFlags = new HashSet<AttributeFlag>();
+    static {
+        allowedFlags.add(AttributeFlag.ephemeral);
+        allowedFlags.add(AttributeFlag.dynamic);
+        allowedFlags.add(AttributeFlag.expirable);
+    }
+
     private static AttributeManager mInstance;
 
     // contains attrs defined in one of the zimbra .xml files (currently zimbra attrs and some of the amavis attrs)
@@ -120,6 +130,9 @@ public class AttributeManager {
     // The only such syntax we support for now is:
     // 1.3.6.1.4.1.1466.115.121.1.8 - Certificate syntax
     private static Set<String> mBinaryTransferAttrs = new HashSet<String>();
+
+    private final Map<String, AttributeInfo> mEphemeralAttrs = new HashMap<String, AttributeInfo>(); //lowercased
+    private final Set<String> mEphemeralAttrsSet = new HashSet<String>(); // not lowercased
 
     /*
      * Notes on certificate attributes
@@ -197,13 +210,29 @@ public class AttributeManager {
         return attributeInfo != null && attributeInfo.getCardinality() == AttributeCardinality.multi;
     }
 
+    public boolean isEphemeral(String attrName) {
+        return mEphemeralAttrsSet.contains(attrName);
+    }
+
+    public boolean isDynamic(String attrName) {
+        AttributeInfo ai = mEphemeralAttrs.get(attrName.toLowerCase());
+        if (ai != null) {
+            return ai.isDynamic();
+        } else {
+            return false;
+        }
+    }
     @VisibleForTesting
-    void addAttribute(AttributeInfo info) {
+    public void addAttribute(AttributeInfo info) {
         mAttrs.put(info.mName.toLowerCase(), info);
+        if (info.isEphemeral()) {
+            mEphemeralAttrs.put(info.mName.toLowerCase(), info);
+            mEphemeralAttrsSet.add(info.mName);
+        }
     }
 
     @VisibleForTesting
-    AttributeManager() {
+    public AttributeManager() {
     }
 
     public AttributeManager(String dir) throws ServiceException {
@@ -354,6 +383,7 @@ public class AttributeManager {
             List<AttributeServerType> requiresRestart = null;
             Version deprecatedSinceVer = null;
             List<Version> sinceVer = null;
+            Boolean ephemeral = false;
 
             for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                 Attribute attr = (Attribute) attrIter.next();
@@ -433,7 +463,6 @@ public class AttributeManager {
                             error(name, file, aname + " is not valid: " + attr.getValue() + " (" + e.getMessage() + ")");
                         }
                     }
-
                 } else {
                     error(name, file, "unknown <attr> attr: " + aname);
                 }
@@ -542,6 +571,8 @@ public class AttributeManager {
                 }
             }
 
+            checkEphemeralFlags(name, file, flags, min, max);
+
             AttributeInfo info = createAttributeInfo(
                     name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                     cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
@@ -582,6 +613,33 @@ public class AttributeManager {
                 mBinaryTransferAttrs.add(canonicalName);
             }
 
+            if (flags != null && flags.contains(AttributeFlag.ephemeral)) {
+                mEphemeralAttrs.put(canonicalName, info);
+            }
+
+        }
+    }
+
+    private void checkEphemeralFlags(String attrName, File file,
+            Set<AttributeFlag> flags, String min, String max) {
+        if (flags == null) { return; }
+        boolean isEphemeral = flags.contains(AttributeFlag.ephemeral);
+        if (flags.contains(AttributeFlag.dynamic) && !isEphemeral) {
+            error(attrName, file, "'dynamic' flag can only be used with ephemeral attributes");
+        } else if (flags.contains(AttributeFlag.expirable) && !isEphemeral) {
+            error(attrName, file, "'expirable' flag can only be used with ephemeral attributes");
+        }
+        if (isEphemeral) {
+
+            Sets.SetView<AttributeFlag> diff = Sets.difference(flags, allowedFlags);
+            if (!diff.isEmpty()) {
+                error(attrName, file, String.format("flags %s cannot be used with ephemeral attributes", Joiner.on(",").join(diff)));
+            }
+            if (!Strings.isNullOrEmpty(min)) {
+                error(attrName, file, "'min' constraint cannot be used with ephemeral attributes");
+            } else if (!Strings.isNullOrEmpty(max)) {
+                error(attrName, file, "'max' constraint cannot be used with ephemeral attributes");
+            }
         }
     }
 
@@ -1133,6 +1191,10 @@ public class AttributeManager {
         return mBinaryTransferAttrs;
     }
 
+    public Map<String, AttributeInfo> getEphemeralAttrs() {
+        return mEphemeralAttrs;
+    }
+
     boolean hasFlag(AttributeFlag flag, String attr) {
         return mFlagToAttrsMap.get(flag).contains(attr);
     }
@@ -1306,3 +1368,4 @@ public class AttributeManager {
         }
     }
 }
+

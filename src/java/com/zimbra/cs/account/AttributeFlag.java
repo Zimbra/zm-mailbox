@@ -27,5 +27,9 @@ public enum AttributeFlag {
     serverInherited,
     idn,
     serverPreferAlwaysOn,
+    ephemeral,
+    dynamic,
+    expirable,
     octopus  // for tracking octopus specific attributes
+
 }

@@ -270,7 +270,6 @@ public class AttributeInfo {
             }
             break;
         }
-
     }
 
     public int getEnumValueMaxLength() {
@@ -572,5 +571,17 @@ public class AttributeInfo {
      */
     public boolean isCaseInsensitive() {
         return AttributeType.TYPE_STRING == mType || AttributeType.TYPE_ASTRING == mType;
+    }
+
+    public Boolean isEphemeral() {
+        return hasFlag(AttributeFlag.ephemeral);
+    }
+
+    public Boolean isDynamic() {
+        return hasFlag(AttributeFlag.dynamic);
+    }
+
+    public Boolean isExpirable() {
+        return hasFlag(AttributeFlag.expirable);
     }
 }
