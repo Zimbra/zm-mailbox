@@ -46,6 +46,12 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager.IDNType;
+import com.zimbra.cs.ephemeral.EphemeralInput;
+import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
+import com.zimbra.cs.ephemeral.EphemeralLocation;
+import com.zimbra.cs.ephemeral.EphemeralResult;
+import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.LdapEntryLocation;
 import com.zimbra.cs.ldap.LdapDateUtil;
 
 public abstract class Entry implements ToZJSONObject {
@@ -712,4 +718,66 @@ public abstract class Entry implements ToZJSONObject {
         return sorted;
     }
 
+    public EphemeralResult getEphemeralAttr(String name) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        return EphemeralStore.getFactory().getStore().get(name, location);
+    }
+
+    public void deleteEphemeralAttr(String name, String value) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        if (value == null) {
+            store.delete(name, location);
+        } else {
+            store.deleteValue(name, value, location);
+        }
+    }
+
+    private void modifyEphemeralAttrInternal(String name, String value, boolean update, boolean dynamic, Expiration expiration, EphemeralStore store, EphemeralLocation location) throws ServiceException {
+        EphemeralInput input = new EphemeralInput(name, value);
+        input.setDynamic(dynamic);
+        if (expiration != null) {
+            input.setExpiration(expiration);
+        }
+        if (update) {
+            store.update(input, location);
+        } else {
+            store.set(input, location);
+        }
+    }
+
+    public void modifyEphemeralAttr(EphemeralInput input, boolean update) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        if (update) {
+            store.update(input, location);
+        }
+        else {
+            store.set(input, location);
+        }
+    }
+
+    public void modifyEphemeralAttr(String name, String value, boolean update, boolean dynamic, Expiration expiration) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        modifyEphemeralAttrInternal(name, value, update, dynamic, expiration, store, location);
+    }
+
+    public void modifyEphemeralAttr(String name, String[] values, boolean update, boolean dynamic, Expiration expiration) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        for (String value: values) {
+            modifyEphemeralAttrInternal(name, value, update, dynamic, expiration, store, location);
+        }
+    }
+
+    protected long getEphemeralTimeInterval(String name, long defaultValue) throws ServiceException {
+        return DateUtil.getTimeInterval(getEphemeralAttr(name).getValue(), defaultValue);
+    }
+
+    public void purgeEphemeralAttr(String name) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        store.purgeExpired(name, location);
+    }
 }
