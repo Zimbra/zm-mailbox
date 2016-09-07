@@ -469,6 +469,7 @@ public final class RuleManager {
         IncomingMessageHandler handler = new IncomingMessageHandler(
             octxt, sharedDeliveryCtxt, mailbox, recipient, pm, size, incomingFolderId, noICal);
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
+        mailAdapter.setEnvelope(env);
         mailAdapter.setAllowFilterToMountpoint(allowFilterToMountpoint);
 
         try {
