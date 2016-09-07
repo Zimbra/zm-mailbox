@@ -8753,6 +8753,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailReferMode = "zimbraMailReferMode";
 
     /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2095)
+    public static final String A_zimbraMailSieveNotifyActionRFCCompliant = "zimbraMailSieveNotifyActionRFCCompliant";
+
+    /**
      * sieve script generated from user filter rules
      */
     @ZAttr(id=32)
