@@ -84,21 +84,42 @@ public class EphemeralInput {
     }
 
 
+    public static abstract class Expiration {
+        public abstract long getMillis();
+    }
+
     /**
      * Class representing the relative expiration time of a key/value pair
-     *
      */
-    public static class Expiration {
+    public static class RelativeExpiration extends Expiration {
         protected Long expiresIn;
         protected TimeUnit unit;
 
-        public Expiration(Long expiresIn, TimeUnit unit) {
+        public RelativeExpiration(Long expiresIn, TimeUnit unit) {
             this.expiresIn = expiresIn;
             this.unit = unit;
         }
 
-        public Long getMillis() {
+        @Override
+        public long getMillis() {
             return System.currentTimeMillis() + TimeUnit.MILLISECONDS.convert(expiresIn, unit);
         }
+    }
+
+    /**
+     * Class representing the expiration time of a key/value pair in milliseconds since the epoch
+     */
+    public static class AbsoluteExpiration extends Expiration {
+        private long millis;
+
+        public AbsoluteExpiration(long millis) {
+            this.millis = millis;
+        }
+
+        @Override
+        public long getMillis() {
+            return millis;
+        }
+
     }
 }

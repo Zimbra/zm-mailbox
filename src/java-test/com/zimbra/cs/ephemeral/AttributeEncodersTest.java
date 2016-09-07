@@ -4,27 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
-import java.util.concurrent.TimeUnit;
-
 import org.junit.Test;
 
-import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
 import com.zimbra.cs.ephemeral.EphemeralStoreTest.TestLocation;
 
 public class AttributeEncodersTest {
-
-    //Absolute expiration; does not add System.currentTimeMillis() to passed-in value
-    static class TestExpiration extends Expiration {
-
-        public TestExpiration(Long absoluteExpiration, TimeUnit unit) {
-            super(absoluteExpiration, unit);
-        }
-
-        @Override
-        public Long getMillis() {
-            return TimeUnit.MILLISECONDS.convert(expiresIn, unit);
-        }
-    }
 
     @Test
     public void testKeyEncoders() throws Exception {
@@ -92,6 +76,5 @@ public class AttributeEncodersTest {
         } else {
             assertEquals(expiration, kvp.getExpiration());
         }
-
     }
 }

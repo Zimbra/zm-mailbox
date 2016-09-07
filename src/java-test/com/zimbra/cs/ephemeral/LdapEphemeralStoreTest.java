@@ -5,14 +5,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.ephemeral.AttributeEncodersTest.TestExpiration;
 import com.zimbra.cs.ephemeral.EphemeralStoreTest.TestLocation;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore.AbstractLdapHelper;
 
