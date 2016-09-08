@@ -75,6 +75,9 @@ public class JsieveConfigMapHandler {
 
         Map<String, String> mTestMap =
                 Collections.synchronizedMap(new HashMap<String, String>());
+        mTestMap.put("header", com.zimbra.cs.filter.jsieve.HeaderTest.class.getName());
+        mTestMap.put("address", com.zimbra.cs.filter.jsieve.AddressTest.class.getName());
+        mTestMap.put("envelope", com.zimbra.cs.filter.jsieve.EnvelopeTest.class.getName());
         mTestMap.put("date", com.zimbra.cs.filter.jsieve.DateTest.class.getName());
         mTestMap.put("body", com.zimbra.cs.filter.jsieve.BodyTest.class.getName());
         mTestMap.put("attachment", com.zimbra.cs.filter.jsieve.AttachmentTest.class.getName());
@@ -83,7 +86,8 @@ public class JsieveConfigMapHandler {
         mTestMap.put("me", com.zimbra.cs.filter.jsieve.MeTest.class.getName());
         mTestMap.put("invite", com.zimbra.cs.filter.jsieve.InviteTest.class.getName());
         mTestMap.put("mime_header", com.zimbra.cs.filter.jsieve.MimeHeaderTest.class.getName());
-        mTestMap.put("header", com.zimbra.cs.filter.jsieve.VariableHeader.class.getName());
+        // Need to merge code from VariableHeader to HeaderTest, temporarily commenting.
+//        mTestMap.put("header", com.zimbra.cs.filter.jsieve.VariableHeader.class.getName());
         mTestMap.put("current_time", com.zimbra.cs.filter.jsieve.CurrentTimeTest.class.getName());
         mTestMap.put("current_day_of_week", com.zimbra.cs.filter.jsieve.CurrentDayOfWeekTest.class.getName());
         mTestMap.put("conversation", com.zimbra.cs.filter.jsieve.ConversationTest.class.getName());
@@ -98,6 +102,7 @@ public class JsieveConfigMapHandler {
         mTestMap.put("community_connections", com.zimbra.cs.filter.jsieve.CommunityConnectionsTest.class.getName());
         mTestMap.put("community_requests", com.zimbra.cs.filter.jsieve.CommunityRequestsTest.class.getName());
         mTestMap.put("community_content", com.zimbra.cs.filter.jsieve.CommunityContentTest.class.getName());
+        mTestMap.put("relational", com.zimbra.cs.filter.jsieve.RelationalTest.class.getName());
         return mTestMap;
     }
 

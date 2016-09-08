@@ -665,6 +665,7 @@ public final class FilterUtil {
         String temp = varName.substring(2, varName.indexOf("}"));
         if (variables.containsKey(temp)) {
             temp = variables.get(temp);
+            return temp;
         }
         temp = "${" + temp + "}";
         for (int i = 0; i < matchedValues.size(); ++i) {

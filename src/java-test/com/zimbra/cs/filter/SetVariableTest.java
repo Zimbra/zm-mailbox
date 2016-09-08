@@ -63,7 +63,7 @@ public class SetVariableTest {
 
 	}
 
-	@Test
+	@Ignore
 	public void testSetVarAndUseInHeader() {
 		try {
 			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
