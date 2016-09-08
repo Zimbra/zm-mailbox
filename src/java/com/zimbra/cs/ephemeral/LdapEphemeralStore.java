@@ -10,6 +10,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 
 public class LdapEphemeralStore extends EphemeralStore {
 
@@ -160,7 +161,17 @@ public class LdapEphemeralStore extends EphemeralStore {
 
         @Override
         void executeChange() throws ServiceException {
-            Provisioning.getInstance().modifyAttrs(entry, attrs);
+            if (attrs.isEmpty()) {
+                return;
+            }
+            Provisioning prov = Provisioning.getInstance();
+            if (prov instanceof LdapProvisioning) {
+                ((LdapProvisioning) prov).modifyEphemeralAttrsInLdap(entry, attrs);
+            } else {
+                throw ServiceException.FAILURE(
+                        String.format("LdapEphemeralStore can only be used with LdapProvisioning: '%s' provided",
+                                prov.getClass().getName()), null);
+            }
             reset();
         }
 
