@@ -513,17 +513,7 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
     }
 
     public void cleanExpiredTokens() throws ServiceException {
-    	String[] tokens = getAuthTokens();
-    	for(String tk : tokens) {
-    	    String[] tokenParts = tk.split("\\|");
-    	    if(tokenParts.length > 0) {
-    	        String szExpire = tokenParts[1];
-    	        Long expires = Long.parseLong(szExpire);
-    	        if(System.currentTimeMillis() > expires) {
-    	            removeAuthTokens(tk);
-    	        }
-    	    }
-    	}
+        purgeAuthTokens();
     }
 }
 

@@ -22822,8 +22822,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * rough estimate of when the user last logged in. see
-     * zimbraLastLogonTimestampFrequency
+     * rough estimate of when the user last logged in
      *
      * <p>Use getLastLogonTimestampAsString to access value as a string.
      *
@@ -22841,8 +22840,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * rough estimate of when the user last logged in. see
-     * zimbraLastLogonTimestampFrequency
+     * rough estimate of when the user last logged in
      *
      * Ephemeral attribute - requests routed to EphemeralStore
      *
@@ -22856,8 +22854,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * rough estimate of when the user last logged in. see
-     * zimbraLastLogonTimestampFrequency
+     * rough estimate of when the user last logged in
      *
      * Ephemeral attribute - requests routed to EphemeralStore
      *
@@ -22870,8 +22867,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * rough estimate of when the user last logged in. see
-     * zimbraLastLogonTimestampFrequency
+     * rough estimate of when the user last logged in
      *
      * Ephemeral attribute - requests routed to EphemeralStore
      *
@@ -22884,8 +22880,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * rough estimate of when the user last logged in. see
-     * zimbraLastLogonTimestampFrequency
+     * rough estimate of when the user last logged in
      *
      * Ephemeral attribute - requests routed to EphemeralStore
      *

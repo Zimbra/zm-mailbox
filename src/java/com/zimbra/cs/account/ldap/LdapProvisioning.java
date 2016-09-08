@@ -5393,33 +5393,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void updateLastLogon(Account acct) throws ServiceException {
-        Config config = Provisioning.getInstance().getConfig();
-        long freq = config.getTimeInterval(
-                    Provisioning.A_zimbraLastLogonTimestampFrequency,
-                    com.zimbra.cs.util.Config.D_ZIMBRA_LAST_LOGON_TIMESTAMP_FREQUENCY);
-
-        // never update timestamp if frequency is 0
-        if (freq == 0)
-            return;
-
-        Date lastLogon = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraLastLogonTimestamp, null);
-        if (lastLogon == null) {
-            Map<String, String> attrs = new HashMap<String, String>();
-            attrs.put(Provisioning.A_zimbraLastLogonTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
-            try {
-                modifyAttrs(acct, attrs);
-            } catch (ServiceException e) {
-                ZimbraLog.account.warn("updating zimbraLastLogonTimestamp", e);
-            }
-        } else {
-            long current = System.currentTimeMillis();
-            if (current - freq >= lastLogon.getTime()) {
-                try {
-                    acct.setLastLogonTimestamp(new Date());
-                } catch (ServiceException e) {
-                    ZimbraLog.account.warn("updating zimbraLastLogonTimestamp", e);
-                }
-            }
+        try {
+            acct.setLastLogonTimestamp(new Date());
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("updating zimbraLastLogonTimestamp", e);
         }
     }
 
