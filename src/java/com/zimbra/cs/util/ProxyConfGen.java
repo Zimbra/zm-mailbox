@@ -792,6 +792,43 @@ abstract class ServersVar extends ProxyConfVar {
     }
 }
 
+class ReverseProxyIPThrottleWhitelist extends ProxyConfVar {
+
+	public ReverseProxyIPThrottleWhitelist() {
+        super("mail.whitelistip.:servers", null, null, ProxyConfValueType.CUSTOM,
+                ProxyConfOverride.CUSTOM,
+			    "List of Client IP addresses immune to IP Throttling");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+    	ArrayList<String> directives = new ArrayList<String>();
+        String[] ips = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyIPThrottleWhitelist);
+		Boolean first = true;
+    	for (String ip : ips) {
+			directives.add(ip);
+			mLog.debug("Added %s IP Throttle whitelist", ip);
+    	}
+    	mValue = directives;
+    }
+
+	@Override
+    public String format(Object o) {
+        @SuppressWarnings("unchecked")
+        ArrayList<String> servers = (ArrayList<String>) o;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < servers.size(); i++) {
+            String s = servers.get(i);
+            if (i == 0) {
+                sb.append(String.format("mail_whitelist_ip    %s;\n", s));
+            } else {
+                sb.append(String.format("    mail_whitelist_ip    %s;\n", s));
+            }
+        }
+        return sb.toString();
+    }
+}
+
 class WebUpstreamServersVar extends ServersVar {
 
 	public WebUpstreamServersVar() {
@@ -2562,6 +2599,7 @@ public class ProxyConfGen
         mConfVars.put("mail.pop3.enabled", new ProxyConfVar("mail.pop3.enabled", "zimbraReverseProxyMailPop3Enabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Pop Mail Proxy is enabled"));
         mConfVars.put("mail.pop3s.enabled", new ProxyConfVar("mail.pop3s.enabled", "zimbraReverseProxyMailPop3sEnabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Pops Mail Proxy is enabled"));
         mConfVars.put("mail.proxy.ssl", new ProxyConfVar("mail.proxy.ssl", "zimbraReverseProxySSLToUpstreamEnabled", true, ProxyConfValueType.BOOLEAN, ProxyConfOverride.SERVER, "Indicates whether using SSL to connect to upstream mail server"));
+        mConfVars.put("mail.whitelistip.:servers", new ReverseProxyIPThrottleWhitelist());
         mConfVars.put("web.logfile", new ProxyConfVar("web.logfile", null, mWorkingDir + "/log/nginx.access.log", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Access log file path (relative to ${core.workdir})"));
         mConfVars.put("web.mailmode", new ProxyConfVar("web.mailmode", Provisioning.A_zimbraReverseProxyMailMode, "both", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"Reverse Proxy Mail Mode - can be http|https|both|redirect|mixed"));
         mConfVars.put("web.server_name.default", new ProxyConfVar("web.server_name.default", "zimbra_server_hostname", "localhost", ProxyConfValueType.STRING, ProxyConfOverride.LOCALCONFIG, "The server name for default server config"));
