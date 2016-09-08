@@ -38726,6 +38726,140 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * List of IP addresses to be excluded from IP throttling.
+     *
+     * @return zimbraReverseProxyIPThrottleWhitelist, or empty array if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3000)
+    public String[] getReverseProxyIPThrottleWhitelist() {
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyIPThrottleWhitelist);
+    }
+
+    /**
+     * List of IP addresses to be excluded from IP throttling.
+     *
+     * @param zimbraReverseProxyIPThrottleWhitelist new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3000)
+    public void setReverseProxyIPThrottleWhitelist(String[] zimbraReverseProxyIPThrottleWhitelist) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPThrottleWhitelist, zimbraReverseProxyIPThrottleWhitelist);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of IP addresses to be excluded from IP throttling.
+     *
+     * @param zimbraReverseProxyIPThrottleWhitelist new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3000)
+    public Map<String,Object> setReverseProxyIPThrottleWhitelist(String[] zimbraReverseProxyIPThrottleWhitelist, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPThrottleWhitelist, zimbraReverseProxyIPThrottleWhitelist);
+        return attrs;
+    }
+
+    /**
+     * List of IP addresses to be excluded from IP throttling.
+     *
+     * @param zimbraReverseProxyIPThrottleWhitelist new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3000)
+    public void addReverseProxyIPThrottleWhitelist(String zimbraReverseProxyIPThrottleWhitelist) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyIPThrottleWhitelist, zimbraReverseProxyIPThrottleWhitelist);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of IP addresses to be excluded from IP throttling.
+     *
+     * @param zimbraReverseProxyIPThrottleWhitelist new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3000)
+    public Map<String,Object> addReverseProxyIPThrottleWhitelist(String zimbraReverseProxyIPThrottleWhitelist, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyIPThrottleWhitelist, zimbraReverseProxyIPThrottleWhitelist);
+        return attrs;
+    }
+
+    /**
+     * List of IP addresses to be excluded from IP throttling.
+     *
+     * @param zimbraReverseProxyIPThrottleWhitelist existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3000)
+    public void removeReverseProxyIPThrottleWhitelist(String zimbraReverseProxyIPThrottleWhitelist) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyIPThrottleWhitelist, zimbraReverseProxyIPThrottleWhitelist);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of IP addresses to be excluded from IP throttling.
+     *
+     * @param zimbraReverseProxyIPThrottleWhitelist existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3000)
+    public Map<String,Object> removeReverseProxyIPThrottleWhitelist(String zimbraReverseProxyIPThrottleWhitelist, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyIPThrottleWhitelist, zimbraReverseProxyIPThrottleWhitelist);
+        return attrs;
+    }
+
+    /**
+     * List of IP addresses to be excluded from IP throttling.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3000)
+    public void unsetReverseProxyIPThrottleWhitelist() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPThrottleWhitelist, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of IP addresses to be excluded from IP throttling.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3000)
+    public Map<String,Object> unsetReverseProxyIPThrottleWhitelist(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPThrottleWhitelist, "");
+        return attrs;
+    }
+
+    /**
      * NGINX reverse proxy imap capabilities
      *
      * @return zimbraReverseProxyImapEnabledCapability, or empty array if unset
