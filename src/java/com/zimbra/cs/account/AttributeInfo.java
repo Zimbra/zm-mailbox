@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -145,7 +146,8 @@ public class AttributeInfo {
     }
 
 
-    protected AttributeInfo(
+    @VisibleForTesting
+    public AttributeInfo(
             String attrName, int id, String parentId, int groupId,
             AttributeCallback callback, AttributeType type, AttributeOrder order,
             String value, boolean immutable, String min, String max,
