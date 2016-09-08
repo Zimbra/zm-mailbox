@@ -3449,17 +3449,23 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * application-specific password
      *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error on accessing ephemeral data
+     *
      * @return zimbraAppSpecificPassword, or empty array if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1836)
-    public String[] getAppSpecificPassword() {
-        return getMultiAttr(Provisioning.A_zimbraAppSpecificPassword);
+    public String[] getAppSpecificPassword() throws com.zimbra.common.service.ServiceException {
+        return getEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword).getValues();
     }
 
     /**
      * application-specific password
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @param zimbraAppSpecificPassword new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3468,29 +3474,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1836)
     public void setAppSpecificPassword(String[] zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
-        getProvisioning().modifyAttrs(this, attrs);
+        modifyEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword, false, false, null);
     }
 
     /**
      * application-specific password
      *
-     * @param zimbraAppSpecificPassword new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1836)
-    public Map<String,Object> setAppSpecificPassword(String[] zimbraAppSpecificPassword, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
-        return attrs;
-    }
-
-    /**
-     * application-specific password
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @param zimbraAppSpecificPassword new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3499,29 +3489,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1836)
     public void addAppSpecificPassword(String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
-        getProvisioning().modifyAttrs(this, attrs);
+        modifyEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword, true, false, null);
     }
 
     /**
      * application-specific password
      *
-     * @param zimbraAppSpecificPassword new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1836)
-    public Map<String,Object> addAppSpecificPassword(String zimbraAppSpecificPassword, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
-        return attrs;
-    }
-
-    /**
-     * application-specific password
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @param zimbraAppSpecificPassword existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3530,29 +3504,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1836)
     public void removeAppSpecificPassword(String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
-        getProvisioning().modifyAttrs(this, attrs);
+        deleteEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
     }
 
     /**
      * application-specific password
      *
-     * @param zimbraAppSpecificPassword existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1836)
-    public Map<String,Object> removeAppSpecificPassword(String zimbraAppSpecificPassword, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
-        return attrs;
-    }
-
-    /**
-     * application-specific password
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3560,24 +3518,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1836)
     public void unsetAppSpecificPassword() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAppSpecificPassword, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * application-specific password
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1836)
-    public Map<String,Object> unsetAppSpecificPassword(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAppSpecificPassword, "");
-        return attrs;
+        deleteEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, null);
     }
 
     /**
@@ -4483,17 +4424,23 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * list of currently active auth tokens
      *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error on accessing ephemeral data
+     *
      * @return zimbraAuthTokens, or empty array if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1585)
-    public String[] getAuthTokens() {
-        return getMultiAttr(Provisioning.A_zimbraAuthTokens);
+    public String[] getAuthTokens() throws com.zimbra.common.service.ServiceException {
+        return getEphemeralAttr(Provisioning.A_zimbraAuthTokens).getValues();
     }
 
     /**
      * list of currently active auth tokens
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @param zimbraAuthTokens new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4501,30 +4448,14 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1585)
-    public void setAuthTokens(String[] zimbraAuthTokens) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
-        getProvisioning().modifyAttrs(this, attrs);
+    public void setAuthTokens(String[] zimbraAuthTokens, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
+        modifyEphemeralAttr(Provisioning.A_zimbraAuthTokens, zimbraAuthTokens, false, true, expiration);
     }
 
     /**
      * list of currently active auth tokens
      *
-     * @param zimbraAuthTokens new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1585)
-    public Map<String,Object> setAuthTokens(String[] zimbraAuthTokens, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
-        return attrs;
-    }
-
-    /**
-     * list of currently active auth tokens
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @param zimbraAuthTokens new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4532,30 +4463,14 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1585)
-    public void addAuthTokens(String zimbraAuthTokens) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
-        getProvisioning().modifyAttrs(this, attrs);
+    public void addAuthTokens(String zimbraAuthTokens, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
+        modifyEphemeralAttr(Provisioning.A_zimbraAuthTokens, zimbraAuthTokens, true, true, expiration);
     }
 
     /**
      * list of currently active auth tokens
      *
-     * @param zimbraAuthTokens new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1585)
-    public Map<String,Object> addAuthTokens(String zimbraAuthTokens, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
-        return attrs;
-    }
-
-    /**
-     * list of currently active auth tokens
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @param zimbraAuthTokens existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4564,29 +4479,27 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1585)
     public void removeAuthTokens(String zimbraAuthTokens) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
-        getProvisioning().modifyAttrs(this, attrs);
+        deleteEphemeralAttr(Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
     }
 
     /**
      * list of currently active auth tokens
      *
-     * @param zimbraAuthTokens existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1585)
-    public Map<String,Object> removeAuthTokens(String zimbraAuthTokens, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
-        return attrs;
+    public void purgeAuthTokens() throws com.zimbra.common.service.ServiceException {
+        purgeEphemeralAttr(Provisioning.A_zimbraAuthTokens);
     }
 
     /**
      * list of currently active auth tokens
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4594,24 +4507,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1585)
     public void unsetAuthTokens() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAuthTokens, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * list of currently active auth tokens
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1585)
-    public Map<String,Object> unsetAuthTokens(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAuthTokens, "");
-        return attrs;
+        deleteEphemeralAttr(Provisioning.A_zimbraAuthTokens, null);
     }
 
     /**
@@ -7285,19 +7181,25 @@ public abstract class ZAttrAccount  extends MailTarget {
      * format is CSRF token data:Auth token Key crumb:Auth Token Key
      * expiration
      *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error on accessing ephemeral data
+     *
      * @return zimbraCsrfTokenData, or empty array if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1629)
-    public String[] getCsrfTokenData() {
-        return getMultiAttr(Provisioning.A_zimbraCsrfTokenData);
+    public String[] getCsrfTokenData() throws com.zimbra.common.service.ServiceException {
+        return getEphemeralAttr(Provisioning.A_zimbraCsrfTokenData).getValues();
     }
 
     /**
      * List of data associated with CSRF token for an account. The data
      * format is CSRF token data:Auth token Key crumb:Auth Token Key
      * expiration
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @param zimbraCsrfTokenData new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -7305,10 +7207,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1629)
-    public void setCsrfTokenData(String[] zimbraCsrfTokenData) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
-        getProvisioning().modifyAttrs(this, attrs);
+    public void setCsrfTokenData(String[] zimbraCsrfTokenData, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
+        modifyEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData, false, true, expiration);
     }
 
     /**
@@ -7316,23 +7216,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * format is CSRF token data:Auth token Key crumb:Auth Token Key
      * expiration
      *
-     * @param zimbraCsrfTokenData new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1629)
-    public Map<String,Object> setCsrfTokenData(String[] zimbraCsrfTokenData, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
-        return attrs;
-    }
-
-    /**
-     * List of data associated with CSRF token for an account. The data
-     * format is CSRF token data:Auth token Key crumb:Auth Token Key
-     * expiration
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @param zimbraCsrfTokenData new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -7340,10 +7224,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1629)
-    public void addCsrfTokenData(String zimbraCsrfTokenData) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
-        getProvisioning().modifyAttrs(this, attrs);
+    public void addCsrfTokenData(String zimbraCsrfTokenData, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
+        modifyEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData, true, true, expiration);
     }
 
     /**
@@ -7351,23 +7233,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * format is CSRF token data:Auth token Key crumb:Auth Token Key
      * expiration
      *
-     * @param zimbraCsrfTokenData new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1629)
-    public Map<String,Object> addCsrfTokenData(String zimbraCsrfTokenData, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
-        return attrs;
-    }
-
-    /**
-     * List of data associated with CSRF token for an account. The data
-     * format is CSRF token data:Auth token Key crumb:Auth Token Key
-     * expiration
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @param zimbraCsrfTokenData existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -7376,9 +7242,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1629)
     public void removeCsrfTokenData(String zimbraCsrfTokenData) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
-        getProvisioning().modifyAttrs(this, attrs);
+        deleteEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
     }
 
     /**
@@ -7386,23 +7250,23 @@ public abstract class ZAttrAccount  extends MailTarget {
      * format is CSRF token data:Auth token Key crumb:Auth Token Key
      * expiration
      *
-     * @param zimbraCsrfTokenData existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1629)
-    public Map<String,Object> removeCsrfTokenData(String zimbraCsrfTokenData, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
-        return attrs;
+    public void purgeCsrfTokenData() throws com.zimbra.common.service.ServiceException {
+        purgeEphemeralAttr(Provisioning.A_zimbraCsrfTokenData);
     }
 
     /**
      * List of data associated with CSRF token for an account. The data
      * format is CSRF token data:Auth token Key crumb:Auth Token Key
      * expiration
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -7410,26 +7274,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1629)
     public void unsetCsrfTokenData() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCsrfTokenData, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * List of data associated with CSRF token for an account. The data
-     * format is CSRF token data:Auth token Key crumb:Auth Token Key
-     * expiration
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1629)
-    public Map<String,Object> unsetCsrfTokenData(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCsrfTokenData, "");
-        return attrs;
+        deleteEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null);
     }
 
     /**
@@ -23031,107 +22876,71 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @see #getLastLogonTimestampAsString()
      *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error on accessing ephemeral data
+     *
      * @return zimbraLastLogonTimestamp as Date, null if unset or unable to parse
      */
     @ZAttr(id=113)
-    public Date getLastLogonTimestamp() {
-        return getGeneralizedTimeAttr(Provisioning.A_zimbraLastLogonTimestamp, null);
+    public Date getLastLogonTimestamp() throws com.zimbra.common.service.ServiceException {
+        String v = getEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp).getValue(null); return v == null ? null : LdapDateUtil.parseGeneralizedTime(v);
     }
 
     /**
      * rough estimate of when the user last logged in. see
      * zimbraLastLogonTimestampFrequency
      *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error on accessing ephemeral data
+     *
      * @return zimbraLastLogonTimestamp, or null if unset
      */
     @ZAttr(id=113)
-    public String getLastLogonTimestampAsString() {
-        return getAttr(Provisioning.A_zimbraLastLogonTimestamp, null);
+    public String getLastLogonTimestampAsString() throws com.zimbra.common.service.ServiceException {
+        return getEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp).getValue(null);
     }
 
     /**
      * rough estimate of when the user last logged in. see
      * zimbraLastLogonTimestampFrequency
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @param zimbraLastLogonTimestamp new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=113)
     public void setLastLogonTimestamp(Date zimbraLastLogonTimestamp) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLastLogonTimestamp, zimbraLastLogonTimestamp==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraLastLogonTimestamp));
-        getProvisioning().modifyAttrs(this, attrs);
+        modifyEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, zimbraLastLogonTimestamp==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraLastLogonTimestamp), false, false, null);
     }
 
     /**
      * rough estimate of when the user last logged in. see
      * zimbraLastLogonTimestampFrequency
      *
-     * @param zimbraLastLogonTimestamp new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     */
-    @ZAttr(id=113)
-    public Map<String,Object> setLastLogonTimestamp(Date zimbraLastLogonTimestamp, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLastLogonTimestamp, zimbraLastLogonTimestamp==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraLastLogonTimestamp));
-        return attrs;
-    }
-
-    /**
-     * rough estimate of when the user last logged in. see
-     * zimbraLastLogonTimestampFrequency
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @param zimbraLastLogonTimestamp new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=113)
     public void setLastLogonTimestampAsString(String zimbraLastLogonTimestamp) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLastLogonTimestamp, zimbraLastLogonTimestamp);
-        getProvisioning().modifyAttrs(this, attrs);
+        modifyEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, zimbraLastLogonTimestamp, false, false, null);
     }
 
     /**
      * rough estimate of when the user last logged in. see
      * zimbraLastLogonTimestampFrequency
      *
-     * @param zimbraLastLogonTimestamp new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     */
-    @ZAttr(id=113)
-    public Map<String,Object> setLastLogonTimestampAsString(String zimbraLastLogonTimestamp, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLastLogonTimestamp, zimbraLastLogonTimestamp);
-        return attrs;
-    }
-
-    /**
-     * rough estimate of when the user last logged in. see
-     * zimbraLastLogonTimestampFrequency
+     * Ephemeral attribute - requests routed to EphemeralStore
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=113)
     public void unsetLastLogonTimestamp() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLastLogonTimestamp, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * rough estimate of when the user last logged in. see
-     * zimbraLastLogonTimestampFrequency
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     */
-    @ZAttr(id=113)
-    public Map<String,Object> unsetLastLogonTimestamp(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLastLogonTimestamp, "");
-        return attrs;
+        deleteEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, null);
     }
 
     /**
