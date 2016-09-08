@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -257,13 +258,14 @@ public final class FilterUtil {
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     public static final String HEADER_RETURN_PATH = "Return-Path";
+    public static final String HEADER_AUTO_SUBMITTED = "Auto-Submitted";
 
     public static void redirect(OperationContext octxt, Mailbox sourceMbox, MimeMessage msg, String destinationAddress)
     throws ServiceException {
         MimeMessage outgoingMsg;
 
         try {
-            if (!isMailLoop(sourceMbox, msg)) {
+            if (!isMailLoop(sourceMbox, msg, new String[]{HEADER_FORWARDED})) {
                 outgoingMsg = new Mime.FixedMimeMessage(msg);
                 Mime.recursiveRepairTransferEncoding(outgoingMsg);
                 outgoingMsg.addHeader(HEADER_FORWARDED, sourceMbox.getAccount().getName());
@@ -336,7 +338,7 @@ public final class FilterUtil {
     public static void reply(OperationContext octxt, Mailbox mailbox, ParsedMessage parsedMessage, String bodyTemplate)
     throws MessagingException, ServiceException {
         MimeMessage mimeMessage = parsedMessage.getMimeMessage();
-        if (isMailLoop(mailbox, mimeMessage)) {
+        if (isMailLoop(mailbox, mimeMessage, new String[]{HEADER_FORWARDED})) {
             String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(mimeMessage));
             throw ServiceException.FAILURE(error, null);
         }
@@ -390,7 +392,7 @@ public final class FilterUtil {
             String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders)
     throws MessagingException, ServiceException {
         MimeMessage mimeMessage = parsedMessage.getMimeMessage();
-        if (isMailLoop(mailbox, mimeMessage)) {
+        if (isMailLoop(mailbox, mimeMessage, new String[]{HEADER_FORWARDED})) {
             String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(mimeMessage));
             throw ServiceException.FAILURE(error, null);
         }
@@ -477,7 +479,7 @@ public final class FilterUtil {
                               String reason, LmtpEnvelope envelope)
       throws MessagingException, ServiceException {
         MimeMessage mimeMessage = parsedMessage.getMimeMessage();
-        if (isMailLoop(mailbox, mimeMessage)) {
+        if (isMailLoop(mailbox, mimeMessage, new String[]{HEADER_FORWARDED})) {
             // Detected a mail loop.  Do not send MDN, but just discard the message
             String error = String.format("Detected a mail loop for message %s. No MDN sent.",
                 Mime.getMessageID(mimeMessage));
@@ -555,6 +557,118 @@ public final class FilterUtil {
     }
 
 
+    public static void notifyMailto(LmtpEnvelope envelope, OperationContext octxt, Mailbox mailbox,
+            ParsedMessage parsedMessage, String from, int importance, Map<String, String> options,
+            String message, String mailto, Map<String, List<String>> mailtoParams)
+                    throws MessagingException, ServiceException {
+        // X-Zimbra-Forwarded
+        MimeMessage mimeMessage = parsedMessage.getMimeMessage();
+        if (isMailLoop(mailbox, mimeMessage, new String[]{HEADER_FORWARDED, HEADER_AUTO_SUBMITTED})) {
+            String error = String.format("Detected a mail loop for message %s while notifying", Mime.getMessageID(mimeMessage));
+            throw ServiceException.FAILURE(error, null);
+        }
+
+        Account account = mailbox.getAccount();
+        MimeMessage notification = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
+        MailSender mailSender = mailbox.getMailSender().setSaveToSent(false);
+        mailSender.setRedirectMode(true);
+
+        // add the forwarded header account names to detect the mail loop between accounts
+        for (String headerFwdAccountName : Mime.getHeaders(mimeMessage, HEADER_FORWARDED)) {
+            notification.addHeader(HEADER_FORWARDED, headerFwdAccountName);
+        }
+        notification.addHeader(HEADER_FORWARDED, account.getName());
+
+        // Envelope FROM
+        // RFC 5436 2.7. (1st item of the 'guidelines')
+        String envelopeFrom = null;
+        String originalEnvelopeFrom = envelope == null ? null : envelope.getSender().getEmailAddress();
+        if (originalEnvelopeFrom == null) {
+            // Whenever the envelope FROM of the original message is <>, set <> to the notification message too
+            mailSender.setEnvelopeFrom("<>");
+        } else if (!StringUtil.isNullOrEmpty(from)) {
+            mailSender.setEnvelopeFrom(from);
+        } else {
+            // System default value
+            mailSender.setEnvelopeFrom("<>");
+        }
+
+        // Envelope TO & Header To/Cc
+        // RFC 5436 2.7. (2nd and 5th item of the 'guidelines')
+        Set<String> envelopeTos = new HashSet<String>();
+        envelopeTos.add(mailto);
+        notification.addRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(mailto));
+
+        List<String> tos = mailtoParams.get("to");
+        if (tos != null && tos.size() > 0) {
+            for (String to : tos) {
+                envelopeTos.add(to);
+                notification.addRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(to));
+            }
+        }
+        List<String> ccs = mailtoParams.get("cc");
+        if (ccs != null && ccs.size() > 0) {
+            for (String cc : ccs) {
+                envelopeTos.add(cc);
+                notification.addRecipient(javax.mail.Message.RecipientType.CC, new JavaMailInternetAddress(cc));
+            }
+        }
+        List<String> bccs = mailtoParams.get("bcc");
+        if (bccs != null && bccs.size() > 0) {
+            for (String bcc : bccs) {
+                envelopeTos.add(bcc);
+                // No Bcc for the message header
+            }
+        }
+        mailSender.setRecipients(envelopeTos.toArray(new String[envelopeTos.size()]));
+
+        // Auto-Submitted
+        // RFC 5436 2.7. (3rd item of the 'guidelines') and 2.7.1.
+        StringBuilder autoSubmitted = new StringBuilder("auto-notified; owner-email=\"").append(account.getName()).append("\"");
+        notification.addHeader(HEADER_AUTO_SUBMITTED, autoSubmitted.toString());
+
+        // Header From
+        // RFC 5436 2.7. (4th item of the 'guidelines')
+        if (!StringUtil.isNullOrEmpty(from)) {
+            notification.addHeader("from", from);
+        } else {
+            // RFC says: "This MUST NOT be overridden by a "from" URI header"
+        }
+
+        // Subject
+        // RFC 5436 2.7. (6th item of the 'guidelines')
+        notification.setSubject(message, getCharset(account, message));
+
+        // Body
+        // RFC 5436 2.7. (8th item of the 'guidelines')
+        List<String> bodys = mailtoParams.get("body");
+        if (bodys != null && bodys.size() > 0) {
+            String body = bodys.get(0);
+            notification.setText(body, getCharset(account, body));
+        }
+        notification.saveChanges();
+
+        // Misc.
+        notification.setSentDate(new Date());
+        for (String headerName : mailtoParams.keySet()) {
+            if (!("to".equalsIgnoreCase(headerName) ||
+                  "cc".equalsIgnoreCase(headerName) ||
+                  "bcc".equalsIgnoreCase(headerName) ||
+                  "from".equalsIgnoreCase(headerName) ||
+                  "auto-submitted".equalsIgnoreCase(headerName) ||
+                  "x-zimbra-forwarded".equalsIgnoreCase(headerName) ||
+                  "body".equalsIgnoreCase(headerName))) {
+                List<String> values = mailtoParams.get(headerName);
+                for (String value : values) {
+                    notification.addHeader(headerName, value);
+                }
+            }
+        }
+
+        mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
+        mailSender.sendMimeMessage(octxt, mailbox, notification);
+    }
+
     /**
      * Gets appropriate charset for the given data. The charset preference order is:
      *                `
@@ -619,16 +733,39 @@ public final class FilterUtil {
     }
 
     /**
-     * Returns <tt>true</tt> if the current account's name is
-     * specified in one of the X-Zimbra-Forwarded headers.
+     * Returns <tt>true</tt> if the triggering message is an automatically
+     * generated message.
+     * @param sourceMbox owner's mailbox
+     * @param msg triggering message
+     * @param checkHeaders a list of header field names to be checked on the triggering message.
+     *  For the reply and notify (legacy Zimbra version) action, checks X-Zimbra-Forwarded
+     *  For the notify (RFC compliant) action, checks X-Zimbra-Forwarded and Auto-Submitted headers.
      */
-    private static boolean isMailLoop(Mailbox sourceMbox, MimeMessage msg)
+    private static boolean isMailLoop(Mailbox sourceMbox, MimeMessage msg, String[] checkHeaders)
     throws ServiceException {
-        String[] forwards = Mime.getHeaders(msg, HEADER_FORWARDED);
         String userName = sourceMbox.getAccount().getName();
-        for (String forward : forwards) {
-            if (StringUtil.equal(userName, forward)) {
-                return true;
+        for (String header : checkHeaders) {
+            if (HEADER_FORWARDED.equals(header)) {
+                String[] forwards = Mime.getHeaders(msg, HEADER_FORWARDED);
+                for (String forward : forwards) {
+                    if (StringUtil.equal(userName, forward)) {
+                        return true;
+                    }
+                }
+            } else if (HEADER_AUTO_SUBMITTED.equals(header)) {
+                String[] values = Mime.getHeaders(msg, HEADER_AUTO_SUBMITTED);
+                for (String value : values) {
+                    String[] tokens = value.split(";");
+                    if (tokens.length > 1) {
+                        if ("no".equalsIgnoreCase(tokens[0].trim())) {
+                            return false;
+                        } else {
+                            // Sample header value
+                            //   Auto-Submitted: auto-notified; owner-email="recipient@example.org"
+                            return true;
+                        }
+                    }
+                }
             }
         }
         return false;

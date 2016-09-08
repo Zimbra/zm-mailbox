@@ -39,7 +39,9 @@ import javax.mail.internet.MimePart;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.zimbra.common.mime.InternetAddress;
+import com.zimbra.cs.filter.jsieve.ActionEreject;
 import com.zimbra.cs.filter.jsieve.ActionNotify;
+import com.zimbra.cs.filter.jsieve.ActionNotifyMailto;
 import com.zimbra.cs.filter.jsieve.ActionReply;
 import com.zimbra.cs.filter.jsieve.ActionEreject;
 import com.zimbra.cs.filter.jsieve.ErejectException;
@@ -306,6 +308,20 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                         throw e;
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to ereject.", e);
+                    }
+                } else if (action instanceof ActionNotifyMailto) {
+                    ActionNotifyMailto notifyMailto = (ActionNotifyMailto) action;
+                    ZimbraLog.filter.debug("Sending RFC 5435/5436 compliant notification message to %s.", notifyMailto.getMailto());
+                    try {
+                        handler.notifyMailto(envelope,
+                                             notifyMailto.getFrom(),
+                                             notifyMailto.getImportance(),
+                                             notifyMailto.getOptions(),
+                                             notifyMailto.getMessage(),
+                                             notifyMailto.getMailto(),
+                                             notifyMailto.getMailtoParams());
+                    } catch (Exception e) {
+                        ZimbraLog.filter.warn("Unable to notify (mailto).", e);
                         explicitKeep();
                     }
                 }
