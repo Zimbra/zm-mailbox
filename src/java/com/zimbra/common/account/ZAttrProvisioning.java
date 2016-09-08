@@ -14248,6 +14248,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyIpThrottleMsg = "zimbraReverseProxyIpThrottleMsg";
 
     /**
+     * List of IP addresses to be excluded from IP throttling.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3000)
+    public static final String A_zimbraReverseProxyIPThrottleWhitelist = "zimbraReverseProxyIPThrottleWhitelist";
+
+    /**
      * Log level for NGINX Proxy error log
      *
      * @since ZCS 5.0.10
