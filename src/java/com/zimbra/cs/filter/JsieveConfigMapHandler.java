@@ -116,6 +116,8 @@ public class JsieveConfigMapHandler {
             // the "enotify" is not accepted as an action name in the sieve filter body, 
             // such as inside the 'if' body.
             mTestMap.put("enotify", com.zimbra.cs.filter.jsieve.EnotifyTest.class.getName());
+            mTestMap.put("valid_notify_method", com.zimbra.cs.filter.jsieve.ValidNotifyMethodTest.class.getName());
+            mTestMap.put("notify_method_capability", com.zimbra.cs.filter.jsieve.NotifyMethodCapabilityTest.class.getName());
         }
 
         return mTestMap;

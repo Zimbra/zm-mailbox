@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
@@ -125,8 +126,8 @@ public class NotifyMailtoTest {
 
             acct1.setMailSieveScript(filterScript1);
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
-                    new OperationContext(mbox1), mbox1, 
-                    new ParsedMessage(sampleMsg.getBytes(), false), 0, 
+                    new OperationContext(mbox1), mbox1,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
                     acct1.getName(), env, new DeliveryContext(),
                     Mailbox.ID_FOLDER_INBOX, true);
 
@@ -193,6 +194,115 @@ public class NotifyMailtoTest {
             Assert.assertEquals(0, size2);
             long size3 = mbox3.getSize();
             Assert.assertEquals(0, size3);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+
+    /**
+     * Tests that the valid_notify_method
+     */
+    @Test
+    public void testValidNotifyMethod() {
+        String filterScript =
+                "require \"enotify\";\n"
+              + "require \"tag\";\n"
+              + "if not valid_notify_method [\"mailto:\", \n"
+              + "         \"http://gw.example.net/notify?test\"] {\n"
+              + "  tag \"valid_notify_method\";\n"
+              + "}";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1,
+                    new ParsedMessage("From: test1@zimbra.com".getBytes(), false), 0,
+                    acct1.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+
+            // The sample filter script should be matched since the the first argument of the
+            // 'valid_notify_method' test is NOT correctly formatted ("mailto:").
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox1.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("valid_notify_method", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    /**
+     * Tests the notify_method_capability ("online"/"maybe")
+     */
+    @Test
+    public void testNotifyMethodCapability_OnlineMaybe() {
+        String filterScript =
+                "require [\"enotify\", \"tag\"];\n"
+              + "if notify_method_capability\n"
+              + "     \"mailto:test2@zimbra.com\"\n"
+              + "     \"Online\"\n"
+              + "     \"maybe\" { \n"
+              + "  tag \"notify_method_capability\";\n"
+              + "}";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1,
+                    new ParsedMessage("From: test1@zimbra.com".getBytes(), false), 0,
+                    acct1.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+
+            // ZCS implements the RFC 5436 so that it returns true when 'notify_method_capability'
+            // checkes whether the "Online" status is "maybe".
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox1.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("notify_method_capability", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    /**
+     * Tests the notify_method_capability ("online"/"yes")
+     * The mailto method returns true for only "maybe"; return false for other values.
+     */
+    @Test
+    public void testNotifyMethodCapability_OnlineYes() {
+        String filterScript =
+                "require [\"enotify\", \"tag\"];\n"
+              + "if not notify_method_capability\n"
+              + "     \"mailto:test2@zimbra.com\"\n"
+              + "     \"Online\"\n"
+              + "     \"YES\"] { \n"
+              + "  tag \"notify_method_capability\";\n"
+              + "}";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1,
+                    new ParsedMessage("From: test1@zimbra.com".getBytes(), false), 0,
+                    acct1.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+
+            // ZCS implements the RFC 5436 so that it returns true when 'notify_method_capability'
+            // checkes whether the "Online" status is "maybe". Otherwise it returns false.
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox1.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
         } catch (Exception e) {
             fail("No exception should be thrown");
         }
