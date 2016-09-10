@@ -45,7 +45,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=-1)
     public String getCn() {
-        return getAttr(Provisioning.A_cn, null);
+        return getAttr(Provisioning.A_cn, null, true);
     }
 
     /**
@@ -107,7 +107,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=-1)
     public String[] getDescription() {
-        return getMultiAttr(Provisioning.A_description);
+        return getMultiAttr(Provisioning.A_description, true, true);
     }
 
     /**
@@ -223,7 +223,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=-1)
     public String getDisplayName() {
-        return getAttr(Provisioning.A_displayName, null);
+        return getAttr(Provisioning.A_displayName, null, true);
     }
 
     /**
@@ -285,7 +285,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=-1)
     public String getMail() {
-        return getAttr(Provisioning.A_mail, null);
+        return getAttr(Provisioning.A_mail, null, true);
     }
 
     /**
@@ -347,7 +347,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=-1)
     public String getUid() {
-        return getAttr(Provisioning.A_uid, null);
+        return getAttr(Provisioning.A_uid, null, true);
     }
 
     /**
@@ -411,7 +411,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=659)
     public String[] getACE() {
-        return getMultiAttr(Provisioning.A_zimbraACE);
+        return getMultiAttr(Provisioning.A_zimbraACE, true, true);
     }
 
     /**
@@ -545,7 +545,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=761)
     public String[] getAdminConsoleUIComponents() {
-        return getMultiAttr(Provisioning.A_zimbraAdminConsoleUIComponents);
+        return getMultiAttr(Provisioning.A_zimbraAdminConsoleUIComponents, true, true);
     }
 
     /**
@@ -683,7 +683,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=790)
     public Date getCreateTimestamp() {
-        return getGeneralizedTimeAttr(Provisioning.A_zimbraCreateTimestamp, null);
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraCreateTimestamp, null, true);
     }
 
     /**
@@ -695,7 +695,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=790)
     public String getCreateTimestampAsString() {
-        return getAttr(Provisioning.A_zimbraCreateTimestamp, null);
+        return getAttr(Provisioning.A_zimbraCreateTimestamp, null, true);
     }
 
     /**
@@ -799,7 +799,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=811)
     public String getDistributionListSendShareMessageFromAddress() {
-        return getAttr(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, null);
+        return getAttr(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, null, true);
     }
 
     /**
@@ -877,7 +877,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=810)
     public boolean isDistributionListSendShareMessageToNewMembers() {
-        return getBooleanAttr(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, false);
+        return getBooleanAttr(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, false, true);
     }
 
     /**
@@ -960,7 +960,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=1275)
     public ZAttrProvisioning.DistributionListSubscriptionPolicy getDistributionListSubscriptionPolicy() {
-        try { String v = getAttr(Provisioning.A_zimbraDistributionListSubscriptionPolicy); return v == null ? null : ZAttrProvisioning.DistributionListSubscriptionPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraDistributionListSubscriptionPolicy, true, true); return v == null ? null : ZAttrProvisioning.DistributionListSubscriptionPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -975,7 +975,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=1275)
     public String getDistributionListSubscriptionPolicyAsString() {
-        return getAttr(Provisioning.A_zimbraDistributionListSubscriptionPolicy, null);
+        return getAttr(Provisioning.A_zimbraDistributionListSubscriptionPolicy, null, true);
     }
 
     /**
@@ -1099,7 +1099,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=1276)
     public ZAttrProvisioning.DistributionListUnsubscriptionPolicy getDistributionListUnsubscriptionPolicy() {
-        try { String v = getAttr(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy); return v == null ? null : ZAttrProvisioning.DistributionListUnsubscriptionPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, true, true); return v == null ? null : ZAttrProvisioning.DistributionListUnsubscriptionPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -1114,7 +1114,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=1276)
     public String getDistributionListUnsubscriptionPolicyAsString() {
-        return getAttr(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, null);
+        return getAttr(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, null, true);
     }
 
     /**
@@ -1233,7 +1233,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=325)
     public String getGroupId() {
-        return getAttr(Provisioning.A_zimbraGroupId, null);
+        return getAttr(Provisioning.A_zimbraGroupId, null, true);
     }
 
     /**
@@ -1295,7 +1295,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=1)
     public String getId() {
-        return getAttr(Provisioning.A_zimbraId, null);
+        return getAttr(Provisioning.A_zimbraId, null, true);
     }
 
     /**
@@ -1359,7 +1359,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=802)
     public boolean isIsAdminGroup() {
-        return getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
+        return getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false, true);
     }
 
     /**
@@ -1429,7 +1429,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=345)
     public String getLocaleAsString() {
-        return getAttr(Provisioning.A_zimbraLocale, null);
+        return getAttr(Provisioning.A_zimbraLocale, null, true);
     }
 
     /**
@@ -1491,7 +1491,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=9)
     public String getNotes() {
-        return getAttr(Provisioning.A_zimbraNotes, null);
+        return getAttr(Provisioning.A_zimbraNotes, null, true);
     }
 
     /**
@@ -1556,7 +1556,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=1333)
     public String[] getPrefAllowAddressForDelegatedSender() {
-        return getMultiAttr(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender);
+        return getMultiAttr(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, true, true);
     }
 
     /**
@@ -1696,7 +1696,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=60)
     public String getPrefReplyToAddress() {
-        return getAttr(Provisioning.A_zimbraPrefReplyToAddress, null);
+        return getAttr(Provisioning.A_zimbraPrefReplyToAddress, null, true);
     }
 
     /**
@@ -1758,7 +1758,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=404)
     public String getPrefReplyToDisplay() {
-        return getAttr(Provisioning.A_zimbraPrefReplyToDisplay, null);
+        return getAttr(Provisioning.A_zimbraPrefReplyToDisplay, null, true);
     }
 
     /**
@@ -1820,7 +1820,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=405)
     public boolean isPrefReplyToEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefReplyToEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraPrefReplyToEnabled, false, true);
     }
 
     /**
@@ -1884,7 +1884,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=357)
     public String[] getShareInfo() {
-        return getMultiAttr(Provisioning.A_zimbraShareInfo);
+        return getMultiAttr(Provisioning.A_zimbraShareInfo, true, true);
     }
 
     /**
