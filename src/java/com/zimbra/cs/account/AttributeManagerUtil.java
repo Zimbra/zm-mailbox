@@ -1046,7 +1046,7 @@ public class AttributeManagerUtil {
                if (ai.isEphemeral()) {
                    javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s).getBoolValue(%s);", name, defaultValue);
                } else {
-                   javaBody = String.format("return getBooleanAttr(Provisioning.A_%s, %s);", name, defaultValue);
+                   javaBody = String.format("return getBooleanAttr(Provisioning.A_%s, %s, true);", name, defaultValue);
                }
                javaDocReturns = String.format(", or %s if unset", defaultValue);
                break;
@@ -1057,7 +1057,7 @@ public class AttributeManagerUtil {
                if (ai.isEphemeral()) {
                    javaBody = String.format("String v = getEphemeralAttr(Provisioning.A_%s).getValue(%s); return v == null ? null : ByteUtil.decodeLDAPBase64(v);", name, defaultValue);
                } else {
-                   javaBody = String.format("return getBinaryAttr(Provisioning.A_%s);", name);
+                   javaBody = String.format("return getBinaryAttr(Provisioning.A_%s, true);", name);
                }
                javaDocReturns = String.format(", or null if unset", defaultValue);
                break;
@@ -1067,7 +1067,7 @@ public class AttributeManagerUtil {
                if (ai.isEphemeral()) {
                    javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s).getIntValue(%s);", name, defaultValue);
                } else {
-                   javaBody = String.format("return getIntAttr(Provisioning.A_%s, %s);", name, defaultValue);
+                   javaBody = String.format("return getIntAttr(Provisioning.A_%s, %s, true);", name, defaultValue);
                }
                javaDocReturns = String.format(", or %s if unset", defaultValue);
                break;
@@ -1077,7 +1077,7 @@ public class AttributeManagerUtil {
                if (ai.isEphemeral()) {
                    javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s).getIntValue(%s);", name, defaultValue);
                } else {
-                   javaBody = String.format("return getIntAttr(Provisioning.A_%s, %s);", name, defaultValue);
+                   javaBody = String.format("return getIntAttr(Provisioning.A_%s, %s, true);", name, defaultValue);
                }
                javaDocReturns = String.format(", or %s if unset", defaultValue);
                asStringDoc = true;
@@ -1092,7 +1092,7 @@ public class AttributeManagerUtil {
                if (ai.isEphemeral()) {
                    javaBody = String.format("try { String v = getEphemeralAttr(Provisioning.A_%s).getValue(); return v == null ? %s : ZAttrProvisioning.%s.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return %s; }", name, defaultValue,enumName(ai), defaultValue);
                } else {
-                   javaBody = String.format("try { String v = getAttr(Provisioning.A_%s); return v == null ? %s : ZAttrProvisioning.%s.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return %s; }", name, defaultValue,enumName(ai), defaultValue);
+                   javaBody = String.format("try { String v = getAttr(Provisioning.A_%s, true, true); return v == null ? %s : ZAttrProvisioning.%s.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return %s; }", name, defaultValue,enumName(ai), defaultValue);
                }
                javaDocReturns = String.format(", or %s if unset and/or has invalid value", defaultValue);
                break;
@@ -1102,7 +1102,7 @@ public class AttributeManagerUtil {
                if (ai.isEphemeral()) {
                    javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s).getLongValue(%sL);", name, defaultValue);
                } else {
-                   javaBody = String.format("return getLongAttr(Provisioning.A_%s, %sL);", name, defaultValue);
+                   javaBody = String.format("return getLongAttr(Provisioning.A_%s, %sL, true);", name, defaultValue);
                }
                javaDocReturns = String.format(", or %s if unset", defaultValue);
                break;
@@ -1118,7 +1118,7 @@ public class AttributeManagerUtil {
                if (ai.isEphemeral()) {
                    javaBody = String.format("return getEphemeralTimeInterval(Provisioning.A_%s, %sL);", name, defaultValue);
                } else {
-                   javaBody = String.format("return getTimeInterval(Provisioning.A_%s, %sL);", name, defaultValue);
+                   javaBody = String.format("return getTimeInterval(Provisioning.A_%s, %sL, true);", name, defaultValue);
                }
                javaDocReturns = String.format(" in millseconds, or %s%s if unset", defaultValue, defaultDurationStrValue);
                javaType = "long";
@@ -1129,7 +1129,7 @@ public class AttributeManagerUtil {
                if (ai.isEphemeral()) {
                    javaBody = String.format("String v = getEphemeralAttr(Provisioning.A_%s).getValue(%s); return v == null ? null : LdapDateUtil.parseGeneralizedTime(v);", name, defaultValue);
                } else {
-                   javaBody = String.format("return getGeneralizedTimeAttr(Provisioning.A_%s, null);", name);
+                   javaBody = String.format("return getGeneralizedTimeAttr(Provisioning.A_%s, null, true);", name);
                }
                javaDocReturns = " as Date, null if unset or unable to parse";
                asStringDoc = true;
@@ -1145,7 +1145,7 @@ public class AttributeManagerUtil {
                    if (ai.isEphemeral()) {
                        javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s).getValue(%s);", name, defaultValue);
                    } else {
-                       javaBody = String.format("return getAttr(Provisioning.A_%s, %s);", name, defaultValue);
+                       javaBody = String.format("return getAttr(Provisioning.A_%s, %s, true);", name, defaultValue);
                    }
                    javaDocReturns = String.format(", or %s if unset", defaultValue);
                } else {
@@ -1158,9 +1158,9 @@ public class AttributeManagerUtil {
                        }
                    } else {
                        if (defaultValue == null) {
-                           javaBody = String.format("return getMultiAttr(Provisioning.A_%s);", name);
+                           javaBody = String.format("return getMultiAttr(Provisioning.A_%s, true, true);", name);
                        } else {
-                           javaBody = String.format("String[] value = getMultiAttr(Provisioning.A_%s); return value.length > 0 ? value : %s;", name, defaultValue);
+                           javaBody = String.format("String[] value = getMultiAttr(Provisioning.A_%s, true, true); return value.length > 0 ? value : %s;", name, defaultValue);
                        }
                    }
                    javaDocReturns = ", or empty array if unset";
@@ -1219,7 +1219,8 @@ public class AttributeManagerUtil {
        }
    }
 
-   private static enum SetterType { set, add, unset, remove, purge }
+   @VisibleForTesting
+   static enum SetterType { set, add, unset, remove, purge }
 
    private static void generateSetters(StringBuilder result, AttributeInfo ai, boolean asString, SetterType setterType) throws ServiceException {
        generateSetter(result, ai, asString, setterType, true);

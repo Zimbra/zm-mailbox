@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 
 import org.json.JSONException;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
@@ -125,7 +126,6 @@ public abstract class Entry implements ToZJSONObject {
         mAttrs = attrs;
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
-        this.overrideDefaults = overrideDefaults;
         setAttributeManager();
     }
 
@@ -289,23 +289,39 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public String getAttr(String name) {
-        return getAttr(name, true);
+        return getAttr(name, true, false);
     }
 
     public String getAttr(String name, boolean applyDefaults) {
-        Object v = getObject(name, applyDefaults);
-        if (v instanceof String) {
-            return (String) v;
-        } else if (v instanceof String[]) {
-            String[] a = (String[]) v;
-            return a.length > 0 ? a[0] : null;
+        return getAttr(name, applyDefaults, false);
+    }
+
+    protected String getAttr(String name, boolean applyDefaults, boolean skipEphemeralCheck) {
+        if (!skipEphemeralCheck && mAttrMgr.isEphemeral(name)) {
+            try {
+                String value = getEphemeralAttr(name).getValue();
+                if (!Strings.isNullOrEmpty(value)) {
+                    return value;
+                } else {
+                    return applyDefaults ? objectToString(getAttrDefault(name)) : null;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.ephemeral.warn("error getting value for %s, returning default", name);
+                return applyDefaults ? objectToString(getAttrDefault(name)) : null;
+            }
         } else {
-            return null;
+            Object v = getObject(name, applyDefaults);
+            return objectToString(v);
         }
     }
 
     public String getAttr(String name, String defaultValue) {
-        String v = getAttr(name);
+        String v = getAttr(name, true, false);
+        return v == null ? defaultValue : v;
+    }
+
+    protected String getAttr(String name, String defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         return v == null ? defaultValue : v;
     }
 
@@ -323,8 +339,8 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults) {
+        Map<String, Object> attrs = new HashMap<String, Object>();
         if (applyDefaults && (mDefaults != null || mSecondaryDefaults != null)) {
-            Map<String, Object> attrs = new HashMap<String, Object>();
             // put the second defaults
             if (mSecondaryDefaults != null)
                 attrs.putAll(mSecondaryDefaults);
@@ -336,14 +352,36 @@ public abstract class Entry implements ToZJSONObject {
             // override with currently set
             attrs.putAll(mAttrs);
 
+            // add ephemeral attributes
+            attrs.putAll(getEphemeralAttrs());
+
             // override with overrides if set
             if (overrideDefaults != null) {
                 attrs.putAll(overrideDefaults);
             }
-            return attrs;
         } else {
-            return mAttrs;
+            attrs.putAll(mAttrs);
+            attrs.putAll(getEphemeralAttrs());
         }
+        return attrs;
+    }
+
+    public Map<String, Object> getEphemeralAttrs() {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        for (Map.Entry<String, AttributeInfo> info: mAttrMgr.getEphemeralAttrs().entrySet()) {
+            String name = info.getKey();
+            AttributeInfo ai = info.getValue();
+            try {
+                String[] values = getEphemeralAttr(ai.getName()).getValues();
+                if (values != null && values.length > 0) {
+                    attrs.put(name, Arrays.asList(values));
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.ephemeral.warn("error getting ephemeral attribute " + name);
+                continue;
+            }
+        }
+        return attrs;
     }
 
     public Map<String, Object> getUnicodeAttrs(boolean applyDefaults) {
@@ -358,12 +396,20 @@ public abstract class Entry implements ToZJSONObject {
      * @return
      */
     public boolean getBooleanAttr(String name, boolean defaultValue) {
-        String v = getAttr(name);
+        return getBooleanAttr(name, defaultValue, false);
+    }
+
+    protected boolean getBooleanAttr(String name, boolean defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         return v == null ? defaultValue : ProvisioningConstants.TRUE.equals(v);
     }
 
     public byte[] getBinaryAttr(String name) {
-        String v = getAttr(name);
+        return getBinaryAttr(name, false);
+    }
+
+    protected byte[] getBinaryAttr(String name, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         return v == null ? null : ByteUtil.decodeLDAPBase64(v);
     }
 
@@ -374,7 +420,11 @@ public abstract class Entry implements ToZJSONObject {
      * @return
      */
     public Date getGeneralizedTimeAttr(String name, Date defaultValue) {
-        String v = getAttr(name);
+        return getGeneralizedTimeAttr(name, defaultValue, false);
+    }
+
+    protected Date getGeneralizedTimeAttr(String name, Date defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         if (v == null)
             return defaultValue;
         Date d = LdapDateUtil.parseGeneralizedTime(v);
@@ -388,7 +438,11 @@ public abstract class Entry implements ToZJSONObject {
      * @return
      */
     public int getIntAttr(String name, int defaultValue) {
-        String v = getAttr(name);
+        return getIntAttr(name, defaultValue, false);
+    }
+
+    protected int getIntAttr(String name, int defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         try {
             return v == null ? defaultValue : Integer.parseInt(v);
         } catch (NumberFormatException e) {
@@ -419,7 +473,11 @@ public abstract class Entry implements ToZJSONObject {
      * @return
      */
     public long getLongAttr(String name, long defaultValue) {
-        String v = getAttr(name);
+        return getLongAttr(name, defaultValue, false);
+    }
+
+    protected long getLongAttr(String name, long defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         try {
             return v == null ? defaultValue : Long.parseLong(v);
         } catch (NumberFormatException e) {
@@ -457,18 +515,62 @@ public abstract class Entry implements ToZJSONObject {
             return values;
     }
 
+    private String objectToString(Object obj) {
+        if (obj instanceof String) {
+            return (String) obj;
+        } else if (obj instanceof String[]) {
+            String[] a = (String[]) obj;
+            return a.length > 0 ? a[0] : null;
+        } else {
+            return null;
+        }
+    }
+
+    private String[] objectToStringArray(Object obj) {
+        if (obj instanceof String) {
+            return new String[]{(String) obj};
+        } else if (obj instanceof String[]) {
+            return (String[]) obj;
+        } else {
+            return sEmptyMulti;
+        }
+    }
+
     /**
      * Returns the set of values for the given attribute, or an empty
      * array if no values are defined.
      */
     public String[] getMultiAttr(String name, boolean applyDefaults) {
-        Object v = getObject(name, applyDefaults);
-        if (v instanceof String) {
-            return new String[]{(String) v};
-        } else if (v instanceof String[]) {
-            return (String[]) v;
+        return getMultiAttr(name, applyDefaults, false);
+    }
+
+    public String[] getMultiAttr(String name, boolean applyDefaults, boolean skipEphemeralCheck) {
+        if (!skipEphemeralCheck && mAttrMgr.isEphemeral(name)) {
+            try {
+                String[] values = getEphemeralAttr(name).getValues();
+                if (values == null || values.length == 0) {
+                    if (applyDefaults) {
+                        Object v = getAttrDefault(name);
+                        return objectToStringArray(v);
+                    } else {
+                        return sEmptyMulti;
+                    }
+                } else {
+                    return values;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.ephemeral.warn("error getting values for %s, returning default", name);
+                if (applyDefaults) {
+                    Object v = getAttrDefault(name);
+                    return objectToStringArray(v);
+                }
+                else {
+                    return sEmptyMulti;
+                }
+            }
         } else {
-            return sEmptyMulti;
+            Object v = getObject(name, applyDefaults);
+            return objectToStringArray(v);
         }
     }
 
@@ -524,7 +626,12 @@ public abstract class Entry implements ToZJSONObject {
      * @return interval in milliseconds
      */
     public long getTimeInterval(String name, long defaultValue) {
-        return DateUtil.getTimeInterval(getAttr(name), defaultValue);
+        return getTimeInterval(name, defaultValue, false);
+    }
+
+    protected long getTimeInterval(String name, long defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
+        return DateUtil.getTimeInterval(v, defaultValue);
     }
 
     /**
