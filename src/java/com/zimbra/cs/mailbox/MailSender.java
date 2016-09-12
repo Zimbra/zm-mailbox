@@ -690,6 +690,10 @@ public class MailSender {
                 mm.removeHeader(PRE_SEND_HEADER); //no need to keep the header in the message at this point
             }
 
+            if (mimeProcessor != null) {
+                mimeProcessor.process(mm);
+            }
+
             // actually send the message via SMTP
             Collection<Address> sentAddresses = sendMessage(mbox, mm, rollbacks);
 
