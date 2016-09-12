@@ -21,6 +21,9 @@ public abstract class EphemeralStore {
     private static Map<String, String> factories = new HashMap<String, String>();
     private static Factory factory;
     protected AttributeEncoder encoder;
+    static {
+        factories.put("ldap", LdapEphemeralStore.Factory.class.getName());
+    }
 
     /**
      * Get the value for a key. If key does not exist, returns an empty
@@ -98,6 +101,8 @@ public abstract class EphemeralStore {
         if (factories.containsKey(prefix)) {
             ZimbraLog.ephemeral.warn("Replacing ephemeral factory class '%s' registered for '%s' with '%s'",
                     factories.get(prefix), prefix, klass);
+        } else {
+            ZimbraLog.ephemeral.info("Registering ephemeral factory class '%s' for prefix '%s'", klass, prefix);
         }
         factories.put(prefix,  klass);
     }
@@ -124,7 +129,7 @@ public abstract class EphemeralStore {
         try {
             factory = factoryClass.newInstance();
             factory.startup();
-            ZimbraLog.ephemeral.info("using ephemeral store factory %s", factoryClass.getDeclaringClass().getSimpleName());
+            ZimbraLog.ephemeral.debug("using ephemeral store factory %s", factoryClass.getDeclaringClass().getSimpleName());
         } catch (InstantiationException | IllegalAccessException e) {
             Zimbra.halt("Unable to initialize EphemeralStore factory " + factoryClass.getDeclaringClass().getSimpleName(), e);
         }
@@ -159,6 +164,8 @@ public abstract class EphemeralStore {
                 if (tokens != null && tokens.length > 0) {
                     factoryClass = factories.get(tokens[0]);
                 }
+            } else {
+                factoryClass = factories.get("ldap");
             }
             setFactory(factoryClass);
         }

@@ -542,7 +542,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         for (Map.Entry<String, Object> e: attrs.entrySet()) {
             String key = e.getKey();
             Object value = e.getValue();
-            AttributeInfo ai = ephemeralAttrMap.get(key);
+            AttributeInfo ai = ephemeralAttrMap.get(key.toLowerCase());
             if (ai == null) { continue; }
             boolean dynamic = ai.isDynamic();
 
