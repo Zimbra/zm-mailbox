@@ -58,16 +58,6 @@ public abstract class EphemeralStore {
             throws ServiceException;
 
     /**
-     * Delete the specified key, and all associated values.
-     *
-     * @param key
-     * @param location
-     * @throws ServiceException
-     */
-    public abstract void delete(String key, EphemeralLocation location)
-            throws ServiceException;
-
-    /**
      * Delete specified value for a key. If the value does not exist, do
      * nothing.
      *
@@ -76,19 +66,20 @@ public abstract class EphemeralStore {
      * @param location
      * @throws ServiceException
      */
-    public abstract void deleteValue(String key, String value, EphemeralLocation location)
+    public abstract void delete(String key, String value, EphemeralLocation location)
             throws ServiceException;
 
 
     /**
-     * Check whether the specified key exists in the target location.
+     * Check whether the specified key/value pair exists in the target location.
      *
      * @param key
+     * @param value
      * @param location
      * @return
      * @throws ServiceException
      */
-    public abstract boolean hasKey(String key, EphemeralLocation location)
+    public abstract boolean has(String key, String value, EphemeralLocation location)
             throws ServiceException;
 
     /**
