@@ -72,6 +72,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeProcessor;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
@@ -88,13 +89,14 @@ import com.zimbra.soap.type.MsgContent;
  *
  * @since Sep 17, 2004
  */
-public final class SendMsg extends MailDocumentHandler {
+public class SendMsg extends MailDocumentHandler {
     private static final Log LOG = LogFactory.getLog(SendMsg.class);
 
     private enum SendState { NEW, SENT, PENDING };
 
     private static final long MAX_IN_FLIGHT_DELAY_MSECS = 4 * Constants.MILLIS_PER_SECOND;
     private static final long RETRY_CHECK_PERIOD_MSECS = 500;
+    protected static MimeProcessor processor = null;
 
     private static final ItemId NO_MESSAGE_SAVED_TO_SENT = new ItemId((String) null, -1);
 
@@ -240,9 +242,9 @@ public final class SendMsg extends MailDocumentHandler {
         if (dataSourceId == null) {
             sender = isCalendarMessage ? CalendarMailSender.getCalendarMailSender(mbox) : mbox.getMailSender();
             if (noSaveToSent) {
-                id = sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false);
+                id = sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false, processor);
             } else {
-                id = sender.sendMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, false);
+                id = sender.sendMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, false, processor);
             }
         } else {
             com.zimbra.cs.account.DataSource dataSource = mbox.getAccount().getDataSourceById(dataSourceId);
