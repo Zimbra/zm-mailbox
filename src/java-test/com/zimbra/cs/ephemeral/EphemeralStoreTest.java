@@ -52,15 +52,14 @@ public class EphemeralStoreTest {
     public void testDelete() throws Exception {
         EphemeralLocation target = new TestLocation();
         store.set(new EphemeralInput("foo", "bar"), target);
-        store.delete("foo", target);
-        EphemeralResult result = store.get("foo", target);
-        assertTrue(result.isEmpty());
-        store.set(new EphemeralInput("foo", "bar"), target);
         store.update(new EphemeralInput("foo", "baz"), target);
-        store.deleteValue("foo", "bar", target);
-        result = store.get("foo", target);
+        store.delete("foo", "bar", target);
+        EphemeralResult result = store.get("foo", target);
         assertEquals(1, result.getValues().length);
         assertEquals("baz", result.getValue());
+        store.delete("foo", "baz", target);
+        result = store.get("foo", target);
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -76,12 +75,13 @@ public class EphemeralStoreTest {
     }
 
     @Test
-    public void testHasKey() throws Exception {
+    public void testHas() throws Exception {
         EphemeralLocation target = new TestLocation();
         store.set(new EphemeralInput("foo", "bar"), target);
-        assertTrue(store.hasKey("foo", target));
-        store.delete("foo", target);
-        assertFalse(store.hasKey("foo", target));
+        assertTrue(store.has("foo", "bar", target));
+        assertFalse(store.has("foo", "baz", target));
+        store.delete("foo", "bar", target);
+        assertFalse(store.has("foo", "bar", target));
     }
 
     @Test

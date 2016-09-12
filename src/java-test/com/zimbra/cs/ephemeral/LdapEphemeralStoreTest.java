@@ -61,25 +61,16 @@ public class LdapEphemeralStoreTest {
         EphemeralLocation location = new TestLocation();
         store.set(new EphemeralInput("foo", "bar"), location);
         helper.reset();
-        store.delete("foo", location);
+        store.delete("foo", "bar", location);
         Map<String, Object> expected = makeMap("-foo", "bar");
         verifyAttrMap(expected);
         helper.reset();
 
-        //delete multiple values
-        store.set(new EphemeralInput("foo", "bar"), location);
-        store.set(new EphemeralInput("foo", "baz"), location);
-        helper.reset();
-        store.delete("foo", location);
-        expected = makeMap("-foo", "bar", "baz");
-        verifyAttrMap(expected);
-        helper.reset();
-
-        //delete only one value from several
+        //delete one value from several
         store.set(new EphemeralInput("foo", "bar"), location);
         store.update(new EphemeralInput("foo", "baz"), location);
         helper.reset();
-        store.deleteValue("foo", "bar", location);
+        store.delete("foo", "bar", location);
         expected = makeMap("-foo", "bar");
         verifyAttrMap(expected);
     }
@@ -101,7 +92,7 @@ public class LdapEphemeralStoreTest {
     public void testHasKey() throws Exception {
         EphemeralLocation target = new TestLocation();
         store.set(new EphemeralInput("foo", "bar"), target);
-        assertTrue(store.hasKey("foo", target));
+        assertTrue(store.has("foo", "bar", target));
     }
 
     private Map<String, Object> makeMap(String key, String... values) {
@@ -199,7 +190,7 @@ public class LdapEphemeralStoreTest {
                 } else {
                     for (String v: values) {
                         EphemeralKeyValuePair kvPair = encoder.decode(key.substring(1), v);
-                        store.deleteValue(kvPair.getKey(), kvPair.getValue(), location);
+                        store.delete(kvPair.getKey(), kvPair.getValue(), location);
                     }
                 }
             }
