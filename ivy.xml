@@ -40,7 +40,7 @@
   <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z"/>
   <dependency org="org.apache.mina" name="mina-core" rev="2.0.4"/>
   <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="r239"/>
-  <dependency org="net.sf.ehcache" name="ehcache-core" rev="2.5.1"/>
+  <dependency org="org.ehcache" name="ehcache" rev="3.1.2"/>
   <dependency org="commons-fileupload" name="commons-fileupload" rev="1.2.2"/>
   <dependency org="ant-1.7.0-ziputil-patched" name="ant-1.7.0-ziputil-patched" rev="1.0"/>
   <dependency org="org.eclipse.jetty" name="jetty-continuation" rev="9.3.5.v20151012"/>
