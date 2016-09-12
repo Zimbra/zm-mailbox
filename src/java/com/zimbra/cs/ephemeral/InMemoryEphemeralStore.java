@@ -58,14 +58,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
     }
 
     @Override
-    public void delete(String key, EphemeralLocation target)
-            throws ServiceException {
-        Multimap<String, String> map = getSpecifiedMap(target);
-        map.removeAll(key);
-    }
-
-    @Override
-    public void deleteValue(String key, String valueToDelete, EphemeralLocation target)
+    public void delete(String key, String valueToDelete, EphemeralLocation target)
             throws ServiceException {
         Multimap<String, String> map = getSpecifiedMap(target);
         Collection<String> values = map.get(key);
@@ -102,10 +95,11 @@ public class InMemoryEphemeralStore extends EphemeralStore {
     }
 
     @Override
-    public boolean hasKey(String keyName, EphemeralLocation target)
+    public boolean has(String key, String value, EphemeralLocation target)
             throws ServiceException {
         Multimap<String, String> map = getSpecifiedMap(target);
-        return map.containsKey(keyName);
+        Collection<String> values = map.get(key);
+        return values.contains(value);
     }
 
     private Multimap<String, String> getSpecifiedMap(EphemeralLocation target) {

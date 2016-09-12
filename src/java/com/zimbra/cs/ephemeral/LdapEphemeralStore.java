@@ -2,12 +2,13 @@ package com.zimbra.cs.ephemeral;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -62,15 +63,7 @@ public class LdapEphemeralStore extends EphemeralStore {
     }
 
     @Override
-    public void delete(String key, EphemeralLocation location)
-            throws ServiceException {
-        helper.setLocation(location);
-        String[] vals = helper.getMultiAttr(key);
-        deleteInternal(helper, key, Arrays.asList(vals));
-    }
-
-    @Override
-    public void deleteValue(String key, String valueToDelete, EphemeralLocation location)
+    public void delete(String key, String valueToDelete, EphemeralLocation location)
             throws ServiceException {
         helper.setLocation(location);
         // have to take into account that values may have expiration encoded in
@@ -106,9 +99,14 @@ public class LdapEphemeralStore extends EphemeralStore {
     }
 
     @Override
-    public boolean hasKey(String keyName, EphemeralLocation location)
+    public boolean has(String key, String value, EphemeralLocation location)
             throws ServiceException {
-        return !Strings.isNullOrEmpty(helper.getAttr(keyName));
+        String[] values = helper.getMultiAttr(key);
+        if (values == null || values.length == 0) {
+            return false;
+        }
+        Set<String> valueSet = new HashSet<String>(Arrays.asList(values));
+        return valueSet.contains(value);
     }
 
     private void deleteInternal(AbstractLdapHelper helper, String key, List<String> values) throws ServiceException {
