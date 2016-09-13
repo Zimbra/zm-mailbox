@@ -1,4 +1,4 @@
-package com.zimbra.soap.smime;
+package com.zimbra.soap.mail.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

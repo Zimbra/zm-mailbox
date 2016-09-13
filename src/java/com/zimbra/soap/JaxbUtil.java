@@ -1052,8 +1052,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.RevokeOAuthConsumerResponse.class,
 
             //smime
-            com.zimbra.soap.smime.SendSecureMsgRequest.class,
-            com.zimbra.soap.smime.SendSecureMsgResponse.class
+            com.zimbra.soap.mail.message.SendSecureMsgRequest.class,
+            com.zimbra.soap.mail.message.SendSecureMsgResponse.class
         };
 
         try {
