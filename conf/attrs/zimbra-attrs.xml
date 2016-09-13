@@ -9349,4 +9349,8 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="3000" name="zimbraReverseProxyIPThrottleWhitelist" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+  <desc>Client IP/IPRange whitelist for exclusion from IP throttling. Value may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.  IPV6 is supported as well.</desc>
+</attr>
+
 </attrs>
