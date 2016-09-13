@@ -99,7 +99,10 @@ public class NotifyMailtoTest {
           + "}\n";
 
     /**
-     * Tests the notify action with a typical parameters contains in non-ASCII characters.
+     * Tests 'notify' filter rule:
+     *  - Set :message (Subject field), :from (From field) and mechanism (mailto:...)
+     *  - Body of the notification message contains non-ascii characters
+     *  - Additional header fields are specified via mechanism (maito:) parameter
      */
     @Test
     public void test() {
@@ -201,10 +204,13 @@ public class NotifyMailtoTest {
 
 
     /**
-     * Tests that the valid_notify_method
+     * Tests the 'valid_notify_method' test: verify that the given parameters
+     * do not have any syntax error.
      */
     @Test
     public void testValidNotifyMethod() {
+        // The sample filter script should be matched since the the first argument of the
+        // 'valid_notify_method' test is NOT correctly formatted (no parameter after "mailto:").
         String filterScript =
                 "require \"enotify\";\n"
               + "require \"tag\";\n"
@@ -225,8 +231,6 @@ public class NotifyMailtoTest {
                     acct1.getName(), new DeliveryContext(),
                     Mailbox.ID_FOLDER_INBOX, true);
 
-            // The sample filter script should be matched since the the first argument of the
-            // 'valid_notify_method' test is NOT correctly formatted ("mailto:").
             Assert.assertEquals(1, ids.size());
             Message msg = mbox1.getMessageById(null, ids.get(0).getId());
             Assert.assertEquals("valid_notify_method", ArrayUtil.getFirstElement(msg.getTags()));
