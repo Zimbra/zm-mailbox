@@ -16,15 +16,15 @@ import com.zimbra.common.util.ZimbraLog;
  *
  */
 public class EphemeralResult {
-    private String key;
+    private EphemeralKey key;
     private String[] values;
 
-    public EphemeralResult(String key, String value) {
+    public EphemeralResult(EphemeralKey key, String value) {
         this.key = key;
         this.values = value == null ? null : new String[] {value};
     }
 
-    public EphemeralResult(String key, String[] values) {
+    public EphemeralResult(EphemeralKey key, String[] values) {
         this.key = key;
         this.values = values;
     }
@@ -44,8 +44,8 @@ public class EphemeralResult {
         }
     }
 
-    public EphemeralResult(String name, List<String> values) {
-        this(name, values.toArray(new String[values.size()]));
+    public EphemeralResult(EphemeralKey key, List<String> values) {
+        this(key, values.toArray(new String[values.size()]));
     }
 
     public String getValue() {
@@ -150,7 +150,7 @@ public class EphemeralResult {
         return values != null && values.length > 1;
     }
 
-    public String getKey() {
+    public EphemeralKey getKey() {
         return key;
     }
 
@@ -159,7 +159,7 @@ public class EphemeralResult {
         return String.format("ephemeral attribute %s [%s]", key, values == null ? "unset" : values);
     }
 
-    public static EphemeralResult emptyResult(String key) {
+    public static EphemeralResult emptyResult(EphemeralKey key) {
         return new EphemeralResult(key, new String[0]);
     }
 

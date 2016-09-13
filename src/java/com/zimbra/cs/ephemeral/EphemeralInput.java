@@ -20,56 +20,51 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class EphemeralInput {
-    private String key;
+    private EphemeralKey key;
     private Object value;
     private Expiration expiration;
-    private boolean dynamic;
 
-    public EphemeralInput(String key, String value) {
-        this(key, value, null, false);
+    public EphemeralInput(EphemeralKey key, String value) {
+        this(key, value, null);
     }
 
-    public EphemeralInput(String key, Integer value) {
-        this(key, value, null, false);
+    public EphemeralInput(EphemeralKey key, Integer value) {
+        this(key, value, null);
     }
 
-    public EphemeralInput(String key, Long value) {
-        this(key, value, null, false);
+    public EphemeralInput(EphemeralKey key, Long value) {
+        this(key, value, null);
     }
 
-    public EphemeralInput(String key, Boolean value) {
-        this(key, value, null, false);
+    public EphemeralInput(EphemeralKey key, Boolean value) {
+        this(key, value, null);
     }
 
-    public EphemeralInput(String key, String value, Expiration expiration, boolean dynamic) {
+    public EphemeralInput(EphemeralKey key, String value, Expiration expiration) {
         this.key = key;
         this.value = value;
         this.expiration = expiration;
-        this.dynamic = dynamic;
     }
 
-    public EphemeralInput(String key, Integer value, Expiration expiration, boolean dynamic) {
+    public EphemeralInput(EphemeralKey key, Integer value, Expiration expiration) {
         this.key = key;
         this.value = value;
         this.expiration = expiration;
-        this.dynamic = dynamic;
     }
 
-    public EphemeralInput(String key, Long value, Expiration expiration, boolean dynamic) {
+    public EphemeralInput(EphemeralKey key, Long value, Expiration expiration) {
         this.key = key;
         this.value = value;
         this.expiration = expiration;
-        this.dynamic = dynamic;
     }
 
-    public EphemeralInput(String key, Boolean value, Expiration expiration, boolean dynamic) {
+    public EphemeralInput(EphemeralKey key, Boolean value, Expiration expiration) {
         this.key = key;
         this.value = value;
         this.expiration = expiration;
-        this.dynamic = dynamic;
     }
 
-    public String getKey() {
+    public EphemeralKey getEphemeralKey() {
         return key;
     }
     public Object getValue() {
@@ -80,16 +75,12 @@ public class EphemeralInput {
         this.expiration = expiration;
     }
 
-    public void setDynamic(boolean dynamic) {
-        this.dynamic = dynamic;
-    }
-
     public Long getExpiration() {
         return expiration == null ? null : expiration.getMillis();
     }
 
     public boolean isDynamic() {
-        return dynamic;
+        return key.isDynamic();
     }
 
 

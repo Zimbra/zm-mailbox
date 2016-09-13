@@ -31,7 +31,7 @@ public abstract class EphemeralStore {
      * @return
      * @throws ServiceException
      */
-    public abstract EphemeralResult get(String key, EphemeralLocation location)
+    public abstract EphemeralResult get(EphemeralKey key, EphemeralLocation location)
             throws ServiceException;
 
     /**
@@ -66,12 +66,12 @@ public abstract class EphemeralStore {
      * @param location
      * @throws ServiceException
      */
-    public abstract void delete(String key, String value, EphemeralLocation location)
+    public abstract void delete(EphemeralKey key, String value, EphemeralLocation location)
             throws ServiceException;
 
 
     /**
-     * Check whether the specified key/value pair exists in the target location.
+     * Check whether the specified key exists in the target location.
      *
      * @param key
      * @param value
@@ -79,18 +79,19 @@ public abstract class EphemeralStore {
      * @return
      * @throws ServiceException
      */
-    public abstract boolean has(String key, String value, EphemeralLocation location)
+    public abstract boolean has(EphemeralKey key, EphemeralLocation location)
             throws ServiceException;
 
     /**
      * Delete keys that have passed their expiration. If the backend natively
      * supports key expiry, this may do nothing.
      *
+     *
      * @param key
      * @param location
      * @throws ServiceException
      */
-    public abstract void purgeExpired(String key, EphemeralLocation location)
+    public abstract void purgeExpired(EphemeralKey key, EphemeralLocation location)
             throws ServiceException;
 
     public static void registerFactory(String prefix, String klass) {
@@ -133,8 +134,20 @@ public abstract class EphemeralStore {
         this.encoder = encoder;
     }
 
-    public AttributeEncoder getAttributeEncoder() {
-        return encoder;
+    protected String encodeKey(EphemeralInput input, EphemeralLocation target) {
+        return encoder.encodeKey(input.getEphemeralKey(), target);
+    }
+
+    protected String encodeKey(EphemeralKey key, EphemeralLocation target) {
+        return encoder.encodeKey(key, target);
+    }
+
+    protected String encodeValue(EphemeralInput input, EphemeralLocation target) {
+        return encoder.encodeValue(input, target);
+    }
+
+    protected EphemeralKeyValuePair decode(String key, String value) {
+        return encoder.decode(key, value);
     }
 
     public static Factory getFactory() throws ServiceException {
