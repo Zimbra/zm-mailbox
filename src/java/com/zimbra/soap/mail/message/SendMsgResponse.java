@@ -43,7 +43,7 @@ public class SendMsgResponse {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private SendMsgResponse() {
+    public SendMsgResponse() {
     }
 
     public MsgWithGroupInfo getMsg() { return msg; }
