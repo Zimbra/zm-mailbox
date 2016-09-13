@@ -59,6 +59,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.Folder;
@@ -288,13 +289,17 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     }
                 } else if (action instanceof ActionReject) {
                     ActionReject reject = (ActionReject) action;
-                    ZimbraLog.filter.debug("Refusing delivery of a message", reject.getMessage());
-                    try {
-                        handler.reject(reject.getMessage(), envelope);
-                        handler.discard();
-                    } catch (Exception e) {
-                        ZimbraLog.filter.info("Unable to reject.", e);
-                        explicitKeep();
+                    boolean isRejectSupported = Provisioning.getInstance().getConfig().getBooleanAttr(
+                            Provisioning.A_zimbraSieveRejectEnabled, false);
+                    if (isRejectSupported) {
+	                    ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
+	                    try {
+	                        handler.reject(reject.getMessage(), envelope);
+	                        handler.discard();
+	                    } catch (Exception e) {
+	                        ZimbraLog.filter.info("Unable to reject.", e);
+	                        explicitKeep();
+	                    }
                     }
                 } else if (action instanceof ActionEreject) {
                     ActionEreject ereject = (ActionEreject) action;
