@@ -12,5 +12,6 @@ public class SmimeConstants {
 
     public static final String A_SIGN = "sign";
     public static final String A_ENCRYPT = "encrypt";
+    public static final String A_CERT_ID = "certId";
 
 }
