@@ -292,7 +292,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     boolean isRejectSupported = Provisioning.getInstance().getConfig().getBooleanAttr(
                             Provisioning.A_zimbraSieveRejectEnabled, false);
                     if (isRejectSupported) {
-	                    ZimbraLog.filter.debug("Refusing delivery of a message", reject.getMessage());
+	                    ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
 	                    try {
 	                        handler.reject(reject.getMessage(), envelope);
 	                        handler.discard();
