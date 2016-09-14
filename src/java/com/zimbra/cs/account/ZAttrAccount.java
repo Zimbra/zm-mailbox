@@ -3458,23 +3458,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1836)
-    public String[] getAppSpecificPassword() throws com.zimbra.common.service.ServiceException {
-        return getEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword).getValues();
-    }
-
-    /**
-     * application-specific password
-     *
-     * Ephemeral attribute - requests routed to EphemeralStore
-     *
-     * @param zimbraAppSpecificPassword new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1836)
-    public void setAppSpecificPassword(String[] zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, null, zimbraAppSpecificPassword, false, null);
+    public String getAppSpecificPassword(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
+        return getEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, dynamicComponent).getValue(null);
     }
 
     /**
@@ -3488,8 +3473,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1836)
-    public void addAppSpecificPassword(String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, null, zimbraAppSpecificPassword, false, null);
+    public void addAppSpecificPassword(String dynamicComponent, String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
+        modifyEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, dynamicComponent, zimbraAppSpecificPassword, true, null);
     }
 
     /**
@@ -3503,8 +3488,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1836)
-    public void removeAppSpecificPassword(String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, null, zimbraAppSpecificPassword);
+    public void removeAppSpecificPassword(String dynamicComponent, String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
+        deleteEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, dynamicComponent, zimbraAppSpecificPassword);
     }
 
     /**
@@ -3517,8 +3502,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1836)
-    public void unsetAppSpecificPassword() throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, null, null);
+    public void hasAppSpecificPassword(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
+        hasEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, dynamicComponent);
     }
 
     /**
@@ -4433,23 +4418,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1585)
-    public String[] getAuthTokens() throws com.zimbra.common.service.ServiceException {
-        return getEphemeralAttr(Provisioning.A_zimbraAuthTokens).getValues();
-    }
-
-    /**
-     * list of currently active auth tokens
-     *
-     * Ephemeral attribute - requests routed to EphemeralStore
-     *
-     * @param zimbraAuthTokens new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1585)
-    public void setAuthTokens(String[] zimbraAuthTokens, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraAuthTokens, null, zimbraAuthTokens, true, expiration);
+    public String getAuthTokens(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
+        return getEphemeralAttr(Provisioning.A_zimbraAuthTokens, dynamicComponent).getValue(null);
     }
 
     /**
@@ -4463,8 +4433,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1585)
-    public void addAuthTokens(String zimbraAuthTokens, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraAuthTokens, null, zimbraAuthTokens, true, expiration);
+    public void addAuthTokens(String dynamicComponent, String zimbraAuthTokens, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
+        modifyEphemeralAttr(Provisioning.A_zimbraAuthTokens, dynamicComponent, zimbraAuthTokens, true, expiration);
     }
 
     /**
@@ -4478,8 +4448,22 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1585)
-    public void removeAuthTokens(String zimbraAuthTokens) throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraAuthTokens, null, zimbraAuthTokens);
+    public void removeAuthTokens(String dynamicComponent, String zimbraAuthTokens) throws com.zimbra.common.service.ServiceException {
+        deleteEphemeralAttr(Provisioning.A_zimbraAuthTokens, dynamicComponent, zimbraAuthTokens);
+    }
+
+    /**
+     * list of currently active auth tokens
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public void hasAuthTokens(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
+        hasEphemeralAttr(Provisioning.A_zimbraAuthTokens, dynamicComponent);
     }
 
     /**
@@ -4493,21 +4477,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1585)
     public void purgeAuthTokens() throws com.zimbra.common.service.ServiceException {
-        purgeEphemeralAttr(Provisioning.A_zimbraAuthTokens, null);
-    }
-
-    /**
-     * list of currently active auth tokens
-     *
-     * Ephemeral attribute - requests routed to EphemeralStore
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1585)
-    public void unsetAuthTokens() throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraAuthTokens, null, null);
+        purgeEphemeralAttr(Provisioning.A_zimbraAuthTokens);
     }
 
     /**
@@ -7190,25 +7160,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1629)
-    public String[] getCsrfTokenData() throws com.zimbra.common.service.ServiceException {
-        return getEphemeralAttr(Provisioning.A_zimbraCsrfTokenData).getValues();
-    }
-
-    /**
-     * List of data associated with CSRF token for an account. The data
-     * format is CSRF token data:Auth token Key crumb:Auth Token Key
-     * expiration
-     *
-     * Ephemeral attribute - requests routed to EphemeralStore
-     *
-     * @param zimbraCsrfTokenData new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1629)
-    public void setCsrfTokenData(String[] zimbraCsrfTokenData, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null, zimbraCsrfTokenData, true, expiration);
+    public String getCsrfTokenData(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
+        return getEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, dynamicComponent).getValue(null);
     }
 
     /**
@@ -7224,8 +7177,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1629)
-    public void addCsrfTokenData(String zimbraCsrfTokenData, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null, zimbraCsrfTokenData, true, expiration);
+    public void addCsrfTokenData(String dynamicComponent, String zimbraCsrfTokenData, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
+        modifyEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, dynamicComponent, zimbraCsrfTokenData, true, expiration);
     }
 
     /**
@@ -7241,8 +7194,24 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1629)
-    public void removeCsrfTokenData(String zimbraCsrfTokenData) throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null, zimbraCsrfTokenData);
+    public void removeCsrfTokenData(String dynamicComponent, String zimbraCsrfTokenData) throws com.zimbra.common.service.ServiceException {
+        deleteEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, dynamicComponent, zimbraCsrfTokenData);
+    }
+
+    /**
+     * List of data associated with CSRF token for an account. The data
+     * format is CSRF token data:Auth token Key crumb:Auth Token Key
+     * expiration
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1629)
+    public void hasCsrfTokenData(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
+        hasEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, dynamicComponent);
     }
 
     /**
@@ -7258,23 +7227,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1629)
     public void purgeCsrfTokenData() throws com.zimbra.common.service.ServiceException {
-        purgeEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null);
-    }
-
-    /**
-     * List of data associated with CSRF token for an account. The data
-     * format is CSRF token data:Auth token Key crumb:Auth Token Key
-     * expiration
-     *
-     * Ephemeral attribute - requests routed to EphemeralStore
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1629)
-    public void unsetCsrfTokenData() throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null, null);
+        purgeEphemeralAttr(Provisioning.A_zimbraCsrfTokenData);
     }
 
     /**
@@ -21421,7 +21374,6 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraId, or null if unset
      */
-    @Override
     @ZAttr(id=1)
     public String getId() {
         return getAttr(Provisioning.A_zimbraId, null, true);
@@ -22900,7 +22852,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=113)
     public String getLastLogonTimestampAsString() throws com.zimbra.common.service.ServiceException {
-        return getEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp).getValue(null);
+        return getEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, null).getValue(null);
     }
 
     /**
@@ -22941,7 +22893,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=113)
     public void unsetLastLogonTimestamp() throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, null, null);
+        deleteEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp);
     }
 
     /**
