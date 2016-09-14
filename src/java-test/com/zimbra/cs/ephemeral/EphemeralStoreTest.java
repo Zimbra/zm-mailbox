@@ -30,58 +30,121 @@ public class EphemeralStoreTest {
 
     @Test
     public void testSet() throws Exception {
+        EphemeralKey key = new EphemeralKey("foo");
         EphemeralLocation target = new TestLocation();
-        store.set(new EphemeralInput("foo", "bar"), target);
-        assertEquals("bar", store.get("foo", target).getValue());
-        store.set(new EphemeralInput("foo", "baz"), target);
-        assertEquals("baz", store.get("foo", target).getValue());
+        store.set(new EphemeralInput(key, "bar"), target);
+        assertEquals("bar", store.get(key, target).getValue());
+        store.set(new EphemeralInput(key, "baz"), target);
+        assertEquals("baz", store.get(key, target).getValue());
     }
 
     @Test
     public void testUpdate() throws Exception {
+        EphemeralKey staticKey = new EphemeralKey("foo");
+        EphemeralKey dynamicKey = new EphemeralKey("foo", "1");
         EphemeralLocation target = new TestLocation();
-        store.update(new EphemeralInput("foo", "bar"), target);
-        store.update(new EphemeralInput("foo", "baz"), target);
-        EphemeralResult result = store.get("foo", target);
+        store.update(new EphemeralInput(staticKey, "bar"), target);
+        store.update(new EphemeralInput(staticKey, "baz"), target);
+        EphemeralResult result = store.get(staticKey, target);
         String[] values = result.getValues();
         assertEquals("bar", values[0]);
         assertEquals("baz", values[1]);
+
+        //test dynamic values
+        store.update(new EphemeralInput(dynamicKey, "dynamic"), target);
+        result = store.get(staticKey, target);
+        values = result.getValues();
+        assertEquals(2, values.length);
+        assertEquals("bar", values[0]);
+        assertEquals("baz", values[1]);
+
+        result = store.get(dynamicKey, target);
+        values = result.getValues();
+        assertEquals(1, values.length);
+        assertEquals("dynamic", values[0]);
     }
 
     @Test
     public void testDelete() throws Exception {
         EphemeralLocation target = new TestLocation();
-        store.set(new EphemeralInput("foo", "bar"), target);
-        store.delete("foo", target);
-        EphemeralResult result = store.get("foo", target);
-        assertTrue(result.isEmpty());
-        store.set(new EphemeralInput("foo", "bar"), target);
-        store.update(new EphemeralInput("foo", "baz"), target);
-        store.deleteValue("foo", "bar", target);
-        result = store.get("foo", target);
+        EphemeralKey staticKey = new EphemeralKey("foo");
+        EphemeralKey dynamicKey1 = new EphemeralKey("foo", "1");
+        EphemeralKey dynamicKey2 = new EphemeralKey("foo", "2");
+
+        store.set(new EphemeralInput(staticKey, "bar"), target);
+        store.update(new EphemeralInput(staticKey, "baz"), target);
+        store.update(new EphemeralInput(dynamicKey1, "dynamic1"), target);
+        store.update(new EphemeralInput(dynamicKey2, "dynamic2"), target);
+        store.delete(staticKey, "bar", target);
+        EphemeralResult result = store.get(staticKey, target);
         assertEquals(1, result.getValues().length);
         assertEquals("baz", result.getValue());
+        store.delete(staticKey, "baz", target);
+        result = store.get(staticKey, target);
+        assertTrue(result.isEmpty());
+
+        store.delete(dynamicKey1, "dynamic1", target);
+        result = store.get(dynamicKey1, target);
+        assertTrue(result.isEmpty());
+        result = store.get(dynamicKey2, target);
+        assertEquals(1, result.getValues().length);
+        assertEquals("dynamic2", result.getValue());
+
+        store.delete(dynamicKey2, "dynamic2", target);
+        result = store.get(dynamicKey2, target);
+        assertTrue(result.isEmpty());
     }
 
     @Test
     public void testExpiry() throws Exception {
         EphemeralLocation target = new TestLocation();
-        EphemeralInput input = new EphemeralInput("foo", "bar");
-        input.setExpiration(new Expiration(1L, TimeUnit.SECONDS));
-        store.set(input, target);
-        assertEquals("bar", store.get("foo", target).getValue());
+        EphemeralKey staticKey = new EphemeralKey("foo");
+        EphemeralKey dynamicKey = new EphemeralKey("foo","1");
+        EphemeralInput input1 = new EphemeralInput(staticKey, "bar");
+        input1.setExpiration(new Expiration(1L, TimeUnit.SECONDS));
+        store.set(input1, target);
+        EphemeralInput input2 = new EphemeralInput(dynamicKey, "bar");
+        input2.setExpiration(new Expiration(1L, TimeUnit.SECONDS));
+        store.update(input2, target);
+        //sanity check
+        assertEquals("bar", store.get(staticKey, target).getValue());
+        assertEquals("bar", store.get(dynamicKey, target).getValue());
         Thread.sleep(1500);
-        store.purgeExpired("foo", target);
-        assertTrue(store.get("foo", target).isEmpty());
+        //purging without specifying a dynamic component will purge all keys with dynamic components
+        store.purgeExpired(staticKey, target);
+        assertTrue(store.get(staticKey, target).isEmpty());
+        assertTrue(store.get(dynamicKey, target).isEmpty());
+
+        store.set(input1, target);
+        store.update(input2, target);
+        Thread.sleep(1500);
+        //purging with a dynamic component will purge only keys that match that dynamic component
+        store.purgeExpired(dynamicKey, target);
+        assertTrue(store.get(dynamicKey, target).isEmpty());
+        assertEquals("bar", store.get(staticKey, target).getValue());
     }
 
     @Test
-    public void testHasKey() throws Exception {
+    public void testHas() throws Exception {
         EphemeralLocation target = new TestLocation();
-        store.set(new EphemeralInput("foo", "bar"), target);
-        assertTrue(store.hasKey("foo", target));
-        store.delete("foo", target);
-        assertFalse(store.hasKey("foo", target));
+
+        EphemeralKey staticKey = new EphemeralKey("foo");
+        EphemeralKey dynamicKey1 = new EphemeralKey("foo", "1");
+        EphemeralKey dynamicKey2 = new EphemeralKey("foo", "2");
+
+        store.set(new EphemeralInput(staticKey, "bar"), target);
+        store.update(new EphemeralInput(dynamicKey1, "bar"), target);
+        store.update(new EphemeralInput(dynamicKey2, "bar"), target);
+
+        assertTrue(store.has(staticKey, target));
+        assertTrue(store.has(dynamicKey1, target));
+        assertTrue(store.has(dynamicKey2, target));
+        assertFalse(store.has(new EphemeralKey("foo", "3"), target));
+
+        //delete one of the dynamic keys
+        store.delete(dynamicKey1, "bar", target);
+        assertFalse(store.has(dynamicKey1, target));
+        assertTrue(store.has(dynamicKey2, target));
     }
 
     @Test
@@ -90,43 +153,45 @@ public class EphemeralStoreTest {
         Integer intValue = 1;
         Boolean boolValue = true;
         Long longValue = 10000000000L;
-        store.set(new EphemeralInput("integer", intValue), target);
-        store.set(new EphemeralInput("boolean", boolValue), target);
-        store.set(new EphemeralInput("long", longValue), target);
-        assertEquals(intValue, store.get("integer", target).getIntValue());
-        assertEquals(boolValue, store.get("boolean", target).getBoolValue());
-        assertEquals(longValue, store.get("long", target).getLongValue());
+        store.set(new EphemeralInput(new EphemeralKey("integer"), intValue), target);
+        store.set(new EphemeralInput(new EphemeralKey("boolean"), boolValue), target);
+        store.set(new EphemeralInput(new EphemeralKey("long"), longValue), target);
+        assertEquals(intValue, store.get(new EphemeralKey("integer"), target).getIntValue());
+        assertEquals(boolValue, store.get(new EphemeralKey("boolean"), target).getBoolValue());
+        assertEquals(longValue, store.get(new EphemeralKey("long"), target).getLongValue());
     }
 
     @Test
     public void testIncorrectDataTypes() throws Exception {
+        EphemeralKey key = new EphemeralKey("foo");
         EphemeralLocation target = new TestLocation();
-        store.set(new EphemeralInput("foo", "bar"), target);
-        store.update(new EphemeralInput("foo", "1"), target);
-        store.update(new EphemeralInput("foo", "true"), target);
-        EphemeralResult result = store.get("foo", target);
+        store.set(new EphemeralInput(key, "bar"), target);
+        store.update(new EphemeralInput(key, "1"), target);
+        store.update(new EphemeralInput(key, "true"), target);
+        EphemeralResult result = store.get(key, target);
 
         assertEquals((Integer) null, result.getIntValue());
         assertEquals(new Integer(1), result.getIntValue(1));
         assertArrayEquals(new Integer[] {null, 1, null}, result.getIntValues());
         assertArrayEquals(new Integer[] {0, 1, 0}, result.getIntValues(0));
 
-        assertEquals((Boolean) null, store.get("foo", target).getBoolValue());
-        assertEquals(true, store.get("foo", target).getBoolValue(true));
+        assertEquals((Boolean) null, store.get(key, target).getBoolValue());
+        assertEquals(true, store.get(key, target).getBoolValue(true));
         assertArrayEquals(new Boolean[] {null, null, true}, result.getBoolValues());
         assertArrayEquals(new Boolean[] {false, false, true}, result.getBoolValues(false));
 
 
-        assertEquals((Long) null, store.get("foo", target).getLongValue());
-        assertEquals(new Long(1), store.get("foo", target).getLongValue(1L));
+        assertEquals((Long) null, store.get(key, target).getLongValue());
+        assertEquals(new Long(1), store.get(key, target).getLongValue(1L));
         assertArrayEquals(new Long[] {null, 1L, null}, result.getLongValues());
         assertArrayEquals(new Long[] {0L, 1L, 0L}, result.getLongValues(0L));
     }
 
     @Test
     public void testDifferentLocation() throws Exception {
+        EphemeralKey key = new EphemeralKey("foo");
         EphemeralLocation target = new TestLocation();
-        store.set(new EphemeralInput("foo", "bar"), target);
+        store.set(new EphemeralInput(key, "bar"), target);
 
         EphemeralLocation differentLocation = new EphemeralLocation() {
 
@@ -134,12 +199,13 @@ public class EphemeralStoreTest {
             public String[] getLocation() { return new String[] { "different" }; }
         };
 
-        assertTrue(store.get("foo", differentLocation).isEmpty());
+        assertTrue(store.get(key, differentLocation).isEmpty());
     }
 
     @Test
     public void testDefaults() throws Exception {
-        EphemeralResult result = new EphemeralResult("foo", (String) null);
+        EphemeralKey key = new EphemeralKey("foo");
+        EphemeralResult result = new EphemeralResult(key, (String) null);
         assertEquals(null, result.getValue());
         assertEquals("bar", result.getValue("bar"));
         assertEquals(null, result.getIntValue());

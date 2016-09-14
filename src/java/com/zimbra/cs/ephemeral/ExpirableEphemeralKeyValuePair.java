@@ -10,7 +10,7 @@ package com.zimbra.cs.ephemeral;
 public class ExpirableEphemeralKeyValuePair extends EphemeralKeyValuePair {
     private Long expiration;
 
-    public ExpirableEphemeralKeyValuePair(String key, String value, Long expiration) {
+    public ExpirableEphemeralKeyValuePair(EphemeralKey key, String value, Long expiration) {
         super(key, value);
         this.expiration = expiration;
     }

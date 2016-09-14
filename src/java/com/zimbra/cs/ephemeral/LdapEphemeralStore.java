@@ -2,15 +2,12 @@ package com.zimbra.cs.ephemeral;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 
@@ -24,28 +21,24 @@ public class LdapEphemeralStore extends EphemeralStore {
 
     public LdapEphemeralStore(AbstractLdapHelper helper) {
         this.helper = helper;
-        setAttributeEncoder(new ExpirationEncoder());
+        setAttributeEncoder(new DynamicExpirationEncoder());
     }
 
     @Override
-    public EphemeralResult get(String key, EphemeralLocation location)
+    public EphemeralResult get(EphemeralKey key, EphemeralLocation location)
             throws ServiceException {
         helper.setLocation(location);
-        String[] values = helper.getMultiAttr(key);
-        EphemeralKeyValuePair[] parsed = new EphemeralKeyValuePair[values.length];
-        for (int i = 0; i < values.length; i++) {
-            parsed[i] = getAttributeEncoder().decode(key, values[i]);
-        }
-        return new EphemeralResult(parsed);
+        String[] values = helper.getMultiAttr(key.getKey());
+        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder);
+        return iteratorHelper.get(Arrays.asList(values));
     }
 
     @Override
     public void set(EphemeralInput input, EphemeralLocation location)
             throws ServiceException {
         helper.setLocation(location);
-        AttributeEncoder encoder = getAttributeEncoder();
-        String key = encoder.encodeKey(input, location);
-        String value = encoder.encodeValue(input, location);
+        String key = encodeKey(input, location);
+        String value = encodeValue(input, location);
         helper.addChange(key, value);
         helper.executeChange();
     }
@@ -54,61 +47,42 @@ public class LdapEphemeralStore extends EphemeralStore {
     public void update(EphemeralInput input, EphemeralLocation location)
             throws ServiceException {
         helper.setLocation(location);
-        AttributeEncoder encoder = getAttributeEncoder();
-        String key = encoder.encodeKey(input, location);
-        String value = encoder.encodeValue(input, location);
+        String key = encodeKey(input, location);
+        String value = encodeValue(input, location);
         helper.addChange("+" + key, value);
         helper.executeChange();
     }
 
     @Override
-    public void delete(String key, EphemeralLocation location)
+    public void delete(EphemeralKey key, String valueToDelete, EphemeralLocation location)
             throws ServiceException {
         helper.setLocation(location);
-        String[] vals = helper.getMultiAttr(key);
-        deleteInternal(helper, key, Arrays.asList(vals));
-    }
-
-    @Override
-    public void deleteValue(String key, String valueToDelete, EphemeralLocation location)
-            throws ServiceException {
-        helper.setLocation(location);
+        String encodedKey = encodeKey(key, location);
         // have to take into account that values may have expiration encoded in
-        List<String> toDelete = new LinkedList<String>();
-        for (String val: helper.getMultiAttr(key)) {
-            String parsedValue = getAttributeEncoder().decode(key, val).getValue();
-            if (parsedValue.equals(valueToDelete)) {
-                toDelete.add(val);
-            }
-        }
-        deleteInternal(helper, key, toDelete);
+        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder);
+        String[] values = helper.getMultiAttr(key.getKey());
+        List<String> toDelete = iteratorHelper.delete(Arrays.asList(values), valueToDelete);
+        deleteInternal(helper, encodedKey, toDelete);
     }
 
     @Override
-    public void purgeExpired(String key, EphemeralLocation location)
+    public void purgeExpired(EphemeralKey key, EphemeralLocation location)
             throws ServiceException {
         helper.setLocation(location);
-        String[] values = helper.getMultiAttr(key);
-        List<String> purged = new LinkedList<String>();
-        AttributeEncoder encoder = getAttributeEncoder();
-        for (String ldapValue: values) {
-            EphemeralKeyValuePair entry = encoder.decode(key, ldapValue);
-            if (entry instanceof ExpirableEphemeralKeyValuePair) {
-                Long expiry  = ((ExpirableEphemeralKeyValuePair) entry).getExpiration();
-                if (expiry != null && System.currentTimeMillis() > expiry) {
-                    String value = entry.getValue();
-                    ZimbraLog.ephemeral.info("purging ephemeral value '%s' for key '%s'", key, value);
-                    purged.add(ldapValue);
-                }
-            }
-        }
-        deleteInternal(helper, key, purged);
+        String encodedKey = encodeKey(key, location);
+        String[] values = helper.getMultiAttr(key.getKey());
+        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder);
+        List<String> purged = iteratorHelper.purge(Arrays.asList(values));
+        deleteInternal(helper, encodedKey, purged);
     }
 
     @Override
-    public boolean hasKey(String keyName, EphemeralLocation location)
+    public boolean has(EphemeralKey key, EphemeralLocation location)
             throws ServiceException {
-        return !Strings.isNullOrEmpty(helper.getAttr(keyName));
+        helper.setLocation(location);
+        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder);
+        String[] values = helper.getMultiAttr(key.getKey());
+        return iteratorHelper.has(Arrays.asList(values));
     }
 
     private void deleteInternal(AbstractLdapHelper helper, String key, List<String> values) throws ServiceException {

@@ -2,7 +2,6 @@ package com.zimbra.cs.ephemeral;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,95 +16,72 @@ public class InMemoryEphemeralStore extends EphemeralStore {
 
     public InMemoryEphemeralStore() {
         storeMap = new HashMap<String, Multimap<String, String>>();
-        setAttributeEncoder(new ExpirationEncoder());
+        setAttributeEncoder(new DynamicExpirationEncoder());
     }
 
     @Override
-    public EphemeralResult get(String key, EphemeralLocation target)
+    public EphemeralResult get(EphemeralKey key, EphemeralLocation target)
             throws ServiceException {
         Multimap<String, String> map = getSpecifiedMap(target);
-        Collection<String> values = map.get(key);
-        if (values.isEmpty()) {
-            return EphemeralResult.emptyResult(key);
-        } else {
-            EphemeralKeyValuePair[] entries = new EphemeralKeyValuePair[values.size()];
-            int i = 0;
-            for (String v: values) {
-                entries[i] = getAttributeEncoder().decode(key, v);
-                i++;
-            }
-            return new EphemeralResult(entries);
-        }
+        String encodedKey = encodeKey(key, target);
+        Collection<String> values = map.get(encodedKey);
+        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder);
+        return helper.get(values);
     }
 
     @Override
     public void set(EphemeralInput attribute, EphemeralLocation target)
             throws ServiceException {
-        String key = attribute.getKey();
-        String value = getAttributeEncoder().encodeValue(attribute, target);
+        String encodedKey = encodeKey(attribute, target);
+        String encodedValue = encodeValue(attribute, target);
         Multimap<String, String> map = getSpecifiedMap(target);
-        map.removeAll(key);
-        map.put(key, value);
+        map.removeAll(encodedKey);
+        map.put(encodedKey, encodedValue);
     }
 
     @Override
     public void update(EphemeralInput attribute, EphemeralLocation target)
             throws ServiceException {
         Multimap<String, String> map = getSpecifiedMap(target);
-        String key = attribute.getKey();
-        String value = getAttributeEncoder().encodeValue(attribute, target);
-        map.put(key, value);
+        String encodedKey = encodeKey(attribute, target);
+        String encodedValue = encodeValue(attribute, target);
+        map.put(encodedKey, encodedValue);
     }
 
     @Override
-    public void delete(String key, EphemeralLocation target)
+    public void delete(EphemeralKey key, String valueToDelete, EphemeralLocation target)
             throws ServiceException {
         Multimap<String, String> map = getSpecifiedMap(target);
-        map.removeAll(key);
-    }
-
-    @Override
-    public void deleteValue(String key, String valueToDelete, EphemeralLocation target)
-            throws ServiceException {
-        Multimap<String, String> map = getSpecifiedMap(target);
-        Collection<String> values = map.get(key);
-        List<String> toDelete = new LinkedList<String>();
-        for (String v: values) {
-            if (getAttributeEncoder().decode(key, v).getValue().equals(valueToDelete)) {
-                toDelete.add(v);
-            }
-        }
+        String encodedKey = encodeKey(key, target);
+        Collection<String> values = map.get(encodedKey);
+        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder);
+        List<String> toDelete = helper.delete(values, valueToDelete);
         for (String v: toDelete) {
-            map.remove(key, v);
+            map.remove(encodedKey, v);
         }
     }
 
     @Override
-    public void purgeExpired(String key, EphemeralLocation target)
+    public void purgeExpired(EphemeralKey key, EphemeralLocation target)
             throws ServiceException {
         Multimap<String, String> map = getSpecifiedMap(target);
-        Collection<String> values = map.get(key);
-        List<String> toDelete = new LinkedList<String>();
-        AttributeEncoder encoder = getAttributeEncoder();
-        for (String v: values) {
-            EphemeralKeyValuePair entry = encoder.decode(key, v);
-            if (entry instanceof ExpirableEphemeralKeyValuePair) {
-                ExpirableEphemeralKeyValuePair expirableEntry = (ExpirableEphemeralKeyValuePair) entry;
-                if (expirableEntry.getExpiration() < System.currentTimeMillis()) {
-                    toDelete.add(v);
-                }
-            }
-        }
-        for (String v: toDelete) {
-            map.remove(key, v);
+        String encodedKey = encodeKey(key, target);
+        Collection<String> values = map.get(encodedKey);
+        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder, true);
+        List<String> purged = helper.purge(values);
+        for (String v: purged) {
+            map.remove(encodedKey, v);
         }
     }
 
     @Override
-    public boolean hasKey(String keyName, EphemeralLocation target)
+    public boolean has(EphemeralKey key, EphemeralLocation target)
             throws ServiceException {
         Multimap<String, String> map = getSpecifiedMap(target);
-        return map.containsKey(keyName);
+        String encodedKey = encodeKey(key, target);
+        Collection<String> values = map.get(encodedKey);
+        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder);
+        return helper.has(values);
     }
 
     private Multimap<String, String> getSpecifiedMap(EphemeralLocation target) {

@@ -36,21 +36,23 @@ public class LdapEphemeralStoreTest {
 
     @Test
     public void testGet() throws Exception {
-        store.set(new EphemeralInput("foo", "bar"), new TestLocation());
-        EphemeralResult result = store.get("foo", new TestLocation());
+        EphemeralKey key = new EphemeralKey("foo");
+        store.set(new EphemeralInput(key, "bar"), new TestLocation());
+        EphemeralResult result = store.get(key, new TestLocation());
         assertEquals("bar", result.getValue());
     }
 
     @Test
     public void testSet() throws Exception {
-        store.set(new EphemeralInput("foo", "bar"), new TestLocation());
+        EphemeralKey key = new EphemeralKey("foo");
+        store.set(new EphemeralInput(new EphemeralKey("foo"), "bar"), new TestLocation());
         Map<String, Object> expected = makeMap("foo", "bar");
         verifyAttrMap(expected);
     }
 
     @Test
     public void testUpdate() throws Exception {
-        store.update(new EphemeralInput("foo", "bar"), new TestLocation());
+        store.update(new EphemeralInput(new EphemeralKey("foo"), "bar"), new TestLocation());
         Map<String, Object> expected = makeMap("+foo", "bar");
         verifyAttrMap(expected);
     }
@@ -59,27 +61,18 @@ public class LdapEphemeralStoreTest {
     public void testDelete() throws Exception {
         //delete one value
         EphemeralLocation location = new TestLocation();
-        store.set(new EphemeralInput("foo", "bar"), location);
+        store.set(new EphemeralInput(new EphemeralKey("foo"), "bar"), location);
         helper.reset();
-        store.delete("foo", location);
+        store.delete(new EphemeralKey("foo"), "bar", location);
         Map<String, Object> expected = makeMap("-foo", "bar");
         verifyAttrMap(expected);
         helper.reset();
 
-        //delete multiple values
-        store.set(new EphemeralInput("foo", "bar"), location);
-        store.set(new EphemeralInput("foo", "baz"), location);
+        //delete one value from several
+        store.set(new EphemeralInput(new EphemeralKey("foo"), "bar"), location);
+        store.update(new EphemeralInput(new EphemeralKey("foo"), "baz"), location);
         helper.reset();
-        store.delete("foo", location);
-        expected = makeMap("-foo", "bar", "baz");
-        verifyAttrMap(expected);
-        helper.reset();
-
-        //delete only one value from several
-        store.set(new EphemeralInput("foo", "bar"), location);
-        store.update(new EphemeralInput("foo", "baz"), location);
-        helper.reset();
-        store.deleteValue("foo", "bar", location);
+        store.delete(new EphemeralKey("foo"), "bar", location);
         expected = makeMap("-foo", "bar");
         verifyAttrMap(expected);
     }
@@ -87,21 +80,21 @@ public class LdapEphemeralStoreTest {
     @Test
     public void testExpiry() throws Exception {
         EphemeralLocation location = new TestLocation();
-        EphemeralInput input = new EphemeralInput("foo", "bar");
+        EphemeralInput input = new EphemeralInput(new EphemeralKey("foo"), "bar");
         input.setExpiration(new TestExpiration(1L, TimeUnit.SECONDS));
         store.set(input, location);
         helper.reset();
         Thread.sleep(1500);
-        store.purgeExpired("foo", location);
-        Map<String, Object> expected = makeMap("-foo", "bar|1000");
+        store.purgeExpired(new EphemeralKey("foo"), location);
+        Map<String, Object> expected = makeMap("-foo", "bar||1000");
         verifyAttrMap(expected);
     }
 
     @Test
     public void testHasKey() throws Exception {
         EphemeralLocation target = new TestLocation();
-        store.set(new EphemeralInput("foo", "bar"), target);
-        assertTrue(store.hasKey("foo", target));
+        store.set(new EphemeralInput(new EphemeralKey("foo"), "bar"), target);
+        assertTrue(store.has(new EphemeralKey("foo"), target));
     }
 
     private Map<String, Object> makeMap(String key, String... values) {
@@ -142,7 +135,7 @@ public class LdapEphemeralStoreTest {
         public MockLdapHelper() {
             store = new InMemoryEphemeralStore();
             store.setAttributeEncoder(new DummyAttributeEncoder());
-            encoder = new ExpirationEncoder();
+            encoder = new DynamicExpirationEncoder();
         }
 
         public Map<String, Object> getAttrs() {
@@ -156,12 +149,12 @@ public class LdapEphemeralStoreTest {
 
         @Override
         String getAttr(String key) throws ServiceException {
-            return store.get(key, location).getValue();
+            return store.get(new EphemeralKey(key), location).getValue();
         }
 
         @Override
         String[] getMultiAttr(String key) throws ServiceException {
-            return store.get(key, location).getValues();
+            return store.get(new EphemeralKey("foo"), location).getValues();
         }
 
         private String[] objectToStringArray(Object o) throws ServiceException {
@@ -183,7 +176,7 @@ public class LdapEphemeralStoreTest {
                 String[] values = objectToStringArray(kv.getValue());
                 if ((key.startsWith("+") || !key.startsWith("-")) && values.length > 0) {
                     String firstValue = values[0];
-                    EphemeralInput input = new EphemeralInput(key, firstValue);
+                    EphemeralInput input = new EphemeralInput(new EphemeralKey("foo"), firstValue);
                     if (key.startsWith("+")) {
                         store.update(input, location);
                     } else {
@@ -192,14 +185,14 @@ public class LdapEphemeralStoreTest {
                     // if more than one value is provided, it has to be an update
                     if (values.length > 1) {
                         for (int i = 1; i < values.length; i++) {
-                            input = new EphemeralInput(key, values[i]);
+                            input = new EphemeralInput(new EphemeralKey("foo"), values[i]);
                             store.update(input, location);
                         }
                     }
                 } else {
                     for (String v: values) {
                         EphemeralKeyValuePair kvPair = encoder.decode(key.substring(1), v);
-                        store.deleteValue(kvPair.getKey(), kvPair.getValue(), location);
+                        store.delete(kvPair.getKey(), kvPair.getValue(), location);
                     }
                 }
             }
@@ -214,21 +207,20 @@ public class LdapEphemeralStoreTest {
      */
     static class DummyAttributeEncoder extends AttributeEncoder {
 
-        @Override
-        public String encodeKey(EphemeralInput input,
-                EphemeralLocation target) {
-            return input.getKey();
-        }
+        public DummyAttributeEncoder() {
+            setKeyEncoder(new StaticKeyEncoder());
+            setValueEncoder(new ValueEncoder() {
 
-        @Override
-        public String encodeValue(EphemeralInput input,
-                EphemeralLocation target) {
-            return String.valueOf(input.getValue());
+                @Override
+                public String encodeValue(EphemeralInput input, EphemeralLocation target) {
+                    return String.valueOf(input.getValue());
+                }
+            });
         }
 
         @Override
         public EphemeralKeyValuePair decode(String key, String value) {
-            return new EphemeralKeyValuePair(key, value);
+            return new EphemeralKeyValuePair(new EphemeralKey(key), value);
         }
     }
 }

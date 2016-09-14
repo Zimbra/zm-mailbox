@@ -9,16 +9,16 @@ package com.zimbra.cs.ephemeral;
  * @author iraykin
  *
  */
-class EphemeralKeyValuePair {
-    protected String key;
+public class EphemeralKeyValuePair {
+    protected EphemeralKey key;
     protected String value;
 
-    public EphemeralKeyValuePair(String key, String value) {
+    public EphemeralKeyValuePair(EphemeralKey key, String value) {
         this.key = key;
         this.value = value;
     }
 
-    public String getKey() {
+    public EphemeralKey getKey() {
         return key;
     }
 
