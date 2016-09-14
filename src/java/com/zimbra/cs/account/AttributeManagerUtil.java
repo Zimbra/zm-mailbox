@@ -1348,7 +1348,7 @@ public class AttributeManagerUtil {
                body = String.format("        purgeEphemeralAttr(Provisioning.A_%s);%n", name);
                break;
            case has:
-               body = String.format("        hasEphemeralAttr(Provisioning.A_%s, %s);%n", name, dynamic);
+               body = String.format("        return hasEphemeralAttr(Provisioning.A_%s, %s);%n", name, dynamic);
                break;
     default:
         break;
@@ -1396,9 +1396,9 @@ public class AttributeManagerUtil {
                    break;
                case has:
                    if (ai.isDynamic()) {
-                       result.append(String.format("    public void %s(String dynamicComponent) throws com.zimbra.common.service.ServiceException {%n", methodName));
+                       result.append(String.format("    public boolean %s(String dynamicComponent) throws com.zimbra.common.service.ServiceException {%n", methodName));
                    } else {
-                       result.append(String.format("    public void %s() throws com.zimbra.common.service.ServiceException {%n", methodName));
+                       result.append(String.format("    public boolean %s() throws com.zimbra.common.service.ServiceException {%n", methodName));
                    }
                    break;
                }

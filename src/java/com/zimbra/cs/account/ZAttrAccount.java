@@ -3502,8 +3502,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1836)
-    public void hasAppSpecificPassword(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
-        hasEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, dynamicComponent);
+    public boolean hasAppSpecificPassword(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
+        return hasEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, dynamicComponent);
     }
 
     /**
@@ -4462,8 +4462,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1585)
-    public void hasAuthTokens(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
-        hasEphemeralAttr(Provisioning.A_zimbraAuthTokens, dynamicComponent);
+    public boolean hasAuthTokens(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
+        return hasEphemeralAttr(Provisioning.A_zimbraAuthTokens, dynamicComponent);
     }
 
     /**
@@ -7210,8 +7210,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1629)
-    public void hasCsrfTokenData(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
-        hasEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, dynamicComponent);
+    public boolean hasCsrfTokenData(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
+        return hasEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, dynamicComponent);
     }
 
     /**
@@ -22837,7 +22837,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=113)
     public Date getLastLogonTimestamp() throws com.zimbra.common.service.ServiceException {
-        String v = getEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp).getValue(null); return v == null ? null : LdapDateUtil.parseGeneralizedTime(v);
+        String v = getEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, null).getValue(null); return v == null ? null : LdapDateUtil.parseGeneralizedTime(v);
     }
 
     /**

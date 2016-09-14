@@ -76,8 +76,8 @@ public class GenerateEphemeralGettersTest {
                         "        purgeEphemeralAttr(Provisioning.A_zimbraEphemeralAttribute);\n" +
                         "    }";
 
-        String has =    "    public void hasEphemeralAttribute(String dynamicComponent) throws com.zimbra.common.service.ServiceException {\n" +
-                        "        hasEphemeralAttr(Provisioning.A_zimbraEphemeralAttribute, dynamicComponent);\n" +
+        String has =    "    public boolean hasEphemeralAttribute(String dynamicComponent) throws com.zimbra.common.service.ServiceException {\n" +
+                        "        return hasEphemeralAttr(Provisioning.A_zimbraEphemeralAttribute, dynamicComponent);\n" +
                         "    }";
 
 
