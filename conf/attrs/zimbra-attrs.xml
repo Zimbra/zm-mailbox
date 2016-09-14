@@ -8556,7 +8556,7 @@ TODO: delete them permanently from here
   <desc>Value for postconf hopcount_limit</desc>
 </attr>
 
-<attr id="1836" name="zimbraAppSpecificPassword" type="ostring" cardinality="multi" optionalIn="account" immutable="1" since="8.7.0,9.0.0" flags="ephemeral">
+<attr id="1836" name="zimbraAppSpecificPassword" type="ostring" cardinality="multi" optionalIn="account" immutable="1" since="8.7.0,9.0.0">
   <desc>application-specific password</desc>
 </attr>
 

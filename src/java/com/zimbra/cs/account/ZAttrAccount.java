@@ -3449,23 +3449,48 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * application-specific password
      *
-     * Ephemeral attribute - requests routed to EphemeralStore
-     *
-     * @throws com.zimbra.common.service.ServiceException if error on accessing ephemeral data
-     *
      * @return zimbraAppSpecificPassword, or empty array if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1836)
-    public String getAppSpecificPassword(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
-        return getEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, dynamicComponent).getValue(null);
+    public String[] getAppSpecificPassword() {
+        return getMultiAttr(Provisioning.A_zimbraAppSpecificPassword, true, true);
     }
 
     /**
      * application-specific password
      *
-     * Ephemeral attribute - requests routed to EphemeralStore
+     * @param zimbraAppSpecificPassword new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1836)
+    public void setAppSpecificPassword(String[] zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * application-specific password
+     *
+     * @param zimbraAppSpecificPassword new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1836)
+    public Map<String,Object> setAppSpecificPassword(String[] zimbraAppSpecificPassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        return attrs;
+    }
+
+    /**
+     * application-specific password
      *
      * @param zimbraAppSpecificPassword new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3473,14 +3498,30 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1836)
-    public void addAppSpecificPassword(String dynamicComponent, String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, dynamicComponent, zimbraAppSpecificPassword, true, null);
+    public void addAppSpecificPassword(String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * application-specific password
      *
-     * Ephemeral attribute - requests routed to EphemeralStore
+     * @param zimbraAppSpecificPassword new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1836)
+    public Map<String,Object> addAppSpecificPassword(String zimbraAppSpecificPassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        return attrs;
+    }
+
+    /**
+     * application-specific password
      *
      * @param zimbraAppSpecificPassword existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3488,22 +3529,55 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1836)
-    public void removeAppSpecificPassword(String dynamicComponent, String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, dynamicComponent, zimbraAppSpecificPassword);
+    public void removeAppSpecificPassword(String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * application-specific password
      *
-     * Ephemeral attribute - requests routed to EphemeralStore
+     * @param zimbraAppSpecificPassword existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1836)
+    public Map<String,Object> removeAppSpecificPassword(String zimbraAppSpecificPassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        return attrs;
+    }
+
+    /**
+     * application-specific password
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1836)
-    public boolean hasAppSpecificPassword(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
-        return hasEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, dynamicComponent);
+    public void unsetAppSpecificPassword() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPassword, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * application-specific password
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1836)
+    public Map<String,Object> unsetAppSpecificPassword(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPassword, "");
+        return attrs;
     }
 
     /**

@@ -78,32 +78,6 @@ public class EphemeralAttributesTest {
     }
 
     @Test
-    public void testAppSpecificPasswords() throws Exception {
-
-        EphemeralKey appKey1 = new EphemeralKey(Provisioning.A_zimbraAppSpecificPassword, "passwd1");
-        EphemeralKey appKey2 = new EphemeralKey(Provisioning.A_zimbraAppSpecificPassword, "passwd2");
-        acct.addAppSpecificPassword("passwd1", "data1");
-        acct.addAppSpecificPassword("passwd2", "data2");
-
-        //is it in the ephemeral store?
-        assertEquals("data1", store.get(appKey1, location).getValue());
-        assertEquals("data2", store.get(appKey2, location).getValue());
-
-        //test getters
-        assertEquals("data1", acct.getAppSpecificPassword("passwd1"));
-        assertEquals("data2", acct.getAppSpecificPassword("passwd2"));
-
-        //test removing a specific value
-        acct.addAppSpecificPassword("passwd3", "data3");
-        acct.removeAppSpecificPassword("passwd1", "data1");
-        assertTrue(store.get(appKey1, location).isEmpty());
-
-        //test removing an incorrect value
-        acct.removeAppSpecificPassword("passwd2", "data3");
-        assertEquals("data2", store.get(appKey2, location).getValue());
-    }
-
-    @Test
     public void testAuthTokens() throws Exception {
         EphemeralKey tokenKey1 = new EphemeralKey(Provisioning.A_zimbraAuthTokens, "token1");
         EphemeralKey tokenKey2 = new EphemeralKey(Provisioning.A_zimbraAuthTokens, "token2");
