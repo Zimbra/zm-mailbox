@@ -53183,7 +53183,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * List of IP addresses to be excluded from IP throttling.
+     * Client IP/IPRange whitelist for exclusion from IP throttling. Value
+     * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
+     * IPV6 is supported as well.
      *
      * @return zimbraReverseProxyIPThrottleWhitelist, or empty array if unset
      *
@@ -53191,11 +53193,13 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=3000)
     public String[] getReverseProxyIPThrottleWhitelist() {
-        return getMultiAttr(Provisioning.A_zimbraReverseProxyIPThrottleWhitelist);
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyIPThrottleWhitelist, true, true);
     }
 
     /**
-     * List of IP addresses to be excluded from IP throttling.
+     * Client IP/IPRange whitelist for exclusion from IP throttling. Value
+     * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
+     * IPV6 is supported as well.
      *
      * @param zimbraReverseProxyIPThrottleWhitelist new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -53210,7 +53214,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * List of IP addresses to be excluded from IP throttling.
+     * Client IP/IPRange whitelist for exclusion from IP throttling. Value
+     * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
+     * IPV6 is supported as well.
      *
      * @param zimbraReverseProxyIPThrottleWhitelist new value
      * @param attrs existing map to populate, or null to create a new map
@@ -53226,7 +53232,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * List of IP addresses to be excluded from IP throttling.
+     * Client IP/IPRange whitelist for exclusion from IP throttling. Value
+     * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
+     * IPV6 is supported as well.
      *
      * @param zimbraReverseProxyIPThrottleWhitelist new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -53241,7 +53249,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * List of IP addresses to be excluded from IP throttling.
+     * Client IP/IPRange whitelist for exclusion from IP throttling. Value
+     * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
+     * IPV6 is supported as well.
      *
      * @param zimbraReverseProxyIPThrottleWhitelist new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -53257,7 +53267,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * List of IP addresses to be excluded from IP throttling.
+     * Client IP/IPRange whitelist for exclusion from IP throttling. Value
+     * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
+     * IPV6 is supported as well.
      *
      * @param zimbraReverseProxyIPThrottleWhitelist existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -53272,7 +53284,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * List of IP addresses to be excluded from IP throttling.
+     * Client IP/IPRange whitelist for exclusion from IP throttling. Value
+     * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
+     * IPV6 is supported as well.
      *
      * @param zimbraReverseProxyIPThrottleWhitelist existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -53288,7 +53302,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * List of IP addresses to be excluded from IP throttling.
+     * Client IP/IPRange whitelist for exclusion from IP throttling. Value
+     * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
+     * IPV6 is supported as well.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -53302,7 +53318,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * List of IP addresses to be excluded from IP throttling.
+     * Client IP/IPRange whitelist for exclusion from IP throttling. Value
+     * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
+     * IPV6 is supported as well.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
