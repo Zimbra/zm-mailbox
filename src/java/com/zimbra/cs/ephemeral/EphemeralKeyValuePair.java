@@ -9,7 +9,7 @@ package com.zimbra.cs.ephemeral;
  * @author iraykin
  *
  */
-class EphemeralKeyValuePair {
+public class EphemeralKeyValuePair {
     protected EphemeralKey key;
     protected String value;
 
