@@ -157,6 +157,7 @@ import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.ephemeral.EphemeralInput;
+import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
@@ -544,7 +545,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             Object value = e.getValue();
             AttributeInfo ai = ephemeralAttrMap.get(key.toLowerCase());
             if (ai == null) { continue; }
-            boolean dynamic = ai.isDynamic();
+            if (ai.isDynamic()) {
+                ZimbraLog.ephemeral.warn("Ephemeral attribute %s expects a dynamic key component; it cannot be modified with modifyAttrs");
+                continue;
+            }
 
             boolean doAdd = key.charAt(0) == '+';
             boolean doRemove = key.charAt(0) == '-';
@@ -557,20 +561,21 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             if (value instanceof Collection) {
                 Collection values = (Collection) value;
                 if (values.size() == 0) {
-                    store.delete(key, location);
+                    ZimbraLog.ephemeral.warn("Ephemeral attribute %s doesn't support deletion by key; only deletion by key+value is supported", key);
+                    continue;
                 } else {
                     for (Object v : values) {
                         if (v == null) { continue; }
                         String s = v.toString();
                         EphemeralInput input = null;
+                        EphemeralKey ephemeralKey = new EphemeralKey(key);
                         if (doAdd || !doRemove) {
-                            input = new EphemeralInput(key, s);
-                            input.setDynamic(dynamic);
+                            input = new EphemeralInput(ephemeralKey, s);
                         }
                         if (doAdd) {
                             store.update(input, location);
                         } else if (doRemove) {
-                            store.deleteValue(key, s, location);
+                            store.delete(ephemeralKey, s, location);
                         } else {
                             store.set(input, location);
                         }
@@ -580,22 +585,22 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 throw ServiceException.FAILURE("Map is not a supported value type", null);
             } else if (value != null) {
                 String s = value.toString();
+                EphemeralKey ephemeralKey = new EphemeralKey(key);
                 EphemeralInput input = null;
                 if (doAdd || !doRemove) {
-                    input = new EphemeralInput(key, s);
-                    input.setDynamic(dynamic);
+                    input = new EphemeralInput(ephemeralKey, s);
                 }
                 if (doAdd) {
                     store.update(input, location);
                 }
                 else if (doRemove) {
-                    store.deleteValue(key, s, location);
+                    store.delete(ephemeralKey, s, location);
                 }
                 else {
                     store.set(input, location);
                 }
             } else {
-                store.delete(key, location);
+                ZimbraLog.ephemeral.warn("Ephemeral attribute %s doesn't support deletion by key; only deletion by key+value is supported", key);
             }
         }
     }

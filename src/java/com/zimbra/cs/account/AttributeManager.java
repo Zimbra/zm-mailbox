@@ -87,11 +87,11 @@ public class AttributeManager {
     private static final String E_DEFAULT_EXTERNAL_COS_VALUE = "defaultExternalCOSValue";
     private static final String E_DEFAULT_COS_VALUE_UPGRADE = "defaultCOSValueUpgrade";
 
-    private static final Set<AttributeFlag> allowedFlags = new HashSet<AttributeFlag>();
+    private static final Set<AttributeFlag> allowedEphemeralFlags = new HashSet<AttributeFlag>();
     static {
-        allowedFlags.add(AttributeFlag.ephemeral);
-        allowedFlags.add(AttributeFlag.dynamic);
-        allowedFlags.add(AttributeFlag.expirable);
+        allowedEphemeralFlags.add(AttributeFlag.ephemeral);
+        allowedEphemeralFlags.add(AttributeFlag.dynamic);
+        allowedEphemeralFlags.add(AttributeFlag.expirable);
     }
 
     private static AttributeManager mInstance;
@@ -571,7 +571,7 @@ public class AttributeManager {
                 }
             }
 
-            checkEphemeralFlags(name, file, flags, min, max);
+            checkEphemeralFlags(name, file, flags, min, max, cardinality);
 
             AttributeInfo info = createAttributeInfo(
                     name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
@@ -621,7 +621,7 @@ public class AttributeManager {
     }
 
     private void checkEphemeralFlags(String attrName, File file,
-            Set<AttributeFlag> flags, String min, String max) {
+            Set<AttributeFlag> flags, String min, String max, AttributeCardinality cardinality) {
         if (flags == null) { return; }
         boolean isEphemeral = flags.contains(AttributeFlag.ephemeral);
         if (flags.contains(AttributeFlag.dynamic) && !isEphemeral) {
@@ -630,8 +630,10 @@ public class AttributeManager {
             error(attrName, file, "'expirable' flag can only be used with ephemeral attributes");
         }
         if (isEphemeral) {
-
-            Sets.SetView<AttributeFlag> diff = Sets.difference(flags, allowedFlags);
+            if (cardinality == AttributeCardinality.multi && !flags.contains(AttributeFlag.dynamic)) {
+                error(attrName, file, "multi-valued ephemeral attributes must have the 'dynamic' flag set");
+            }
+            Sets.SetView<AttributeFlag> diff = Sets.difference(flags, allowedEphemeralFlags);
             if (!diff.isEmpty()) {
                 error(attrName, file, String.format("flags %s cannot be used with ephemeral attributes", Joiner.on(",").join(diff)));
             }

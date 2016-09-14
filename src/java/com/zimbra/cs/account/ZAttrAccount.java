@@ -3474,7 +3474,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1836)
     public void setAppSpecificPassword(String[] zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword, false, false, null);
+        modifyEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, null, zimbraAppSpecificPassword, false, null);
     }
 
     /**
@@ -3489,7 +3489,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1836)
     public void addAppSpecificPassword(String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword, true, false, null);
+        modifyEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, null, zimbraAppSpecificPassword, false, null);
     }
 
     /**
@@ -3504,7 +3504,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1836)
     public void removeAppSpecificPassword(String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        deleteEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, null, zimbraAppSpecificPassword);
     }
 
     /**
@@ -3518,7 +3518,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1836)
     public void unsetAppSpecificPassword() throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, null);
+        deleteEphemeralAttr(Provisioning.A_zimbraAppSpecificPassword, null, null);
     }
 
     /**
@@ -4449,7 +4449,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1585)
     public void setAuthTokens(String[] zimbraAuthTokens, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraAuthTokens, zimbraAuthTokens, false, true, expiration);
+        modifyEphemeralAttr(Provisioning.A_zimbraAuthTokens, null, zimbraAuthTokens, true, expiration);
     }
 
     /**
@@ -4464,7 +4464,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1585)
     public void addAuthTokens(String zimbraAuthTokens, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraAuthTokens, zimbraAuthTokens, true, true, expiration);
+        modifyEphemeralAttr(Provisioning.A_zimbraAuthTokens, null, zimbraAuthTokens, true, expiration);
     }
 
     /**
@@ -4479,7 +4479,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1585)
     public void removeAuthTokens(String zimbraAuthTokens) throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
+        deleteEphemeralAttr(Provisioning.A_zimbraAuthTokens, null, zimbraAuthTokens);
     }
 
     /**
@@ -4493,7 +4493,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1585)
     public void purgeAuthTokens() throws com.zimbra.common.service.ServiceException {
-        purgeEphemeralAttr(Provisioning.A_zimbraAuthTokens);
+        purgeEphemeralAttr(Provisioning.A_zimbraAuthTokens, null);
     }
 
     /**
@@ -4507,7 +4507,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1585)
     public void unsetAuthTokens() throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraAuthTokens, null);
+        deleteEphemeralAttr(Provisioning.A_zimbraAuthTokens, null, null);
     }
 
     /**
@@ -7208,7 +7208,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1629)
     public void setCsrfTokenData(String[] zimbraCsrfTokenData, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData, false, true, expiration);
+        modifyEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null, zimbraCsrfTokenData, true, expiration);
     }
 
     /**
@@ -7225,7 +7225,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1629)
     public void addCsrfTokenData(String zimbraCsrfTokenData, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData, true, true, expiration);
+        modifyEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null, zimbraCsrfTokenData, true, expiration);
     }
 
     /**
@@ -7242,7 +7242,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1629)
     public void removeCsrfTokenData(String zimbraCsrfTokenData) throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
+        deleteEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null, zimbraCsrfTokenData);
     }
 
     /**
@@ -7258,7 +7258,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1629)
     public void purgeCsrfTokenData() throws com.zimbra.common.service.ServiceException {
-        purgeEphemeralAttr(Provisioning.A_zimbraCsrfTokenData);
+        purgeEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null);
     }
 
     /**
@@ -7274,7 +7274,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1629)
     public void unsetCsrfTokenData() throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null);
+        deleteEphemeralAttr(Provisioning.A_zimbraCsrfTokenData, null, null);
     }
 
     /**
@@ -21421,6 +21421,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraId, or null if unset
      */
+    @Override
     @ZAttr(id=1)
     public String getId() {
         return getAttr(Provisioning.A_zimbraId, null, true);
@@ -22913,7 +22914,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=113)
     public void setLastLogonTimestamp(Date zimbraLastLogonTimestamp) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, zimbraLastLogonTimestamp==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraLastLogonTimestamp), false, false, null);
+        modifyEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, null, zimbraLastLogonTimestamp==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraLastLogonTimestamp), false, null);
     }
 
     /**
@@ -22927,7 +22928,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=113)
     public void setLastLogonTimestampAsString(String zimbraLastLogonTimestamp) throws com.zimbra.common.service.ServiceException {
-        modifyEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, zimbraLastLogonTimestamp, false, false, null);
+        modifyEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, null, zimbraLastLogonTimestamp, false, null);
     }
 
     /**
@@ -22940,7 +22941,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=113)
     public void unsetLastLogonTimestamp() throws com.zimbra.common.service.ServiceException {
-        deleteEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, null);
+        deleteEphemeralAttr(Provisioning.A_zimbraLastLogonTimestamp, null, null);
     }
 
     /**

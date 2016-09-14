@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
+import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
 import com.zimbra.cs.ephemeral.EphemeralStoreTest.TestLocation;
 
 public class AttributeEncodersTest {
@@ -39,8 +40,8 @@ public class AttributeEncodersTest {
 
 
         //set expirations
-        staticInput.setExpiration(new TestExpiration(1L, TimeUnit.SECONDS));
-        dynamicInput.setExpiration(new TestExpiration(1L, TimeUnit.SECONDS));
+        staticInput.setExpiration(new AbsoluteExpiration(1000L));
+        dynamicInput.setExpiration(new AbsoluteExpiration(1000L));
 
         //static key, expiration
         assertEquals("bar||1000", dynamicExpirationEncoder.encodeValue(staticInput, location));

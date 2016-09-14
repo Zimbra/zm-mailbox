@@ -49,6 +49,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
+import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
@@ -299,6 +300,10 @@ public abstract class Entry implements ToZJSONObject {
     protected String getAttr(String name, boolean applyDefaults, boolean skipEphemeralCheck) {
         if (!skipEphemeralCheck && mAttrMgr.isEphemeral(name)) {
             try {
+                if (mAttrMgr.isDynamic(name)) {
+                    ZimbraLog.ephemeral.warn("can't get value of dynamic ephemeral attribute %s without the dynamic component", name);
+                    return null;
+                }
                 String value = getEphemeralAttr(name).getValue();
                 if (!Strings.isNullOrEmpty(value)) {
                     return value;
@@ -339,8 +344,8 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults) {
-        Map<String, Object> attrs = new HashMap<String, Object>();
         if (applyDefaults && (mDefaults != null || mSecondaryDefaults != null)) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
             // put the second defaults
             if (mSecondaryDefaults != null)
                 attrs.putAll(mSecondaryDefaults);
@@ -352,36 +357,14 @@ public abstract class Entry implements ToZJSONObject {
             // override with currently set
             attrs.putAll(mAttrs);
 
-            // add ephemeral attributes
-            attrs.putAll(getEphemeralAttrs());
-
             // override with overrides if set
             if (overrideDefaults != null) {
                 attrs.putAll(overrideDefaults);
             }
+            return attrs;
         } else {
-            attrs.putAll(mAttrs);
-            attrs.putAll(getEphemeralAttrs());
+            return mAttrs;
         }
-        return attrs;
-    }
-
-    public Map<String, Object> getEphemeralAttrs() {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        for (Map.Entry<String, AttributeInfo> info: mAttrMgr.getEphemeralAttrs().entrySet()) {
-            String name = info.getKey();
-            AttributeInfo ai = info.getValue();
-            try {
-                String[] values = getEphemeralAttr(ai.getName()).getValues();
-                if (values != null && values.length > 0) {
-                    attrs.put(name, Arrays.asList(values));
-                }
-            } catch (ServiceException e) {
-                ZimbraLog.ephemeral.warn("error getting ephemeral attribute " + name);
-                continue;
-            }
-        }
-        return attrs;
     }
 
     public Map<String, Object> getUnicodeAttrs(boolean applyDefaults) {
@@ -547,8 +530,13 @@ public abstract class Entry implements ToZJSONObject {
     public String[] getMultiAttr(String name, boolean applyDefaults, boolean skipEphemeralCheck) {
         if (!skipEphemeralCheck && mAttrMgr.isEphemeral(name)) {
             try {
-                String[] values = getEphemeralAttr(name).getValues();
-                if (values == null || values.length == 0) {
+                if (mAttrMgr.isDynamic(name)) {
+                    ZimbraLog.ephemeral.warn("can't get value of dynamic ephemeral attribute %s without the dynamic component", name);
+                    return sEmptyMulti;
+                }
+                //only returning max of one value here, since multi-valued ephemeral attributes have to be dynamic
+                String value = getEphemeralAttr(name).getValue();
+                if (value == null) {
                     if (applyDefaults) {
                         Object v = getAttrDefault(name);
                         return objectToStringArray(v);
@@ -556,7 +544,7 @@ public abstract class Entry implements ToZJSONObject {
                         return sEmptyMulti;
                     }
                 } else {
-                    return values;
+                    return new String[] { value };
                 }
             } catch (ServiceException e) {
                 ZimbraLog.ephemeral.warn("error getting values for %s, returning default", name);
@@ -825,24 +813,34 @@ public abstract class Entry implements ToZJSONObject {
         return sorted;
     }
 
-    public EphemeralResult getEphemeralAttr(String name) throws ServiceException {
-        EphemeralLocation location = new LdapEntryLocation(this);
-        return EphemeralStore.getFactory().getStore().get(name, location);
+    public EphemeralResult getEphemeralAttr(String key) throws ServiceException {
+        return getEphemeralAttr(key, null);
     }
 
-    public void deleteEphemeralAttr(String name, String value) throws ServiceException {
+    public EphemeralResult getEphemeralAttr(String key, String dynamicComponent) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        return EphemeralStore.getFactory().getStore().get(new EphemeralKey(key, dynamicComponent), location);
+    }
+
+    protected void deleteEphemeralAttr(String key) throws ServiceException {
+        //The EphemeralStore API currently doesn't support deleting all values for a key,
+        //but this method is only called by unsetters for single-valued non-dynamic ephemeral attributes,
+        //which means we can first fetch the value and then delete it.
         EphemeralLocation location = new LdapEntryLocation(this);
         EphemeralStore store = EphemeralStore.getFactory().getStore();
-        if (value == null) {
-            store.delete(name, location);
-        } else {
-            store.deleteValue(name, value, location);
-        }
+        EphemeralKey ephemeralKey = new EphemeralKey(key);
+        String curValue = store.get(ephemeralKey, location).getValue();
+        store.delete(ephemeralKey, curValue, location);
     }
 
-    private void modifyEphemeralAttrInternal(String name, String value, boolean update, boolean dynamic, Expiration expiration, EphemeralStore store, EphemeralLocation location) throws ServiceException {
-        EphemeralInput input = new EphemeralInput(name, value);
-        input.setDynamic(dynamic);
+    public void deleteEphemeralAttr(String key, String dynamicComponent, String value) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        store.delete(new EphemeralKey(key, dynamicComponent), value, location);
+    }
+
+    private void modifyEphemeralAttrInternal(String key, String dynamicComponent, String value, boolean update, Expiration expiration, EphemeralStore store, EphemeralLocation location) throws ServiceException {
+        EphemeralInput input = new EphemeralInput(new EphemeralKey(key, dynamicComponent), value);
         if (expiration != null) {
             input.setExpiration(expiration);
         }
@@ -864,27 +862,33 @@ public abstract class Entry implements ToZJSONObject {
         }
     }
 
-    public void modifyEphemeralAttr(String name, String value, boolean update, boolean dynamic, Expiration expiration) throws ServiceException {
+    public void modifyEphemeralAttr(String key, String dynamicComponent, String value, boolean update, Expiration expiration) throws ServiceException {
         EphemeralLocation location = new LdapEntryLocation(this);
         EphemeralStore store = EphemeralStore.getFactory().getStore();
-        modifyEphemeralAttrInternal(name, value, update, dynamic, expiration, store, location);
+        modifyEphemeralAttrInternal(key, dynamicComponent, value, update, expiration, store, location);
     }
 
-    public void modifyEphemeralAttr(String name, String[] values, boolean update, boolean dynamic, Expiration expiration) throws ServiceException {
+    public void modifyEphemeralAttr(String key, String dynamicComponent, String[] values, boolean update, Expiration expiration) throws ServiceException {
         EphemeralLocation location = new LdapEntryLocation(this);
         EphemeralStore store = EphemeralStore.getFactory().getStore();
         for (String value: values) {
-            modifyEphemeralAttrInternal(name, value, update, dynamic, expiration, store, location);
+            modifyEphemeralAttrInternal(key, dynamicComponent, value, update, expiration, store, location);
         }
     }
 
-    protected long getEphemeralTimeInterval(String name, long defaultValue) throws ServiceException {
-        return DateUtil.getTimeInterval(getEphemeralAttr(name).getValue(), defaultValue);
+    protected long getEphemeralTimeInterval(String key, String dynamicComponent, long defaultValue) throws ServiceException {
+        return DateUtil.getTimeInterval(getEphemeralAttr(key, dynamicComponent).getValue(), defaultValue);
     }
 
-    public void purgeEphemeralAttr(String name) throws ServiceException {
+    public void purgeEphemeralAttr(String key) throws ServiceException {
         EphemeralLocation location = new LdapEntryLocation(this);
         EphemeralStore store = EphemeralStore.getFactory().getStore();
-        store.purgeExpired(name, location);
+        store.purgeExpired(new EphemeralKey(key), location);
+    }
+
+    public boolean hasEphemeralAttr(String key, String dynamicComponent) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        return store.has(new EphemeralKey(key, dynamicComponent), location);
     }
 }

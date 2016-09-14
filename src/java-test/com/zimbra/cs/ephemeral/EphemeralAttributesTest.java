@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -49,159 +48,118 @@ public class EphemeralAttributesTest {
 
     @Test
     public void testCsrfTokens() throws Exception {
-
-        acct.addCsrfTokenData("value1", new AbsoluteExpiration(1000L)); //already expired
-        acct.addCsrfTokenData("value2", new RelativeExpiration(1L, TimeUnit.DAYS));
+        EphemeralKey tokenDataKey1 = new EphemeralKey(Provisioning.A_zimbraCsrfTokenData, "crumb1");
+        EphemeralKey tokenDataKey2 = new EphemeralKey(Provisioning.A_zimbraCsrfTokenData, "crumb2");
+        acct.addCsrfTokenData("crumb1", "data1", new AbsoluteExpiration(1000L)); //already expired
+        acct.addCsrfTokenData("crumb2", "data2", new RelativeExpiration(1L, TimeUnit.DAYS));
 
         //is it in the ephemeral store?
-        EphemeralResult result = store.get(Provisioning.A_zimbraCsrfTokenData, location);
-        String[] values = result.getValues();
-        assertEquals(2, values.length);
-        assertEquals("value1", values[0]);
-        assertEquals("value2", values[1]);
+        assertEquals("data1", store.get(tokenDataKey1, location).getValue());
+        assertEquals("data2", store.get(tokenDataKey2, location).getValue());
 
         //test getter
-        values = acct.getCsrfTokenData();
-        assertEquals(2, values.length);
-        assertEquals("value1", values[0]);
-        assertEquals("value2", values[1]);
+        assertEquals("data1", acct.getCsrfTokenData("crumb1"));
+        assertEquals("data2", acct.getCsrfTokenData("crumb2"));
 
         //test removing expired
         acct.purgeCsrfTokenData();
-        result = store.get(Provisioning.A_zimbraCsrfTokenData, location);
-        assertEquals(1, result.getValues().length);
-        assertEquals("value2", result.getValue());
+        assertTrue(store.get(tokenDataKey1, location).isEmpty());
+        assertEquals("data2", store.get(tokenDataKey2, location).getValue());
 
         //test removing a specific value
-        acct.addCsrfTokenData("value3", new RelativeExpiration(1L, TimeUnit.DAYS));
-        acct.removeCsrfTokenData("value2");
-        result = store.get(Provisioning.A_zimbraCsrfTokenData, location);
-        assertEquals(1, result.getValues().length);
-        assertEquals("value3", result.getValue());
+        acct.addCsrfTokenData("crumb3", "data3", new RelativeExpiration(1L, TimeUnit.DAYS));
+        acct.removeCsrfTokenData("crumb2", "data2");
+        assertTrue(store.get(tokenDataKey2, location).isEmpty());
+        assertEquals("data3", acct.getCsrfTokenData("crumb3"));
 
-        //test setter
-        acct.setCsrfTokenData(new String[] {"value4"}, new RelativeExpiration(1L, TimeUnit.DAYS));
-        result = store.get(Provisioning.A_zimbraCsrfTokenData, location);
-        assertEquals(1, result.getValues().length);
-        assertEquals("value4", result.getValue());
-
-        //test removing all values
-        acct.unsetCsrfTokenData();
-        assertTrue(store.get(Provisioning.A_zimbraCsrfTokenData, location).isEmpty());
+        //test removing incorrect value
+        acct.removeCsrfTokenData("crumb3", "data2");
+        assertEquals("data3", acct.getCsrfTokenData("crumb3"));
     }
 
     @Test
     public void testAppSpecificPasswords() throws Exception {
-        acct.addAppSpecificPassword("value1");
-        acct.addAppSpecificPassword("value2");
+
+        EphemeralKey appKey1 = new EphemeralKey(Provisioning.A_zimbraAppSpecificPassword, "passwd1");
+        EphemeralKey appKey2 = new EphemeralKey(Provisioning.A_zimbraAppSpecificPassword, "passwd2");
+        acct.addAppSpecificPassword("passwd1", "data1");
+        acct.addAppSpecificPassword("passwd2", "data2");
 
         //is it in the ephemeral store?
-        EphemeralResult result = store.get(Provisioning.A_zimbraAppSpecificPassword, location);
-        String[] values = result.getValues();
-        assertEquals(2, values.length);
-        assertEquals("value1", values[0]);
-        assertEquals("value2", values[1]);
+        assertEquals("data1", store.get(appKey1, location).getValue());
+        assertEquals("data2", store.get(appKey2, location).getValue());
 
-        //test getter
-        values = acct.getAppSpecificPassword();
-        assertEquals(2, values.length);
-        assertEquals("value1", values[0]);
-        assertEquals("value2", values[1]);
+        //test getters
+        assertEquals("data1", acct.getAppSpecificPassword("passwd1"));
+        assertEquals("data2", acct.getAppSpecificPassword("passwd2"));
 
         //test removing a specific value
-        acct.removeAppSpecificPassword("value1");
-        result = store.get(Provisioning.A_zimbraAppSpecificPassword, location);
-        assertEquals(1, result.getValues().length);
-        assertEquals("value2", result.getValue());
+        acct.addAppSpecificPassword("passwd3", "data3");
+        acct.removeAppSpecificPassword("passwd1", "data1");
+        assertTrue(store.get(appKey1, location).isEmpty());
 
-        //test setter
-        acct.setAppSpecificPassword(new String[] {"value3"});
-        result = store.get(Provisioning.A_zimbraAppSpecificPassword, location);
-        assertEquals(1, result.getValues().length);
-        assertEquals("value3", result.getValue());
-
-        //test removing all values
-        acct.unsetAppSpecificPassword();
-        assertTrue(store.get(Provisioning.A_zimbraAppSpecificPassword, location).isEmpty());
+        //test removing an incorrect value
+        acct.removeAppSpecificPassword("passwd2", "data3");
+        assertEquals("data2", store.get(appKey2, location).getValue());
     }
 
     @Test
     public void testAuthTokens() throws Exception {
-        acct.addAuthTokens("value1", new AbsoluteExpiration(1000L)); //already expired
-        acct.addAuthTokens("value2", new RelativeExpiration(1L, TimeUnit.DAYS));
+        EphemeralKey tokenKey1 = new EphemeralKey(Provisioning.A_zimbraAuthTokens, "token1");
+        EphemeralKey tokenKey2 = new EphemeralKey(Provisioning.A_zimbraAuthTokens, "token2");
+        acct.addAuthTokens("token1", "data1", new AbsoluteExpiration(1000L)); //already expired
+        acct.addAuthTokens("token2", "data2", new RelativeExpiration(1L, TimeUnit.DAYS));
 
         //is it in the ephemeral store?
-        EphemeralResult result = store.get(Provisioning.A_zimbraAuthTokens, location);
-        String[] values = result.getValues();
-        assertEquals(2, values.length);
-        assertEquals("value1", values[0]);
-        assertEquals("value2", values[1]);
+        assertEquals("data1", store.get(tokenKey1, location).getValue());
+        assertEquals("data2", store.get(tokenKey2, location).getValue());
 
         //test getter
-        values = acct.getAuthTokens();
-        assertEquals(2, values.length);
-        assertEquals("value1", values[0]);
-        assertEquals("value2", values[1]);
+        assertEquals("data1", acct.getAuthTokens("token1"));
+        assertEquals("data2", acct.getAuthTokens("token2"));
 
         //test removing expired
         acct.purgeAuthTokens();
-        result = store.get(Provisioning.A_zimbraAuthTokens, location);
-        assertEquals(1, result.getValues().length);
-        assertEquals("value2", result.getValue());
+        assertTrue(store.get(tokenKey1, location).isEmpty());
+        assertEquals("data2", store.get(tokenKey2, location).getValue());
 
         //test removing a specific value
-        acct.addAuthTokens("value3", new RelativeExpiration(1L, TimeUnit.DAYS));
-        acct.removeAuthTokens("value2");
-        result = store.get(Provisioning.A_zimbraAuthTokens, location);
-        assertEquals(1, result.getValues().length);
-        assertEquals("value3", result.getValue());
+        acct.addAuthTokens("token3","data3", new RelativeExpiration(1L, TimeUnit.DAYS));
+        acct.removeAuthTokens("token2", "data2");
+        assertTrue(store.get(tokenKey2, location).isEmpty());
+        assertEquals("data3", acct.getAuthTokens("token3"));
 
-        //test setter
-        acct.setAuthTokens(new String[] {"value4"}, new RelativeExpiration(1L, TimeUnit.DAYS));
-        result = store.get(Provisioning.A_zimbraAuthTokens, location);
-        assertEquals(1, result.getValues().length);
-        assertEquals("value4", result.getValue());
-
-        //test removing all values
-        acct.unsetAuthTokens();
-        assertTrue(store.get(Provisioning.A_zimbraAuthTokens, location).isEmpty());
+        //test removing incorrect value
+        acct.removeAuthTokens("token3", "data2");
+        assertEquals("data3", acct.getAuthTokens("token3"));
     }
 
     @Test
     public void testLastLogonTimestamp() throws Exception {
+        EphemeralKey key = new EphemeralKey(Provisioning.A_zimbraLastLogonTimestamp);
         Date login1 = new Date();
         acct.setLastLogonTimestamp(login1);
         Date login2 = new Date();
         acct.setLastLogonTimestamp(login2);
 
         //is it in the ephemeral store?
-        EphemeralResult result = store.get(Provisioning.A_zimbraLastLogonTimestamp, location);
+        EphemeralResult result = store.get(key, location);
         assertEquals(1, result.getValues().length);
         assertEquals(LdapDateUtil.toGeneralizedTime(login2), result.getValue());
 
         //test the getter
         assertEquals(LdapDateUtil.toGeneralizedTime(login2), acct.getLastLogonTimestampAsString());
         acct.unsetLastLogonTimestamp();
-        assertTrue(store.get(Provisioning.A_zimbraLastLogonTimestamp, location).isEmpty());
-    }
-
-    @Test
-    public void testGetEphemeralAttrs() throws Exception {
-        acct.addAuthTokens("value1", new AbsoluteExpiration(1000L)); //already expired
-        acct.addAppSpecificPassword("value1");
-        acct.addCsrfTokenData("value1", new AbsoluteExpiration(1000L));
-        acct.setLastLogonTimestamp(new Date());
-        Map<String, Object> attrs = acct.getEphemeralAttrs();
-        assertEquals(4, attrs.size());
+        assertTrue(store.get(key, location).isEmpty());
     }
 
     private static void initEphemeralAttributes() throws Exception {
         Set<AttributeClass> requiredIn = Sets.newHashSet(AttributeClass.account);
         Set<AttributeFlag> flags = Sets.newHashSet(AttributeFlag.ephemeral, AttributeFlag.dynamic, AttributeFlag.expirable);
-        AttributeInfo ai1 = new AttributeInfo("zimbraAuthTokens", 1, null, 0, null, AttributeType.TYPE_ASTRING, null, "", true, null, null, AttributeCardinality.multi, requiredIn, null, flags, null, null, null, null, null, "auth tokens", null, null, null);
-        AttributeInfo ai2 = new AttributeInfo("zimbraCsrfTokenData", 1, null, 0, null, AttributeType.TYPE_ASTRING, null, "", true, null, null, AttributeCardinality.multi, requiredIn, null, flags, null, null, null, null, null, "csrf tokens", null, null, null);
-        AttributeInfo ai3 = new AttributeInfo("zimbraLastLogonTimestamp", 1, null, 0, null, AttributeType.TYPE_GENTIME, null, "", true, null, null, AttributeCardinality.single, requiredIn, null, flags, null, null, null, null, null, "last logon timestamp", null, null, null);
-        AttributeInfo ai4 = new AttributeInfo("zimbraAppSpecificPassword", 1, null, 0, null, AttributeType.TYPE_ASTRING, null, "", true, null, null, AttributeCardinality.single, requiredIn, null, flags, null, null, null, null, null, "app-specific passwords", null, null, null);
+        AttributeInfo ai1 = new AttributeInfo(Provisioning.A_zimbraAuthTokens, 1, null, 0, null, AttributeType.TYPE_ASTRING, null, "", true, null, null, AttributeCardinality.multi, requiredIn, null, flags, null, null, null, null, null, "auth tokens", null, null, null);
+        AttributeInfo ai2 = new AttributeInfo(Provisioning.A_zimbraCsrfTokenData, 1, null, 0, null, AttributeType.TYPE_ASTRING, null, "", true, null, null, AttributeCardinality.multi, requiredIn, null, flags, null, null, null, null, null, "csrf tokens", null, null, null);
+        AttributeInfo ai3 = new AttributeInfo(Provisioning.A_zimbraLastLogonTimestamp, 1, null, 0, null, AttributeType.TYPE_GENTIME, null, "", true, null, null, AttributeCardinality.single, requiredIn, null, flags, null, null, null, null, null, "last logon timestamp", null, null, null);
+        AttributeInfo ai4 = new AttributeInfo(Provisioning.A_zimbraAppSpecificPassword, 1, null, 0, null, AttributeType.TYPE_ASTRING, null, "", true, null, null, AttributeCardinality.single, requiredIn, null, flags, null, null, null, null, null, "app-specific passwords", null, null, null);
         AttributeManager am = new AttributeManager();
         am.addAttribute(ai1);
         am.addAttribute(ai2);
