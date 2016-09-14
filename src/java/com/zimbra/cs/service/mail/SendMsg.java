@@ -33,6 +33,8 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.dom4j.QName;
+
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
@@ -102,6 +104,10 @@ public class SendMsg extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        return handle(request, context, MailConstants.SEND_MSG_RESPONSE);
+    }
+
+    public Element handle(Element request, Map<String, Object> context, QName respQname) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         AccountUtil.checkQuotaWhenSendMail(mbox);
@@ -202,7 +208,7 @@ public class SendMsg extends MailDocumentHandler {
             deleteDraft(iidDraft, octxt, mbox, zsc);
         }
 
-        Element response = zsc.createElement(MailConstants.SEND_MSG_RESPONSE);
+        Element response = zsc.createElement(respQname);
         if (savedMsgId != null && savedMsgId != NO_MESSAGE_SAVED_TO_SENT && savedMsgId.getId() > 0) {
             if (fetchSavedMsg) {
                 Message msg = GetMsg.getMsg(octxt, mbox, savedMsgId, false);
