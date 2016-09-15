@@ -48,11 +48,18 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("tag", com.zimbra.cs.filter.jsieve.Tag.class.getName());
         mCommandMap.put("flag", com.zimbra.cs.filter.jsieve.Flag.class.getName());
         mCommandMap.put("reply", com.zimbra.cs.filter.jsieve.Reply.class.getName());
-        mCommandMap.put("notify", com.zimbra.cs.filter.jsieve.Notify.class.getName());
         mCommandMap.put("discard", com.zimbra.cs.filter.jsieve.Discard.class.getName());
         mCommandMap.put("ereject", com.zimbra.cs.filter.jsieve.Ereject.class.getName());
         mCommandMap.put("set", com.zimbra.cs.filter.jsieve.SetVariable.class.getName());
         mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
+
+        if (isNotifyActionRFCCompliantAvailable()) {
+            mCommandMap.put("notify",  com.zimbra.cs.filter.jsieve.NotifyMailto.class.getName());
+            ZimbraLog.filter.info("RFC compliant 'notify' is loaded");
+        } else {
+            mCommandMap.put("notify", com.zimbra.cs.filter.jsieve.Notify.class.getName());
+            ZimbraLog.filter.debug("Zimbra 'notify' is loaded");
+        }
 
         boolean isRejectSupported = true;
         try {
@@ -103,6 +110,16 @@ public class JsieveConfigMapHandler {
         mTestMap.put("community_requests", com.zimbra.cs.filter.jsieve.CommunityRequestsTest.class.getName());
         mTestMap.put("community_content", com.zimbra.cs.filter.jsieve.CommunityContentTest.class.getName());
         mTestMap.put("relational", com.zimbra.cs.filter.jsieve.RelationalTest.class.getName());
+
+        if (isNotifyActionRFCCompliantAvailable()) {
+            // The capability string associated with the 'notify' action is "enotify"; 
+            // the "enotify" is not accepted as an action name in the sieve filter body, 
+            // such as inside the 'if' body.
+            mTestMap.put("enotify", com.zimbra.cs.filter.jsieve.EnotifyTest.class.getName());
+            mTestMap.put("valid_notify_method", com.zimbra.cs.filter.jsieve.ValidNotifyMethodTest.class.getName());
+            mTestMap.put("notify_method_capability", com.zimbra.cs.filter.jsieve.NotifyMethodCapabilityTest.class.getName());
+        }
+
         return mTestMap;
     }
 
@@ -130,5 +147,14 @@ public class JsieveConfigMapHandler {
         return mTestMap;
     }
 
-
+    private static boolean isNotifyActionRFCCompliantAvailable() {
+        boolean isNotifyActionRFCCompliant = false;
+        try {
+            isNotifyActionRFCCompliant = Provisioning.getInstance().getConfig().getBooleanAttr(
+                Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, false);
+        } catch (ServiceException e) {
+            // the legacy Zimbra specific 'notify' action is used
+        }
+        return isNotifyActionRFCCompliant;
+    }
 }

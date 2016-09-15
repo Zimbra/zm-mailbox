@@ -18,6 +18,7 @@ package com.zimbra.cs.filter;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -112,4 +113,19 @@ interface FilterHandler {
      * Execute erejects action.
      */
     abstract void ereject(LmtpEnvelope envelope) throws ErejectException;
+
+    /**
+     * Sends an email notification (RFC 5435 and 5436 compliant)
+     * @param from From address specified by :from tag
+     * @param importance Importance integer specified by :importance tag
+     * @param options Option string list specified by :options tag
+     * @param message Subject string specified by :message tag
+     * @param mailto To address specified in the method parameter
+     * @param mailtoParams Set of key and value specified in the method parameter
+     * @throws ServiceException
+     * @throws MessagingException
+     */
+    abstract void notifyMailto(LmtpEnvelope envelope, String from, int importance,
+        Map<String, String> options, String message, String mailto,
+        Map<String, List<String>> mailtoParams) throws ServiceException, MessagingException;
 }
