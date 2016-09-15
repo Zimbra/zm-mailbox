@@ -23,10 +23,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.Element;
+import com.zimbra.cs.util.EhcacheManager;
+
+import org.ehcache.Cache;
+import org.ehcache.spi.loaderwriter.CacheLoadingException;
+import org.ehcache.spi.loaderwriter.CacheWritingException;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Constants;
@@ -38,14 +39,14 @@ import com.zimbra.common.util.ZimbraLog;
  * @author ysasaki
  */
 final class EhcacheImapCache implements ImapSessionManager.Cache {
-    private final Ehcache ehcache;
+    private final Cache ehcache;
     private final boolean active;
     private Map<String, Long> activeCacheUpdateTimes;
     private static final int ACTIVE_CACHE_THRESHOLD = 1000;
 
     @SuppressWarnings("serial")
     EhcacheImapCache(String name, boolean active) {
-        ehcache = CacheManager.getInstance().getEhcache(name);
+        ehcache = EhcacheManager.getInstance().getEhcache(name);
         this.active = active;
         if (active) {
             activeCacheUpdateTimes = new LinkedHashMap<String, Long>(ACTIVE_CACHE_THRESHOLD, 0.75f, true) {
@@ -53,7 +54,7 @@ final class EhcacheImapCache implements ImapSessionManager.Cache {
                     return (timestamp < (System.currentTimeMillis() - (LC.imap_authenticated_max_idle_time.intValue() * Constants.MILLIS_PER_SECOND + 5 * Constants.MILLIS_PER_MINUTE)));
                 }
 
-                private boolean removeIfExpired(Entry<String, Long> entry) {
+                private boolean removeIfExpired(Cache.Entry<String, Long> entry) {
                     if (isExpired(entry.getValue())) {
                         doRemove(entry.getKey());
                         return true;
@@ -68,8 +69,7 @@ final class EhcacheImapCache implements ImapSessionManager.Cache {
                     remove(key);
                 }
 
-                @Override
-                protected boolean removeEldestEntry(Entry<String, Long> eldest) {
+                protected boolean removeEldestEntry(Cache.Entry<String, Long> eldest) {
                     if (removeIfExpired(eldest)) {
                         Set<String> keysToRemove = new HashSet<String>();
                         if (size() > ACTIVE_CACHE_THRESHOLD) {
@@ -96,29 +96,33 @@ final class EhcacheImapCache implements ImapSessionManager.Cache {
 
     @Override
     public void put(String key, ImapFolder folder) {
-        if (active) {
-            synchronized (activeCacheUpdateTimes) {
-                if (!ehcache.isKeyInCache(key)) {
-                    ehcache.put(new Element(key, folder));
-                    ZimbraLog.imap.debug("put key %s",key);
+                try {
+                        if (active) {
+                                synchronized (activeCacheUpdateTimes) {
+                                        if (!ehcache.containsKey(key)) {
+                                                ehcache.put(key, folder);
+                                                ZimbraLog.imap.debug("put key %s",key);
+                                        }
+                                        long currentTime = System.currentTimeMillis();
+                                        activeCacheUpdateTimes.put(key, currentTime);
+                                }
+                        } else {
+                                if (!ehcache.containsKey(key)) {
+                                        ehcache.put(key, folder);
+                                }
+                        }
+                } catch (CacheWritingException we) {
+            ZimbraLog.imap.error("IMAP cache exception - failed to insert key: %s", key);
                 }
-                long currentTime = System.currentTimeMillis();
-                activeCacheUpdateTimes.put(key, currentTime);
-            }
-        } else {
-            if (!ehcache.isKeyInCache(key)) {
-                ehcache.put(new Element(key, folder));
-            }
-        }
     }
 
     @Override
     public ImapFolder get(String key) {
         try {
-            Element el = null;
+            ImapFolder el = null;
             if (active) {
                 synchronized (activeCacheUpdateTimes) {
-                    el = ehcache.get(key);
+                    el = (ImapFolder) ehcache.get(key);
                     if (el != null) {
                         activeCacheUpdateTimes.put(key, System.currentTimeMillis());
                         ZimbraLog.imap.debug("got Element for key %s",key);
@@ -127,10 +131,10 @@ final class EhcacheImapCache implements ImapSessionManager.Cache {
                     }
                 }
             } else {
-                el = ehcache.get(key);
+                el = (ImapFolder) ehcache.get(key);
             }
-            return el != null ? (ImapFolder) el.getValue() : null;
-        } catch (CacheException ce) {
+            return el;
+        } catch (CacheLoadingException ce) {
             ZimbraLog.imap.error("IMAP cache exception - removing offending key", ce);
             remove(key, true);
             return null;
@@ -146,7 +150,7 @@ final class EhcacheImapCache implements ImapSessionManager.Cache {
                 }
             }
             ehcache.remove(key);
-        } catch (CacheException ce) {
+        } catch (CacheWritingException ce) {
             if (!quiet) {
                 ZimbraLog.imap.error("IMAP cache exception", ce);
             }
