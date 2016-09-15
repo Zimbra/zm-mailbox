@@ -546,7 +546,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             AttributeInfo ai = ephemeralAttrMap.get(key.toLowerCase());
             if (ai == null) { continue; }
             if (ai.isDynamic()) {
-                ZimbraLog.ephemeral.warn("Ephemeral attribute %s expects a dynamic key component; it cannot be modified with modifyAttrs");
+                ZimbraLog.ephemeral.warn("Ephemeral attribute %s expects a dynamic key component; it cannot be modified with modifyAttrs", key);
                 continue;
             }
 
