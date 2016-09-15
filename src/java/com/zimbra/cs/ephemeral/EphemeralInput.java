@@ -7,13 +7,13 @@ import java.util.concurrent.TimeUnit;
  *
  * Aside from the required key/value strings, two options can be specified:
  * 1) A value, in milliseconds, of how long the key/value pair should last.
- *    Depending on whether the @EphemeralStore natively supports key expiration,
- *    this will either be encoded in the value to be used by @EphemeralStore.purgeExpired(),
+ *    Depending on whether the EphemeralStore natively supports key expiration,
+ *    this will either be encoded in the value to be used by EphemeralStore.purgeExpired(),
  *    or leveraged by the backend's own key expiration mechanism.
- * 2) Whether the key/value pair is dynamic. If the @EphemeralStore supports
+ * 2) Whether the key/value pair is dynamic. If the EphemeralStore supports
  *    dynamic keys (for example, if it is schemaless) this should be used
  *    as a hint to the implementation to encode the key and value into a single key.
- *    This is beneficial for use cases where we need to check whether a multi-valued key
+ *    This is beneficial for use cases where we need to check whether a multivalued key
  *    contains a specific value.
  *
  * @author iraykin
@@ -75,6 +75,10 @@ public class EphemeralInput {
         this.expiration = expiration;
     }
 
+    /**
+     * Returns the expiration of the key/value pair in milliseconds since epoch,
+     * or null if the attribute does not expire.
+     */
     public Long getExpiration() {
         return expiration == null ? null : expiration.getMillis();
     }
