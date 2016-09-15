@@ -299,7 +299,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         try {
             Server server = acct.getServer();
             if (server != null) {
-                server_version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+                server_version = server.getServerVersion();
+            } else {
+                server_version = Provisioning.getInstance().getLocalServer().getServerVersion();
             }
         } catch (ServiceException e) {
             LOG.error("Unable to fetch server version for the user account", e);
