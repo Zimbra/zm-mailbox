@@ -819,7 +819,10 @@ public abstract class Entry implements ToZJSONObject {
 
     public EphemeralResult getEphemeralAttr(String key, String dynamicComponent) throws ServiceException {
         EphemeralLocation location = new LdapEntryLocation(this);
-        return EphemeralStore.getFactory().getStore().get(new EphemeralKey(key, dynamicComponent), location);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        EphemeralKey ephemeralKey = new EphemeralKey(key, dynamicComponent);
+        EphemeralResult result = store.get(ephemeralKey, location);
+        return result == null ? EphemeralResult.emptyResult(ephemeralKey) : result;
     }
 
     protected void deleteEphemeralAttr(String key) throws ServiceException {
