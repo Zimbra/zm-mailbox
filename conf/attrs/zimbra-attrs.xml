@@ -138,6 +138,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
                            encoding in SOAP responses.
     serverPreferAlwaysOn...if zimbraAlwaysOnClusterId is configured override the server
                            attributes from the alwaysOnCluster
+    ephemeral..............this attribute will be stored in ephemeral storage,
+                           as specified by zimbraEphemeralBackendURL
+    expirable..............ephemeral values will expire after a specified amount of time;
+                           must be used in conjunction with the "ephemeral" flag
+    dynamic................ephemeral attribute will have a dynamic component to the key;
+                           must be used in conjunction with the "ephemeral" flag and cardinality="multi"
 
   requiresRestart: server(s) need be to restarted after changing this attribute.
                    values are comma-separated if more than one servers need to be restarted.
