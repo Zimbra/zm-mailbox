@@ -20,9 +20,7 @@ package com.zimbra.cs.servlet.util;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.InvalidAlgorithmParameterException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +48,8 @@ import com.zimbra.cs.account.CsrfTokenKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.TokenUtil;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
+import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
 import com.zimbra.cs.service.AuthProvider;
 
 
@@ -226,18 +226,10 @@ public final class CsrfUtil {
             Account account = getAccount(authToken, Boolean.TRUE);
             if(account != null) {
                 String crumb = authToken.getCrumb();
-                String[] validCsrfTokens = account.getMultiAttr(Provisioning.A_zimbraCsrfTokenData);
-                List<String> validCsrfTokenList = Arrays.asList(validCsrfTokens);
-                for (String csrfTokenData : validCsrfTokenList) {
-                    String [] data = csrfTokenData.split(":");
-                    if (data[1].equals(crumb)) {
-                        csrfTokenCreated = true;
-                        break;
-                    }
-                }
+                csrfTokenCreated = account.hasCsrfTokenData(crumb);
             }
        } catch (ServiceException | AuthTokenException e) {
-           ZimbraLog.misc.info("Error fetching list of CSRF tokens" + e.getMessage());
+           ZimbraLog.ephemeral.info("Error fetching CSRF token data" + e.getMessage());
        }
         return csrfTokenCreated;
     }
@@ -365,23 +357,8 @@ public final class CsrfUtil {
      * @throws ServiceException
      */
     private static String getTokenDataFromLdap(String crumb, Account account) throws ServiceException {
-        String csrfTokenData = null;
-        String [] validCsrfTokens = account.getMultiAttr(Provisioning.A_zimbraCsrfTokenData);
-
-        List<String> validCsrfTokenList = Arrays.asList(validCsrfTokens);
-        if (ZimbraLog.misc.isDebugEnabled()) {
-            ZimbraLog.misc.debug("Existing CSRF token data: " +  validCsrfTokenList);
-        }
-        validCsrfTokenList = purgeOldCsrfTokens(validCsrfTokenList, account);
-        for (String validCsrfToken : validCsrfTokenList) {
-            String [] temp = validCsrfToken.split(":");
-            if (temp[1].equals(crumb)) {
-                csrfTokenData = temp[0];
-                break;
-            }
-        }
-
-        return csrfTokenData;
+        account.purgeCsrfTokenData();
+        return account.getCsrfTokenData(crumb);
     }
 
 
@@ -402,34 +379,6 @@ public final class CsrfUtil {
             throw new AuthTokenException("blob decoding exception", e);
         }
     }
-
-    /**
-     * @param validCsrfTokenList
-     * @return
-     * @throws ServiceException
-     */
-    private static List<String> purgeOldCsrfTokens(
-        List<String> validCsrfTokenSaltList, Account account) throws ServiceException {
-
-        List <String> validList = new ArrayList<String>();
-        long now  = System.currentTimeMillis();
-        HashMap<String, Object> toPurge = new HashMap<String, Object>();
-        for (String csrfTokenSalt : validCsrfTokenSaltList) {
-            String [] temp = csrfTokenSalt.split(":");
-            long tokenExpiration = Long.parseLong(temp[2]);
-            if (now < tokenExpiration) {
-                validList.add(csrfTokenSalt);
-            } else {
-                StringUtil.addToMultiMap(toPurge, "-" + Provisioning.A_zimbraCsrfTokenData, csrfTokenSalt);
-            }
-        }
-        if (toPurge.size() > 0) {
-            account.modify(toPurge);
-        }
-        return validList;
-    }
-
-
 
     /**
      * @param sessionId
@@ -500,32 +449,23 @@ public final class CsrfUtil {
      */
     private static void storeTokenData(String data, AuthToken authToken, long authTokenExpiration,
         String crumb) throws ServiceException {
-            Account account = getAccount(authToken, Boolean.TRUE);
-            if(account != null) {
-                String [] validCsrfTokens = account.getMultiAttr(Provisioning.A_zimbraCsrfTokenData);
-    //            CSRF token data:Auth token Key crumb:Auth Token Key expiration
-                String newToken = data + ":" + crumb + ":" + authTokenExpiration ;
-                HashMap<String,Object> mods = new HashMap<String,Object>();
-                boolean needToAdd = true;
-                for (String tokenData : validCsrfTokens) {
-                    String[] temp = tokenData.split(":");
-                    String tokenCrumb = temp[1];
-                    if (tokenCrumb.equals(crumb)) {
-                        if (!tokenData.equals(newToken)) {
-                            StringUtil.addToMultiMap(mods, "-" + Provisioning.A_zimbraCsrfTokenData, tokenData);
-                        } else {
-                            ZimbraLog.misc.debug("token already stored in LDAP");
-                            needToAdd = false;
-                        }
-                    }
-                }
-                if (needToAdd) {
-                    StringUtil.addToMultiMap(mods, "+" + Provisioning.A_zimbraCsrfTokenData, newToken);
-                }
-                if (mods.size() > 0) {
-                    account.modify(mods);
+        Account account = getAccount(authToken, Boolean.TRUE);
+        if(account != null) {
+            Expiration expiration = new AbsoluteExpiration(authTokenExpiration);
+            boolean needToAdd = true;
+            String curData = account.getCsrfTokenData(crumb);
+            if (curData != null) {
+                if (data != curData) {
+                    account.removeCsrfTokenData(crumb, curData);
+                } else {
+                    ZimbraLog.ephemeral.debug("CSRF token already stored in ephemeral storage");
+                    needToAdd = false;
                 }
             }
+            if (needToAdd) {
+                account.addCsrfTokenData(crumb, data, expiration);
+            }
+        }
     }
 
     public static CsrfTokenKey getCsrfTokenKey() throws ServiceException {

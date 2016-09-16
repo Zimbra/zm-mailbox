@@ -45,7 +45,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=-1)
     public String getCn() {
-        return getAttr(Provisioning.A_cn, null);
+        return getAttr(Provisioning.A_cn, null, true);
     }
 
     /**
@@ -107,7 +107,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=-1)
     public String[] getDescription() {
-        return getMultiAttr(Provisioning.A_description);
+        return getMultiAttr(Provisioning.A_description, true, true);
     }
 
     /**
@@ -225,7 +225,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=659)
     public String[] getACE() {
-        return getMultiAttr(Provisioning.A_zimbraACE);
+        return getMultiAttr(Provisioning.A_zimbraACE, true, true);
     }
 
     /**
@@ -359,7 +359,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=2059)
     public int getConvertPoolTimeout() {
-        return getIntAttr(Provisioning.A_zimbraConvertPoolTimeout, -1);
+        return getIntAttr(Provisioning.A_zimbraConvertPoolTimeout, -1, true);
     }
 
     /**
@@ -435,7 +435,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=790)
     public Date getCreateTimestamp() {
-        return getGeneralizedTimeAttr(Provisioning.A_zimbraCreateTimestamp, null);
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraCreateTimestamp, null, true);
     }
 
     /**
@@ -447,7 +447,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=790)
     public String getCreateTimestampAsString() {
-        return getAttr(Provisioning.A_zimbraCreateTimestamp, null);
+        return getAttr(Provisioning.A_zimbraCreateTimestamp, null, true);
     }
 
     /**
@@ -554,7 +554,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1980)
     public int getExtensionBindPort() {
-        return getIntAttr(Provisioning.A_zimbraExtensionBindPort, -1);
+        return getIntAttr(Provisioning.A_zimbraExtensionBindPort, -1, true);
     }
 
     /**
@@ -566,7 +566,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1980)
     public String getExtensionBindPortAsString() {
-        return getAttr(Provisioning.A_zimbraExtensionBindPort, null);
+        return getAttr(Provisioning.A_zimbraExtensionBindPort, null, true);
     }
 
     /**
@@ -667,7 +667,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1)
     public String getId() {
-        return getAttr(Provisioning.A_zimbraId, null);
+        return getAttr(Provisioning.A_zimbraId, null, true);
     }
 
     /**
@@ -734,7 +734,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=2013)
     public long getImapInactiveSessionCacheMaxDiskSize() {
-        return getLongAttr(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, -1L);
+        return getLongAttr(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, -1L, true);
     }
 
     /**
@@ -824,7 +824,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=2018)
     public boolean isLdapGentimeFractionalSecondsEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraLdapGentimeFractionalSecondsEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraLdapGentimeFractionalSecondsEnabled, false, true);
     }
 
     /**
@@ -928,7 +928,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=2053)
     public long getMailboxThrottleReapInterval() {
-        return getTimeInterval(Provisioning.A_zimbraMailboxThrottleReapInterval, -1L);
+        return getTimeInterval(Provisioning.A_zimbraMailboxThrottleReapInterval, -1L, true);
     }
 
     /**
@@ -944,7 +944,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=2053)
     public String getMailboxThrottleReapIntervalAsString() {
-        return getAttr(Provisioning.A_zimbraMailboxThrottleReapInterval, null);
+        return getAttr(Provisioning.A_zimbraMailboxThrottleReapInterval, null, true);
     }
 
     /**
@@ -1033,7 +1033,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1014)
     public String[] getMemcachedClientServerList() {
-        return getMultiAttr(Provisioning.A_zimbraMemcachedClientServerList);
+        return getMultiAttr(Provisioning.A_zimbraMemcachedClientServerList, true, true);
     }
 
     /**
@@ -1177,7 +1177,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1818)
     public boolean isReverseProxySNIEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraReverseProxySNIEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxySNIEnabled, false, true);
     }
 
     /**
@@ -1274,7 +1274,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1903)
     public long getShortTermAllEffectiveRightsCacheExpiration() {
-        return getTimeInterval(Provisioning.A_zimbraShortTermAllEffectiveRightsCacheExpiration, -1L);
+        return getTimeInterval(Provisioning.A_zimbraShortTermAllEffectiveRightsCacheExpiration, -1L, true);
     }
 
     /**
@@ -1299,7 +1299,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1903)
     public String getShortTermAllEffectiveRightsCacheExpirationAsString() {
-        return getAttr(Provisioning.A_zimbraShortTermAllEffectiveRightsCacheExpiration, null);
+        return getAttr(Provisioning.A_zimbraShortTermAllEffectiveRightsCacheExpiration, null, true);
     }
 
     /**
@@ -1426,7 +1426,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1902)
     public int getShortTermAllEffectiveRightsCacheSize() {
-        return getIntAttr(Provisioning.A_zimbraShortTermAllEffectiveRightsCacheSize, -1);
+        return getIntAttr(Provisioning.A_zimbraShortTermAllEffectiveRightsCacheSize, -1, true);
     }
 
     /**
@@ -1526,7 +1526,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1901)
     public long getShortTermGranteeCacheExpiration() {
-        return getTimeInterval(Provisioning.A_zimbraShortTermGranteeCacheExpiration, -1L);
+        return getTimeInterval(Provisioning.A_zimbraShortTermGranteeCacheExpiration, -1L, true);
     }
 
     /**
@@ -1550,7 +1550,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1901)
     public String getShortTermGranteeCacheExpirationAsString() {
-        return getAttr(Provisioning.A_zimbraShortTermGranteeCacheExpiration, null);
+        return getAttr(Provisioning.A_zimbraShortTermGranteeCacheExpiration, null, true);
     }
 
     /**
@@ -1673,7 +1673,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1900)
     public int getShortTermGranteeCacheSize() {
-        return getIntAttr(Provisioning.A_zimbraShortTermGranteeCacheSize, -1);
+        return getIntAttr(Provisioning.A_zimbraShortTermGranteeCacheSize, -1, true);
     }
 
     /**
@@ -1758,7 +1758,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      */
     @ZAttr(id=1447)
     public String[] getZookeeperClientServerList() {
-        return getMultiAttr(Provisioning.A_zimbraZookeeperClientServerList);
+        return getMultiAttr(Provisioning.A_zimbraZookeeperClientServerList, true, true);
     }
 
     /**

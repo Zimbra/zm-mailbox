@@ -8,7 +8,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
- * A wrapper class for results retrieved from @EphemeralStore.
+ * A wrapper class for results retrieved from EphemeralStore.
  * This class supports both single- and multi-valued keys.
  * If a key is known to have a single value, the get*Value() methods should be used.
  * If a key has more than one, get*Values() should be used.

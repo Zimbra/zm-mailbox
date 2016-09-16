@@ -7,8 +7,8 @@ import java.util.List;
 import com.zimbra.common.service.ServiceException;
 
 /**
- * Helper class used by @InMemoryEphemeralStore and @LdapEphemeralStore, or potentially
- * any @EphemeralStore implementation that does not support native key expiration or dynamic keys,
+ * Helper class used by InMemoryEphemeralStore and LdapEphemeralStore, or potentially
+ * any EphemeralStore implementation that does not support native key expiration or dynamic keys,
  * requiring the expiration and dynamic key data to be encoded in the values.
  *
  * This class handles the task of filtering multivalued results on whether the requested key was dynamic,

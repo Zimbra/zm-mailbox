@@ -51,7 +51,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=-1)
     public String[] getDescription() {
-        return getMultiAttr(Provisioning.A_description);
+        return getMultiAttr(Provisioning.A_description, true, true);
     }
 
     /**
@@ -169,7 +169,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=659)
     public String[] getACE() {
-        return getMultiAttr(Provisioning.A_zimbraACE);
+        return getMultiAttr(Provisioning.A_zimbraACE, true, true);
     }
 
     /**
@@ -303,7 +303,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=746)
     public boolean isAdminConsoleCatchAllAddressEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAdminConsoleCatchAllAddressEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraAdminConsoleCatchAllAddressEnabled, false, true);
     }
 
     /**
@@ -375,7 +375,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=743)
     public boolean isAdminConsoleDNSCheckEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAdminConsoleDNSCheckEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraAdminConsoleDNSCheckEnabled, false, true);
     }
 
     /**
@@ -447,7 +447,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=774)
     public boolean isAdminConsoleLDAPAuthEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAdminConsoleLDAPAuthEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraAdminConsoleLDAPAuthEnabled, false, true);
     }
 
     /**
@@ -519,7 +519,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=772)
     public String[] getAdminConsoleLoginMessage() {
-        return getMultiAttr(Provisioning.A_zimbraAdminConsoleLoginMessage);
+        return getMultiAttr(Provisioning.A_zimbraAdminConsoleLoginMessage, true, true);
     }
 
     /**
@@ -654,7 +654,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=696)
     public String getAdminConsoleLoginURL() {
-        return getAttr(Provisioning.A_zimbraAdminConsoleLoginURL, null);
+        return getAttr(Provisioning.A_zimbraAdminConsoleLoginURL, null, true);
     }
 
     /**
@@ -731,7 +731,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=684)
     public String getAdminConsoleLogoutURL() {
-        return getAttr(Provisioning.A_zimbraAdminConsoleLogoutURL, null);
+        return getAttr(Provisioning.A_zimbraAdminConsoleLogoutURL, null, true);
     }
 
     /**
@@ -807,7 +807,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=751)
     public boolean isAdminConsoleSkinEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAdminConsoleSkinEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraAdminConsoleSkinEnabled, false, true);
     }
 
     /**
@@ -879,7 +879,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1328)
     public long getAggregateQuotaLastUsage() {
-        return getLongAttr(Provisioning.A_zimbraAggregateQuotaLastUsage, -1L);
+        return getLongAttr(Provisioning.A_zimbraAggregateQuotaLastUsage, -1L, true);
     }
 
     /**
@@ -951,7 +951,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1459)
     public String getAmavisDomainDisclaimerHTML() {
-        return getAttr(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, null);
+        return getAttr(Provisioning.A_zimbraAmavisDomainDisclaimerHTML, null, true);
     }
 
     /**
@@ -1023,7 +1023,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1458)
     public String getAmavisDomainDisclaimerText() {
-        return getAttr(Provisioning.A_zimbraAmavisDomainDisclaimerText, null);
+        return getAttr(Provisioning.A_zimbraAmavisDomainDisclaimerText, null, true);
     }
 
     /**
@@ -1093,7 +1093,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=257)
     public boolean isAuthFallbackToLocal() {
-        return getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false);
+        return getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false, true);
     }
 
     /**
@@ -1157,7 +1157,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=548)
     public String getAuthKerberos5Realm() {
-        return getAttr(Provisioning.A_zimbraAuthKerberos5Realm, null);
+        return getAttr(Provisioning.A_zimbraAuthKerberos5Realm, null, true);
     }
 
     /**
@@ -1227,7 +1227,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=44)
     public String getAuthLdapBindDn() {
-        return getAttr(Provisioning.A_zimbraAuthLdapBindDn, null);
+        return getAttr(Provisioning.A_zimbraAuthLdapBindDn, null, true);
     }
 
     /**
@@ -1289,7 +1289,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=252)
     public String getAuthLdapSearchBase() {
-        return getAttr(Provisioning.A_zimbraAuthLdapSearchBase, null);
+        return getAttr(Provisioning.A_zimbraAuthLdapSearchBase, null, true);
     }
 
     /**
@@ -1351,7 +1351,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=253)
     public String getAuthLdapSearchBindDn() {
-        return getAttr(Provisioning.A_zimbraAuthLdapSearchBindDn, null);
+        return getAttr(Provisioning.A_zimbraAuthLdapSearchBindDn, null, true);
     }
 
     /**
@@ -1413,7 +1413,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=254)
     public String getAuthLdapSearchBindPassword() {
-        return getAttr(Provisioning.A_zimbraAuthLdapSearchBindPassword, null);
+        return getAttr(Provisioning.A_zimbraAuthLdapSearchBindPassword, null, true);
     }
 
     /**
@@ -1475,7 +1475,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=255)
     public String getAuthLdapSearchFilter() {
-        return getAttr(Provisioning.A_zimbraAuthLdapSearchFilter, null);
+        return getAttr(Provisioning.A_zimbraAuthLdapSearchFilter, null, true);
     }
 
     /**
@@ -1539,7 +1539,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=654)
     public boolean isAuthLdapStartTlsEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAuthLdapStartTlsEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraAuthLdapStartTlsEnabled, false, true);
     }
 
     /**
@@ -1609,7 +1609,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=43)
     public String[] getAuthLdapURL() {
-        return getMultiAttr(Provisioning.A_zimbraAuthLdapURL);
+        return getMultiAttr(Provisioning.A_zimbraAuthLdapURL, true, true);
     }
 
     /**
@@ -1726,7 +1726,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=42)
     public String getAuthMech() {
-        return getAttr(Provisioning.A_zimbraAuthMech, null);
+        return getAttr(Provisioning.A_zimbraAuthMech, null, true);
     }
 
     /**
@@ -1794,7 +1794,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1252)
     public String getAuthMechAdmin() {
-        return getAttr(Provisioning.A_zimbraAuthMechAdmin, null);
+        return getAttr(Provisioning.A_zimbraAuthMechAdmin, null, true);
     }
 
     /**
@@ -1869,7 +1869,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1230)
     public String getAutoProvAccountNameMap() {
-        return getAttr(Provisioning.A_zimbraAutoProvAccountNameMap, null);
+        return getAttr(Provisioning.A_zimbraAutoProvAccountNameMap, null, true);
     }
 
     /**
@@ -1963,7 +1963,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1231)
     public String[] getAutoProvAttrMap() {
-        return getMultiAttr(Provisioning.A_zimbraAutoProvAttrMap);
+        return getMultiAttr(Provisioning.A_zimbraAutoProvAttrMap, true, true);
     }
 
     /**
@@ -2183,7 +2183,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1222)
     public String[] getAutoProvAuthMechAsString() {
-        return getMultiAttr(Provisioning.A_zimbraAutoProvAuthMech);
+        return getMultiAttr(Provisioning.A_zimbraAutoProvAuthMech, true, true);
     }
 
     /**
@@ -2323,7 +2323,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1234)
     public int getAutoProvBatchSize() {
-        return getIntAttr(Provisioning.A_zimbraAutoProvBatchSize, 20);
+        return getIntAttr(Provisioning.A_zimbraAutoProvBatchSize, 20, true);
     }
 
     /**
@@ -2407,7 +2407,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1235)
     public Date getAutoProvLastPolledTimestamp() {
-        return getGeneralizedTimeAttr(Provisioning.A_zimbraAutoProvLastPolledTimestamp, null);
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraAutoProvLastPolledTimestamp, null, true);
     }
 
     /**
@@ -2423,7 +2423,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1235)
     public String getAutoProvLastPolledTimestampAsString() {
-        return getAttr(Provisioning.A_zimbraAutoProvLastPolledTimestamp, null);
+        return getAttr(Provisioning.A_zimbraAutoProvLastPolledTimestamp, null, true);
     }
 
     /**
@@ -2552,7 +2552,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1225)
     public String getAutoProvLdapAdminBindDn() {
-        return getAttr(Provisioning.A_zimbraAutoProvLdapAdminBindDn, null);
+        return getAttr(Provisioning.A_zimbraAutoProvLdapAdminBindDn, null, true);
     }
 
     /**
@@ -2633,7 +2633,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1226)
     public String getAutoProvLdapAdminBindPassword() {
-        return getAttr(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, null);
+        return getAttr(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, null, true);
     }
 
     /**
@@ -2717,7 +2717,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1229)
     public String getAutoProvLdapBindDn() {
-        return getAttr(Provisioning.A_zimbraAutoProvLdapBindDn, null);
+        return getAttr(Provisioning.A_zimbraAutoProvLdapBindDn, null, true);
     }
 
     /**
@@ -2825,7 +2825,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1227)
     public String getAutoProvLdapSearchBase() {
-        return getAttr(Provisioning.A_zimbraAutoProvLdapSearchBase, null);
+        return getAttr(Provisioning.A_zimbraAutoProvLdapSearchBase, null, true);
     }
 
     /**
@@ -2921,7 +2921,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1228)
     public String getAutoProvLdapSearchFilter() {
-        return getAttr(Provisioning.A_zimbraAutoProvLdapSearchFilter, null);
+        return getAttr(Provisioning.A_zimbraAutoProvLdapSearchFilter, null, true);
     }
 
     /**
@@ -3027,7 +3027,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1224)
     public boolean isAutoProvLdapStartTlsEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, false, true);
     }
 
     /**
@@ -3108,7 +3108,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1223)
     public String getAutoProvLdapURL() {
-        return getAttr(Provisioning.A_zimbraAutoProvLdapURL, null);
+        return getAttr(Provisioning.A_zimbraAutoProvLdapURL, null, true);
     }
 
     /**
@@ -3208,7 +3208,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1233)
     public String getAutoProvListenerClass() {
-        return getAttr(Provisioning.A_zimbraAutoProvListenerClass, null);
+        return getAttr(Provisioning.A_zimbraAutoProvListenerClass, null, true);
     }
 
     /**
@@ -3381,7 +3381,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1236)
     public String getAutoProvLock() {
-        return getAttr(Provisioning.A_zimbraAutoProvLock, null);
+        return getAttr(Provisioning.A_zimbraAutoProvLock, null, true);
     }
 
     /**
@@ -3489,7 +3489,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1221)
     public String[] getAutoProvModeAsString() {
-        return getMultiAttr(Provisioning.A_zimbraAutoProvMode);
+        return getMultiAttr(Provisioning.A_zimbraAutoProvMode, true, true);
     }
 
     /**
@@ -3690,7 +3690,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1357)
     public String getAutoProvNotificationBody() {
-        return getAttr(Provisioning.A_zimbraAutoProvNotificationBody, "Your account has been auto provisioned.  Your email address is ${ACCOUNT_ADDRESS}.");
+        return getAttr(Provisioning.A_zimbraAutoProvNotificationBody, "Your account has been auto provisioned.  Your email address is ${ACCOUNT_ADDRESS}.", true);
     }
 
     /**
@@ -3773,7 +3773,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1232)
     public String getAutoProvNotificationFromAddress() {
-        return getAttr(Provisioning.A_zimbraAutoProvNotificationFromAddress, null);
+        return getAttr(Provisioning.A_zimbraAutoProvNotificationFromAddress, null, true);
     }
 
     /**
@@ -3859,7 +3859,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1356)
     public String getAutoProvNotificationSubject() {
-        return getAttr(Provisioning.A_zimbraAutoProvNotificationSubject, "New account auto provisioned");
+        return getAttr(Provisioning.A_zimbraAutoProvNotificationSubject, "New account auto provisioned", true);
     }
 
     /**
@@ -3939,7 +3939,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=364)
     public String[] getAvailableSkin() {
-        return getMultiAttr(Provisioning.A_zimbraAvailableSkin);
+        return getMultiAttr(Provisioning.A_zimbraAvailableSkin, true, true);
     }
 
     /**
@@ -4073,7 +4073,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1098)
     public String getBasicAuthRealm() {
-        return getAttr(Provisioning.A_zimbraBasicAuthRealm, "Zimbra");
+        return getAttr(Provisioning.A_zimbraBasicAuthRealm, "Zimbra", true);
     }
 
     /**
@@ -4145,7 +4145,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1218)
     public String getCalendarLocationDisabledFields() {
-        return getAttr(Provisioning.A_zimbraCalendarLocationDisabledFields, null);
+        return getAttr(Provisioning.A_zimbraCalendarLocationDisabledFields, null, true);
     }
 
     /**
@@ -4217,7 +4217,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=777)
     public String getChangePasswordURL() {
-        return getAttr(Provisioning.A_zimbraChangePasswordURL, null);
+        return getAttr(Provisioning.A_zimbraChangePasswordURL, null, true);
     }
 
     /**
@@ -4289,7 +4289,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1637)
     public String getCommunityAPIClientID() {
-        return getAttr(Provisioning.A_zimbraCommunityAPIClientID, null);
+        return getAttr(Provisioning.A_zimbraCommunityAPIClientID, null, true);
     }
 
     /**
@@ -4361,7 +4361,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1638)
     public String getCommunityAPIClientSecret() {
-        return getAttr(Provisioning.A_zimbraCommunityAPIClientSecret, null);
+        return getAttr(Provisioning.A_zimbraCommunityAPIClientSecret, null, true);
     }
 
     /**
@@ -4434,7 +4434,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1640)
     public String getCommunityBaseURL() {
-        return getAttr(Provisioning.A_zimbraCommunityBaseURL, null);
+        return getAttr(Provisioning.A_zimbraCommunityBaseURL, null, true);
     }
 
     /**
@@ -4511,7 +4511,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1641)
     public String getCommunityHomeURL() {
-        return getAttr(Provisioning.A_zimbraCommunityHomeURL, "/integration/zimbracollaboration");
+        return getAttr(Provisioning.A_zimbraCommunityHomeURL, "/integration/zimbracollaboration", true);
     }
 
     /**
@@ -4587,7 +4587,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1639)
     public String getCommunityUsernameMapping() {
-        return getAttr(Provisioning.A_zimbraCommunityUsernameMapping, "uid");
+        return getAttr(Provisioning.A_zimbraCommunityUsernameMapping, "uid", true);
     }
 
     /**
@@ -4663,7 +4663,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=790)
     public Date getCreateTimestamp() {
-        return getGeneralizedTimeAttr(Provisioning.A_zimbraCreateTimestamp, null);
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraCreateTimestamp, null, true);
     }
 
     /**
@@ -4675,7 +4675,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=790)
     public String getCreateTimestampAsString() {
-        return getAttr(Provisioning.A_zimbraCreateTimestamp, null);
+        return getAttr(Provisioning.A_zimbraCreateTimestamp, null, true);
     }
 
     /**
@@ -4779,7 +4779,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1630)
     public String[] getCsrfAllowedRefererHosts() {
-        return getMultiAttr(Provisioning.A_zimbraCsrfAllowedRefererHosts);
+        return getMultiAttr(Provisioning.A_zimbraCsrfAllowedRefererHosts, true, true);
     }
 
     /**
@@ -4922,7 +4922,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=744)
     public String getDNSCheckHostname() {
-        return getAttr(Provisioning.A_zimbraDNSCheckHostname, null);
+        return getAttr(Provisioning.A_zimbraDNSCheckHostname, null, true);
     }
 
     /**
@@ -4998,7 +4998,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1327)
     public long getDomainAggregateQuota() {
-        return getLongAttr(Provisioning.A_zimbraDomainAggregateQuota, 0L);
+        return getLongAttr(Provisioning.A_zimbraDomainAggregateQuota, 0L, true);
     }
 
     /**
@@ -5073,7 +5073,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1329)
     public ZAttrProvisioning.DomainAggregateQuotaPolicy getDomainAggregateQuotaPolicy() {
-        try { String v = getAttr(Provisioning.A_zimbraDomainAggregateQuotaPolicy); return v == null ? ZAttrProvisioning.DomainAggregateQuotaPolicy.ALLOWSENDRECEIVE : ZAttrProvisioning.DomainAggregateQuotaPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.DomainAggregateQuotaPolicy.ALLOWSENDRECEIVE; }
+        try { String v = getAttr(Provisioning.A_zimbraDomainAggregateQuotaPolicy, true, true); return v == null ? ZAttrProvisioning.DomainAggregateQuotaPolicy.ALLOWSENDRECEIVE : ZAttrProvisioning.DomainAggregateQuotaPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.DomainAggregateQuotaPolicy.ALLOWSENDRECEIVE; }
     }
 
     /**
@@ -5088,7 +5088,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1329)
     public String getDomainAggregateQuotaPolicyAsString() {
-        return getAttr(Provisioning.A_zimbraDomainAggregateQuotaPolicy, "ALLOWSENDRECEIVE");
+        return getAttr(Provisioning.A_zimbraDomainAggregateQuotaPolicy, "ALLOWSENDRECEIVE", true);
     }
 
     /**
@@ -5211,7 +5211,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1331)
     public String[] getDomainAggregateQuotaWarnEmailRecipient() {
-        return getMultiAttr(Provisioning.A_zimbraDomainAggregateQuotaWarnEmailRecipient);
+        return getMultiAttr(Provisioning.A_zimbraDomainAggregateQuotaWarnEmailRecipient, true, true);
     }
 
     /**
@@ -5361,7 +5361,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1330)
     public int getDomainAggregateQuotaWarnPercent() {
-        return getIntAttr(Provisioning.A_zimbraDomainAggregateQuotaWarnPercent, 80);
+        return getIntAttr(Provisioning.A_zimbraDomainAggregateQuotaWarnPercent, 80, true);
     }
 
     /**
@@ -5433,7 +5433,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=775)
     public String getDomainAliasTargetId() {
-        return getAttr(Provisioning.A_zimbraDomainAliasTargetId, null);
+        return getAttr(Provisioning.A_zimbraDomainAliasTargetId, null, true);
     }
 
     /**
@@ -5507,7 +5507,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1721)
     public String[] getDomainAllowedIPs() {
-        return getMultiAttr(Provisioning.A_zimbraDomainAllowedIPs);
+        return getMultiAttr(Provisioning.A_zimbraDomainAllowedIPs, true, true);
     }
 
     /**
@@ -5659,7 +5659,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=714)
     public String[] getDomainCOSMaxAccounts() {
-        return getMultiAttr(Provisioning.A_zimbraDomainCOSMaxAccounts);
+        return getMultiAttr(Provisioning.A_zimbraDomainCOSMaxAccounts, true, true);
     }
 
     /**
@@ -5807,7 +5807,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=299)
     public String getDomainDefaultCOSId() {
-        return getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null);
+        return getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null, true);
     }
 
     /**
@@ -5871,7 +5871,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1247)
     public String getDomainDefaultExternalUserCOSId() {
-        return getAttr(Provisioning.A_zimbraDomainDefaultExternalUserCOSId, null);
+        return getAttr(Provisioning.A_zimbraDomainDefaultExternalUserCOSId, null, true);
     }
 
     /**
@@ -5944,7 +5944,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=715)
     public String[] getDomainFeatureMaxAccounts() {
-        return getMultiAttr(Provisioning.A_zimbraDomainFeatureMaxAccounts);
+        return getMultiAttr(Provisioning.A_zimbraDomainFeatureMaxAccounts, true, true);
     }
 
     /**
@@ -6086,7 +6086,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1069)
     public boolean isDomainMandatoryMailSignatureEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraDomainMandatoryMailSignatureEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraDomainMandatoryMailSignatureEnabled, false, true);
     }
 
     /**
@@ -6160,7 +6160,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1071)
     public String getDomainMandatoryMailSignatureHTML() {
-        return getAttr(Provisioning.A_zimbraDomainMandatoryMailSignatureHTML, null);
+        return getAttr(Provisioning.A_zimbraDomainMandatoryMailSignatureHTML, null, true);
     }
 
     /**
@@ -6242,7 +6242,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1070)
     public String getDomainMandatoryMailSignatureText() {
-        return getAttr(Provisioning.A_zimbraDomainMandatoryMailSignatureText, null);
+        return getAttr(Provisioning.A_zimbraDomainMandatoryMailSignatureText, null, true);
     }
 
     /**
@@ -6320,7 +6320,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=400)
     public int getDomainMaxAccounts() {
-        return getIntAttr(Provisioning.A_zimbraDomainMaxAccounts, -1);
+        return getIntAttr(Provisioning.A_zimbraDomainMaxAccounts, -1, true);
     }
 
     /**
@@ -6382,7 +6382,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=19)
     public String getDomainName() {
-        return getAttr(Provisioning.A_zimbraDomainName, null);
+        return getAttr(Provisioning.A_zimbraDomainName, null, true);
     }
 
     /**
@@ -6446,7 +6446,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=536)
     public String getDomainRenameInfo() {
-        return getAttr(Provisioning.A_zimbraDomainRenameInfo, null);
+        return getAttr(Provisioning.A_zimbraDomainRenameInfo, null, true);
     }
 
     /**
@@ -6539,7 +6539,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=535)
     public ZAttrProvisioning.DomainStatus getDomainStatus() {
-        try { String v = getAttr(Provisioning.A_zimbraDomainStatus); return v == null ? null : ZAttrProvisioning.DomainStatus.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraDomainStatus, true, true); return v == null ? null : ZAttrProvisioning.DomainStatus.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -6572,7 +6572,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=535)
     public String getDomainStatusAsString() {
-        return getAttr(Provisioning.A_zimbraDomainStatus, null);
+        return getAttr(Provisioning.A_zimbraDomainStatus, null, true);
     }
 
     /**
@@ -6801,7 +6801,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=212)
     public ZAttrProvisioning.DomainType getDomainType() {
-        try { String v = getAttr(Provisioning.A_zimbraDomainType); return v == null ? null : ZAttrProvisioning.DomainType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraDomainType, true, true); return v == null ? null : ZAttrProvisioning.DomainType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -6813,7 +6813,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=212)
     public String getDomainTypeAsString() {
-        return getAttr(Provisioning.A_zimbraDomainType, null);
+        return getAttr(Provisioning.A_zimbraDomainType, null, true);
     }
 
     /**
@@ -6916,7 +6916,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1075)
     public String getErrorReportUrl() {
-        return getAttr(Provisioning.A_zimbraErrorReportUrl, null);
+        return getAttr(Provisioning.A_zimbraErrorReportUrl, null, true);
     }
 
     /**
@@ -6989,7 +6989,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=2056)
     public int getExportMaxDays() {
-        return getIntAttr(Provisioning.A_zimbraExportMaxDays, 0);
+        return getIntAttr(Provisioning.A_zimbraExportMaxDays, 0, true);
     }
 
     /**
@@ -7066,7 +7066,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1251)
     public String getExternalGroupHandlerClass() {
-        return getAttr(Provisioning.A_zimbraExternalGroupHandlerClass, null);
+        return getAttr(Provisioning.A_zimbraExternalGroupHandlerClass, null, true);
     }
 
     /**
@@ -7142,7 +7142,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1249)
     public String getExternalGroupLdapSearchBase() {
-        return getAttr(Provisioning.A_zimbraExternalGroupLdapSearchBase, null);
+        return getAttr(Provisioning.A_zimbraExternalGroupLdapSearchBase, null, true);
     }
 
     /**
@@ -7214,7 +7214,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1250)
     public String getExternalGroupLdapSearchFilter() {
-        return getAttr(Provisioning.A_zimbraExternalGroupLdapSearchFilter, null);
+        return getAttr(Provisioning.A_zimbraExternalGroupLdapSearchFilter, null, true);
     }
 
     /**
@@ -7286,7 +7286,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=786)
     public String getExternalImapHostname() {
-        return getAttr(Provisioning.A_zimbraExternalImapHostname, null);
+        return getAttr(Provisioning.A_zimbraExternalImapHostname, null, true);
     }
 
     /**
@@ -7362,7 +7362,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=782)
     public int getExternalImapPort() {
-        return getIntAttr(Provisioning.A_zimbraExternalImapPort, -1);
+        return getIntAttr(Provisioning.A_zimbraExternalImapPort, -1, true);
     }
 
     /**
@@ -7374,7 +7374,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=782)
     public String getExternalImapPortAsString() {
-        return getAttr(Provisioning.A_zimbraExternalImapPort, null);
+        return getAttr(Provisioning.A_zimbraExternalImapPort, null, true);
     }
 
     /**
@@ -7477,7 +7477,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=787)
     public String getExternalImapSSLHostname() {
-        return getAttr(Provisioning.A_zimbraExternalImapSSLHostname, null);
+        return getAttr(Provisioning.A_zimbraExternalImapSSLHostname, null, true);
     }
 
     /**
@@ -7553,7 +7553,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=783)
     public int getExternalImapSSLPort() {
-        return getIntAttr(Provisioning.A_zimbraExternalImapSSLPort, -1);
+        return getIntAttr(Provisioning.A_zimbraExternalImapSSLPort, -1, true);
     }
 
     /**
@@ -7565,7 +7565,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=783)
     public String getExternalImapSSLPortAsString() {
-        return getAttr(Provisioning.A_zimbraExternalImapSSLPort, null);
+        return getAttr(Provisioning.A_zimbraExternalImapSSLPort, null, true);
     }
 
     /**
@@ -7668,7 +7668,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=784)
     public String getExternalPop3Hostname() {
-        return getAttr(Provisioning.A_zimbraExternalPop3Hostname, null);
+        return getAttr(Provisioning.A_zimbraExternalPop3Hostname, null, true);
     }
 
     /**
@@ -7744,7 +7744,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=780)
     public int getExternalPop3Port() {
-        return getIntAttr(Provisioning.A_zimbraExternalPop3Port, -1);
+        return getIntAttr(Provisioning.A_zimbraExternalPop3Port, -1, true);
     }
 
     /**
@@ -7756,7 +7756,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=780)
     public String getExternalPop3PortAsString() {
-        return getAttr(Provisioning.A_zimbraExternalPop3Port, null);
+        return getAttr(Provisioning.A_zimbraExternalPop3Port, null, true);
     }
 
     /**
@@ -7859,7 +7859,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=785)
     public String getExternalPop3SSLHostname() {
-        return getAttr(Provisioning.A_zimbraExternalPop3SSLHostname, null);
+        return getAttr(Provisioning.A_zimbraExternalPop3SSLHostname, null, true);
     }
 
     /**
@@ -7935,7 +7935,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=781)
     public int getExternalPop3SSLPort() {
-        return getIntAttr(Provisioning.A_zimbraExternalPop3SSLPort, -1);
+        return getIntAttr(Provisioning.A_zimbraExternalPop3SSLPort, -1, true);
     }
 
     /**
@@ -7947,7 +7947,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=781)
     public String getExternalPop3SSLPortAsString() {
-        return getAttr(Provisioning.A_zimbraExternalPop3SSLPort, null);
+        return getAttr(Provisioning.A_zimbraExternalPop3SSLPort, null, true);
     }
 
     /**
@@ -8051,7 +8051,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1264)
     public boolean isExternalShareDomainWhitelistEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraExternalShareDomainWhitelistEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraExternalShareDomainWhitelistEnabled, false, true);
     }
 
     /**
@@ -8136,7 +8136,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1349)
     public long getExternalShareInvitationUrlExpiration() {
-        return getTimeInterval(Provisioning.A_zimbraExternalShareInvitationUrlExpiration, 0L);
+        return getTimeInterval(Provisioning.A_zimbraExternalShareInvitationUrlExpiration, 0L, true);
     }
 
     /**
@@ -8153,7 +8153,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1349)
     public String getExternalShareInvitationUrlExpirationAsString() {
-        return getAttr(Provisioning.A_zimbraExternalShareInvitationUrlExpiration, "0");
+        return getAttr(Provisioning.A_zimbraExternalShareInvitationUrlExpiration, "0", true);
     }
 
     /**
@@ -8245,7 +8245,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1263)
     public String[] getExternalShareWhitelistDomain() {
-        return getMultiAttr(Provisioning.A_zimbraExternalShareWhitelistDomain);
+        return getMultiAttr(Provisioning.A_zimbraExternalShareWhitelistDomain, true, true);
     }
 
     /**
@@ -8379,7 +8379,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1261)
     public boolean isExternalSharingEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraExternalSharingEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraExternalSharingEnabled, false, true);
     }
 
     /**
@@ -8452,7 +8452,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1150)
     public boolean isFeatureCalendarReminderDeviceEmailEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureCalendarReminderDeviceEmailEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureCalendarReminderDeviceEmailEnabled, false, true);
     }
 
     /**
@@ -8528,7 +8528,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1438)
     public boolean isFeatureDistributionListFolderEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureDistributionListFolderEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureDistributionListFolderEnabled, false, true);
     }
 
     /**
@@ -8600,7 +8600,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1490)
     public boolean isFeatureSocialEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureSocialEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureSocialEnabled, false, true);
     }
 
     /**
@@ -8672,7 +8672,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1491)
     public boolean isFeatureSocialExternalEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureSocialExternalEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureSocialExternalEnabled, false, true);
     }
 
     /**
@@ -8744,7 +8744,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1492)
     public String getFeatureSocialExternalURL() {
-        return getAttr(Provisioning.A_zimbraFeatureSocialExternalURL, null);
+        return getAttr(Provisioning.A_zimbraFeatureSocialExternalURL, null, true);
     }
 
     /**
@@ -8816,7 +8816,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1625)
     public String getFeatureSocialName() {
-        return getAttr(Provisioning.A_zimbraFeatureSocialName, null);
+        return getAttr(Provisioning.A_zimbraFeatureSocialName, null, true);
     }
 
     /**
@@ -8888,7 +8888,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1350)
     public long getFileUploadMaxSizePerFile() {
-        return getLongAttr(Provisioning.A_zimbraFileUploadMaxSizePerFile, 2147483648L);
+        return getLongAttr(Provisioning.A_zimbraFileUploadMaxSizePerFile, 2147483648L, true);
     }
 
     /**
@@ -8961,7 +8961,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1437)
     public boolean isForceClearCookies() {
-        return getBooleanAttr(Provisioning.A_zimbraForceClearCookies, false);
+        return getBooleanAttr(Provisioning.A_zimbraForceClearCookies, false, true);
     }
 
     /**
@@ -9038,7 +9038,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1135)
     public String[] getForeignName() {
-        return getMultiAttr(Provisioning.A_zimbraForeignName);
+        return getMultiAttr(Provisioning.A_zimbraForeignName, true, true);
     }
 
     /**
@@ -9181,7 +9181,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1136)
     public String[] getForeignNameHandler() {
-        return getMultiAttr(Provisioning.A_zimbraForeignNameHandler);
+        return getMultiAttr(Provisioning.A_zimbraForeignNameHandler, true, true);
     }
 
     /**
@@ -9323,7 +9323,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=609)
     public String getFreebusyExchangeAuthPassword() {
-        return getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
+        return getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null, true);
     }
 
     /**
@@ -9397,7 +9397,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=611)
     public ZAttrProvisioning.FreebusyExchangeAuthScheme getFreebusyExchangeAuthScheme() {
-        try { String v = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme); return v == null ? null : ZAttrProvisioning.FreebusyExchangeAuthScheme.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, true, true); return v == null ? null : ZAttrProvisioning.FreebusyExchangeAuthScheme.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -9411,7 +9411,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=611)
     public String getFreebusyExchangeAuthSchemeAsString() {
-        return getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
+        return getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null, true);
     }
 
     /**
@@ -9526,7 +9526,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=608)
     public String getFreebusyExchangeAuthUsername() {
-        return getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
+        return getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null, true);
     }
 
     /**
@@ -9606,7 +9606,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=621)
     public long getFreebusyExchangeCachedInterval() {
-        return getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedInterval, 5184000000L);
+        return getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedInterval, 5184000000L, true);
     }
 
     /**
@@ -9622,7 +9622,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=621)
     public String getFreebusyExchangeCachedIntervalAsString() {
-        return getAttr(Provisioning.A_zimbraFreebusyExchangeCachedInterval, "60d");
+        return getAttr(Provisioning.A_zimbraFreebusyExchangeCachedInterval, "60d", true);
     }
 
     /**
@@ -9719,7 +9719,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=620)
     public long getFreebusyExchangeCachedIntervalStart() {
-        return getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, 604800000L);
+        return getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, 604800000L, true);
     }
 
     /**
@@ -9736,7 +9736,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=620)
     public String getFreebusyExchangeCachedIntervalStartAsString() {
-        return getAttr(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, "7d");
+        return getAttr(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, "7d", true);
     }
 
     /**
@@ -9831,7 +9831,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1174)
     public ZAttrProvisioning.FreebusyExchangeServerType getFreebusyExchangeServerType() {
-        try { String v = getAttr(Provisioning.A_zimbraFreebusyExchangeServerType); return v == null ? ZAttrProvisioning.FreebusyExchangeServerType.webdav : ZAttrProvisioning.FreebusyExchangeServerType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.FreebusyExchangeServerType.webdav; }
+        try { String v = getAttr(Provisioning.A_zimbraFreebusyExchangeServerType, true, true); return v == null ? ZAttrProvisioning.FreebusyExchangeServerType.webdav : ZAttrProvisioning.FreebusyExchangeServerType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.FreebusyExchangeServerType.webdav; }
     }
 
     /**
@@ -9846,7 +9846,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1174)
     public String getFreebusyExchangeServerTypeAsString() {
-        return getAttr(Provisioning.A_zimbraFreebusyExchangeServerType, "webdav");
+        return getAttr(Provisioning.A_zimbraFreebusyExchangeServerType, "webdav", true);
     }
 
     /**
@@ -9967,7 +9967,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=607)
     public String getFreebusyExchangeURL() {
-        return getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
+        return getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null, true);
     }
 
     /**
@@ -10039,7 +10039,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=610)
     public String getFreebusyExchangeUserOrg() {
-        return getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
+        return getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null, true);
     }
 
     /**
@@ -10111,7 +10111,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=831)
     public String[] getGalAccountId() {
-        return getMultiAttr(Provisioning.A_zimbraGalAccountId);
+        return getMultiAttr(Provisioning.A_zimbraGalAccountId, true, true);
     }
 
     /**
@@ -10246,7 +10246,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1093)
     public boolean isGalAlwaysIncludeLocalCalendarResources() {
-        return getBooleanAttr(Provisioning.A_zimbraGalAlwaysIncludeLocalCalendarResources, false);
+        return getBooleanAttr(Provisioning.A_zimbraGalAlwaysIncludeLocalCalendarResources, false, true);
     }
 
     /**
@@ -10320,7 +10320,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=360)
     public String getGalAutoCompleteLdapFilter() {
-        return getAttr(Provisioning.A_zimbraGalAutoCompleteLdapFilter, "externalLdapAutoComplete");
+        return getAttr(Provisioning.A_zimbraGalAutoCompleteLdapFilter, "externalLdapAutoComplete", true);
     }
 
     /**
@@ -10388,7 +10388,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1413)
     public Date getGalDefinitionLastModifiedTime() {
-        return getGeneralizedTimeAttr(Provisioning.A_zimbraGalDefinitionLastModifiedTime, null);
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraGalDefinitionLastModifiedTime, null, true);
     }
 
     /**
@@ -10400,7 +10400,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1413)
     public String getGalDefinitionLastModifiedTimeAsString() {
-        return getAttr(Provisioning.A_zimbraGalDefinitionLastModifiedTime, null);
+        return getAttr(Provisioning.A_zimbraGalDefinitionLastModifiedTime, null, true);
     }
 
     /**
@@ -10503,7 +10503,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1153)
     public boolean isGalGroupIndicatorEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraGalGroupIndicatorEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraGalGroupIndicatorEnabled, true, true);
     }
 
     /**
@@ -10575,7 +10575,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=358)
     public String getGalInternalSearchBase() {
-        return getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
+        return getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN", true);
     }
 
     /**
@@ -10645,7 +10645,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=153)
     public String[] getGalLdapAttrMap() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","zimbraPhoneticCompany,ms-DS-Phonetic-Company-Name=phoneticCompany","givenName,gn=firstName","zimbraPhoneticFirstName,ms-DS-Phonetic-First-Name=phoneticFirstName","sn=lastName","zimbraPhoneticLastName,ms-DS-Phonetic-Last-Name=phoneticLastName","displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=member","zimbraCalResType,msExchResourceSearchProperties=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName","zimbraCalResBuilding=zimbraCalResBuilding","zimbraCalResCapacity,msExchResourceCapacity=zimbraCalResCapacity","zimbraCalResFloor=zimbraCalResFloor","zimbraCalResSite=zimbraCalResSite","zimbraCalResContactEmail=zimbraCalResContactEmail","zimbraDistributionListSubscriptionPolicy=zimbraDistributionListSubscriptionPolicy","zimbraDistributionListUnsubscriptionPolicy=zimbraDistributionListUnsubscriptionPolicy","msExchResourceSearchProperties=zimbraAccountCalendarUserType","(certificate) userCertificate=userCertificate","(binary) userSMIMECertificate=userSMIMECertificate"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap, true, true); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","zimbraPhoneticCompany,ms-DS-Phonetic-Company-Name=phoneticCompany","givenName,gn=firstName","zimbraPhoneticFirstName,ms-DS-Phonetic-First-Name=phoneticFirstName","sn=lastName","zimbraPhoneticLastName,ms-DS-Phonetic-Last-Name=phoneticLastName","displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=member","zimbraCalResType,msExchResourceSearchProperties=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName","zimbraCalResBuilding=zimbraCalResBuilding","zimbraCalResCapacity,msExchResourceCapacity=zimbraCalResCapacity","zimbraCalResFloor=zimbraCalResFloor","zimbraCalResSite=zimbraCalResSite","zimbraCalResContactEmail=zimbraCalResContactEmail","zimbraDistributionListSubscriptionPolicy=zimbraDistributionListSubscriptionPolicy","zimbraDistributionListUnsubscriptionPolicy=zimbraDistributionListUnsubscriptionPolicy","msExchResourceSearchProperties=zimbraAccountCalendarUserType","(certificate) userCertificate=userCertificate","(binary) userSMIMECertificate=userSMIMECertificate"};
     }
 
     /**
@@ -10768,7 +10768,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=549)
     public ZAttrProvisioning.GalLdapAuthMech getGalLdapAuthMech() {
-        try { String v = getAttr(Provisioning.A_zimbraGalLdapAuthMech); return v == null ? null : ZAttrProvisioning.GalLdapAuthMech.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraGalLdapAuthMech, true, true); return v == null ? null : ZAttrProvisioning.GalLdapAuthMech.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -10785,7 +10785,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=549)
     public String getGalLdapAuthMechAsString() {
-        return getAttr(Provisioning.A_zimbraGalLdapAuthMech, null);
+        return getAttr(Provisioning.A_zimbraGalLdapAuthMech, null, true);
     }
 
     /**
@@ -10916,7 +10916,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=49)
     public String getGalLdapBindDn() {
-        return getAttr(Provisioning.A_zimbraGalLdapBindDn, null);
+        return getAttr(Provisioning.A_zimbraGalLdapBindDn, null, true);
     }
 
     /**
@@ -10978,7 +10978,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=50)
     public String getGalLdapBindPassword() {
-        return getAttr(Provisioning.A_zimbraGalLdapBindPassword, null);
+        return getAttr(Provisioning.A_zimbraGalLdapBindPassword, null, true);
     }
 
     /**
@@ -11040,7 +11040,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=51)
     public String getGalLdapFilter() {
-        return getAttr(Provisioning.A_zimbraGalLdapFilter, null);
+        return getAttr(Provisioning.A_zimbraGalLdapFilter, null, true);
     }
 
     /**
@@ -11105,7 +11105,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1112)
     public String getGalLdapGroupHandlerClass() {
-        return getAttr(Provisioning.A_zimbraGalLdapGroupHandlerClass, null);
+        return getAttr(Provisioning.A_zimbraGalLdapGroupHandlerClass, null, true);
     }
 
     /**
@@ -11181,7 +11181,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=551)
     public String getGalLdapKerberos5Keytab() {
-        return getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab, null);
+        return getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab, null, true);
     }
 
     /**
@@ -11253,7 +11253,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=550)
     public String getGalLdapKerberos5Principal() {
-        return getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal, null);
+        return getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal, null, true);
     }
 
     /**
@@ -11327,7 +11327,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=583)
     public int getGalLdapPageSize() {
-        return getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 1000);
+        return getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 1000, true);
     }
 
     /**
@@ -11405,7 +11405,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=48)
     public String getGalLdapSearchBase() {
-        return getAttr(Provisioning.A_zimbraGalLdapSearchBase, null);
+        return getAttr(Provisioning.A_zimbraGalLdapSearchBase, null, true);
     }
 
     /**
@@ -11472,7 +11472,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=655)
     public boolean isGalLdapStartTlsEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled, false, true);
     }
 
     /**
@@ -11554,7 +11554,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=47)
     public String[] getGalLdapURL() {
-        return getMultiAttr(Provisioning.A_zimbraGalLdapURL);
+        return getMultiAttr(Provisioning.A_zimbraGalLdapURL, true, true);
     }
 
     /**
@@ -11673,7 +11673,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1110)
     public String[] getGalLdapValueMap() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapValueMap); return value.length > 0 ? value : new String[] {"zimbraCalResType: Room Location","zimbraAccountCalendarUserType: Room|Equipment RESOURCE"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapValueMap, true, true); return value.length > 0 ? value : new String[] {"zimbraCalResType: Room Location","zimbraAccountCalendarUserType: Room|Equipment RESOURCE"};
     }
 
     /**
@@ -11813,7 +11813,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=53)
     public int getGalMaxResults() {
-        return getIntAttr(Provisioning.A_zimbraGalMaxResults, 100);
+        return getIntAttr(Provisioning.A_zimbraGalMaxResults, 100, true);
     }
 
     /**
@@ -11879,7 +11879,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=46)
     public ZAttrProvisioning.GalMode getGalMode() {
-        try { String v = getAttr(Provisioning.A_zimbraGalMode); return v == null ? null : ZAttrProvisioning.GalMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraGalMode, true, true); return v == null ? null : ZAttrProvisioning.GalMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -11893,7 +11893,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=46)
     public String getGalModeAsString() {
-        return getAttr(Provisioning.A_zimbraGalMode, null);
+        return getAttr(Provisioning.A_zimbraGalMode, null, true);
     }
 
     /**
@@ -12011,7 +12011,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=598)
     public String getGalSyncInternalSearchBase() {
-        return getAttr(Provisioning.A_zimbraGalSyncInternalSearchBase, null);
+        return getAttr(Provisioning.A_zimbraGalSyncInternalSearchBase, null, true);
     }
 
     /**
@@ -12101,7 +12101,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=592)
     public ZAttrProvisioning.GalSyncLdapAuthMech getGalSyncLdapAuthMech() {
-        try { String v = getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech); return v == null ? null : ZAttrProvisioning.GalSyncLdapAuthMech.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech, true, true); return v == null ? null : ZAttrProvisioning.GalSyncLdapAuthMech.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -12119,7 +12119,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=592)
     public String getGalSyncLdapAuthMechAsString() {
-        return getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech, null);
+        return getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech, null, true);
     }
 
     /**
@@ -12259,7 +12259,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=593)
     public String getGalSyncLdapBindDn() {
-        return getAttr(Provisioning.A_zimbraGalSyncLdapBindDn, null);
+        return getAttr(Provisioning.A_zimbraGalSyncLdapBindDn, null, true);
     }
 
     /**
@@ -12336,7 +12336,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=594)
     public String getGalSyncLdapBindPassword() {
-        return getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword, null);
+        return getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword, null, true);
     }
 
     /**
@@ -12413,7 +12413,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=591)
     public String getGalSyncLdapFilter() {
-        return getAttr(Provisioning.A_zimbraGalSyncLdapFilter, null);
+        return getAttr(Provisioning.A_zimbraGalSyncLdapFilter, null, true);
     }
 
     /**
@@ -12490,7 +12490,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=596)
     public String getGalSyncLdapKerberos5Keytab() {
-        return getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab, null);
+        return getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab, null, true);
     }
 
     /**
@@ -12567,7 +12567,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=595)
     public String getGalSyncLdapKerberos5Principal() {
-        return getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal, null);
+        return getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal, null, true);
     }
 
     /**
@@ -12646,7 +12646,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=597)
     public int getGalSyncLdapPageSize() {
-        return getIntAttr(Provisioning.A_zimbraGalSyncLdapPageSize, 1000);
+        return getIntAttr(Provisioning.A_zimbraGalSyncLdapPageSize, 1000, true);
     }
 
     /**
@@ -12731,7 +12731,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=590)
     public String getGalSyncLdapSearchBase() {
-        return getAttr(Provisioning.A_zimbraGalSyncLdapSearchBase, null);
+        return getAttr(Provisioning.A_zimbraGalSyncLdapSearchBase, null, true);
     }
 
     /**
@@ -12808,7 +12808,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=656)
     public boolean isGalSyncLdapStartTlsEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraGalSyncLdapStartTlsEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraGalSyncLdapStartTlsEnabled, false, true);
     }
 
     /**
@@ -12885,7 +12885,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=589)
     public String[] getGalSyncLdapURL() {
-        return getMultiAttr(Provisioning.A_zimbraGalSyncLdapURL);
+        return getMultiAttr(Provisioning.A_zimbraGalSyncLdapURL, true, true);
     }
 
     /**
@@ -13028,7 +13028,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1154)
     public int getGalSyncMaxConcurrentClients() {
-        return getIntAttr(Provisioning.A_zimbraGalSyncMaxConcurrentClients, 2);
+        return getIntAttr(Provisioning.A_zimbraGalSyncMaxConcurrentClients, 2, true);
     }
 
     /**
@@ -13181,7 +13181,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1019)
     public String getGalSyncTimestampFormat() {
-        return getAttr(Provisioning.A_zimbraGalSyncTimestampFormat, "yyyyMMddHHmmss'Z'");
+        return getAttr(Provisioning.A_zimbraGalSyncTimestampFormat, "yyyyMMddHHmmss'Z'", true);
     }
 
     /**
@@ -13256,7 +13256,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=599)
     public ZAttrProvisioning.GalTokenizeAutoCompleteKey getGalTokenizeAutoCompleteKey() {
-        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey); return v == null ? ZAttrProvisioning.GalTokenizeAutoCompleteKey.and : ZAttrProvisioning.GalTokenizeAutoCompleteKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.GalTokenizeAutoCompleteKey.and; }
+        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, true, true); return v == null ? ZAttrProvisioning.GalTokenizeAutoCompleteKey.and : ZAttrProvisioning.GalTokenizeAutoCompleteKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.GalTokenizeAutoCompleteKey.and; }
     }
 
     /**
@@ -13271,7 +13271,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=599)
     public String getGalTokenizeAutoCompleteKeyAsString() {
-        return getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, "and");
+        return getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, "and", true);
     }
 
     /**
@@ -13395,7 +13395,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=600)
     public ZAttrProvisioning.GalTokenizeSearchKey getGalTokenizeSearchKey() {
-        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeSearchKey); return v == null ? ZAttrProvisioning.GalTokenizeSearchKey.and : ZAttrProvisioning.GalTokenizeSearchKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.GalTokenizeSearchKey.and; }
+        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, true, true); return v == null ? ZAttrProvisioning.GalTokenizeSearchKey.and : ZAttrProvisioning.GalTokenizeSearchKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.GalTokenizeSearchKey.and; }
     }
 
     /**
@@ -13410,7 +13410,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=600)
     public String getGalTokenizeSearchKeyAsString() {
-        return getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, "and");
+        return getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, "and", true);
     }
 
     /**
@@ -13531,7 +13531,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=674)
     public String getHelpAdminURL() {
-        return getAttr(Provisioning.A_zimbraHelpAdminURL, null);
+        return getAttr(Provisioning.A_zimbraHelpAdminURL, null, true);
     }
 
     /**
@@ -13603,7 +13603,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=676)
     public String getHelpAdvancedURL() {
-        return getAttr(Provisioning.A_zimbraHelpAdvancedURL, null);
+        return getAttr(Provisioning.A_zimbraHelpAdvancedURL, null, true);
     }
 
     /**
@@ -13675,7 +13675,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=675)
     public String getHelpDelegatedURL() {
-        return getAttr(Provisioning.A_zimbraHelpDelegatedURL, null);
+        return getAttr(Provisioning.A_zimbraHelpDelegatedURL, null, true);
     }
 
     /**
@@ -13747,7 +13747,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=677)
     public String getHelpStandardURL() {
-        return getAttr(Provisioning.A_zimbraHelpStandardURL, null);
+        return getAttr(Provisioning.A_zimbraHelpStandardURL, null, true);
     }
 
     /**
@@ -13817,7 +13817,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1)
     public String getId() {
-        return getAttr(Provisioning.A_zimbraId, null);
+        return getAttr(Provisioning.A_zimbraId, null, true);
     }
 
     /**
@@ -13881,7 +13881,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1319)
     public String[] getInternalSendersDomain() {
-        return getMultiAttr(Provisioning.A_zimbraInternalSendersDomain);
+        return getMultiAttr(Provisioning.A_zimbraInternalSendersDomain, true, true);
     }
 
     /**
@@ -14016,7 +14016,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1386)
     public boolean isInternalSharingCrossDomainEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraInternalSharingCrossDomainEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraInternalSharingCrossDomainEnabled, true, true);
     }
 
     /**
@@ -14094,7 +14094,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1387)
     public String[] getInternalSharingDomain() {
-        return getMultiAttr(Provisioning.A_zimbraInternalSharingDomain);
+        return getMultiAttr(Provisioning.A_zimbraInternalSharingDomain, true, true);
     }
 
     /**
@@ -14244,7 +14244,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1420)
     public boolean isLdapGalSyncDisabled() {
-        return getBooleanAttr(Provisioning.A_zimbraLdapGalSyncDisabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraLdapGalSyncDisabled, false, true);
     }
 
     /**
@@ -14314,7 +14314,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=345)
     public String getLocaleAsString() {
-        return getAttr(Provisioning.A_zimbraLocale, null);
+        return getAttr(Provisioning.A_zimbraLocale, null, true);
     }
 
     /**
@@ -14378,7 +14378,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1241)
     public String[] getMailAddressValidationRegex() {
-        return getMultiAttr(Provisioning.A_zimbraMailAddressValidationRegex);
+        return getMultiAttr(Provisioning.A_zimbraMailAddressValidationRegex, true, true);
     }
 
     /**
@@ -14513,7 +14513,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=2093)
     public String getMailAdminOutgoingSieveScriptAfter() {
-        return getAttr(Provisioning.A_zimbraMailAdminOutgoingSieveScriptAfter, null);
+        return getAttr(Provisioning.A_zimbraMailAdminOutgoingSieveScriptAfter, null, true);
     }
 
     /**
@@ -14590,7 +14590,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=2092)
     public String getMailAdminOutgoingSieveScriptBefore() {
-        return getAttr(Provisioning.A_zimbraMailAdminOutgoingSieveScriptBefore, null);
+        return getAttr(Provisioning.A_zimbraMailAdminOutgoingSieveScriptBefore, null, true);
     }
 
     /**
@@ -14667,7 +14667,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=2091)
     public String getMailAdminSieveScriptAfter() {
-        return getAttr(Provisioning.A_zimbraMailAdminSieveScriptAfter, null);
+        return getAttr(Provisioning.A_zimbraMailAdminSieveScriptAfter, null, true);
     }
 
     /**
@@ -14744,7 +14744,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=2090)
     public String getMailAdminSieveScriptBefore() {
-        return getAttr(Provisioning.A_zimbraMailAdminSieveScriptBefore, null);
+        return getAttr(Provisioning.A_zimbraMailAdminSieveScriptBefore, null, true);
     }
 
     /**
@@ -14821,7 +14821,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1326)
     public long getMailDomainQuota() {
-        return getLongAttr(Provisioning.A_zimbraMailDomainQuota, 0L);
+        return getLongAttr(Provisioning.A_zimbraMailDomainQuota, 0L, true);
     }
 
     /**
@@ -14925,7 +14925,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1215)
     public String getMailSSLClientCertPrincipalMap() {
-        return getAttr(Provisioning.A_zimbraMailSSLClientCertPrincipalMap, "SUBJECT_EMAILADDRESS=name");
+        return getAttr(Provisioning.A_zimbraMailSSLClientCertPrincipalMap, "SUBJECT_EMAILADDRESS=name", true);
     }
 
     /**
@@ -15109,7 +15109,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1139)
     public int getMailTrustedSenderListMaxNumEntries() {
-        return getIntAttr(Provisioning.A_zimbraMailTrustedSenderListMaxNumEntries, -1);
+        return getIntAttr(Provisioning.A_zimbraMailTrustedSenderListMaxNumEntries, -1, true);
     }
 
     /**
@@ -15184,7 +15184,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1426)
     public String[] getMobileItemsToTrackPerFolderMaxSize() {
-        return getMultiAttr(Provisioning.A_zimbraMobileItemsToTrackPerFolderMaxSize);
+        return getMultiAttr(Provisioning.A_zimbraMobileItemsToTrackPerFolderMaxSize, true, true);
     }
 
     /**
@@ -15344,7 +15344,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1425)
     public boolean isMobileMetadataMaxSizeEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraMobileMetadataMaxSizeEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraMobileMetadataMaxSizeEnabled, false, true);
     }
 
     /**
@@ -15425,7 +15425,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1169)
     public String getMyoneloginSamlSigningCert() {
-        return getAttr(Provisioning.A_zimbraMyoneloginSamlSigningCert, null);
+        return getAttr(Provisioning.A_zimbraMyoneloginSamlSigningCert, null, true);
     }
 
     /**
@@ -15500,7 +15500,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=363)
     public String getNotebookAccount() {
-        return getAttr(Provisioning.A_zimbraNotebookAccount, null);
+        return getAttr(Provisioning.A_zimbraNotebookAccount, null, true);
     }
 
     /**
@@ -15566,7 +15566,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=9)
     public String getNotes() {
-        return getAttr(Provisioning.A_zimbraNotes, null);
+        return getAttr(Provisioning.A_zimbraNotes, null, true);
     }
 
     /**
@@ -15631,7 +15631,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1131)
     public String[] getOAuthConsumerCredentials() {
-        return getMultiAttr(Provisioning.A_zimbraOAuthConsumerCredentials);
+        return getMultiAttr(Provisioning.A_zimbraOAuthConsumerCredentials, true, true);
     }
 
     /**
@@ -15773,7 +15773,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1191)
     public String[] getOpenidConsumerAllowedOPEndpointURL() {
-        return getMultiAttr(Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL);
+        return getMultiAttr(Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL, true, true);
     }
 
     /**
@@ -15907,7 +15907,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=586)
     public String getPasswordChangeListener() {
-        return getAttr(Provisioning.A_zimbraPasswordChangeListener, null);
+        return getAttr(Provisioning.A_zimbraPasswordChangeListener, null, true);
     }
 
     /**
@@ -15977,7 +15977,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=307)
     public String getPreAuthKey() {
-        return getAttr(Provisioning.A_zimbraPreAuthKey, null);
+        return getAttr(Provisioning.A_zimbraPreAuthKey, null, true);
     }
 
     /**
@@ -16041,7 +16041,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1424)
     public boolean isPrefColorMessagesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefColorMessagesEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraPrefColorMessagesEnabled, false, true);
     }
 
     /**
@@ -16114,7 +16114,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1138)
     public String[] getPrefMailTrustedSenderList() {
-        return getMultiAttr(Provisioning.A_zimbraPrefMailTrustedSenderList);
+        return getMultiAttr(Provisioning.A_zimbraPrefMailTrustedSenderList, true, true);
     }
 
     /**
@@ -16256,7 +16256,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1787)
     public boolean isPrefShowChatsFolderInMail() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefShowChatsFolderInMail, false);
+        return getBooleanAttr(Provisioning.A_zimbraPrefShowChatsFolderInMail, false, true);
     }
 
     /**
@@ -16326,7 +16326,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=355)
     public String getPrefSkin() {
-        return getAttr(Provisioning.A_zimbraPrefSkin, null);
+        return getAttr(Provisioning.A_zimbraPrefSkin, null, true);
     }
 
     /**
@@ -16391,7 +16391,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1073)
     public String[] getPrefSpellIgnoreWord() {
-        return getMultiAttr(Provisioning.A_zimbraPrefSpellIgnoreWord);
+        return getMultiAttr(Provisioning.A_zimbraPrefSpellIgnoreWord, true, true);
     }
 
     /**
@@ -16531,7 +16531,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=235)
     public String[] getPrefTimeZoneId() {
-        return getMultiAttr(Provisioning.A_zimbraPrefTimeZoneId);
+        return getMultiAttr(Provisioning.A_zimbraPrefTimeZoneId, true, true);
     }
 
     /**
@@ -16647,7 +16647,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=377)
     public String getPublicServiceHostname() {
-        return getAttr(Provisioning.A_zimbraPublicServiceHostname, null);
+        return getAttr(Provisioning.A_zimbraPublicServiceHostname, null, true);
     }
 
     /**
@@ -16715,7 +16715,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=699)
     public int getPublicServicePort() {
-        return getIntAttr(Provisioning.A_zimbraPublicServicePort, -1);
+        return getIntAttr(Provisioning.A_zimbraPublicServicePort, -1, true);
     }
 
     /**
@@ -16727,7 +16727,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=699)
     public String getPublicServicePortAsString() {
-        return getAttr(Provisioning.A_zimbraPublicServicePort, null);
+        return getAttr(Provisioning.A_zimbraPublicServicePort, null, true);
     }
 
     /**
@@ -16830,7 +16830,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=698)
     public String getPublicServiceProtocol() {
-        return getAttr(Provisioning.A_zimbraPublicServiceProtocol, null);
+        return getAttr(Provisioning.A_zimbraPublicServiceProtocol, null, true);
     }
 
     /**
@@ -16902,7 +16902,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1351)
     public boolean isPublicSharingEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraPublicSharingEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraPublicSharingEnabled, false, true);
     }
 
     /**
@@ -16976,7 +16976,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1074)
     public String[] getResponseHeader() {
-        return getMultiAttr(Provisioning.A_zimbraResponseHeader);
+        return getMultiAttr(Provisioning.A_zimbraResponseHeader, true, true);
     }
 
     /**
@@ -17127,7 +17127,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1201)
     public String getReverseProxyClientCertCA() {
-        return getAttr(Provisioning.A_zimbraReverseProxyClientCertCA, null);
+        return getAttr(Provisioning.A_zimbraReverseProxyClientCertCA, null, true);
     }
 
     /**
@@ -17206,7 +17206,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1200)
     public ZAttrProvisioning.ReverseProxyClientCertMode getReverseProxyClientCertMode() {
-        try { String v = getAttr(Provisioning.A_zimbraReverseProxyClientCertMode); return v == null ? ZAttrProvisioning.ReverseProxyClientCertMode.off : ZAttrProvisioning.ReverseProxyClientCertMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyClientCertMode.off; }
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyClientCertMode, true, true); return v == null ? ZAttrProvisioning.ReverseProxyClientCertMode.off : ZAttrProvisioning.ReverseProxyClientCertMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyClientCertMode.off; }
     }
 
     /**
@@ -17221,7 +17221,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1200)
     public String getReverseProxyClientCertModeAsString() {
-        return getAttr(Provisioning.A_zimbraReverseProxyClientCertMode, "off");
+        return getAttr(Provisioning.A_zimbraReverseProxyClientCertMode, "off", true);
     }
 
     /**
@@ -17347,7 +17347,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1454)
     public boolean isReverseProxyExternalRouteIncludeOriginalAuthusername() {
-        return getBooleanAttr(Provisioning.A_zimbraReverseProxyExternalRouteIncludeOriginalAuthusername, false);
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyExternalRouteIncludeOriginalAuthusername, false, true);
     }
 
     /**
@@ -17442,7 +17442,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1973)
     public String[] getReverseProxyResponseHeaders() {
-        return getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders, true, true);
     }
 
     /**
@@ -17605,7 +17605,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=779)
     public boolean isReverseProxyUseExternalRoute() {
-        return getBooleanAttr(Provisioning.A_zimbraReverseProxyUseExternalRoute, false);
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyUseExternalRoute, false, true);
     }
 
     /**
@@ -17698,7 +17698,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1132)
     public boolean isReverseProxyUseExternalRouteIfAccountNotExist() {
-        return getBooleanAttr(Provisioning.A_zimbraReverseProxyUseExternalRouteIfAccountNotExist, false);
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyUseExternalRouteIfAccountNotExist, false, true);
     }
 
     /**
@@ -17785,7 +17785,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1182)
     public String[] getSMIMELdapAttribute() {
-        return getMultiAttr(Provisioning.A_zimbraSMIMELdapAttribute);
+        return getMultiAttr(Provisioning.A_zimbraSMIMELdapAttribute, true, true);
     }
 
     /**
@@ -18018,7 +18018,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1178)
     public String[] getSMIMELdapBindDn() {
-        return getMultiAttr(Provisioning.A_zimbraSMIMELdapBindDn);
+        return getMultiAttr(Provisioning.A_zimbraSMIMELdapBindDn, true, true);
     }
 
     /**
@@ -18251,7 +18251,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1179)
     public String[] getSMIMELdapBindPassword() {
-        return getMultiAttr(Provisioning.A_zimbraSMIMELdapBindPassword);
+        return getMultiAttr(Provisioning.A_zimbraSMIMELdapBindPassword, true, true);
     }
 
     /**
@@ -18490,7 +18490,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1209)
     public String[] getSMIMELdapDiscoverSearchBaseEnabled() {
-        return getMultiAttr(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled);
+        return getMultiAttr(Provisioning.A_zimbraSMIMELdapDiscoverSearchBaseEnabled, true, true);
     }
 
     /**
@@ -18773,7 +18773,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1181)
     public String[] getSMIMELdapFilter() {
-        return getMultiAttr(Provisioning.A_zimbraSMIMELdapFilter);
+        return getMultiAttr(Provisioning.A_zimbraSMIMELdapFilter, true, true);
     }
 
     /**
@@ -19022,7 +19022,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1180)
     public String[] getSMIMELdapSearchBase() {
-        return getMultiAttr(Provisioning.A_zimbraSMIMELdapSearchBase);
+        return getMultiAttr(Provisioning.A_zimbraSMIMELdapSearchBase, true, true);
     }
 
     /**
@@ -19255,7 +19255,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1177)
     public String[] getSMIMELdapStartTlsEnabled() {
-        return getMultiAttr(Provisioning.A_zimbraSMIMELdapStartTlsEnabled);
+        return getMultiAttr(Provisioning.A_zimbraSMIMELdapStartTlsEnabled, true, true);
     }
 
     /**
@@ -19489,7 +19489,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1176)
     public String[] getSMIMELdapURL() {
-        return getMultiAttr(Provisioning.A_zimbraSMIMELdapURL);
+        return getMultiAttr(Provisioning.A_zimbraSMIMELdapURL, true, true);
     }
 
     /**
@@ -19719,7 +19719,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=563)
     public String getSSLCertificate() {
-        return getAttr(Provisioning.A_zimbraSSLCertificate, null);
+        return getAttr(Provisioning.A_zimbraSSLCertificate, null, true);
     }
 
     /**
@@ -19791,7 +19791,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=564)
     public String getSSLPrivateKey() {
-        return getAttr(Provisioning.A_zimbraSSLPrivateKey, null);
+        return getAttr(Provisioning.A_zimbraSSLPrivateKey, null, true);
     }
 
     /**
@@ -19863,7 +19863,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=648)
     public String getSkinBackgroundColor() {
-        return getAttr(Provisioning.A_zimbraSkinBackgroundColor, null);
+        return getAttr(Provisioning.A_zimbraSkinBackgroundColor, null, true);
     }
 
     /**
@@ -19935,7 +19935,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=800)
     public String getSkinFavicon() {
-        return getAttr(Provisioning.A_zimbraSkinFavicon, null);
+        return getAttr(Provisioning.A_zimbraSkinFavicon, null, true);
     }
 
     /**
@@ -20007,7 +20007,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=647)
     public String getSkinForegroundColor() {
-        return getAttr(Provisioning.A_zimbraSkinForegroundColor, null);
+        return getAttr(Provisioning.A_zimbraSkinForegroundColor, null, true);
     }
 
     /**
@@ -20079,7 +20079,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=671)
     public String getSkinLogoAppBanner() {
-        return getAttr(Provisioning.A_zimbraSkinLogoAppBanner, null);
+        return getAttr(Provisioning.A_zimbraSkinLogoAppBanner, null, true);
     }
 
     /**
@@ -20151,7 +20151,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=670)
     public String getSkinLogoLoginBanner() {
-        return getAttr(Provisioning.A_zimbraSkinLogoLoginBanner, null);
+        return getAttr(Provisioning.A_zimbraSkinLogoLoginBanner, null, true);
     }
 
     /**
@@ -20223,7 +20223,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=649)
     public String getSkinLogoURL() {
-        return getAttr(Provisioning.A_zimbraSkinLogoURL, null);
+        return getAttr(Provisioning.A_zimbraSkinLogoURL, null, true);
     }
 
     /**
@@ -20295,7 +20295,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=668)
     public String getSkinSecondaryColor() {
-        return getAttr(Provisioning.A_zimbraSkinSecondaryColor, null);
+        return getAttr(Provisioning.A_zimbraSkinSecondaryColor, null, true);
     }
 
     /**
@@ -20367,7 +20367,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=669)
     public String getSkinSelectionColor() {
-        return getAttr(Provisioning.A_zimbraSkinSelectionColor, null);
+        return getAttr(Provisioning.A_zimbraSkinSelectionColor, null, true);
     }
 
     /**
@@ -20437,7 +20437,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=97)
     public String[] getSmtpHostname() {
-        return getMultiAttr(Provisioning.A_zimbraSmtpHostname);
+        return getMultiAttr(Provisioning.A_zimbraSmtpHostname, true, true);
     }
 
     /**
@@ -20557,7 +20557,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=98)
     public int getSmtpPort() {
-        return getIntAttr(Provisioning.A_zimbraSmtpPort, -1);
+        return getIntAttr(Provisioning.A_zimbraSmtpPort, -1, true);
     }
 
     /**
@@ -20567,7 +20567,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=98)
     public String getSmtpPortAsString() {
-        return getAttr(Provisioning.A_zimbraSmtpPort, null);
+        return getAttr(Provisioning.A_zimbraSmtpPort, null, true);
     }
 
     /**
@@ -20656,7 +20656,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=249)
     public boolean isSmtpSendPartial() {
-        return getBooleanAttr(Provisioning.A_zimbraSmtpSendPartial, false);
+        return getBooleanAttr(Provisioning.A_zimbraSmtpSendPartial, false, true);
     }
 
     /**
@@ -20718,7 +20718,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=99)
     public int getSmtpTimeout() {
-        return getIntAttr(Provisioning.A_zimbraSmtpTimeout, -1);
+        return getIntAttr(Provisioning.A_zimbraSmtpTimeout, -1, true);
     }
 
     /**
@@ -20784,7 +20784,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1167)
     public String[] getSpamTrashAlias() {
-        return getMultiAttr(Provisioning.A_zimbraSpamTrashAlias);
+        return getMultiAttr(Provisioning.A_zimbraSpamTrashAlias, true, true);
     }
 
     /**
@@ -20935,7 +20935,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1267)
     public String[] getStandardClientCustomPrefTab() {
-        return getMultiAttr(Provisioning.A_zimbraStandardClientCustomPrefTab);
+        return getMultiAttr(Provisioning.A_zimbraStandardClientCustomPrefTab, true, true);
     }
 
     /**
@@ -21078,7 +21078,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1266)
     public boolean isStandardClientCustomPrefTabsEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, false, true);
     }
 
     /**
@@ -21154,7 +21154,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1401)
     public String getUCServiceId() {
-        return getAttr(Provisioning.A_zimbraUCServiceId, null);
+        return getAttr(Provisioning.A_zimbraUCServiceId, null, true);
     }
 
     /**
@@ -21225,7 +21225,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=352)
     public String[] getVirtualHostname() {
-        return getMultiAttr(Provisioning.A_zimbraVirtualHostname);
+        return getMultiAttr(Provisioning.A_zimbraVirtualHostname, true, true);
     }
 
     /**
@@ -21354,7 +21354,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=562)
     public String[] getVirtualIPAddress() {
-        return getMultiAttr(Provisioning.A_zimbraVirtualIPAddress);
+        return getMultiAttr(Provisioning.A_zimbraVirtualIPAddress, true, true);
     }
 
     /**
@@ -21512,7 +21512,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=701)
     public String getWebClientAdminReference() {
-        return getAttr(Provisioning.A_zimbraWebClientAdminReference, null);
+        return getAttr(Provisioning.A_zimbraWebClientAdminReference, null, true);
     }
 
     /**
@@ -21583,7 +21583,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=506)
     public String getWebClientLoginURL() {
-        return getAttr(Provisioning.A_zimbraWebClientLoginURL, null);
+        return getAttr(Provisioning.A_zimbraWebClientLoginURL, null, true);
     }
 
     /**
@@ -21654,7 +21654,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1352)
     public String[] getWebClientLoginURLAllowedIP() {
-        return getMultiAttr(Provisioning.A_zimbraWebClientLoginURLAllowedIP);
+        return getMultiAttr(Provisioning.A_zimbraWebClientLoginURLAllowedIP, true, true);
     }
 
     /**
@@ -21817,7 +21817,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1141)
     public String[] getWebClientLoginURLAllowedUA() {
-        return getMultiAttr(Provisioning.A_zimbraWebClientLoginURLAllowedUA);
+        return getMultiAttr(Provisioning.A_zimbraWebClientLoginURLAllowedUA, true, true);
     }
 
     /**
@@ -21990,7 +21990,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=507)
     public String getWebClientLogoutURL() {
-        return getAttr(Provisioning.A_zimbraWebClientLogoutURL, null);
+        return getAttr(Provisioning.A_zimbraWebClientLogoutURL, null, true);
     }
 
     /**
@@ -22061,7 +22061,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1353)
     public String[] getWebClientLogoutURLAllowedIP() {
-        return getMultiAttr(Provisioning.A_zimbraWebClientLogoutURLAllowedIP);
+        return getMultiAttr(Provisioning.A_zimbraWebClientLogoutURLAllowedIP, true, true);
     }
 
     /**
@@ -22224,7 +22224,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1142)
     public String[] getWebClientLogoutURLAllowedUA() {
-        return getMultiAttr(Provisioning.A_zimbraWebClientLogoutURLAllowedUA);
+        return getMultiAttr(Provisioning.A_zimbraWebClientLogoutURLAllowedUA, true, true);
     }
 
     /**
@@ -22398,7 +22398,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1339)
     public int getWebClientMaxInputBufferLength() {
-        return getIntAttr(Provisioning.A_zimbraWebClientMaxInputBufferLength, 1024);
+        return getIntAttr(Provisioning.A_zimbraWebClientMaxInputBufferLength, 1024, true);
     }
 
     /**
@@ -22471,7 +22471,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1687)
     public boolean isWebClientStaySignedInDisabled() {
-        return getBooleanAttr(Provisioning.A_zimbraWebClientStaySignedInDisabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraWebClientStaySignedInDisabled, false, true);
     }
 
     /**
@@ -22558,7 +22558,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=2012)
     public String[] getWebClientSupportedHelps() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraWebClientSupportedHelps); return value.length > 0 ? value : new String[] {"productHelp","onlineHelp","newFeatures"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraWebClientSupportedHelps, true, true); return value.length > 0 ? value : new String[] {"productHelp","onlineHelp","newFeatures"};
     }
 
     /**
@@ -22781,7 +22781,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=1269)
     public boolean isZimletDataSensitiveInMixedModeDisabled() {
-        return getBooleanAttr(Provisioning.A_zimbraZimletDataSensitiveInMixedModeDisabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraZimletDataSensitiveInMixedModeDisabled, true, true);
     }
 
     /**
@@ -22860,7 +22860,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=710)
     public String[] getZimletDomainAvailableZimlets() {
-        return getMultiAttr(Provisioning.A_zimbraZimletDomainAvailableZimlets);
+        return getMultiAttr(Provisioning.A_zimbraZimletDomainAvailableZimlets, true, true);
     }
 
     /**
@@ -23018,7 +23018,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=2027)
     public int getZimletUserPropertiesMaxNumEntries() {
-        return getIntAttr(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, -1);
+        return getIntAttr(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, -1, true);
     }
 
     /**

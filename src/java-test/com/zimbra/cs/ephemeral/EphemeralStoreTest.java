@@ -11,7 +11,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
+import com.zimbra.cs.ephemeral.EphemeralInput.RelativeExpiration;
 
 public class EphemeralStoreTest {
 
@@ -101,10 +101,10 @@ public class EphemeralStoreTest {
         EphemeralKey staticKey = new EphemeralKey("foo");
         EphemeralKey dynamicKey = new EphemeralKey("foo","1");
         EphemeralInput input1 = new EphemeralInput(staticKey, "bar");
-        input1.setExpiration(new Expiration(1L, TimeUnit.SECONDS));
+        input1.setExpiration(new RelativeExpiration(1L, TimeUnit.SECONDS));
         store.set(input1, target);
         EphemeralInput input2 = new EphemeralInput(dynamicKey, "bar");
-        input2.setExpiration(new Expiration(1L, TimeUnit.SECONDS));
+        input2.setExpiration(new RelativeExpiration(1L, TimeUnit.SECONDS));
         store.update(input2, target);
         //sanity check
         assertEquals("bar", store.get(staticKey, target).getValue());

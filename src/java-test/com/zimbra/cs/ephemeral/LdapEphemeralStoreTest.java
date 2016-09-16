@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.ephemeral.AttributeEncodersTest.TestExpiration;
+import com.zimbra.cs.ephemeral.EphemeralInput.RelativeExpiration;
 import com.zimbra.cs.ephemeral.EphemeralStoreTest.TestLocation;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore.AbstractLdapHelper;
 
@@ -81,7 +81,7 @@ public class LdapEphemeralStoreTest {
     public void testExpiry() throws Exception {
         EphemeralLocation location = new TestLocation();
         EphemeralInput input = new EphemeralInput(new EphemeralKey("foo"), "bar");
-        input.setExpiration(new TestExpiration(1L, TimeUnit.SECONDS));
+        input.setExpiration(new RelativeExpiration(1L, TimeUnit.SECONDS));
         store.set(input, location);
         helper.reset();
         Thread.sleep(1500);

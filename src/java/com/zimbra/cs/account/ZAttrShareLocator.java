@@ -41,7 +41,7 @@ public abstract class ZAttrShareLocator extends NamedEntry {
      */
     @ZAttr(id=-1)
     public String getCn() {
-        return getAttr(Provisioning.A_cn, null);
+        return getAttr(Provisioning.A_cn, null, true);
     }
 
     /**
@@ -105,7 +105,7 @@ public abstract class ZAttrShareLocator extends NamedEntry {
      */
     @ZAttr(id=1375)
     public String getShareOwnerAccountId() {
-        return getAttr(Provisioning.A_zimbraShareOwnerAccountId, null);
+        return getAttr(Provisioning.A_zimbraShareOwnerAccountId, null, true);
     }
 
     /**

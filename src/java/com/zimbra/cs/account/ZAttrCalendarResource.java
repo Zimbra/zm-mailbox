@@ -44,7 +44,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=-1)
     public String getDisplayName() {
-        return getAttr(Provisioning.A_displayName, null);
+        return getAttr(Provisioning.A_displayName, null, true);
     }
 
     /**
@@ -108,7 +108,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=313)
     public ZAttrProvisioning.AccountCalendarUserType getAccountCalendarUserType() {
-        try { String v = getAttr(Provisioning.A_zimbraAccountCalendarUserType); return v == null ? null : ZAttrProvisioning.AccountCalendarUserType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraAccountCalendarUserType, true, true); return v == null ? null : ZAttrProvisioning.AccountCalendarUserType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -120,7 +120,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=313)
     public String getAccountCalendarUserTypeAsString() {
-        return getAttr(Provisioning.A_zimbraAccountCalendarUserType, null);
+        return getAttr(Provisioning.A_zimbraAccountCalendarUserType, null, true);
     }
 
     /**
@@ -222,7 +222,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=315)
     public boolean isCalResAutoAcceptDecline() {
-        return getBooleanAttr(Provisioning.A_zimbraCalResAutoAcceptDecline, false);
+        return getBooleanAttr(Provisioning.A_zimbraCalResAutoAcceptDecline, false, true);
     }
 
     /**
@@ -289,7 +289,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=322)
     public boolean isCalResAutoDeclineIfBusy() {
-        return getBooleanAttr(Provisioning.A_zimbraCalResAutoDeclineIfBusy, false);
+        return getBooleanAttr(Provisioning.A_zimbraCalResAutoDeclineIfBusy, false, true);
     }
 
     /**
@@ -356,7 +356,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=323)
     public boolean isCalResAutoDeclineRecurring() {
-        return getBooleanAttr(Provisioning.A_zimbraCalResAutoDeclineRecurring, false);
+        return getBooleanAttr(Provisioning.A_zimbraCalResAutoDeclineRecurring, false, true);
     }
 
     /**
@@ -422,7 +422,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=327)
     public String getCalResBuilding() {
-        return getAttr(Provisioning.A_zimbraCalResBuilding, null);
+        return getAttr(Provisioning.A_zimbraCalResBuilding, null, true);
     }
 
     /**
@@ -484,7 +484,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=330)
     public int getCalResCapacity() {
-        return getIntAttr(Provisioning.A_zimbraCalResCapacity, -1);
+        return getIntAttr(Provisioning.A_zimbraCalResCapacity, -1, true);
     }
 
     /**
@@ -546,7 +546,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=332)
     public String getCalResContactEmail() {
-        return getAttr(Provisioning.A_zimbraCalResContactEmail, null);
+        return getAttr(Provisioning.A_zimbraCalResContactEmail, null, true);
     }
 
     /**
@@ -608,7 +608,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=331)
     public String getCalResContactName() {
-        return getAttr(Provisioning.A_zimbraCalResContactName, null);
+        return getAttr(Provisioning.A_zimbraCalResContactName, null, true);
     }
 
     /**
@@ -670,7 +670,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=333)
     public String getCalResContactPhone() {
-        return getAttr(Provisioning.A_zimbraCalResContactPhone, null);
+        return getAttr(Provisioning.A_zimbraCalResContactPhone, null, true);
     }
 
     /**
@@ -732,7 +732,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=328)
     public String getCalResFloor() {
-        return getAttr(Provisioning.A_zimbraCalResFloor, null);
+        return getAttr(Provisioning.A_zimbraCalResFloor, null, true);
     }
 
     /**
@@ -794,7 +794,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=324)
     public String getCalResLocationDisplayName() {
-        return getAttr(Provisioning.A_zimbraCalResLocationDisplayName, null);
+        return getAttr(Provisioning.A_zimbraCalResLocationDisplayName, null, true);
     }
 
     /**
@@ -860,7 +860,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=808)
     public int getCalResMaxNumConflictsAllowed() {
-        return getIntAttr(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, -1);
+        return getIntAttr(Provisioning.A_zimbraCalResMaxNumConflictsAllowed, -1, true);
     }
 
     /**
@@ -942,7 +942,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=809)
     public int getCalResMaxPercentConflictsAllowed() {
-        return getIntAttr(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, -1);
+        return getIntAttr(Provisioning.A_zimbraCalResMaxPercentConflictsAllowed, -1, true);
     }
 
     /**
@@ -1020,7 +1020,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=329)
     public String getCalResRoom() {
-        return getAttr(Provisioning.A_zimbraCalResRoom, null);
+        return getAttr(Provisioning.A_zimbraCalResRoom, null, true);
     }
 
     /**
@@ -1082,7 +1082,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=326)
     public String getCalResSite() {
-        return getAttr(Provisioning.A_zimbraCalResSite, null);
+        return getAttr(Provisioning.A_zimbraCalResSite, null, true);
     }
 
     /**
@@ -1146,7 +1146,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=314)
     public ZAttrProvisioning.CalResType getCalResType() {
-        try { String v = getAttr(Provisioning.A_zimbraCalResType); return v == null ? null : ZAttrProvisioning.CalResType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraCalResType, true, true); return v == null ? null : ZAttrProvisioning.CalResType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
@@ -1158,7 +1158,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=314)
     public String getCalResTypeAsString() {
-        return getAttr(Provisioning.A_zimbraCalResType, null);
+        return getAttr(Provisioning.A_zimbraCalResType, null, true);
     }
 
     /**
@@ -1265,7 +1265,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=790)
     public Date getCreateTimestamp() {
-        return getGeneralizedTimeAttr(Provisioning.A_zimbraCreateTimestamp, null);
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraCreateTimestamp, null, true);
     }
 
     /**
@@ -1277,7 +1277,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=790)
     public String getCreateTimestampAsString() {
-        return getAttr(Provisioning.A_zimbraCreateTimestamp, null);
+        return getAttr(Provisioning.A_zimbraCreateTimestamp, null, true);
     }
 
     /**
@@ -1378,7 +1378,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=1)
     public String getId() {
-        return getAttr(Provisioning.A_zimbraId, null);
+        return getAttr(Provisioning.A_zimbraId, null, true);
     }
 
     /**
@@ -1440,7 +1440,7 @@ public class ZAttrCalendarResource extends Account {
      */
     @ZAttr(id=345)
     public String getLocaleAsString() {
-        return getAttr(Provisioning.A_zimbraLocale, null);
+        return getAttr(Provisioning.A_zimbraLocale, null, true);
     }
 
     /**

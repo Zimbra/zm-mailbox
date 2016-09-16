@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 
 import org.json.JSONException;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
@@ -46,6 +47,13 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager.IDNType;
+import com.zimbra.cs.ephemeral.EphemeralInput;
+import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
+import com.zimbra.cs.ephemeral.EphemeralKey;
+import com.zimbra.cs.ephemeral.EphemeralLocation;
+import com.zimbra.cs.ephemeral.EphemeralResult;
+import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.LdapEntryLocation;
 import com.zimbra.cs.ldap.LdapDateUtil;
 
 public abstract class Entry implements ToZJSONObject {
@@ -119,7 +127,6 @@ public abstract class Entry implements ToZJSONObject {
         mAttrs = attrs;
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
-        this.overrideDefaults = overrideDefaults;
         setAttributeManager();
     }
 
@@ -283,23 +290,43 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public String getAttr(String name) {
-        return getAttr(name, true);
+        return getAttr(name, true, false);
     }
 
     public String getAttr(String name, boolean applyDefaults) {
-        Object v = getObject(name, applyDefaults);
-        if (v instanceof String) {
-            return (String) v;
-        } else if (v instanceof String[]) {
-            String[] a = (String[]) v;
-            return a.length > 0 ? a[0] : null;
+        return getAttr(name, applyDefaults, false);
+    }
+
+    protected String getAttr(String name, boolean applyDefaults, boolean skipEphemeralCheck) {
+        if (!skipEphemeralCheck && mAttrMgr.isEphemeral(name)) {
+            try {
+                if (mAttrMgr.isDynamic(name)) {
+                    ZimbraLog.ephemeral.warn("can't get value of dynamic ephemeral attribute %s without the dynamic component", name);
+                    return null;
+                }
+                String value = getEphemeralAttr(name).getValue();
+                if (!Strings.isNullOrEmpty(value)) {
+                    return value;
+                } else {
+                    return applyDefaults ? objectToString(getAttrDefault(name)) : null;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.ephemeral.warn("error getting value for %s, returning default", name);
+                return applyDefaults ? objectToString(getAttrDefault(name)) : null;
+            }
         } else {
-            return null;
+            Object v = getObject(name, applyDefaults);
+            return objectToString(v);
         }
     }
 
     public String getAttr(String name, String defaultValue) {
-        String v = getAttr(name);
+        String v = getAttr(name, true, false);
+        return v == null ? defaultValue : v;
+    }
+
+    protected String getAttr(String name, String defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         return v == null ? defaultValue : v;
     }
 
@@ -352,12 +379,20 @@ public abstract class Entry implements ToZJSONObject {
      * @return
      */
     public boolean getBooleanAttr(String name, boolean defaultValue) {
-        String v = getAttr(name);
+        return getBooleanAttr(name, defaultValue, false);
+    }
+
+    protected boolean getBooleanAttr(String name, boolean defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         return v == null ? defaultValue : ProvisioningConstants.TRUE.equals(v);
     }
 
     public byte[] getBinaryAttr(String name) {
-        String v = getAttr(name);
+        return getBinaryAttr(name, false);
+    }
+
+    protected byte[] getBinaryAttr(String name, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         return v == null ? null : ByteUtil.decodeLDAPBase64(v);
     }
 
@@ -368,7 +403,11 @@ public abstract class Entry implements ToZJSONObject {
      * @return
      */
     public Date getGeneralizedTimeAttr(String name, Date defaultValue) {
-        String v = getAttr(name);
+        return getGeneralizedTimeAttr(name, defaultValue, false);
+    }
+
+    protected Date getGeneralizedTimeAttr(String name, Date defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         if (v == null)
             return defaultValue;
         Date d = LdapDateUtil.parseGeneralizedTime(v);
@@ -382,7 +421,11 @@ public abstract class Entry implements ToZJSONObject {
      * @return
      */
     public int getIntAttr(String name, int defaultValue) {
-        String v = getAttr(name);
+        return getIntAttr(name, defaultValue, false);
+    }
+
+    protected int getIntAttr(String name, int defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         try {
             return v == null ? defaultValue : Integer.parseInt(v);
         } catch (NumberFormatException e) {
@@ -413,7 +456,11 @@ public abstract class Entry implements ToZJSONObject {
      * @return
      */
     public long getLongAttr(String name, long defaultValue) {
-        String v = getAttr(name);
+        return getLongAttr(name, defaultValue, false);
+    }
+
+    protected long getLongAttr(String name, long defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
         try {
             return v == null ? defaultValue : Long.parseLong(v);
         } catch (NumberFormatException e) {
@@ -451,18 +498,67 @@ public abstract class Entry implements ToZJSONObject {
             return values;
     }
 
+    private String objectToString(Object obj) {
+        if (obj instanceof String) {
+            return (String) obj;
+        } else if (obj instanceof String[]) {
+            String[] a = (String[]) obj;
+            return a.length > 0 ? a[0] : null;
+        } else {
+            return null;
+        }
+    }
+
+    private String[] objectToStringArray(Object obj) {
+        if (obj instanceof String) {
+            return new String[]{(String) obj};
+        } else if (obj instanceof String[]) {
+            return (String[]) obj;
+        } else {
+            return sEmptyMulti;
+        }
+    }
+
     /**
      * Returns the set of values for the given attribute, or an empty
      * array if no values are defined.
      */
     public String[] getMultiAttr(String name, boolean applyDefaults) {
-        Object v = getObject(name, applyDefaults);
-        if (v instanceof String) {
-            return new String[]{(String) v};
-        } else if (v instanceof String[]) {
-            return (String[]) v;
+        return getMultiAttr(name, applyDefaults, false);
+    }
+
+    public String[] getMultiAttr(String name, boolean applyDefaults, boolean skipEphemeralCheck) {
+        if (!skipEphemeralCheck && mAttrMgr.isEphemeral(name)) {
+            try {
+                if (mAttrMgr.isDynamic(name)) {
+                    ZimbraLog.ephemeral.warn("can't get value of dynamic ephemeral attribute %s without the dynamic component", name);
+                    return sEmptyMulti;
+                }
+                //only returning max of one value here, since multi-valued ephemeral attributes have to be dynamic
+                String value = getEphemeralAttr(name).getValue();
+                if (value == null) {
+                    if (applyDefaults) {
+                        Object v = getAttrDefault(name);
+                        return objectToStringArray(v);
+                    } else {
+                        return sEmptyMulti;
+                    }
+                } else {
+                    return new String[] { value };
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.ephemeral.warn("error getting values for %s, returning default", name);
+                if (applyDefaults) {
+                    Object v = getAttrDefault(name);
+                    return objectToStringArray(v);
+                }
+                else {
+                    return sEmptyMulti;
+                }
+            }
         } else {
-            return sEmptyMulti;
+            Object v = getObject(name, applyDefaults);
+            return objectToStringArray(v);
         }
     }
 
@@ -518,7 +614,12 @@ public abstract class Entry implements ToZJSONObject {
      * @return interval in milliseconds
      */
     public long getTimeInterval(String name, long defaultValue) {
-        return DateUtil.getTimeInterval(getAttr(name), defaultValue);
+        return getTimeInterval(name, defaultValue, false);
+    }
+
+    protected long getTimeInterval(String name, long defaultValue, boolean skipEphemeralCheck) {
+        String v = getAttr(name, true, skipEphemeralCheck);
+        return DateUtil.getTimeInterval(v, defaultValue);
     }
 
     /**
@@ -712,4 +813,85 @@ public abstract class Entry implements ToZJSONObject {
         return sorted;
     }
 
+    public EphemeralResult getEphemeralAttr(String key) throws ServiceException {
+        return getEphemeralAttr(key, null);
+    }
+
+    public EphemeralResult getEphemeralAttr(String key, String dynamicComponent) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        EphemeralKey ephemeralKey = new EphemeralKey(key, dynamicComponent);
+        EphemeralResult result = store.get(ephemeralKey, location);
+        return result == null ? EphemeralResult.emptyResult(ephemeralKey) : result;
+    }
+
+    protected void deleteEphemeralAttr(String key) throws ServiceException {
+        //The EphemeralStore API currently doesn't support deleting all values for a key,
+        //but this method is only called by unsetters for single-valued non-dynamic ephemeral attributes,
+        //which means we can first fetch the value and then delete it.
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        EphemeralKey ephemeralKey = new EphemeralKey(key);
+        String curValue = store.get(ephemeralKey, location).getValue();
+        store.delete(ephemeralKey, curValue, location);
+    }
+
+    public void deleteEphemeralAttr(String key, String dynamicComponent, String value) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        store.delete(new EphemeralKey(key, dynamicComponent), value, location);
+    }
+
+    private void modifyEphemeralAttrInternal(String key, String dynamicComponent, String value, boolean update, Expiration expiration, EphemeralStore store, EphemeralLocation location) throws ServiceException {
+        EphemeralInput input = new EphemeralInput(new EphemeralKey(key, dynamicComponent), value);
+        if (expiration != null) {
+            input.setExpiration(expiration);
+        }
+        if (update) {
+            store.update(input, location);
+        } else {
+            store.set(input, location);
+        }
+    }
+
+    public void modifyEphemeralAttr(EphemeralInput input, boolean update) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        if (update) {
+            store.update(input, location);
+        }
+        else {
+            store.set(input, location);
+        }
+    }
+
+    public void modifyEphemeralAttr(String key, String dynamicComponent, String value, boolean update, Expiration expiration) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        modifyEphemeralAttrInternal(key, dynamicComponent, value, update, expiration, store, location);
+    }
+
+    public void modifyEphemeralAttr(String key, String dynamicComponent, String[] values, boolean update, Expiration expiration) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        for (String value: values) {
+            modifyEphemeralAttrInternal(key, dynamicComponent, value, update, expiration, store, location);
+        }
+    }
+
+    protected long getEphemeralTimeInterval(String key, String dynamicComponent, long defaultValue) throws ServiceException {
+        return DateUtil.getTimeInterval(getEphemeralAttr(key, dynamicComponent).getValue(), defaultValue);
+    }
+
+    public void purgeEphemeralAttr(String key) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        store.purgeExpired(new EphemeralKey(key), location);
+    }
+
+    public boolean hasEphemeralAttr(String key, String dynamicComponent) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(this);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        return store.has(new EphemeralKey(key, dynamicComponent), location);
+    }
 }
