@@ -22,6 +22,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +108,7 @@ public class ExtensionUtil {
 
     public static synchronized void initAll() {
         ZimbraLog.extensions.info("Initializing extensions");
+        List<ZimbraExtensionClassLoader> sClassLoadersToRemove = new ArrayList<ZimbraExtensionClassLoader>();
         for (ZimbraExtensionClassLoader zcl : sClassLoaders) {
             for (String name : zcl.getExtensionClassNames()) {
                 try {
@@ -124,8 +126,8 @@ public class ExtensionUtil {
                                 "Disabled '" + ext.getName() + "' " +
                                 e.getMessage());
                         ext.destroy();
-                        RedoableOp.deregisterClassLoader(
-                                ext.getClass().getClassLoader());
+                        RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());
+                        sClassLoadersToRemove.add(zcl);
                     } catch (Exception e) {
                         ZimbraLog.extensions.warn("exception in " + name + ".init()", e);
                         RedoableOp.deregisterClassLoader(
@@ -140,6 +142,10 @@ public class ExtensionUtil {
                 }
 
             }
+        }
+
+        for (ZimbraExtensionClassLoader zcl : sClassLoadersToRemove) {
+            sClassLoaders.remove(zcl);
         }
     }
 
