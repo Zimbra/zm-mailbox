@@ -19,7 +19,7 @@ public abstract class SmimeHandler {
                     return sInstance;
                 }
 
-                String className = "com.zimbra.cs.smime.SmimeCryptoUtil";
+                String className = "com.zimbra.cs.smime.SmimeCryptoHandler";
                 try {
                     sInstance = (SmimeHandler) ExtensionUtil.findClass(className).newInstance();
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
