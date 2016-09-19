@@ -1,12 +1,13 @@
 package com.zimbra.cs.filter;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.jsieve.exception.SyntaxException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -17,8 +18,10 @@ import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.filter.jsieve.Variables;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -66,7 +69,7 @@ public class SetVariableTest {
 
 	}
 
-	@Ignore
+	@Test
 	public void testSetVarAndUseInHeader() {
 		try {
 			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -157,4 +160,253 @@ public class SetVariableTest {
             Assert.assertEquals(entry.getValue(), result);
         }
     }
+    
+    
+    @Test
+	public void testSetVarWithModifiersValid() {
+		try {
+			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+			RuleManager.clearCachedRules(account);
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			filterScript = "require [\"variables\"];\n"
+					+ "set \"var\" \"hello\" ;";
+			account.setMailSieveScript(filterScript);
+			String raw = "From: sender@in.telligent.com\n" + "To: test1@in.telligent.com\n" + "Subject: Test\n" + "\n"
+					+ "Hello World.";
+			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			filterScript = "require [\"variables\"];\n"
+					+ "set :length \"var\" \"hello\" ;";
+			ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			
+			filterScript = "require [\"variables\"];\n"
+					+ "set :lower \"var\" \"hello\" ;";
+			ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			
+			filterScript = "require [\"variables\"];\n"
+					+ "set :upper \"var\" \"hello\" ;";
+			ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			
+			filterScript = "require [\"variables\"];\n"
+					+ "set :lowerfirst \"var\" \"hello\" ;";
+			ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			
+			filterScript = "require [\"variables\"];\n"
+					+ "set :UPPERFIRST \"var\" \"hello\" ;";
+			ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			
+			//quotewildcard
+			filterScript = "require [\"variables\"];\n"
+					+ "set :quotewildcard \"var\" \"hello\" ;";
+			ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			
+			filterScript = "require [\"variables\"];\n"
+					+ "set :quotewildcard  :UPPERFIRST  \"var\" \"hello\" ;";
+			ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			
+			filterScript = "require [\"variables\"];\n"
+					+ "set :quotewildcard  :UPPERFIRST :length \"var\" \"hello\" ;";
+			ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			
+			filterScript = "require [\"variables\"];\n"
+					+ "set :quotewildcard  :UPPERFIRST :length \"var\" \"${1}\" ;";
+			ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);			
+
+		} catch (Exception e) {
+			fail("No exception should be thrown");
+		}
+
+	}
+    
+    
+    @Test
+   	public void testSetVarWithModifiersInValid() {
+   		try {
+   			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+   			RuleManager.clearCachedRules(account);
+   			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+   			
+   			String raw = "From: sender@in.telligent.com\n" + "To: test1@in.telligent.com\n" + "Subject: Test\n" + "\n"
+   					+ "Hello World.";
+   			try {
+   				filterScript = "require [\"variables\"];\n"
+   	   					+ "set  \"hello\" ;";
+   	   			account.setMailSieveScript(filterScript);
+   				RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			} catch (Exception e) {
+   				if (e instanceof SyntaxException) {
+   					SyntaxException se = (SyntaxException) e;
+   					
+   					assertTrue(se.getMessage().indexOf("Atleast 2 argument are needed. Found Arguments: [[hello]]") > -1);
+   				}
+   			}
+   			
+   			try {
+   				filterScript = "require [\"variables\"];\n"
+   					+ "set :lownner \"var\" \"hello\" ;";
+   	   			account.setMailSieveScript(filterScript);
+   				RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			} catch (Exception e) {
+   				if (e instanceof SyntaxException) {
+   					SyntaxException se = (SyntaxException) e;
+   					assertTrue(se.getMessage().indexOf("Invalid variable modifier:") > -1);
+   				}
+   			}
+   			
+   			try {
+   				filterScript = "require [\"variables\"];\n"
+   					+ "set :lower \"var\"  ;";
+   	   			account.setMailSieveScript(filterScript);
+   				RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			} catch (Exception e) {
+   				if (e instanceof SyntaxException) {
+   					SyntaxException se = (SyntaxException) e;
+   					assertTrue(se.getMessage().indexOf("Invalid variable modifier:") > -1);
+   				}
+   			}
+
+   		} catch (Exception e) {
+   			e.printStackTrace();
+   			fail("No exception should be thrown");
+   		}
+
+   	}
+    
+    @Test
+    public void testApplyModifiers() {
+    	String [] modifiers = new String [6];
+    	modifiers[SetVariable.getIndex(":" + SetVariable.ALL_LOWER_CASE)] =  SetVariable.ALL_LOWER_CASE;
+    	modifiers[SetVariable.getIndex(":" + SetVariable.UPPERCASE_FIRST)] = SetVariable.UPPERCASE_FIRST;
+    	String value = SetVariable.applyModifiers("juMBlEd lETteRS", modifiers);
+    	Assert.assertEquals("Jumbled letters", value);
+    	
+    	
+    	modifiers = new String [6];
+    	modifiers[SetVariable.getIndex(":" + SetVariable.STRING_LENGTH)] =  SetVariable.STRING_LENGTH;
+    	value = SetVariable.applyModifiers("juMBlEd lETteRS", modifiers);
+    	Assert.assertEquals("15", value);
+    	
+    	modifiers = new String [6];
+    	modifiers[SetVariable.getIndex(":" + SetVariable.QUOTE_WILDCARD)] =  SetVariable.QUOTE_WILDCARD;
+    	modifiers[SetVariable.getIndex(":" + SetVariable.ALL_UPPER_CASE)] =  SetVariable.ALL_UPPER_CASE;
+    	modifiers[SetVariable.getIndex(":" + SetVariable.LOWERCASE_FIRST)] = SetVariable.LOWERCASE_FIRST;
+    	value = SetVariable.applyModifiers("j?uMBlEd*lETte\\RS", modifiers);
+    	System.out.println(value);
+    	Assert.assertEquals("j\\?UMBLED\\*LETTE\\\\RS", value);
+    }
+    
+//    set "a" "juMBlEd lETteRS";             => "juMBlEd lETteRS"
+//    set :length "b" "${a}";                => "15"
+//    set :lower "b" "${a}";                 => "jumbled letters"
+//    set :upperfirst "b" "${a}";            => "JuMBlEd lETteRS"
+//    set :upperfirst :lower "b" "${a}"; 
+    @Test
+	public void testModifier() {
+    	try {
+			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+			RuleManager.clearCachedRules(account);
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			filterScript = "require [\"variables\"];\n"
+					+ "set \"a\" \"juMBlEd lETteRS\" ;\n"
+					+ "set :length \"b\" \"${a}\";\n"
+					+ "set :lower \"b\" \"${a}\";\n"
+					+ "set :upperfirst \"c\" \"${b}\";"
+					+ "set :upperfirst :lower \"d\" \"${c}\"; "
+					+ "if header :matches \"Subject\" \"*\" { tag \"${d}\"; }";;
+			account.setMailSieveScript(filterScript);
+			String raw = "From: sender@in.telligent.com\n" + "To: test1@in.telligent.com\n" + "Subject: Test\n" + "\n"
+					+ "Hello World.";
+			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			Message msg = mbox.getMessageById(null, ids.get(0).getId());
+			Assert.assertEquals("Jumbled letters", ArrayUtil.getFirstElement(msg.getTags()));
+		} catch (Exception e) {
+			fail("No exception should be thrown");
+		}
+    }
+    
+    @Test
+   	public void testStringInterpretation() {
+       	try {
+   			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+   			RuleManager.clearCachedRules(account);
+   			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+   			filterScript = "require [\"variables\"];\n"
+   					+ "set \"a\" \"juMBlEd lETteRS\" ;\n"
+   					
+   					+ "if header :matches \"Subject\" \"*\" { tag \"${d}\"; }";;
+   			account.setMailSieveScript(filterScript);
+   			String raw = "From: sender@in.telligent.com\n" + "To: test1@in.telligent.com\n" + "Subject: Test\n" + "\n"
+   					+ "Hello World.";
+   			try {
+   			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			
+   				Message msg = mbox.getMessageById(null, ids.get(0).getId());
+   			} catch (MailServiceException e) {
+   				String t = e.getArgumentValue("name");
+   				assertTrue(e.getCode().equals("mail.INVALID_NAME"));
+   			}
+   			
+   			RuleManager.clearCachedRules(account);
+   			filterScript = "require [\"variables\"];\n"
+   					+ "set \"a\" \"juMBlEd lETteRS\" ;\n"
+   					+ "if header :matches \"Subject\" \"*\" { tag \"${}\"; }";;
+   			account.setMailSieveScript(filterScript);
+			try {
+				List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+						new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+						Mailbox.ID_FOLDER_INBOX, true);
+			} catch (MailServiceException e) {
+				String t = e.getArgumentValue("name");
+				assertTrue(e.getCode().equals("mail.INVALID_NAME"));
+				assertEquals("${}", t);
+			}
+   			RuleManager.clearCachedRules(account);
+			filterScript = "require [\"variables\"];\n"
+   					+ "set \"ave\" \"juMBlEd lETteRS\" ;\n"
+   					+ "if header :matches \"Subject\" \"*\" { tag \"${ave!}\"; }";;
+   			account.setMailSieveScript(filterScript);
+			try {
+				List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+						new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+						Mailbox.ID_FOLDER_INBOX, true);
+			} catch (MailServiceException e) {
+				String t = e.getArgumentValue("name");
+				assertTrue(e.getCode().equals("mail.INVALID_NAME"));
+				assertEquals("${ave!}", t);
+			}
+   		} catch (Exception e) {
+   			
+   			fail("No exception should be thrown");
+   		}
+       }
+
 }

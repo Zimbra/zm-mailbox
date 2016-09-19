@@ -796,22 +796,81 @@ public final class FilterUtil {
     }
 
     public static String replaceVariables(Map<String, String> variables, List<String> matchedValues, String varName) {
-        if (!varName.startsWith("${")) {
+        if (varName.indexOf("${") == -1) {
             return varName;
         }
-        String temp = varName.substring(2, varName.indexOf("}"));
-        if (variables.containsKey(temp)) {
-            temp = variables.get(temp);
-            return temp;
+        String prefix = "";
+        String varValue = "";
+        int startIndex = varName.indexOf("${");
+        if (startIndex != 0) {
+        	prefix = varName.substring(0, startIndex);
         }
-        temp = "${" + temp + "}";
-        for (int i = 0; i < matchedValues.size(); ++i) {
-            String pattern = "{" + i + "}";
-            if (temp.contains(pattern)) {
-                temp = temp.replaceAll(pattern, matchedValues.get(i));
-            }
+        String name =  varName.substring(startIndex + 2, varName.indexOf("}"));
+        if (name.equals("")) {
+        	return varName;
         }
-        return temp;
+        name = handleQuotedAndEncodedVar(name);
+        ZimbraLog.filter.debug("Sieve: variable expression is %s and variable name is: %s", varName, name);
+        // case varName = ${1}
+        if (name.length() == 1  && Character.isDigit(name.charAt(0))) {
+             for (int i = 0; i < matchedValues.size(); ++i) {
+                 String pattern = "{" + i + "}";
+                 if (varName.contains(pattern)) {
+                     varValue = varName.replaceAll(pattern, matchedValues.get(i));
+                 }
+             }
+        } else {
+        	if (!isValidSieveVariableName(name)) {
+        		varValue = "${" + name + "}";
+        				//varName; 
+        	} else {
+        	  if (variables.containsKey(name)) {
+                  varValue = variables.get(name);
+              }
+        	}
+        }
+        if (!prefix.equals("")) {
+        	varValue = handleQuotedAndEncodedVar(prefix) + varValue;
+        }
+        ZimbraLog.filter.debug("Sieve: variable value is: %s", varValue);
+        return varValue;
+    }
+    
+    
+    /**
+	 * @param varName
+	 * @return
+	 *  "${fo\o}"  => ${foo}  => the expansion of variable foo.
+     * "${fo\\o}" => ${fo\o} => illegal identifier => left verbatim.
+     * "\${foo}"  => ${foo}  => the expansion of variable foo.
+     * "\\${foo}" => \${foo} => a backslash character followed by the
+     *                           expansion of variable foo.
+	 */
+	public static String handleQuotedAndEncodedVar(String varName) {
+		String processedStr  = varName;
+		StringBuilder sb = new StringBuilder();
+		char [] charArray = varName.toCharArray();
+		for (int i = 0; i < charArray.length; ++i) {
+			if (charArray[i] == '\\') {
+				if (charArray[i] == '\\' && (i+1 <= charArray.length -1) && charArray[i + 1] == '\\') {
+					sb.append('\\');
+				}
+			} else {
+				sb.append(charArray[i]);
+			}
+		}
+		processedStr = sb.toString();
+		
+		return processedStr;
+	}
+
+	public static boolean  isValidSieveVariableName(String varName) {
+    	
+    	Pattern pattern = Pattern.compile("([a-zA-Z_])*",  Pattern.CASE_INSENSITIVE);
+        if (pattern.matcher(varName).matches()) {
+           return true;
+        }
+    	return false;
     }
 }
 

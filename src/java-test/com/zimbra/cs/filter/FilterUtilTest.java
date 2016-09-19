@@ -91,5 +91,34 @@ public class FilterUtilTest {
     	matchedValues.add("test2");
     	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${0}");
     	Assert.assertEquals("test1", varValue);
+    	
+    	
+    	variables = new HashMap<String, String>();
+    	variables.put("var", "hello");
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${var!}");
+    	Assert.assertEquals("${var!}", varValue);
+    }
+    
+    @Test
+    public void testVariableReplacementQutdAndEncoded() {
+    	Map<String, String> variables = new HashMap<String, String>();
+    	variables.put("var", "hello");
+    	List<String> matchedValues = new ArrayList<String>();
+    	String varValue = FilterUtil.replaceVariables(variables, matchedValues, "${va\\r}");
+    	Assert.assertEquals("hello", varValue);
+    	
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${va\\\\r}");
+    	System.out.println(varValue);
+    	Assert.assertEquals("${va\\r}", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "\\${var}");
+    	System.out.println(varValue);
+    	Assert.assertEquals("hello", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "\\\\${var}");
+    	System.out.println(varValue);
+    	Assert.assertEquals("\\hello", varValue);
+    	
     }
 }
