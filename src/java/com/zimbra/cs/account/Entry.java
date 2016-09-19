@@ -297,7 +297,7 @@ public abstract class Entry implements ToZJSONObject {
         return getAttr(name, applyDefaults, false);
     }
 
-    protected String getAttr(String name, boolean applyDefaults, boolean skipEphemeralCheck) {
+    public String getAttr(String name, boolean applyDefaults, boolean skipEphemeralCheck) {
         if (!skipEphemeralCheck && mAttrMgr.isEphemeral(name)) {
             try {
                 if (mAttrMgr.isDynamic(name)) {
