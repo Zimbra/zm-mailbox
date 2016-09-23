@@ -15004,6 +15004,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
 
     /**
+     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
+     * RFC 5229.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2096)
+    public static final String A_zimbraSieveFeatureVariablesEnabled = "zimbraSieveFeatureVariablesEnabled";
+
+    /**
      * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
      * 5429.
      *
