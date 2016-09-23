@@ -259,6 +259,27 @@ public class RelationalExtensionTest {
     }
 
     @Test
+    public void testValueEnvelopeCasemap() {
+        // LMTP MAIL FROM envelope (<abc@zimbra.com>) matchs the all upper case string
+        // RFC 5228 Section 2.7.3. "i;ascii-casemap" comparator which treats uppercase and lowercase
+        //   characters in the US-ASCII subset of UTF-8 as the same
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+                + "if envelope :value \"eq\" :comparator \"i;ascii-casemap\" "
+                + "[\"from\"] \"ABC@ZIMBRA.COM\" {" + "tag \"Priority\";}";
+        doTest(filterScript, "Priority");
+    }
+
+    @Test
+    public void testValueEnvelopeOctet() {
+        // LMTP MAIL FROM envelope (<abc@zimbra.com>) does not match the all upper case string
+        // RFC 5228 Section 2.7.3. i;octet comparator simply compares octets
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+                + "if envelope :value \"eq\" :comparator \"i;octet\" "
+                + "[\"from\"] \"ABC@ZIMBRA.COM\" {" + "tag \"Priority\";}";
+        doTest(filterScript, null);
+    }
+
+    @Test
     public void testBadFormat_invalidEnvHeaderName() {
         String filterScript = "if envelope :value \"gt\" :comparator \"i;ascii-casemap\" "
                 + "[\"AUTH\"] [\"M\"] {" + "tag \"Priority\";}";

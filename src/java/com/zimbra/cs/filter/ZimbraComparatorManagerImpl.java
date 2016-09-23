@@ -87,6 +87,12 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
             ZimbraLog.filter.info("[%s] = [%s]",
                 ASCII_NUMERIC_COMPARATOR, getClassName(ASCII_NUMERIC_COMPARATOR));
 
+            className = LC.zimbra_class_jsieve_comparators_octet.value();
+            if (className != null && !className.equals("")) {
+                this.classNameMap.put(OCTET_COMPARATOR, className);
+            }
+            ZimbraLog.filter.info("[%s] = [%s]",
+                ASCII_NUMERIC_COMPARATOR, getClassName(ASCII_NUMERIC_COMPARATOR));
         } catch (Exception e) {
             ZimbraLog.webclient.warn("exception classname: [%s] not found", className);
         }

@@ -16,6 +16,13 @@
  */
 package com.zimbra.cs.filter;
 
+import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.EQ_OP;
+import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GE_OP;
+import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GT_OP;
+import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LE_OP;
+import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LT_OP;
+import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.NE_OP;
+
 import java.util.List;
 
 import org.apache.jsieve.comparators.Octet;
@@ -24,13 +31,28 @@ import org.apache.jsieve.exception.FeatureException;
 import com.zimbra.cs.filter.jsieve.Values;
 
 /**
- * Class ZimbraOctet enhances the jsieve's Octet class not to support the values() and counts() methods for the i;octet.
+ * Class ZimbraOctet enhances the jsieve's Octet class to
+ * support the :values match type for the i;octet
  */
 public class ZimbraOctet extends Octet implements ZimbraComparator {
 
-    public boolean values(String operator, String lhs, String rhs)
+    public boolean values(String operator, String left, String right)
         throws FeatureException {
-        throw new FeatureException("Substring compare value unsupported by octet");
+        switch (operator) {
+        case GT_OP:
+            return (left.compareTo(right) > 0);
+        case GE_OP:
+            return (left.compareTo(right) >= 0);
+        case LT_OP:
+            return (left.compareTo(right) < 0);
+        case LE_OP:
+            return (left.compareTo(right) <= 0);
+        case EQ_OP:
+            return (left.compareTo(right) == 0);
+        case NE_OP:
+            return (left.compareTo(right) != 0);
+        }
+        return false;
     }
 
     @Override
