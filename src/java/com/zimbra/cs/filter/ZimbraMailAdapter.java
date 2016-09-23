@@ -22,9 +22,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -37,14 +39,19 @@ import javax.mail.internet.MimePart;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.zimbra.common.mime.InternetAddress;
+import com.zimbra.cs.filter.jsieve.ActionEreject;
 import com.zimbra.cs.filter.jsieve.ActionNotify;
+import com.zimbra.cs.filter.jsieve.ActionNotifyMailto;
 import com.zimbra.cs.filter.jsieve.ActionReply;
+import com.zimbra.cs.filter.jsieve.ActionEreject;
+import com.zimbra.cs.filter.jsieve.ErejectException;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.jsieve.mail.ActionKeep;
 import org.apache.jsieve.mail.ActionRedirect;
+import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
@@ -54,6 +61,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.Folder;
@@ -64,17 +72,22 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import org.apache.jsieve.mail.optional.EnvelopeAccessors;
+import com.zimbra.cs.lmtpserver.LmtpAddress;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 
 /**
  * Sieve evaluation engine adds a list of {@link org.apache.jsieve.mail.Action}s
  * that have matched the filter conditions to this object
  * and invokes its {@link #executeActions()} method.
  */
-public class ZimbraMailAdapter implements MailAdapter {
+public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private Mailbox mailbox;
     private FilterHandler handler;
     private String[] tags;
     private boolean allowFilterToMountpoint = true;
+    private Map<String, String> variables = new HashMap<String, String>();
+    private List<String> matchedValues = new ArrayList<String>();
 
     /**
      * Keeps track of folders into which we filed messages, so we don't file twice
@@ -100,6 +113,8 @@ public class ZimbraMailAdapter implements MailAdapter {
     private SieveContext context;
 
     private boolean discardActionPresent = false;
+
+    private LmtpEnvelope envelope = null;
 
     public ZimbraMailAdapter(Mailbox mailbox, FilterHandler handler) {
         this.mailbox = mailbox;
@@ -199,12 +214,12 @@ public class ZimbraMailAdapter implements MailAdapter {
 
             if (getDeliveryActions().isEmpty()) {
                 // i.e. no keep/fileinto/redirect actions
-                if (getReplyNotifyActions().isEmpty()) {
+                if (getReplyNotifyRejectActions().isEmpty()) {
                     // if only flag/tag actions are present, we keep the message even if discard
                     // action is present
                     explicitKeep();
                 } else if (!discardActionPresent) {
-                    // else if reply/notify actions are present and there's no discard, do sort
+                    // else if reply/notify/reject/ereject actions are present and there's no discard, do sort
                     // of implicit keep
                     explicitKeep();
                 }
@@ -225,6 +240,7 @@ public class ZimbraMailAdapter implements MailAdapter {
                 } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
                     String folderPath = fileinto.getDestination();
+                    folderPath = FilterUtil.replaceVariables(this.variables, this.matchedValues, folderPath);
                     try {
                         if (!allowFilterToMountpoint && isMountpoint(mailbox, folderPath)) {
                             ZimbraLog.filter.info("Filing to mountpoint \"%s\" is not allowed.  Filing to the default folder instead.",
@@ -271,6 +287,46 @@ public class ZimbraMailAdapter implements MailAdapter {
                                        notify.getOrigHeaders());
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to notify.", e);
+                        explicitKeep();
+                    }
+                } else if (action instanceof ActionReject) {
+                    ActionReject reject = (ActionReject) action;
+                    boolean isRejectSupported = Provisioning.getInstance().getConfig().getBooleanAttr(
+                            Provisioning.A_zimbraSieveRejectEnabled, false);
+                    if (isRejectSupported) {
+	                    ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
+	                    try {
+	                        handler.reject(reject.getMessage(), envelope);
+	                        handler.discard();
+	                    } catch (Exception e) {
+	                        ZimbraLog.filter.info("Unable to reject.", e);
+	                        explicitKeep();
+	                    }
+                    }
+                } else if (action instanceof ActionEreject) {
+                    ActionEreject ereject = (ActionEreject) action;
+                    ZimbraLog.filter.debug("Refusing delivery of a message at the protocol level");
+                    try {
+                        handler.ereject(envelope);
+                    } catch (ErejectException e) {
+                        // 'ereject' action executed
+                        throw e;
+                    } catch (Exception e) {
+                        ZimbraLog.filter.warn("Unable to ereject.", e);
+                    }
+                } else if (action instanceof ActionNotifyMailto) {
+                    ActionNotifyMailto notifyMailto = (ActionNotifyMailto) action;
+                    ZimbraLog.filter.debug("Sending RFC 5435/5436 compliant notification message to %s.", notifyMailto.getMailto());
+                    try {
+                        handler.notifyMailto(envelope,
+                                             notifyMailto.getFrom(),
+                                             notifyMailto.getImportance(),
+                                             notifyMailto.getOptions(),
+                                             notifyMailto.getMessage(),
+                                             notifyMailto.getMailto(),
+                                             notifyMailto.getMailtoParams());
+                    } catch (Exception e) {
+                        ZimbraLog.filter.warn("Unable to notify (mailto).", e);
                         explicitKeep();
                     }
                 }
@@ -321,10 +377,11 @@ public class ZimbraMailAdapter implements MailAdapter {
         return actions;
     }
 
-    private List<Action> getReplyNotifyActions() {
+    private List<Action> getReplyNotifyRejectActions() {
         List<Action> actions = new ArrayList<Action>();
         for (Action action : this.actions) {
-            if (action instanceof ActionReply || action instanceof ActionNotify) {
+            if (action instanceof ActionReply || action instanceof ActionNotify
+               || action instanceof ActionReject || action instanceof ActionEreject) {
                 actions.add(action);
             }
         }
@@ -607,5 +664,84 @@ public class ZimbraMailAdapter implements MailAdapter {
 
     public void setDiscardActionPresent() {
         discardActionPresent = true;
+    }
+
+
+    public void setEnvelope(LmtpEnvelope env) {
+        this.envelope  = env;
+    }
+
+    @Override
+    public List<String> getEnvelope(String name) throws SieveMailException {
+        return getMatchingEnvelope(name);
+    }
+
+    @Override
+    public List<String> getEnvelopeNames() throws SieveMailException {
+        List<String> result = new ArrayList<String>();
+        if (envelope.hasRecipients()) {
+            result.add("to");
+        }
+        if (envelope.hasSender()) {
+            result.add("from");
+        }
+        return result;
+    }
+
+    @Override
+    public List<String> getMatchingEnvelope(String name)
+        throws SieveMailException {
+        List<String> result = Lists.newArrayListWithExpectedSize(2);
+        if (envelope == null) {
+            return result;
+        }
+
+        if (name.compareToIgnoreCase("to") == 0) {
+            /* RFC 5228 5.4. Test envelope
+             * ---
+             * If the SMTP transaction involved several RCPT commands, only the data
+             * from the RCPT command that caused delivery to this user is available
+             * in the "to" part of the envelope.
+             * ---
+             * Return only the address who is currently being processed.
+             */
+            List<LmtpAddress> recipients = envelope.getRecipients();
+            try {
+                String myaddress = mailbox.getAccount().getMail();
+                if (!myaddress.isEmpty()) {
+                    for (LmtpAddress recipient: recipients) {
+                        if (myaddress.toUpperCase().startsWith(recipient.getEmailAddress().toUpperCase())) {
+                            result.add(recipient.getEmailAddress());
+                        }
+                    }
+                }
+            } catch (ServiceException e) {
+                // nothing to do with this exception. Just return an empty list
+            }
+        } else {
+            LmtpAddress sender = envelope.getSender();
+            result.add(sender.getEmailAddress());
+        }
+        return result;
+    }
+    
+    public String getVariable(String key) {
+        return variables.get(key);
+    }
+
+    public void addVariable(String key, String value) {
+        this.variables.put(key, value);
+    }
+
+    public List<String> getMatchedValues() {
+        return matchedValues;
+    }
+
+    public void setMatchedValues(List<String> matchedValues) {
+        this.matchedValues = matchedValues;
+    }
+
+    public Map<String, String> getVariables() {
+        return variables;
     }
 }

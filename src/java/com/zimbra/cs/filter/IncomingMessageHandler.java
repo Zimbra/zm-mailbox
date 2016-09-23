@@ -19,6 +19,8 @@ package com.zimbra.cs.filter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.ErejectException;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
@@ -38,6 +40,7 @@ import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Mail filtering implementation for messages that arrive via LMTP or from
@@ -153,6 +156,25 @@ public final class IncomingMessageHandler implements FilterHandler {
             throws ServiceException, MessagingException {
         FilterUtil.notify(
                 octxt, mailbox, parsedMessage, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
+    }
+
+    @Override
+    public void reject(String reason, LmtpEnvelope envelope) throws ServiceException, MessagingException {
+        FilterUtil.reject(octxt, mailbox, parsedMessage, reason, envelope);
+    }
+
+    @Override
+    public void ereject(LmtpEnvelope envelope) throws ErejectException {
+        throw new ErejectException(
+                "'ereject' action refuses delivery of a message. Sieve rule evaluation is cancelled");
+    }
+
+    @Override
+    public void notifyMailto(LmtpEnvelope envelope, String from, int importance,
+            Map<String, String> options, String message, String mailto,
+            Map<String, List<String>> mailtoParams)
+            throws ServiceException, MessagingException {
+        FilterUtil.notifyMailto(envelope, octxt, mailbox, parsedMessage, from, importance, options, message, mailto, mailtoParams);
     }
 
     @Override
