@@ -17,7 +17,7 @@ import com.zimbra.soap.mail.type.CertificateInfo;
 @XmlRootElement(name=SmimeConstants.E_GET_CERT_INFO_RESPONSE)
 public class GetCertificateInfoResponse {
 
-    @XmlElement(name=SmimeConstants.E_CERTIFICATE /* cert */, required=false)
+    @XmlElement(name=SmimeConstants.E_CERTIFICATE, required=false)
     private List<CertificateInfo> certificates = Lists.newArrayList();
 
     public GetCertificateInfoResponse() {
