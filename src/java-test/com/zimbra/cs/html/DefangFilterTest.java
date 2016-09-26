@@ -1336,4 +1336,20 @@ public class DefangFilterTest {
         Assert.assertTrue(result.contains("VBSCRIPT-BLOCKED"));
     }
 
+    @Test
+    /**
+     * Verify that dfsrc and data-mce-src attributes of img tag are maintained after passing through the defanger.
+     * @throws Exception
+     */
+    public void testBug106162() throws Exception {
+
+        String html = "<div>Thanks</div><div><img src=\"/home/ews01@zdev-vm002.eng.zimbra.com/Briefcase/rupali.jpeg\" "
+                + "dfsrc=\"doc:Briefcase/rupali.jpeg\" "
+                + "data-mce-src=\"/home/ews01@zdev-vm002.eng.zimbra.com/Briefcase/rupali.jpeg\"></div>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("dfsrc=\"doc:Briefcase/rupali.jpeg\""));
+        Assert.assertTrue(result.contains("data-mce-src=\"/home/ews01"));
+    }
+
 }
