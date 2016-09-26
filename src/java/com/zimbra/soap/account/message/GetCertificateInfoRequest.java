@@ -14,7 +14,7 @@ public class GetCertificateInfoRequest {
 
     /**
      * @zm-api-field-tag certId
-     * @zm-api-field-description Certificate Id.If it's value is specified details of certificate matching that id will be returned.
+     * @zm-api-field-description Certificate Id. If it's value is specified, details of certificate matching that id will be returned.
              If value is not specified, details of all certificates of the user will be returned.
      */
     @XmlAttribute(name=SmimeConstants.A_CERT_ID, required=false)
