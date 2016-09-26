@@ -12,26 +12,54 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 public class CertificateInfo {
 
+    /**
+     * @zm-api-field-tag pubCertId
+     * @zm-api-field-description Item Id associated with the public certificate
+     */
     @XmlAttribute(name=SmimeConstants.A_PUB_CERT_ID, required=true)
     private String pubCertId;
 
+    /**
+     * @zm-api-field-tag pvtKeyId
+     * @zm-api-field-description Item Id associated with the private key
+     */
     @XmlAttribute(name=SmimeConstants.A_PVT_KEY_ID, required=true)
     private String pvtKeyId;
 
+    /**
+     * @zm-api-field-tag defaultCert
+     * @zm-api-field-description Is this certificate the default one, in case user has multiple certificates
+     */
     @XmlAttribute(name=SmimeConstants.A_DEFAULT, required=false)
     private ZmBoolean defaultCert;
 
+    /**
+     * @zm-api-field-tag subjectDN
+     * @zm-api-field-description details of the subject (The person, or entity identified.)
+     */
     @XmlElement(name=SmimeConstants.E_SUBJECT_DN, required=true)
     private String subjectDN;
 
+    /**
+     * @zm-api-field-tag issuerDN
+     * @zm-api-field-description details of the issuer (who has issued the certificate)
+     */
     @XmlElement(name=SmimeConstants.E_ISSUER_DN, required=false)
     private String issuerDN;
 
+    /**
+     * @zm-api-field-tag validity
+     * @zm-api-field-description validity of the certificate
+     */
     @XmlElement(name=SmimeConstants.E_VALIDITY, required=false)
     private Validity validity;
 
+    /**
+     * @zm-api-field-tag signature
+     * @zm-api-field-description signature details of the certificate
+     */
     @XmlElement(name=SmimeConstants.E_SIGNATURE, required=false)
-    private Signature signature;
+    private CertificateSignature signature;
 
     public String getSubjectDN() {
         return subjectDN;
@@ -57,11 +85,11 @@ public class CertificateInfo {
         this.validity = validity;
     }
 
-    public Signature getSignature() {
+    public CertificateSignature getSignature() {
         return signature;
     }
 
-    public void setSignature(Signature signature) {
+    public void setSignature(CertificateSignature signature) {
         this.signature = signature;
     }
 
