@@ -1,0 +1,53 @@
+package com.zimbra.soap.account.type;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
+import com.google.common.base.Objects;
+import com.zimbra.common.soap.SmimeConstants;
+
+@XmlAccessorType(XmlAccessType.NONE)
+public class CertificateSignature {
+
+    /**
+     * @zm-api-field-tag serialNumber
+     * @zm-api-field-description serialNumber of the certificate, which is used to uniquely identify the certificate.
+     */
+    @XmlElement(name=SmimeConstants.E_SERIAL_NO, required=false)
+    private String serialNumber;
+
+    /**
+     * @zm-api-field-tag algorithm
+     * @zm-api-field-description algorithm used to create the signature.
+     */
+    @XmlElement(name=SmimeConstants.E_ALGORITHM, required=false)
+    private String algorithm;
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper.add("serialNo", serialNumber)
+            .add("algorithm", algorithm);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
+    }
+
+}

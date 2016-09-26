@@ -1053,7 +1053,9 @@ public final class JaxbUtil {
 
             //smime
             com.zimbra.soap.mail.message.SendSecureMsgRequest.class,
-            com.zimbra.soap.mail.message.SendSecureMsgResponse.class
+            com.zimbra.soap.mail.message.SendSecureMsgResponse.class,
+            com.zimbra.soap.account.message.GetCertificateInfoRequest.class,
+            com.zimbra.soap.account.message.GetCertificateInfoResponse.class
         };
 
         try {
