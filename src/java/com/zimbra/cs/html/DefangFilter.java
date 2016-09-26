@@ -193,7 +193,7 @@ public class DefangFilter extends DefaultFilter {
         acceptElement("h6", CORE_LANG+"align");
         acceptElement("hr", CORE_LANG+"align,noshade,size,width");
         acceptElement("html", LANG+"xmlns");
-        acceptElement("img", CORE_LANG+"align,alt,border,height,hspace,ismap,longdesc,src,usemap,vspace,width");
+        acceptElement("img", CORE_LANG+"align,alt,border,height,hspace,ismap,longdesc,src,usemap,vspace,width,dfsrc,data-mce-src");
         acceptElement("ins", CORE_LANG+"cite");
         acceptElement("label", CORE_LANG+"for");
         //acceptElement("link", CORE_LANG+"charset,href,hreflang,media,ntarget,rel,rev,type");
@@ -719,7 +719,7 @@ public class DefangFilter extends DefaultFilter {
         // may annoy the front end. Here, we'll check for
         // a valid url as well as just a valid filename in the
         // case that its an inline image
-        if(aName.equals("src")) {
+        if(aName.equals("src") || aName.equals("dfsrc") || aName.equals("data-mce-src")) {
             if (!(VALID_EXT_URL.matcher(value).find() ||
                 VALID_INT_IMG.matcher(value).find() ||
                 VALID_IMG_FILE.matcher(value).find())) {
