@@ -11,8 +11,8 @@ public class SmimeConstants {
 
     public static final QName SEND_SECURE_MSG_REQUEST = QName.get(E_SEND_SECURE_MSG_REQUEST, MailConstants.NAMESPACE);
     public static final QName SEND_SECURE_MSG_RESPONSE = QName.get(E_SEND_SECURE_MSG_RESPONSE, MailConstants.NAMESPACE);
-    public static final QName GET_CERT_INFO_REQUEST = QName.get(E_GET_CERT_INFO_REQUEST, MailConstants.NAMESPACE);
-    public static final QName GET_CERT_INFO_RESPONSE = QName.get(E_GET_CERT_INFO_RESPONSE, MailConstants.NAMESPACE);
+    public static final QName GET_CERT_INFO_REQUEST = QName.get(E_GET_CERT_INFO_REQUEST, AccountConstants.NAMESPACE);
+    public static final QName GET_CERT_INFO_RESPONSE = QName.get(E_GET_CERT_INFO_RESPONSE, AccountConstants.NAMESPACE);
 
     public static final String A_SIGN = "sign";
     public static final String A_ENCRYPT = "encrypt";
