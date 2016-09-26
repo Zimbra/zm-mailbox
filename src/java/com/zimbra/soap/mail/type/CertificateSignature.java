@@ -8,11 +8,19 @@ import com.google.common.base.Objects;
 import com.zimbra.common.soap.SmimeConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Signature {
+public class CertificateSignature {
 
+    /**
+     * @zm-api-field-tag serialNumber
+     * @zm-api-field-description serialNumber of the certificate, which is used to uniquely identify the certificate.
+     */
     @XmlElement(name=SmimeConstants.E_SERIAL_NO, required=false)
     private String serialNumber;
 
+    /**
+     * @zm-api-field-tag algorithm
+     * @zm-api-field-description algorithm used to create the signature.
+     */
     @XmlElement(name=SmimeConstants.E_ALGORITHM, required=false)
     private String algorithm;
 

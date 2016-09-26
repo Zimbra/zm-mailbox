@@ -12,6 +12,11 @@ import com.zimbra.common.soap.SmimeConstants;
 @XmlRootElement(name=SmimeConstants.E_GET_CERT_INFO_REQUEST)
 public class GetCertificateInfoRequest {
 
+    /**
+     * @zm-api-field-tag certId
+     * @zm-api-field-description Certificate Id.If it's value is specified details of certificate matching that id will be returned.
+             If value is not specified, details of all certificates of the user will be returned.
+     */
     @XmlAttribute(name=SmimeConstants.A_CERT_ID, required=false)
     private String certId;
 
