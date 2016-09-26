@@ -1,4 +1,4 @@
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.account.message;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.SmimeConstants;
-import com.zimbra.soap.mail.type.CertificateInfo;
+import com.zimbra.soap.account.type.CertificateInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=SmimeConstants.E_GET_CERT_INFO_RESPONSE)
