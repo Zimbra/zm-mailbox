@@ -1,4 +1,4 @@
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.account.type;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -52,7 +52,7 @@ public class CertificateInfo {
      * @zm-api-field-description validity of the certificate
      */
     @XmlElement(name=SmimeConstants.E_VALIDITY, required=false)
-    private Validity validity;
+    private CertificateValidity validity;
 
     /**
      * @zm-api-field-tag signature
@@ -77,11 +77,11 @@ public class CertificateInfo {
         this.issuerDN = issuerDN;
     }
 
-    public Validity getValidity() {
+    public CertificateValidity getValidity() {
         return validity;
     }
 
-    public void setValidity(Validity validity) {
+    public void setValidity(CertificateValidity validity) {
         this.validity = validity;
     }
 

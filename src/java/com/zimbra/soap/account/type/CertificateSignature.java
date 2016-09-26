@@ -1,4 +1,4 @@
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.account.type;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

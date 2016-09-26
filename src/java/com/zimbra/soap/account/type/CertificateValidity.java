@@ -1,4 +1,4 @@
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.account.type;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -8,7 +8,7 @@ import com.google.common.base.Objects;
 import com.zimbra.common.soap.SmimeConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class Validity {
+public class CertificateValidity {
 
     /**
      * @zm-api-field-tag startDate
