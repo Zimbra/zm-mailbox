@@ -24,8 +24,8 @@ import com.google.common.base.Objects;
 import com.zimbra.common.soap.SmimeConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SmimeConstants.E_SAVE_CERTIFICATE_RESPONSE)
-public class SaveCertificateResponse {
+@XmlRootElement(name=SmimeConstants.E_SAVE_SMIME_CERTIFICATE_RESPONSE)
+public class SaveSmimeCertificateResponse {
 
 	/**
      * @zm-api-field-tag item-id
@@ -41,7 +41,7 @@ public class SaveCertificateResponse {
     @XmlAttribute(name=SmimeConstants.A_PVT_KEY_ID /* smime certificate key id */, required=false)
     private String pvtKeyId;
 
-	public SaveCertificateResponse() {
+	public SaveSmimeCertificateResponse() {
 	}
 
 	public void setPubCertId(String pubCertId) { this.pubCertId = pubCertId; }

@@ -27,8 +27,8 @@ import com.zimbra.common.soap.SmimeConstants;
 import com.zimbra.soap.type.Id;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SmimeConstants.E_SAVE_CERTIFICATE_REQUEST)
-public class SaveCertificateRequest {
+@XmlRootElement(name=SmimeConstants.E_SAVE_SMIME_CERTIFICATE_REQUEST)
+public class SaveSmimeCertificateRequest {
 
 	/**
      * @zm-api-field-description Upload specification
@@ -50,14 +50,14 @@ public class SaveCertificateRequest {
     @XmlAttribute(name=SmimeConstants.A_REPLACE_ID /* replaceId */, required=false)
     private String replaceId;
 
-	public SaveCertificateRequest() {
+	public SaveSmimeCertificateRequest() {
 		this(null);
 	}
 
     /**
 	 * @param upload
 	 */
-	public SaveCertificateRequest(Id upload) {
+	public SaveSmimeCertificateRequest(Id upload) {
 		this.upload = upload;
 	}
 
