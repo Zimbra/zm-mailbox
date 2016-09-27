@@ -19,7 +19,6 @@ package com.zimbra.cs.filter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -27,7 +26,6 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
-import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -122,23 +120,6 @@ public final class OutgoingMessageHandler implements FilterHandler {
             throws ServiceException, MessagingException {
         FilterUtil.notify(
                 octxt, mailbox, parsedMessage, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
-    }
-
-    @Override
-    public void notifyMailto(LmtpEnvelope envelope, String from, int importance,
-            Map<String, String> options, String message, String mailto,
-            Map<String, List<String>> mailtoParams) throws ServiceException, MessagingException {
-        FilterUtil.notifyMailto(envelope, octxt, mailbox, parsedMessage, from, importance, options, message, mailto, mailtoParams);
-    }
-
-    @Override
-    public void reject(String reason, LmtpEnvelope envelope) {
-        ZimbraLog.filter.debug("Ignoring attempt to reject outgoing message");
-    }
-
-    @Override
-    public void ereject(LmtpEnvelope envelope) {
-        ZimbraLog.filter.debug("Ignoring attempt to perform 'ereject' command on outgoing message");
     }
 
     @Override

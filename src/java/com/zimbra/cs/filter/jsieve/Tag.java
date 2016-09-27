@@ -33,9 +33,6 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.commands.AbstractActionCommand;
 import org.apache.jsieve.mail.MailAdapter;
 
-import com.zimbra.cs.filter.FilterUtil;
-import com.zimbra.cs.filter.ZimbraMailAdapter;
-
 public class Tag extends AbstractActionCommand {
 
     @Override
@@ -45,11 +42,8 @@ public class Tag extends AbstractActionCommand {
                 .getList().get(0);
 
         // Only one tag with the same tag name allowed, others should be
-        // discarded?   
-        ZimbraMailAdapter mailAdapter  = (ZimbraMailAdapter) mail;
-        if (tagName.startsWith("${")) {
-        	tagName = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), tagName);
-        }
+        // discarded?            
+        
         mail.addAction(new ActionTag(tagName));
 
         return null;
