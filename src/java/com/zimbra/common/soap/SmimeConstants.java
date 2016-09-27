@@ -8,15 +8,21 @@ public class SmimeConstants {
     public static final String E_SEND_SECURE_MSG_RESPONSE = "SendSecureMsgResponse";
     public static final String E_GET_CERT_INFO_REQUEST = "GetCertificateInfoRequest";
     public static final String E_GET_CERT_INFO_RESPONSE = "GetCertificateInfoResponse";
+    public static final String E_SAVE_CERTIFICATE_REQUEST = "SaveCertificateRequest";
+    public static final String E_SAVE_CERTIFICATE_RESPONSE = "SaveCertificateResponse";
 
     public static final QName SEND_SECURE_MSG_REQUEST = QName.get(E_SEND_SECURE_MSG_REQUEST, MailConstants.NAMESPACE);
     public static final QName SEND_SECURE_MSG_RESPONSE = QName.get(E_SEND_SECURE_MSG_RESPONSE, MailConstants.NAMESPACE);
     public static final QName GET_CERT_INFO_REQUEST = QName.get(E_GET_CERT_INFO_REQUEST, AccountConstants.NAMESPACE);
     public static final QName GET_CERT_INFO_RESPONSE = QName.get(E_GET_CERT_INFO_RESPONSE, AccountConstants.NAMESPACE);
+    public static final QName SAVE_CERTIFICATE_REQUEST = QName.get(E_SAVE_CERTIFICATE_REQUEST, AccountConstants.NAMESPACE);
+    public static final QName SAVE_CERTIFICATE_RESPONSE = QName.get(E_SAVE_CERTIFICATE_RESPONSE, AccountConstants.NAMESPACE);
 
     public static final String A_SIGN = "sign";
     public static final String A_ENCRYPT = "encrypt";
     public static final String A_CERT_ID = "certId";
+    public static final String A_CERTIFICATE_PASSWORD = "password";
+    public static final String A_REPLACE_ID = "replaceId";
 
     public static final String E_CERTIFICATE = "certificate";
     public static final String E_SUBJECT_DN = "subjectDn";
