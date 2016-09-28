@@ -50,7 +50,7 @@ public class Variables extends AbstractActionCommand {
      * @return Replaced text string
      */
     public static String replaceAllVariables(MailAdapter mail, String sourceStr) {
-        if (sourceStr == null || sourceStr.length() == 0) {
+        if (!(mail instanceof ZimbraMailAdapter) || sourceStr == null || sourceStr.length() == 0) {
             return sourceStr;
         }
         Map<String, String> variables = ((ZimbraMailAdapter) mail).getVariables();

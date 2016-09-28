@@ -64,6 +64,9 @@ public class EnvelopeTest extends Envelope {
      */
     protected boolean executeBasic(MailAdapter mail, Arguments arguments,
             SieveContext context) throws SieveException {
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return false;
+        }
 
         ZimbraComparatorUtils.TestParameters params = ZimbraComparatorUtils.parseTestArguments(mail, arguments, context);
 
@@ -93,6 +96,9 @@ public class EnvelopeTest extends Envelope {
     private boolean match(MailAdapter mail, String addressPart, String comparator,
             String matchType, String operator, List<String> headerNames,
             List<String> keys, SieveContext context) throws SieveException {
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return false;
+        }
         // Iterate over the address fields looking for a match
         boolean isMatched = false;
         List<String> headerValues = Lists.newArrayListWithExpectedSize(2);

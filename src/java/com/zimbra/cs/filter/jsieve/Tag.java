@@ -40,6 +40,9 @@ public class Tag extends AbstractActionCommand {
 
     @Override
     protected Object executeBasic(MailAdapter mail, Arguments args, Block block, SieveContext context) {
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return null;
+        }
         String tagName =
             (String) ((StringListArgument) args.getArgumentList().get(0))
                 .getList().get(0);
