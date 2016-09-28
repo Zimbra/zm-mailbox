@@ -51,24 +51,24 @@ import com.zimbra.cs.memcached.MemcachedConnector;
 public final class EhcacheManager {
     private static final EhcacheManager SINGLETON = new EhcacheManager();
 
-        private CacheManager cacheManager;
-        
+    private CacheManager cacheManager;
+
     public static final String IMAP_ACTIVE_SESSION_CACHE = "imap-active-session-cache";
     public static final String IMAP_INACTIVE_SESSION_CACHE = "imap-inactive-session-cache";
     public static final String SYNC_STATE_ITEM_CACHE = "sync-state-item-cache";
 
     private EhcacheManager() {
-                cacheManager = CacheManagerBuilder.newCacheManagerBuilder()
-                        .with(CacheManagerBuilder.persistence(LC.zimbra_home.value() + File.separator + "data" + File.separator + "mailboxd"))
-                        .withCache(IMAP_ACTIVE_SESSION_CACHE, createImapActiveSessionCache())
-                        .build(true);
+        cacheManager = CacheManagerBuilder.newCacheManagerBuilder()
+                .with(CacheManagerBuilder.persistence(LC.zimbra_home.value() + File.separator + "data" + File.separator + "mailboxd"))
+                .withCache(IMAP_ACTIVE_SESSION_CACHE, createImapActiveSessionCache())
+                .build(true);
 
-                if (MemcachedConnector.isConnected()) {
-                        ZimbraLog.imap.info("Using Memcached for inactive session cache");
-                } else {
-                        cacheManager.createCache(IMAP_INACTIVE_SESSION_CACHE, createImapInactiveSessionCache());
-                        cacheManager.createCache(SYNC_STATE_ITEM_CACHE, createSyncStateItemCache());
-                }
+        if (MemcachedConnector.isConnected()) {
+            ZimbraLog.imap.info("Using Memcached for inactive session cache");
+        } else {
+            cacheManager.createCache(IMAP_INACTIVE_SESSION_CACHE, createImapInactiveSessionCache());
+            cacheManager.createCache(SYNC_STATE_ITEM_CACHE, createSyncStateItemCache());
+        }
     }
 
     public static EhcacheManager getInstance() {
@@ -79,48 +79,48 @@ public final class EhcacheManager {
     }
 
     private CacheConfiguration createImapActiveSessionCache() {
-                return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
-                                                                                                                                          ImapFolder.class,
-                                                                                                                                          ResourcePoolsBuilder.newResourcePoolsBuilder()
-                                                                                                                                          .heap(1, EntryUnit.ENTRIES)
-                                                                                                                                          .disk(100, MemoryUnit.GB, false))  // disk backed not persistent
-                        .build();
+        return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
+                ImapFolder.class,
+                ResourcePoolsBuilder.newResourcePoolsBuilder()
+                .heap(1, EntryUnit.ENTRIES)
+                .disk(100, MemoryUnit.GB, false))  // disk backed not persistent
+                .build();
     }
 
     private CacheConfiguration createImapInactiveSessionCache() {
         long maxBytesOnLocalDisk;
         try {
             maxBytesOnLocalDisk = Provisioning.getInstance().getLocalServer().getImapInactiveSessionCacheMaxDiskSize();
-                } catch (ServiceException e) {
-                        ZimbraLog.imap.error("Exception while fetching attribute imap ImapInactiveSessionCacheMaxDiskSize", e);
-                        maxBytesOnLocalDisk = 10737418240L;
-                }
-                
-                return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
-                                                                                                                                          ImapFolder.class,
-                                                                                                                                          ResourcePoolsBuilder.newResourcePoolsBuilder()
-                                                                                                                                          .heap(1, EntryUnit.ENTRIES)
-                                                                                                                                          .offheap(LC.imap_inactive_session_cache_size.intValue(), MemoryUnit.B) 
-                                                                                                                                          .disk(maxBytesOnLocalDisk, MemoryUnit.B, true)) // disk backed persistent store
-                        .build();
-                                
-            // conf.setMaxElementsOnDisk(LC.imap_inactive_session_cache_size.intValue());
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Exception while fetching attribute imap ImapInactiveSessionCacheMaxDiskSize", e);
+            maxBytesOnLocalDisk = 10737418240L;
         }
+
+        return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
+                ImapFolder.class,
+                ResourcePoolsBuilder.newResourcePoolsBuilder()
+                .heap(1, EntryUnit.ENTRIES)
+                .offheap(LC.imap_inactive_session_cache_size.intValue(), MemoryUnit.B) 
+                .disk(maxBytesOnLocalDisk, MemoryUnit.B, true)) // disk backed persistent store
+                .build();
+
+        // conf.setMaxElementsOnDisk(LC.imap_inactive_session_cache_size.intValue());
+    }
 
     private CacheConfiguration createSyncStateItemCache() {
-                return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
-                                                                                                                                          ImapFolder.class,
-                                                                                                                                          ResourcePoolsBuilder.newResourcePoolsBuilder()
-                                                                                                                                          .heap(LC.zimbra_activesync_syncstate_item_cache_heap_size.intValue(), MemoryUnit.B)
-                                                                                                                                          .disk(100, MemoryUnit.GB, true)) // disk backed persistent store
-                        .withExpiry(Expirations.timeToLiveExpiration(Duration.of(LC.zimbra_activesync_metadata_cache_expiration.intValue(), TimeUnit.SECONDS)))
-                        .build();
-        }
+        return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
+                ImapFolder.class,
+                ResourcePoolsBuilder.newResourcePoolsBuilder()
+                .heap(LC.zimbra_activesync_syncstate_item_cache_heap_size.intValue(), MemoryUnit.B)
+                .disk(100, MemoryUnit.GB, true)) // disk backed persistent store
+                .withExpiry(Expirations.timeToLiveExpiration(Duration.of(LC.zimbra_activesync_metadata_cache_expiration.intValue(), TimeUnit.SECONDS)))
+                .build();
+    }
 
-        public Cache getEhcache(String cacheName) {
-                return cacheManager.getCache(cacheName, String.class, ImapFolder.class);
-        }
-                
+    public Cache getEhcache(String cacheName) {
+        return cacheManager.getCache(cacheName, String.class, ImapFolder.class);
+    }
+
     public void shutdown() {
         cacheManager.close();
     }
