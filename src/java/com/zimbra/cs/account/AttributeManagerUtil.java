@@ -57,6 +57,7 @@ import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager.ObjectClassInfo;
 import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.cs.util.MemoryUnitUtil;
 
 public class AttributeManagerUtil {
 
@@ -1106,7 +1107,7 @@ public class AttributeManagerUtil {
                if (ai.isEphemeral()) {
                    javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s, %s).getLongValue(%sL);", name, dynamic, defaultValue);
                } else {
-                   javaBody = String.format("return getLongAttr(Provisioning.A_%s, %sL, true);", name, defaultValue);
+                   javaBody = String.format("return getLongAttr(Provisioning.A_%s, %sL, true);", name, new MemoryUnitUtil(1024).convertToBytes(defaultValue));
                }
                javaDocReturns = String.format(", or %s if unset", defaultValue);
                break;

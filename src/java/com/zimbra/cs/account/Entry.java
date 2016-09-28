@@ -55,6 +55,7 @@ import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
 import com.zimbra.cs.ldap.LdapDateUtil;
+import com.zimbra.cs.util.MemoryUnitUtil;
 
 public abstract class Entry implements ToZJSONObject {
 
@@ -462,7 +463,10 @@ public abstract class Entry implements ToZJSONObject {
     protected long getLongAttr(String name, long defaultValue, boolean skipEphemeralCheck) {
         String v = getAttr(name, true, skipEphemeralCheck);
         try {
-            return v == null ? defaultValue : Long.parseLong(v);
+            if (MemoryUnitUtil.isMemoryUnit(v))
+                return new MemoryUnitUtil(1024).convertToBytes(v);
+            else
+                return v == null ? defaultValue : Long.parseLong(v);
         } catch (NumberFormatException e) {
             return defaultValue;
         }
