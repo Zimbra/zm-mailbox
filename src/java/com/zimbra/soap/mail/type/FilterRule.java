@@ -78,6 +78,7 @@ public final class FilterRule {
         @XmlElement(name=MailConstants.E_ACTION_REDIRECT /* actionRedirect */, type=FilterAction.RedirectAction.class),
         @XmlElement(name=MailConstants.E_ACTION_REPLY /* actionReply */, type=FilterAction.ReplyAction.class),
         @XmlElement(name=MailConstants.E_ACTION_NOTIFY /* actionNotify */, type=FilterAction.NotifyAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_RFCCOMPLIANTNOTIFY /* actionNotify (RFC compliant) */, type=FilterAction.RFCCompliantNotifyAction.class),
         @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class)
     })
     // in nested rule case, actions could be null.
