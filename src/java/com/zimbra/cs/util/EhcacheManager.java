@@ -78,7 +78,7 @@ public final class EhcacheManager {
     public void startup() {
     }
 
-    private CacheConfiguration createImapActiveSessionCache() {
+    private CacheConfiguration<String, ImapFolder> createImapActiveSessionCache() {
         return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
                 ImapFolder.class,
                 ResourcePoolsBuilder.newResourcePoolsBuilder()
@@ -87,7 +87,7 @@ public final class EhcacheManager {
                 .build();
     }
 
-    private CacheConfiguration createImapInactiveSessionCache() {
+    private CacheConfiguration<String, ImapFolder> createImapInactiveSessionCache() {
         long maxBytesOnLocalDisk;
         try {
             maxBytesOnLocalDisk = Provisioning.getInstance().getLocalServer().getImapInactiveSessionCacheMaxDiskSize();
@@ -107,7 +107,7 @@ public final class EhcacheManager {
         // conf.setMaxElementsOnDisk(LC.imap_inactive_session_cache_size.intValue());
     }
 
-    private CacheConfiguration createSyncStateItemCache() {
+    private CacheConfiguration<String, ImapFolder> createSyncStateItemCache() {
         return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
                 ImapFolder.class,
                 ResourcePoolsBuilder.newResourcePoolsBuilder()
@@ -117,7 +117,7 @@ public final class EhcacheManager {
                 .build();
     }
 
-    public Cache getEhcache(String cacheName) {
+    public Cache<String, ImapFolder> getEhcache(String cacheName) {
         return cacheManager.getCache(cacheName, String.class, ImapFolder.class);
     }
 
