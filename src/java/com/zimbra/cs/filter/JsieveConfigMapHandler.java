@@ -153,7 +153,11 @@ public class JsieveConfigMapHandler {
         return mTestMap;
     }
 
-    private static boolean isNotifyActionRFCCompliantAvailable() {
+    /**
+     * Checks the global config attribute 'zimbraMailSieveNotifyActionRFCCompliant'.
+     * @return <tt>true</tt> if the RFC compliant notify action is allowed to execute.
+     */
+    public static boolean isNotifyActionRFCCompliantAvailable() {
         boolean isNotifyActionRFCCompliant = false;
         try {
             isNotifyActionRFCCompliant = Provisioning.getInstance().getConfig().getBooleanAttr(
