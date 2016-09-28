@@ -108,10 +108,11 @@ public final class EhcacheManager {
     }
 
     private CacheConfiguration<String, ImapFolder> createSyncStateItemCache() {
+        String heapSize = LC.zimbra_activesync_syncstate_item_cache_heap_size.value();
         return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
                 ImapFolder.class,
                 ResourcePoolsBuilder.newResourcePoolsBuilder()
-                .heap(LC.zimbra_activesync_syncstate_item_cache_heap_size.intValue(), MemoryUnit.B)
+                .heap(new MemoryUnitUtil(1024).convertToBytes(heapSize), MemoryUnit.B)
                 .disk(100, MemoryUnit.GB, true)) // disk backed persistent store
                 .withExpiry(Expirations.timeToLiveExpiration(Duration.of(LC.zimbra_activesync_metadata_cache_expiration.intValue(), TimeUnit.SECONDS)))
                 .build();
