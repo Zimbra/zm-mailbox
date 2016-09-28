@@ -8068,16 +8068,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraJunkMessagesIndexingEnabled = "zimbraJunkMessagesIndexingEnabled";
 
     /**
-     * rough estimate of when the user last logged in. see
-     * zimbraLastLogonTimestampFrequency
+     * rough estimate of when the user last logged in
      */
     @ZAttr(id=113)
     public static final String A_zimbraLastLogonTimestamp = "zimbraLastLogonTimestamp";
 
     /**
-     * how often the zimbraLastLogonTimestamp is updated. if set to 0,
-     * updating zimbraLastLogonTimestamp is completely disabled . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * Deprecated since: 8.7.0. Deprecated when zimbraLastLogonTimestamp
+     * became an ephemeral attribute. Orig desc: how often the
+     * zimbraLastLogonTimestamp is updated. if set to 0, updating
+     * zimbraLastLogonTimestamp is completely disabled . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -14248,7 +14249,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyIpThrottleMsg = "zimbraReverseProxyIpThrottleMsg";
 
     /**
-     * List of IP addresses to be excluded from IP throttling.
+     * Client IP/IPRange whitelist for exclusion from IP throttling. Value
+     * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
+     * IPV6 is supported as well.
      *
      * @since ZCS 8.8.0
      */
