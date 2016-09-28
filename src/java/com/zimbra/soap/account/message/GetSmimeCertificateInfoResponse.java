@@ -14,8 +14,8 @@ import com.zimbra.common.soap.SmimeConstants;
 import com.zimbra.soap.account.type.CertificateInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SmimeConstants.E_GET_CERT_INFO_RESPONSE)
-public class GetCertificateInfoResponse {
+@XmlRootElement(name=SmimeConstants.E_GET_SMIME_CERT_INFO_RESPONSE)
+public class GetSmimeCertificateInfoResponse {
 
     /**
      * @zm-api-field-tag certificates
@@ -24,7 +24,7 @@ public class GetCertificateInfoResponse {
     @XmlElement(name=SmimeConstants.E_CERTIFICATE, required=false)
     private List<CertificateInfo> certificates = Lists.newArrayList();
 
-    public GetCertificateInfoResponse() {
+    public GetSmimeCertificateInfoResponse() {
     }
 
     public void setCertificates(Iterable <CertificateInfo> certificates) {
