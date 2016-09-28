@@ -14326,6 +14326,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyIPThrottleWhitelist = "zimbraReverseProxyIPThrottleWhitelist";
 
     /**
+     * Sets the time-to-live for mail_whitelist_ip_ttl in nginx. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3007)
+    public static final String A_zimbraReverseProxyIPThrottleWhitelistTime = "zimbraReverseProxyIPThrottleWhitelistTime";
+
+    /**
      * Log level for NGINX Proxy error log
      *
      * @since ZCS 5.0.10
