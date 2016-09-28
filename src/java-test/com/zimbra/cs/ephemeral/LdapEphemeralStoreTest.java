@@ -5,14 +5,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.ephemeral.EphemeralInput.RelativeExpiration;
+import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
 import com.zimbra.cs.ephemeral.EphemeralStoreTest.TestLocation;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore.AbstractLdapHelper;
 
@@ -81,7 +80,7 @@ public class LdapEphemeralStoreTest {
     public void testExpiry() throws Exception {
         EphemeralLocation location = new TestLocation();
         EphemeralInput input = new EphemeralInput(new EphemeralKey("foo"), "bar");
-        input.setExpiration(new RelativeExpiration(1L, TimeUnit.SECONDS));
+        input.setExpiration(new AbsoluteExpiration(1000L));
         store.set(input, location);
         helper.reset();
         Thread.sleep(1500);
