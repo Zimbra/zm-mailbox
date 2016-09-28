@@ -9,8 +9,8 @@ import com.google.common.base.Objects;
 import com.zimbra.common.soap.SmimeConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SmimeConstants.E_GET_CERT_INFO_REQUEST)
-public class GetCertificateInfoRequest {
+@XmlRootElement(name=SmimeConstants.E_GET_SMIME_CERT_INFO_REQUEST)
+public class GetSmimeCertificateInfoRequest {
 
     /**
      * @zm-api-field-tag certId
