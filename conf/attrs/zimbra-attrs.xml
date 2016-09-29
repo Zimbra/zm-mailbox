@@ -89,6 +89,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
                 and personal part is optional.
     id..........^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
     integer.....32 bit signed, min/max checked
+    long........64 bit unsigned unbounded number
+                Can also contain human readable memory unit values: ex 1KB => 1024 bytes
     port........0-65535
     regex.......value attr is a regular expression. Should explicitly
                 add ^ to front and $ at the end
@@ -9358,6 +9360,36 @@ TODO: delete them permanently from here
 
 <attr id="3000" name="zimbraReverseProxyIPThrottleWhitelist" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
   <desc>Client IP/IPRange whitelist for exclusion from IP throttling. Value may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.  IPV6 is supported as well.</desc>
+</attr>
+
+<attr id="3001" name="zimbraActiveSyncEhcacheHeapSize" type="long" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>10MB</globalConfigValue>
+  <desc> Ehcache: the maximum heap size of the ActiveSync cache in Bytes before eviction. By default this value is 10MB. This is a rough limit,Due to internals of ehcache actual size in memory will often exceed this limit by a modest margin. </desc>
+</attr>
+
+<attr id="3002" name="zimbraActiveSyncEhcacheMaxDiskSize" type="long" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>10GB</globalConfigValue>
+  <desc> Ehcache: the maximum disk size of the ActiveSync cache in Bytes before eviction. By default this value is 10GB. This is a rough limit,Due to internals of ehcache actual size on disk will often exceed this limit by a modest margin. </desc>
+</attr>
+
+<attr id="3003" name="zimbraActiveSyncEhcacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>5m</globalConfigValue>
+  <desc>Ehcache: default expiration time for activesync cache values; default is 5 minutes</desc>
+</attr>
+
+<attr id="3004" name="zimbraImapInactiveSessionEhcacheSize" type="long" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>1MB</globalConfigValue>
+  <desc> Ehcache: the maximum heap size of the inactive session cache in Bytes before eviction. By default this value is 1 megabyte. This is a rough limit,Due to internals of ehcache actual size in memory will often exceed this limit by a modest margin. </desc>
+</attr>
+
+<attr id="3005" name="zimbraImapActiveSessionEhcacheMaxDiskSize" type="long" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>100GB</globalConfigValue>
+  <desc> Ehcache: the maximum amount of disk space the imap active session cache will consume in Bytes before eviction. By default this value is 100 gigabytes. This is a rough limit,Due to internals of ehcache actual size in memory will often exceed this limit by a modest margin. </desc>
+</attr>
+
+<attr id="3006" name="zimbraImapInactiveSessionEhcacheMaxDiskSize" type="long" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>100GB</globalConfigValue>
+  <desc> Ehcache: the maximum amount of disk space the imap inactive session cache will consume in Bytes before eviction. By default this value is 100 gigabytes. This is a rough limit,Due to internals of ehcache actual size in memory will often exceed this limit by a modest margin. </desc>
 </attr>
 
 </attrs>
