@@ -103,6 +103,13 @@ class ImapCredentials implements java.io.Serializable {
         return MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
     }
 
+    ImapMailboxStore getImapMailboxStore() throws ServiceException {
+        if (mIsLocal) {
+            return new LocalImapMailboxStore(MailboxManager.getInstance().getMailboxByAccountId(mAccountId));
+        }
+        throw new UnsupportedOperationException("RemoteImapMailboxStore not supported yet");
+    }
+
 
     private Set<String> parseConfig(Metadata config) throws ServiceException {
         if (config == null || !config.containsKey(FN_SUBSCRIPTIONS))
@@ -122,11 +129,11 @@ class ImapCredentials implements java.io.Serializable {
             for (String sub : subscriptions)
                 slist.add(sub);
         }
-        getMailbox().setConfig(getContext(), SN_IMAP, new Metadata().put(FN_SUBSCRIPTIONS, slist));
+        getImapMailboxStore().setConfig(getContext(), SN_IMAP, new Metadata().put(FN_SUBSCRIPTIONS, slist));
     }
 
     Set<String> listSubscriptions() throws ServiceException {
-        return parseConfig(getMailbox().getConfig(getContext(), SN_IMAP));
+        return parseConfig(getImapMailboxStore().getConfig(getContext(), SN_IMAP));
     }
 
     void subscribe(ImapPath path) throws ServiceException {
