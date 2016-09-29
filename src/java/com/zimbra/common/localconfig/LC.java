@@ -714,8 +714,6 @@ public final class LC {
     @Reloadable
     public static final KnownKey imap_max_consecutive_error = KnownKey.newKey(5);
 
-    @Supported
-    public static final KnownKey imap_inactive_session_cache_size = KnownKey.newKey(10000);
     // Default 3 days.  Without limit 1 server was needing to restart every 30 to 45 days
     public static final KnownKey imap_noninteractive_session_cache_maxage_days = KnownKey.newKey(3);
     public static final KnownKey imap_use_ehcache = KnownKey.newKey(true);
@@ -1092,15 +1090,12 @@ public final class LC {
     public static final KnownKey zimbra_activesync_contact_image_size = KnownKey.newKey(2*1024*1024);
     public static final KnownKey zimbra_activesync_autodiscover_url = KnownKey.newKey(null);
     public static final KnownKey zimbra_activesync_autodiscover_use_service_url = KnownKey.newKey(false);
-    public static final KnownKey zimbra_activesync_metadata_cache_expiration = KnownKey.newKey(3600);
-    public static final KnownKey zimbra_activesync_metadata_cache_max_size = KnownKey.newKey(5000);
     public static final KnownKey zimbra_activesync_heartbeat_interval_min = KnownKey.newKey(300); //300 Seconds = 5 mins
     //make sure it's less than nginx's zimbraReverseProxyUpstreamPollingTimeout, which is now 3600 seconds
     public static final KnownKey zimbra_activesync_heartbeat_interval_max = KnownKey.newKey(3540); //3540 Seconds = 59 mins
     public static final KnownKey zimbra_activesync_search_max_results = KnownKey.newKey(500);
     public static final KnownKey zimbra_activesync_general_cache_size = KnownKey.newKey(500); //active device number
     public static final KnownKey zimbra_activesync_parallel_sync_enabled = KnownKey.newKey(false);
-    public static final KnownKey zimbra_activesync_syncstate_item_cache_heap_size = KnownKey.newKey("10M"); //e.g. 10M,10G
 
     public static final KnownKey zimbra_slow_logging_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_slow_logging_threshold = KnownKey.newKey(5000);
