@@ -357,6 +357,292 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Ehcache: default expiration time for activesync cache values; default
+     * is 5 minutes. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getActiveSyncEhcacheExpirationAsString to access value as a string.
+     *
+     * @see #getActiveSyncEhcacheExpirationAsString()
+     *
+     * @return zimbraActiveSyncEhcacheExpiration in millseconds, or 300000 (5m)  if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3003)
+    public long getActiveSyncEhcacheExpiration() {
+        return getTimeInterval(Provisioning.A_zimbraActiveSyncEhcacheExpiration, 300000L, true);
+    }
+
+    /**
+     * Ehcache: default expiration time for activesync cache values; default
+     * is 5 minutes. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraActiveSyncEhcacheExpiration, or "5m" if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3003)
+    public String getActiveSyncEhcacheExpirationAsString() {
+        return getAttr(Provisioning.A_zimbraActiveSyncEhcacheExpiration, "5m", true);
+    }
+
+    /**
+     * Ehcache: default expiration time for activesync cache values; default
+     * is 5 minutes. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraActiveSyncEhcacheExpiration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3003)
+    public void setActiveSyncEhcacheExpiration(String zimbraActiveSyncEhcacheExpiration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheExpiration, zimbraActiveSyncEhcacheExpiration);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: default expiration time for activesync cache values; default
+     * is 5 minutes. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraActiveSyncEhcacheExpiration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3003)
+    public Map<String,Object> setActiveSyncEhcacheExpiration(String zimbraActiveSyncEhcacheExpiration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheExpiration, zimbraActiveSyncEhcacheExpiration);
+        return attrs;
+    }
+
+    /**
+     * Ehcache: default expiration time for activesync cache values; default
+     * is 5 minutes. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3003)
+    public void unsetActiveSyncEhcacheExpiration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheExpiration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: default expiration time for activesync cache values; default
+     * is 5 minutes. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3003)
+    public Map<String,Object> unsetActiveSyncEhcacheExpiration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheExpiration, "");
+        return attrs;
+    }
+
+    /**
+     * Ehcache: the maximum heap size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10MB. This is a rough limit,Due to
+     * internals of ehcache actual size in memory will often exceed this
+     * limit by a modest margin.
+     *
+     * @return zimbraActiveSyncEhcacheHeapSize, or 10MB if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3001)
+    public long getActiveSyncEhcacheHeapSize() {
+        return getLongAttr(Provisioning.A_zimbraActiveSyncEhcacheHeapSize, 10485760L, true);
+    }
+
+    /**
+     * Ehcache: the maximum heap size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10MB. This is a rough limit,Due to
+     * internals of ehcache actual size in memory will often exceed this
+     * limit by a modest margin.
+     *
+     * @param zimbraActiveSyncEhcacheHeapSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3001)
+    public void setActiveSyncEhcacheHeapSize(long zimbraActiveSyncEhcacheHeapSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheHeapSize, Long.toString(zimbraActiveSyncEhcacheHeapSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum heap size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10MB. This is a rough limit,Due to
+     * internals of ehcache actual size in memory will often exceed this
+     * limit by a modest margin.
+     *
+     * @param zimbraActiveSyncEhcacheHeapSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3001)
+    public Map<String,Object> setActiveSyncEhcacheHeapSize(long zimbraActiveSyncEhcacheHeapSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheHeapSize, Long.toString(zimbraActiveSyncEhcacheHeapSize));
+        return attrs;
+    }
+
+    /**
+     * Ehcache: the maximum heap size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10MB. This is a rough limit,Due to
+     * internals of ehcache actual size in memory will often exceed this
+     * limit by a modest margin.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3001)
+    public void unsetActiveSyncEhcacheHeapSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheHeapSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum heap size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10MB. This is a rough limit,Due to
+     * internals of ehcache actual size in memory will often exceed this
+     * limit by a modest margin.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3001)
+    public Map<String,Object> unsetActiveSyncEhcacheHeapSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheHeapSize, "");
+        return attrs;
+    }
+
+    /**
+     * Ehcache: the maximum disk size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10GB. This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @return zimbraActiveSyncEhcacheMaxDiskSize, or 10GB if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3002)
+    public long getActiveSyncEhcacheMaxDiskSize() {
+        return getLongAttr(Provisioning.A_zimbraActiveSyncEhcacheMaxDiskSize, 10737418240L, true);
+    }
+
+    /**
+     * Ehcache: the maximum disk size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10GB. This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @param zimbraActiveSyncEhcacheMaxDiskSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3002)
+    public void setActiveSyncEhcacheMaxDiskSize(long zimbraActiveSyncEhcacheMaxDiskSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheMaxDiskSize, Long.toString(zimbraActiveSyncEhcacheMaxDiskSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum disk size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10GB. This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @param zimbraActiveSyncEhcacheMaxDiskSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3002)
+    public Map<String,Object> setActiveSyncEhcacheMaxDiskSize(long zimbraActiveSyncEhcacheMaxDiskSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheMaxDiskSize, Long.toString(zimbraActiveSyncEhcacheMaxDiskSize));
+        return attrs;
+    }
+
+    /**
+     * Ehcache: the maximum disk size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10GB. This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3002)
+    public void unsetActiveSyncEhcacheMaxDiskSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheMaxDiskSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum disk size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10GB. This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3002)
+    public Map<String,Object> unsetActiveSyncEhcacheMaxDiskSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncEhcacheMaxDiskSize, "");
+        return attrs;
+    }
+
+    /**
      * interface address on which Admin HTTPS server should listen; if empty,
      * binds to all interfaces
      *
@@ -10376,6 +10662,93 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Ehcache: the maximum amount of disk space the imap active session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @return zimbraImapActiveSessionEhcacheMaxDiskSize, or 100GB if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3005)
+    public long getImapActiveSessionEhcacheMaxDiskSize() {
+        return getLongAttr(Provisioning.A_zimbraImapActiveSessionEhcacheMaxDiskSize, 107374182400L, true);
+    }
+
+    /**
+     * Ehcache: the maximum amount of disk space the imap active session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @param zimbraImapActiveSessionEhcacheMaxDiskSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3005)
+    public void setImapActiveSessionEhcacheMaxDiskSize(long zimbraImapActiveSessionEhcacheMaxDiskSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapActiveSessionEhcacheMaxDiskSize, Long.toString(zimbraImapActiveSessionEhcacheMaxDiskSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum amount of disk space the imap active session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @param zimbraImapActiveSessionEhcacheMaxDiskSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3005)
+    public Map<String,Object> setImapActiveSessionEhcacheMaxDiskSize(long zimbraImapActiveSessionEhcacheMaxDiskSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapActiveSessionEhcacheMaxDiskSize, Long.toString(zimbraImapActiveSessionEhcacheMaxDiskSize));
+        return attrs;
+    }
+
+    /**
+     * Ehcache: the maximum amount of disk space the imap active session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3005)
+    public void unsetImapActiveSessionEhcacheMaxDiskSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapActiveSessionEhcacheMaxDiskSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum amount of disk space the imap active session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3005)
+    public Map<String,Object> unsetImapActiveSessionEhcacheMaxDiskSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapActiveSessionEhcacheMaxDiskSize, "");
+        return attrs;
+    }
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      *
      * @return zimbraImapAdvertisedName, or null if unset
@@ -11152,6 +11525,180 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetImapInactiveSessionCacheMaxDiskSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, "");
+        return attrs;
+    }
+
+    /**
+     * Ehcache: the maximum amount of disk space the imap inactive session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @return zimbraImapInactiveSessionEhcacheMaxDiskSize, or 100GB if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3006)
+    public long getImapInactiveSessionEhcacheMaxDiskSize() {
+        return getLongAttr(Provisioning.A_zimbraImapInactiveSessionEhcacheMaxDiskSize, 107374182400L, true);
+    }
+
+    /**
+     * Ehcache: the maximum amount of disk space the imap inactive session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @param zimbraImapInactiveSessionEhcacheMaxDiskSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3006)
+    public void setImapInactiveSessionEhcacheMaxDiskSize(long zimbraImapInactiveSessionEhcacheMaxDiskSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionEhcacheMaxDiskSize, Long.toString(zimbraImapInactiveSessionEhcacheMaxDiskSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum amount of disk space the imap inactive session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @param zimbraImapInactiveSessionEhcacheMaxDiskSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3006)
+    public Map<String,Object> setImapInactiveSessionEhcacheMaxDiskSize(long zimbraImapInactiveSessionEhcacheMaxDiskSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionEhcacheMaxDiskSize, Long.toString(zimbraImapInactiveSessionEhcacheMaxDiskSize));
+        return attrs;
+    }
+
+    /**
+     * Ehcache: the maximum amount of disk space the imap inactive session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3006)
+    public void unsetImapInactiveSessionEhcacheMaxDiskSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionEhcacheMaxDiskSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum amount of disk space the imap inactive session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3006)
+    public Map<String,Object> unsetImapInactiveSessionEhcacheMaxDiskSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionEhcacheMaxDiskSize, "");
+        return attrs;
+    }
+
+    /**
+     * Ehcache: the maximum heap size of the inactive session cache in Bytes
+     * before eviction. By default this value is 1 megabyte. This is a rough
+     * limit,Due to internals of ehcache actual size in memory will often
+     * exceed this limit by a modest margin.
+     *
+     * @return zimbraImapInactiveSessionEhcacheSize, or 1MB if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3004)
+    public long getImapInactiveSessionEhcacheSize() {
+        return getLongAttr(Provisioning.A_zimbraImapInactiveSessionEhcacheSize, 1048576L, true);
+    }
+
+    /**
+     * Ehcache: the maximum heap size of the inactive session cache in Bytes
+     * before eviction. By default this value is 1 megabyte. This is a rough
+     * limit,Due to internals of ehcache actual size in memory will often
+     * exceed this limit by a modest margin.
+     *
+     * @param zimbraImapInactiveSessionEhcacheSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3004)
+    public void setImapInactiveSessionEhcacheSize(long zimbraImapInactiveSessionEhcacheSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionEhcacheSize, Long.toString(zimbraImapInactiveSessionEhcacheSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum heap size of the inactive session cache in Bytes
+     * before eviction. By default this value is 1 megabyte. This is a rough
+     * limit,Due to internals of ehcache actual size in memory will often
+     * exceed this limit by a modest margin.
+     *
+     * @param zimbraImapInactiveSessionEhcacheSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3004)
+    public Map<String,Object> setImapInactiveSessionEhcacheSize(long zimbraImapInactiveSessionEhcacheSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionEhcacheSize, Long.toString(zimbraImapInactiveSessionEhcacheSize));
+        return attrs;
+    }
+
+    /**
+     * Ehcache: the maximum heap size of the inactive session cache in Bytes
+     * before eviction. By default this value is 1 megabyte. This is a rough
+     * limit,Due to internals of ehcache actual size in memory will often
+     * exceed this limit by a modest margin.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3004)
+    public void unsetImapInactiveSessionEhcacheSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionEhcacheSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum heap size of the inactive session cache in Bytes
+     * before eviction. By default this value is 1 megabyte. This is a rough
+     * limit,Due to internals of ehcache actual size in memory will often
+     * exceed this limit by a modest margin.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3004)
+    public Map<String,Object> unsetImapInactiveSessionEhcacheSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionEhcacheSize, "");
         return attrs;
     }
 
