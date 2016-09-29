@@ -2861,6 +2861,40 @@ public class ZAttrProvisioning {
     public static final String A_zimbraACE = "zimbraACE";
 
     /**
+     * Ehcache: default expiration time for activesync cache values; default
+     * is 5 minutes. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3003)
+    public static final String A_zimbraActiveSyncEhcacheExpiration = "zimbraActiveSyncEhcacheExpiration";
+
+    /**
+     * Ehcache: the maximum heap size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10MB. This is a rough limit,Due to
+     * internals of ehcache actual size in memory will often exceed this
+     * limit by a modest margin.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3001)
+    public static final String A_zimbraActiveSyncEhcacheHeapSize = "zimbraActiveSyncEhcacheHeapSize";
+
+    /**
+     * Ehcache: the maximum disk size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10GB. This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3002)
+    public static final String A_zimbraActiveSyncEhcacheMaxDiskSize = "zimbraActiveSyncEhcacheMaxDiskSize";
+
+    /**
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
@@ -7641,6 +7675,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIdentityMaxNumEntries = "zimbraIdentityMaxNumEntries";
 
     /**
+     * Ehcache: the maximum amount of disk space the imap active session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3005)
+    public static final String A_zimbraImapActiveSessionEhcacheMaxDiskSize = "zimbraImapActiveSessionEhcacheMaxDiskSize";
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=178)
@@ -7712,6 +7757,28 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2013)
     public static final String A_zimbraImapInactiveSessionCacheMaxDiskSize = "zimbraImapInactiveSessionCacheMaxDiskSize";
+
+    /**
+     * Ehcache: the maximum amount of disk space the imap inactive session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3006)
+    public static final String A_zimbraImapInactiveSessionEhcacheMaxDiskSize = "zimbraImapInactiveSessionEhcacheMaxDiskSize";
+
+    /**
+     * Ehcache: the maximum heap size of the inactive session cache in Bytes
+     * before eviction. By default this value is 1 megabyte. This is a rough
+     * limit,Due to internals of ehcache actual size in memory will often
+     * exceed this limit by a modest margin.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3004)
+    public static final String A_zimbraImapInactiveSessionEhcacheSize = "zimbraImapInactiveSessionEhcacheSize";
 
     /**
      * Maximum number of concurrent IMAP connections allowed. New connections
