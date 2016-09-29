@@ -51,7 +51,7 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("discard", com.zimbra.cs.filter.jsieve.Discard.class.getName());
         mCommandMap.put("ereject", com.zimbra.cs.filter.jsieve.Ereject.class.getName());
         mCommandMap.put("set", com.zimbra.cs.filter.jsieve.SetVariable.class.getName());
-        mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
+        
 
         if (isNotifyActionRFCCompliantAvailable()) {
             mCommandMap.put("notify",  com.zimbra.cs.filter.jsieve.NotifyMailto.class.getName());
@@ -74,11 +74,16 @@ public class JsieveConfigMapHandler {
             // Disable the 'reject' action defined by the jSieve library
             mCommandMap.remove("reject");
         }
+        
+        if (isVariablesExtAvailable()) {
+        	mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
+            ZimbraLog.filter.info("Variables extension is loaded");
+        } 
 
         return mCommandMap;
     }
 
-    private static Map<String, String> createDefaultTestMap() {
+	private static Map<String, String> createDefaultTestMap() {
 
         Map<String, String> mTestMap =
                 Collections.synchronizedMap(new HashMap<String, String>());
@@ -110,6 +115,7 @@ public class JsieveConfigMapHandler {
         mTestMap.put("community_requests", com.zimbra.cs.filter.jsieve.CommunityRequestsTest.class.getName());
         mTestMap.put("community_content", com.zimbra.cs.filter.jsieve.CommunityContentTest.class.getName());
         mTestMap.put("relational", com.zimbra.cs.filter.jsieve.RelationalTest.class.getName());
+        mTestMap.put("string", com.zimbra.cs.filter.jsieve.StringTest.class.getName());
 
         if (isNotifyActionRFCCompliantAvailable()) {
             // The capability string associated with the 'notify' action is "enotify"; 
@@ -157,4 +163,18 @@ public class JsieveConfigMapHandler {
         }
         return isNotifyActionRFCCompliant;
     }
+    
+	/**
+	 * @return true if zimbraSieveFeatureVariablesEnabled is true
+	 */
+	private static boolean isVariablesExtAvailable() {
+		boolean variablesExtAvailable = false;
+		try {
+			variablesExtAvailable = Provisioning.getInstance().getConfig()
+					.getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
+		} catch (ServiceException e) {
+			ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
+		}
+		return variablesExtAvailable;
+	}
 }

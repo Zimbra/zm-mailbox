@@ -1,5 +1,18 @@
-/**
- * 
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2014, 2016 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.filter.jsieve;
 
@@ -18,6 +31,7 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
@@ -28,17 +42,17 @@ import com.zimbra.cs.filter.ZimbraMailAdapter;
  */
 public class SetVariable extends AbstractCommand {
 
-	public static final String ALL_LOWER_CASE = "lower";
-	public static final String ALL_UPPER_CASE = "upper";
-	public static final String LOWERCASE_FIRST = "lowerfirst";
-	public static final String UPPERCASE_FIRST = "upperfirst";
-	public static final String QUOTE_WILDCARD = "quotewildcard";
-	public static final String STRING_LENGTH = "length";
+	public static final String ALL_LOWER_CASE = ":lower";
+	public static final String ALL_UPPER_CASE = ":upper";
+	public static final String LOWERCASE_FIRST = ":lowerfirst";
+	public static final String UPPERCASE_FIRST = ":upperfirst";
+	public static final String QUOTE_WILDCARD = ":quotewildcard";
+	public static final String STRING_LENGTH = ":length";
 	
 	@Override
 	protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context)
 			throws SieveException {
-		List<Argument> args = arguments.getArgumentList();
+
 		this.validateArguments(arguments, context);
 
 		if (!(mail instanceof ZimbraMailAdapter)) {
@@ -55,34 +69,25 @@ public class SetVariable extends AbstractCommand {
 			if (a instanceof TagArgument) {
 				TagArgument tag = (TagArgument) a;
 				String tagValue = tag.getTag();
-				if (tagValue.startsWith(":") && isValidModifier(tagValue)) {
-					operations[getIndex(tagValue)] = tagValue.substring(1);
+				if (isValidModifier(tagValue)) {
+					operations[getIndex(tagValue)] = tagValue.toLowerCase();
 				}			
 			} else {
 				String argument = ((StringListArgument) a).getList().get(0);
-				if (argument.startsWith(":")) {
-					operations[getIndex(argument)] = argument.substring(1);
+				if (index == 0) {
+					key = argument;
 				} else {
-					if (index == 0) {
-						key = argument;
+					if (argument.contains("${")) {
+						value = FilterUtil.replaceVariables(existingVars, matchedValues, argument);
 					} else {
-						if (argument.startsWith("${")) {
-							value = FilterUtil.replaceVariables(existingVars, matchedValues, argument);
-						} else {
-							value = argument;
-						}
+						value = argument;
 					}
-					++index;
 				}
+				++index;
 			}
 		}
 		value = applyModifiers(value, operations);
 		mailAdapter.addVariable(key, value);
-		
-//		if (value.startsWith("${")) {
-//			value = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), value);
-//		}
-//		mailAdapter.addVariable(key, value);
 		return null;
 	}
 
@@ -92,7 +97,10 @@ public class SetVariable extends AbstractCommand {
 	 */
 	public static int getIndex(String operation) {
 		int index = 0;
-		operation = operation.substring(1);
+
+		if (!StringUtil.isNullOrEmpty(operation)) {
+			operation = operation.toLowerCase();
+		}
 		if (operation.equals(STRING_LENGTH)) {
 			index = 5;
 		} else if (operation.equals(QUOTE_WILDCARD)) {
@@ -146,48 +154,45 @@ public class SetVariable extends AbstractCommand {
 	@Override
 	protected void validateArguments(Arguments arguments, SieveContext context) throws SieveException {
 		List<Argument> args = arguments.getArgumentList();
-//		":lower" / ":upper" / ":lowerfirst" / ":upperfirst" /
-//        ":quotewildcard" / ":length"
-//		  set "name" "Ethelbert"
-//		  set "a" "juMBlEd lETteRS";             => "juMBlEd lETteRS"
-//	      set :length "b" "${a}";                => "15"
-//	      set :lower "b" "${a}";                 => "jumbled letters"
-//	      set :upperfirst "b" "${a}";            => "JuMBlEd lETteRS"
-//	      set :upperfirst :lower "b" "${a}";     => "Jumbled letters"
-//	      set :quotewildcard "b" "Rock*";        => "Rock\*"
+		//	":lower" / ":upper" / ":lowerfirst" / ":upperfirst" /
+		//  ":quotewildcard" / ":length"
+		//	set "name" "Ethelbert"
+		//	set "a" "juMBlEd lETteRS";             => "juMBlEd lETteRS"
+		//	set :length "b" "${a}";                => "15"
+		//	set :lower "b" "${a}";                 => "jumbled letters"
+		//	set :upperfirst "b" "${a}";            => "JuMBlEd lETteRS"
+		//	set :upperfirst :lower "b" "${a}";     => "Jumbled letters"
+		//	set :quotewildcard "b" "Rock*";        => "Rock\*"
 		int varArgCount = 0;
 		String key = null;
 		if (args.size() >= 2) {
-			for (Argument a: arguments.getArgumentList()) {
+			for (Argument arg: arguments.getArgumentList()) {
 				
-				if (a instanceof TagArgument) {
-					TagArgument tag = (TagArgument) a;
+				if (arg instanceof TagArgument) {
+					TagArgument tag = (TagArgument) arg;
 					String tagValue = tag.getTag();
-					if (tagValue.startsWith(":") && !isValidModifier(tagValue)) {
+					if (!isValidModifier(tagValue)) {
 						throw new SyntaxException("Invalid variable modifier:" + tagValue);
 					}			
 				} else {
-					String argument = ((StringListArgument)a).getList().get(0);
-					if (argument.startsWith(":") && !isValidModifier(argument)) {
-						throw new SyntaxException("Invalid variable modifier:" + argument);
-					} else {
-						ZimbraLog.filter.debug("set variable argument: " + argument);
-						if (varArgCount == 0) {
-							key = argument;
-						}
-						++ varArgCount;
+					String argument = ((StringListArgument) arg).getList().get(0);
+					ZimbraLog.filter.debug("set variable argument: " + argument);
+					if (varArgCount == 0) {
+						key = argument;
 					}
+					++varArgCount;
 				}
 			}
 			if (varArgCount != 2) {
 				throw new SyntaxException("Exactly 2 arguments permitted. Found " + varArgCount);
 			} else {
 				if (!(isValidIdentifier(key))) {
-					
+					throw new SyntaxException("Variable identifier is invalid, got identifier " + key);
 				}
 			}
 		}  else {
-			throw new SyntaxException("Atleast 2 argument are needed. Found " + arguments);
+			throw new SyntaxException("Minimum 2 arguments are needed. Usage: set :upperfirst \"b\" \"hello\";. Arguments found: " 
+					+ arguments);
 		}
 	}
 
@@ -196,7 +201,7 @@ public class SetVariable extends AbstractCommand {
 	 * @return
 	 */
 	private boolean isValidIdentifier(String key) {
-		Pattern pattern = Pattern.compile("([a-zA-Z_])*",  Pattern.CASE_INSENSITIVE);
+		Pattern pattern = Pattern.compile(".*[\\p{Alpha}$_.]|[\\d]",  Pattern.CASE_INSENSITIVE);
         if (pattern.matcher(key).matches()) {
            return true;
         }
@@ -208,8 +213,7 @@ public class SetVariable extends AbstractCommand {
 	 * @return
 	 */
 	private boolean isValidModifier(String modifier) {
-		String temp = modifier.substring(1);
-		temp = temp.toLowerCase();
+		String temp = modifier.toLowerCase();
 		ZimbraLog.filter.debug("Set variable modifier is:" + temp);
 		if (temp.equals(ALL_LOWER_CASE) || temp.equals(ALL_UPPER_CASE) || temp.equals(LOWERCASE_FIRST) 
 				|| temp.equals(UPPERCASE_FIRST) || temp.equals(QUOTE_WILDCARD) || temp.equals(STRING_LENGTH)) {

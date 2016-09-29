@@ -16,12 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
-import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
-import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
-import static org.apache.jsieve.comparators.MatchTypeTags.MATCHES_TAG;
-import static org.apache.jsieve.tests.ComparatorTags.COMPARATOR_TAG;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.EQ_OP;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GE_OP;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GT_OP;
@@ -30,6 +25,11 @@ import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LT_OP;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.NE_OP;
 import static com.zimbra.cs.filter.jsieve.MatchTypeTags.COUNT_TAG;
 import static com.zimbra.cs.filter.jsieve.MatchTypeTags.VALUE_TAG;
+import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
+import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
+import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
+import static org.apache.jsieve.comparators.MatchTypeTags.MATCHES_TAG;
+import static org.apache.jsieve.tests.ComparatorTags.COMPARATOR_TAG;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -38,7 +38,6 @@ import java.util.ListIterator;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.Argument;
@@ -46,14 +45,14 @@ import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.TagArgument;
-import org.apache.jsieve.comparators.ComparatorUtils;
 import org.apache.jsieve.comparators.MatchTypeTags;
+import org.apache.jsieve.exception.SieveException;
+import org.apache.jsieve.exception.SievePatternException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.SieveMailException;
 import org.apache.jsieve.tests.Header;
-import org.apache.jsieve.exception.SieveException;
-import org.apache.jsieve.exception.SievePatternException;
 
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
@@ -291,34 +290,31 @@ public class HeaderTest extends Header {
 	}
 	
 	private void evaluateVarExp(ZimbraMailAdapter mailAdapter, List headerNames, List keys) throws SieveMailException, SievePatternException {
-		StringBuilder sb = new StringBuilder();
-		for (Object obj : keys) {
-			sb.append((String)obj);
-		}
-		String regEx = sb.toString();
+		
+		List<String> varValues = new ArrayList<String>();
+
 		for (Object headerName : headerNames) {
 			String hn = (String) headerName;
 			List<String> values = mailAdapter.getMatchingHeader(hn);
-			sb = new StringBuilder();
-			for (String value : values) {
-				sb.append(value);
-			}
-			
+			varValues.addAll(values);
+			for (String sourceStr : values) {
+				for (Object key : keys) {
+					String keyStr = ((String) key);
+					String regex = FilterUtil.sieveToJavaRegex(keyStr);
+					Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(sourceStr);
+					if (matcher.find() && matcher.groupCount() > 0) {
+						int grpCount = matcher.groupCount();
+						for (int i = 0; i<=grpCount; ++i) {
+							String matchGrp =  matcher.group(i);
+							if (!StringUtils.isEmpty(matchGrp.trim())) {
+								varValues.add(matchGrp);
+							}
+						}
+					}
+				} 
+			}	
 		}
-		String matchString  = sb.toString();
-		List<String> varValues = new ArrayList<String>();
-		try {
-			String regex = ComparatorUtils.sieveToJavaRegex(regEx);
-			Matcher matcher = Pattern.compile(regex).matcher(matchString);
-			while (matcher.find()) {
-				String matchGrp =  matcher.group();
-				if (!StringUtils.isEmpty(matchGrp.trim())) {
-					varValues.add(matchGrp);
-				}
-			}
-		} catch (PatternSyntaxException e) {
-			throw new SievePatternException(e.getMessage());
-		}
+
 		mailAdapter.setMatchedValues(varValues);
 	}
 }
