@@ -45,7 +45,6 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
@@ -145,8 +144,7 @@ final class AppendMessage {
         this.handler = null;
     }
 
-    void checkFlags(Mailbox mbox, ImapFlagCache flagSet, ImapFlagCache tagSet, List<Tag> newTags)
-            throws ServiceException {
+    void checkFlags(ImapFlagCache flagSet, ImapFlagCache tagSet) throws ServiceException {
         if (flagNames == null) {
             return;
         }
