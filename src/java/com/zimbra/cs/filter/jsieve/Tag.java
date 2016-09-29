@@ -47,7 +47,7 @@ public class Tag extends AbstractActionCommand {
         // Only one tag with the same tag name allowed, others should be
         // discarded?   
         ZimbraMailAdapter mailAdapter  = (ZimbraMailAdapter) mail;
-        if (tagName.startsWith("${")) {
+        if (SetVariable.isVariablesExtAvailable(mailAdapter)) {
         	tagName = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), tagName);
         }
         mail.addAction(new ActionTag(tagName));

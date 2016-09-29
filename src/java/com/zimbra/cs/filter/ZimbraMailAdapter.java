@@ -45,6 +45,8 @@ import com.zimbra.cs.filter.jsieve.ActionNotifyMailto;
 import com.zimbra.cs.filter.jsieve.ActionReply;
 import com.zimbra.cs.filter.jsieve.ActionEreject;
 import com.zimbra.cs.filter.jsieve.ErejectException;
+import com.zimbra.cs.filter.jsieve.SetVariable;
+
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
@@ -240,7 +242,9 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
                     String folderPath = fileinto.getDestination();
-                    folderPath = FilterUtil.replaceVariables(this.variables, this.matchedValues, folderPath);
+                    if (SetVariable.isVariablesExtAvailable(this)) {
+                    	folderPath = FilterUtil.replaceVariables(this.variables, this.matchedValues, folderPath);
+                    }
                     try {
                         if (!allowFilterToMountpoint && isMountpoint(mailbox, folderPath)) {
                             ZimbraLog.filter.info("Filing to mountpoint \"%s\" is not allowed.  Filing to the default folder instead.",

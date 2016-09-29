@@ -31,8 +31,11 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
@@ -53,12 +56,15 @@ public class SetVariable extends AbstractCommand {
 	protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context)
 			throws SieveException {
 
-		this.validateArguments(arguments, context);
-
 		if (!(mail instanceof ZimbraMailAdapter)) {
 			return null;
 		}
 		ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+		if (!isVariablesExtAvailable(mailAdapter)) {
+			return null;
+		}
+		this.validateArguments(arguments, context);
+
 		Map<String, String> existingVars = mailAdapter.getVariables();
 		List<String> matchedValues = mailAdapter.getMatchedValues();
 		String [] operations = new String[6];
@@ -222,6 +228,20 @@ public class SetVariable extends AbstractCommand {
 		return false;
 	}
 	
+	/**
+	 * @return true if zimbraSieveFeatureVariablesEnabled is true
+	 */
+	public static boolean isVariablesExtAvailable(ZimbraMailAdapter mailAdapter) {
+		boolean variablesExtAvailable = false;
+		try {
+			Account account = mailAdapter.getMailbox().getAccount();
+			variablesExtAvailable = Provisioning.getInstance().getServer(account)
+					.getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
+		} catch (ServiceException e) {
+			ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
+		}
+		return variablesExtAvailable;
+	}
 	
 	
 

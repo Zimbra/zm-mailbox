@@ -57,13 +57,16 @@ public class StringTest extends Header {
 		 }
 
 		 ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+		 if (!SetVariable.isVariablesExtAvailable(mailAdapter)) {
+			 return false;
+		 }
 		 Map<String, String> existingVars = mailAdapter.getVariables();
 		 List<String> matchedValues = mailAdapter.getMatchedValues();
 		    
-		 String matchType = IS_TAG;
-		 String comparator = null;
-	    List<String> sourceValues = null;
-	    List<String> keyValues = null;
+		String matchType = IS_TAG;
+		String comparator = null;
+		List<String> sourceValues = null;
+		List<String> keyValues = null;
 
 	    int index = 0;
 		    
