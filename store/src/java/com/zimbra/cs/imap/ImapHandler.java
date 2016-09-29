@@ -1043,6 +1043,13 @@ abstract class ImapHandler {
         return credentials.getContext().setSession(selectedFolder);
     }
 
+    OperationContext getContextOrNull() {
+        try {
+            return getContext();
+        } catch (ServiceException e) {
+            return null;
+        }
+    }
 
     boolean doCAPABILITY(String tag) throws IOException {
         sendUntagged(getCapabilityString());
@@ -1439,7 +1446,7 @@ abstract class ImapHandler {
 
         setCredentials(new ImapCredentials(account, hack));
         if (credentials.isLocal()) {
-            credentials.getMailbox().beginTrackingImap();
+            credentials.getImapMailboxStore().beginTrackingImap();
         }
         ZimbraLog.addAccountNameToContext(credentials.getUsername());
         ZimbraLog.imap.info("user %s authenticated, mechanism=%s%s",
@@ -2484,31 +2491,25 @@ abstract class ImapHandler {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
-        Object mboxobj = null;
-        List<Tag> newTags = new ArrayList<Tag>();
+        // Object mboxobj = null;
+        ImapMailboxStore mboxStore = null;
         List<Integer> createdIds = new ArrayList<Integer>(appends.size());
         StringBuilder appendHint = extensionEnabled("UIDPLUS") ? new StringBuilder() : null;
+        OperationContext octxt = getContextOrNull();
         try {
             if (!path.isVisible()) {
                 throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
             } else if (!path.isWritable(ACL.RIGHT_INSERT)) {
                 throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
             }
-            mboxobj = path.getOwnerMailbox();
+            Object mboxobj = path.getOwnerMailbox();
             Object folderobj = path.getFolder();
+            mboxStore = path.getOwnerImapMailboxStore();
 
-            Mailbox mbox = mboxobj instanceof Mailbox ? (Mailbox) mboxobj : credentials.getMailbox();
-            mbox.lock.lock();
-            try {
-                ImapFlagCache flagset = ImapFlagCache.getSystemFlags(mbox);
-                ImapFlagCache tagset = mboxobj instanceof Mailbox ?
-                        new ImapFlagCache((Mailbox) mboxobj, getContext()) : new ImapFlagCache();
-                for (AppendMessage append : appends) {
-                    append.checkFlags(mbox, flagset, tagset, newTags);
-                }
-            } finally {
-                mbox.lock.release();
+            if (! (mboxStore instanceof LocalImapMailboxStore)) {
+                mboxStore = credentials.getImapMailboxStore();
             }
+            mboxStore.checkAppendMessageFlags(octxt, appends);
 
             // Append message parts and check message content size
             for (AppendMessage append : appends) {
@@ -2530,8 +2531,9 @@ abstract class ImapHandler {
             for (AppendMessage append : appends) {
                 append.cleanup();
             }
-            deleteTags(newTags);
-            deleteMessages(mboxobj, createdIds);
+            if (null != mboxStore) {
+                mboxStore.deleteMessages(octxt, createdIds);
+            }
 
             String msg = "APPEND failed";
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
@@ -2572,20 +2574,6 @@ abstract class ImapHandler {
                 ltag.getMailbox().delete(getContext(), ltag.getId(), ltag.getType(), null);
             } catch (ServiceException e) {
                 ZimbraLog.imap.warn("failed to delete tag: " + ltag.getName(), e);
-            }
-        }
-    }
-
-    public void deleteMessages(Object mboxobj, List<Integer> ids) {
-        for (int id : ids) {
-            try {
-                if (mboxobj instanceof Mailbox) {
-                    ((Mailbox) mboxobj).delete(getContext(), id, MailItem.Type.MESSAGE);
-                } else {
-                    ((ZMailbox) mboxobj).deleteMessage(String.valueOf(id));
-                }
-            } catch (ServiceException e) {
-                ZimbraLog.imap.warn("failed to delete message: " + id);
             }
         }
     }
@@ -4173,15 +4161,9 @@ abstract class ImapHandler {
         if (i4folder == null) {
             throw new ImapSessionClosedException();
         }
-        Mailbox mbox = i4folder.getMailbox();
+        LocalImapMailboxStore mboxStore = (LocalImapMailboxStore) i4folder.getImapMailboxStore();
 
-        Set<ImapMessage> i4set;
-        mbox.lock.lock();
-        try {
-            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
-        } finally {
-            mbox.lock.release();
-        }
+        Set<ImapMessage> i4set = mboxStore.getSubsequence(i4folder, tag, sequenceSet, byUID);
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
         if (!byUID && i4set.contains(null)) {
@@ -4203,7 +4185,7 @@ abstract class ImapHandler {
 
             // check target folder permissions before attempting the copy
             if (mboxobj instanceof Mailbox) {
-                sameMailbox = mbox.getAccountId().equalsIgnoreCase(((Mailbox) mboxobj).getAccountId());
+                sameMailbox = mboxStore.getAccountId().equalsIgnoreCase(((Mailbox) mboxobj).getAccountId());
                 Folder folder = (Folder) path.getFolder();
                 iidTarget = new ItemId(folder);
                 uvv = ImapFolder.getUIDValidity(folder);
@@ -4243,7 +4225,7 @@ abstract class ImapHandler {
                                 type = MailItem.Type.UNKNOWN;
                             }
                         }
-                        copyMsgs = mbox.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
+                        copyMsgs = mboxStore.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Caught IOException executing " + this, e);
                     }
@@ -4253,7 +4235,10 @@ abstract class ImapHandler {
                         createdList.add(target.getImapUid());
                     }
                 } else {
-                    ItemActionHelper op = ItemActionHelper.COPY(getContext(), mbox, null, idlist, MailItem.Type.UNKNOWN, null, iidTarget);
+                    // TODO ItemActionHelper either needs to work without Mailbox or perhaps with another
+                    // non-Imap interface that Mailbox and ZMailbox use?
+                    ItemActionHelper op = ItemActionHelper.COPY(getContext(), mboxStore.getMailbox(), null, idlist,
+                            MailItem.Type.UNKNOWN, null, iidTarget);
                     for (String target : op.getCreatedIds()) {
                         createdList.add(new ItemId(target, selectedFolder.getAuthenticatedAccountId()).getId());
                     }
