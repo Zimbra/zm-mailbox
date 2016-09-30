@@ -21,21 +21,20 @@ import java.util.concurrent.TimeUnit;
 
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
+import org.ehcache.config.CacheConfiguration;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
 import org.ehcache.config.builders.CacheManagerBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
-import org.ehcache.config.CacheConfiguration;
-import org.ehcache.config.Configuration;
 import org.ehcache.config.units.EntryUnit;
 import org.ehcache.config.units.MemoryUnit;
 import org.ehcache.expiry.Duration;
 import org.ehcache.expiry.Expirations;
 
-import com.zimbra.cs.imap.ImapFolder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.imap.ImapFolder;
 import com.zimbra.cs.memcached.MemcachedConnector;
 
 /**
@@ -43,8 +42,6 @@ import com.zimbra.cs.memcached.MemcachedConnector;
  *
  * As of Ehcache 2.0, disk cache only configuration is no longer supported. But, {@code maxElementsInMemory = 1} is
  * virtually disk cache only. {@code maxElementsInMemory = 0} gives an infinite capacity.
- *
- * TODO Byte size based limit is only available from Ehcache 2.5.
  *
  * @author ysasaki
  */
@@ -67,7 +64,7 @@ public final class EhcacheManager {
             ZimbraLog.imap.info("Using Memcached for inactive session cache");
         } else {
             cacheManager.createCache(IMAP_INACTIVE_SESSION_CACHE, createImapInactiveSessionCache());
-            cacheManager.createCache(SYNC_STATE_ITEM_CACHE, createSyncStateItemCache());
+            cacheManager.createCache(SYNC_STATE_ITEM_CACHE, createActiveSyncStateItemCache());
         }
     }
 
@@ -79,42 +76,75 @@ public final class EhcacheManager {
     }
 
     private CacheConfiguration<String, ImapFolder> createImapActiveSessionCache() {
+        long maxBytesOnLocalDisk;
+        try {
+            maxBytesOnLocalDisk = Provisioning.getInstance().getLocalServer().getImapActiveSessionEhcacheMaxDiskSize();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraImapActiveSessionEhcacheMaxDiskSize, e);
+            maxBytesOnLocalDisk = new MemoryUnitUtil().convertToBytes("100GB");
+        }
         return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
                 ImapFolder.class,
                 ResourcePoolsBuilder.newResourcePoolsBuilder()
                 .heap(1, EntryUnit.ENTRIES)
-                .disk(100, MemoryUnit.GB, false))  // disk backed not persistent
+                .disk(maxBytesOnLocalDisk, MemoryUnit.B, false))  // disk backed not persistent
                 .build();
     }
 
     private CacheConfiguration<String, ImapFolder> createImapInactiveSessionCache() {
         long maxBytesOnLocalDisk;
+        long inactiveSessionCache;
         try {
             maxBytesOnLocalDisk = Provisioning.getInstance().getLocalServer().getImapInactiveSessionCacheMaxDiskSize();
         } catch (ServiceException e) {
-            ZimbraLog.imap.error("Exception while fetching attribute imap ImapInactiveSessionCacheMaxDiskSize", e);
-            maxBytesOnLocalDisk = 10737418240L;
+            ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, e);
+            maxBytesOnLocalDisk = new MemoryUnitUtil().convertToBytes("100GB");;
+        }
+        try {
+            inactiveSessionCache = Provisioning.getInstance().getLocalServer().getImapInactiveSessionEhcacheSize();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraImapInactiveSessionEhcacheSize, e);
+            inactiveSessionCache = new MemoryUnitUtil().convertToBytes("10MB");
         }
 
         return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
                 ImapFolder.class,
                 ResourcePoolsBuilder.newResourcePoolsBuilder()
                 .heap(1, EntryUnit.ENTRIES)
-                .offheap(LC.imap_inactive_session_cache_size.intValue(), MemoryUnit.B) 
+                .offheap(inactiveSessionCache, MemoryUnit.B)
                 .disk(maxBytesOnLocalDisk, MemoryUnit.B, true)) // disk backed persistent store
                 .build();
-
-        // conf.setMaxElementsOnDisk(LC.imap_inactive_session_cache_size.intValue());
     }
 
-    private CacheConfiguration<String, ImapFolder> createSyncStateItemCache() {
-        String heapSize = LC.zimbra_activesync_syncstate_item_cache_heap_size.value();
+    private CacheConfiguration<String, ImapFolder> createActiveSyncStateItemCache() {
+        long heapSize;
+        long timeout;
+        long diskSize;
+        try {
+            heapSize = Provisioning.getInstance().getLocalServer().getActiveSyncEhcacheHeapSize();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraActiveSyncEhcacheHeapSize, e);
+            heapSize = new MemoryUnitUtil().convertToBytes("10MB");
+        }
+        try {
+            timeout = Provisioning.getInstance().getLocalServer().getActiveSyncEhcacheExpiration();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraActiveSyncEhcacheExpiration, e);
+            timeout = 5 * 60 * 1000; // 5 minutes in milliseconds
+        }
+        try {
+            diskSize = Provisioning.getInstance().getLocalServer().getActiveSyncEhcacheMaxDiskSize();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraActiveSyncEhcacheMaxDiskSize, e);
+            diskSize = new MemoryUnitUtil().convertToBytes("100GB");
+        }
+
         return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
                 ImapFolder.class,
                 ResourcePoolsBuilder.newResourcePoolsBuilder()
-                .heap(new MemoryUnitUtil(1024).convertToBytes(heapSize), MemoryUnit.B)
-                .disk(100, MemoryUnit.GB, true)) // disk backed persistent store
-                .withExpiry(Expirations.timeToLiveExpiration(Duration.of(LC.zimbra_activesync_metadata_cache_expiration.intValue(), TimeUnit.SECONDS)))
+                .heap(heapSize, MemoryUnit.B)
+                .disk(diskSize, MemoryUnit.B, true)) // disk backed persistent store
+                .withExpiry(Expirations.timeToLiveExpiration(Duration.of(timeout, TimeUnit.MILLISECONDS)))
                 .build();
     }
 
