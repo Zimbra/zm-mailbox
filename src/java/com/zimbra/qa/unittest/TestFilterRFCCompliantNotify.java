@@ -17,7 +17,9 @@
 package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.zimbra.client.ZFilterAction;
 import com.zimbra.client.ZFilterCondition;
@@ -28,6 +30,8 @@ import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZFilterAction.ZRFCCompliantNotifyAction;
 import com.zimbra.client.ZFilterCondition.HeaderOp;
 import com.zimbra.client.ZFilterCondition.ZHeaderCondition;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 
 import junit.framework.TestCase;
 
@@ -38,9 +42,15 @@ public class TestFilterRFCCompliantNotify extends TestCase {
 
     private ZMailbox mMbox;
     private ZFilterRules mOriginalIncomingRules;
+    private boolean mAvailableRFCCompliantNotify;
 
     public void testNotifyAction()
     throws Exception {
+        if (!mAvailableRFCCompliantNotify) {
+            fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to FALSE");
+            return;
+        }
+
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
@@ -90,6 +100,12 @@ public class TestFilterRFCCompliantNotify extends TestCase {
     public void setUp() throws Exception {
         cleanUp();
 
+        Account account = TestUtil.getAccount(USER_NAME);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveScript, "");
+        attrs.put(Provisioning.A_zimbraMailOutgoingSieveScript, "");
+        Provisioning.getInstance().modifyAttrs(account, attrs);
+
         mMbox = TestUtil.getZMailbox(USER_NAME);
 
         // Create mountpoint for testMountpoint()
@@ -97,6 +113,8 @@ public class TestFilterRFCCompliantNotify extends TestCase {
 
         mOriginalIncomingRules = mMbox.getIncomingFilterRules();
         saveIncomingRules(mMbox, getTestIncomingRules());
+
+        mAvailableRFCCompliantNotify  = Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, false);
     }
 
     /**

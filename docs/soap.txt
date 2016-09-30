@@ -3225,8 +3225,8 @@ Actions:
   <actionNotify a="email-address" [su="subject-template"] [maxBodySize="{num-bytes}"] [origHeaders="{comma-separated-header-names}|*"]>
     <content>{body-template}</content> ?
   </actionNotify>
-  <actionRFCCompliantNotify from="sender's email-address" message="subject">
-    <method>"mailto: url"</method>
+  <actionRFCCompliantNotify from="{from}" [importance="{importance}"] [options="{options}"] message="{subject}">
+    <method>{method}</method>
   </actionRFCCompliantNotify>
 
 Each action has an optional "index" attribute which specifies a guaranteed order
@@ -3289,6 +3289,10 @@ Notify action:
 <actionRFCCompliantNotify> generates the RFC 5436 and 5436 compliant notify filter rule.
 <actionRFCCompliantNotify> is available only when the global config 'zimbraMailSieveNotifyActionRFCCompliant' key is set to TRUE 
 (if this key is set to TRUE, the Zimbra-format notify action will fail to execute, and vise varsa).
+  {from} : The from address which is displayed at the From header of the notification message.
+  {subject} : The subject of the notification message.
+  {method} : "mailto:" url.  Please refer to the RFC 5436 for more details.
+  {importance} and {options} : Reserved.
 ---------------------------
 
 <ApplyFilterRulesRequest>

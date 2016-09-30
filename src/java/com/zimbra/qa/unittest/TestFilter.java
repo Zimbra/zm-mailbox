@@ -79,9 +79,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -118,6 +120,12 @@ public final class TestFilter extends TestCase {
         mTag1 = mMbox.createTag(TAG1_NAME, null);
         mTag2 = mMbox.createTag(TAG2_NAME, null);
 
+        Account account = TestUtil.getAccount(USER_NAME);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveScript, "");
+        attrs.put(Provisioning.A_zimbraMailOutgoingSieveScript, "");
+        Provisioning.getInstance().modifyAttrs(account, attrs);
+
         // Create mountpoint for testMountpoint()
         ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         TestUtil.createMountpoint(remoteMbox, "/" + MOUNTPOINT_FOLDER_NAME, mMbox, MOUNTPOINT_FOLDER_NAME);
@@ -128,7 +136,6 @@ public final class TestFilter extends TestCase {
         mOriginalOutgoingRules = mMbox.getOutgoingFilterRules();
         saveOutgoingRules(mMbox, getTestOutgoingRules());
 
-        Account account = TestUtil.getAccount(USER_NAME);
         mOriginalSpamApplyUserFilters = account.getAttr(Provisioning.A_zimbraSpamApplyUserFilters);
         mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPortAsString();
         mOriginalSetEnvelopeSender = TestUtil.getServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender);
