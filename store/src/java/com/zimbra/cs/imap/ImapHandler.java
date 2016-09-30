@@ -1476,9 +1476,9 @@ abstract class ImapHandler {
         List<String> permflags = Collections.emptyList();
         try {
             // set imap_proxy_to_localhost = true to test IMAP proxy
-            Object mboxobj = (DebugConfig.imapProxyToLocalhost && path.useReferent()) ?
-                            path.getOwnerZMailbox() : path.getOwnerMailbox();
-            if (mboxobj instanceof ZMailbox) {
+            ImapMailboxStore mboxStore = path.getOwnerImapMailboxStore(
+                    DebugConfig.imapProxyToLocalhost && path.useReferent());
+            if (mboxStore instanceof RemoteImapMailboxStore) {
                 // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox
                 //         before attempting the new selection.  Consequently, if a mailbox is selected
                 //         and a SELECT command that fails is attempted, no mailbox is selected."
@@ -2491,7 +2491,6 @@ abstract class ImapHandler {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
-        // Object mboxobj = null;
         ImapMailboxStore mboxStore = null;
         List<Integer> createdIds = new ArrayList<Integer>(appends.size());
         StringBuilder appendHint = extensionEnabled("UIDPLUS") ? new StringBuilder() : null;
@@ -2502,9 +2501,8 @@ abstract class ImapHandler {
             } else if (!path.isWritable(ACL.RIGHT_INSERT)) {
                 throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
             }
-            Object mboxobj = path.getOwnerMailbox();
-            Object folderobj = path.getFolder();
             mboxStore = path.getOwnerImapMailboxStore();
+            ImapFolderStore folderStore = path.getImapFolderStore();
 
             if (! (mboxStore instanceof LocalImapMailboxStore)) {
                 mboxStore = credentials.getImapMailboxStore();
@@ -2516,13 +2514,13 @@ abstract class ImapHandler {
                 append.checkContent();
             }
             for (AppendMessage append : appends) {
-                int id = append.storeContent(mboxobj, folderobj);
+                int id = append.storeContent(mboxStore, folderStore);
                 if (id > 0) {
                     createdIds.add(id);
                 }
             }
 
-            int uvv = (folderobj instanceof Folder ? ImapFolder.getUIDValidity((Folder) folderobj) : ImapFolder.getUIDValidity((ZFolder) folderobj));
+            int uvv = folderStore.getUIDValidity();
             if (appendHint != null && uvv > 0) {
                 appendHint.append("[APPENDUID ").append(uvv).append(' ')
                     .append(ImapFolder.encodeSubsequence(createdIds)).append("] ");
