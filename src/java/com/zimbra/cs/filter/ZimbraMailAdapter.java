@@ -764,7 +764,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 in = pm.getRawInputStream();
                 blob = sm.storeIncoming(in);
             } catch (IOException | ServiceException | MessagingException e) {
-
+                ZimbraLog.filter.error("Unable to update MimeMessage and incomimg blob.", e);
             } finally {
                 ByteUtil.closeStream(in);
             }
