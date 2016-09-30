@@ -21,8 +21,20 @@ import com.zimbra.cs.mailbox.Folder;
 public class LocalImapFolderStore implements ImapFolderStore {
 
     private transient Folder folder;
+    private final String folderId;
 
     public LocalImapFolderStore(Folder folder) {
         this.folder = folder;
+        this.folderId = (folder == null) ? null : Integer.toString(folder.getId());
+    }
+
+    @Override
+    public String getId() {
+        return folderId;
+    }
+
+    @Override
+    public int getUIDValidity() {
+        return ImapFolder.getUIDValidity(folder);
     }
 }
