@@ -24,4 +24,14 @@ public class RemoteImapFolderStore implements ImapFolderStore {
     public RemoteImapFolderStore(ZFolder folder) {
         this.folder = folder;
     }
+
+    @Override
+    public String getId() {
+        return folder.getId();
+    }
+
+    @Override
+    public int getUIDValidity() {
+        return ImapFolder.getUIDValidity(folder);
+    }
 }
