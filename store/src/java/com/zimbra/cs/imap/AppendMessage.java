@@ -33,8 +33,6 @@ import javax.mail.internet.MailDateFormat;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
 import com.zimbra.common.service.ServiceException;
@@ -42,15 +40,12 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.util.AccountUtil;
 
 /**
  * Encapsulates append message data for an APPEND request.
@@ -176,53 +171,58 @@ final class AppendMessage {
         flagNames = null;
     }
 
-    int storeContent(Object mboxObj, Object folderObj)
+    int storeContent(ImapMailboxStore mboxStore, ImapFolderStore folderStore)
             throws ImapSessionClosedException, IOException, ServiceException {
         try {
             checkDate(content);
-            if (mboxObj instanceof Mailbox) {
-                return store((Mailbox) mboxObj, (Folder) folderObj);
-            } else {
-                return store((ZMailbox) mboxObj, (ZFolder) folderObj);
-            }
+            return store(mboxStore, folderStore);
         } finally {
             cleanup();
         }
     }
 
-    private int store(Mailbox mbox, Folder folder) throws ImapSessionClosedException, ServiceException, IOException {
-        boolean idxAttach = mbox.attachmentsIndexingEnabled();
-        Long receivedDate = date != null ? date.getTime() : null;
-        ParsedMessage pm = new ParsedMessage(content, receivedDate, idxAttach);
-        try {
-            if (!pm.getSender().isEmpty()) {
-                InternetAddress ia = new JavaMailInternetAddress(pm.getSender());
-                if (AccountUtil.addressMatchesAccountOrSendAs(mbox.getAccount(), ia.getAddress())) {
-                    flags |= Flag.BITMASK_FROM_ME;
+    private int store(ImapMailboxStore mboxStore, ImapFolderStore folderStore)
+    throws ImapSessionClosedException, ServiceException, IOException {
+        if (mboxStore instanceof LocalImapMailboxStore) {
+            boolean idxAttach = mboxStore.attachmentsIndexingEnabled();
+            Long receivedDate = date != null ? date.getTime() : null;
+            ParsedMessage pm = new ParsedMessage(content, receivedDate, idxAttach);
+            try {
+                if (!pm.getSender().isEmpty()) {
+                    InternetAddress ia = new JavaMailInternetAddress(pm.getSender());
+                    if (mboxStore.addressMatchesAccountOrSendAs(ia.getAddress())) {
+                        flags |= Flag.BITMASK_FROM_ME;
+                    }
                 }
-            }
-        } catch (Exception e) { }
+            } catch (Exception e) { }
 
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true).setFlags(flags).setTags(tags);
-        Message msg = mbox.addMessage(handler.getContext(), pm, dopt, null);
-        if (msg != null && sflags != 0 && handler.getState() == ImapHandler.State.SELECTED) {
-            ImapFolder selectedFolder = handler.getSelectedFolder();
-            // remember, selected folder may be on another host (i.e. mProxy != null)
-            //   (note that this leaves session flags unset on remote appended messages)
-            if (selectedFolder != null) {
-                ImapMessage i4msg = selectedFolder.getById(msg.getId());
-                if (i4msg != null) {
-                    i4msg.setSessionFlags(sflags, selectedFolder);
+            int folderId = Integer.parseInt(folderStore.getId());
+            DeliveryOptions dopt =
+                    new DeliveryOptions().setFolderId(folderId).setNoICal(true).setFlags(flags).setTags(tags);
+            Message msg = ((LocalImapMailboxStore) mboxStore).getMailbox().addMessage(handler.getContext(), pm, dopt, null);
+            if (msg != null && sflags != 0 && handler.getState() == ImapHandler.State.SELECTED) {
+                ImapFolder selectedFolder = handler.getSelectedFolder();
+                // remember, selected folder may be on another host (i.e. mProxy != null)
+                //   (note that this leaves session flags unset on remote appended messages)
+                if (selectedFolder != null) {
+                    ImapMessage i4msg = selectedFolder.getById(msg.getId());
+                    if (i4msg != null) {
+                        i4msg.setSessionFlags(sflags, selectedFolder);
+                    }
                 }
             }
+            return msg == null ? -1 : msg.getId();
         }
-        return msg == null ? -1 : msg.getId();
-    }
-
-    private int store(ZMailbox mbox, ZFolder folder) throws IOException, ServiceException {
-        InputStream is = content.getInputStream();
-        String id = mbox.addMessage(folder.getId(), Flag.toString(flags), null, date.getTime(), is, content.getRawSize(), true);
-        return new ItemId(id, getCredentials().getAccountId()).getId();
+        if (mboxStore instanceof RemoteImapMailboxStore) {
+            /* TODO: For new IMAP, may need to do more here to get, e.g. the flags correct. */
+            String id;
+            try (InputStream is = content.getInputStream()) {
+                id = ((RemoteImapMailboxStore) mboxStore).getZMailbox().addMessage(
+                    folderStore.getId(), Flag.toString(flags), null, date.getTime(), is, content.getRawSize(), true);
+            }
+            return new ItemId(id, mboxStore.getAccountId()).getId();
+        }
+        return -1;
     }
 
     void checkContent() throws IOException, ImapException, ServiceException {
