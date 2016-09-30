@@ -118,18 +118,14 @@ public class AddHeader extends AbstractCommand {
             throws SieveException {
         if (headerName != null) {
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(headerName, CharsetUtil.US_ASCII))) {
-                throw new SyntaxException("Header name must be printable ASCII only.");
+                throw new SyntaxException("AddHeader:Header name must be printable ASCII only.");
             }
         }
 
         if (headerValue != null) {
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(headerValue, CharsetUtil.US_ASCII))) {
-                throw new SyntaxException(" Header value must be printable ASCII only.");
+                throw new SyntaxException("AddHeader:Header value must be printable ASCII only.");
             }
-        }
-
-        if (headerName != null && (headerName.length() + headerValue.length()) > 997) {
-            throw new SyntaxException(" Header name and value length exceeds the header line limit.");
         }
     }
 }
