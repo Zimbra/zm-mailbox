@@ -17,24 +17,34 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.store.Blob;
 
 public class RemoteImapMailboxStore implements ImapMailboxStore {
 
-    private transient ZMailbox mailbox;
+    private transient ZMailbox zMailbox;
+    private transient String accountId;
 
-    public RemoteImapMailboxStore(ZMailbox mailbox) throws ServiceException {
-        this.mailbox = mailbox;
+    public RemoteImapMailboxStore(ZMailbox mailbox, String accountId) throws ServiceException {
+        this.zMailbox = mailbox;
+        this.accountId = accountId;
     }
 
     @Override
@@ -82,7 +92,7 @@ public class RemoteImapMailboxStore implements ImapMailboxStore {
     public void deleteMessages(OperationContext octxt, List<Integer> ids) {
         for (int id : ids) {
             try {
-                    mailbox.deleteMessage(String.valueOf(id));
+                    zMailbox.deleteMessage(String.valueOf(id));
             } catch (ServiceException e) {
                 ZimbraLog.imap.warn("failed to delete message: %s", id);
             }
@@ -111,13 +121,42 @@ public class RemoteImapMailboxStore implements ImapMailboxStore {
     }
 
     @Override
+    public boolean attachmentsIndexingEnabled() throws ServiceException {
+        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+    }
+
+    @Override
+    public boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException {
+        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+    }
+
+    public int store(String folderId, Blob content, Date date, int msgFlags)
+    throws ImapSessionClosedException, ServiceException, IOException {
+        String id;
+        try (InputStream is = content.getInputStream()) {
+            id = zMailbox.addMessage(folderId, Flag.toString(msgFlags), null, date.getTime(), is,
+                    content.getRawSize(), true);
+        }
+        return new ItemId(id, accountId).getId();
+    }
+
+    @Override
     public int getId() {
         throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+    }
+
+    @Override
+    public Account getAccount() throws ServiceException {
+        return Provisioning.getInstance().get(AccountBy.id, accountId);
     }
 
     /** Returns the ID of this mailbox's Account. */
     @Override
     public String getAccountId() {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        return accountId;
+    }
+
+    public ZMailbox getZMailbox() {
+        return zMailbox;
     }
 }
