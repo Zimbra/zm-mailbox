@@ -27,6 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
@@ -41,6 +42,10 @@ interface FilterHandler {
     ParsedMessage getParsedMessage() throws ServiceException;
 
     MimeMessage getMimeMessage() throws ServiceException;
+
+    default public DeliveryContext getDeliveryContext() {
+        return null;
+    }
 
     int getMessageSize();
 
