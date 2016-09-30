@@ -475,6 +475,10 @@ public final class ZFilterRule implements ToZJSONObject {
                     }
                     actions.add(new ZNotifyAction(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes));
                 } else {
+                    // The number of tokens is either 4 (notify rfc "from" "message" "url")
+                    // or 6 (notify rfc "from" "importance" "options" "message" "url").
+                    // If the "url" is "mailto:" style, you don't have to specify the "importance" and
+                    // "options".
                     if (i + 4 > args.length) {
                         throw ZClientException.CLIENT_ERROR("missing args", null);
                     }
@@ -483,7 +487,9 @@ public final class ZFilterRule implements ToZJSONObject {
                     String importance = null;
                     String options = null;
                     if (i + 4 == args.length) {
-                        // notify rfc ... "importance" "options" "message(subject)" "mailto url"
+                        // Now we check whether the notify string contains "importance" and "options" tokens
+                        // If these two tokens are included, the remaining number of tokens at this point is 4,
+                        // otherwise 2.
                         importance = args[i++];
                         options = args[i++];
                     }
