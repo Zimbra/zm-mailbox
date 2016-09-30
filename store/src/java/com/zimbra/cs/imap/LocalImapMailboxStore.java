@@ -22,12 +22,14 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.util.AccountUtil;
 
 public class LocalImapMailboxStore implements ImapMailboxStore {
 
@@ -132,6 +134,16 @@ public class LocalImapMailboxStore implements ImapMailboxStore {
     }
 
     @Override
+    public boolean attachmentsIndexingEnabled() throws ServiceException {
+        return mailbox.attachmentsIndexingEnabled();
+    }
+
+    @Override
+    public boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException {
+        return (AccountUtil.addressMatchesAccountOrSendAs(mailbox.getAccount(), givenAddress));
+    }
+
+    @Override
     public int getId() {
         return mailbox.getId();
     }
@@ -140,6 +152,11 @@ public class LocalImapMailboxStore implements ImapMailboxStore {
     @Override
     public String getAccountId() {
         return mailbox.getAccountId();
+    }
+
+    @Override
+    public Account getAccount() throws ServiceException {
+        return mailbox.getAccount();
     }
 
     public Mailbox getMailbox() {
