@@ -21,6 +21,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Folder;
 
 public interface ImapFolderStore {
+
+    String getId();
+    int getUIDValidity();
+
     public static ImapFolderStore get(Object folder) throws ServiceException {
         if (folder == null) {
             return null;
