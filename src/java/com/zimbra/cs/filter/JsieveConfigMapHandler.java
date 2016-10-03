@@ -77,10 +77,8 @@ public class JsieveConfigMapHandler {
             mCommandMap.remove("reject");
         }
         
-//        if (isVariablesExtAvailable()) {
-        	mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
-//            ZimbraLog.filter.info("Variables extension is loaded");
-//        } 
+		mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
+		ZimbraLog.filter.info("Variables extension is loaded");
 
         return mCommandMap;
     }
