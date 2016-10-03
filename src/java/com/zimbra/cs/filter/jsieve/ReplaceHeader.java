@@ -112,7 +112,8 @@ public class ReplaceHeader extends AbstractCommand {
 
         int headerCount = 0;
         try {
-            headerCount = mm.getHeader(key).length;
+            String[] headerValues = mm.getHeader(key);
+            headerCount = headerValues != null ? headerValues.length : 0;
         } catch (MessagingException e) {
             throw new OperationException("Error occured while fetching " + key + " headers from mime.", e);
         }
