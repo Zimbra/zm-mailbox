@@ -16,12 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
-import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
-import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
-import static org.apache.jsieve.comparators.MatchTypeTags.MATCHES_TAG;
-import static org.apache.jsieve.tests.ComparatorTags.COMPARATOR_TAG;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.EQ_OP;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GE_OP;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GT_OP;
@@ -30,22 +25,36 @@ import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LT_OP;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.NE_OP;
 import static com.zimbra.cs.filter.jsieve.MatchTypeTags.COUNT_TAG;
 import static com.zimbra.cs.filter.jsieve.MatchTypeTags.VALUE_TAG;
+import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
+import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
+import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
+import static org.apache.jsieve.comparators.MatchTypeTags.MATCHES_TAG;
+import static org.apache.jsieve.tests.ComparatorTags.COMPARATOR_TAG;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.TagArgument;
-import org.apache.jsieve.mail.MailAdapter;
-import org.apache.jsieve.tests.Header;
+import org.apache.jsieve.comparators.MatchTypeTags;
 import org.apache.jsieve.exception.SieveException;
+import org.apache.jsieve.exception.SievePatternException;
+import org.apache.jsieve.mail.MailAdapter;
+import org.apache.jsieve.mail.SieveMailException;
+import org.apache.jsieve.tests.Header;
 
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 public class HeaderTest extends Header {
 
@@ -248,4 +257,67 @@ public class HeaderTest extends Header {
         }
         return isMatched;
     }
+    
+    protected boolean match(MailAdapter mail, String comparator, String matchType, List headerNames, List keys,
+			SieveContext context) throws SieveException {
+		if (!(mail instanceof ZimbraMailAdapter)) {
+			return false;
+		}
+		
+		ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
+		if (matchType.equals(MatchTypeTags.MATCHES_TAG)) {
+			this.evaluateVarExp(zma, headerNames, keys);
+		}
+		List<String> newKeys = new ArrayList<String>();
+		for (Object key : keys) {
+			String keyT = (String) key;
+			if (keyT.startsWith("$")) {
+				keyT = zma.getVariable(keyT.substring(2, keyT.indexOf("}")));
+				newKeys.add(keyT);
+			} else {
+				newKeys.add(keyT);
+			}
+		}
+
+		// Iterate over the header names looking for a match
+		boolean isMatched = false;
+		Iterator<String> headerNamesIter = headerNames.iterator();
+		while (!isMatched && headerNamesIter.hasNext()) {
+			Set<String> values = zma.getMatchingHeaderFromAllParts(headerNamesIter.next());
+			isMatched = match(comparator, matchType, new ArrayList<String>(values), newKeys, context);
+		}
+		return isMatched;
+	}
+	
+	private void evaluateVarExp(ZimbraMailAdapter mailAdapter, List headerNames, List keys) throws SieveMailException, SievePatternException {
+		
+		List<String> varValues = new ArrayList<String>();
+
+		for (Object headerName : headerNames) {
+			String hn = (String) headerName;
+			List<String> values = mailAdapter.getMatchingHeader(hn);
+			varValues.addAll(values);
+			for (String sourceStr : values) {
+				for (Object key : keys) {
+					String keyStr = ((String) key);
+					if (SetVariable.isVariablesExtAvailable(mailAdapter)) {
+						keyStr = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), keyStr);
+					}
+					String regex = FilterUtil.sieveToJavaRegex(keyStr);
+					Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(sourceStr);
+					if (matcher.find() && matcher.groupCount() > 0) {
+						int grpCount = matcher.groupCount();
+						for (int i = 0; i<=grpCount; ++i) {
+							String matchGrp =  matcher.group(i);
+							if (!StringUtils.isEmpty(matchGrp.trim())) {
+								varValues.add(matchGrp);
+							}
+						}
+					}
+				} 
+			}	
+		}
+
+		mailAdapter.setMatchedValues(varValues);
+	}
 }

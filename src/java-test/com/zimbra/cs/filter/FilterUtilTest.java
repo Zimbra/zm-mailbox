@@ -91,5 +91,111 @@ public class FilterUtilTest {
     	matchedValues.add("test2");
     	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${0}");
     	Assert.assertEquals("test1", varValue);
+    	
+    	
+    	variables = new HashMap<String, String>();
+    	variables.put("var", "hello");
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${var!}");
+    	Assert.assertEquals("${var!}", varValue);
+    	
+    	
+    	variables = new HashMap<String, String>();
+    	variables.put("var", "hello");
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${var}");
+    	Assert.assertEquals("${var!}", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${test${var}");
+    	Assert.assertEquals("${testhello", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${test${var}");
+    	Assert.assertEquals("${testhello", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "\\\\${President, ${var} Inc.}");
+    	Assert.assertEquals("\\${President, hello Inc.}", varValue);
+    	
+    	// set "company" "ACME";
+			// set "a.b" "おしらせ"; (or any non-ascii characters)
+			// set "c_d" "C";
+			// set "1" "One"; ==> Should be ignored or error [Note 1]
+			// set "23" "twenty three"; ==> Should be ignored or error [Note 1]
+			// set "combination" "Hello ${company}!!";
+    	variables = new HashMap<String, String>();
+    	variables.put("company", "ACME");
+    	variables.put("a.b", "おしらせ");
+    	variables.put("c_d", "C");
+    	variables.put("1", "One");
+    	variables.put("23", "twenty three");
+    	variables.put("combination", "Hello ACME!!");
+
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${full}");
+    	Assert.assertEquals("", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${company}");
+    	Assert.assertEquals("ACME", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${BAD${Company}");
+    	Assert.assertEquals("${BADACME", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${company");
+    	Assert.assertEquals("${company", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${${COMpANY}}");
+    	Assert.assertEquals("${ACME}", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${a.b}}");
+    	Assert.assertEquals("おしらせ", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "$c_d}}");
+    	Assert.assertEquals("C", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "You've got a mail. ${a.b} ${combination} ${c_d}hao!");
+    	Assert.assertEquals("You've got a mail. おしらせ Hello ACME!! Chao!", varValue);
+    }
+    
+    @Test
+    public void testVariableReplacementQutdAndEncoded() {
+    	Map<String, String> variables = new HashMap<String, String>();
+    	variables.put("var", "hello");
+    	List<String> matchedValues = new ArrayList<String>();
+    	String varValue = FilterUtil.replaceVariables(variables, matchedValues, "${va\\r}");
+    	Assert.assertEquals("hello", varValue);
+    	
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${va\\\\r}");
+    	System.out.println(varValue);
+    	Assert.assertEquals("${va\\r}", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "\\${var}");
+    	System.out.println(varValue);
+    	Assert.assertEquals("hello", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "\\\\${var}");
+    	System.out.println(varValue);
+    	Assert.assertEquals("\\hello", varValue);
+    	
+    }
+    
+    @Test
+    public void testGetListOfVariables() {
+    	List<String> varNames = FilterUtil.getListOfVars("${var}");
+    	Assert.assertEquals("${var}", varNames.get(0));
+    	
+    	varNames = FilterUtil.getListOfVars("${test${var}");
+     	Assert.assertEquals("${var}", varNames.get(0));
+     	
+     	varNames = FilterUtil.getListOfVars("${${company}}");
+     	Assert.assertEquals("${company}", varNames.get(0));
+     	
+     	varNames = FilterUtil.getListOfVars("You've got a mail. ${a.b} ${combination} ${c_d}hao!");
+     	Assert.assertEquals("${a.b}", varNames.get(0));
+     	Assert.assertEquals("${combination}", varNames.get(1));
+     	Assert.assertEquals("${c_d}", varNames.get(2));
+    }
+    
+    @Test
+    public void testToJavaRegex() {
+    	String regex = FilterUtil.sieveToJavaRegex("coyote@**.com");
+    	Assert.assertEquals("coyote@(.*)?(.*)?\\.com", regex);
+    	
     }
 }

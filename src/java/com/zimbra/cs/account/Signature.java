@@ -72,16 +72,16 @@ public class Signature extends AccountProperty implements Comparable {
 
             String content = getAttr((String)entry.getKey());
             if (content != null) {
-                if (entry.getKey().equals(ZAttrProvisioning.A_zimbraPrefMailSignatureHTML)) {
-
-                    StringReader reader = new StringReader(content);
-                    try {
-                        content = defanger.defang(reader, false);
-                    } catch (IOException e) {
-                       ZimbraLog.misc.info("Error sanitizing html signature: %s", content);
-                    }
-
-                }
+//                if (entry.getKey().equals(ZAttrProvisioning.A_zimbraPrefMailSignatureHTML)) {
+//
+//                    StringReader reader = new StringReader(content);
+//                    try {
+//                        content = defanger.defang(reader, false);
+//                    } catch (IOException e) {
+//                       ZimbraLog.misc.info("Error sanitizing html signature: %s", content);
+//                    }
+//
+//                }
                 contents.add(new SignatureContent((String)entry.getValue(), content));
             }
         }

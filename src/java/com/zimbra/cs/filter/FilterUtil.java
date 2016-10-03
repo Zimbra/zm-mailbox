@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -27,7 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
+import java.util.Stack;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
@@ -64,7 +65,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
-import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
@@ -796,22 +796,167 @@ public final class FilterUtil {
     }
 
     public static String replaceVariables(Map<String, String> variables, List<String> matchedValues, String varName) {
-        if (!varName.startsWith("${")) {
+        if (varName.indexOf("${") == -1) {
             return varName;
         }
-        String temp = varName.substring(2, varName.indexOf("}"));
-        if (variables.containsKey(temp)) {
-            temp = variables.get(temp);
-            return temp;
+        ZimbraLog.filter.debug("Variable ");
+        String varValue = varName;
+        List<String> varNames = getListOfVars(varName);
+		for (String var : varNames) {
+			String name = var.substring(2, var.indexOf("}"));
+			name = handleQuotedAndEncodedVar(name);
+			ZimbraLog.filter.debug("Sieve: variable expression is %s and variable name is: %s", var, name);
+			if (name.length() == 1 && Character.isDigit(name.charAt(0))) {
+				for (int i = 0; i < matchedValues.size(); ++i) {
+					String pattern = "{" + i + "}";
+					if (varName.contains(pattern)) {
+						varValue = matchedValues.get(i);
+					}
+				}
+			} else {
+				if (isValidSieveVariableName(name)) {
+					if (variables.containsKey(name)) {
+						varValue = varValue.replace(var, variables.get(name));
+					}
+				}
+			}
+		}
+        varValue = handleQuotedAndEncodedVar(varValue);
+        ZimbraLog.filter.debug("Sieve: variable value is: %s", varValue);
+        return varValue;
+    }
+    
+    
+    /**
+	 * @param varName
+	 * @return
+	 */
+	public static List<String> getListOfVars(String varName) {
+		Stack<Character> stack = new Stack<Character>();
+		List<String> varNames =  new ArrayList<String>();
+		StringBuilder sb = new StringBuilder();
+		
+		char [] chars = varName.toCharArray();
+		char previous = 0;
+		boolean save = false;
+		for (int i = 0; i < chars.length; i++) {
+	        char current = chars[i];
+	        if (current == '{' && previous == '$') {
+	        	sb = new StringBuilder();
+	            stack.push(current);
+	            save = true;
+	            continue;
+	        } else if (current == '}') {
+	            char last = stack.peek();
+	            if (current == '}' && last == '{') {
+	                stack.pop();
+	                String var = sb.toString();
+	                sb = new StringBuilder();
+	                save = false;
+	                varNames.add("${" + var + "}");
+	            }
+	            
+	        } 
+	        previous = chars[i];
+	        if (save) {
+	        	sb.append(current);
+	        }
+	    }
+		return varNames;
+	}
+
+	/**
+	 * @param varName
+	 * @return
+	 *  "${fo\o}"  => ${foo}  => the expansion of variable foo.
+     * "${fo\\o}" => ${fo\o} => illegal identifier => left verbatim.
+     * "\${foo}"  => ${foo}  => the expansion of variable foo.
+     * "\\${foo}" => \${foo} => a backslash character followed by the
+     *                           expansion of variable foo.
+	 */
+	public static String handleQuotedAndEncodedVar(String varName) {
+		String processedStr  = varName;
+		StringBuilder sb = new StringBuilder();
+		char [] charArray = varName.toCharArray();
+		for (int i = 0; i < charArray.length; ++i) {
+			if (charArray[i] == '\\') {
+				if (charArray[i] == '\\' && (i+1 <= charArray.length -1) && charArray[i + 1] == '\\') {
+					sb.append('\\');
+				}
+			} else {
+				sb.append(charArray[i]);
+			}
+		}
+		processedStr = sb.toString();
+		
+		return processedStr;
+	}
+
+	public static boolean  isValidSieveVariableName(String varName) {
+    	
+    	Pattern pattern = Pattern.compile(".*[\\p{Alpha}$_.]|[\\d]",  Pattern.CASE_INSENSITIVE);
+        if (pattern.matcher(varName).matches()) {
+           return true;
         }
-        temp = "${" + temp + "}";
-        for (int i = 0; i < matchedValues.size(); ++i) {
-            String pattern = "{" + i + "}";
-            if (temp.contains(pattern)) {
-                temp = temp.replaceAll(pattern, matchedValues.get(i));
+    	return false;
+    }
+	
+	 /**
+     * Converts a Sieve pattern in a java regex pattern
+     */
+    public static String sieveToJavaRegex(String pattern) {
+        int ch;
+        StringBuffer buffer = new StringBuffer(2 * pattern.length());
+        boolean lastCharWasStar = false;
+        for (ch = 0; ch < pattern.length(); ch++) {
+            final char nextChar = pattern.charAt(ch);
+            switch (nextChar) {
+            case '*':
+                //
+                // Java Matcher has issues with repeated stars
+                //
+//                if (!lastCharWasStar) {
+                    buffer.append("(.*)?");
+//                }
+                break;
+            case '?':
+                buffer.append('.');
+                break;
+            case '\\':
+                buffer.append('\\');
+                if (ch == pattern.length() - 1)
+                    buffer.append('\\');
+                else if (isSieveMatcherSpecialChar(pattern.charAt(ch + 1)))
+                    buffer.append(pattern.charAt(++ch));
+                else
+                    buffer.append('\\');
+                break;
+            default:
+                if (isRegexSpecialChar(nextChar))
+                    buffer.append('\\');
+                buffer.append(nextChar);
+                break;
             }
+            // Workaround for issue with Java Matcher
+//            lastCharWasStar = '*' == nextChar;
         }
-        return temp;
+        return buffer.toString();
+    }
+    
+    /**
+     * Returns true if the char is a special char for regex
+     */
+    private static boolean isRegexSpecialChar(char ch) {
+        return (ch == '*' || ch == '?' || ch == '+' || ch == '[' || ch == ']'
+                || ch == '(' || ch == ')' || ch == '|' || ch == '^'
+                || ch == '$' || ch == '.' || ch == '{' || ch == '}' || ch == '\\');
+    }
+
+    /**
+     * Returns true if the char is a special char for sieve matching
+     */
+    private static boolean isSieveMatcherSpecialChar(char ch) {
+        return (ch == '*' || ch == '?' || ch == '\\');
     }
 }
 
