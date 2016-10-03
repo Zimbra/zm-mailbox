@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -70,13 +71,6 @@ public class ReplaceHeader extends AbstractCommand {
     private boolean countTag = false;
     private boolean valueTag = false;
     private String relationalComparator = null;
-    // relational-match
-    private static final String GREATER_THAN = "gt";
-    private static final String GREATER_THAN_OR_EQUAL_TO = "ge";
-    private static final String LESS_THAN = "lt";
-    private static final String LESS_THAN_OR_EQUAL_TO = "le";
-    private static final String EQUAL_TO = "eq";
-    private static final String NOT_EQUAL_TO = "ne";
     // key and valuelist
     private String key = null;
     private List<String> valueList = null;
@@ -93,13 +87,15 @@ public class ReplaceHeader extends AbstractCommand {
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
 
         // replace variables
+        List<String> temp = new ArrayList<String>();
         if (valueList != null && !valueList.isEmpty()) {
             for (String value : valueList) {
-                Variables.replaceAllVariables(mailAdapter, value);
+                temp.add(Variables.replaceAllVariables(mailAdapter, value));
             }
         }
+        valueList = temp;
         if (newValue != null) {
-            Variables.replaceAllVariables(mailAdapter, newValue);
+            newValue = Variables.replaceAllVariables(mailAdapter, newValue);
         }
 
         MimeMessage mm = mailAdapter.getMimeMessage();
@@ -125,7 +121,11 @@ public class ReplaceHeader extends AbstractCommand {
             return null;
         }
         if (last && headerCount > index) {
-            index = headerCount - index;
+            if (index == 0) {
+                index = headerCount - index;
+            } else  {
+                index = headerCount - index + 1;
+            }
         }
         int matchIndex = 0;
         Set<String> removedHeaders = new HashSet<String>();
@@ -148,32 +148,32 @@ public class ReplaceHeader extends AbstractCommand {
                             if (comparator.equals(I_ASCII_NUMERIC)) {
                                 if (valueTag) {
                                     switch (relationalComparator) {
-                                    case GREATER_THAN:
+                                    case MatchRelationalOperators.GT_OP:
                                         if (Integer.valueOf(header.getValue()) > Integer.valueOf(value)) {
                                             replace = true;
                                         }
                                         break;
-                                    case GREATER_THAN_OR_EQUAL_TO:
+                                    case MatchRelationalOperators.GE_OP:
                                         if (Integer.valueOf(header.getValue()) >= Integer.valueOf(value)) {
                                             replace = true;
                                         }
                                         break;
-                                    case LESS_THAN:
+                                    case MatchRelationalOperators.LT_OP:
                                         if (Integer.valueOf(header.getValue()) < Integer.valueOf(value)) {
                                             replace = true;
                                         }
                                         break;
-                                    case LESS_THAN_OR_EQUAL_TO:
+                                    case MatchRelationalOperators.LE_OP:
                                         if (Integer.valueOf(header.getValue()) <= Integer.valueOf(value)) {
                                             replace = true;
                                         }
                                         break;
-                                    case EQUAL_TO:
+                                    case MatchRelationalOperators.EQ_OP:
                                         if (Integer.valueOf(header.getValue()) == Integer.valueOf(value)) {
                                             replace = true;
                                         }
                                         break;
-                                    case NOT_EQUAL_TO:
+                                    case MatchRelationalOperators.NE_OP:
                                         if (Integer.valueOf(header.getValue()) != Integer.valueOf(value)) {
                                             replace = true;
                                         }
@@ -183,32 +183,32 @@ public class ReplaceHeader extends AbstractCommand {
                                     }
                                 } else if (countTag) {
                                     switch (relationalComparator) {
-                                    case GREATER_THAN:
+                                    case MatchRelationalOperators.GT_OP:
                                         if (headerCount > Integer.valueOf(value)) {
                                             replace = true;
                                         }
                                         break;
-                                    case GREATER_THAN_OR_EQUAL_TO:
+                                    case MatchRelationalOperators.GE_OP:
                                         if (headerCount >= Integer.valueOf(value)) {
                                             replace = true;
                                         }
                                         break;
-                                    case LESS_THAN:
+                                    case MatchRelationalOperators.LT_OP:
                                         if (headerCount < Integer.valueOf(value)) {
                                             replace = true;
                                         }
                                         break;
-                                    case LESS_THAN_OR_EQUAL_TO:
+                                    case MatchRelationalOperators.LE_OP:
                                         if (headerCount <= Integer.valueOf(value)) {
                                             replace = true;
                                         }
                                         break;
-                                    case EQUAL_TO:
+                                    case MatchRelationalOperators.EQ_OP:
                                         if (headerCount == Integer.valueOf(value)) {
                                             replace = true;
                                         }
                                         break;
-                                    case NOT_EQUAL_TO:
+                                    case MatchRelationalOperators.NE_OP:
                                         if (headerCount != Integer.valueOf(value)) {
                                             replace = true;
                                         }
@@ -259,6 +259,7 @@ public class ReplaceHeader extends AbstractCommand {
     @Override
     protected void validateArguments(Arguments arguments, SieveContext context)
             throws SieveException {
+        ZimbraLog.filter.debug(arguments.getArgumentList().toString());
         // set up class variables
         Iterator<Argument> itr = arguments.getArgumentList().iterator();
         while (itr.hasNext()) {
@@ -362,46 +363,46 @@ public class ReplaceHeader extends AbstractCommand {
 
         // Match type or Comparator type condition must be present
         if (!(is || contains || matches || countTag || valueTag)) {
-            throw new SyntaxException("Match type or Comparator type must be present.");
+            throw new SyntaxException("Match type or Comparator type must be present in replaceheader.");
         }
 
         // Key and value both must be present at a time
         if (key == null || valueList == null) {
-            throw new SyntaxException("key or value not found.");
+            throw new SyntaxException("key or value not found in replaceheader.");
         }
 
         // character set validation
         if (newName != null) {
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(newName, CharsetUtil.US_ASCII))) {
-                throw new SyntaxException("newname must be printable ASCII only.");
+                throw new SyntaxException("newname must be printable ASCII only in replaceheader.");
             }
         }
         if (newValue != null) {
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(newValue, CharsetUtil.US_ASCII))) {
-                throw new SyntaxException("newvalue must be printable ASCII only.");
+                throw new SyntaxException("newvalue must be printable ASCII only in replaceheader.");
             }
         }
         if (key != null) {
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(key, CharsetUtil.US_ASCII))) {
-                throw new SyntaxException("key must be printable ASCII only.");
+                throw new SyntaxException("key must be printable ASCII only in replaceheader.");
             }
         }
         if (valueList != null && !valueList.isEmpty()) {
             for (String value : valueList) {
                 if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(value, CharsetUtil.US_ASCII))) {
-                    throw new SyntaxException("value must be printable ASCII only.");
+                    throw new SyntaxException("value must be printable ASCII only in replaceheader.");
                 }
             }
         }
 
         // relation comparator must be valid
         if (relationalComparator != null) {
-            if (!(relationalComparator.equals(GREATER_THAN)
-                    || relationalComparator.equals(GREATER_THAN_OR_EQUAL_TO)
-                    || relationalComparator.equals(LESS_THAN)
-                    || relationalComparator.equals(LESS_THAN_OR_EQUAL_TO)
-                    || relationalComparator.equals(EQUAL_TO)
-                    || relationalComparator.equals(NOT_EQUAL_TO))) {
+            if (!(relationalComparator.equals(MatchRelationalOperators.GT_OP)
+                    || relationalComparator.equals(MatchRelationalOperators.GE_OP)
+                    || relationalComparator.equals(MatchRelationalOperators.LT_OP)
+                    || relationalComparator.equals(MatchRelationalOperators.LE_OP)
+                    || relationalComparator.equals(MatchRelationalOperators.EQ_OP)
+                    || relationalComparator.equals(MatchRelationalOperators.NE_OP))) {
                 throw new SyntaxException("Invalid relational comparator provided in replaceheader.");
             }
         }

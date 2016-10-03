@@ -212,7 +212,7 @@ public class ReplaceHeaderTest {
     public void testReplaceFirstFromBottomHeader() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :index 1 :last :newvalue \"new test\" :contains \"X-Test-Header\" \"test\" \r\n"
+                    + " replaceheader :index 2 :last :newvalue \"new test\" :contains \"X-Test-Header\" \"test\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -232,7 +232,7 @@ public class ReplaceHeaderTest {
                 Header header = enumeration.nextElement();
                 if ("X-Test-Header".equals(header.getName())) {
                     indexMatch++;
-                    if (indexMatch == 3) {
+                    if (indexMatch == 2) {
                         Assert.assertEquals("new test", header.getValue());
                         break;
                     }
