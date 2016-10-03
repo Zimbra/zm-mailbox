@@ -79,9 +79,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -108,6 +110,7 @@ public final class TestFilter extends TestCase {
     private String mOriginalSetEnvelopeSender = null;
     private ZTag mTag1;
     private ZTag mTag2;
+    private boolean mAvailableRFCCompliantNotify = false;
 
     @Override
     public void setUp() throws Exception {
@@ -116,6 +119,12 @@ public final class TestFilter extends TestCase {
         mMbox = TestUtil.getZMailbox(USER_NAME);
         mTag1 = mMbox.createTag(TAG1_NAME, null);
         mTag2 = mMbox.createTag(TAG2_NAME, null);
+
+        Account account = TestUtil.getAccount(USER_NAME);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveScript, "");
+        attrs.put(Provisioning.A_zimbraMailOutgoingSieveScript, "");
+        Provisioning.getInstance().modifyAttrs(account, attrs);
 
         // Create mountpoint for testMountpoint()
         ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
@@ -127,10 +136,11 @@ public final class TestFilter extends TestCase {
         mOriginalOutgoingRules = mMbox.getOutgoingFilterRules();
         saveOutgoingRules(mMbox, getTestOutgoingRules());
 
-        Account account = TestUtil.getAccount(USER_NAME);
         mOriginalSpamApplyUserFilters = account.getAttr(Provisioning.A_zimbraSpamApplyUserFilters);
         mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPortAsString();
         mOriginalSetEnvelopeSender = TestUtil.getServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender);
+
+        mAvailableRFCCompliantNotify  = Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, false);
     }
 
     /**
@@ -732,8 +742,17 @@ public final class TestFilter extends TestCase {
                 mimeStructure.getContentType().contains(MimeConstants.P_CHARSET_ASCII));
     }
 
+    /**
+     * Tests the Zimbra-specifict 'notify' action format (not RFC compliant format)
+     *
+     * Note: please set the global config key 'zimbraMailSieveNotifyActionRFCCompliant' to FALSE.
+     */
     public void testNotifyAction()
     throws Exception {
+        if (mAvailableRFCCompliantNotify) {
+            fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to TRUE");
+            return;
+        }
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
@@ -767,6 +786,10 @@ public final class TestFilter extends TestCase {
 
     public void testNotifyActionUseOrigHeaders()
     throws Exception {
+        if (mAvailableRFCCompliantNotify) {
+            fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to TRUE");
+            return;
+        }
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
@@ -821,6 +844,10 @@ public final class TestFilter extends TestCase {
 
     public void testNotifyActionCopyAllOrigHeaders()
     throws Exception {
+        if (mAvailableRFCCompliantNotify) {
+            fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to TRUE");
+            return;
+        }
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
@@ -851,6 +878,10 @@ public final class TestFilter extends TestCase {
 
     public void testNotifyWithDiscard()
     throws Exception {
+        if (mAvailableRFCCompliantNotify) {
+            fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to TRUE");
+            return;
+        }
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
@@ -879,6 +910,10 @@ public final class TestFilter extends TestCase {
      */
     public void testMultipleMultilineText()
     throws Exception {
+        if (mAvailableRFCCompliantNotify) {
+            fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to TRUE");
+            return;
+        }
         List<ZFilterRule> rules;
         List<ZFilterCondition> conditions;
         List<ZFilterAction> actions;

@@ -48,7 +48,11 @@ public final class SoapToSieve {
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\"];\n");
+            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\"");
+            if (JsieveConfigMapHandler.isNotifyActionRFCCompliantAvailable()) {
+                buffer.append(", \"enotify\"");
+            }
+            buffer.append("];\n");
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule);
@@ -468,6 +472,36 @@ public final class SoapToSieve {
                     append("text:\r\n").append(getDotStuffed(bodyTemplate)).append("\r\n.\r\n").
                     append(maxBodyBytes < 0 ? "" : " " + maxBodyBytes).
                     append(origHeaders.isEmpty() ? "" : " " + getSieveMultiValue(origHeaders)).toString();
+        } else if (action instanceof FilterAction.RFCCompliantNotifyAction) {
+            FilterAction.RFCCompliantNotifyAction notify = (FilterAction.RFCCompliantNotifyAction) action;
+            String from = notify.getFrom();
+            String importance = Strings.nullToEmpty(notify.getImportance());
+            String options = Strings.nullToEmpty(notify.getOptions());
+            String message = Strings.nullToEmpty(notify.getMessage());
+            String method = Strings.nullToEmpty(notify.getMethod());
+            if (StringUtil.isNullOrEmpty(method)) {
+                throw ServiceException.INVALID_REQUEST("Missing notification mechanism", null);
+            }
+
+            StringBuilder filter = new StringBuilder("notify ");
+            if (!from.isEmpty()) {
+                filter.append(":from ").append(StringUtil.enclose(FilterUtil.escape(from), '"')).append(' ');
+            }
+            if (!importance.isEmpty()) {
+                filter.append(":importance ").append(StringUtil.enclose(importance, '"')).append(' ');
+            }
+            if (!options.isEmpty()) {
+                filter.append(":options ").append(StringUtil.enclose(options, '"')).append(' ');
+            }
+            if (!message.isEmpty()) {
+                filter.append(":message ").append(StringUtil.enclose(message, '"')).append(' ');
+            }
+            if (method.indexOf("\n") < 0) {
+                filter.append(StringUtil.enclose(method, '"'));
+            } else {
+                filter.append("text:\r\n").append(method).append("\r\n.\r\n");
+            }
+            return filter.toString();
         } else if (action instanceof FilterAction.StopAction) {
             return "stop";
         } else {
