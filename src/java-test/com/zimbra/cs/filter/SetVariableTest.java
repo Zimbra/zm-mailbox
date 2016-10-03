@@ -31,10 +31,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.filter.jsieve.Variables;
 import com.zimbra.cs.mailbox.DeliveryContext;
@@ -55,7 +57,10 @@ public class SetVariableTest {
 	public static void init() throws Exception {
 		MailboxTestUtil.initServer();
 		Provisioning prov = Provisioning.getInstance();
-		prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
+		Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
+		Server server = Provisioning.getInstance().getServer(acct);
+		server.setSieveFeatureVariablesEnabled(true);
+		
 	}
 
 	@Before
@@ -66,10 +71,12 @@ public class SetVariableTest {
 	@Test
 	public void testSetVar() {
 		try {
-			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+			Account account = Provisioning.getInstance().get(Key.AccountBy.name,
+					"test@in.telligent.com");
+
 			RuleManager.clearCachedRules(account);
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			System.out.println(filterScript);
+
 			account.setMailSieveScript(filterScript);
 			String raw = "From: sender@in.telligent.com\n" + "To: test1@in.telligent.com\n" + "Subject: Test\n" + "\n"
 					+ "Hello World.";
@@ -81,6 +88,7 @@ public class SetVariableTest {
 			Assert.assertEquals("hello", ArrayUtil.getFirstElement(msg.getTags()));
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			fail("No exception should be thrown");
 		}
 
@@ -94,7 +102,7 @@ public class SetVariableTest {
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 			filterScript = "require [\"variables\"];\n" + "set \"var\" \"hello\" ;"
 					+ "if header :contains \"Subject\" \"${var}\" { tag \"blue\"; }";
-			System.out.println(filterScript);
+
 			account.setMailSieveScript(filterScript);
 			String raw = "From: sender@in.telligent.com\n" + "To: test1@in.telligent.com\n"
 					+ "Subject: hello version 1.0 is out\n" + "\n" + "Hello World.";
@@ -119,7 +127,6 @@ public class SetVariableTest {
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 			filterScript = "require [\"variables\"];\n"
 					+ "if header :matches \"Subject\" \"*\"{set \"var\" \"hello\" ; tag \"${var}\"; }";
-			System.out.println(filterScript);
 			account.setMailSieveScript(filterScript);
 			String raw = "From: sender@in.telligent.com\n" + "To: test1@in.telligent.com\n"
 					+ "Subject: hello version 1.0 is out\n" + "\n" + "Hello World.";
@@ -337,7 +344,7 @@ public class SetVariableTest {
     	modifiers[SetVariable.getIndex(SetVariable.ALL_UPPER_CASE)] =  SetVariable.ALL_UPPER_CASE;
     	modifiers[SetVariable.getIndex(SetVariable.LOWERCASE_FIRST)] = SetVariable.LOWERCASE_FIRST;
     	value = SetVariable.applyModifiers("j?uMBlEd*lETte\\RS", modifiers);
-    	System.out.println(value);
+
     	Assert.assertEquals("j\\?UMBLED\\*LETTE\\\\RS", value);
     }
     
@@ -508,7 +515,7 @@ public class SetVariableTest {
 
 			filterScript = "require [\"variables\"];\n" 
 					+ "if header :matches [\"To\", \"Cc\"] [\"coyote@**.com\",\"wile@**.com\"]{ tag \"${2}\"; }";
-			System.out.println(filterScript);
+
 			account.setMailSieveScript(filterScript);
 			String raw = "From: sender@in.telligent.com\n" 
 					+ "To: coyote@ACME.Example.COM\n"
@@ -519,6 +526,61 @@ public class SetVariableTest {
 			Assert.assertEquals(1, ids.size());
 			Message msg = mbox.getMessageById(null, ids.get(0).getId());
 			Assert.assertEquals("ACME.Example", ArrayUtil.getFirstElement(msg.getTags()));
+
+		} catch (Exception e) {
+			fail("No exception should be thrown");
+		}
+
+	}
+    
+    @Test
+	public void testSetVarSieveFeatureDisabled() {
+		try {
+			Account account = Provisioning.getInstance().get(Key.AccountBy.name,
+					"test@in.telligent.com");
+			Server server = Provisioning.getInstance().getServer(account);
+			server.setSieveFeatureVariablesEnabled(false);
+			RuleManager.clearCachedRules(account);
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			
+			account.setMailSieveScript(filterScript);
+			String raw = "From: sender@in.telligent.com\n" + "To: test1@in.telligent.com\n" + "Subject: Test\n" + "\n"
+					+ "Hello World.";
+			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			Assert.assertEquals(1, ids.size());
+			Message msg = mbox.getMessageById(null, ids.get(0).getId());
+			Assert.assertEquals("${var}", ArrayUtil.getFirstElement(msg.getTags()));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("No exception should be thrown");
+		}
+
+	}
+    
+    @Test
+	public void testSetMatchVarAndUseInHeader2() {
+		try {
+			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+			RuleManager.clearCachedRules(account);
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+			filterScript = "require [\"variables\"];\n" 
+					+" set \"x\" \"hello\";\n"
+					+ "if header :matches \"Subject\" \"${x}\" { tag \"${x} world!\"; }";
+
+			account.setMailSieveScript(filterScript);
+			String raw = "From: sender@in.telligent.com\n" 
+					+ "To: coyote@ACME.Example.COM\n"
+					+ "Subject: hello\n" + "\n" + "Hello World.";
+			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+			Assert.assertEquals(1, ids.size());
+			Message msg = mbox.getMessageById(null, ids.get(0).getId());
+			Assert.assertEquals("hello world!", ArrayUtil.getFirstElement(msg.getTags()));
 
 		} catch (Exception e) {
 			fail("No exception should be thrown");

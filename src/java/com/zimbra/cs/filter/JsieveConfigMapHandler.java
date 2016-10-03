@@ -75,10 +75,10 @@ public class JsieveConfigMapHandler {
             mCommandMap.remove("reject");
         }
         
-        if (isVariablesExtAvailable()) {
+//        if (isVariablesExtAvailable()) {
         	mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
-            ZimbraLog.filter.info("Variables extension is loaded");
-        } 
+//            ZimbraLog.filter.info("Variables extension is loaded");
+//        } 
 
         return mCommandMap;
     }
@@ -164,17 +164,17 @@ public class JsieveConfigMapHandler {
         return isNotifyActionRFCCompliant;
     }
     
-	/**
-	 * @return true if zimbraSieveFeatureVariablesEnabled is true
-	 */
-	private static boolean isVariablesExtAvailable() {
-		boolean variablesExtAvailable = false;
-		try {
-			variablesExtAvailable = Provisioning.getInstance().getConfig()
-					.getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
-		} catch (ServiceException e) {
-			ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
-		}
-		return variablesExtAvailable;
-	}
+//	/**
+//	 * @return true if zimbraSieveFeatureVariablesEnabled is true
+//	 */
+//	private static boolean isVariablesExtAvailable() {
+//		boolean variablesExtAvailable = false;
+//		try {
+//			variablesExtAvailable = Provisioning.getInstance().getConfig()
+//					.getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
+//		} catch (ServiceException e) {
+//			ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
+//		}
+//		return variablesExtAvailable;
+//	}
 }

@@ -36,17 +36,6 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.zimbra.common.mime.InternetAddress;
-import com.zimbra.cs.filter.jsieve.ActionEreject;
-import com.zimbra.cs.filter.jsieve.ActionNotify;
-import com.zimbra.cs.filter.jsieve.ActionNotifyMailto;
-import com.zimbra.cs.filter.jsieve.ActionReply;
-import com.zimbra.cs.filter.jsieve.ActionEreject;
-import com.zimbra.cs.filter.jsieve.ErejectException;
-import com.zimbra.cs.filter.jsieve.SetVariable;
-
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
@@ -57,15 +46,27 @@ import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
+import org.apache.jsieve.mail.optional.EnvelopeAccessors;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.jsieve.ActionEreject;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.ActionNotify;
+import com.zimbra.cs.filter.jsieve.ActionNotifyMailto;
+import com.zimbra.cs.filter.jsieve.ActionReply;
 import com.zimbra.cs.filter.jsieve.ActionTag;
+import com.zimbra.cs.filter.jsieve.ErejectException;
+import com.zimbra.cs.filter.jsieve.SetVariable;
+import com.zimbra.cs.lmtpserver.LmtpAddress;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -74,9 +75,6 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
-import org.apache.jsieve.mail.optional.EnvelopeAccessors;
-import com.zimbra.cs.lmtpserver.LmtpAddress;
-import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 
 /**
  * Sieve evaluation engine adds a list of {@link org.apache.jsieve.mail.Action}s
@@ -262,6 +260,9 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     // redirect mail to another address
                     ActionRedirect redirect = (ActionRedirect) action;
                     String addr = redirect.getAddress();
+                    if (SetVariable.isVariablesExtAvailable(this)) {
+                    	addr = FilterUtil.replaceVariables(this.variables, this.matchedValues, addr);
+                    }
                     ZimbraLog.filter.info("Redirecting message to %s.", addr);
                     try {
                         handler.redirect(addr);
@@ -275,7 +276,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     ActionReply reply = (ActionReply) action;
                     ZimbraLog.filter.debug("Replying to message");
                     try {
-                        handler.reply(reply.getBodyTemplate());
+                    	String replyStrg = reply.getBodyTemplate();
+                    	if (SetVariable.isVariablesExtAvailable(this)) {
+                    		replyStrg = FilterUtil.replaceVariables(this.variables, this.matchedValues, replyStrg);
+                        }
+                        handler.reply(replyStrg);
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to reply.", e);
                         explicitKeep();
@@ -284,11 +289,20 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     ActionNotify notify = (ActionNotify) action;
                     ZimbraLog.filter.debug("Sending notification message to %s.", notify.getEmailAddr());
                     try {
-                        handler.notify(notify.getEmailAddr(),
-                                       notify.getSubjectTemplate(),
-                                       notify.getBodyTemplate(),
-                                       notify.getMaxBodyBytes(),
-                                       notify.getOrigHeaders());
+                    	
+                    	if (SetVariable.isVariablesExtAvailable(this)) {
+                    		 handler.notify(FilterUtil.replaceVariables(this.variables, this.matchedValues, notify.getEmailAddr()),
+                    				 FilterUtil.replaceVariables(this.variables, this.matchedValues, notify.getSubjectTemplate()),
+                    				 FilterUtil.replaceVariables(this.variables, this.matchedValues, notify.getBodyTemplate()),
+                                     notify.getMaxBodyBytes(),
+                                     notify.getOrigHeaders());
+                    	} else {
+	                        handler.notify(notify.getEmailAddr(),
+	                                       notify.getSubjectTemplate(),
+	                                       notify.getBodyTemplate(),
+	                                       notify.getMaxBodyBytes(),
+	                                       notify.getOrigHeaders());
+                    	}
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to notify.", e);
                         explicitKeep();
