@@ -14636,6 +14636,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyUpstreamEwsServers = "zimbraReverseProxyUpstreamEwsServers";
 
     /**
+     * The pool of servers that are available to the proxy for handling IMAP
+     * sessions. If empty, the NginxLookupExtension will select the mailbox
+     * server that hosts the account.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3008)
+    public static final String A_zimbraReverseProxyUpstreamImapServers = "zimbraReverseProxyUpstreamImapServers";
+
+    /**
      * The servers to be included in the login block in the nginx web proxy
      * config file. The servers configured here will only affect the proxy of
      * login URL requests.
