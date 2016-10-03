@@ -907,7 +907,6 @@ public final class FilterUtil {
     public static String sieveToJavaRegex(String pattern) {
         int ch;
         StringBuffer buffer = new StringBuffer(2 * pattern.length());
-        boolean lastCharWasStar = false;
         for (ch = 0; ch < pattern.length(); ch++) {
             final char nextChar = pattern.charAt(ch);
             switch (nextChar) {
@@ -915,9 +914,7 @@ public final class FilterUtil {
                 //
                 // Java Matcher has issues with repeated stars
                 //
-//                if (!lastCharWasStar) {
-                    buffer.append("(.*)?");
-//                }
+                buffer.append("(.*)?");
                 break;
             case '?':
                 buffer.append('.');
@@ -937,8 +934,6 @@ public final class FilterUtil {
                 buffer.append(nextChar);
                 break;
             }
-            // Workaround for issue with Java Matcher
-//            lastCharWasStar = '*' == nextChar;
         }
         return buffer.toString();
     }

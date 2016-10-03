@@ -103,7 +103,6 @@ public class StringTest extends Header {
 	        }
 	        sourceValues = tempSourceValues;
 	        
-//	      return false;
 	   
 	        return match(mail, (comparator == null ? ASCII_CASEMAP_COMPARATOR
 	                : comparator), matchType, sourceValues, keyValues, context);
@@ -112,7 +111,6 @@ public class StringTest extends Header {
 
 	@Override
 	protected void validateArguments(Arguments arguments, SieveContext context) throws SieveException {
-		// TODO Auto-generated method stub
 		if (arguments.getArgumentList().size() < 3) {
 			throw new SyntaxException("Atleast 3 argument are needed. Found " + arguments);
 		}
