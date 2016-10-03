@@ -16,7 +16,8 @@
  */
 
 package com.zimbra.cs.filter;
-
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,6 +54,7 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.IDNUtil;
@@ -67,6 +69,7 @@ import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -75,6 +78,9 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.StoreManager;
+
 
 /**
  * Sieve evaluation engine adds a list of {@link org.apache.jsieve.mail.Action}s
@@ -761,5 +767,25 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
     public Map<String, String> getVariables() {
         return variables;
+    }
+
+    public void updateIncomingBlob() {
+        DeliveryContext ctxt = handler.getDeliveryContext();
+        if (ctxt != null) {
+            StoreManager sm = StoreManager.getInstance();
+            InputStream in = null;
+            Blob blob = ctxt.getIncomingBlob();
+            try {
+                ParsedMessage pm = getParsedMessage();
+                pm.updateMimeMessage();
+                in = pm.getRawInputStream();
+                blob = sm.storeIncoming(in);
+            } catch (IOException | ServiceException | MessagingException e) {
+                ZimbraLog.filter.error("Unable to update MimeMessage and incomimg blob.", e);
+            } finally {
+                ByteUtil.closeStream(in);
+            }
+            ctxt.setIncomingBlob(blob);
+        }
     }
 }

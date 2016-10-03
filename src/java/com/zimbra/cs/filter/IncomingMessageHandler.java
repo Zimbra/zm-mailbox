@@ -16,6 +16,14 @@
  */
 package com.zimbra.cs.filter;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
@@ -34,13 +42,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SpamHandler.SpamReport;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Mail filtering implementation for messages that arrive via LMTP or from
@@ -192,5 +193,9 @@ public final class IncomingMessageHandler implements FilterHandler {
 
     @Override
     public void afterFiltering() {
+    }
+
+    public DeliveryContext getDeliveryContext() {
+        return dctxt;
     }
 }
