@@ -39425,6 +39425,118 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Sets the time-to-live for mail_whitelist_ip_ttl in nginx. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getReverseProxyIPThrottleWhitelistTimeAsString to access value as a string.
+     *
+     * @see #getReverseProxyIPThrottleWhitelistTimeAsString()
+     *
+     * @return zimbraReverseProxyIPThrottleWhitelistTime in millseconds, or 300000 (300s)  if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3007)
+    public long getReverseProxyIPThrottleWhitelistTime() {
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyIPThrottleWhitelistTime, 300000L, true);
+    }
+
+    /**
+     * Sets the time-to-live for mail_whitelist_ip_ttl in nginx. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraReverseProxyIPThrottleWhitelistTime, or "300s" if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3007)
+    public String getReverseProxyIPThrottleWhitelistTimeAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyIPThrottleWhitelistTime, "300s", true);
+    }
+
+    /**
+     * Sets the time-to-live for mail_whitelist_ip_ttl in nginx. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraReverseProxyIPThrottleWhitelistTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3007)
+    public void setReverseProxyIPThrottleWhitelistTime(String zimbraReverseProxyIPThrottleWhitelistTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPThrottleWhitelistTime, zimbraReverseProxyIPThrottleWhitelistTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the time-to-live for mail_whitelist_ip_ttl in nginx. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraReverseProxyIPThrottleWhitelistTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3007)
+    public Map<String,Object> setReverseProxyIPThrottleWhitelistTime(String zimbraReverseProxyIPThrottleWhitelistTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPThrottleWhitelistTime, zimbraReverseProxyIPThrottleWhitelistTime);
+        return attrs;
+    }
+
+    /**
+     * Sets the time-to-live for mail_whitelist_ip_ttl in nginx. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3007)
+    public void unsetReverseProxyIPThrottleWhitelistTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPThrottleWhitelistTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the time-to-live for mail_whitelist_ip_ttl in nginx. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3007)
+    public Map<String,Object> unsetReverseProxyIPThrottleWhitelistTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyIPThrottleWhitelistTime, "");
+        return attrs;
+    }
+
+    /**
      * NGINX reverse proxy imap capabilities
      *
      * @return zimbraReverseProxyImapEnabledCapability, or empty array if unset

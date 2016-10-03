@@ -9392,4 +9392,9 @@ TODO: delete them permanently from here
   <desc> Ehcache: the maximum amount of disk space the imap inactive session cache will consume in Bytes before eviction. By default this value is 100 gigabytes. This is a rough limit,Due to internals of ehcache actual size in memory will often exceed this limit by a modest margin. </desc>
 </attr>
 
+<attr id="3007" name="zimbraReverseProxyIPThrottleWhitelistTime" type="duration" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+  <globalConfigValue>300s</globalConfigValue>
+  <desc>Sets the time-to-live for mail_whitelist_ip_ttl in nginx</desc>
+</attr>
+
 </attrs>
