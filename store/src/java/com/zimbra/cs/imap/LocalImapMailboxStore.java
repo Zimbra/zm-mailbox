@@ -23,6 +23,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -178,6 +179,11 @@ public class LocalImapMailboxStore implements ImapMailboxStore {
         return mailbox.getId();
     }
 
+    @Override
+    public MailboxStore getMailboxStore() {
+        return mailbox;
+    }
+
     /** Returns the ID of this mailbox's Account. */
     @Override
     public String getAccountId() {
@@ -187,6 +193,12 @@ public class LocalImapMailboxStore implements ImapMailboxStore {
     @Override
     public Account getAccount() throws ServiceException {
         return mailbox.getAccount();
+    }
+
+    @Override
+    public FolderStore getFolderById(OperationContext octxt, String id) throws ServiceException {
+        int intID = Integer.parseInt(id);
+        return mailbox.getFolderById(octxt, intID);
     }
 
     public Mailbox getMailbox() {
