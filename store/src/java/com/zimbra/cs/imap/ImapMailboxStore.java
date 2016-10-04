@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
@@ -30,7 +31,7 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.Session;
 
-public interface ImapMailboxStore {
+public interface ImapMailboxStore extends MailboxStore {
     public ImapFlag getFlagByName(String name);
     public List<String> getFlagList(boolean permanentOnly);
     public ImapFlag getTagByName(String tag) throws ServiceException;
@@ -54,14 +55,14 @@ public interface ImapMailboxStore {
     /** Returns the ID of this mailbox's Account. */
     public String getAccountId();
 
-    public static ImapMailboxStore get(Mailbox mbox) throws ServiceException {
+    public static ImapMailboxStore get(Mailbox mbox) {
         if (mbox == null) {
             return null;
         }
         return new LocalImapMailboxStore(mbox);
     }
 
-    public static ImapMailboxStore get(ZMailbox mbox, String accountId) throws ServiceException {
+    public static ImapMailboxStore get(ZMailbox mbox, String accountId) {
         if (mbox == null) {
             return null;
         }
