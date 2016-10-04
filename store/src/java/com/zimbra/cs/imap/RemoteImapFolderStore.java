@@ -17,6 +17,10 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.client.ZFolder;
+import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.util.ItemId;
 
 public class RemoteImapFolderStore implements ImapFolderStore {
     private transient ZFolder folder;
@@ -26,8 +30,27 @@ public class RemoteImapFolderStore implements ImapFolderStore {
     }
 
     @Override
-    public String getId() {
-        return folder.getId();
+    public String getFolderIdAsString() {
+        return (folder == null) ? null : folder.getFolderIdAsString();
+    }
+
+    @Override
+    public FolderStore getFolderStore() {
+        return folder;
+    }
+
+    @Override
+    public boolean isUserRootFolder() {
+        try {
+            return (new ItemId(folder.getId(), (String) null).getId() == Mailbox.ID_FOLDER_USER_ROOT);
+        } catch (ServiceException e) {
+            return true;  // Shouldn't happen but assume the worst if it does
+        }
+    }
+
+    @Override
+    public boolean isIMAPDeleted() {
+        return folder.isIMAPDeleted();
     }
 
     @Override
