@@ -71,6 +71,7 @@ import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
@@ -250,7 +251,7 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
 /**
  * @since Jun 13, 2004
  */
-public class Mailbox {
+public class Mailbox implements MailboxStore {
 
     /* these probably should be ints... */
     public static final String BROWSE_BY_DOMAINS = "domains";
