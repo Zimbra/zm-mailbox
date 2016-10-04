@@ -17,13 +17,17 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
@@ -132,6 +136,26 @@ public class LocalImapMailboxStore implements ImapMailboxStore {
     @Override
     public int getCurrentMODSEQ(int folderId) throws ServiceException {
         return mailbox.getFolderById(null, folderId).getImapMODSEQ();
+    }
+
+    @Override
+    public Collection<FolderStore> getVisibleFolders(OperationContext octxt, ImapCredentials credentials,
+            String owner, ImapPath relativeTo)
+    throws ServiceException {
+        Collection<Folder> folders = mailbox.getVisibleFolders(octxt);
+        if (folders == null) {
+            folders = mailbox.getFolderById(octxt, relativeTo == null ?
+                    Mailbox.ID_FOLDER_USER_ROOT : relativeTo.asItemId().getId()).getSubfolderHierarchy();
+        }
+        String root = relativeTo == null ? "" : "/" + relativeTo.asResolvedPath();
+        Collection<FolderStore> fStores = Sets.newHashSetWithExpectedSize(folders.size());
+        for (Folder folder : folders) {
+            if (!folder.getPath().startsWith(root) || folder.getPath().equals(root)) {
+                continue;
+            }
+            fStores.add(folder);
+        }
+        return fStores;
     }
 
     @Override
