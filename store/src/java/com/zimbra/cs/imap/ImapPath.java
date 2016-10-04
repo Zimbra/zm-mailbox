@@ -50,14 +50,16 @@ public class ImapPath implements Comparable<ImapPath> {
     enum Scope { UNPARSED, NAME, CONTENT, REFERENCE };
 
     static Charset FOLDER_ENCODING_CHARSET;
-        static {
-            try {
-                FOLDER_ENCODING_CHARSET = Charset.forName("imap-utf-7");
-            } catch (Exception e) {
-                ZimbraLog.imap.error("could not load imap-utf-7 charset (perhaps zimbra-charset.jar is not in the jetty endorsed directory)", e);
-                FOLDER_ENCODING_CHARSET = Charset.forName("utf-8");
-            }
+    static {
+        try {
+            FOLDER_ENCODING_CHARSET = Charset.forName("imap-utf-7");
+        } catch (Exception e) {
+            ZimbraLog.imap.error(
+                "could not load imap-utf-7 charset (perhaps zimbra-charset.jar is not in the jetty endorsed directory)",
+                e);
+            FOLDER_ENCODING_CHARSET = Charset.forName("utf-8");
         }
+    }
 
     static final String NAMESPACE_PREFIX = "/home/";
 
@@ -597,8 +599,8 @@ public class ImapPath implements Comparable<ImapPath> {
     private boolean isVisible(MailItem.Type type, boolean isMailFolders) {
     switch (type) {
         case APPOINTMENT:
-	    case TASK:
-	    case WIKI:
+        case TASK:
+        case WIKI:
         case DOCUMENT:
         return false;
         case CONTACT:
