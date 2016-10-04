@@ -24,6 +24,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMountpoint;
 import com.zimbra.client.ZSearchFolder;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -32,7 +33,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -67,7 +67,7 @@ public class ImapPath implements Comparable<ImapPath> {
     private ItemId mItemId;
     private Scope mScope = Scope.CONTENT;
     private transient ImapMailboxStore mboxStore;
-    private transient ImapFolderStore folderStore;
+    private transient ImapFolderStore imapFolderStore;
     private transient Object mMailbox;
     private transient Object mFolder;
     private transient ImapPath mReferent;
@@ -125,6 +125,7 @@ public class ImapPath implements Comparable<ImapPath> {
         mOwner = other.mOwner;
         mPath = other.mPath;
         mMailbox = other.mMailbox;
+        mboxStore = other.mboxStore;
         mFolder = other.mFolder;
         mItemId = other.mItemId;
     }
@@ -132,6 +133,7 @@ public class ImapPath implements Comparable<ImapPath> {
     ImapPath(String owner, Folder folder, ImapCredentials creds) {
         this(owner, folder.getPath(), creds);
         mMailbox = folder.getMailbox();
+        mboxStore = ImapMailboxStore.get(folder.getMailbox());
         mFolder = folder;
         mItemId = new ItemId(folder);
     }
@@ -146,6 +148,7 @@ public class ImapPath implements Comparable<ImapPath> {
     ImapPath(String owner, ZFolder zfolder, ImapCredentials creds) throws ServiceException {
         this(owner, zfolder.getPath(), creds);
         mMailbox = zfolder.getMailbox();
+        mboxStore = ImapMailboxStore.get(zfolder.getMailbox(), creds.getAccountId());
         mFolder = zfolder;
         mItemId = new ItemId(zfolder.getId(), creds == null ? null : creds.getAccountId());
     }
@@ -223,7 +226,7 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     public ImapFolderStore getFolderStore() {
-        return folderStore;
+        return imapFolderStore;
     }
 
     boolean belongsTo(Mailbox mbox) throws ServiceException {
@@ -427,6 +430,7 @@ public class ImapPath implements Comparable<ImapPath> {
         ItemId iidRemote;
         String subpathRemote = null;
 
+        ImapMailboxStore ownerMailboxStore = getOwnerImapMailboxStore();
         Object mboxobj = getOwnerMailbox();
         if (mboxobj instanceof Mailbox) {
             try {
@@ -502,7 +506,8 @@ public class ImapPath implements Comparable<ImapPath> {
                 } else {
                     (mReferent = new ImapPath(owner, folder.getPath() + (folder.getPath().equals("/") ? "" : "/") + subpathRemote, mCredentials)).mMailbox = mbox;
                 }
-            } catch (ServiceException e) {
+            } catch (ServiceException se) {
+                ZimbraLog.imap.debug("Unexpected exception", se);
             }
         } else {
             Account acct = mCredentials == null ? null : Provisioning.getInstance().get(AccountBy.id, mCredentials.getAccountId());
@@ -568,19 +573,10 @@ public class ImapPath implements Comparable<ImapPath> {
         if (!isSelectable()) {
             return false;
         }
-
-        if (mFolder instanceof Folder) {
-            Folder folder = (Folder) mFolder;
-            if (folder instanceof SearchFolder || folder.getDefaultView() == MailItem.Type.CONTACT) {
-                return false;
-            }
-        } else {
-            ZFolder zfolder = (ZFolder) mFolder;
-            if (zfolder instanceof ZSearchFolder || zfolder.getDefaultView() == ZFolder.View.contact) {
-                return false;
-            }
+        FolderStore fstore = imapFolderStore.getFolderStore();
+        if (fstore.isSearchFolder() || fstore.isContactsFolder()) {
+            return false;
         }
-
         // note that getFolderRights() operates on the referent folder...
         if (rights == 0) {
             return true;
@@ -589,26 +585,12 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     boolean isSelectable() throws ServiceException {
-        if (!isVisible())
+        if (!isVisible() || imapFolderStore.isUserRootFolder() || imapFolderStore.isIMAPDeleted()) {
             return false;
-
-        if (mFolder instanceof Folder) {
-            Folder folder = (Folder) mFolder;
-            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT) {
-                return false;
-            } else if (folder.isTagged(Flag.FlagInfo.DELETED)) {
-                return false;
-            }
-        } else {
-            ZFolder zfolder = (ZFolder) mFolder;
-            if (new ItemId(zfolder.getId(), (String) null).getId() == Mailbox.ID_FOLDER_USER_ROOT) {
-                return false;
-            } else if (zfolder.isIMAPDeleted()) {
-                return false;
-            }
         }
         return (mReferent == this ? true : mReferent.isSelectable());
     }
+
     /**
      * Calendars, briefcases, etc. are not surfaced in IMAP.
      */

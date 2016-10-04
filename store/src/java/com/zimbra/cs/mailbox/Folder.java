@@ -31,6 +31,7 @@ import java.util.Set;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ListUtil;
@@ -50,7 +51,7 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
 /**
  * @since Aug 18, 2004
  */
-public class Folder extends MailItem {
+public class Folder extends MailItem implements FolderStore {
     public static class FolderOptions {
         private byte attributes;
         private Type defaultView = MailItem.Type.UNKNOWN;
@@ -1596,4 +1597,20 @@ public class Folder extends MailItem {
         }
         return false;
     }
+
+    @Override
+    public String getFolderIdAsString() {
+        return Integer.toString(getId());
+    }
+
+    @Override
+    public boolean isSearchFolder() {
+        return (this instanceof SearchFolder);
+    }
+
+    @Override
+    public boolean isContactsFolder() {
+        return (MailItem.Type.CONTACT == this.getDefaultView());
+    }
+
 }
