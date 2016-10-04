@@ -58,6 +58,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.AccessBoundedRegex;
@@ -1933,7 +1934,7 @@ abstract class ImapHandler {
                 patterns.add(pattern);
 
                 // get the set of *all* folders; we'll iterate over it below to find matches
-                accumulatePaths(patternPath.getOwnerMailbox(), owner, null, paths);
+                accumulatePaths(patternPath.getOwnerImapMailboxStore(), owner, null, paths);
 
                 // get the set of folders matching the selection criteria (either all folders or subscribed folders)
                 if (selectSubscribed) {
@@ -2070,50 +2071,32 @@ abstract class ImapHandler {
         return new Pair<String, Pattern>(resolved, Pattern.compile(escaped.toString()));
     }
 
-    private void accumulatePaths(Object mboxobj, String owner, ImapPath relativeTo, Map<ImapPath, ItemId> paths) throws ServiceException {
-        String root = relativeTo == null ? "" : "/" + relativeTo.asResolvedPath();
-        if (mboxobj instanceof Mailbox) {
-            Mailbox mbox = (Mailbox) mboxobj;
-            Collection<Folder> folders = mbox.getVisibleFolders(getContext());
-            if (folders == null) {
-                folders = mbox.getFolderById(getContext(), relativeTo == null ?
-                        Mailbox.ID_FOLDER_USER_ROOT : relativeTo.asItemId().getId()).getSubfolderHierarchy();
-            }
-            boolean isMailFolders =  Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
-            for (Folder folder : folders) {
-                if (!folder.getPath().startsWith(root) || folder.getPath().equals(root)) {
+    private void accumulatePaths(ImapMailboxStore imapStore, String owner, ImapPath relativeTo,
+            Map<ImapPath, ItemId> paths) throws ServiceException {
+        Collection<FolderStore> visibleFolders = imapStore.getVisibleFolders(getContext(), credentials,
+                owner, relativeTo);
+        // TODO - This probably needs to be the setting for the server for IMAP session's main mailbox
+        boolean isMailFolders =  Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
+        for (FolderStore folderStore : visibleFolders) {
+            //bug 6418 ..filter out folders which are contacts and chat for LIST command.
+            if(isMailFolders) {
+                //  chat has item type of message.  hence ignoring the chat folder by name.
+                if (folderStore.isChatsFolder() || (folderStore.getName().equals ("Chats"))) {
                     continue;
                 }
-               //bug 6418 ..filter out folders which are contacts and chat for LIST command.
-               if(isMailFolders) {
-	               MailItem.Type view = folder.getDefaultView(); //  chat has item type of message.hence ignoring the chat folder by name.
-	               if((view == MailItem.Type.CHAT) || (folder.getName().equals ("Chats"))) {
-	                continue;
-               }
-              }
-               ImapPath path = relativeTo == null ? new ImapPath(owner, folder, credentials) :
-                    new ImapPath(owner, folder, relativeTo);
-                if (path.isVisible()) {
-                    if (userAgent != null && userAgent.startsWith(IDInfo.DATASOURCE_IMAP_CLIENT_NAME)
-                        && folder.isTagged(Flag.FlagInfo.SYNCFOLDER)) {
-                        //bug 72577 - do not display folders synced with IMAP datasource to downstream IMAP datasource connections
-                        continue;
-                    }
-                    boolean alreadyTraversed = paths.put(path, path.asItemId()) != null;
-                    if (folder instanceof Mountpoint && !alreadyTraversed) {
-                        accumulatePaths(path.getOwnerMailbox(), owner, path, paths);
-                    }
-                }
             }
-        } else if (mboxobj instanceof ZMailbox) {
-            ZMailbox zmbx = (ZMailbox) mboxobj;
-            for (ZFolder zfolder : zmbx.getAllFolders()) {
-                if (!zfolder.getPath().startsWith(root) || zfolder.getPath().equals(root)) {
+            ImapPath path = relativeTo == null ? new ImapPath(owner, folderStore, credentials) :
+                new ImapPath(owner, folderStore, relativeTo);
+            if (path.isVisible()) {
+                if (userAgent != null && userAgent.startsWith(IDInfo.DATASOURCE_IMAP_CLIENT_NAME)
+                        && folderStore.isFlaggedAsSyncFolder()) {
+                    //bug 72577 - do not display folders synced with IMAP datasource to downstream
+                    // IMAP datasource connections
                     continue;
                 }
-                ImapPath path = relativeTo == null ? new ImapPath(owner, zfolder, credentials) : new ImapPath(owner, zfolder, relativeTo);
-                if (path.isVisible()) {
-                    paths.put(path, path.asItemId());
+                boolean alreadyTraversed = paths.put(path, path.asItemId()) != null;
+                if (folderStore instanceof Mountpoint && !alreadyTraversed) {
+                    accumulatePaths(path.getOwnerImapMailboxStore(), owner, path, paths);
                 }
             }
         }

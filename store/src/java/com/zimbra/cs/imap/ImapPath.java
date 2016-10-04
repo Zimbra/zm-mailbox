@@ -132,36 +132,25 @@ public class ImapPath implements Comparable<ImapPath> {
         mItemId = other.mItemId;
     }
 
-    ImapPath(String owner, Folder folder, ImapCredentials creds) {
-        this(owner, folder.getPath(), creds);
-        mMailbox = folder.getMailbox();
-        mboxStore = ImapMailboxStore.get(folder.getMailbox());
-        mFolder = folder;
-        mItemId = new ItemId(folder);
+    ImapPath(String owner, FolderStore folderStore, ImapCredentials creds) throws ServiceException {
+        this(owner, folderStore.getPath(), creds);
+        if (folderStore instanceof Folder) {
+            mMailbox = ((Folder)folderStore).getMailbox();
+        }
+        if (folderStore instanceof ZFolder) {
+            mMailbox = ((ZFolder)folderStore).getMailbox();
+        }
+        mboxStore = ImapMailboxStore.get(folderStore.getMailboxStore(), creds.getAccountId());
+        mFolder = folderStore;
+        mItemId = new ItemId(folderStore.getFolderIdAsString(), (creds == null) ? null : creds.getAccountId());
     }
 
-    ImapPath(String owner, Folder folder, ImapPath mountpoint) throws ServiceException {
+    ImapPath(String owner, FolderStore folderStore, ImapPath mountpoint) throws ServiceException {
         this(mountpoint);
-        (mReferent = new ImapPath(owner, folder, mCredentials)).mScope = Scope.REFERENCE;
+        (mReferent = new ImapPath(owner, folderStore, mCredentials)).mScope = Scope.REFERENCE;
         int start = mountpoint.getReferent().mPath.length() + 1;
         mPath = mountpoint.mPath + "/" + mReferent.mPath.substring(start == 1 ? 0 : start);
     }
-
-    ImapPath(String owner, ZFolder zfolder, ImapCredentials creds) throws ServiceException {
-        this(owner, zfolder.getPath(), creds);
-        mMailbox = zfolder.getMailbox();
-        mboxStore = ImapMailboxStore.get(zfolder.getMailbox(), creds.getAccountId());
-        mFolder = zfolder;
-        mItemId = new ItemId(zfolder.getId(), creds == null ? null : creds.getAccountId());
-    }
-
-    ImapPath(String owner, ZFolder zfolder, ImapPath mountpoint) throws ServiceException {
-        this(mountpoint);
-        (mReferent = new ImapPath(owner, zfolder, mCredentials)).mScope = Scope.REFERENCE;
-        int start = mountpoint.getReferent().mPath.length() + 1;
-        mPath = mountpoint.mPath + "/" + mReferent.mPath.substring(start == 1 ? 0 : start);
-    }
-
 
     public boolean isEquivalent(ImapPath other) {
         if (!mPath.equalsIgnoreCase(other.mPath)) {
