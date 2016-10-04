@@ -196,7 +196,7 @@ final class AppendMessage {
                 }
             } catch (Exception e) { }
 
-            int folderId = Integer.parseInt(folderStore.getId());
+            int folderId = Integer.parseInt(folderStore.getFolderIdAsString());
             DeliveryOptions dopt =
                     new DeliveryOptions().setFolderId(folderId).setNoICal(true).setFlags(flags).setTags(tags);
             Message msg = ((LocalImapMailboxStore) mboxStore).getMailbox().addMessage(handler.getContext(), pm, dopt, null);
@@ -217,8 +217,8 @@ final class AppendMessage {
             /* TODO: For new IMAP, may need to do more here to get, e.g. the flags correct. */
             String id;
             try (InputStream is = content.getInputStream()) {
-                id = ((RemoteImapMailboxStore) mboxStore).getZMailbox().addMessage(
-                    folderStore.getId(), Flag.toString(flags), null, date.getTime(), is, content.getRawSize(), true);
+                id = ((RemoteImapMailboxStore) mboxStore).getZMailbox().addMessage(folderStore.getFolderIdAsString(),
+                        Flag.toString(flags), null, date.getTime(), is, content.getRawSize(), true);
             }
             return new ItemId(id, mboxStore.getAccountId()).getId();
         }
