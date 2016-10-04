@@ -28,6 +28,7 @@ import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -171,8 +172,18 @@ public class RemoteImapMailboxStore implements ImapMailboxStore {
     }
 
     @Override
+    public MailboxStore getMailboxStore() {
+        return zMailbox;
+    }
+
+    @Override
     public Account getAccount() throws ServiceException {
         return Provisioning.getInstance().get(AccountBy.id, accountId);
+    }
+
+    @Override
+    public FolderStore getFolderById(OperationContext octxt, String id) throws ServiceException {
+        return zMailbox.getFolderById(id);
     }
 
     /** Returns the ID of this mailbox's Account. */
