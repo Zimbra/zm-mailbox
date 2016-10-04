@@ -69,6 +69,7 @@ public interface ImapMailboxStore extends MailboxStore {
     public boolean attachmentsIndexingEnabled() throws ServiceException;
     public boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException;
     public int getId();
+    public MailboxStore getMailboxStore();
     /** Returns this mailbox's Account. */
     Account getAccount() throws ServiceException;
     /** Returns the ID of this mailbox's Account. */
@@ -76,4 +77,5 @@ public interface ImapMailboxStore extends MailboxStore {
     public Collection<FolderStore> getVisibleFolders(OperationContext octxt, ImapCredentials credentials,
             String owner, ImapPath relativeTo)
     throws ServiceException;
+    public FolderStore getFolderById(OperationContext octxt, String id) throws ServiceException;
 }
