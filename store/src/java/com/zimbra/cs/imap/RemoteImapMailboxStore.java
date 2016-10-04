@@ -42,7 +42,7 @@ public class RemoteImapMailboxStore implements ImapMailboxStore {
     private transient ZMailbox zMailbox;
     private transient String accountId;
 
-    public RemoteImapMailboxStore(ZMailbox mailbox, String accountId) throws ServiceException {
+    public RemoteImapMailboxStore(ZMailbox mailbox, String accountId) {
         this.zMailbox = mailbox;
         this.accountId = accountId;
     }
