@@ -17,13 +17,17 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.client.ZFolder;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Folder;
 
 public interface ImapFolderStore {
 
-    String getId();
-    int getUIDValidity();
+    public String getFolderIdAsString();
+    public int getUIDValidity();
+    public boolean isUserRootFolder();
+    public boolean isIMAPDeleted();
+    public FolderStore getFolderStore();
 
     public static ImapFolderStore get(Object folder) throws ServiceException {
         if (folder == null) {
