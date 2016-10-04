@@ -17,10 +17,12 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -32,6 +34,23 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.Session;
 
 public interface ImapMailboxStore extends MailboxStore {
+    public static ImapMailboxStore get(Mailbox mbox) {
+        if (mbox == null) {
+            return null;
+        }
+        return new LocalImapMailboxStore(mbox);
+    }
+
+    public static ImapMailboxStore get(MailboxStore mailboxStore, String accountId) {
+        if (mailboxStore instanceof Mailbox) {
+            return new LocalImapMailboxStore((Mailbox) mailboxStore);
+        }
+        if (mailboxStore instanceof ZMailbox) {
+            return new RemoteImapMailboxStore((ZMailbox) mailboxStore, accountId);
+        }
+        return null;
+    }
+
     public ImapFlag getFlagByName(String name);
     public List<String> getFlagList(boolean permanentOnly);
     public ImapFlag getTagByName(String tag) throws ServiceException;
@@ -54,18 +73,7 @@ public interface ImapMailboxStore extends MailboxStore {
     Account getAccount() throws ServiceException;
     /** Returns the ID of this mailbox's Account. */
     public String getAccountId();
-
-    public static ImapMailboxStore get(Mailbox mbox) {
-        if (mbox == null) {
-            return null;
-        }
-        return new LocalImapMailboxStore(mbox);
-    }
-
-    public static ImapMailboxStore get(ZMailbox mbox, String accountId) {
-        if (mbox == null) {
-            return null;
-        }
-        return new RemoteImapMailboxStore(mbox, accountId);
-    }
+    public Collection<FolderStore> getVisibleFolders(OperationContext octxt, ImapCredentials credentials,
+            String owner, ImapPath relativeTo)
+    throws ServiceException;
 }
