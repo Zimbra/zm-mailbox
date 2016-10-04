@@ -18,12 +18,16 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
+import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -113,6 +117,27 @@ public class RemoteImapMailboxStore implements ImapMailboxStore {
     @Override
     public int getCurrentMODSEQ(int folderId) throws ServiceException {
         throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+    }
+
+    @Override
+    public Collection<FolderStore> getVisibleFolders(OperationContext octxt, ImapCredentials credentials,
+            String owner, ImapPath relativeTo)
+    throws ServiceException {
+        String root = relativeTo == null ? "" : "/" + relativeTo.asResolvedPath();
+        List<ZFolder> allZFolders = zMailbox.getAllFolders();
+        Set<FolderStore> fStores = Sets.newHashSetWithExpectedSize(allZFolders.size());
+        for (ZFolder zfolder : zMailbox.getAllFolders()) {
+            if (!zfolder.getPath().startsWith(root) || zfolder.getPath().equals(root)) {
+                continue;
+            }
+            ImapPath path;
+            path = (relativeTo == null) ? new ImapPath(owner, zfolder, credentials)
+                    : new ImapPath(owner, zfolder, relativeTo);
+            if (path.isVisible()) {
+                fStores.add(zfolder);
+            }
+        }
+        return fStores;
     }
 
     @Override
