@@ -36,9 +36,15 @@ public class LocalImapMailboxStore implements ImapMailboxStore {
     private transient Mailbox mailbox;
     private transient ImapFlagCache flags;
 
-    public LocalImapMailboxStore(Mailbox mailbox) throws ServiceException {
+    public LocalImapMailboxStore(Mailbox mailbox) {
         this.mailbox = mailbox;
-        this.flags = ImapFlagCache.getSystemFlags(mailbox);
+        try {
+            this.flags = ImapFlagCache.getSystemFlags(mailbox);
+        } catch (ServiceException se) {
+            // Realistically shouldn't happen
+            ZimbraLog.imap.debug("Problem getting system flags for mailbox %s - using empty set", mailbox, se);
+            this.flags = new ImapFlagCache();
+        }
     }
 
     @Override
