@@ -7781,6 +7781,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapInactiveSessionEhcacheSize = "zimbraImapInactiveSessionEhcacheSize";
 
     /**
+     * Determines the load-balancing algorithm used to select an IMAP server
+     * from the pool of available zimbraReverseProxyUpstreamImapServers.
+     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * ...]
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3009)
+    public static final String A_zimbraImapLoadBalancingAlgorithm = "zimbraImapLoadBalancingAlgorithm";
+
+    /**
      * Maximum number of concurrent IMAP connections allowed. New connections
      * exceeding this limit are rejected.
      *
