@@ -1409,7 +1409,7 @@ public class DefangFilterTest {
         String result = DefangFilter.removeAnySpacesAndEncodedChars(html);
         Assert.assertTrue(result.startsWith("javascript:"));
 
-        html= "j&#97;v&#97;script&#x3A;&#97;lert(document.domain)\n"
+        html= "j&#97;v&#97;script&#x3A;:&#97;lert(document.domain)\n"
                 +">XSS(1)</a>\n"
                 +"</body>\n"
                 +"</html>";

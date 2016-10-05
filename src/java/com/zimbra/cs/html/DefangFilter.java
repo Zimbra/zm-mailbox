@@ -773,12 +773,9 @@ public class DefangFilter extends DefaultFilter {
                 }
             }
         }
-        String temp = sb.toString().toLowerCase();
+        String temp = sb.toString();
         temp = StringEscapeUtils.unescapeHtml(temp);
-        if (index != -1 && (temp.contains("javascript") || temp.contains("vbscript"))) {
-            //maintaing the original case
-        	temp = sb.toString();
-            temp = StringEscapeUtils.unescapeHtml(temp);
+        if (index != -1 && (temp.toLowerCase().contains("javascript") || temp.toLowerCase().contains("vbscript"))) {
             sanitizedStr = temp + result.substring(index);
         }
         return sanitizedStr;
