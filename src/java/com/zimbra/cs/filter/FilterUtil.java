@@ -645,7 +645,10 @@ public final class FilterUtil {
         if (bodys != null && bodys.size() > 0) {
             String body = bodys.get(0);
             notification.setText(body, getCharset(account, body));
-        }
+        } else {
+		    notification.setText("");
+		}
+
         notification.saveChanges();
 
         // Misc.
