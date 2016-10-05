@@ -24,15 +24,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -47,6 +52,12 @@ import com.zimbra.soap.RequestContext;
  */
 public class DefangFilterTest {
     private static final String EMAIL_BASE_DIR = "./data/unittest/email/";
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
+    }
 
     /**
      * Check to makes sure ftp:// urls are passed through...
@@ -1295,7 +1306,16 @@ public class DefangFilterTest {
         InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
-        Assert.assertTrue(result.equals("<div>LIne 1</div></div><div>Line 2</div>"));
+        Assert.assertTrue(result.contains("<div>LIne 1</div></div><div>Line 2</div>"));
+
+        html = "<div>Thanks</div><div><img src=\"/home/ews01@zdev-vm002.eng.zimbra.com/Briefcase/rupali.jpeg\" "
+                + "dfsrc=\"doc:Briefcase/rupali.jpeg\" "
+                + "data-mce-src=\"/home/ews01@zdev-vm002.eng.zimbra.com/Briefcase/rupali.jpeg\"></div>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        System.out.println(result);
+        Assert.assertTrue(result.contains("dfsrc=\"doc:Briefcase/rupali.jpeg\""));
+        Assert.assertTrue(result.contains("data-mce-src=\"/home/ews01"));
     }
 
     @Test
@@ -1334,6 +1354,29 @@ public class DefangFilterTest {
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(result.contains("VBSCRIPT-BLOCKED"));
+
+        html= "<html>"
+               +" <body>\n"
+               +" <a href=\"j\n"
+               +" av\n"
+               +" ascript\n"
+               +" :\n"
+               +"alert(1)\n"
+               +"\"\n"
+               +">XSS(1)</a>\n"
+               +"</body>\n"
+               +"</html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html ="<a href=j&#97;v&#97;script&#x3A;&#97;lert(document.domain)>ClickMe</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
     }
 
     @Test
@@ -1352,4 +1395,25 @@ public class DefangFilterTest {
         Assert.assertTrue(result.contains("data-mce-src=\"/home/ews01"));
     }
 
+    @Test
+    public void testemoveAnySpacesAndEncodedChars() {
+        String  html= "j\n"
+              +" av\n"
+              +" ascript\n"
+              +" :\n"
+              +"alert(1)\n"
+              +"\n"
+              +">XSS(1)</a>\n"
+              +"</body>\n"
+              +"</html>";
+        String result = DefangFilter.removeAnySpacesAndEncodedChars(html);
+        Assert.assertTrue(result.startsWith("javascript:"));
+
+        html= "j&#97;v&#97;script&#x3A;&#97;lert(document.domain)\n"
+                +">XSS(1)</a>\n"
+                +"</body>\n"
+                +"</html>";
+        result = DefangFilter.removeAnySpacesAndEncodedChars(html);
+        Assert.assertTrue(result.startsWith("javascript:"));
+    }
 }

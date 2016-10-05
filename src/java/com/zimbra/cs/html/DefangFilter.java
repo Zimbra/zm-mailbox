@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
@@ -731,6 +732,7 @@ public class DefangFilter extends DefaultFilter {
     }
 
     public static String sanitize(String result, boolean isAllowedScript) {
+        result = removeAnySpacesAndEncodedChars(result);
         if (!(IMG_SKIP_OWASPSANITIZE.matcher(result).find())) {
             result = sanitizer.sanitize(result);
         }
@@ -752,6 +754,36 @@ public class DefangFilter extends DefaultFilter {
         }
         return result;
     }
+
+    /**
+     * @param result
+     * @return
+     */
+    public static String removeAnySpacesAndEncodedChars(String result) {
+        String sanitizedStr = result;
+        StringBuilder sb = new StringBuilder();
+        int index = result.indexOf(":");
+
+        if (index > -1) {
+            String jsString = result.substring(0, index);
+            char [] chars = jsString.toCharArray();
+            for (int i = 0; i < chars.length; ++i) {
+                if (!Character.isSpace(chars[i])) {
+                    sb.append(chars[i]);
+                }
+            }
+        }
+        String temp = sb.toString().toLowerCase();
+        temp = StringEscapeUtils.unescapeHtml(temp);
+        if (index != -1 && (temp.contains("javascript") || temp.contains("vbscript"))) {
+            //maintaing the original case
+        	temp = sb.toString();
+            temp = StringEscapeUtils.unescapeHtml(temp);
+            sanitizedStr = temp + result.substring(index);
+        }
+        return sanitizedStr;
+    }
+
     /**
      * sanitize an attr value. For now, this means stirpping out Java Script entity tags &{...},
      * and <script> tags.
