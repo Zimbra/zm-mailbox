@@ -20,30 +20,29 @@ package com.zimbra.client;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import com.zimbra.soap.mail.type.Acl;
 import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyFolderEvent;
+import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.soap.mail.type.Acl;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.Grant;
 import com.zimbra.soap.mail.type.Mountpoint;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.mail.type.SearchFolder;
 
-public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
+public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONObject {
 
     public static final String ID_USER_ROOT = "1";
     public static final String ID_INBOX = "2";
@@ -67,9 +66,9 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     public static final String PERM_WRITE = "w";
 
     private ZFolder.Color mColor;
-    private String mRgb;
-    private String mId;
-    private String mUuid;
+    private final String mRgb;
+    private final String mId;
+    private final String mUuid;
     private String mName;
     private int mUnreadCount;
     private int mImapUnreadCount;
@@ -88,8 +87,8 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     private List<ZGrant> mGrants;
     private List<ZFolder> mSubFolders;
     private ZFolder mParent;
-    private boolean mIsPlaceholder;
-    private ZMailbox mMailbox;
+    private final boolean mIsPlaceholder;
+    private final ZMailbox mMailbox;
     private RetentionPolicy mRetentionPolicy = new RetentionPolicy();
     private boolean mActiveSyncDisabled;
 
@@ -165,8 +164,8 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
             }
         };
 
-        private String mName;
-        private long mValue;
+        private final String mName;
+        private final long mValue;
 
         private Color(String color, long value) {
             this.mName = color;
@@ -438,6 +437,36 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     }
 
     @Override
+    public String getFolderIdAsString() {
+        return getId();
+    }
+
+    @Override
+    public boolean isSearchFolder() {
+        return (this instanceof ZSearchFolder);
+    }
+
+    @Override
+    public boolean isContactsFolder() {
+        return (ZFolder.View.contact == getDefaultView());
+    }
+
+    @Override
+    public boolean isChatsFolder() {
+        return (ZFolder.View.chat == getDefaultView());
+    }
+
+    @Override
+    public boolean isFlaggedAsSyncFolder() {
+        throw new UnsupportedOperationException("ZFolder method not supported yet");
+    }
+
+    @Override
+    public MailboxStore getMailboxStore() {
+        return getMailbox();
+    }
+
+    @Override
     public String getUuid() {
         return mUuid;
     }
@@ -449,6 +478,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
      * @see #getPath()
      *
      */
+    @Override
     public String getName() {
         return mName;
     }
@@ -468,6 +498,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
      *  which has the path <code>"/"</code>.  So the Inbox's path is
      *  <code>"/Inbox"</code>, etc.
      */
+    @Override
     public String getPath() {
         // TODO: CACHE? compute upfront?
         if (mParent == null)
@@ -678,7 +709,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     public String getRemoteURL() {
         return mRemoteURL;
     }
-    
+
     public boolean isActiveSyncDisabled() {
         return mActiveSyncDisabled;
     }
