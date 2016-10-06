@@ -16,9 +16,18 @@
  */
 package com.zimbra.common.mailbox;
 
-import com.zimbra.common.service.ServiceException;
+/**
+ * For path e.g. "/foo/bar/baz/gub" where a mailbox has a Folder at "/foo/bar" but NOT one at "/foo/bar/baz"
+ * this class can encapsulate this information where:
+ *     parentFolderStore is the folder at path "/foo/bar"
+ *     unmatchedPart = "baz/gub".
+ */
+public class ExistingParentFolderStoreAndUnmatchedPart {
+    public FolderStore parentFolderStore;
+    public String unmatchedPart;
 
-public interface MailboxStore {
-    public ExistingParentFolderStoreAndUnmatchedPart getParentFolderStoreAndUnmatchedPart(OpContext octxt, String path)
-    throws ServiceException;
+    public ExistingParentFolderStoreAndUnmatchedPart(FolderStore fstore, String unmatched) {
+        this.parentFolderStore = fstore;
+        this.unmatchedPart = unmatched;
+    }
 }
