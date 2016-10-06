@@ -17,25 +17,27 @@
 
 package com.zimbra.client;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
+import org.json.JSONException;
+
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyFolderEvent;
 import com.zimbra.client.event.ZModifyMountpointEvent;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MountpointStore;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Mountpoint;
 
-import org.json.JSONException;
-
-public class ZMountpoint extends ZFolder {
+public class ZMountpoint extends ZFolder implements MountpointStore {
 
     private String mOwnerId;
     private String mOwnerDisplayName;
     private String mRemoteId;
-    
+
     public ZMountpoint(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
         super(e, parent, mailbox);
-        mOwnerDisplayName = e.getAttribute(MailConstants.A_OWNER_NAME, null); // TODO: change back to required when DF is on main
+        mOwnerDisplayName = e.getAttribute(MailConstants.A_OWNER_NAME, null);
         mRemoteId = e.getAttribute(MailConstants.A_REMOTE_ID);
         mOwnerId = e.getAttribute(MailConstants.A_ZIMBRA_ID);
     }
@@ -46,7 +48,8 @@ public class ZMountpoint extends ZFolder {
         mRemoteId = Integer.toString(m.getRemoteFolderId());
         mOwnerId = m.getOwnerAccountId();
     }
-    
+
+    @Override
     public void modifyNotification(ZModifyEvent e) throws ServiceException {
         if (e instanceof ZModifyMountpointEvent) {
             ZModifyMountpointEvent mpe = (ZModifyMountpointEvent) e;
@@ -61,11 +64,12 @@ public class ZMountpoint extends ZFolder {
         }
     }
 
-
+    @Override
     public String toString() {
         return String.format("[ZMountpoint %s]", getPath());
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = super.toZJSONObject();
         jo.put("ownerId", mOwnerId);
@@ -100,7 +104,11 @@ public class ZMountpoint extends ZFolder {
      * @return the canonical remote id: {owner-id}:{remote-id}
      */
     public String getCanonicalRemoteId() {
-        return mOwnerId+":"+mRemoteId;       
+        return mOwnerId+":"+mRemoteId;
     }
 
+    @Override
+    public ItemIdentifier getTargetItemIdentifier() {
+        return ItemIdentifier.fromOwnerAndRemoteId(mOwnerId, mRemoteId);
+    }
 }
