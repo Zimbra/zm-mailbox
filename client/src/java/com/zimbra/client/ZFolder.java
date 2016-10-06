@@ -483,14 +483,14 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         return mName;
     }
 
-	public String getNameURLEncoded() {
-		try {
-			return URLEncoder.encode(mName, "utf-8").replace("+", "%20");
-		}
-		catch (UnsupportedEncodingException e) {
-			return mName;
-		}
-	}
+    public String getNameURLEncoded() {
+        try {
+            return URLEncoder.encode(mName, "utf-8").replace("+", "%20");
+        }
+        catch (UnsupportedEncodingException e) {
+            return mName;
+        }
+    }
 
     /** Returns the folder's absolute path.  Paths are UNIX-style with
      *  <code>'/'</code> as the path delimiter.  Paths are relative to
