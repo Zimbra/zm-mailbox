@@ -16,9 +16,9 @@
  */
 package com.zimbra.common.mailbox;
 
-import com.zimbra.common.service.ServiceException;
-
-public interface MailboxStore {
-    public ExistingParentFolderStoreAndUnmatchedPart getParentFolderStoreAndUnmatchedPart(OpContext octxt, String path)
-    throws ServiceException;
+/**
+ * Mostly created for use in interfaces shared between Mailbox/ZMailbox, Folder/ZFolder etc
+ * so that OperationContext can be preserved for Mailbox and Folder etc
+ */
+public interface OpContext {
 }
