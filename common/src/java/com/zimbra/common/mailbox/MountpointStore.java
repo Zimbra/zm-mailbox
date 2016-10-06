@@ -16,9 +16,6 @@
  */
 package com.zimbra.common.mailbox;
 
-import com.zimbra.common.service.ServiceException;
-
-public interface MailboxStore {
-    public ExistingParentFolderStoreAndUnmatchedPart getParentFolderStoreAndUnmatchedPart(OpContext octxt, String path)
-    throws ServiceException;
+public interface MountpointStore {
+    public ItemIdentifier getTargetItemIdentifier();
 }
