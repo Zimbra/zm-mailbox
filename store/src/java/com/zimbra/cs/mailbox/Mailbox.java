@@ -71,7 +71,9 @@ import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
@@ -4129,6 +4131,24 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
+    }
+
+    /**
+     * Given a path, resolves as much of the path as possible and returns the folder and the unmatched part.
+     *
+     * For path e.g. "/foo/bar/baz/gub" where a mailbox has a Folder at "/foo/bar" but NOT one at "/foo/bar/baz"
+     * this class can encapsulate this information where:
+     *     parentFolderStore is the folder at path "/foo/bar"
+     *     unmatchedPart = "baz/gub".
+     *
+     * If the returned folder is a mountpoint, then perhaps the remaining part is a subfolder in the remote mailbox.
+     */
+    @Override
+    public ExistingParentFolderStoreAndUnmatchedPart getParentFolderStoreAndUnmatchedPart(OpContext octxt, String path)
+    throws ServiceException {
+        int baseFolderId = Mailbox.ID_FOLDER_USER_ROOT;
+        Pair<Folder, String> pair = getFolderByPathLongestMatch((OperationContext)octxt, baseFolderId, path);
+        return new ExistingParentFolderStoreAndUnmatchedPart(pair.getFirst(), pair.getSecond());
     }
 
     public List<Folder> getFolderList(OperationContext octxt, SortBy sort) throws ServiceException {
