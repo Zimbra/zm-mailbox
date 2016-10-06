@@ -33,7 +33,7 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.Session;
 
-public interface ImapMailboxStore extends MailboxStore {
+public interface ImapMailboxStore {
     public static ImapMailboxStore get(Mailbox mbox) {
         if (mbox == null) {
             return null;
