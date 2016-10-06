@@ -95,6 +95,9 @@ import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.auth.twofactor.TwoFactorOptions.Encoding;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
+import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
@@ -165,7 +168,7 @@ import com.zimbra.soap.type.Pop3DataSource;
 import com.zimbra.soap.type.RssDataSource;
 import com.zimbra.soap.type.SearchSortBy;
 
-public class ZMailbox implements ToZJSONObject {
+public class ZMailbox implements ToZJSONObject, MailboxStore {
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
     public final static int MAX_NUM_CACHED_SEARCH_CONV_PAGERS = 5;
     public final static int MAX_NUM_CACHED_MESSAGES = LC.zmailbox_message_cachesize.intValue();
@@ -5582,7 +5585,7 @@ public class ZMailbox implements ToZJSONObject {
      * If the returned folder is a ZMountpoint, then it can be assumed that the remaining part is a subfolder in
      * the remote mailbox.
      *
-     * @param baseFolderItemId Folder to start from (pass Mailbox.ID_FOLDER_ROOT as String to start from the root)
+     * @param baseFolderItemId Folder to start from (pass ZFolder.ID_USER_ROOT as String to start from the root)
      * @throws ServiceException if the folder with {@code startingFolderId} does not exist or {@code path} is
      * {@code null} or empty.
      */
@@ -5608,6 +5611,37 @@ public class ZMailbox implements ToZJSONObject {
             folder = subfolder;
         }
         return new Pair<ZFolder, String>(folder, unmatched);
+    }
+
+    /**
+     * Given a path, resolves as much of the path as possible and returns the folder and the unmatched part.
+     *
+     * For path e.g. "/foo/bar/baz/gub" where a mailbox has a Folder at "/foo/bar" but NOT one at "/foo/bar/baz"
+     * this class can encapsulate this information where:
+     *     parentFolderStore is the folder at path "/foo/bar"
+     *     unmatchedPart = "baz/gub".
+     *
+     * If the returned folder is a mountpoint, then perhaps the remaining part is a subfolder in the remote mailbox.
+     */
+    @Override
+    public ExistingParentFolderStoreAndUnmatchedPart getParentFolderStoreAndUnmatchedPart(OpContext octxt, String path)
+    throws ServiceException {
+        // Could have based this on getFolderByPathLongestMatch(ZFolder.ID_USER_ROOT, path);
+        // but that looks less efficient - for deep nesting, creating lots of ZFolders and throwing them away...
+        // This code borrowed (and moved) from ImapPath.getReferent()
+        if (Strings.isNullOrEmpty(path)) {
+            return new ExistingParentFolderStoreAndUnmatchedPart(getFolderById(ZFolder.ID_USER_ROOT), "");
+        }
+        try {
+            for (int index = path.length(); index != -1; index = path.lastIndexOf('/', index - 1)) {
+                ZFolder zfolder = getFolderByPath(path.substring(0, index));
+                if (zfolder != null) {
+                    String subpathRemote = path.substring(Math.min(path.length(), index + 1));
+                    return new ExistingParentFolderStoreAndUnmatchedPart(zfolder, subpathRemote);
+                }
+            }
+        } catch (ServiceException e) {}
+        return new ExistingParentFolderStoreAndUnmatchedPart(getFolderById(ZFolder.ID_USER_ROOT), path);
     }
 
     public EnableTwoFactorAuthResponse enableTwoFactorAuth(String password, TOTPAuthenticator auth) throws ServiceException {
