@@ -28,12 +28,15 @@ import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyFolderEvent;
+import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.mail.type.Acl;
 import com.zimbra.soap.mail.type.Folder;
@@ -44,22 +47,23 @@ import com.zimbra.soap.mail.type.SearchFolder;
 
 public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONObject {
 
-    public static final String ID_USER_ROOT = "1";
-    public static final String ID_INBOX = "2";
-    public static final String ID_TRASH = "3";
-    public static final String ID_SPAM = "4";
-    public static final String ID_SENT = "5";
-    public static final String ID_DRAFTS = "6";
-    public static final String ID_CONTACTS = "7";
-    public static final String ID_TAGS = "8";
-    public static final String ID_CONVERSATIONS = "9";
-    public static final String ID_CALENDAR = "10";
-    public static final String ID_ROOT = "11";
-    public static final String ID_NOTEBOOK = "12";
-    public static final String ID_AUTO_CONTACTS = "13";
-    public static final String ID_CHATS = "14";
-    public static final String ID_TASKS = "15";
-    public static final String ID_BRIEFCASE = "16";
+    public static final String ID_USER_ROOT = Integer.toString(FolderConstants.ID_FOLDER_USER_ROOT) ; // "1"
+    public static final String ID_INBOX = Integer.toString(FolderConstants.ID_FOLDER_INBOX) ; // "2"
+    public static final String ID_TRASH = Integer.toString(FolderConstants.ID_FOLDER_TRASH) ; // "3"
+    public static final String ID_SPAM = Integer.toString(FolderConstants.ID_FOLDER_SPAM) ; // "4"
+    public static final String ID_SENT = Integer.toString(FolderConstants.ID_FOLDER_SENT) ; // "5"
+    public static final String ID_DRAFTS = Integer.toString(FolderConstants.ID_FOLDER_DRAFTS) ; // "6"
+    public static final String ID_CONTACTS = Integer.toString(FolderConstants.ID_FOLDER_CONTACTS) ; // "7"
+    public static final String ID_TAGS = Integer.toString(FolderConstants.ID_FOLDER_TAGS) ; // "8"
+    public static final String ID_CONVERSATIONS = Integer.toString(FolderConstants.ID_FOLDER_CONVERSATIONS) ; // "9"
+    public static final String ID_CALENDAR = Integer.toString(FolderConstants.ID_FOLDER_CALENDAR) ; // "10"
+    public static final String ID_ROOT = Integer.toString(FolderConstants.ID_FOLDER_ROOT) ; // "11"
+    public static final String ID_NOTEBOOK = Integer.toString(FolderConstants.ID_FOLDER_NOTEBOOK) ; // "12"
+    public static final String ID_AUTO_CONTACTS = Integer.toString(FolderConstants.ID_FOLDER_AUTO_CONTACTS) ; // "13"
+    public static final String ID_CHATS = Integer.toString(FolderConstants.ID_FOLDER_IM_LOGS) ; // "14"
+    public static final String ID_TASKS = Integer.toString(FolderConstants.ID_FOLDER_TASKS) ; // "15"
+    public static final String ID_BRIEFCASE = Integer.toString(FolderConstants.ID_FOLDER_BRIEFCASE) ; // "16"
+
     public static final String ID_FIRST_USER_ID = "256";
     public static final double BASE64_TO_NORMAL_RATIO = 1.34;
 
@@ -441,6 +445,34 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         return getId();
     }
 
+    public int getFolderIdInOwnerMailbox() {
+        ItemIdentifier fId;
+        try {
+            fId = new ItemIdentifier(getFolderIdAsString(), null);
+            return fId.id;
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.debug("Problem understanding folderId '%s' - assume hidden", getFolderIdAsString(), e);
+            throw new RuntimeException(
+                    String.format("Problem understanding folderId '%s' - assume hidden", getFolderIdAsString()), e);
+        }
+
+    }
+
+    /**
+     * Returns whether the folder is client-visible. Folders below the user root folder
+     * ({@link FolderConstants#ID_FOLDER_USER_ROOT}) are visible; all others are hidden.
+     */
+    @Override
+    public boolean isHidden() {
+        int fId = this.getFolderIdInOwnerMailbox();
+        if (FolderConstants.ID_FOLDER_USER_ROOT == fId) {
+            return false;
+        } else if (FolderConstants.ID_FOLDER_ROOT == fId) {
+            return true;
+        }
+        return getParent().isHidden();
+    }
+
     @Override
     public boolean isSearchFolder() {
         return (this instanceof ZSearchFolder);
@@ -459,6 +491,32 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     @Override
     public boolean isFlaggedAsSyncFolder() {
         throw new UnsupportedOperationException("ZFolder method not supported yet");
+    }
+
+    /** Returns whether the folder is the Trash folder or any of its subfolders. */
+    @Override public boolean inTrash() {
+        int fId = this.getFolderIdInOwnerMailbox();
+        if (fId <= FolderConstants.HIGHEST_SYSTEM_ID) {
+            return (FolderConstants.ID_FOLDER_TRASH == fId);
+        }
+        return getParent().inTrash();
+    }
+
+    /** Calendars, briefcases, etc. are not surfaced in IMAP. */
+    @Override
+    public boolean isVisibleInImap(boolean displayMailFoldersOnly) {
+        switch (getDefaultView()) {
+        case appointment:
+        case task:
+        case wiki:
+        case document:
+            return false;
+        case contact:
+        case chat:
+            return !displayMailFoldersOnly;
+        default:
+            return true;
+        }
     }
 
     @Override
