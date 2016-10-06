@@ -26,6 +26,7 @@ import java.util.Map;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -43,11 +44,8 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class ItemId implements java.io.Serializable {
     private static final long serialVersionUID = -9044615129495573523L;
 
-    private static final char ACCOUNT_DELIMITER = ':';
-    private static final char PART_DELIMITER    = '-';
-
-    private String mAccountId;
-    private int    mId;
+    private final String mAccountId;
+    private final int    mId;
     private int    mSubpartId = -1;
 
     public ItemId(MailItem item) {
@@ -70,39 +68,18 @@ public class ItemId implements java.io.Serializable {
         mAccountId = acctId;  mId = id;  mSubpartId = subId;
     }
 
+    public ItemId(ItemIdentifier itemIdentifier) {
+        mAccountId = itemIdentifier.accountId;
+        mId = itemIdentifier.id;
+        mSubpartId = itemIdentifier.subPartId;
+    }
+
     public ItemId(String encoded, ZimbraSoapContext zsc) throws ServiceException {
         this(encoded, zsc.getRequestedAccountId());
     }
 
     public ItemId(String encoded, String defaultAccountId) throws ServiceException {
-        if (encoded == null || encoded.equals(""))
-            throw ServiceException.INVALID_REQUEST("empty/missing item ID", null);
-
-        // strip off the account id, if present
-        int delimiter = encoded.indexOf(ACCOUNT_DELIMITER);
-        if (delimiter == 0 || delimiter == encoded.length() - 1)
-            throw ServiceException.INVALID_REQUEST("malformed item ID: " + encoded, null);
-        if (delimiter != -1)
-            mAccountId = encoded.substring(0, delimiter);
-        else if (defaultAccountId != null)
-            mAccountId = defaultAccountId;
-        encoded = encoded.substring(delimiter + 1);
-
-        // break out the appointment sub-id, if present
-        delimiter = encoded.indexOf(PART_DELIMITER);
-        if (delimiter == encoded.length() - 1)
-            throw ServiceException.INVALID_REQUEST("malformed item ID: " + encoded, null);
-        try {
-            if (delimiter > 0) {
-                mSubpartId = Integer.parseInt(encoded.substring(delimiter + 1));
-                if (mSubpartId < 0)
-                    throw ServiceException.INVALID_REQUEST("malformed item ID: " + encoded, null);
-                encoded = encoded.substring(0, delimiter);
-            }
-            mId = Integer.parseInt(encoded);
-        } catch (NumberFormatException nfe) {
-            throw ServiceException.INVALID_REQUEST("malformed item ID: " + encoded, nfe);
-        }
+        this(new ItemIdentifier(encoded, defaultAccountId));
     }
 
     public static ItemId createFromEncoded(String encoded, String defaultAccountId) throws ServiceException {
@@ -146,6 +123,9 @@ public class ItemId implements java.io.Serializable {
         return mbox == null || mAccountId == null || mAccountId.equals(mbox.getAccountId());
     }
 
+    public ItemIdentifier toItemIdentifier() {
+        return new ItemIdentifier(mAccountId, mId, mSubpartId);
+    }
 
     @Override public String toString() {
         return toString((String) null);
@@ -160,12 +140,12 @@ public class ItemId implements java.io.Serializable {
     }
 
     public String toString(String authAccountId) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (mAccountId != null && mAccountId.length() > 0 && !mAccountId.equals(authAccountId))
-            sb.append(mAccountId).append(ACCOUNT_DELIMITER);
+            sb.append(mAccountId).append(ItemIdentifier.ACCOUNT_DELIMITER);
         sb.append(mId);
         if (hasSubpart())
-            sb.append(PART_DELIMITER).append(mSubpartId);
+            sb.append(ItemIdentifier.PART_DELIMITER).append(mSubpartId);
         return sb.toString();
     }
 
@@ -185,7 +165,6 @@ public class ItemId implements java.io.Serializable {
     @Override public int hashCode() {
         return (mAccountId == null ? 0 : mAccountId.hashCode()) ^ mId;
     }
-
 
     // groups folders by account id
     // value is list of folder id integers
@@ -236,12 +215,10 @@ public class ItemId implements java.io.Serializable {
                 ItemIdFormatter ifmt = new ItemIdFormatter(targetAccountId, targetAccountId, false);
                 if (ecode.equals(ServiceException.PERM_DENIED)) {
                     // share permission was revoked
-                    ZimbraLog.calendar.warn(
-                            "Ignorable permission error " + ifmt.formatItemId(folderId), e);
+                    ZimbraLog.calendar.warn("Ignorable permission error %s", ifmt.formatItemId(folderId), e);
                 } else if (ecode.equals(MailServiceException.NO_SUCH_FOLDER)) {
                     // shared calendar folder was deleted by the owner
-                    ZimbraLog.calendar.warn(
-                            "Ignoring deleted folder " + ifmt.formatItemId(folderId));
+                    ZimbraLog.calendar.warn("Ignoring deleted folder %s", ifmt.formatItemId(folderId));
                 } else {
                     throw e;
                 }
@@ -254,9 +231,9 @@ public class ItemId implements java.io.Serializable {
         ItemId foo = null;
         try {
             foo = new ItemId("34480-508bc90b-d85e-45d6-bca2-7c34b7c407cb:34479", (String) null);
+            System.out.println(foo.toString());
         } catch (ServiceException e) {
             e.printStackTrace();
         }
-        System.out.println(foo.toString());
     }
 }
