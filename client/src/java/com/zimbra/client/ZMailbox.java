@@ -96,6 +96,7 @@ import com.zimbra.common.auth.twofactor.TwoFactorOptions.Encoding;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.net.SocketFactories;
@@ -2658,6 +2659,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             return null;
         }
         return mUserRoot.getSubFolderByPath(path.substring(1));
+    }
+
+    @Override
+    public FolderStore getFolderByPath(OpContext octxt, String path) throws ServiceException {
+        return getFolderByPath(path);
     }
 
     public ZFolder getInbox() throws ServiceException { return getFolderById(ZFolder.ID_INBOX); }
