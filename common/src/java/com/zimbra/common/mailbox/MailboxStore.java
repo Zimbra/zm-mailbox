@@ -19,6 +19,7 @@ package com.zimbra.common.mailbox;
 import com.zimbra.common.service.ServiceException;
 
 public interface MailboxStore {
+    public FolderStore getFolderByPath(OpContext octxt, String path) throws ServiceException;
     public ExistingParentFolderStoreAndUnmatchedPart getParentFolderStoreAndUnmatchedPart(OpContext octxt, String path)
     throws ServiceException;
 }
