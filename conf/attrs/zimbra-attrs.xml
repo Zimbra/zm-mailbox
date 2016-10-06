@@ -9397,4 +9397,8 @@ TODO: delete them permanently from here
   <desc>Sets the time-to-live for mail_whitelist_ip_ttl in nginx</desc>
 </attr>
 
+<attr id="3008" name="zimbraReverseProxyUpstreamImapServers" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+  <desc>The pool of servers that are available to the proxy for handling IMAP sessions. If empty, the NginxLookupExtension will select the mailbox server that hosts the account.</desc>
+</attr>
+
 </attrs>

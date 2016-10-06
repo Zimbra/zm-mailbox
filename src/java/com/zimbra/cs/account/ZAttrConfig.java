@@ -57964,6 +57964,158 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * The pool of servers that are available to the proxy for handling IMAP
+     * sessions. If empty, the NginxLookupExtension will select the mailbox
+     * server that hosts the account.
+     *
+     * @return zimbraReverseProxyUpstreamImapServers, or empty array if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3008)
+    public String[] getReverseProxyUpstreamImapServers() {
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamImapServers, true, true);
+    }
+
+    /**
+     * The pool of servers that are available to the proxy for handling IMAP
+     * sessions. If empty, the NginxLookupExtension will select the mailbox
+     * server that hosts the account.
+     *
+     * @param zimbraReverseProxyUpstreamImapServers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3008)
+    public void setReverseProxyUpstreamImapServers(String[] zimbraReverseProxyUpstreamImapServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamImapServers, zimbraReverseProxyUpstreamImapServers);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The pool of servers that are available to the proxy for handling IMAP
+     * sessions. If empty, the NginxLookupExtension will select the mailbox
+     * server that hosts the account.
+     *
+     * @param zimbraReverseProxyUpstreamImapServers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3008)
+    public Map<String,Object> setReverseProxyUpstreamImapServers(String[] zimbraReverseProxyUpstreamImapServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamImapServers, zimbraReverseProxyUpstreamImapServers);
+        return attrs;
+    }
+
+    /**
+     * The pool of servers that are available to the proxy for handling IMAP
+     * sessions. If empty, the NginxLookupExtension will select the mailbox
+     * server that hosts the account.
+     *
+     * @param zimbraReverseProxyUpstreamImapServers new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3008)
+    public void addReverseProxyUpstreamImapServers(String zimbraReverseProxyUpstreamImapServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyUpstreamImapServers, zimbraReverseProxyUpstreamImapServers);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The pool of servers that are available to the proxy for handling IMAP
+     * sessions. If empty, the NginxLookupExtension will select the mailbox
+     * server that hosts the account.
+     *
+     * @param zimbraReverseProxyUpstreamImapServers new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3008)
+    public Map<String,Object> addReverseProxyUpstreamImapServers(String zimbraReverseProxyUpstreamImapServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyUpstreamImapServers, zimbraReverseProxyUpstreamImapServers);
+        return attrs;
+    }
+
+    /**
+     * The pool of servers that are available to the proxy for handling IMAP
+     * sessions. If empty, the NginxLookupExtension will select the mailbox
+     * server that hosts the account.
+     *
+     * @param zimbraReverseProxyUpstreamImapServers existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3008)
+    public void removeReverseProxyUpstreamImapServers(String zimbraReverseProxyUpstreamImapServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyUpstreamImapServers, zimbraReverseProxyUpstreamImapServers);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The pool of servers that are available to the proxy for handling IMAP
+     * sessions. If empty, the NginxLookupExtension will select the mailbox
+     * server that hosts the account.
+     *
+     * @param zimbraReverseProxyUpstreamImapServers existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3008)
+    public Map<String,Object> removeReverseProxyUpstreamImapServers(String zimbraReverseProxyUpstreamImapServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyUpstreamImapServers, zimbraReverseProxyUpstreamImapServers);
+        return attrs;
+    }
+
+    /**
+     * The pool of servers that are available to the proxy for handling IMAP
+     * sessions. If empty, the NginxLookupExtension will select the mailbox
+     * server that hosts the account.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3008)
+    public void unsetReverseProxyUpstreamImapServers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamImapServers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The pool of servers that are available to the proxy for handling IMAP
+     * sessions. If empty, the NginxLookupExtension will select the mailbox
+     * server that hosts the account.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3008)
+    public Map<String,Object> unsetReverseProxyUpstreamImapServers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamImapServers, "");
+        return attrs;
+    }
+
+    /**
      * The servers to be included in the login block in the nginx web proxy
      * config file. The servers configured here will only affect the proxy of
      * login URL requests.
