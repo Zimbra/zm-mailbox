@@ -19,15 +19,19 @@ package com.zimbra.cs.imap;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
+import org.python.google.common.base.Strings;
+
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMountpoint;
 import com.zimbra.client.ZSearchFolder;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -71,8 +75,7 @@ public class ImapPath implements Comparable<ImapPath> {
     private Scope mScope = Scope.CONTENT;
     private transient ImapMailboxStore imapMboxStore;
     private transient ImapFolderStore imapFolderStore;
-    private transient Object mMailbox;
-    private transient Object mFolder;
+    private transient FolderStore mFolder;
     private transient ImapPath mReferent;
 
     /** Takes a user-supplied IMAP mailbox path and converts it to a Zimbra
@@ -126,7 +129,6 @@ public class ImapPath implements Comparable<ImapPath> {
     static ImapPath get(String owner, String zimbraPath, ImapCredentials creds, ImapMailboxStore imapMailboxStore) {
         ImapPath ipath = new ImapPath (owner, zimbraPath, creds);
         ipath.imapMboxStore = imapMailboxStore;
-        ipath.mMailbox = imapMailboxStore.getMailboxStore();
         return ipath;
     }
 
@@ -134,7 +136,6 @@ public class ImapPath implements Comparable<ImapPath> {
         mCredentials = other.mCredentials;
         mOwner = other.mOwner;
         mPath = other.mPath;
-        mMailbox = other.mMailbox;
         imapMboxStore = other.imapMboxStore;
         mFolder = other.mFolder;
         mItemId = other.mItemId;
@@ -142,12 +143,6 @@ public class ImapPath implements Comparable<ImapPath> {
 
     ImapPath(String owner, FolderStore folderStore, ImapCredentials creds) throws ServiceException {
         this(owner, folderStore.getPath(), creds);
-        if (folderStore instanceof Folder) {
-            mMailbox = ((Folder)folderStore).getMailbox();
-        }
-        if (folderStore instanceof ZFolder) {
-            mMailbox = ((ZFolder)folderStore).getMailbox();
-        }
         imapMboxStore = ImapMailboxStore.get(folderStore.getMailboxStore(), creds.getAccountId());
         mFolder = folderStore;
         mItemId = new ItemId(folderStore.getFolderIdAsString(), (creds == null) ? null : creds.getAccountId());
@@ -192,12 +187,7 @@ public class ImapPath implements Comparable<ImapPath> {
     ImapPath canonicalize() throws ServiceException {
         getFolder();
 
-        String path;
-        if (mFolder instanceof Folder) {
-            path = ((Folder) mFolder).getPath();
-        } else {
-            path = ((ZFolder) mFolder).getPath();
-        }
+        String path = mFolder.getPath();
 
         while (path.startsWith("/")) {
             path = path.substring(1);
@@ -276,9 +266,9 @@ public class ImapPath implements Comparable<ImapPath> {
         return acct != null && Provisioning.onLocalServer(acct);
     }
 
-    Object getOwnerMailbox() throws ServiceException {
+    MailboxStore getOwnerMailbox() throws ServiceException {
         getOwnerImapMailboxStore(false);
-        return mMailbox;
+        return (null == imapMboxStore) ? null : imapMboxStore.getMailboxStore();
     }
 
     ImapMailboxStore getOwnerImapMailboxStore() throws ServiceException {
@@ -295,24 +285,19 @@ public class ImapPath implements Comparable<ImapPath> {
         }
         if (forceRemote) {
             ZMailbox zmbox = getOwnerZMailbox();
-            mMailbox = zmbox;
             imapMboxStore = (null == zmbox) ? null : ImapMailboxStore.get(zmbox, this.getOwnerAccountId());
         }
-        if (mMailbox == null) {
+        if (imapMboxStore == null) {
             Account target = getOwnerAccount();
             if (target == null) {
-                mMailbox = null;
                 imapMboxStore = null;
             } else if (Provisioning.onLocalServer(target)) {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(target);
-                mMailbox = mbox;
                 imapMboxStore = ImapMailboxStore.get(mbox);
             } else if (mCredentials == null) {
-                mMailbox = null;
                 imapMboxStore = null;
             } else {
                 ZMailbox zmbox = getOwnerZMailbox();
-                mMailbox = zmbox;
                 imapMboxStore = (null == zmbox) ? null : ImapMailboxStore.get(zmbox, this.getOwnerAccountId());
             }
         }
@@ -354,7 +339,7 @@ public class ImapPath implements Comparable<ImapPath> {
         return (mCredentials == null ? null : mCredentials.getContext());
     }
 
-    Object getFolder() throws ServiceException {
+    FolderStore getFolder() throws ServiceException {
         if (useReferent()) {
             return getReferent().getFolder();
         }
@@ -413,6 +398,10 @@ public class ImapPath implements Comparable<ImapPath> {
         return !iidBase.equals(mReferent.mItemId);
     }
 
+    /**
+     * @return equivalent path from the point of view of the owner of the mailbox containing this ImapPath.
+     *         Typically only different from this if the path is not in my mailbox
+     */
     ImapPath getReferent() throws ServiceException {
         if (mReferent != null) {
             return mReferent;
@@ -426,64 +415,39 @@ public class ImapPath implements Comparable<ImapPath> {
             return mReferent;
         }
 
+        ImapMailboxStore ownerImapMailboxStore = getOwnerImapMailboxStore();
+        if (null == ownerImapMailboxStore) {
+            return mReferent;
+        }
+
         ItemId iidRemote;
         String subpathRemote = null;
 
-        ImapMailboxStore ownerMailboxStore = getOwnerImapMailboxStore();
-        Object mboxobj = getOwnerMailbox();
-        if (mboxobj instanceof Mailbox) {
+        if (mFolder == null) {
             try {
-                if (mFolder == null) {
-                    Pair<Folder,String> resolved = ((Mailbox) mboxobj).getFolderByPathLongestMatch(getContext(), Mailbox.ID_FOLDER_USER_ROOT, asZimbraPath());
-                    subpathRemote = resolved.getSecond();
-
-                    boolean isMountpoint = resolved.getFirst() instanceof Mountpoint;
-                    if (isMountpoint || resolved.getSecond() == null) {
-                        mFolder = resolved.getFirst();
-                        mItemId = new ItemId(resolved.getFirst());
-                    }
-                    if (!isMountpoint) {
-                        return mReferent;
-                    }
-                } else if (!(mFolder instanceof Mountpoint)) {
+                ExistingParentFolderStoreAndUnmatchedPart info =
+                        ownerImapMailboxStore.getMailboxStore().getParentFolderStoreAndUnmatchedPart(
+                                getContext(), asZimbraPath());
+                subpathRemote = info.unmatchedPart;
+                if (info.parentFolderStore instanceof MountpointStore || Strings.isNullOrEmpty(subpathRemote)) {
+                    mFolder = info.parentFolderStore;
+                    String accountId = mCredentials == null ? null : mCredentials.getAccountId();
+                    ItemIdentifier itemIdent = ItemIdentifier.fromOwnerAndFolder(accountId, mFolder);
+                    mItemId = new ItemId(itemIdent);
+                }
+                if (!(info.parentFolderStore instanceof MountpointStore)) {
                     return mReferent;
                 }
-
-                // somewhere along the specified path is a visible mountpoint owned by the user
-                iidRemote = ((Mountpoint) mFolder).getTarget();
             } catch (ServiceException e) {
                 return mReferent;
             }
-        } else if (mboxobj instanceof ZMailbox) {
-            String accountId = mCredentials == null ? null : mCredentials.getAccountId();
-            if (mFolder == null) {
-                ZMailbox zmbx = (ZMailbox) mboxobj;
-                String path = asZimbraPath();
-                try {
-                    for (int index = path.length(); index != -1; index = path.lastIndexOf('/', index - 1)) {
-                        ZFolder zfolder = zmbx.getFolderByPath(path.substring(0, index));
-                        if (zfolder != null) {
-                            subpathRemote = path.substring(Math.min(path.length(), index + 1));
+        }
 
-                            if (zfolder instanceof ZMountpoint || subpathRemote.isEmpty()) {
-                                mFolder = zfolder;
-                                mItemId = new ItemId(zfolder.getId(), accountId);
-                            }
-                            break;
-                        }
-                    }
-                } catch (ServiceException e) {}
-            }
-
-            if (!(mFolder instanceof ZMountpoint)) {
-                return mReferent;
-            }
-
-            // somewhere along the specified path is a visible mountpoint owned by the user
-            iidRemote = new ItemId(((ZMountpoint) mFolder).getCanonicalRemoteId(), accountId);
-        } else {
+        if (!(mFolder instanceof MountpointStore)) {
             return mReferent;
         }
+        // somewhere along the specified path is a visible mountpoint owned by the user
+        iidRemote = new ItemId(((MountpointStore) mFolder).getTargetItemIdentifier());
 
         // don't allow mountpoints that point at the same mailbox (as it can cause infinite loops)
         if (belongsTo(iidRemote.getAccountId())) {
