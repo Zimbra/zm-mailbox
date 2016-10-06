@@ -21543,6 +21543,93 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Determines the load-balancing algorithm used to select an IMAP server
+     * from the pool of available zimbraReverseProxyUpstreamImapServers.
+     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * ...]
+     *
+     * @return zimbraImapLoadBalancingAlgorithm, or "ClientIpHash" if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3009)
+    public String getImapLoadBalancingAlgorithm() {
+        return getAttr(Provisioning.A_zimbraImapLoadBalancingAlgorithm, "ClientIpHash", true);
+    }
+
+    /**
+     * Determines the load-balancing algorithm used to select an IMAP server
+     * from the pool of available zimbraReverseProxyUpstreamImapServers.
+     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * ...]
+     *
+     * @param zimbraImapLoadBalancingAlgorithm new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3009)
+    public void setImapLoadBalancingAlgorithm(String zimbraImapLoadBalancingAlgorithm) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapLoadBalancingAlgorithm, zimbraImapLoadBalancingAlgorithm);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Determines the load-balancing algorithm used to select an IMAP server
+     * from the pool of available zimbraReverseProxyUpstreamImapServers.
+     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * ...]
+     *
+     * @param zimbraImapLoadBalancingAlgorithm new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3009)
+    public Map<String,Object> setImapLoadBalancingAlgorithm(String zimbraImapLoadBalancingAlgorithm, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapLoadBalancingAlgorithm, zimbraImapLoadBalancingAlgorithm);
+        return attrs;
+    }
+
+    /**
+     * Determines the load-balancing algorithm used to select an IMAP server
+     * from the pool of available zimbraReverseProxyUpstreamImapServers.
+     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * ...]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3009)
+    public void unsetImapLoadBalancingAlgorithm() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapLoadBalancingAlgorithm, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Determines the load-balancing algorithm used to select an IMAP server
+     * from the pool of available zimbraReverseProxyUpstreamImapServers.
+     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * ...]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3009)
+    public Map<String,Object> unsetImapLoadBalancingAlgorithm(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapLoadBalancingAlgorithm, "");
+        return attrs;
+    }
+
+    /**
      * Maximum number of concurrent IMAP connections allowed. New connections
      * exceeding this limit are rejected.
      *
