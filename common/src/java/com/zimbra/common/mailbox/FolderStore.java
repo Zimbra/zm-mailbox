@@ -28,8 +28,11 @@ public interface FolderStore {
     public MailboxStore getMailboxStore();
     public String getName();
     public String getFolderIdAsString();
+    public boolean isHidden();
     public boolean isSearchFolder();
     public boolean isContactsFolder();
     public boolean isChatsFolder();
-    boolean isFlaggedAsSyncFolder();
+    public boolean isFlaggedAsSyncFolder();
+    public boolean inTrash();
+    public boolean isVisibleInImap(boolean displayMailFoldersOnly);
 }
