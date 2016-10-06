@@ -383,6 +383,7 @@ public class Folder extends MailItem implements FolderStore {
      *
      * @see Mailbox#initialize()
      */
+    @Override
     public boolean isHidden() {
         switch (mId) {
             case Mailbox.ID_FOLDER_USER_ROOT:
@@ -1622,6 +1623,23 @@ public class Folder extends MailItem implements FolderStore {
     @Override
     public boolean isFlaggedAsSyncFolder() {
         return isTagged(Flag.FlagInfo.SYNCFOLDER);
+    }
+
+    /** Calendars, briefcases, etc. are not surfaced in IMAP. */
+    @Override
+    public boolean isVisibleInImap(boolean displayMailFoldersOnly) {
+        switch (getDefaultView()) {
+        case APPOINTMENT:
+        case TASK:
+        case WIKI:
+        case DOCUMENT:
+            return false;
+        case CONTACT:
+        case CHAT:
+            return !displayMailFoldersOnly;
+        default:
+            return true;
+        }
     }
 
     @Override

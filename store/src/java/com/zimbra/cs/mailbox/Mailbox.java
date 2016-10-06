@@ -72,6 +72,8 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
+import com.zimbra.common.mailbox.FolderConstants;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mime.InternetAddress;
@@ -260,32 +262,34 @@ public class Mailbox implements MailboxStore {
     public static final String BROWSE_BY_OBJECTS = "objects";
     public static final String BROWSE_BY_ATTACHMENTS = "attachments";
 
-    public static final int ID_AUTO_INCREMENT = -1;
-    public static final int ID_FOLDER_USER_ROOT = 1;
-    public static final int ID_FOLDER_INBOX = 2;
-    public static final int ID_FOLDER_TRASH = 3;
-    public static final int ID_FOLDER_SPAM = 4;
-    public static final int ID_FOLDER_SENT = 5;
-    public static final int ID_FOLDER_DRAFTS = 6;
-    public static final int ID_FOLDER_CONTACTS = 7;
-    public static final int ID_FOLDER_TAGS = 8;
-    public static final int ID_FOLDER_CONVERSATIONS = 9;
-    public static final int ID_FOLDER_CALENDAR = 10;
-    public static final int ID_FOLDER_ROOT = 11;
+    public static final int ID_AUTO_INCREMENT = FolderConstants.ID_AUTO_INCREMENT; // -1;
+    public static final int ID_FOLDER_USER_ROOT = FolderConstants.ID_FOLDER_USER_ROOT; // 1;
+    public static final int ID_FOLDER_INBOX = FolderConstants.ID_FOLDER_INBOX; // 2;
+    public static final int ID_FOLDER_TRASH = FolderConstants.ID_FOLDER_TRASH; // 3;
+    public static final int ID_FOLDER_SPAM = FolderConstants.ID_FOLDER_SPAM; // 4;
+    public static final int ID_FOLDER_SENT = FolderConstants.ID_FOLDER_SENT; // 5;
+    public static final int ID_FOLDER_DRAFTS = FolderConstants.ID_FOLDER_DRAFTS; // 6;
+    public static final int ID_FOLDER_CONTACTS = FolderConstants.ID_FOLDER_CONTACTS; // 7;
+    public static final int ID_FOLDER_TAGS = FolderConstants.ID_FOLDER_TAGS; // 8;
+    public static final int ID_FOLDER_CONVERSATIONS = FolderConstants.ID_FOLDER_CONVERSATIONS; // 9;
+    public static final int ID_FOLDER_CALENDAR = FolderConstants.ID_FOLDER_CALENDAR; // 10;
+    public static final int ID_FOLDER_ROOT = FolderConstants.ID_FOLDER_ROOT; // 11;
+
     @Deprecated
-    public static final int ID_FOLDER_NOTEBOOK  = 12;      // no longer created in new mailboxes since Helix (bug 39647).  old mailboxes may still contain a system folder with id 12
-    public static final int ID_FOLDER_AUTO_CONTACTS = 13;
-    public static final int ID_FOLDER_IM_LOGS = 14;
-    public static final int ID_FOLDER_TASKS = 15;
-    public static final int ID_FOLDER_BRIEFCASE = 16;
-    public static final int ID_FOLDER_COMMENTS  = 17;
+    // no longer created in mailboxes since Helix (bug 39647).  old mboxes may still contain a system folder with id 12
+    public static final int ID_FOLDER_NOTEBOOK = FolderConstants.ID_FOLDER_NOTEBOOK; // 12;
+    public static final int ID_FOLDER_AUTO_CONTACTS = FolderConstants.ID_FOLDER_AUTO_CONTACTS; // 13;
+    public static final int ID_FOLDER_IM_LOGS = FolderConstants.ID_FOLDER_IM_LOGS; // 14;
+    public static final int ID_FOLDER_TASKS = FolderConstants.ID_FOLDER_TASKS; // 15;
+    public static final int ID_FOLDER_BRIEFCASE = FolderConstants.ID_FOLDER_BRIEFCASE; // 16;
+    public static final int ID_FOLDER_COMMENTS = FolderConstants.ID_FOLDER_COMMENTS; // 17;
     // ID_FOLDER_PROFILE Was used for folder related to ProfileServlet which was used in pre-release Iron Maiden only.
     // Old mailboxes may still contain a system folder with id 18
     @Deprecated
-    public static final int ID_FOLDER_PROFILE = 18;
-
+    public static final int ID_FOLDER_PROFILE = FolderConstants.ID_FOLDER_PROFILE; // 18;
     //This id should be incremented if any new ID_FOLDER_* is added.
-    public static final int HIGHEST_SYSTEM_ID = 18;
+    public static final int HIGHEST_SYSTEM_ID = FolderConstants.HIGHEST_SYSTEM_ID; // 18;
+
     public static final int FIRST_USER_ID = 256;
 
 
@@ -4047,6 +4051,13 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
+    }
+
+    /** Returns the folder with the specified path, delimited by slashes (<tt>/</tt>).
+     * @throws {@link NoSuchItemException} if the folder does not exist */
+    @Override
+    public FolderStore getFolderByPath(OpContext octxt, String path) throws ServiceException {
+        return getFolderByPath((OperationContext) octxt, path);
     }
 
     /** Returns the folder with the specified path, delimited by slashes (<tt>/</tt>).
