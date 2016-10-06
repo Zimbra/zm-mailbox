@@ -19,6 +19,8 @@ package com.zimbra.cs.mailbox;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
@@ -26,13 +28,12 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 
-public class OperationContext {
+public class OperationContext implements OpContext {
     public static final boolean CHECK_CREATED = false, CHECK_MODIFIED = true;
 
     private Account    authuser;
@@ -46,7 +47,7 @@ public class OperationContext {
     private String     mRequestedAccountId;
     private String     mAuthTokenAccountId;
     private Map<String, OperationContextData> contextData;
-    
+
     boolean changetype = CHECK_CREATED;
     int     change = -1;
 
@@ -134,11 +135,11 @@ public class OperationContext {
     public Account getAuthenticatedUser() {
         return authuser;
     }
-    
+
     public AuthToken getAuthToken() throws ServiceException {
         return getAuthToken(true);
     }
-    
+
     public AuthToken getAuthToken(boolean constructIfNotPresent) throws ServiceException {
         if (authToken != null) {
             return authToken;
@@ -149,7 +150,7 @@ public class OperationContext {
         }
         return null;
     }
-    
+
     public boolean isUsingAdminPrivileges() {
         return isAdmin;
     }
@@ -167,30 +168,30 @@ public class OperationContext {
         }
         return authuser != null && !AccountUtil.isZDesktopLocalAccount(authuser.getId());
     }
-    
+
     public OperationContext setRequestIP(String addr) {
         requestIP = addr;  return this;
     }
-    
+
     public String getRequestIP() {
         return requestIP;
     }
-    
+
     public OperationContext setUserAgent(String ua) {
         userAgent = ua;  return this;
     }
-    
+
     public String getUserAgent() {
         return userAgent;
     }
-    
+
     public void setCtxtData(String key, OperationContextData data) {
         if (contextData == null) {
             contextData = new HashMap<String, OperationContextData>();
         }
         contextData.put(key, data);
     }
-    
+
     public OperationContextData getCtxtData(String key) {
         if (contextData == null) {
             return null;
