@@ -23,8 +23,6 @@ import org.python.google.common.base.Strings;
 
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMountpoint;
-import com.zimbra.client.ZSearchFolder;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderStore;
@@ -39,14 +37,11 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
@@ -143,9 +138,9 @@ public class ImapPath implements Comparable<ImapPath> {
 
     ImapPath(String owner, FolderStore folderStore, ImapCredentials creds) throws ServiceException {
         this(owner, folderStore.getPath(), creds);
-        imapMboxStore = ImapMailboxStore.get(folderStore.getMailboxStore(), creds.getAccountId());
+        imapMboxStore = ImapMailboxStore.get(folderStore.getMailboxStore(), accountIdFromCredentials());
         mFolder = folderStore;
-        mItemId = new ItemId(folderStore.getFolderIdAsString(), (creds == null) ? null : creds.getAccountId());
+        mItemId = new ItemId(folderStore.getFolderIdAsString(), accountIdFromCredentials());
     }
 
     ImapPath(String owner, FolderStore folderStore, ImapPath mountpoint) throws ServiceException {
@@ -304,6 +299,10 @@ public class ImapPath implements Comparable<ImapPath> {
         return imapMboxStore;
     }
 
+    private String accountIdFromCredentials() {
+        return (mCredentials == null) ? null : mCredentials.getAccountId();
+    }
+
     private ZMailbox getOwnerZMailbox() throws ServiceException {
         if (useReferent()) {
             return getReferent().getOwnerZMailbox();
@@ -349,21 +348,15 @@ public class ImapPath implements Comparable<ImapPath> {
         }
 
         if (mFolder == null) {
-            Object mboxobj = getOwnerMailbox();
-            if (mboxobj instanceof Mailbox) {
-                Folder folder = ((Mailbox) mboxobj).getFolderByPath(getContext(), asZimbraPath());
-                mFolder = folder;
-                mItemId = new ItemId(folder);
-            } else if (mboxobj instanceof ZMailbox) {
-                ZFolder zfolder = ((ZMailbox) mboxobj).getFolderByPath(asZimbraPath());
-                mFolder = zfolder;
-                if (zfolder == null) {
-                    throw MailServiceException.NO_SUCH_FOLDER(asImapPath());
-                }
-                mItemId = new ItemId(zfolder.getId(), mCredentials == null ? null : mCredentials.getAccountId());
-            } else {
+            MailboxStore mboxStore = getOwnerMailbox();
+            if (null == mboxStore) {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(getOwner());
             }
+            mFolder = mboxStore.getFolderByPath(getContext(), asZimbraPath());
+            if (mFolder == null) {
+                throw MailServiceException.NO_SUCH_FOLDER(asImapPath());
+            }
+            mItemId = new ItemId(mFolder.getFolderIdAsString(), accountIdFromCredentials());
         }
         return mFolder;
     }
@@ -387,15 +380,13 @@ public class ImapPath implements Comparable<ImapPath> {
         assert(mFolder != null);
         assert(mReferent != null);
 
-        ItemId iidBase;
-        if (mFolder instanceof Mountpoint) {
-            iidBase = ((Mountpoint) mFolder).getTarget();
-        } else if (mFolder instanceof ZMountpoint) {
-            iidBase = new ItemId(((ZMountpoint) mFolder).getCanonicalRemoteId(), (String) null);
+        if (mFolder instanceof MountpointStore) {
+            ItemId iidBase;
+            iidBase = new ItemId(((MountpointStore)mFolder).getTargetItemIdentifier());
+            return !iidBase.equals(mReferent.mItemId);
         } else {
             return false;
         }
-        return !iidBase.equals(mReferent.mItemId);
     }
 
     /**
@@ -431,9 +422,7 @@ public class ImapPath implements Comparable<ImapPath> {
                 subpathRemote = info.unmatchedPart;
                 if (info.parentFolderStore instanceof MountpointStore || Strings.isNullOrEmpty(subpathRemote)) {
                     mFolder = info.parentFolderStore;
-                    String accountId = mCredentials == null ? null : mCredentials.getAccountId();
-                    ItemIdentifier itemIdent = ItemIdentifier.fromOwnerAndFolder(accountId, mFolder);
-                    mItemId = new ItemId(itemIdent);
+                    mItemId = new ItemId(ItemIdentifier.fromOwnerAndFolder(accountIdFromCredentials(), mFolder));
                 }
                 if (!(info.parentFolderStore instanceof MountpointStore)) {
                     return mReferent;
@@ -459,7 +448,8 @@ public class ImapPath implements Comparable<ImapPath> {
             return mReferent;
         }
 
-        String owner = mCredentials != null && mCredentials.getAccountId().equalsIgnoreCase(target.getId()) ? null : target.getName();
+        String owner = mCredentials != null && mCredentials.getAccountId().equalsIgnoreCase(target.getId()) ? null
+                : target.getName();
         ImapMailboxStore imapMailboxStore = null;
         if (Provisioning.onLocalServer(target)) {
             try {
@@ -559,31 +549,13 @@ public class ImapPath implements Comparable<ImapPath> {
         return (mReferent == this ? true : mReferent.isSelectable());
     }
 
-    /**
-     * Calendars, briefcases, etc. are not surfaced in IMAP.
-     */
-    private boolean isVisible(MailItem.Type type, boolean isMailFolders) {
-    switch (type) {
-        case APPOINTMENT:
-        case TASK:
-        case WIKI:
-        case DOCUMENT:
-        return false;
-        case CONTACT:
-        case CHAT:
-        return !isMailFolders;
-        default:
-        return true;
-        }
-    }
-
     boolean isVisible() throws ServiceException {
-     boolean isMailFolders = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
-    // check the folder type before hitting a remote server if it's a mountpoint
-     if (mFolder instanceof Folder && !isVisible(((Folder) mFolder).getDefaultView(), isMailFolders)) {
-         return false;
-     }
-     if (mCredentials != null) {
+        boolean isMailFolders = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
+        // check the folder type before hitting a remote server if it's a mountpoint
+        if (!(mFolder.isVisibleInImap(isMailFolders))) {
+            return false;
+        }
+        if (mCredentials != null) {
             if (mCredentials.isFolderHidden(this)) {
                 return false;
             }
@@ -598,11 +570,8 @@ public class ImapPath implements Comparable<ImapPath> {
             throw e;
         }
 
-        if (mFolder instanceof Folder) {
-            Folder folder = (Folder) mFolder;
-            if (folder.isHidden()) {
-                return false;
-            }
+        if (mFolder.isHidden()) {
+            return false;
         }
         boolean okPath = isValidImapPath();
         if (!okPath) {
@@ -628,36 +597,7 @@ public class ImapPath implements Comparable<ImapPath> {
             if (mOwner != null && belongsTo(mCredentials))
                 return false;
             getFolder();
-            if (mFolder instanceof Folder) {
-                Folder folder = (Folder) mFolder;
-                // hide all system folders and the user root folder
-                if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
-                    return false;
-                }
-                // hide spam folder unless anti-spam feature is enabled.
-                if (folder.getId() == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
-                    return false;
-                }
-                boolean isMailFolders = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
-                if (!isVisible(folder.getDefaultView(), isMailFolders)) {
-                return false;
-                }
-                // hide subfolders of trashed mountpoints
-                if (mReferent != this && folder.inTrash() &&
-                        !((Mountpoint) folder).getTarget().equals(mReferent.asItemId())) {
-                    return false;
-                }
-                // hide other users' mountpoints and mountpoints that point to the same mailbox
-                if (folder instanceof Mountpoint && mReferent == this && mScope != Scope.UNPARSED) {
-                    return false;
-                }
-                // search folder visibility depends on an account setting
-                if (folder instanceof SearchFolder) {
-                    return ((SearchFolder) folder).isImapVisible() &&
-                            ImapFolder.getTypeConstraint((SearchFolder) folder).size() > 0;
-                }
-            } else {
-                ZFolder zfolder = (ZFolder) mFolder;
+            if (mFolder !=null) {
                 int folderId = asItemId().getId();
                 // the mailbox root folder is not visible
                 if (folderId == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
@@ -667,18 +607,23 @@ public class ImapPath implements Comparable<ImapPath> {
                 if (folderId == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
                     return false;
                 }
+                boolean isMailFolders = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
                 // calendars, briefcases, etc. are not surfaced in IMAP
-                ZFolder.View view = zfolder.getDefaultView();
-                if (view == ZFolder.View.appointment || view == ZFolder.View.task ||
-                        view == ZFolder.View.wiki || view == ZFolder.View.document) {
+                if (!(mFolder.isVisibleInImap(isMailFolders))) {
                     return false;
+                }
+                // hide subfolders of trashed mountpoints
+                if (mReferent != this && mFolder.inTrash()) {
+                    ItemId targID = new ItemId(((MountpointStore) mFolder).getTargetItemIdentifier());
+                    if (targID.equals(mReferent.asItemId())) {
+                        return false;
+                    }
                 }
                 // hide other users' mountpoints and mountpoints that point to the same mailbox
-                if (zfolder instanceof ZMountpoint && mReferent == this && mScope != Scope.UNPARSED) {
+                if (mFolder instanceof MountpointStore && mReferent == this && mScope != Scope.UNPARSED) {
                     return false;
                 }
-                // hide all remote searchfolders
-                if (zfolder instanceof ZSearchFolder) {
+                if (mFolder.isSearchFolder()) {
                     return false;
                 }
             }
