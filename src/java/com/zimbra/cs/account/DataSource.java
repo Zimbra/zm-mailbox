@@ -446,14 +446,22 @@ public class DataSource extends AccountProperty {
 
     public static String encryptData(String dataSourceId, String data) throws ServiceException {
         try {
+            return new String(encryptData(dataSourceId, data.getBytes("utf-8")));
+        } catch (UnsupportedEncodingException e) {
+            throw ServiceException.FAILURE("caught unsupport encoding exception", e);
+        }
+    }
+
+    public static byte[] encryptData(String dataSourceId, byte[] data) throws ServiceException {
+        try {
             byte[] salt = randomSalt();
             Cipher cipher = getCipher(dataSourceId, salt, true);
-            byte[] dataBytes = cipher.doFinal(data.getBytes("utf-8"));
+            byte[] dataBytes = cipher.doFinal(data);
             byte[] toEncode = new byte[VERSION.length + salt.length + dataBytes.length];
             System.arraycopy(VERSION, 0, toEncode, 0, VERSION.length);
             System.arraycopy(salt, 0, toEncode, VERSION.length, salt.length);
             System.arraycopy(dataBytes, 0, toEncode, VERSION.length+salt.length, dataBytes.length);
-            return new String(Base64.encodeBase64(toEncode));
+            return Base64.encodeBase64(toEncode);
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("caught unsupport encoding exception", e);
         } catch (GeneralSecurityException e) {
@@ -463,7 +471,15 @@ public class DataSource extends AccountProperty {
 
     public static String decryptData(String dataSourceId, String data) throws ServiceException {
         try {
-            byte[] encoded = Base64.decodeBase64(data.getBytes());
+            return new String(decryptData(dataSourceId, data.getBytes()), "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            throw ServiceException.FAILURE("caught unsupport encoding exception", e);
+        }
+    }
+
+    public static byte[] decryptData(String dataSourceId, byte[] data) throws ServiceException {
+        try {
+            byte[] encoded = Base64.decodeBase64(data);
             if (encoded.length < VERSION.length + SALT_SIZE_BYTES + AES_PAD_SIZE)
                 throw ServiceException.FAILURE("invalid encoded size: "+encoded.length, null);
             byte[] version = new byte[VERSION.length];
@@ -473,7 +489,7 @@ public class DataSource extends AccountProperty {
                 throw ServiceException.FAILURE("unsupported version", null);
             System.arraycopy(encoded, VERSION.length, salt, 0, SALT_SIZE_BYTES);
             Cipher cipher = getCipher(dataSourceId, salt, false);
-            return new String(cipher.doFinal(encoded, VERSION.length + SALT_SIZE_BYTES, encoded.length - SALT_SIZE_BYTES - VERSION.length), "utf-8");
+            return cipher.doFinal(encoded, VERSION.length + SALT_SIZE_BYTES, encoded.length - SALT_SIZE_BYTES - VERSION.length);
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("caught unsupport encoding exception", e);
         } catch (GeneralSecurityException e) {
