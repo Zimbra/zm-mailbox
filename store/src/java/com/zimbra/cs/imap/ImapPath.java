@@ -213,10 +213,6 @@ public class ImapPath implements Comparable<ImapPath> {
         return imapFolderStore;
     }
 
-    boolean belongsTo(Mailbox mbox) throws ServiceException {
-        return belongsTo(mbox.getAccountId());
-    }
-
     boolean belongsTo(ImapCredentials creds) throws ServiceException {
         return belongsTo(creds.getAccountId());
     }
