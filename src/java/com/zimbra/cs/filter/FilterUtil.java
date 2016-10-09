@@ -630,9 +630,19 @@ public final class FilterUtil {
         // Header From
         // RFC 5436 2.7. (4th item of the 'guidelines')
         if (!StringUtil.isNullOrEmpty(from)) {
+            // The "From:" header field of the notification message SHOULD be set
+            // to the value of the ":from" tag to the notify action, if one is
+            // specified, has email address syntax, and is valid according to the
+            // implementation-specific security checks.
             notification.addHeader("from", from);
         } else {
-            // RFC says: "This MUST NOT be overridden by a "from" URI header"
+            // If ":from" is not specified or is not valid, the
+            // "From:" header field of the notification message SHOULD be set
+            // either to the envelope "to" field from the triggering message, as
+            // used by Sieve...
+            // This MUST NOT be overridden by a "from" URI header, and any such
+            // URI header MUST be ignored.
+            notification.addHeader("from", mailbox.getAccount().getMail());
         }
 
         // Subject
@@ -802,25 +812,25 @@ public final class FilterUtil {
         ZimbraLog.filter.debug("Variable ");
         String varValue = varName;
         List<String> varNames = getListOfVars(varName);
-		for (String var : varNames) {
-			String name = var.substring(2, var.indexOf("}"));
-			name = handleQuotedAndEncodedVar(name);
-			ZimbraLog.filter.debug("Sieve: variable expression is %s and variable name is: %s", var, name);
-			if (name.length() == 1 && Character.isDigit(name.charAt(0))) {
-				for (int i = 0; i < matchedValues.size(); ++i) {
-					String pattern = "{" + i + "}";
-					if (varName.contains(pattern)) {
-						varValue = matchedValues.get(i);
-					}
-				}
-			} else {
-				if (isValidSieveVariableName(name)) {
-					if (variables.containsKey(name)) {
-						varValue = varValue.replace(var, variables.get(name));
-					}
-				}
-			}
-		}
+        for (String var : varNames) {
+            String name = var.substring(2, var.indexOf("}"));
+            name = handleQuotedAndEncodedVar(name);
+            ZimbraLog.filter.debug("Sieve: variable expression is %s and variable name is: %s", var, name);
+            if (name.length() == 1 && Character.isDigit(name.charAt(0))) {
+                for (int i = 0; i < matchedValues.size(); ++i) {
+                    String pattern = "{" + i + "}";
+                    if (varName.contains(pattern)) {
+                        varValue = matchedValues.get(i);
+                    }
+                }
+            } else {
+                if (isValidSieveVariableName(name)) {
+                    if (variables.containsKey(name)) {
+                        varValue = varValue.replace(var, variables.get(name));
+                    }
+                }
+            }
+        }
         varValue = handleQuotedAndEncodedVar(varValue);
         ZimbraLog.filter.debug("Sieve: variable value is: %s", varValue);
         return varValue;
@@ -828,80 +838,80 @@ public final class FilterUtil {
     
     
     /**
-	 * @param varName
-	 * @return
-	 */
-	public static List<String> getListOfVars(String varName) {
-		Stack<Character> stack = new Stack<Character>();
-		List<String> varNames =  new ArrayList<String>();
-		StringBuilder sb = new StringBuilder();
-		
-		char [] chars = varName.toCharArray();
-		char previous = 0;
-		boolean save = false;
-		for (int i = 0; i < chars.length; i++) {
-	        char current = chars[i];
-	        if (current == '{' && previous == '$') {
-	        	sb = new StringBuilder();
-	            stack.push(current);
-	            save = true;
-	            continue;
-	        } else if (current == '}') {
-	            char last = stack.peek();
-	            if (current == '}' && last == '{') {
-	                stack.pop();
-	                String var = sb.toString();
-	                sb = new StringBuilder();
-	                save = false;
-	                varNames.add("${" + var + "}");
-	            }
-	            
-	        } 
-	        previous = chars[i];
-	        if (save) {
-	        	sb.append(current);
-	        }
-	    }
-		return varNames;
-	}
+     * @param varName
+     * @return
+     */
+    public static List<String> getListOfVars(String varName) {
+        Stack<Character> stack = new Stack<Character>();
+        List<String> varNames =  new ArrayList<String>();
+        StringBuilder sb = new StringBuilder();
+        
+        char [] chars = varName.toCharArray();
+        char previous = 0;
+        boolean save = false;
+        for (int i = 0; i < chars.length; i++) {
+            char current = chars[i];
+            if (current == '{' && previous == '$') {
+                sb = new StringBuilder();
+                stack.push(current);
+                save = true;
+                continue;
+            } else if (current == '}') {
+                char last = stack.peek();
+                if (current == '}' && last == '{') {
+                    stack.pop();
+                    String var = sb.toString();
+                    sb = new StringBuilder();
+                    save = false;
+                    varNames.add("${" + var + "}");
+                }
+                
+            } 
+            previous = chars[i];
+            if (save) {
+                sb.append(current);
+            }
+        }
+        return varNames;
+    }
 
-	/**
-	 * @param varName
-	 * @return
-	 *  "${fo\o}"  => ${foo}  => the expansion of variable foo.
+    /**
+     * @param varName
+     * @return
+     *  "${fo\o}"  => ${foo}  => the expansion of variable foo.
      * "${fo\\o}" => ${fo\o} => illegal identifier => left verbatim.
      * "\${foo}"  => ${foo}  => the expansion of variable foo.
      * "\\${foo}" => \${foo} => a backslash character followed by the
      *                           expansion of variable foo.
-	 */
-	public static String handleQuotedAndEncodedVar(String varName) {
-		String processedStr  = varName;
-		StringBuilder sb = new StringBuilder();
-		char [] charArray = varName.toCharArray();
-		for (int i = 0; i < charArray.length; ++i) {
-			if (charArray[i] == '\\') {
-				if (charArray[i] == '\\' && (i+1 <= charArray.length -1) && charArray[i + 1] == '\\') {
-					sb.append('\\');
-				}
-			} else {
-				sb.append(charArray[i]);
-			}
-		}
-		processedStr = sb.toString();
-		
-		return processedStr;
-	}
+     */
+    public static String handleQuotedAndEncodedVar(String varName) {
+        String processedStr  = varName;
+        StringBuilder sb = new StringBuilder();
+        char [] charArray = varName.toCharArray();
+        for (int i = 0; i < charArray.length; ++i) {
+            if (charArray[i] == '\\') {
+                if (charArray[i] == '\\' && (i+1 <= charArray.length -1) && charArray[i + 1] == '\\') {
+                    sb.append('\\');
+                }
+            } else {
+                sb.append(charArray[i]);
+            }
+        }
+        processedStr = sb.toString();
+        
+        return processedStr;
+    }
 
-	public static boolean  isValidSieveVariableName(String varName) {
-    	
-    	Pattern pattern = Pattern.compile(".*[\\p{Alpha}$_.]|[\\d]",  Pattern.CASE_INSENSITIVE);
+    public static boolean  isValidSieveVariableName(String varName) {
+        
+        Pattern pattern = Pattern.compile(".*[\\p{Alpha}$_.]|[\\d]",  Pattern.CASE_INSENSITIVE);
         if (pattern.matcher(varName).matches()) {
            return true;
         }
-    	return false;
+        return false;
     }
-	
-	 /**
+    
+    /**
      * Converts a Sieve pattern in a java regex pattern
      */
     public static String sieveToJavaRegex(String pattern) {
