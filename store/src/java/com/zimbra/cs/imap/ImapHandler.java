@@ -59,6 +59,7 @@ import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.AccessBoundedRegex;
@@ -2485,7 +2486,7 @@ abstract class ImapHandler {
                 throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
             }
             mboxStore = path.getOwnerImapMailboxStore();
-            ImapFolderStore folderStore = path.getImapFolderStore();
+            FolderStore folderStore = path.getFolder();
 
             if (! (mboxStore instanceof LocalImapMailboxStore)) {
                 mboxStore = credentials.getImapMailboxStore();
@@ -4142,9 +4143,9 @@ abstract class ImapHandler {
         if (i4folder == null) {
             throw new ImapSessionClosedException();
         }
-        LocalImapMailboxStore mboxStore = (LocalImapMailboxStore) i4folder.getImapMailboxStore();
+        ImapMailboxStore selectedImapMboxStore = i4folder.getImapMailboxStore();
 
-        Set<ImapMessage> i4set = mboxStore.getSubsequence(i4folder, tag, sequenceSet, byUID);
+        Set<ImapMessage> i4set = selectedImapMboxStore.getSubsequence(i4folder, tag, sequenceSet, byUID);
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
         if (!byUID && i4set.contains(null)) {
@@ -4159,24 +4160,16 @@ abstract class ImapHandler {
             } else if (!path.isWritable(ACL.RIGHT_INSERT)) {
                 throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
             }
-            Object mboxobj = path.getOwnerMailbox();
-            ItemId iidTarget;
-            boolean sameMailbox = false;
-            int uvv;
-
-            // check target folder permissions before attempting the copy
-            if (mboxobj instanceof Mailbox) {
-                sameMailbox = mboxStore.getAccountId().equalsIgnoreCase(((Mailbox) mboxobj).getAccountId());
-                Folder folder = (Folder) path.getFolder();
-                iidTarget = new ItemId(folder);
-                uvv = ImapFolder.getUIDValidity(folder);
-            } else if (mboxobj instanceof ZMailbox) {
-                ZFolder zfolder = (ZFolder) path.getFolder();
-                iidTarget = new ItemId(zfolder.getId(), path.getOwnerAccount().getId());
-                uvv = ImapFolder.getUIDValidity(zfolder);
-            } else {
+            MailboxStore mbxStore = path.getOwnerMailbox();
+            if (null == mbxStore) {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }
+            FolderStore folder = path.getFolder();
+
+            // check target folder permissions before attempting the copy
+            boolean sameMailbox = selectedImapMboxStore.getAccountId().equalsIgnoreCase(mbxStore.getAccountId());
+            int uvv = folder.getUIDValidity();
+            ItemId iidTarget = new ItemId(folder, path.getOwnerAccount().getId());
 
             long checkpoint = System.currentTimeMillis();
             List<Integer> srcUIDs = extensionEnabled("UIDPLUS") ? new ArrayList<Integer>() : null;
@@ -4206,7 +4199,7 @@ abstract class ImapHandler {
                                 type = MailItem.Type.UNKNOWN;
                             }
                         }
-                        copyMsgs = mboxStore.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
+                        copyMsgs = selectedImapMboxStore.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Caught IOException executing " + this, e);
                     }
@@ -4218,10 +4211,15 @@ abstract class ImapHandler {
                 } else {
                     // TODO ItemActionHelper either needs to work without Mailbox or perhaps with another
                     // non-Imap interface that Mailbox and ZMailbox use?
-                    ItemActionHelper op = ItemActionHelper.COPY(getContext(), mboxStore.getMailbox(), null, idlist,
-                            MailItem.Type.UNKNOWN, null, iidTarget);
-                    for (String target : op.getCreatedIds()) {
-                        createdList.add(new ItemId(target, selectedFolder.getAuthenticatedAccountId()).getId());
+                    MailboxStore selectedStore = selectedImapMboxStore.getMailboxStore();
+                    if (selectedStore instanceof Mailbox) {
+                        ItemActionHelper op = ItemActionHelper.COPY(getContext(), (Mailbox)selectedStore, null, idlist,
+                                MailItem.Type.UNKNOWN, null, iidTarget);
+                        for (String target : op.getCreatedIds()) {
+                            createdList.add(new ItemId(target, selectedFolder.getAuthenticatedAccountId()).getId());
+                        }
+                    } else {
+                        throw new UnsupportedOperationException("ItemActionHelper doesn't support remote Mailboxes yet");
                     }
                 }
 
