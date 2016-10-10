@@ -26,7 +26,9 @@ import java.util.Map;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -78,6 +80,10 @@ public class ItemId implements java.io.Serializable {
         this(encoded, zsc.getRequestedAccountId());
     }
 
+    public ItemId(FolderStore folder, String defaultAccountId) throws ServiceException {
+        this(new ItemIdentifier(folder.getFolderIdAsString(), defaultAccountId));
+    }
+
     public ItemId(String encoded, String defaultAccountId) throws ServiceException {
         this(new ItemIdentifier(encoded, defaultAccountId));
     }
@@ -116,11 +122,15 @@ public class ItemId implements java.io.Serializable {
         return acctId == null || mAccountId == null || mAccountId.equals(acctId);
     }
 
-    /** Returns whether the item belongs to the specified {@link Mailbox}.  If
+    /** Returns whether the item belongs to the specified {@link MailboxStore}.  If
      *  <code>mbox</code> is <tt>null</tt> and/or this ItemId was unqualified,
      *  returns <tt>true</tt>. */
-    public boolean belongsTo(Mailbox mbox) {
-        return mbox == null || mAccountId == null || mAccountId.equals(mbox.getAccountId());
+    public boolean belongsTo(MailboxStore mbox) {
+        try {
+            return mbox == null || mAccountId == null || mAccountId.equals(mbox.getAccountId());
+        } catch (ServiceException e) {
+            return false;
+        }
     }
 
     public ItemIdentifier toItemIdentifier() {
