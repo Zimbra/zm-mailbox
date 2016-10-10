@@ -203,13 +203,17 @@ abstract class ImapHandler {
     void setLoggingContext() {
         ZimbraLog.clearContext();
         ImapSession i4selected = selectedFolder;
-        Mailbox mbox = i4selected == null ? null : i4selected.getMailbox();
+        MailboxStore mbox = i4selected == null ? null : i4selected.getMailbox();
 
         if (credentials != null) {
             ZimbraLog.addAccountNameToContext(credentials.getUsername());
         }
         if (mbox != null) {
-            ZimbraLog.addMboxToContext(mbox.getId());
+            if (mbox instanceof Mailbox) {
+                ZimbraLog.addMboxToContext(((Mailbox)mbox).getId());
+            } else {
+                // TODO - for ZMailbox, could put account id of mailbox there?  Not an int though, which might matter
+            }
         }
         if (origRemoteIp != null) {
             ZimbraLog.addOrigIpToContext(origRemoteIp);
@@ -3207,6 +3211,7 @@ abstract class ImapHandler {
 
         boolean changed = false;
         long checkpoint = System.currentTimeMillis();
+        Mailbox selectedMailbox = (Mailbox) selectedFolder.getMailbox();
         for (int i = 1, max = i4folder.getSize(); i <= max; i++) {
             ImapMessage i4msg = i4folder.getBySequence(i);
             if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.BITMASK_DELETED) > 0) {
@@ -3219,7 +3224,7 @@ abstract class ImapHandler {
             if (ids.size() >= (i == max ? 1 : SUGGESTED_DELETE_BATCH_SIZE)) {
                 List<Integer> nonExistingItems = new ArrayList<Integer>();
                 ZimbraLog.imap.debug("  ** deleting: %s", ids);
-                selectedFolder.getMailbox().delete(getContext(), ArrayUtil.toIntArray(ids), MailItem.Type.UNKNOWN, null, nonExistingItems);
+                selectedMailbox.delete(getContext(), ArrayUtil.toIntArray(ids), MailItem.Type.UNKNOWN, null, nonExistingItems);
                 ids.clear();
                 for (Integer itemId : nonExistingItems) {
                     i4msg = i4folder.getById(itemId);
@@ -3238,7 +3243,7 @@ abstract class ImapHandler {
             }
         }
         if (changed) {
-            selectedFolder.getMailbox().resetRecentMessageCount(getContext());
+            selectedMailbox.resetRecentMessageCount(getContext());
         }
         return changed;
     }
@@ -3302,7 +3307,7 @@ abstract class ImapHandler {
         int modseq = 0;
 
         try {
-            Mailbox mbox = i4folder.getMailbox();
+            Mailbox mbox = (Mailbox)i4folder.getMailbox();
             if (unsorted && i4search.canBeRunLocally()) {
                 mbox.lock.lock(false);
                 try {
@@ -3412,7 +3417,7 @@ abstract class ImapHandler {
 
     private ZimbraQueryResults runSearch(ImapSearch i4search, ImapFolder i4folder, SortBy sort,
             SearchParams.Fetch fetch) throws ImapParseException, ServiceException {
-        Mailbox mbox = i4folder.getMailbox();
+        Mailbox mbox = (Mailbox) i4folder.getMailbox();
         if (mbox == null) {
             throw ServiceException.FAILURE("unexpected session close during search", null);
         }
@@ -3616,7 +3621,7 @@ abstract class ImapHandler {
         }
 
         ImapMessageSet i4set;
-        Mailbox mbox = i4folder.getMailbox();
+        Mailbox mbox = (Mailbox)i4folder.getMailbox();
         mbox.lock.lock(false);
         try {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID, allowOutOfRangeMsgSeq, true /* includeExpunged */);
@@ -3946,7 +3951,7 @@ abstract class ImapHandler {
 
         String command = (byUID ? "UID STORE" : "STORE");
         List<Tag> newTags = (operation != StoreAction.REMOVE ? new ArrayList<Tag>() : null);
-        Mailbox mbox = selectedFolder.getMailbox();
+        Mailbox mbox = (Mailbox) selectedFolder.getMailbox();
 
         Set<ImapMessage> i4set;
         mbox.lock.lock();
@@ -4294,7 +4299,7 @@ abstract class ImapHandler {
         if (i4selected == null || !i4selected.hasNotifications()) {
             return;
         }
-        Mailbox mbox = i4selected.getMailbox();
+        Mailbox mbox = (Mailbox) i4selected.getMailbox();
         if (mbox == null) {
             return;
         }

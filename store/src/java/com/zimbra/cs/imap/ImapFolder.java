@@ -35,6 +35,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
@@ -62,7 +63,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     static final byte SELECT_CONDSTORE = 0x02;
 
     // attributes of the folder itself, irrespective of the session state
-    private transient LocalImapMailboxStore mailboxStore;
+    private transient ImapMailboxStore mailboxStore;
     private transient ImapSession session;
     private transient ImapPath path;
     private transient SessionData sessionData;
@@ -156,8 +157,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     }
 
     /** Returns the selected folder's containing {@link Mailbox}. */
-    public Mailbox getMailbox() {
-        return this.mailboxStore.getMailbox();
+    public MailboxStore getMailbox() {
+        return this.mailboxStore.getMailboxStore();
     }
 
     /** Returns the selected folder's containing {@link ImapMailboxStore}. */
@@ -1076,12 +1077,12 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
     void restore(ImapSession sess, SessionData sdata) throws ImapSessionClosedException, ServiceException {
         session = sess;
-        Mailbox sessMbox = session.getMailbox();
+        MailboxStore sessMbox = session.getMailbox();
         if (sessMbox == null) {
             mailboxStore = null;
             throw new ImapSessionClosedException();
         }
-        mailboxStore = new LocalImapMailboxStore(sessMbox);
+        mailboxStore = ImapMailboxStore.get(sessMbox, sessMbox.getAccountId());
         path = session.getPath();
         // FIXME: NOT RESTORING sequence.msg.sflags PROPERLY -- need to serialize it!!!
         sessionData = sdata;
