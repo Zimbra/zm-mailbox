@@ -59,6 +59,7 @@ import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -101,7 +102,6 @@ import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.service.mail.FolderAction;
-import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
@@ -4170,6 +4170,7 @@ abstract class ImapHandler {
             boolean sameMailbox = selectedImapMboxStore.getAccountId().equalsIgnoreCase(mbxStore.getAccountId());
             int uvv = folder.getUIDValidity();
             ItemId iidTarget = new ItemId(folder, path.getOwnerAccount().getId());
+            ItemIdentifier iidTargetIdentifier = iidTarget.toItemIdentifier();
 
             long checkpoint = System.currentTimeMillis();
             List<Integer> srcUIDs = extensionEnabled("UIDPLUS") ? new ArrayList<Integer>() : null;
@@ -4179,6 +4180,7 @@ abstract class ImapHandler {
             List<ImapMessage> i4list = new ArrayList<ImapMessage>(SUGGESTED_COPY_BATCH_SIZE);
             List<Integer> idlist = new ArrayList<Integer>(SUGGESTED_COPY_BATCH_SIZE);
             List<Integer> createdList = new ArrayList<Integer>(SUGGESTED_COPY_BATCH_SIZE);
+            String selectedFldrAcctId = selectedFolder.getAuthenticatedAccountId();
             for (ImapMessage i4msg : i4set) {
                 // we're sending 'em off in batches of 50
                 i4list.add(i4msg);  idlist.add(i4msg.msgId);
@@ -4209,18 +4211,8 @@ abstract class ImapHandler {
                         createdList.add(target.getImapUid());
                     }
                 } else {
-                    // TODO ItemActionHelper either needs to work without Mailbox or perhaps with another
-                    // non-Imap interface that Mailbox and ZMailbox use?
                     MailboxStore selectedStore = selectedImapMboxStore.getMailboxStore();
-                    if (selectedStore instanceof Mailbox) {
-                        ItemActionHelper op = ItemActionHelper.COPY(getContext(), (Mailbox)selectedStore, null, idlist,
-                                MailItem.Type.UNKNOWN, null, iidTarget);
-                        for (String target : op.getCreatedIds()) {
-                            createdList.add(new ItemId(target, selectedFolder.getAuthenticatedAccountId()).getId());
-                        }
-                    } else {
-                        throw new UnsupportedOperationException("ItemActionHelper doesn't support remote Mailboxes yet");
-                    }
+                    selectedStore.copyItemAction(getContext(), selectedFldrAcctId, iidTargetIdentifier, idlist);
                 }
 
                 if (createdList.size() != i4list.size()) {
