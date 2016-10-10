@@ -35,4 +35,5 @@ public interface FolderStore {
     public boolean isFlaggedAsSyncFolder();
     public boolean inTrash();
     public boolean isVisibleInImap(boolean displayMailFoldersOnly);
+    public int getUIDValidity();
 }
