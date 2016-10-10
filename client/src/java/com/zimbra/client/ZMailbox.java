@@ -97,6 +97,7 @@ import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.net.SocketFactories;
@@ -5678,6 +5679,18 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     public SoapHttpTransport getTransport() {
         return mTransport;
+    }
+
+    /**
+     * Copies the items identified in {@link idlist} to folder {@link targetFolder}
+     * @param idlist - list of item ids for items to copy
+     * @param targetFolder - Destination folder
+     */
+    @Override
+    public List<ItemIdentifier> copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
+            List<Integer> idlist)
+    throws ServiceException {
+        throw new UnsupportedOperationException("ZMailbox does not support copyItemAction yet");
     }
 }
 
