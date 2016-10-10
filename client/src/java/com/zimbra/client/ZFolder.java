@@ -493,6 +493,16 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         throw new UnsupportedOperationException("ZFolder method not supported yet");
     }
 
+    /**
+     * Returns the IMAP UID Validity Value for the {@link Folder}.
+     * This is the folder's <tt>MOD_CONTENT</tt> change sequence number.
+     * @see Folder#getSavedSequence()
+     **/
+    @Override
+    public int getUIDValidity() {
+        return getContentSequence();
+    }
+
     /** Returns whether the folder is the Trash folder or any of its subfolders. */
     @Override public boolean inTrash() {
         int fId = this.getFolderIdInOwnerMailbox();
