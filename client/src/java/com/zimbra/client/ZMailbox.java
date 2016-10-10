@@ -1203,6 +1203,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return getAccountInfo(false).getName();
     }
 
+    @Override
+    public String getAccountId() throws ServiceException {
+        return getAccountInfo(false).getId();
+    }
+
     public ZPrefs getPrefs() throws ServiceException {
         return getPrefs(false);
     }
