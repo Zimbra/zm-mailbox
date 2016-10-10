@@ -451,7 +451,7 @@ public final class ZimbraLog {
     public static final Log zmg = LogFactory.getLog("zimbra.zmg");
 
     /**
-     * the "zimbra.zmg" logger. For Zimbra Smime.
+     * the "zimbra.smime" logger. For Zimbra Smime.
      */
     public static final Log smime = LogFactory.getLog("zimbra.smime");
 
