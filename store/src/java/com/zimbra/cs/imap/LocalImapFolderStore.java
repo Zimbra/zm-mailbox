@@ -48,10 +48,4 @@ public class LocalImapFolderStore implements ImapFolderStore {
     public boolean isIMAPDeleted() {
         return (folder.isTagged(Flag.FlagInfo.DELETED));
     }
-
-    @Override
-    public int getUIDValidity() {
-        return ImapFolder.getUIDValidity(folder);
-    }
-
 }
