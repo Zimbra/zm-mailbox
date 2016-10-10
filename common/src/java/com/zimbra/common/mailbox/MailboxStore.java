@@ -16,6 +16,8 @@
  */
 package com.zimbra.common.mailbox;
 
+import java.util.List;
+
 import com.zimbra.common.service.ServiceException;
 
 public interface MailboxStore {
@@ -23,4 +25,11 @@ public interface MailboxStore {
     public FolderStore getFolderByPath(OpContext octxt, String path) throws ServiceException;
     public ExistingParentFolderStoreAndUnmatchedPart getParentFolderStoreAndUnmatchedPart(OpContext octxt, String path)
     throws ServiceException;
+    /**
+     * Copies the items identified in {@link idlist} to folder {@link targetFolder}
+     * @param idlist - list of item ids for items to copy
+     * @param targetFolder - Destination folder
+     */
+    List<ItemIdentifier> copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
+            List<Integer> idlist) throws ServiceException;
 }
