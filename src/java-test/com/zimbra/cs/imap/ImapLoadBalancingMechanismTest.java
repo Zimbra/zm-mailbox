@@ -16,27 +16,28 @@
  */
 package com.zimbra.cs.imap;
 
-import javax.servlet.http.HttpServletRequest;
-
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import junit.framework.Assert;
 
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
-
 import com.zimbra.cs.account.MockServer;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.imap.ImapLoadBalancingMechanism.CustomLBMech;
 import com.zimbra.cs.service.MockHttpServletRequest;
-
-import junit.framework.Assert;
 
 /**
  * Unit test for {@link ImapLoadBalancingMechanism}.
  *
  */
 public final class ImapLoadBalancingMechanismTest {
-    
+
     @Test
     public void ClientIpHashMechanismEmptyServerList()
     throws Exception
@@ -46,7 +47,7 @@ public final class ImapLoadBalancingMechanismTest {
             ArrayList<Server> pool = new ArrayList<Server>();
             mech.getImapServerFromPool(null, pool);
             Assert.fail("should have raised ServiceException");
-            
+
         }
         catch (Exception e) {
             Assert.assertTrue("expected ServiceException", e instanceof ServiceException);
@@ -68,7 +69,7 @@ public final class ImapLoadBalancingMechanismTest {
         pool.add(s2);
         HashMap<String, String> headers = new HashMap<String, String>();
 		/**
-		 * For IPV4, Java uses the 32bit value of an IPV4 address as the hashCode of an IPV4 
+		 * For IPV4, Java uses the 32bit value of an IPV4 address as the hashCode of an IPV4
 		 * address, so with the current test setup, and a pool size of 3:
 		 *   127.0.0.2 == (0x7f << 24) + 2 == 2130706434
 		 * And 2130706434 % 3 = 0
@@ -91,5 +92,33 @@ public final class ImapLoadBalancingMechanismTest {
         Assert.assertEquals(s1, mech.getImapServerFromPool(req, pool));
         headers.put(ImapLoadBalancingMechanism.ClientIpHashMechanism.CLIENT_IP, "::FFFF:127.0.0.4");
         Assert.assertEquals(s2, mech.getImapServerFromPool(req, pool));
+    }
+
+    @Test
+    public void testCustomLoadBalancingMech() throws Exception {
+        CustomLBMech.register("testmech",TestCustomLBMech.class);
+        ImapLoadBalancingMechanism mech = CustomLBMech.loadCustomLBMech("custom:testmech foo bar");
+        Assert.assertTrue((mech instanceof TestCustomLBMech));
+        CustomLBMech customMech = (CustomLBMech) mech;
+        Assert.assertEquals(customMech.args.get(0), "foo");
+        Assert.assertEquals(customMech.args.get(1), "bar");
+        mech = CustomLBMech.loadCustomLBMech("custom:testmech");
+        Assert.assertTrue((mech instanceof TestCustomLBMech));
+        Assert.assertNull(((CustomLBMech) mech).args);
+        mech = CustomLBMech.loadCustomLBMech("custom:unregisteredmech");
+        Assert.assertTrue((mech instanceof ImapLoadBalancingMechanism.ClientIpHashMechanism));
+    }
+
+    public static class TestCustomLBMech extends CustomLBMech {
+
+        protected TestCustomLBMech(List<String> args) {
+            super(args);
+        }
+
+        @Override
+        public Server getImapServerFromPool(HttpServletRequest httpReq,
+                List<Server> pool) throws ServiceException {
+            return null;
+        }
     }
 }
