@@ -168,7 +168,7 @@ public class SoapSession extends Session {
         private boolean calculateVisibleFolders(boolean force) throws ServiceException {
             long now = System.currentTimeMillis();
 
-            Mailbox mbox = mailbox;
+            Mailbox mbox = this.getMailboxOrNull();
             cacheAccountAccess(mAuthenticatedAccountId, mTargetAccountId);
             if (mbox == null) {
                 mVisibleFolderIds = Collections.emptySet();
@@ -234,7 +234,7 @@ public class SoapSession extends Session {
                         filtered.recordCreated(item);
                     } else if (item instanceof Comment) {
                         try {
-                            mailbox.getItemById(octxt, item.getParentId(), MailItem.Type.UNKNOWN);
+                            this.getMailboxOrNull().getItemById(octxt, item.getParentId(), MailItem.Type.UNKNOWN);
                             filtered.recordCreated(item);
                         } catch (ServiceException e) {
                             // no permission.  ignore the item.
@@ -246,7 +246,7 @@ public class SoapSession extends Session {
                 for (Change chg : pms.modified.values()) {
                     if (chg.what instanceof MailItem) {
                         MailItem item = (MailItem) chg.what;
-                        if (skipChangeSerialization(getParentSession().getMailbox(), item)) {
+                        if (skipChangeSerialization(getParentSession().getMailboxOrNull(), item)) {
                             if (ZimbraLog.session.isDebugEnabled()) {
                                 ZimbraLog.session.debug("skipping serialization of too-large remote conversation: " +
                                                                 new ItemId(item));
@@ -483,7 +483,7 @@ public class SoapSession extends Session {
     public SoapSession register() throws ServiceException {
         super.register();
 
-        Mailbox mbox = mailbox;
+        Mailbox mbox = this.getMailboxOrNull();
         if (mbox != null) {
             recentMessages = mbox.getRecentMessageCount();
             previousAccess = mbox.getLastSoapAccessTime();
@@ -496,7 +496,7 @@ public class SoapSession extends Session {
     @Override
     public SoapSession unregister() {
         // when the session goes away, record the timestamp of the last write op to the database
-        Mailbox mbox = mailbox;
+        Mailbox mbox = this.getMailboxOrNull();
         if (lastWrite != -1 && mbox != null) {
             try {
                 mbox.recordLastSoapAccessTime(lastWrite);
@@ -855,7 +855,7 @@ public class SoapSession extends Session {
      * @param source    The (optional) Session which initiated these changes. */
     @Override
     public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
-        Mailbox mbox = mailbox;
+        Mailbox mbox = this.getMailboxOrNull();
         if (pms == null || mbox == null || !pms.hasNotifications()) {
             return;
         }
@@ -1023,7 +1023,7 @@ public class SoapSession extends Session {
      * @param ctxt  An existing SOAP header <context> element
      * @param zsc   The SOAP request's encapsulated context */
     public void putRefresh(Element ctxt, ZimbraSoapContext zsc) throws ServiceException {
-        Mailbox mbox = mailbox;
+        Mailbox mbox = this.getMailboxOrNull();
         if (mbox == null) {
             return;
         }
@@ -1348,7 +1348,7 @@ public class SoapSession extends Session {
      *         received (0 means none)
      * @return The passed-in <tt>&lt;context></tt> element */
     public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) {
-        Mailbox mbox = mailbox;
+        Mailbox mbox = this.getMailboxOrNull();
         if (ctxt == null || mbox == null) {
             return null;
         }

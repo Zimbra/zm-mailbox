@@ -24,7 +24,9 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -127,7 +129,13 @@ public class MailboxNotification extends Message {
                     log.debug("notifying session %s", session.toString());
                     if (pms == null) {
                         try {
-                            pms = PendingModifications.deserialize(session.getMailbox(), message.getPayload());
+                            MailboxStore mboxStore = session.getMailbox();
+                            if ((null == mboxStore) || (mboxStore instanceof Mailbox)) {
+                                pms = PendingModifications.deserialize((Mailbox)mboxStore, message.getPayload());
+                            } else {
+                                log.warn("could not deserialize notification for non-Mailbox MailboxStore '%s'",
+                                        mboxStore.getClass().getName());
+                            }
                         } catch (IOException e) {
                             log.warn("could not deserialize notification", e);
                             return;
