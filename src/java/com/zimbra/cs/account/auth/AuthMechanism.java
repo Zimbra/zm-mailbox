@@ -424,7 +424,7 @@ public abstract class AuthMechanism {
         }
     }
 
-    static class QuotedStringParser {
+    public static class QuotedStringParser {
         private String mInput;
 
         //the parser flips between these two sets of delimiters

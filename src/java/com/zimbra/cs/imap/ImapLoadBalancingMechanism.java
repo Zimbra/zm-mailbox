@@ -17,18 +17,24 @@
 
 package com.zimbra.cs.imap;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.auth.AuthMechanism.QuotedStringParser;
 
 public abstract class ImapLoadBalancingMechanism {
 
@@ -80,7 +86,7 @@ public abstract class ImapLoadBalancingMechanism {
     public static ImapLoadBalancingMechanism newInstance(String lbMechStr)
     throws ServiceException {
         if (lbMechStr.startsWith(ImapLBMech.custom.name() + ":")) {
-            return new CustomLBMech(ImapLBMech.custom, lbMechStr);
+            return loadCustomLBMech(lbMechStr);
         } else {
             try {
                 ImapLBMech lbMech = ImapLBMech.fromString(lbMechStr);
@@ -99,6 +105,37 @@ public abstract class ImapLoadBalancingMechanism {
             return new ClientIpHashMechanism(ImapLBMech.ClientIpHash);
         }
 
+    }
+
+    @VisibleForTesting
+    protected static ImapLoadBalancingMechanism loadCustomLBMech(String lbMechStr) throws ServiceException {
+        String customMechName = null;
+        List<String> args = null;
+        int mechNameStart = lbMechStr.indexOf(':');
+        if (mechNameStart != -1) {
+            int mechNameEnd = lbMechStr.indexOf(' ');
+            if (mechNameEnd != -1) {
+                customMechName = lbMechStr.substring(mechNameStart+1, mechNameEnd);
+                QuotedStringParser parser = new QuotedStringParser(lbMechStr.substring(mechNameEnd+1));
+                args = parser.parse();
+                if (args.size() == 0) {
+                    args = null;
+                }
+            } else {
+                customMechName = lbMechStr.substring(mechNameStart+1);
+            }
+        }
+        if (!StringUtil.isNullOrEmpty(customMechName)) {
+            CustomLBMech mech = CustomLBMech.getCustomMech(customMechName, args);
+            if (mech != null) {
+                return mech;
+            } else {
+                return new ClientIpHashMechanism(ImapLBMech.ClientIpHash);
+            }
+        } else {
+            ZimbraLog.imap.warn("invalid custom load balancing mechanism: %s, falling back to default mech", lbMechStr);
+            return new ClientIpHashMechanism(ImapLBMech.ClientIpHash);
+        }
     }
 
     public abstract Server getImapServerFromPool(HttpServletRequest httpReq, List<Server> pool)
@@ -147,20 +184,60 @@ public abstract class ImapLoadBalancingMechanism {
         }
     }
 
-    /*
-     * Custom load balancing mechanism
+    /**
+     * Base class for custom load balancing mechanisms.
+     * Implementations of CustomLBMech need to register themselves using the CustomLBMEch.register() method
+     * in order for the "custom:{LB mech} [args ...]" value of zimbraImapLoadBalancingAlgorithm to be
+     * recognized. Argument lists
      */
-    static class CustomLBMech extends ImapLoadBalancingMechanism {
-        CustomLBMech(ImapLBMech lbMech, String lbMechStr) {
-            super(lbMech);
-            // TODO
+    public static abstract class CustomLBMech extends ImapLoadBalancingMechanism {
+        protected List<String> args;
+
+        protected CustomLBMech() {
+            this(null);
         }
 
-        @Override
-        public Server getImapServerFromPool(HttpServletRequest httpReq, List<Server> pool)
-        throws ServiceException {
-            // TODO - Implement
-            return null;
+        protected CustomLBMech(List<String> args) {
+            super(ImapLBMech.custom);
+            this.args = args;
+        }
+
+        private static Map<String, Class<? extends CustomLBMech>> customLBMechs;
+
+        /**
+         * Implementations of CustomLBMech need to register themselves using this method in order
+         * for the "custom:{LB mech} [args ...]" value of zimbraImapLoadBalancingAlgorithm to be
+         * recognized.
+         *
+         * @param customMechName
+         * @param customMech
+         */
+        public static void register(String customMechName, Class<? extends CustomLBMech> customMech) {
+            if (customLBMechs == null) {
+                customLBMechs = new HashMap<String, Class<? extends CustomLBMech>>();
+            } else if (customLBMechs.get(customMechName) != null) {
+                ZimbraLog.imap.warn("load-balancing mechanism " + customMechName + " is already registered");
+                return;
+            }
+            customLBMechs.put(customMechName, customMech);
+        }
+
+
+        public synchronized static CustomLBMech getCustomMech(String customMechName, List<String> args) {
+            if (customLBMechs == null || customLBMechs.get(customMechName) == null) {
+                ZimbraLog.imap.warn("no CustomLBMech class registered for key %s; "
+                        + "falling back to default", customMechName);
+                return null;
+            } else {
+                Class<? extends CustomLBMech> klass = customLBMechs.get(customMechName);
+                try {
+                    return klass.getDeclaredConstructor(List.class).newInstance(args);
+                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+                    ZimbraLog.imap.warn("cannot instantiate custom load-balancing mechanism %s; "
+                            + "falling back to default", klass.getName(), e);
+                    return null;
+                }
+            }
         }
     }
 }
