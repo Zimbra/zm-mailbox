@@ -74,6 +74,7 @@ import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mime.InternetAddress;
@@ -227,6 +228,7 @@ import com.zimbra.cs.redolog.op.TrackSync;
 import com.zimbra.cs.redolog.op.UnlockItem;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
+import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
@@ -944,6 +946,7 @@ public class Mailbox implements MailboxStore {
     /** Returns the ID of this mailbox's Account.
      *
      * @see #getAccount() */
+    @Override
     public String getAccountId() {
         return mData.accountId;
     }
@@ -10160,5 +10163,23 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
+    }
+
+    /**
+     * Copies the items identified in {@link idlist} to folder {@link targetFolder}
+     * @param idlist - list of item ids for items to copy
+     * @param targetFolder - Destination folder
+     */
+    @Override
+    public List<ItemIdentifier> copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
+            List<Integer> idlist)
+    throws ServiceException {
+        List<ItemIdentifier> createdList = Lists.newArrayList();
+        ItemActionHelper op = ItemActionHelper.COPY((OperationContext) ctxt, this, null, idlist,
+                MailItem.Type.UNKNOWN, null, new ItemId(targetFolder));
+        for (String createdId : op.getCreatedIds()) {
+            createdList.add(new ItemIdentifier(createdId, authenticatedAcctId));
+        }
+        return createdList;
     }
 }
