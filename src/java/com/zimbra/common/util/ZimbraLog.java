@@ -451,6 +451,11 @@ public final class ZimbraLog {
     public static final Log zmg = LogFactory.getLog("zimbra.zmg");
 
     /**
+     * the "zimbra.zmg" logger. For Zimbra Smime.
+     */
+    public static final Log smime = LogFactory.getLog("zimbra.smime");
+
+    /**
      * Maps the log category name to its description.
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
