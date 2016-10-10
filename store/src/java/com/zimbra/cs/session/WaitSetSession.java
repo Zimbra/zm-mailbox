@@ -60,7 +60,7 @@ public class WaitSetSession extends Session {
             // to signal IFF the passed-in changeId is after the current
             // synctoken...and we want to cancel the existing signalling
             // if the new synctoken is up to date with the mailbox
-            int mboxHighestChange = getMailbox().getLastChangeID();
+            int mboxHighestChange = (getMailboxOrNull()).getLastChangeID();
             if (mboxHighestChange > mHighestChangeId)
                 mHighestChangeId = mboxHighestChange;
             if (mSyncToken.after(mHighestChangeId))
