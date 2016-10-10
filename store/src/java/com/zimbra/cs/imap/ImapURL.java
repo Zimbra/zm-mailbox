@@ -26,23 +26,23 @@ import java.util.HashMap;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.cs.imap.ImapPartSpecifier.BinaryDecodingException;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.imap.ImapPartSpecifier.BinaryDecodingException;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.util.JMSession;
 
 final class ImapURL {
     private static class ImapUrlException extends ImapParseException {
@@ -53,7 +53,7 @@ final class ImapURL {
         }
     }
 
-    private String mURL;
+    private final String mURL;
 
     private String mUsername;
     private String mHostname;
@@ -238,13 +238,14 @@ final class ImapURL {
             Pair<Long, InputStream> content = null;
             // special-case the situation where the relevant folder is already SELECTed
             ImapFolder i4folder = handler.getSelectedFolder();
+            Mailbox i4Mailbox = (Mailbox) i4folder.getMailbox();
             if (state == ImapHandler.State.SELECTED && i4session != null && i4folder != null) {
                 if (acct.getId().equals(i4session.getTargetAccountId()) && mPath.isEquivalent(i4folder.getPath())) {
                     ImapMessage i4msg = i4folder.getByImapId(mUid);
                     if (i4msg == null || i4msg.isExpunged()) {
                         throw new ImapUrlException(tag, mURL, "no such message");
                     }
-                    MailItem item = i4folder.getMailbox().getItemById(octxt, i4msg.msgId, i4msg.getType());
+                    MailItem item = i4Mailbox.getItemById(octxt, i4msg.msgId, i4msg.getType());
                     content = ImapMessage.getContent(item);
                 }
             }
