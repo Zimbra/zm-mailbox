@@ -566,7 +566,7 @@ final class ImapSessionManager {
         }
 
         // if there are still other listeners on this folder, this session is unnecessary
-        Mailbox mbox = session.getMailbox();
+        Mailbox mbox = (Mailbox) session.getMailbox();
         if (mbox != null) {
             mbox.lock.lock();
             try {
@@ -612,7 +612,7 @@ final class ImapSessionManager {
      * @return cache key
      */
     String cacheKey(ImapSession session, boolean active) throws ServiceException {
-        Mailbox mbox = session.getMailbox();
+        Mailbox mbox = (Mailbox) session.getMailbox();
         if (mbox == null) {
             mbox = MailboxManager.getInstance().getMailboxByAccountId(session.getTargetAccountId());
         }
