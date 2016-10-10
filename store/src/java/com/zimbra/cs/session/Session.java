@@ -22,6 +22,7 @@ import java.util.Date;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
@@ -44,7 +45,7 @@ public abstract class Session {
     private   final long   mCreationTime;
 
     private   String    mSessionId;
-    protected volatile Mailbox mailbox;
+    protected volatile MailboxStore mailbox;
     private   long      mLastAccessed;
     private   boolean   mCleanedUp;
     private   boolean   mIsRegistered;
@@ -134,11 +135,17 @@ public abstract class Session {
         }
 
         if (isMailboxListener()) {
-            Mailbox mbox = mailbox = MailboxManager.getInstance().getMailboxByAccountId(mTargetAccountId);
+            MailboxStore mbox = mailbox = MailboxManager.getInstance().getMailboxByAccountId(mTargetAccountId);
 
             // once addListener is called, you may NOT lock the mailbox (b/c of deadlock possibilities)
             if (mbox != null) {
-                mbox.addListener(this);
+                if (mbox instanceof Mailbox) {
+                    ((Mailbox)mbox).addListener(this);
+                } else {
+                    throw new UnsupportedOperationException(String.format(
+                            "Session register only supports Mailbox currently can't handle %s",
+                                    mbox.getClass().getName()));
+                }
             }
         }
 
@@ -160,12 +167,20 @@ public abstract class Session {
      * @see #isRegisteredInCache() */
     public Session unregister() {
         // locking order is always Mailbox then Session
-        Mailbox mbox = mailbox;
-        assert(mbox == null || mbox.lock.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
-
-        if (mbox != null && isMailboxListener()) {
-            mbox.removeListener(this);
-            mailbox = null;
+        MailboxStore mboxStore = mailbox;
+        if (null != mboxStore) {
+            if (mboxStore instanceof Mailbox) {
+                Mailbox mbox = (Mailbox)mboxStore;
+                assert(mbox.lock.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
+                if (isMailboxListener()) {
+                    mbox.removeListener(this);
+                    mailbox = null;
+                }
+            } else {
+                throw new UnsupportedOperationException(String.format(
+                        "Session unregister only supports Mailbox currently can't handle %s",
+                                mboxStore.getClass().getName()));
+            }
         }
 
         removeFromSessionCache();
@@ -242,8 +257,25 @@ public abstract class Session {
     protected abstract long getSessionIdleLifetime();
 
     /** Returns the {@link Mailbox} (if any) this Session is listening on. */
-    public Mailbox getMailbox() {
+    public MailboxStore getMailbox() {
         return mailbox;
+    }
+
+    /** Most session types do not support MailboxStore types other than "Mailbox".
+     * Calling this will ensure that an exception is thrown if the store is not a Mailbox (or null)
+     * for any reason.
+     * @return
+     */
+    public Mailbox getMailboxOrNull() {
+        MailboxStore mboxStore = mailbox;
+        if (null == mboxStore) {
+            return null;
+        }
+        if (mboxStore instanceof Mailbox) {
+            return (Mailbox) mboxStore;
+        }
+        throw new UnsupportedOperationException(String.format(
+                "Operation not supported for non-Mailbox MailboxStore '%s'", mboxStore.getClass().getName()));
     }
 
     /** Handles the set of changes from a single Mailbox transaction.

@@ -1071,8 +1071,15 @@ public class Mailbox implements MailboxStore {
                     // insert session into DB
                     DbConnection conn = DbPool.getConnection();
                     try {
-                        DbSession.create(conn, session.getMailbox().getId(), Provisioning.getInstance()
-                                        .getLocalServer().getId());
+                        MailboxStore sessMbox = session.getMailbox();
+                        if (sessMbox instanceof Mailbox) {
+                            DbSession.create(conn, ((Mailbox)sessMbox).getId(), Provisioning.getInstance()
+                                            .getLocalServer().getId());
+                        } else {
+                            throw new UnsupportedOperationException(String.format(
+                                    "Operation not supported for non-Mailbox MailboxStore",
+                                    sessMbox == null ? "null" : sessMbox.getClass().getName()));
+                        }
                         conn.commit();
                     } catch (ServiceException e) {
                         ZimbraLog.session.info("exception while inserting session into DB", e);

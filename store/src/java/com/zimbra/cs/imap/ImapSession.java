@@ -207,7 +207,7 @@ public class ImapSession extends Session {
      *  messages as \Recent. */
     private void snapshotRECENT() {
         try {
-            Mailbox mbox = mailbox;
+            Mailbox mbox = (Mailbox) mailbox;
             if (mbox != null && isWritable()) {
                 mbox.recordImapSession(mFolderId);
             }
@@ -254,7 +254,7 @@ public class ImapSession extends Session {
     }
 
     Session detach() {
-        Mailbox mbox = mailbox;
+        Mailbox mbox = (Mailbox) mailbox;
         if (mbox != null) { // locking order is always Mailbox then Session
             mbox.lock.lock();
         }
@@ -313,7 +313,7 @@ public class ImapSession extends Session {
      * @param active true to use active session cache, otherwise use inactive session cache
      */
     void unload(boolean active) throws ServiceException {
-        Mailbox mbox = mailbox;
+        Mailbox mbox = (Mailbox) mailbox;
         if (mbox == null) {
             return;
         }
@@ -352,7 +352,7 @@ public class ImapSession extends Session {
     }
 
     ImapFolder reload() throws ImapSessionClosedException {
-        Mailbox mbox = mailbox;
+        Mailbox mbox = (Mailbox) mailbox;
         if (mbox == null) {
             throw new ImapSessionClosedException();
         }
@@ -541,7 +541,7 @@ public class ImapSession extends Session {
     @Override
     public void updateAccessTime() {
         super.updateAccessTime();
-        Mailbox mbox = mailbox;
+        Mailbox mbox = this.getMailboxOrNull();
         if (mbox == null) {
             return;
         }
