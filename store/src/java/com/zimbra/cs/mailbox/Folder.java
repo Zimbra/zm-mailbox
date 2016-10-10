@@ -1625,6 +1625,16 @@ public class Folder extends MailItem implements FolderStore {
         return isTagged(Flag.FlagInfo.SYNCFOLDER);
     }
 
+    /**
+     * Returns the IMAP UID Validity Value for the {@link Folder}.
+     * This is the folder's <tt>MOD_CONTENT</tt> change sequence number.
+     * @see Folder#getSavedSequence()
+     **/
+    @Override
+    public int getUIDValidity() {
+        return Math.max(getSavedSequence(), 1);
+    }
+
     /** Calendars, briefcases, etc. are not surfaced in IMAP. */
     @Override
     public boolean isVisibleInImap(boolean displayMailFoldersOnly) {

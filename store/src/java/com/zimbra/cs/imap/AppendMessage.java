@@ -33,6 +33,7 @@ import javax.mail.internet.MailDateFormat;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
 import com.zimbra.common.service.ServiceException;
@@ -171,7 +172,7 @@ final class AppendMessage {
         flagNames = null;
     }
 
-    int storeContent(ImapMailboxStore mboxStore, ImapFolderStore folderStore)
+    int storeContent(ImapMailboxStore mboxStore, FolderStore folderStore)
             throws ImapSessionClosedException, IOException, ServiceException {
         try {
             checkDate(content);
@@ -181,7 +182,7 @@ final class AppendMessage {
         }
     }
 
-    private int store(ImapMailboxStore mboxStore, ImapFolderStore folderStore)
+    private int store(ImapMailboxStore mboxStore, FolderStore folderStore)
     throws ImapSessionClosedException, ServiceException, IOException {
         if (mboxStore instanceof LocalImapMailboxStore) {
             boolean idxAttach = mboxStore.attachmentsIndexingEnabled();
