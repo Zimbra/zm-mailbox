@@ -24,7 +24,6 @@ import com.zimbra.cs.mailbox.Folder;
 public interface ImapFolderStore {
 
     public String getFolderIdAsString();
-    public int getUIDValidity();
     public boolean isUserRootFolder();
     public boolean isIMAPDeleted();
     public FolderStore getFolderStore();

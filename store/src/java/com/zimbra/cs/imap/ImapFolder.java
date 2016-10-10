@@ -34,7 +34,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.zimbra.client.ZFolder;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
@@ -300,12 +300,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     /** Returns the UID Validity Value for the {@link Folder}.  This is the
      *  folder's <tt>MOD_CONTENT</tt> change sequence number.
      * @see Folder#getSavedSequence() */
-    static int getUIDValidity(Folder folder) {
-        return Math.max(folder.getSavedSequence(), 1);
-    }
-
-    static int getUIDValidity(ZFolder zfolder) {
-        return zfolder.getContentSequence();
+    static int getUIDValidity(FolderStore folder) {
+        return folder.getUIDValidity();
     }
 
     /** Retrieves the index of the ImapMessage with the given IMAP UID in the
