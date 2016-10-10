@@ -52,9 +52,4 @@ public class RemoteImapFolderStore implements ImapFolderStore {
     public boolean isIMAPDeleted() {
         return folder.isIMAPDeleted();
     }
-
-    @Override
-    public int getUIDValidity() {
-        return ImapFolder.getUIDValidity(folder);
-    }
 }
