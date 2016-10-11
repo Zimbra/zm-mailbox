@@ -18,7 +18,6 @@ package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
 
-import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
