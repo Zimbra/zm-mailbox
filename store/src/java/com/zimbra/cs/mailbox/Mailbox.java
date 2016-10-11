@@ -1392,6 +1392,7 @@ public class Mailbox implements MailboxStore {
     }
 
     /** Returns the total (uncompressed) size of the mailbox's contents. */
+    @Override
     public long getSize() {
         return currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size;
     }
@@ -4063,6 +4064,20 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    /**
+     * @param id - String representation of integer ID of the folder in its mailbox
+     * @return FolderStore or null
+     */
+    @Override
+    public FolderStore getFolderById(OpContext octxt, String id) throws ServiceException {
+        try {
+            Folder fldr = getFolderById((OperationContext)octxt, Integer.parseInt(id));
+            return fldr;
+        } catch (NumberFormatException nfe) {
+            return null;
+        }
+    }
+
     /** Returns the folder with the specified path, delimited by slashes (<tt>/</tt>).
      * @throws {@link NoSuchItemException} if the folder does not exist */
     @Override
@@ -6583,6 +6598,18 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    @Override
+    public void flagFolderAsSubscribed(OpContext ctxt, FolderStore folder) throws ServiceException {
+        alterTag((OperationContext)ctxt, ((Folder)folder).getId(), MailItem.Type.FOLDER,
+                Flag.FlagInfo.SUBSCRIBED, true, null);
+    }
+
+    @Override
+    public void flagFolderAsUnsubscribed(OpContext ctxt, FolderStore folder) throws ServiceException {
+        alterTag((OperationContext)ctxt, ((Folder)folder).getId(), MailItem.Type.FOLDER,
+                Flag.FlagInfo.SUBSCRIBED, false, null);
+    }
+
     public void alterTag(OperationContext octxt, int itemId, MailItem.Type type, Flag.FlagInfo finfo,
             boolean addTag, TargetConstraint tcon)
     throws ServiceException {
@@ -7215,6 +7242,11 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
+    }
+
+    @Override
+    public void renameFolder(OpContext octxt, FolderStore folder, String path) throws ServiceException {
+        rename((OperationContext)octxt, ((Folder)folder).getId(), MailItem.Type.FOLDER, path);
     }
 
     /**
@@ -7865,6 +7897,11 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
+    }
+
+    @Override
+    public void createFolderForMsgs(OpContext octxt, String path) throws ServiceException {
+        createFolder((OperationContext)octxt, path, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
     }
 
     //for offline override to filter flags
@@ -10188,5 +10225,12 @@ public class Mailbox implements MailboxStore {
             createdList.add(new ItemIdentifier(createdId, authenticatedAcctId));
         }
         return createdList;
+    }
+
+    @Override
+    public List<FolderStore> getUserRootSubfolderHierarchy(OpContext ctxt) throws ServiceException {
+        List<Folder> fldrs = getFolderById((OperationContext)ctxt, Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy();
+        List<FolderStore> folderStores = Lists.newArrayList(fldrs);
+        return folderStores;
     }
 }

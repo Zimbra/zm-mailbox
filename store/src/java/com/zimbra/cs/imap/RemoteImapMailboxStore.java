@@ -181,11 +181,6 @@ public class RemoteImapMailboxStore implements ImapMailboxStore {
         return Provisioning.getInstance().get(AccountBy.id, accountId);
     }
 
-    @Override
-    public FolderStore getFolderById(OperationContext octxt, String id) throws ServiceException {
-        return zMailbox.getFolderById(id);
-    }
-
     /** Returns the ID of this mailbox's Account. */
     @Override
     public String getAccountId() {
