@@ -24,15 +24,19 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.util.AccountUtil;
 
 class ImapCredentials implements java.io.Serializable {
     private static final long serialVersionUID = -3323076274740054770L;
@@ -97,19 +101,27 @@ class ImapCredentials implements java.io.Serializable {
         return new OperationContext(mAccountId);
     }
 
-    Mailbox getMailbox() throws ServiceException {
-        if (!mIsLocal)
-            throw ServiceException.WRONG_HOST(getAccount().getMailHost(), null);
-        return MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
+    MailboxStore getMailbox() throws ServiceException {
+        ImapMailboxStore imapStore = getImapMailboxStore();
+        return imapStore.getMailboxStore();
     }
 
     ImapMailboxStore getImapMailboxStore() throws ServiceException {
         if (mIsLocal) {
             return new LocalImapMailboxStore(MailboxManager.getInstance().getMailboxByAccountId(mAccountId));
         }
-        throw new UnsupportedOperationException("RemoteImapMailboxStore not supported yet");
+        try {
+            Account acct = getAccount();
+            ZMailbox.Options options =
+                    new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(acct));
+            options.setTargetAccount(acct.getName());
+            options.setNoSession(true);
+            MailboxStore store =  ZMailbox.getMailbox(options);
+            return ImapMailboxStore.get(store, mAccountId);
+        } catch (AuthTokenException ate) {
+            throw ServiceException.FAILURE("error generating auth token", ate);
+        }
     }
-
 
     private Set<String> parseConfig(Metadata config) throws ServiceException {
         if (config == null || !config.containsKey(FN_SUBSCRIPTIONS))
