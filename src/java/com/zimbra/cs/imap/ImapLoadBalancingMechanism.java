@@ -29,12 +29,12 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.QuotedStringParser;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.auth.AuthMechanism.QuotedStringParser;
 
 public abstract class ImapLoadBalancingMechanism {
 

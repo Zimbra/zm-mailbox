@@ -25,6 +25,7 @@ import java.util.StringTokenizer;
 import javax.security.auth.login.LoginException;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.QuotedStringParser;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -421,60 +422,6 @@ public abstract class AuthMechanism {
             if (mHandler == null)
                 throw ServiceException.FAILURE("custom auth handler " + mHandlerName + " not found", null);
             return mHandler.checkPasswordAging();
-        }
-    }
-
-    public static class QuotedStringParser {
-        private String mInput;
-
-        //the parser flips between these two sets of delimiters
-        private static final String DELIM_WHITESPACE_AND_QUOTES = " \t\r\n\"";
-        private static final String DELIM_QUOTES_ONLY ="\"";
-
-        public QuotedStringParser(String input) {
-            if (input == null)
-                throw new IllegalArgumentException("Search Text cannot be null.");
-            mInput = input;
-        }
-
-        public List<String> parse() {
-            List<String> result = new ArrayList<String>();
-
-            boolean returnTokens = true;
-            String currentDelims = DELIM_WHITESPACE_AND_QUOTES;
-            StringTokenizer parser = new StringTokenizer(mInput, currentDelims, returnTokens);
-
-            boolean openDoubleQuote = false;
-            boolean gotContent = false;
-            String token = null;
-            while (parser.hasMoreTokens()) {
-                token = parser.nextToken(currentDelims);
-                if (!isDoubleQuote(token)) {
-                    if (!currentDelims.contains(token)) {
-                        result.add(token);
-                        gotContent = true;
-                    }
-                } else {
-                    currentDelims = flipDelimiters(currentDelims);
-                    // allow empty string in double quotes
-                    if (openDoubleQuote && !gotContent)
-                        result.add("");
-                    openDoubleQuote = !openDoubleQuote;
-                    gotContent = false;
-                }
-            }
-            return result;
-        }
-
-        private boolean isDoubleQuote(String token) {
-            return token.equals("\"");
-        }
-
-        private String flipDelimiters(String curDelims) {
-            if (curDelims.equals(DELIM_WHITESPACE_AND_QUOTES))
-                return DELIM_QUOTES_ONLY;
-            else
-                return DELIM_WHITESPACE_AND_QUOTES;
         }
     }
 
