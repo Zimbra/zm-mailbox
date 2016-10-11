@@ -195,12 +195,6 @@ public class LocalImapMailboxStore implements ImapMailboxStore {
         return mailbox.getAccount();
     }
 
-    @Override
-    public FolderStore getFolderById(OperationContext octxt, String id) throws ServiceException {
-        int intID = Integer.parseInt(id);
-        return mailbox.getFolderById(octxt, intID);
-    }
-
     public Mailbox getMailbox() {
         return mailbox;
     }
