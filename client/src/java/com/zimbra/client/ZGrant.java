@@ -17,46 +17,46 @@
 
 package com.zimbra.client;
 
+import java.util.Arrays;
+
+import org.json.JSONException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.mail.type.Grant;
 
-import org.json.JSONException;
-
-import java.util.Arrays;
-
 public class ZGrant implements ToZJSONObject {
 
     private String mArgs;
-    private String mGranteeName;
-    private String mGranteeId;
-    private GranteeType mGranteeType;
-    private String mPermissions;
+    private final String mGranteeName;
+    private final String mGranteeId;
+    private final GranteeType mGranteeType;
+    private final String mPermissions;
 
     /** Stolen shamelessly from ACL.java. */
     /** The pseudo-GUID signifying "all authenticated users". */
     public static final String GUID_AUTHUSER = "00000000-0000-0000-0000-000000000000";
     /** The pseudo-GUID signifying "all authenticated and unauthenticated users". */
     public static final String GUID_PUBLIC   = "99999999-9999-9999-9999-999999999999";
-    
-    
+
+
     public enum Permission {
         read('r'),
         write('w'),
-        insert('i'),        
+        insert('i'),
         delete('d'),
-        administer('a'),        
+        administer('a'),
         workflow('x'),
-        freebusy('f');                
+        freebusy('f');
 
         private char mPermChar;
-        
+
         public char getPermissionChar() { return mPermChar; }
 
         public static String toNameList(String perms) {
-            if (perms == null || perms.length() == 0) return "";            
+            if (perms == null || perms.length() == 0) return "";
             StringBuilder sb = new StringBuilder();
             for (int i=0; i < perms.length(); i++) {
                 String v = null;
@@ -71,7 +71,7 @@ public class ZGrant implements ToZJSONObject {
             }
             return sb.toString();
         }
-        
+
         Permission(char permChar) {
             mPermChar = permChar;
         }
@@ -82,47 +82,50 @@ public class ZGrant implements ToZJSONObject {
         /**
          * access is granted to an authenticated user
          */
-        usr(com.zimbra.soap.type.GrantGranteeType.usr),
+        usr(com.zimbra.soap.type.GrantGranteeType.usr, com.zimbra.common.mailbox.GrantGranteeType.usr),
         /**
          * access is granted to a group of users
          */
-        grp(com.zimbra.soap.type.GrantGranteeType.grp),
+        grp(com.zimbra.soap.type.GrantGranteeType.grp, com.zimbra.common.mailbox.GrantGranteeType.grp),
         /**
          * access is granted to users on a cos
          */
-        cos(com.zimbra.soap.type.GrantGranteeType.cos),
+        cos(com.zimbra.soap.type.GrantGranteeType.cos, com.zimbra.common.mailbox.GrantGranteeType.cos),
         /**
          * access is granted to public. no authentication needed.
          */
-        pub(com.zimbra.soap.type.GrantGranteeType.pub),
+        pub(com.zimbra.soap.type.GrantGranteeType.pub, com.zimbra.common.mailbox.GrantGranteeType.pub),
         /**
          * access is granted to all authenticated users
          */
-        all(com.zimbra.soap.type.GrantGranteeType.all),
+        all(com.zimbra.soap.type.GrantGranteeType.all, com.zimbra.common.mailbox.GrantGranteeType.all),
         /**
          * access is granted to all users in a domain
          */
-        dom(com.zimbra.soap.type.GrantGranteeType.dom),
+        dom(com.zimbra.soap.type.GrantGranteeType.dom, com.zimbra.common.mailbox.GrantGranteeType.dom),
         /**
-         * access is granted to a non-Zimbra email address and a password 
+         * access is granted to a non-Zimbra email address and a password
          */
-        guest(com.zimbra.soap.type.GrantGranteeType.guest),
+        guest(com.zimbra.soap.type.GrantGranteeType.guest, com.zimbra.common.mailbox.GrantGranteeType.guest),
         /**
          * access is granted to a non-Zimbra email address and an accesskey
          */
-        key(com.zimbra.soap.type.GrantGranteeType.key);
+        key(com.zimbra.soap.type.GrantGranteeType.key, com.zimbra.common.mailbox.GrantGranteeType.key);
 
         private com.zimbra.soap.type.GrantGranteeType jaxbGranteeType;
+        private com.zimbra.common.mailbox.GrantGranteeType commonGranteeType;
 
-        GranteeType(com.zimbra.soap.type.GrantGranteeType jaxbGT) {
+        GranteeType(com.zimbra.soap.type.GrantGranteeType jaxbGT, com.zimbra.common.mailbox.GrantGranteeType commGT) {
             jaxbGranteeType = jaxbGT;
+            commonGranteeType = commGT;
         }
 
         public static GranteeType fromString(String s) throws ServiceException {
             try {
                 return GranteeType.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid grantee: "+s+", valid values: "+Arrays.asList(GranteeType.values()), e);
+                throw ZClientException.CLIENT_ERROR(
+                        "invalid grantee: " + s + ", valid values: " + Arrays.asList(GranteeType.values()), e);
             }
         }
 
@@ -139,6 +142,20 @@ public class ZGrant implements ToZJSONObject {
             }
             throw new IllegalArgumentException("Unrecognised GranteeType:" + jaxbGT);
         }
+
+        /* return equivalent zm-common enum */
+        public com.zimbra.common.mailbox.GrantGranteeType toCommon() {
+            return commonGranteeType;
+        }
+
+        public static GranteeType fromCommon(com.zimbra.common.mailbox.GrantGranteeType commGT) {
+            for (GranteeType gt :GranteeType.values()) {
+                if (gt.toCommon() == commGT) {
+                    return gt;
+                }
+            }
+            throw new IllegalArgumentException("Unrecognised GranteeType:" + commGT);
+        }
     }
 
 
@@ -147,13 +164,13 @@ public class ZGrant implements ToZJSONObject {
         mGranteeName = e.getAttribute(MailConstants.A_DISPLAY, null);
         mGranteeId = e.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         mGranteeType = GranteeType.fromString(e.getAttribute(MailConstants.A_GRANT_TYPE));
-        
+
         if (mGranteeType == GranteeType.key)
             mArgs = e.getAttribute(MailConstants.A_ACCESSKEY, null);
         else
             mArgs = e.getAttribute(MailConstants.A_PASSWORD, null);
     }
-    
+
     public ZGrant(Grant grant) throws ServiceException {
         mPermissions = grant.getPerm();
         mGranteeName = grant.getGranteeName();
@@ -169,7 +186,7 @@ public class ZGrant implements ToZJSONObject {
         Element grant = parent.addElement(MailConstants.E_GRANT);
         if (mPermissions != null)
             grant.addAttribute(MailConstants.A_RIGHTS, mPermissions);
-        
+
         grant.addAttribute(MailConstants.A_GRANT_TYPE, mGranteeType.name());
 
         if (mGranteeId != null)
@@ -185,18 +202,18 @@ public class ZGrant implements ToZJSONObject {
                 grant.addAttribute(MailConstants.A_ARGS, mArgs);
         }
     }
-    
+
     /**
      *  some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x)
      */
     public String getPermissions() {
         return mPermissions;
     }
-    
+
     private boolean hasPerm(Permission p) {
         return (mPermissions != null) && mPermissions.indexOf(p.getPermissionChar()) != -1;
     }
-    
+
     public boolean canAdminister() {
         return hasPerm(Permission.administer);
     }
@@ -210,7 +227,7 @@ public class ZGrant implements ToZJSONObject {
     }
 
     public boolean canRead() {
-        return hasPerm(Permission.read);        
+        return hasPerm(Permission.read);
     }
 
     public boolean canWorkflow() {
@@ -220,14 +237,14 @@ public class ZGrant implements ToZJSONObject {
     public boolean canWrite() {
         return hasPerm(Permission.write);
     }
-    
+
     public boolean canViewFreeBusy() {
         return hasPerm(Permission.freebusy);
     }
-    
+
     /**
      * the type of grantee: "usr", "grp", "dom" (domain),
-     * "all" (all authenticated users), "pub" (public authenticated and unauthenticated access), 
+     * "all" (all authenticated users), "pub" (public authenticated and unauthenticated access),
      * "guest" (non-Zimbra email address and password)
      * "key" (access key)
      */
@@ -247,16 +264,16 @@ public class ZGrant implements ToZJSONObject {
      * the zimbraId of the granteee
      */
     public String getGranteeId() {
-        return mGranteeId;                                                                          
+        return mGranteeId;
     }
-    
+
     /**
      *  optional argument.  password when {grantee-type} is "guest"
      */
     public String getArgs() {
         return mArgs;
     }
-    
+
     void setAccessKey(String accesskey) {
         mArgs = accesskey;
     }
@@ -268,7 +285,8 @@ public class ZGrant implements ToZJSONObject {
     public boolean isPublic() {
         return this.getGranteeType().equals(GranteeType.pub);
     }
-    
+
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("type", mGranteeType.name());
@@ -279,6 +297,7 @@ public class ZGrant implements ToZJSONObject {
         return jo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZGrant %s %s %s]", mGranteeType.name(), mGranteeName, mPermissions);
     }

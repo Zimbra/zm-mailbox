@@ -53,6 +53,7 @@ import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.dom4j.QName;
 import org.json.JSONException;
+import org.python.google.common.collect.Lists;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
@@ -1191,6 +1192,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @return current size of mailbox in bytes
      * @throws com.zimbra.common.service.ServiceException on error
      */
+    @Override
     public long getSize() throws ServiceException {
         populateFolderCache();
         return mSize;
@@ -2703,6 +2705,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     /**
+     * @param id - String representation of integer ID of the folder in its mailbox
+     * @return FolderStore or null
+     */
+    @Override
+    public FolderStore getFolderById(OpContext octxt, String id) throws ServiceException {
+        return getFolderById(id);
+    }
+
+    /**
      * find the folder with the specified UUID.
      * @param uuid UUID of folder
      * @return ZFolder if found, null otherwise.
@@ -2779,6 +2790,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             addSubFolders(getUserRoot(), allFolders);
         }
         return allFolders;
+    }
+
+    @Override
+    public List<FolderStore> getUserRootSubfolderHierarchy(OpContext ctxt) throws ServiceException {
+        List<FolderStore> folders = Lists.newArrayList(getAllFolders());
+        return folders;
     }
 
     private void addSubFolders(ZFolder folder, List<ZFolder> folderList) throws ServiceException {
@@ -3069,6 +3086,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return newFolder != null ? newFolder : new ZFolder(newFolderEl, null, this);
     }
 
+    @Override
+    public void createFolderForMsgs(OpContext octxt, String path) throws ServiceException {
+        createFolder(null, path, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
+    }
+
     /**
      * create a new sub folder of the specified parent folder.
      *
@@ -3280,6 +3302,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZActionResult renameFolder(String id, String name) throws ServiceException {
         return renameFolder(id, name, null);
+    }
+
+    @Override
+    public void renameFolder(OpContext octxt, FolderStore folder, String path) throws ServiceException {
+        renameFolder(folder.getFolderIdAsString(), path);
     }
 
     /** changes the folder's name and moves it be a child of the given target folder.
@@ -5692,5 +5719,17 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     throws ServiceException {
         throw new UnsupportedOperationException("ZMailbox does not support copyItemAction yet");
     }
+
+    @Override
+    public void flagFolderAsSubscribed(OpContext ctxt, FolderStore folder) throws ServiceException {
+        throw new UnsupportedOperationException("ZMailbox does not support copyItemAction yet");
+    }
+
+    @Override
+    public void flagFolderAsUnsubscribed(OpContext ctxt, FolderStore folder) throws ServiceException {
+        throw new UnsupportedOperationException("ZMailbox does not support copyItemAction yet");
+    }
+
+
 }
 
