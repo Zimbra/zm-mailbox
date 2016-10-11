@@ -314,7 +314,8 @@ public class Folder extends MailItem implements FolderStore {
      *  selected.)</i>  Otherwise, it is the number of messages/chats/contacts
      *  added to the folder, moved to the folder, or edited in the folder
      *  since the last such IMAP session. */
-    int getImapRECENT() throws ServiceException {
+    @Override
+    public int getImapRECENT() throws ServiceException {
         // no contents means no \Recent items (duh)
         if (getSize() == 0) {
             return 0;
@@ -339,14 +340,16 @@ public class Folder extends MailItem implements FolderStore {
     /** Returns one higher than the IMAP ID of the last item added to the
      *  folder.  This is used as the UIDNEXT value when returning the folder
      *  via IMAP. */
+    @Override
     public int getImapUIDNEXT() {
         return imapUIDNEXT;
     }
 
-    /** Returns the change number of the last time (a) an item was inserted
-     *  into the folder or (b) an item in the folder had its flags or tags
-     *  changed.  This data is used to enable IMAP client synchronization
-     *  via the CONDSTORE extension. */
+    /** Returns the change number of the last time
+     *  (a) an item was inserted into the folder or
+     *  (b) an item in the folder had its flags or tags changed.
+     *  This data is used to enable IMAP client synchronization via the CONDSTORE extension. */
+    @Override
     public int getImapMODSEQ() {
         return imapMODSEQ;
     }
@@ -1606,6 +1609,16 @@ public class Folder extends MailItem implements FolderStore {
     }
 
     @Override
+    public int getFolderIdInOwnerMailbox() {
+        return getId();
+    }
+
+    @Override
+    public boolean isInboxFolder() {
+        return (mId == Mailbox.ID_FOLDER_INBOX);
+    }
+
+    @Override
     public boolean isSearchFolder() {
         return (this instanceof SearchFolder);
     }
@@ -1625,6 +1638,11 @@ public class Folder extends MailItem implements FolderStore {
         return isTagged(Flag.FlagInfo.SYNCFOLDER);
     }
 
+    @Override
+    public boolean isFlaggedAsSubscribed() {
+        return isTagged(Flag.FlagInfo.SUBSCRIBED);
+    }
+
     /**
      * Returns the IMAP UID Validity Value for the {@link Folder}.
      * This is the folder's <tt>MOD_CONTENT</tt> change sequence number.
@@ -1633,6 +1651,17 @@ public class Folder extends MailItem implements FolderStore {
     @Override
     public int getUIDValidity() {
         return Math.max(getSavedSequence(), 1);
+    }
+
+    @Override
+    public int getImapMessageCount() {
+        return (int) getItemCount();
+    }
+
+    /** @return number of unread items in folder, including IMAP \Deleted items */
+    @Override
+    public int getImapUnreadCount() {
+        return getUnreadCount();
     }
 
     /** Calendars, briefcases, etc. are not surfaced in IMAP. */
