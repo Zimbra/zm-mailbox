@@ -18,6 +18,7 @@ package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
 
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -166,6 +167,161 @@ public class NotifyMailtoTest {
 
             notifyMsg = mbox3.getMessageById(null, item);
             Assert.assertEquals("おしらせ", notifyMsg.getSubject());
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testPercentEncodingVariable_WithEncodeurl() {
+        String sampleMsg = "Auto-Submitted: \"no\"\n"
+                + "from: xyz@example.com\n"
+                + "Subject: [acme-users] [fwd] version 1.0 is out\n"
+                + "to: foo@example.com, baz@example.com\n"
+                + "cc: qux@example.com\n";
+
+        String filterScript_PercentEncodingVariable =
+                "require [\"enotify\", \"variables\"];\n"
+              + "set :encodeurl \"body_param\" \"Safe body&evil=evilbody\";\n"
+              + "notify \"mailto:test2@zimbra.com?body=${body_param}\";";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
+
+            acct1.setMail("test1@zimbra.com");
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript_PercentEncodingVariable);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    acct1.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+
+            // The triggered message should be delivered to the target mailbox
+            Assert.assertEquals(1, ids.size());
+
+            // Notification message should be delivered to mailto and to= addresses
+            Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                    .getIds(MailItem.Type.MESSAGE).get(0);
+            Message notifyMsg = mbox2.getMessageById(null, item);
+
+            Assert.assertEquals("Safe body&evil=evilbody", notifyMsg.getFragment());
+
+            String[] headers = notifyMsg.getMimeMessage().getHeader("evil");
+            Assert.assertFalse(notifyMsg.getSender() == null);
+
+            RuleManager.clearCachedRules(acct1);
+
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testPercentEncodingVariable_WithoutEncodeurl() {
+        String sampleMsg = "Auto-Submitted: \"no\"\n"
+                + "from: xyz@example.com\n"
+                + "Subject: [acme-users] [fwd] version 1.0 is out\n"
+                + "to: foo@example.com, baz@example.com\n"
+                + "cc: qux@example.com\n";
+
+        String filterScript_WithoutPercentEncodingVariable =
+                "require [\"enotify\", \"variables\"];\n"
+              + "set \"body_param\" \"Safe body&evil=evilbody\";\n"
+              + "notify \"mailto:test2@zimbra.com?body=${body_param}\";";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
+
+            acct1.setMail("test1@zimbra.com");
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript_WithoutPercentEncodingVariable);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    acct1.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+
+            // The triggered message should be delivered to the target mailbox
+            Assert.assertEquals(1, ids.size());
+
+            // Notification message should be delivered to mailto and to= addresses
+            Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                    .getIds(MailItem.Type.MESSAGE).get(0);
+            Message notifyMsg = mbox2.getMessageById(null, item);
+
+            Assert.assertEquals("Safe body", notifyMsg.getFragment());
+
+            String[] headers = notifyMsg.getMimeMessage().getHeader("evil");
+            Assert.assertTrue(headers.length == 1);
+            Assert.assertEquals("evilbody", headers[0]);
+
+            RuleManager.clearCachedRules(acct1);
+
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testPercentEncodingVariable_WithoutEncodeurl_BadEncodedString() {
+        String sampleMsg = "Auto-Submitted: \"no\"\n"
+                + "from: xyz@example.com\n"
+                + "Subject: [acme-users] [fwd] version 1.0 is out\n"
+                + "to: foo@example.com, baz@example.com\n"
+                + "cc: qux@example.com\n";
+
+        String filterScript_WithoutPercentEncodingVariable =
+                "require [\"enotify\", \"variables\"];\n"
+              + "set \"body_param\" \"Bad%body&evil=evilbody\";\n"
+              + "notify \"mailto:test2@zimbra.com?body=${body_param}\";";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
+
+            acct1.setMail("test1@zimbra.com");
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript_WithoutPercentEncodingVariable);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    acct1.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+
+            // The triggered message should be delivered to the target mailbox
+            Assert.assertEquals(1, ids.size());
+
+            // Notification message should be delivered to mailto and to= addresses
+            Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                    .getIds(MailItem.Type.MESSAGE).get(0);
+            Message notifyMsg = mbox2.getMessageById(null, item);
+
+            // Since the message body was originally incorrectly percent-encoded,
+            // URLDecoder is failed to decode the message contents. Keep using the
+            // original message string.
+            Assert.assertEquals("Bad%body", notifyMsg.getFragment());
+
+            String[] headers = notifyMsg.getMimeMessage().getHeader("evil");
+            Assert.assertTrue(headers.length == 1);
+            Assert.assertEquals("evilbody", headers[0]);
+
+            RuleManager.clearCachedRules(acct1);
+
         } catch (Exception e) {
             fail("No exception should be thrown");
         }
