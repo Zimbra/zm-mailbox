@@ -445,6 +445,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         return getId();
     }
 
+    @Override
     public int getFolderIdInOwnerMailbox() {
         ItemIdentifier fId;
         try {
@@ -474,6 +475,11 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     }
 
     @Override
+    public boolean isInboxFolder() {
+        return (FolderConstants.ID_FOLDER_INBOX == this.getFolderIdInOwnerMailbox());
+    }
+
+    @Override
     public boolean isSearchFolder() {
         return (this instanceof ZSearchFolder);
     }
@@ -491,6 +497,17 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     @Override
     public boolean isFlaggedAsSyncFolder() {
         throw new UnsupportedOperationException("ZFolder method not supported yet");
+    }
+
+    @Override
+    public boolean isFlaggedAsSubscribed() {
+        throw new UnsupportedOperationException("ZFolder method not supported yet");
+    }
+
+    @Override
+    public int getImapRECENT() throws ServiceException {
+        ZimbraLog.mailbox.info("ZFolder.getImapRECENT always returns 0 currently");
+        return 0;
     }
 
     /**
@@ -643,9 +660,8 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         return mUnreadCount;
     }
 
-    /**
-     * @return number of unread items in folder, including IMAP \Deleted items
-     */
+    /** @return number of unread items in folder, including IMAP \Deleted items */
+    @Override
     public int getImapUnreadCount() {
         return mImapUnreadCount;
     }
@@ -675,6 +691,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     /**
      * @return number of items in folder, including IMAP \Deleted item
      */
+    @Override
     public int getImapMessageCount() {
         return mImapMessageCount;
     }
@@ -708,12 +725,16 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
 
     /** Returns a counter that increments each time an item is added to the folder.
      */
+    @Override
     public int getImapUIDNEXT() {
         return mImapUIDNEXT;
     }
 
-    /** Returns the sequence number for the last change that affected the folder's contents.
-     */
+    /** Returns the change number of the last time
+     *  (a) an item was inserted into the folder or
+     *  (b) an item in the folder had its flags or tags changed.
+     *  This data is used to enable IMAP client synchronization via the CONDSTORE extension. */
+    @Override
     public int getImapMODSEQ() {
         return mImapMODSEQ;
     }
