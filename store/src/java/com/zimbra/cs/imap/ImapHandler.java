@@ -1595,11 +1595,9 @@ abstract class ImapHandler {
         }
 
         try {
-            Object mboxobj = path.getOwnerMailbox();
-            if (mboxobj instanceof Mailbox) {
-                ((Mailbox) mboxobj).createFolder(getContext(), path.asResolvedPath(), new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
-            } else if (mboxobj instanceof ZMailbox) {
-                ((ZMailbox) mboxobj).createFolder(null, path.asResolvedPath(), ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
+            MailboxStore mbox = path.getOwnerMailbox();
+            if (mbox != null) {
+                mbox.createFolderForMsgs(getContext(), path.asResolvedPath());
             } else {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }
@@ -1646,15 +1644,15 @@ abstract class ImapHandler {
                 }
             }
 
-            Object mboxobj = path.getOwnerMailbox();
+            MailboxStore mboxStore = path.getOwnerMailbox();
             if (path.useReferent()) {
                 // when users try to remove mountpoints, the IMAP client hard-deletes the subfolders!
                 //   deal with this by only *pretending* to delete subfolders of mountpoints
                 credentials.hideFolder(path);
                 // even pretend-deleting the folder also unsubscribes from it...
                 credentials.unsubscribe(path);
-            } else if (mboxobj instanceof Mailbox) {
-                Mailbox mbox = (Mailbox) mboxobj;
+            } else if (mboxStore instanceof Mailbox) {
+                Mailbox mbox = (Mailbox) mboxStore;
                 Folder folder = (Folder) path.getFolder();
                 if (!folder.isDeletable()) {
                     throw ImapServiceException.CANNOT_DELETE_SYSTEM_FOLDER(folder.getPath());
@@ -1671,8 +1669,8 @@ abstract class ImapHandler {
                     mbox.emptyFolder(getContext(), folder.getId(), false);
                     // FIXME: add \Deleted flag to folder
                 }
-            } else if (mboxobj instanceof ZMailbox) {
-                ZMailbox zmbx = (ZMailbox) mboxobj;
+            } else if (mboxStore instanceof ZMailbox) {
+                ZMailbox zmbx = (ZMailbox) mboxStore;
                 ZFolder zfolder = (ZFolder) path.getFolder();
 
                 if (zfolder.getSubFolders().isEmpty()) {
@@ -1730,21 +1728,13 @@ abstract class ImapHandler {
                 throw MailServiceException.NO_SUCH_FOLDER(oldPath.asZimbraPath());
             }
 
-            Object mboxobj = oldPath.getOwnerMailbox();
-            if (mboxobj instanceof Mailbox) {
-                int folderId = oldPath.asItemId().getId();
-                if (folderId == Mailbox.ID_FOLDER_INBOX) {
+            MailboxStore mboxStore = oldPath.getOwnerMailbox();
+            if (null != mboxStore) {
+                FolderStore pathFolder = oldPath.getFolder();
+                if (pathFolder.isInboxFolder()) {
                     throw ImapServiceException.CANT_RENAME_INBOX();
                 }
-                Mailbox mbox = (Mailbox) mboxobj;
-                mbox.rename(getContext(), folderId, MailItem.Type.FOLDER, "/" + newPath.asResolvedPath());
-            } else if (mboxobj instanceof ZMailbox) {
-                if (oldPath.asItemId().getId() == Mailbox.ID_FOLDER_INBOX) {
-                    throw ImapServiceException.CANT_RENAME_INBOX();
-                }
-                ZMailbox zmbx = (ZMailbox) mboxobj;
-                ZFolder zfolder = (ZFolder) oldPath.getFolder();
-                zmbx.renameFolder(zfolder.getId(), "/" + newPath.asResolvedPath());
+                mboxStore.renameFolder(getContext(), pathFolder, "/" + newPath.asResolvedPath());
             } else {
                 ZimbraLog.imap.info("RENAME failed: cannot get mailbox for path: " + oldPath);
                 sendNO(tag, "RENAME failed");
@@ -1786,10 +1776,9 @@ abstract class ImapHandler {
                 if (!path.isVisible()) {
                     throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
                 }
-                Mailbox mbox = (Mailbox) path.getOwnerMailbox();
-                Folder folder = (Folder) path.getFolder();
-                if (!folder.isTagged(Flag.FlagInfo.SUBSCRIBED)) {
-                    mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.FlagInfo.SUBSCRIBED, true, null);
+                FolderStore folder = path.getFolder();
+                if (!folder.isFlaggedAsSubscribed()) {
+                    path.getOwnerMailbox().flagFolderAsSubscribed(getContext(), folder);
                 }
             } else {
                 credentials.subscribe(path);
@@ -1820,10 +1809,9 @@ abstract class ImapHandler {
         try {
             if (path.belongsTo(credentials)) {
                 try {
-                    Mailbox mbox = credentials.getMailbox();
-                    Folder folder = (Folder) path.getFolder();
-                    if (folder.isTagged(Flag.FlagInfo.SUBSCRIBED)) {
-                        mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.FlagInfo.SUBSCRIBED, false, null);
+                    FolderStore folder = path.getFolder();
+                    if (folder.isFlaggedAsSubscribed()) {
+                        path.getOwnerMailbox().flagFolderAsUnsubscribed(getContext(), folder);
                     }
                 } catch (NoSuchItemException e) {
                 }
@@ -2242,15 +2230,14 @@ abstract class ImapHandler {
                 Map<SubscribedImapPath, Boolean> hits = new HashMap<SubscribedImapPath, Boolean>();
 
                 if (owner == null) {
-                    Mailbox mbox = credentials.getMailbox();
+                    MailboxStore mbox = credentials.getMailbox();
                     boolean isMailFolders =  Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
-                    for (Folder folder : mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy()) {
-     if(isMailFolders) {MailItem.Type view = folder.getDefaultView(); //  chat has item type of message.hence ignoring the chat folder by name.
-     if((view == MailItem.Type.CHAT) || (folder.getName().equals ("Chats"))) {
-     continue;
-     }
-     }
-                        if (folder.isTagged(Flag.FlagInfo.SUBSCRIBED)) {
+                    for (FolderStore folder : mbox.getUserRootSubfolderHierarchy(getContext())) {
+                        //  chat has item type of message.hence ignoring the chat folder by name.
+                        if ((isMailFolders) && (folder.isChatsFolder() || (folder.getName().equals ("Chats")))) {
+                                continue;
+                        }
+                        if (folder.isFlaggedAsSubscribed()) {
                             checkSubscription(new SubscribedImapPath(
                                     new ImapPath(null, folder, credentials)), pattern, childPattern, hits);
                         }
@@ -2416,13 +2403,14 @@ abstract class ImapHandler {
         int empty = data.length();
 
         int messages, recent, uidnext, uvv, unread, modseq;
-        Object mboxobj = path.getOwnerMailbox();
-        if (mboxobj instanceof Mailbox) {
-            Mailbox mbox = (Mailbox) mboxobj;
-            Folder folder = (Folder) path.getFolder();
+        MailboxStore mboxStore = path.getOwnerMailbox();
+        if (mboxStore != null) {
+            FolderStore folder = path.getFolder();
+            if (folder == null) {
+                throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
+            }
             ImapFolder i4folder = getSelectedFolder();
-
-            messages = (int) folder.getItemCount();
+            messages = folder.getImapMessageCount();
             if ((status & STATUS_RECENT) == 0) {
                 recent = -1;
             } else if (messages == 0) {
@@ -2430,23 +2418,12 @@ abstract class ImapHandler {
             } else if (i4folder != null && path.isEquivalent(i4folder.getPath())) {
                 recent = i4folder.getRecentCount();
             } else {
-                recent = mbox.getImapRecent(getContext(), folder.getId());
+                recent = folder.getImapRECENT();
             }
-            uidnext = folder instanceof SearchFolder ? -1 : folder.getImapUIDNEXT();
-            uvv = ImapFolder.getUIDValidity(folder);
-            unread = folder.getUnreadCount();
-            modseq = folder instanceof SearchFolder ? 0 : folder.getImapMODSEQ();
-        } else if (mboxobj instanceof ZMailbox) {
-            ZFolder zfolder = (ZFolder) path.getFolder();
-            if (zfolder == null) {
-                throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
-            }
-            messages = zfolder.getImapMessageCount();
-            recent = 0;
-            uidnext = zfolder.getImapUIDNEXT();
-            uvv = ImapFolder.getUIDValidity(zfolder);
-            unread = zfolder.getImapUnreadCount();
-            modseq = zfolder.getImapMODSEQ();
+            uidnext = folder.isSearchFolder() ? -1 : folder.getImapUIDNEXT();
+            uvv = folder.getUIDValidity();
+            unread = folder.getImapUnreadCount();
+            modseq = folder.isSearchFolder() ? 0 : folder.getImapMODSEQ();
         } else {
             throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
         }
