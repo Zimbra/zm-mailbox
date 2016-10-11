@@ -476,7 +476,8 @@ public class ImapPath implements Comparable<ImapPath> {
         if (null == imapMailboxStore) {
             return mReferent;
         }
-        FolderStore fldr = imapMailboxStore.getFolderById(getContext(), Integer.toString(iidRemote.getId()));
+        FolderStore fldr = imapMailboxStore.getMailboxStore().getFolderById(
+                getContext(), Integer.toString(iidRemote.getId()));
         if (fldr == null) {
             return mReferent;
         }

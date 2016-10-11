@@ -77,5 +77,4 @@ public interface ImapMailboxStore {
     public Collection<FolderStore> getVisibleFolders(OperationContext octxt, ImapCredentials credentials,
             String owner, ImapPath relativeTo)
     throws ServiceException;
-    public FolderStore getFolderById(OperationContext octxt, String id) throws ServiceException;
 }
