@@ -357,9 +357,10 @@ public final class SoapToSieve {
         Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
         String value = test.getValue();
         checkValue(comp, value);
+        String valueStr = null == value ? "" : FilterUtil.escape(value);
         return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comp,
                 test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
-                        header, FilterUtil.escape(value));
+                        header, valueStr);
     }
 
     private static void checkValue(Sieve.StringComparison comparison, String value) throws ServiceException {
