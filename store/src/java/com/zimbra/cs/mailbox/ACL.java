@@ -71,22 +71,21 @@ public final class ACL {
     public static final short ROLE_ADMIN        = ACL.ROLE_MANAGER | ACL.RIGHT_ADMIN;
 
     /** The grantee of these rights is the zimbraId for a user. */
-    public static final byte GRANTEE_USER     = 1;
+    public static final byte GRANTEE_USER     = 1; /* same as GrantGranteeType.usr */
     /** The grantee of these rights is the zimbraId for a distribution list. */
-    public static final byte GRANTEE_GROUP    = 2;
+    public static final byte GRANTEE_GROUP    = 2; /* same as GrantGranteeType.grp */
     /** The grantee of these rights is all authenticated users. */
-    public static final byte GRANTEE_AUTHUSER = 3;
+    public static final byte GRANTEE_AUTHUSER = 3; /* same as GrantGranteeType.all */
     /** The grantee of these rights is the zimbraId for a domain. */
-    public static final byte GRANTEE_DOMAIN   = 4;
+    public static final byte GRANTEE_DOMAIN   = 4; /* same as GrantGranteeType.dom */
     /** The grantee of these rights is the zimbraId for a COS. */
-    public static final byte GRANTEE_COS      = 5;
+    public static final byte GRANTEE_COS      = 5; /* same as GrantGranteeType.cos */
     /** The grantee of these rights is all authenticated and unauthenticated users. */
-    public static final byte GRANTEE_PUBLIC   = 6;
+    public static final byte GRANTEE_PUBLIC   = 6; /* same as GrantGranteeType.pub */
     /** The grantee of these rights is a named non Zimbra user identified by the email address */
-    public static final byte GRANTEE_GUEST    = 7;
+    public static final byte GRANTEE_GUEST    = 7; /* same as GrantGranteeType.guest */
     /** The grantee of these rights is a named non Zimbra user identified by the access key */
-    public static final byte GRANTEE_KEY      = 8;
-
+    public static final byte GRANTEE_KEY      = 8; /* same as GrantGranteeType.key */
 
     private static final int ACCESSKEY_SIZE_BYTES = 16;
 
