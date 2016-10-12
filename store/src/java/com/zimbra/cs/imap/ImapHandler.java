@@ -59,6 +59,7 @@ import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
@@ -2732,7 +2733,8 @@ abstract class ImapHandler {
             String granteeId = null;
             byte granteeType;
             if (principal.equals("anyone")) {
-                granteeId = GuestAccount.GUID_AUTHUSER;  granteeType = ACL.GRANTEE_AUTHUSER;
+                granteeId = GuestAccount.GUID_AUTHUSER;
+                granteeType = ACL.GRANTEE_AUTHUSER;
             } else {
                 granteeType = ACL.GRANTEE_USER;
                 NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
@@ -2752,7 +2754,7 @@ abstract class ImapHandler {
 
             // figure out the rights already granted on the folder
             short oldRights = 0, newRights;
-            Object folderobj = path.getFolder();
+            FolderStore folderobj = path.getFolder();
             if (folderobj instanceof Folder) {
                 ACL acl = ((Folder) folderobj).getEffectiveACL();
                 if (acl != null) {
@@ -2785,14 +2787,9 @@ abstract class ImapHandler {
 
             // and update the folder appropriately, if necessary
             if (newRights != oldRights) {
-                if (folderobj instanceof Folder) {
-                    Mailbox mbox = (Mailbox) path.getOwnerMailbox();
-                    mbox.grantAccess(getContext(), ((Folder) folderobj).getId(), granteeId, granteeType, newRights, null);
-                } else {
-                    ZMailbox zmbx = (ZMailbox) path.getOwnerMailbox();
-                    ZGrant.GranteeType type = (granteeType == ACL.GRANTEE_AUTHUSER ? ZGrant.GranteeType.all : ZGrant.GranteeType.usr);
-                    zmbx.modifyFolderGrant(((ZFolder) folderobj).getId(), type, principal, ACL.rightsToString(newRights), null);
-                }
+                MailboxStore mboxStore = path.getOwnerMailbox();
+                mboxStore.modifyFolderGrant(getContext(), folderobj, GrantGranteeType.fromByte(granteeType), granteeId,
+                    ACL.rightsToString(newRights), null);
             }
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.PERM_DENIED)) {
