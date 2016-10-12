@@ -7909,6 +7909,18 @@ public class Mailbox implements MailboxStore {
         return mi.getFlagString();
     }
 
+    /**
+     * @param perms permission mask ("rwid")
+     * @param args extra args
+     */
+    @Override
+    public void modifyFolderGrant(OpContext ctxt, FolderStore folder,
+            com.zimbra.common.mailbox.GrantGranteeType granteeType, String granteeId, String perms, String args)
+    throws ServiceException {
+        grantAccess((OperationContext)ctxt, folder.getFolderIdInOwnerMailbox(), granteeId, granteeType.asByte(),
+                     ACL.stringToRights(perms), null);
+    }
+
     public ACL.Grant grantAccess(OperationContext octxt, int itemId, String grantee, byte granteeType, short rights,
             String args)
     throws ServiceException {
