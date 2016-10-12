@@ -123,4 +123,8 @@ public class SmimeConstants {
     public static final String ERRORCODE_INVALID_SIGNATURE = "INVALID_SIGNATURE";
     public static final String ERRORCODE_SIGNATURE_VALIDATION_FAILED = "SIGNATURE_VALIDATION_FAILED";
 
+    public static final String PUB_CERT = "pubCert";
+    public static final String PVT_KEY = "pvtKey";
+    public static final String ALIAS = "alias";
+
 }
