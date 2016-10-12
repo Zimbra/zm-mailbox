@@ -3336,22 +3336,36 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     /**
-     *
      * @param folderId to modify
      * @param granteeType type of grantee
-     * @param grantreeId id of grantree
+     * @param name of grantee
      * @param perms permission mask ("rwid")
      * @param args extra args
-     * @return action result
-     * @throws ServiceException on error
      */
-    public ZActionResult modifyFolderGrant(
-            String folderId, GranteeType granteeType, String grantreeId,
+    public ZActionResult modifyFolderGrant(String folderId, GranteeType granteeType, String name,
+            String perms, String args) throws ServiceException {
+        return modifyFolderGrant(folderId, granteeType, false, name, perms, args);
+    }
+
+    /**
+     * @param folderId to modify
+     * @param granteeType type of grantee
+     * @param useId - false if granteeId is actually a name/email address
+     * @param granteeId of grantee
+     * @param perms permission mask ("rwid")
+     * @param args extra args
+     */
+    public ZActionResult modifyFolderGrant(String folderId, GranteeType granteeType, boolean useId, String granteeId,
             String perms, String args) throws ServiceException {
         Element action = folderAction("grant", folderId);
         Element grant = action.addUniqueElement(MailConstants.E_GRANT);
         grant.addAttribute(MailConstants.A_RIGHTS, perms);
-        grant.addAttribute(MailConstants.A_DISPLAY, grantreeId);
+        if (useId) {
+            grant.addAttribute(MailConstants.A_ZIMBRA_ID, granteeId);
+        } else {
+            grant.addAttribute(MailConstants.A_DISPLAY, granteeId);
+        }
+        grant.addAttribute(MailConstants.A_DISPLAY, granteeId);
         grant.addAttribute(MailConstants.A_GRANT_TYPE, granteeType.name());
         if (args != null) {
             if (granteeType == GranteeType.key) {
@@ -3375,7 +3389,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             ZFolder folder = getFolderById(folderId);
             for (ZGrant g : folder.getGrants()) {
                 if (g.getGranteeType() == GranteeType.key &&
-                        g.getGranteeId().equals(grantreeId)) {
+                        g.getGranteeId().equals(granteeId)) {
                     String key = null;
                     Element eAction = r.getResponse().getOptionalElement(MailConstants.E_ACTION);
                     if (eAction != null) {
@@ -3390,6 +3404,18 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
 
         return r;
+    }
+
+    /**
+     * @param perms permission mask ("rwid")
+     * @param args extra args
+     */
+    @Override
+    public void modifyFolderGrant(OpContext ctxt, FolderStore folder,
+            com.zimbra.common.mailbox.GrantGranteeType granteeType, String granteeId, String perms, String args)
+    throws ServiceException {
+        modifyFolderGrant(folder.getFolderIdAsString(), GranteeType.fromCommon(granteeType), true,
+                granteeId, perms, args);
     }
 
     /**
