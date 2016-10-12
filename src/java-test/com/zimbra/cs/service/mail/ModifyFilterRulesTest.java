@@ -22,8 +22,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,8 +38,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.soap.mail.type.FilterAction;
+import com.zimbra.soap.mail.type.FilterRule;
+import com.zimbra.soap.mail.type.FilterTest;
+import com.zimbra.soap.mail.type.FilterTests;
 
 
 /**
@@ -297,5 +306,57 @@ public class ModifyFilterRulesTest {
         //ZimbraLog.filter.info(expectedScript);
         assertEquals(expectedScript, acct.getMailSieveScript());
 
+    }
+
+    /**
+     * Bug 92309: text "null" was set to To/Cc/From field
+     *
+     * When the To, Cc, or From field in the message filter rule
+     * composing dialogue window is left empty, ZWC automatically
+     * put a text "null" to the filed.  This test case tests that
+     * the text "null" will not be set if the To/Cc/From field
+     * is empty.
+     */
+    @Test
+    public void testBug92309_SetIncomingXMLRules_EmptyAddress() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+
+            // Construct a filter rule with 'address' test whose value is empty (null)
+            FilterRule rule = new FilterRule("testSetIncomingXMLRules_EmptyAddress", true);
+
+            FilterTest.AddressTest test = new FilterTest.AddressTest();
+            test.setHeader("to");
+            test.setStringComparison("is");
+            test.setPart("all");
+            test.setValue(null);
+            test.setIndex(0);
+
+            FilterTests tests = new FilterTests("anyof");
+            tests.addTest(test);
+
+            FilterAction action = new FilterAction.KeepAction();
+            action.setIndex(0);
+
+            rule.setFilterTests(tests);
+            rule.addFilterAction(action);
+
+            List<FilterRule> filterRuleList = new ArrayList<FilterRule>();
+            filterRuleList.add(rule);
+
+            // When the ModifyFilterRulesRequest is submitted from the Web client,
+            // eventually this RuleManager.setIncomingXMLRules is called to convert
+            // the request in JSON to the SIEVE rule text.
+            RuleManager.setIncomingXMLRules(account, filterRuleList);
+
+            // Verify that the saved zimbraMailSieveScript
+            String sieve = account.getMailSieveScript();
+            int result = sieve.indexOf("address :all :is :comparator \"i;ascii-casemap\" [\"to\"] \"\"");
+            Assert.assertNotSame(-1, result);
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
     }
 }
