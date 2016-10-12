@@ -12,7 +12,7 @@
   <!-- mailboxd will not start without zm-common library, so this target does not attempt to start it -->
   <target name="undeploy">
     <ant dir="${server.dir}" target="stop-webserver" inheritAll="false"/>
-    <delete verbose="true">
+    <delete quiet="true" verbose="true">
       <fileset dir="${common.jars.dir}" includes="zm-common*.jar,zimbracommon*.jar"/>
       <fileset dir="${jetty.common.jars.dir}" includes="zm-common*.jar,zimbracommon*.jar"/>
     </delete>
