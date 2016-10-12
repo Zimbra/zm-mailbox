@@ -43,19 +43,17 @@ public abstract class ImapLoadBalancingMechanism {
         /**
          * zimbraImapLoadBalancingAlgorithm type of "ClientIpHash" will select an IMAP
          * server based on the hash of the client IP address.
-         * TODO - should these be refactored to use all lower-case?
          */
         ClientIpHash,
 
         /**
-         * zimbraImapLoadBalancingAlgorithm type of "custom:{handler}" means use registered extension
-         * TODO: details and documentation
+         * zimbraImapLoadBalancingAlgorithm type of "custom:{handler}..." means use registered extension
          */
         custom;
 
         public static ImapLBMech fromString(String lbMechStr) throws ServiceException {
             if (lbMechStr == null) {
-                return null;
+                throw ServiceException.INVALID_REQUEST("null IMAP load balancing mechanism requested", null);
             }
 
             try {
@@ -71,7 +69,7 @@ public abstract class ImapLoadBalancingMechanism {
     protected ImapLoadBalancingMechanism(ImapLBMech lbMech) {
         this.lbMech = lbMech;
     }
-    
+
     public static ImapLoadBalancingMechanism newInstance()
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
@@ -97,16 +95,31 @@ public abstract class ImapLoadBalancingMechanism {
                         return new ClientIpHashMechanism(lbMech);
                 }
             } catch (ServiceException e) {
-                ZimbraLog.account.warn("invalid load balancing mechanism", e);
+                ZimbraLog.account.warn(
+                    "Error trying to load %s: %s",
+                    Provisioning.A_zimbraImapLoadBalancingAlgorithm, lbMechStr, e
+                );
             }
 
-            ZimbraLog.imap.warn("unknown value for " + Provisioning.A_zimbraImapLoadBalancingAlgorithm + ": " +
-                lbMechStr + ", falling back to default mech");
+            ZimbraLog.imap.warn(
+                "unknown value for %s: %s, falling back to default mech",
+                Provisioning.A_zimbraImapLoadBalancingAlgorithm,
+                lbMechStr
+            );
             return new ClientIpHashMechanism(ImapLBMech.ClientIpHash);
         }
 
     }
 
+    /**
+     * Load the registered <code>ImapLoadBalancingMechanism</code> specified by <code>lbMechStr</code>.
+     *
+     * @param lbMechStr is a string that is expected to be of the following format:
+     *                  <code>custom:{handler-algorithm} [arg1 arg2 ...]</code>
+     * @return          the specified custom <code>ImapLoadBalaningMechanism</code>.  If it can not be
+     *                  loaded for any reason, an instance of the default <code>ClientIpHashMechanism</code>
+     *                  will be returned.
+     */
     @VisibleForTesting
     protected static ImapLoadBalancingMechanism loadCustomLBMech(String lbMechStr) throws ServiceException {
         String customMechName = null;
@@ -150,7 +163,9 @@ public abstract class ImapLoadBalancingMechanism {
         private Comparator<Server> serverComparator = new Comparator<Server>() {
             @Override
             public int compare (Server a, Server b) {
-                return a.getName().compareTo(b.getName());
+                String aName = a.getName() != null ? a.getName() : "UNKNOWN";
+                String bName = b.getName() != null ? b.getName() : "UNKNOWN";
+                return aName.compareTo(bName);
             }
         };
         ClientIpHashMechanism(ImapLBMech lbMech) {
@@ -175,9 +190,8 @@ public abstract class ImapLoadBalancingMechanism {
             }
             catch (UnknownHostException e) {
                 ZimbraLog.imap.warn(
-                    "Error resolving CLIENT_IP '" +
-                    httpReq.getHeader(CLIENT_IP) +
-                    "' - returning random IMAP server from pool"
+                    "Error resolving CLIENT_IP '%s' - returning random IMAP server from pool",
+                    httpReq.getHeader(CLIENT_IP)
                 );
                 return pool.get((int)(Math.random() * pool.size()));
             }
@@ -225,16 +239,21 @@ public abstract class ImapLoadBalancingMechanism {
 
         public synchronized static CustomLBMech getCustomMech(String customMechName, List<String> args) {
             if (customLBMechs == null || customLBMechs.get(customMechName) == null) {
-                ZimbraLog.imap.warn("no CustomLBMech class registered for key %s; "
-                        + "falling back to default", customMechName);
+                ZimbraLog.imap.debug(
+                    "no CustomLBMech class registered for key %s; falling back to default",
+                    customMechName
+                );
                 return null;
             } else {
                 Class<? extends CustomLBMech> klass = customLBMechs.get(customMechName);
                 try {
                     return klass.getDeclaredConstructor(List.class).newInstance(args);
-                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-                    ZimbraLog.imap.warn("cannot instantiate custom load-balancing mechanism %s; "
-                            + "falling back to default", klass.getName(), e);
+                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
+                        InvocationTargetException | NoSuchMethodException | SecurityException e) {
+                    ZimbraLog.imap.warn(
+                        "cannot instantiate custom load-balancing mechanism %s; falling back to default",
+                        klass.getName(), e
+                    );
                     return null;
                 }
             }
