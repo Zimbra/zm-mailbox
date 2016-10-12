@@ -39,4 +39,6 @@ public interface MailboxStore {
     public void flagFolderAsSubscribed(OpContext ctxt, FolderStore folder) throws ServiceException;
     public void flagFolderAsUnsubscribed(OpContext ctxt, FolderStore folder) throws ServiceException;
     public List<FolderStore> getUserRootSubfolderHierarchy(OpContext ctxt) throws ServiceException;
+    public void modifyFolderGrant(OpContext ctxt, FolderStore folder, GrantGranteeType granteeType, String granteeId,
+            String perms, String args) throws ServiceException;
 }
