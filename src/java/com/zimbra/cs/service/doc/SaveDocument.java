@@ -44,6 +44,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
@@ -55,6 +56,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.service.FileUploadServlet;
@@ -116,16 +118,7 @@ public class SaveDocument extends DocDocumentHandler {
             Element docRevElem = docElem.getOptionalElement(MailConstants.E_DOC);
             if (attElem != null) {
                 String aid = attElem.getAttribute(MailConstants.A_ID, null);
-                Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), aid, zsc.getAuthToken());
-                // scan upload for viruses
-                StringBuffer info = new StringBuffer();
-                UploadScanner.Result result = UploadScanner.accept(up, info);
-                if (result == UploadScanner.REJECT)
-                    throw MailServiceException.UPLOAD_REJECTED(up.getName(), info.toString());
-                if (result == UploadScanner.ERROR)
-                    throw MailServiceException.SCAN_ERROR(up.getName());
-
-                doc = new Doc(up, explicitName, explicitCtype, description);
+                doc = getUploadedDoc(aid, zsc, explicitName, explicitCtype, description);
             } else if (msgElem != null) {
                 String part = msgElem.getAttribute(MailConstants.A_PART);
                 ItemId iid = new ItemId(msgElem.getAttribute(MailConstants.A_ID), zsc);
@@ -156,11 +149,7 @@ public class SaveDocument extends DocDocumentHandler {
             }
             
             // set content-type based on file extension.
-            if (doc.name != null) {
-                String guess = MimeDetect.getMimeDetect().detect(doc.name);
-                if (guess != null)
-                    doc.contentType = guess;
-            }
+            setDocContentType(doc);
 
             Document docItem = null;
             InputStream is = null;
@@ -171,20 +160,7 @@ public class SaveDocument extends DocDocumentHandler {
             }
             if (itemId == 0) {
                 // create a new page
-                if (doc.name == null || doc.name.trim().equals("")) {
-                    throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_NAME, null);
-                } else if (doc.contentType == null || doc.contentType.trim().equals("")) {
-                    throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_CONTENT_TYPE, null);
-                }
-                boolean descEnabled = docElem.getAttributeBool(MailConstants.A_DESC_ENABLED, true);
-                try {
-                    ParsedDocument pd = new ParsedDocument(is, doc.name, doc.contentType, System.currentTimeMillis(),
-                        getAuthor(zsc), doc.description, descEnabled);
-                    String flags = docElem.getAttribute(MailConstants.A_FLAGS, null);
-                    docItem = mbox.createDocument(octxt, folderId, pd, MailItem.Type.DOCUMENT, Flag.toBitmask(flags));
-                } catch (IOException e) {
-                    throw ServiceException.FAILURE("unable to create document", e);
-                }
+                docItem = createDocument(doc, zsc, octxt, mbox, docElem, is, folderId, MailItem.Type.DOCUMENT);
             } else {
                 // add a new revision
                 docItem = mbox.getDocumentById(octxt, itemId);
@@ -229,6 +205,61 @@ public class SaveDocument extends DocDocumentHandler {
         return response;
     }
 
+    protected Doc getUploadedDoc(String uploadId, ZimbraSoapContext zsc, String name, String ct, String description) throws ServiceException {
+        ZimbraLog.mailbox.info("uploadId=" + uploadId);
+        Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), uploadId, zsc.getAuthToken());
+        // scan upload for viruses
+        StringBuffer info = new StringBuffer();
+        UploadScanner.Result result = UploadScanner.accept(up, info);
+        if (result == UploadScanner.REJECT)
+            throw MailServiceException.UPLOAD_REJECTED(up.getName(), info.toString());
+        if (result == UploadScanner.ERROR)
+            throw MailServiceException.SCAN_ERROR(up.getName());
+
+        Doc doc = new Doc(up, name, ct, description);
+        return doc;
+    }
+
+    protected void setDocContentType(Doc doc) {
+        // set content-type based on file extension.
+        if (doc.name != null) {
+            String guess = MimeDetect.getMimeDetect().detect(doc.name);
+            if (guess != null)
+                doc.contentType = guess;
+        }
+    }
+
+    protected Document createDocument(Doc doc, ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
+            Element docElem, InputStream is, int folderId, MailItem.Type type) throws ServiceException {
+        return createDocument(doc, zsc, octxt, mbox, docElem, is, folderId, type, null, null);
+    }
+
+    protected Document createDocument(Doc doc, ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
+            Element docElem, InputStream is, int folderId, MailItem.Type type, MailItem parent, CustomMetadata custom) throws ServiceException {
+        Document docItem = null;
+        if (doc.name == null || doc.name.trim().equals("")) {
+            throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_NAME, null);
+        } else if (doc.contentType == null || doc.contentType.trim().equals("")) {
+            throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_CONTENT_TYPE, null);
+        }
+        boolean descEnabled = false;
+        String flags = "";
+        if (docElem != null) {
+            descEnabled = docElem.getAttributeBool(MailConstants.A_DESC_ENABLED, true);
+            flags = docElem.getAttribute(MailConstants.A_FLAGS, null);
+        }
+
+        try {
+            ParsedDocument pd = new ParsedDocument(is, doc.name, doc.contentType, System.currentTimeMillis(),
+                getAuthor(zsc), doc.description, descEnabled);
+
+            docItem = mbox.createDocument(octxt, folderId, pd, type, Flag.toBitmask(flags), parent, custom);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to create document", e);
+        }
+        return docItem;
+    }
+
     private Doc fetchMimePart(OperationContext octxt, AuthToken authtoken, ItemId itemId, String partId, String name, String ct, String description) throws ServiceException {
         String accountId = itemId.getAccountId();
         Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
@@ -265,7 +296,7 @@ public class SaveDocument extends DocDocumentHandler {
         }
     }
 
-    private static class Doc {
+    protected static class Doc {
         String name;
         String contentType;
         String description;
@@ -301,7 +332,7 @@ public class SaveDocument extends DocDocumentHandler {
             }
         }
 
-        Doc(InputStream in, ContentType ct, String filename, String ctype, String d) {
+        public Doc(InputStream in, ContentType ct, String filename, String ctype, String d) {
             this.in = in;
             description = d;
             name = ct == null ? null : ct.getParameter("name");
@@ -375,6 +406,10 @@ public class SaveDocument extends DocDocumentHandler {
                 FileUploadServlet.deleteUpload(up);
             }
             ByteUtil.closeStream(in);
+        }
+
+        public String getName() {
+            return name;
         }
     }
 
