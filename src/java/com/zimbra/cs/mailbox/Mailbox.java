@@ -279,10 +279,12 @@ public class Mailbox {
     // Old mailboxes may still contain a system folder with id 18
     @Deprecated
     public static final int ID_FOLDER_PROFILE = 18;
-
-    public static final int HIGHEST_SYSTEM_ID = 18;
-    public static final int FIRST_USER_ID = 256;
     public static final int ID_FOLDER_SMIME_CERT  = 19;
+
+    //This id should be incremented if any new ID_FOLDER_* is added.
+    public static final int HIGHEST_SYSTEM_ID = 19;
+    public static final int FIRST_USER_ID = 256;
+
 
     public static final String CONF_PREVIOUS_MAILBOX_IDS = "prev_mbox_ids";
 
@@ -2173,8 +2175,8 @@ public class Mailbox {
                             MailItem.Type.MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
             Folder.create(ID_FOLDER_BRIEFCASE, UUIDUtil.generateUUID(), this, userRoot, "Briefcase", system,
                             MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
-            Folder.create(ID_FOLDER_SMIME_CERT, UUIDUtil.generateUUID(), this, userRoot, "SmimeCertificates", system,
-                    MailItem.Type.SMIME_CERTIFICATE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
+            Folder.create(ID_FOLDER_SMIME_CERT, UUIDUtil.generateUUID(), this, root, "SmimeCertificates", hidden,
+                    MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
         } finally {
             lock.release();
         }
@@ -8820,13 +8822,10 @@ public class Mailbox {
             Document doc;
             switch (type) {
                 case DOCUMENT:
-                    doc = Document.create(itemId, uuid, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null, flags);
+                    doc = Document.create(itemId, uuid, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, custom, flags, parent);
                     break;
                 case WIKI:
                     doc = WikiItem.create(itemId, uuid, getFolderById(folderId), pd.getFilename(), pd, null);
-                    break;
-                case SMIME_CERTIFICATE:
-                    doc = SmimeCertificate.create(itemId, uuid, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, custom, flags, parent);
                     break;
                 default:
                     throw MailServiceException.INVALID_TYPE(type.toString());

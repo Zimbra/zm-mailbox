@@ -206,9 +206,10 @@ public class SaveDocument extends DocDocumentHandler {
     }
 
     protected Doc getUploadedDoc(String uploadId, ZimbraSoapContext zsc, String name, String ct, String description) throws ServiceException {
-        ZimbraLog.mailbox.info("uploadId=" + uploadId);
+        ZimbraLog.mailbox.info("uploadId=%s", uploadId);
         Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), uploadId, zsc.getAuthToken());
         // scan upload for viruses
+        //StringBuffer is used here rather than a StringBuilder as UploadScanner could potentially be multi-threaded.
         StringBuffer info = new StringBuffer();
         UploadScanner.Result result = UploadScanner.accept(up, info);
         if (result == UploadScanner.REJECT)
@@ -403,7 +404,7 @@ public class SaveDocument extends DocDocumentHandler {
 
         public void cleanup() {
             if (up != null) {
-                FileUploadServlet.deleteUpload(up);
+               FileUploadServlet.deleteUpload(up);
             }
             ByteUtil.closeStream(in);
         }
