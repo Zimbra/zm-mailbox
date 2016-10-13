@@ -52,6 +52,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.SieveMailException;
 import org.apache.jsieve.tests.Header;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
@@ -162,6 +163,7 @@ public class HeaderTest extends Header {
                 keys = ((StringListArgument) argument).getList();
             }
         }
+        keys = replaceVariables(keys, mail);
         if (null == keys) {
             throw context.getCoordinate().syntaxException(
                     "Expecting a StringList of keys");
@@ -186,6 +188,23 @@ public class HeaderTest extends Header {
     }
 
     /**
+	 * @param keys
+	 * @param mail
+	 * @return
+	 */
+	public static List<String> replaceVariables(List<String> keys, MailAdapter mail) {
+		List<String> replacedVariables = new ArrayList<String>();
+		ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
+		for (String key : keys) {
+			String temp = FilterUtil.replaceVariables(zma.getVariables(), zma.getMatchedValues(),
+					key);
+			replacedVariables.add(temp);
+		}
+		
+		return replacedVariables;
+	}
+
+	/**
      * Compares the header field with operator sign
      */
     protected boolean match(MailAdapter mail, String comparator, String matchType,
@@ -266,7 +285,7 @@ public class HeaderTest extends Header {
 		
 		ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
 		if (matchType.equals(MatchTypeTags.MATCHES_TAG)) {
-			this.evaluateVarExp(zma, headerNames, keys);
+			evaluateVarExp(zma, headerNames, keys);
 		}
 		List<String> newKeys = new ArrayList<String>();
 		for (Object key : keys) {
@@ -289,14 +308,13 @@ public class HeaderTest extends Header {
 		return isMatched;
 	}
 	
-	private void evaluateVarExp(ZimbraMailAdapter mailAdapter, List headerNames, List keys) throws SieveMailException, SievePatternException {
+	public static void evaluateVarExp(ZimbraMailAdapter mailAdapter, List headerNames, List keys) throws SieveMailException, SievePatternException {
 		
 		List<String> varValues = new ArrayList<String>();
 
 		for (Object headerName : headerNames) {
 			String hn = (String) headerName;
 			List<String> values = mailAdapter.getMatchingHeader(hn);
-			varValues.addAll(values);
 			for (String sourceStr : values) {
 				for (Object key : keys) {
 					String keyStr = ((String) key);
@@ -311,13 +329,15 @@ public class HeaderTest extends Header {
 							String matchGrp =  matcher.group(i);
 							if (!StringUtils.isEmpty(matchGrp.trim())) {
 								varValues.add(matchGrp);
+								ZimbraLog.filter.debug("The matched variable are: %s", matchGrp );
 							}
 						}
 					}
 				} 
 			}	
 		}
-
+		
+		ZimbraLog.filter.debug("The matched variables are: %s", varValues );
 		mailAdapter.setMatchedValues(varValues);
 	}
 }

@@ -799,30 +799,35 @@ public final class FilterUtil {
         if (varName.indexOf("${") == -1) {
             return varName;
         }
-        ZimbraLog.filter.debug("Variable ");
+        ZimbraLog.filter.info("Variable " + varName);
+        ZimbraLog.filter.info("Variable available: " + variables +"  : "+ matchedValues);
         String varValue = varName;
         List<String> varNames = getListOfVars(varName);
 		for (String var : varNames) {
 			String name = var.substring(2, var.indexOf("}"));
 			name = handleQuotedAndEncodedVar(name);
 			ZimbraLog.filter.debug("Sieve: variable expression is %s and variable name is: %s", var, name);
-			if (name.length() == 1 && Character.isDigit(name.charAt(0))) {
+			if (name.length() == 0) {
+				varValue = varName;
+			} else if (name.length() == 1 && Character.isDigit(name.charAt(0))) {
 				for (int i = 0; i < matchedValues.size(); ++i) {
-					String pattern = "{" + i + "}";
+					String pattern = "${" + i + "}";
 					if (varName.contains(pattern)) {
-						varValue = matchedValues.get(i);
+						varValue = varValue.replace(pattern, matchedValues.get(i));
 					}
 				}
 			} else {
 				if (isValidSieveVariableName(name)) {
 					if (variables.containsKey(name)) {
 						varValue = varValue.replace(var, variables.get(name));
+					} else {
+						varValue = "";
 					}
 				}
 			}
 		}
         varValue = handleQuotedAndEncodedVar(varValue);
-        ZimbraLog.filter.debug("Sieve: variable value is: %s", varValue);
+        ZimbraLog.filter.info("Sieve: variable value is: %s", varValue);
         return varValue;
     }
     
@@ -880,7 +885,7 @@ public final class FilterUtil {
 		char [] charArray = varName.toCharArray();
 		for (int i = 0; i < charArray.length; ++i) {
 			if (charArray[i] == '\\') {
-				if (charArray[i] == '\\' && (i+1 <= charArray.length -1) && charArray[i + 1] == '\\') {
+				if (charArray[i] == '\\' && (i+1 <= charArray.length -1) && (charArray[i + 1] == '\\' || charArray[i + 1] == '*')) {
 					sb.append('\\');
 				}
 			} else {
@@ -894,7 +899,7 @@ public final class FilterUtil {
 
 	public static boolean  isValidSieveVariableName(String varName) {
     	
-    	Pattern pattern = Pattern.compile(".*[\\p{Alpha}$_.]|[\\d]",  Pattern.CASE_INSENSITIVE);
+    	Pattern pattern = Pattern.compile("[\\p{Alpha}$_.]*|[\\d]*",  Pattern.CASE_INSENSITIVE);
         if (pattern.matcher(varName).matches()) {
            return true;
         }

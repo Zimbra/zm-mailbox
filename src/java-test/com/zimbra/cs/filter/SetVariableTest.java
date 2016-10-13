@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.filter.jsieve.Variables;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -514,7 +515,7 @@ public class SetVariableTest {
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
 			filterScript = "require [\"variables\"];\n" 
-					+ "if header :matches [\"To\", \"Cc\"] [\"coyote@**.com\",\"wile@**.com\"]{ tag \"${2}\"; }";
+					+ "if header :matches [\"To\", \"Cc\"] [\"coyote@**.com\",\"wile@**.com\"]{ log \"Match 1 ${1}\";\n tag \"${1}\"; }";
 
 			account.setMailSieveScript(filterScript);
 			String raw = "From: sender@in.telligent.com\n" 
@@ -587,5 +588,93 @@ public class SetVariableTest {
 		}
 
 	}
+    
+    @Test
+   	public void testSetMatchVarAndFileInto() {
+   		try {
+   			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+   			RuleManager.clearCachedRules(account);
+   			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+   			filterScript = "require [\"log\", \"variables\"];\n"
+   							+ "set \"sub\" \"test\";\n"
+   							+ "if header :contains \"subject\" \"${sub}\" {\n"
+   							+ "log \"Subject has test\";\n"
+   							+ "fileinto \"${sub}\";\n"
+   							+ "}";
+
+   			System.out.println(filterScript);
+   			account.setMailSieveScript(filterScript);
+   			String raw = "From: sender@in.telligent.com\n" 
+   					+ "To: coyote@ACME.Example.COM\n"
+   					+ "Subject: test\n" + "\n" + "Hello World.";
+   			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			Assert.assertEquals(1, ids.size());
+   			Message msg = mbox.getMessageById(null, ids.get(0).getId());
+   			Folder folder  = mbox.getFolderById(null, msg.getFolderId());
+   			Assert.assertEquals("test", folder.getName());
+   			
+   			
+   			
+   			RuleManager.clearCachedRules(account);
+   			filterScript = "require [\"log\", \"variables\"];\n"
+   							+ "set \"sub\" \"test\";\n"
+   							+ "if header :contains \"subject\" \"Hello ${sub}\" {\n"
+   							+ "log \"Subject has test\";\n"
+   							+ "fileinto \"${sub}\";\n"
+   							+ "}";
+
+   			System.out.println(filterScript);
+   			account.setMailSieveScript(filterScript);
+   			raw = "From: sender@in.telligent.com\n" 
+   					+ "To: coyote@ACME.Example.COM\n"
+   					+ "Subject: Hello test\n" + "\n" + "Hello World.";
+   		    ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			Assert.assertEquals(1, ids.size());
+   			msg = mbox.getMessageById(null, ids.get(0).getId());
+   			folder  = mbox.getFolderById(null, msg.getFolderId());
+   			Assert.assertEquals("test", folder.getName());
+
+   		} catch (Exception e) {
+   			fail("No exception should be thrown");
+   		}
+
+   	}
+    
+    @Test
+   	public void testSetMatchVarWithEnvelope() {
+   		try {
+   			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+   			RuleManager.clearCachedRules(account);
+   			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+   			filterScript = "require [\"log\", \"variables\", \"envelope\" ];\n"
+   						+ "if envelope :matches [\"To\"] \"*\" {"
+   						+ "set \"rcptto\" \"${1}\";"
+   			  			+ "log \":matches ==> ${1}\";"
+   			  			+ "log \"variables ==> ${rcptto}\";}";
+
+   			System.out.println(filterScript);
+   			account.setMailSieveScript(filterScript);
+   			String raw = "From: sender@in.telligent.com\n" 
+   					+ "To: coyote@ACME.Example.COM\n"
+   					+ "Subject: test\n" + "\n" + "Hello World.";
+   			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			Assert.assertEquals(1, ids.size());
+   			Message msg = mbox.getMessageById(null, ids.get(0).getId());
+   			Folder folder  = mbox.getFolderById(null, msg.getFolderId());
+   			Assert.assertEquals("test", folder.getName());
+   		} catch (Exception e) {
+   			fail("No exception should be thrown");
+   		}
+
+   	}
+
 
 }
