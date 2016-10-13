@@ -821,7 +821,7 @@ public final class FilterUtil {
 					if (variables.containsKey(name)) {
 						varValue = varValue.replace(var, variables.get(name));
 					} else {
-						varValue = "";
+						varValue = varValue.replace(var, "");
 					}
 				}
 			}

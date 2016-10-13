@@ -39,6 +39,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.filter.jsieve.Variables;
+import com.zimbra.cs.lmtpserver.LmtpAddress;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -647,6 +649,11 @@ public class SetVariableTest {
     
     @Test
    	public void testSetMatchVarWithEnvelope() {
+    	  LmtpEnvelope env = new LmtpEnvelope();
+          LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
+          LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+          env.setSender(sender);
+          env.addLocalRecipient(recipient);
    		try {
    			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
    			RuleManager.clearCachedRules(account);
@@ -656,20 +663,65 @@ public class SetVariableTest {
    						+ "if envelope :matches [\"To\"] \"*\" {"
    						+ "set \"rcptto\" \"${1}\";"
    			  			+ "log \":matches ==> ${1}\";"
-   			  			+ "log \"variables ==> ${rcptto}\";}";
+   			  			+ "log \"variables ==> ${rcptto}\";"
+   			  			+ "tag \"${rcptto}\"; }";
 
-   			System.out.println(filterScript);
    			account.setMailSieveScript(filterScript);
+   			account.setMail("test@zimbra.com");
    			String raw = "From: sender@in.telligent.com\n" 
    					+ "To: coyote@ACME.Example.COM\n"
    					+ "Subject: test\n" + "\n" + "Hello World.";
    			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), env, new DeliveryContext(),
    					Mailbox.ID_FOLDER_INBOX, true);
    			Assert.assertEquals(1, ids.size());
    			Message msg = mbox.getMessageById(null, ids.get(0).getId());
    			Folder folder  = mbox.getFolderById(null, msg.getFolderId());
-   			Assert.assertEquals("test", folder.getName());
+   			Assert.assertEquals("coyote@ACME.Example.COM", ArrayUtil.getFirstElement(msg.getTags()));
+   		} catch (Exception e) {
+   			fail("No exception should be thrown");
+   		}
+
+   	}
+    
+    
+    @Test
+   	public void testSetMatchVarMultiLineWithEnvelope() {
+    	  LmtpEnvelope env = new LmtpEnvelope();
+          LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
+          LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+          env.setSender(sender);
+          env.addLocalRecipient(recipient);
+   		try {
+   			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+   			RuleManager.clearCachedRules(account);
+   			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+   			filterScript = "require [\"log\", \"variables\", \"envelope\" ];\n"
+   						+ "if envelope :matches [\"To\"] \"*\" {"
+   						+ "set \"rcptto\" \"${1}\";}\n"
+   						+ "if header :matches [\"From\"] \"*\" {"
+   						+ "set \"fromheader\" \"${1}\";}\n"
+   						+ "if header :matches [\"Subject\"] \"*\" {"
+   						+ "set \"subjectheader\" \"${1}\";}\n"
+   			  			+ "set \"bodyparam\" text: # This is a comment\r\n"
+   						+ "Message delivered to  ${rcptto}\n"
+   						+ "Sent : ${fromheader}\n"
+   						+ "Subject : ${subjectheader} \n"
+   						+".\r\n"
+   						+ ";\n"
+   						+"log \"${bodyparam}\"; \n";
+   				
+   			System.out.println(filterScript);
+   			account.setMailSieveScript(filterScript);
+   			account.setMail("test@zimbra.com");
+   			String raw = "From: sender@in.telligent.com\n" 
+   					+ "To: coyote@ACME.Example.COM\n"
+   					+ "Subject: test\n" + "\n" + "Hello World.";
+   			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), env, new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			
    		} catch (Exception e) {
    			fail("No exception should be thrown");
    		}

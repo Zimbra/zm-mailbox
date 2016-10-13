@@ -320,7 +320,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     if (isRejectSupported) {
 	                    ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
 	                    try {
-	                        handler.reject(reject.getMessage(), envelope);
+	                    	if (SetVariable.isVariablesExtAvailable(this)) {
+	                    		String msg = FilterUtil.replaceVariables(this.variables, this.matchedValues,reject.getMessage());
+	                    		handler.reject(msg, envelope);
+	                    	} else {
+	                    		handler.reject(reject.getMessage(), envelope);
+	                    	}
 	                        handler.discard();
 	                    } catch (Exception e) {
 	                        ZimbraLog.filter.info("Unable to reject.", e);

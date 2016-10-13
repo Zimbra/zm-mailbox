@@ -177,6 +177,9 @@ public class FilterUtilTest {
     	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${var}");
     	Assert.assertEquals("hel\\*lo", varValue);
     	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "hello${test}");
+    	Assert.assertEquals("hello", varValue);
+    	
     }
     
     @Test
