@@ -799,8 +799,8 @@ public final class FilterUtil {
         if (varName.indexOf("${") == -1) {
             return varName;
         }
-        ZimbraLog.filter.info("Variable " + varName);
-        ZimbraLog.filter.info("Variable available: " + variables +"  : "+ matchedValues);
+        ZimbraLog.filter.debug("Variable: %s " , varName);
+        ZimbraLog.filter.debug("Variable available: %s : %s", variables ,  matchedValues);
         String varValue = varName;
         List<String> varNames = getListOfVars(varName);
 		for (String var : varNames) {
@@ -827,7 +827,7 @@ public final class FilterUtil {
 			}
 		}
         varValue = handleQuotedAndEncodedVar(varValue);
-        ZimbraLog.filter.info("Sieve: variable value is: %s", varValue);
+        ZimbraLog.filter.debug("Sieve: variable value is: %s", varValue);
         return varValue;
     }
     

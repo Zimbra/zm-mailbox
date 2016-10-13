@@ -71,7 +71,7 @@ public class EnvelopeTest extends Envelope {
 
         ZimbraComparatorUtils.TestParameters params = ZimbraComparatorUtils.parseTestArguments(mail, arguments, context);
 
-        if (params.getMatchType().equals(MatchTypeTags.MATCHES_TAG)) {
+        if (MatchTypeTags.MATCHES_TAG.equals(params.getMatchType())) {
         	ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
 			HeaderTest.evaluateVarExp(zma, params.getHeaderNames(), params.getKeys());
 		}
