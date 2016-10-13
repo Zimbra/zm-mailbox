@@ -111,9 +111,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         /** Item is a {@link Comment} */
         COMMENT(17),
         /** Item is a {@link Link} pointing to a {@link Document} */
-        LINK(18),
-        /** Item is a bare {@link SmimeCertificate}. */
-        SMIME_CERTIFICATE(19);
+        LINK(18);
 
         private static final Map<Byte, Type> BYTE2TYPE;
         static {
@@ -1675,7 +1673,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             case CHAT:         return new Chat(mbox, data, skipCache);
             case COMMENT:      return new Comment(mbox, data, skipCache);
             case VIRTUAL_CONVERSATION: return new VirtualConversation(mbox,data, skipCache);
-            case SMIME_CERTIFICATE :     return new SmimeCertificate(mbox, data, skipCache);
             default:           return null;
         }
     }
@@ -1708,7 +1705,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             case CONTACT:
                 return MailServiceException.NO_SUCH_CONTACT(id);
             case WIKI:
-            case SMIME_CERTIFICATE:
             case DOCUMENT:
                 return MailServiceException.NO_SUCH_DOC(id);
             case NOTE:
@@ -1736,7 +1732,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             case FOLDER:
                 return MailServiceException.NO_SUCH_FOLDER_UUID(uuid);
             case WIKI:
-            case SMIME_CERTIFICATE:
             case DOCUMENT:
                 return MailServiceException.NO_SUCH_DOC_UUID(uuid);
             default:
@@ -1769,7 +1764,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             return true;
         } else if (desired == Type.CONVERSATION && actual == Type.VIRTUAL_CONVERSATION) {
             return true;
-        } else if (desired == Type.DOCUMENT && (actual == Type.WIKI || actual == Type.SMIME_CERTIFICATE)) {
+        } else if (desired == Type.DOCUMENT && actual == Type.WIKI) {
             return true;
         } else if (desired == Type.MESSAGE && actual == Type.CHAT) {
             return true;
