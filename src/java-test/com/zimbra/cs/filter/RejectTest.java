@@ -131,6 +131,68 @@ public class RejectTest {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
+    
+    /*
+     * MDN should be sent to the envelope from (test2@zimbra.com)
+     */
+    @Test
+    public void testNotemptyEnvelopeFromAndUsingVariables() {
+
+        try {
+        	filterScript = "require [\"log\", \"variables\", \"envelope\" , \"reject\"];\n"
+						+ "if envelope :matches [\"To\"] \"*\" {"
+						+ "set \"rcptto\" \"hello\";}\n"
+						+ "if header :matches [\"From\"] \"*\" {"
+						+ "set \"fromheader\" \"test2@zimbra.com\";}\n"
+						+ "if header :matches [\"Subject\"] \"*\" {"
+						+ "set \"subjectheader\" \"New Subject\";}\n"
+			  			+ "set \"bodyparam\" text: # This is a comment\r\n"
+						+ "Message delivered to  ${rcptto}\n"
+						+ "Sent : ${fromheader}\n"
+						+ "Subject : ${subjectheader} \n"
+						+".\r\n"
+						+ ";\n"
+						+"log \"Subject: ${subjectheader}\"; \n"
+						+"reject \"${bodyparam}\"; \n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
+
+            RuleManager.clearCachedRules(acct1);
+
+            LmtpEnvelope env = new LmtpEnvelope();
+            LmtpAddress sender = new LmtpAddress("<test2@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+            LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+            env.setSender(sender);
+            env.addLocalRecipient(recipient);
+            String raw = "From: sender@in.telligent.com\n" 
+   					+ "To: coyote@ACME.Example.COM\n"
+   					+ "Subject: test\n" + "\n" + "Hello World.";
+
+            acct1.setMailSieveScript(filterScript);
+            acct1.setMail("test@zimbra.com");
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                    		sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            env, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(0, ids.size());
+           List<Integer> ll = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+            .getIds(MailItem.Type.MESSAGE);
+            Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                    .getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox2.getMessageById(null, item);
+            String ctStr = mdnMsg.getMimeMessage().getContentType().toLowerCase();
+            boolean isReport = ctStr.startsWith("multipart/report;");
+            boolean isMdn = ctStr.indexOf("report-type=disposition-notification") < 0 ? false : true;
+            Assert.assertEquals(isReport & isMdn, true);
+        } catch (Exception e) {
+        	e.printStackTrace();
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
 
     /*
      * MDN should be sent to the return-path from (test2@zimbra.com)
