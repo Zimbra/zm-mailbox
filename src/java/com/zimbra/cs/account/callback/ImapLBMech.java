@@ -22,7 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.auth.AuthMechanism;
+import com.zimbra.cs.imap.ImapLoadBalancingMechanism;
 
 public class ImapLBMech extends AttributeCallback {
 
@@ -40,16 +40,22 @@ public class ImapLBMech extends AttributeCallback {
 
             if (lbMech == null) {
                 valid = true;
-            } else {
-            	// TODO (ZMS-148): Implement IMAP server load balancing class and wire it in.
+            } else if (lbMech.startsWith(ImapLoadBalancingMechanism.ImapLBMech.custom.name())) {
             	valid = true;
+            } else {
+                try {
+                	/* will raise exception if invalid string */
+                	ImapLoadBalancingMechanism.ImapLBMech.fromString(lbMech);
+                	valid = true;
+                } catch (ServiceException e) {
+                    ZimbraLog.account.error("invalid IMAP load balancing mechanism", e);
+                }            	
             }
 
             if (!valid) {
                 throw ServiceException.INVALID_REQUEST("invalid value: " + lbMech, null);
             }
         }
-
     }
 
 
