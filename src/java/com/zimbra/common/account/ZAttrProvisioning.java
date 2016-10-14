@@ -8152,11 +8152,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLastLogonTimestamp = "zimbraLastLogonTimestamp";
 
     /**
-     * Deprecated since: 8.7.0. Deprecated when zimbraLastLogonTimestamp
-     * became an ephemeral attribute. Orig desc: how often the
-     * zimbraLastLogonTimestamp is updated. if set to 0, updating
-     * zimbraLastLogonTimestamp is completely disabled . Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * how often the zimbraLastLogonTimestamp is updated. if set to 0,
+     * updating zimbraLastLogonTimestamp is completely disabled . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
