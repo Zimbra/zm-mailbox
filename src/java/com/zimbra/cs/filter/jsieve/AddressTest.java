@@ -34,6 +34,7 @@ import java.util.regex.PatternSyntaxException;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.comparators.AsciiCasemap;
+import org.apache.jsieve.comparators.MatchTypeTags;
 import org.apache.jsieve.comparators.Matches;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SievePatternException;
@@ -64,6 +65,10 @@ public class AddressTest extends Address {
 
         ZimbraComparatorUtils.TestParameters params = ZimbraComparatorUtils.parseTestArguments(mail, arguments, context);
 
+        if (MatchTypeTags.MATCHES_TAG.equals(params.getMatchType())) {
+        	ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
+			HeaderTest.evaluateVarExp(zma, params.getHeaderNames(), params.getKeys());
+		}
         if (COUNT_TAG.equals(params.getMatchType()) || VALUE_TAG.equals(params.getMatchType())) {
             return match(mail,
                          (params.getAddressPart() == null ? ALL_TAG : params.getAddressPart()),
