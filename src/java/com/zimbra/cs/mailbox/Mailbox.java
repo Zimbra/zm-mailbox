@@ -8798,11 +8798,11 @@ public class Mailbox {
     public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type,
             int flags)
     throws IOException, ServiceException {
-        return createDocument(octxt, folderId, pd, type, flags, null, null);
+        return createDocument(octxt, folderId, pd, type, flags, null, null, true);
     }
 
     public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type,
-            int flags, MailItem parent, CustomMetadata custom)
+            int flags, MailItem parent, CustomMetadata custom, boolean indexing)
     throws IOException, ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = sm.stage(pd.getBlob(), this);
@@ -8845,7 +8845,9 @@ public class Mailbox {
             MailboxBlob mailboxBlob = doc.setContent(staged, pd);
             redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
-            index.add(doc);
+            if (indexing) {
+                index.add(doc);
+            }
 
             success = true;
             long elapsed = System.currentTimeMillis() - start;
