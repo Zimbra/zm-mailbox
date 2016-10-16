@@ -101,8 +101,8 @@ public class FilterUtilTest {
     	
     	variables = new HashMap<String, String>();
     	variables.put("var", "hello");
-    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${var}");
-    	Assert.assertEquals("${var!}", varValue);
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${var2}");
+    	Assert.assertEquals("", varValue);
     	
     	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${test${var}");
     	Assert.assertEquals("${testhello", varValue);
@@ -162,16 +162,23 @@ public class FilterUtilTest {
     	
     	
     	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${va\\\\r}");
-    	System.out.println(varValue);
     	Assert.assertEquals("${va\\r}", varValue);
     	
     	varValue = FilterUtil.replaceVariables(variables, matchedValues, "\\${var}");
-    	System.out.println(varValue);
     	Assert.assertEquals("hello", varValue);
     	
     	varValue = FilterUtil.replaceVariables(variables, matchedValues, "\\\\${var}");
-    	System.out.println(varValue);
     	Assert.assertEquals("\\hello", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${}");
+    	Assert.assertEquals("${}", varValue);
+    	
+    	variables.put("var", "hel\\*lo");
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "${var}");
+    	Assert.assertEquals("hel\\*lo", varValue);
+    	
+    	varValue = FilterUtil.replaceVariables(variables, matchedValues, "hello${test}");
+    	Assert.assertEquals("hello", varValue);
     	
     }
     

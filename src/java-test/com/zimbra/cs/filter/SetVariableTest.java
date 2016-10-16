@@ -29,6 +29,7 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.common.account.Key;
@@ -39,7 +40,10 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.filter.jsieve.Variables;
+import com.zimbra.cs.lmtpserver.LmtpAddress;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -514,7 +518,7 @@ public class SetVariableTest {
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
 			filterScript = "require [\"variables\"];\n" 
-					+ "if header :matches [\"To\", \"Cc\"] [\"coyote@**.com\",\"wile@**.com\"]{ tag \"${2}\"; }";
+					+ "if header :matches [\"To\", \"Cc\"] [\"coyote@**.com\",\"wile@**.com\"]{ log \"Match 1 ${1}\";\n tag \"${1}\"; }";
 
 			account.setMailSieveScript(filterScript);
 			String raw = "From: sender@in.telligent.com\n" 
@@ -587,5 +591,220 @@ public class SetVariableTest {
 		}
 
 	}
+    
+    @Test
+   	public void testSetMatchVarAndFileInto() {
+   		try {
+   			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+   			RuleManager.clearCachedRules(account);
+   			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+   			filterScript = "require [\"log\", \"variables\"];\n"
+   							+ "set \"sub\" \"test\";\n"
+   							+ "if header :contains \"subject\" \"${sub}\" {\n"
+   							+ "log \"Subject has test\";\n"
+   							+ "fileinto \"${sub}\";\n"
+   							+ "}";
+
+   			System.out.println(filterScript);
+   			account.setMailSieveScript(filterScript);
+   			String raw = "From: sender@in.telligent.com\n" 
+   					+ "To: coyote@ACME.Example.COM\n"
+   					+ "Subject: test\n" + "\n" + "Hello World.";
+   			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			Assert.assertEquals(1, ids.size());
+   			Message msg = mbox.getMessageById(null, ids.get(0).getId());
+   			Folder folder  = mbox.getFolderById(null, msg.getFolderId());
+   			Assert.assertEquals("test", folder.getName());
+   			
+   			
+   			
+   			RuleManager.clearCachedRules(account);
+   			filterScript = "require [\"log\", \"variables\"];\n"
+   							+ "set \"sub\" \"test\";\n"
+   							+ "if header :contains \"subject\" \"Hello ${sub}\" {\n"
+   							+ "log \"Subject has test\";\n"
+   							+ "fileinto \"${sub}\";\n"
+   							+ "}";
+
+   			System.out.println(filterScript);
+   			account.setMailSieveScript(filterScript);
+   			raw = "From: sender@in.telligent.com\n" 
+   					+ "To: coyote@ACME.Example.COM\n"
+   					+ "Subject: Hello test\n" + "\n" + "Hello World.";
+   		    ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			Assert.assertEquals(1, ids.size());
+   			msg = mbox.getMessageById(null, ids.get(0).getId());
+   			folder  = mbox.getFolderById(null, msg.getFolderId());
+   			Assert.assertEquals("test", folder.getName());
+
+   		} catch (Exception e) {
+   			fail("No exception should be thrown");
+   		}
+
+   	}
+    
+    @Ignore
+   	public void testSetMatchVarWithEnvelope() {
+    	  LmtpEnvelope env = new LmtpEnvelope();
+          LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
+          LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+          env.setSender(sender);
+          env.addLocalRecipient(recipient);
+   		try {
+   			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+   			RuleManager.clearCachedRules(account);
+   			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+   			filterScript = "require [\"log\", \"variables\", \"envelope\" ];\n"
+   						+ "if envelope :matches [\"To\"] \"*\" {"
+   						+ "set \"rcptto\" \"${1}\";"
+   			  			+ "log \":matches ==> ${1}\";"
+   			  			+ "log \"variables ==> ${rcptto}\";"
+   			  			+ "tag \"${rcptto}\"; }";
+
+   			account.setMailSieveScript(filterScript);
+   			account.setMail("test@zimbra.com");
+   			String raw = "From: sender@in.telligent.com\n" 
+   					+ "To: coyote@ACME.Example.COM\n"
+   					+ "Subject: test\n" + "\n" + "Hello World.";
+   			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), env, new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			Assert.assertEquals(1, ids.size());
+   			Message msg = mbox.getMessageById(null, ids.get(0).getId());
+   			Folder folder  = mbox.getFolderById(null, msg.getFolderId());
+   			Assert.assertEquals("coyote@ACME.Example.COM", ArrayUtil.getFirstElement(msg.getTags()));
+   		} catch (Exception e) {
+   			fail("No exception should be thrown");
+   		}
+
+   	}
+    
+    
+    @Ignore
+   	public void testSetMatchVarMultiLineWithEnvelope() {
+    	  LmtpEnvelope env = new LmtpEnvelope();
+          LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
+          LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+          env.setSender(sender);
+          env.addLocalRecipient(recipient);
+   		try {
+   			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+   			RuleManager.clearCachedRules(account);
+   			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+   			filterScript = "require [\"log\", \"variables\", \"envelope\" ];\n"
+   						+ "if envelope :matches [\"To\"] \"*\" {"
+   						+ "set \"rcptto\" \"${1}\";}\n"
+   						+ "if header :matches [\"From\"] \"*\" {"
+   						+ "set \"fromheader\" \"${1}\";}\n"
+   						+ "if header :matches [\"Subject\"] \"*\" {"
+   						+ "set \"subjectheader\" \"${1}\";}\n"
+   			  			+ "set \"bodyparam\" text: # This is a comment\r\n"
+   						+ "Message delivered to  ${rcptto}\n"
+   						+ "Sent : ${fromheader}\n"
+   						+ "Subject : ${subjectheader} \n"
+   						+".\r\n"
+   						+ ";\n"
+   						+"log \"${bodyparam}\"; \n";
+   				
+   			System.out.println(filterScript);
+   			account.setMailSieveScript(filterScript);
+   			account.setMail("test@zimbra.com");
+   			String raw = "From: sender@in.telligent.com\n" 
+   					+ "To: coyote@ACME.Example.COM\n"
+   					+ "Subject: test\n" + "\n" + "Hello World.";
+   			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), env, new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			
+   		} catch (Exception e) {
+   			fail("No exception should be thrown");
+   		}
+
+   	}
+    
+    @Ignore
+   	public void testSetMatchVarMultiLineWithEnvelope2() {
+    	  LmtpEnvelope env = new LmtpEnvelope();
+          LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
+          LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+          env.setSender(sender);
+          env.addLocalRecipient(recipient);
+   		try {
+   			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+   			RuleManager.clearCachedRules(account);
+   			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+   			
+   			filterScript = "require [\"log\", \"variables\", \"envelope\" ];\n"
+   						+ "if envelope :matches [\"To\"] \"*\" {"
+   						+ "set \"rcptto\" \"${1}\";}\n"
+   						+ "if header :matches [\"Date\"] \"*\" {"
+   						+ "set \"dateheader\" \"${1}\";}\n"
+   						+ "if header :matches [\"From\"] \"*\" {"
+   						+ "set \"fromheader\" \"${1}\";}\n"
+   						+ "if header :matches [\"Subject\"] \"*\" {"
+   						+ "set \"subjectheader\" \"${1}\";}\n"
+   						+ "if anyof(not envelope :is [\"From\"] \"\" ){\n"
+   						+ "set \"subjectparam\" \"Notification\";\n"
+   			  			+ "set \"bodyparam\" text: # This is a comment\r\n"
+   						+ "Message delivered to  ${rcptto}\n"
+   						+ "Sent : ${fromheader}\n"
+   						+ "Subject : ${subjectheader} \n"
+   						+".\r\n"
+   						+ ";\n"
+   						+"log \"${bodyparam}\"; \n"
+   						+" log \"subjectparam ==> [${subjectparam}]\";\n"
+   						+"log \"rcptto ==> [${rcptto}]\";\n"
+   						+"log \"mailfrom ==> [${mailfrom}]\";}\n";
+   				
+   			System.out.println(filterScript);
+   			account.setMailSieveScript(filterScript);
+   			account.setMail("test@zimbra.com");
+   			String raw = "From: sender@in.telligent.com\n" 
+   					+ "To: coyote@ACME.Example.COM\n"
+   					+ "Subject: test\n" + "\n" + "Hello World.";
+   			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), env, new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			
+   		} catch (Exception e) {
+   			fail("No exception should be thrown");
+   		}
+
+   	}
+    
+    @Test
+   	public void testSetMatchVarAndUseInHeaderForAddress() {
+   		try {
+   			Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+   			RuleManager.clearCachedRules(account);
+   			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+   			filterScript = "require [\"variables\"];\n" 
+   					+ "if address :comparator \"i;ascii-casemap\" :matches \"To\" \"coyote@**.com\"{  tag \"${1}\"; }";
+
+   			account.setMailSieveScript(filterScript);
+   			String raw = "From: sender@in.telligent.com\n" 
+   					+ "To: coyote@ACME.Example.COM\n"
+   					+ "Subject: hello version 1.0 is out\n" + "\n" + "Hello World.";
+   			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+   					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+   					Mailbox.ID_FOLDER_INBOX, true);
+   			Assert.assertEquals(1, ids.size());
+   			Message msg = mbox.getMessageById(null, ids.get(0).getId());
+   			Assert.assertEquals("ACME.Example", ArrayUtil.getFirstElement(msg.getTags()));
+
+   		} catch (Exception e) {
+   			fail("No exception should be thrown");
+   		}
+
+   	}
+
 
 }
