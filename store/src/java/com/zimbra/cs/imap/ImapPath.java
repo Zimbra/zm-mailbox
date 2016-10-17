@@ -19,8 +19,7 @@ package com.zimbra.cs.imap;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-import org.python.google.common.base.Strings;
-
+import com.google.common.base.Strings;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
