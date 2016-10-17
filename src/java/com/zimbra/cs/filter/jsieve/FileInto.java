@@ -35,14 +35,22 @@ import org.apache.jsieve.mail.MailAdapter;
 
 public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
 	
-	private static final String copy = ":copy";
-
     @Override
     protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context) throws SieveException {
         if (!(mail instanceof ZimbraMailAdapter))
             return null;
     	List<Argument> args = arguments.getArgumentList();
 		if (args.size() == 1) {
+		    // discard from inbox if previous fileinto :copy
+		    boolean addedToInbox =  ((ZimbraMailAdapter) mail).addedToInbox();
+		    System.out.println("addedToInbox:"+addedToInbox);
+		    if(addedToInbox) {
+		        try {
+                    ((ZimbraMailAdapter) mail).discard();
+                } catch (ServiceException e) {
+                    throw new SieveException("Failed to removed copy from inbox.");
+                }
+		    }
 			// default fileinto behavior if :copy argument is absent
 			return super.executeBasic(mail, arguments, block, context);
 		} else {
@@ -78,7 +86,7 @@ public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
 	    } else {
 	    	copyArg = ((Argument)args.get(0)).getValue().toString();
 	    	// if arguments size is 2; first argument should be :copy
-	    	if (!copyArg.equals(copy)) {
+            if (!copyArg.equals(Copy.COPY)) {
 	  	      throw new SyntaxException("Error in sieve fileinto. Expecting argument :copy");
 	  	    } 
 	    	// folder list argument
@@ -86,7 +94,7 @@ public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
 	    }
 	    // folder list argument should be a String list
 	    if (!(argument instanceof StringListArgument)) {
-	      throw new SyntaxException("Expecting a string-list");
+            throw new SyntaxException("Expecting a string-list");
 	    } 
 	    // folder list argument should contain exactly one folder name  
 	    if (1 != ((StringListArgument)argument).getList().size()) {

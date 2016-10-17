@@ -71,6 +71,7 @@ import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -121,6 +122,8 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private boolean discardActionPresent = false;
 
     private LmtpEnvelope envelope = null;
+
+    private int inboxMsgId;
 
     public ZimbraMailAdapter(Mailbox mailbox, FilterHandler handler) {
         this.mailbox = mailbox;
@@ -433,6 +436,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             if (msg != null) {
                 filedIntoPaths.add(folderPath);
                 addedMessageIds.add(new ItemId(msg));
+                inboxMsgId = msg.getId();
             }
         }
         return msg;
@@ -792,5 +796,31 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             }
             ctxt.setIncomingBlob(blob);
         }
+    }
+
+    public boolean addedToInbox() {
+        String folderPath;
+        try {
+            folderPath = handler.getDefaultFolderPath();
+            if(filedIntoPaths.contains(folderPath))
+                return true;
+            else
+                return false;
+        } catch (ServiceException e) {
+            return false;
+        }
+    }
+
+    public void discard() throws ServiceException {
+            mailbox.delete(null, inboxMsgId, MailItem.Type.MESSAGE);
+            filedIntoPaths.remove(handler.getDefaultFolderPath());
+            ItemId toRemove = null;
+            for(ItemId id : addedMessageIds) {
+                if(id.getId() == inboxMsgId) {
+                    toRemove = id;
+                    break;
+                }
+            }
+            addedMessageIds.remove(toRemove);
     }
 }

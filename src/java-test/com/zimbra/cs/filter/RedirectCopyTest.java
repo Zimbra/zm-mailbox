@@ -138,12 +138,44 @@ public class RedirectCopyTest {
 
 			Assert.assertEquals(0, ids.size());
 			Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
-			Message notifyMsg = mbox2.getMessageById(null, item);
-			Assert.assertEquals("Hello World", notifyMsg.getFragment());
-			Assert.assertEquals(2, notifyMsg.getFolderId());
+			Message msg = mbox2.getMessageById(null, item);
+			Assert.assertEquals("Hello World", msg.getFragment());
+			Assert.assertEquals(2, msg.getFolderId());
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail("No exception should be thrown");
 		}
+	}
+
+	@Test
+
+	public void testCopyRedirectThenFileInto() {
+
+	    try {
+
+	        String filterScriptPattern1 = "require [\"copy\", \"fileinto\"];\n"
+	            + "redirect :copy \"test3@zimbra.com\";\n"
+	            + "fileinto \"Junk\"; ";
+
+	        Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+
+	        RuleManager.clearCachedRules(account);
+
+	        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+	        account.setMailSieveScript(filterScriptPattern1);
+
+	        String rawReal = "From: test1@zimbra.com\n" + "To: test2@zimbra.com\n" + "Subject: Test\n" + "\n" + "Hello World";
+
+	        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+	                new ParsedMessage(rawReal.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+	                Mailbox.ID_FOLDER_INBOX, true);
+
+            // message should not be stored in inbox
+	        Assert.assertNull(mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        fail("No exception should be thrown");
+	    }
 	}
 }

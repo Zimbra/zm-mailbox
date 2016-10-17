@@ -23,15 +23,11 @@ import org.apache.jsieve.commands.AbstractActionCommand;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.filter.ZimbraMailAdapter;
-import com.zimbra.cs.mailbox.Message;
-
 public class Copy extends AbstractActionCommand {
-
-	@Override
-	protected Object executeBasic(MailAdapter arg0, Arguments arg1, Block arg2, SieveContext arg3)
-			throws SieveException {
-		return null;
-	}
+    public static final String COPY = ":copy";
+    @Override
+    protected Object executeBasic(MailAdapter arg0, Arguments arg1, Block arg2, SieveContext arg3)
+        throws SieveException {
+        return null;
+    }
 }

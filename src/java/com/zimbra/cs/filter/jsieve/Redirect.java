@@ -76,8 +76,8 @@ public class Redirect extends org.apache.jsieve.commands.Redirect {
 	    } else {
 	    	copyArg = ((Argument)args.get(0)).getValue().toString();
 	    	// if arguments size is 2; first argument should be :copy
-	    	if (!copyArg.equals(":copy")) {
-	  	      throw new SyntaxException("Expecting :copy");
+            if (!copyArg.equals(Copy.COPY)) {
+	  	      throw new SyntaxException("Error in sieve fileinto. Expecting argument :copy");
 	  	    } 
 	    	// address list argument
 	    	argument = (Argument)args.get(1);

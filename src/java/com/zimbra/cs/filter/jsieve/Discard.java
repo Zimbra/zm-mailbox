@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
@@ -32,6 +33,14 @@ public class Discard extends org.apache.jsieve.commands.Discard {
         if (!(mail instanceof ZimbraMailAdapter))
             return null;
         ((ZimbraMailAdapter) mail).setDiscardActionPresent();
+        boolean addedToInbox =  ((ZimbraMailAdapter) mail).addedToInbox();
+        if(addedToInbox) {
+            try {
+                ((ZimbraMailAdapter) mail).discard();
+            } catch (ServiceException e) {
+                throw new SieveException("Failed to removed copy from inbox.");
+            }
+        }
         return super.executeBasic(mail, arguments, block, context);
     }
 }
