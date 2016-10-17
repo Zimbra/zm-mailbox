@@ -39,6 +39,8 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.apache.jsieve.mail.MailAdapter;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.sun.mail.smtp.SMTPMessage;
@@ -958,5 +960,12 @@ public final class FilterUtil {
     private static boolean isSieveMatcherSpecialChar(char ch) {
         return (ch == '*' || ch == '?' || ch == '\\');
     }
+    
+    public static Object copyToInbox(MailAdapter mail) throws ServiceException {
+		 if (!(mail instanceof ZimbraMailAdapter))
+	            return null;
+		 Message msg = ((ZimbraMailAdapter) mail).doDefaultFiling();
+		 return msg;
+	}
 }
 

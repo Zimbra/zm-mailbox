@@ -115,6 +115,7 @@ public class RedirectCopyTest {
 			Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
 			Message notifyMsg = mbox2.getMessageById(null, item);
 			Assert.assertEquals("Hello World", notifyMsg.getFragment());
+			Assert.assertEquals(2, notifyMsg.getFolderId());
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail("No exception should be thrown");

@@ -50,7 +50,7 @@ public class FileIntoCopyTest {
 
 		Provisioning prov = Provisioning.getInstance();
 
-		Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
+		Account acct = prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
 
 		Server server = Provisioning.getInstance().getServer(acct);
 
@@ -74,7 +74,7 @@ public class FileIntoCopyTest {
 
 			Account account = Provisioning.getInstance().get(Key.AccountBy.name,
 
-					"test@in.telligent.com");
+					"test@zimbra.com");
 
 			RuleManager.clearCachedRules(account);
 
@@ -82,7 +82,7 @@ public class FileIntoCopyTest {
 
 			account.setMailSieveScript(filterScript);
 
-			String raw = "From: sender@in.telligent.com\n" + "To: test1@in.telligent.com\n" + "Subject: Test\n" + "\n"
+			String raw = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n" + "\n"
 
 					+ "Hello World.";
 

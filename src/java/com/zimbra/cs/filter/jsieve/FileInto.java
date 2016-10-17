@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter.jsieve;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 import java.util.ArrayList;
@@ -32,6 +33,8 @@ import org.apache.jsieve.mail.MailAdapter;
 
 
 public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
+	
+	private static final String copy = ":copy";
 
     @Override
     protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context) throws SieveException {
@@ -44,7 +47,7 @@ public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
 		} else {
 			// save a copy to inbox
 			try {
-				Copy.copyToInbox(mail);
+				FilterUtil.copyToInbox(mail);
 			} catch (ServiceException e) {
 				throw new SieveException("Failed to save copy to inbox");
 			}
@@ -74,8 +77,8 @@ public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
 	    } else {
 	    	copyArg = ((Argument)args.get(0)).getValue().toString();
 	    	// if arguments size is 2; first argument should be :copy
-	    	if (!copyArg.equals(":copy")) {
-	  	      throw context.getCoordinate().syntaxException("Expecting :copy");
+	    	if (!copyArg.equals(copy)) {
+	  	      throw context.getCoordinate().syntaxException("Error in sieve fileinto. Expecting argument :copy");
 	  	    } 
 	    	// folder list argument
 	    	argument = (Argument)args.get(1);

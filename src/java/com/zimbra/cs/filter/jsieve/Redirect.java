@@ -28,6 +28,7 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 public class Redirect extends org.apache.jsieve.commands.Redirect {
@@ -45,7 +46,7 @@ public class Redirect extends org.apache.jsieve.commands.Redirect {
 			} else {
 				// save a copy to inbox
 				try {
-					Copy.copyToInbox(mail);
+					FilterUtil.copyToInbox(mail);
 				} catch (ServiceException e) {
 					throw new SieveException("Failed to save copy to inbox");
 				}
