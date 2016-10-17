@@ -2468,12 +2468,8 @@ abstract class ImapHandler {
                 throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
             }
             mboxStore = path.getOwnerImapMailboxStore();
-            FolderStore folderStore = path.getFolder();
-
-            if (! (mboxStore instanceof LocalImapMailboxStore)) {
-                mboxStore = credentials.getImapMailboxStore();
-            }
             mboxStore.checkAppendMessageFlags(octxt, appends);
+            FolderStore folderStore = path.getFolder();
 
             // Append message parts and check message content size
             for (AppendMessage append : appends) {
