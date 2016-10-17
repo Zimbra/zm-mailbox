@@ -43,7 +43,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 
-public class ReplaceHeaderTest {
+public class DeleteHeaderTest {
 
     private static String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
             + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
@@ -93,14 +93,14 @@ public class ReplaceHeaderTest {
     }
 
     /*
-     * Replace subject
+     * Delete all X-Test-Header
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testReplaceHeader() {
+    public void testDeleteHeaderAll() {
         try {
            String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :newvalue \"my subject\" :contains \"Subject\" \"example\" \r\n"
+                    + " deleteheader \"X-Test-Header\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
 
@@ -116,29 +116,29 @@ public class ReplaceHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
-            String newSubject = "";
+            boolean headerDeleted = true;
             for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
                 Header temp = enumeration.nextElement();
-                if ("Subject".equals(temp.getName())) {
-                    newSubject = temp.getValue();
+                if ("X-Test-Header".equals(temp.getName())) {
+                    headerDeleted = false;
                     break;
                 }
             }
-            Assert.assertEquals("my subject", newSubject);
+            Assert.assertTrue(headerDeleted);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
 
     /*
-     * Replace header value at index
+     * Delete header at index
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testReplaceHeaderAtIndex() {
+    public void testDeleteHeaderAtIndex() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :index 2 :newvalue \"new test\" :contains \"X-Test-Header\" \"test\" \r\n"
+                    + " deleteheader :index 2 \"X-Test-Header\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -158,26 +158,23 @@ public class ReplaceHeaderTest {
                 Header header = enumeration.nextElement();
                 if ("X-Test-Header".equals(header.getName())) {
                     indexMatch++;
-                    if (indexMatch == 2) {
-                        Assert.assertEquals("new test", header.getValue());
-                        break;
-                    }
                 }
             }
+            Assert.assertEquals(indexMatch, 2);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
 
     /*
-     * Replace last header value
+     * Delete last header
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testReplaceLastHeader() {
+    public void testDeleteLastHeader() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :last :newvalue \"new test\" :contains \"X-Test-Header\" \"test\" \r\n"
+                    + " deleteheader :last \"X-Test-Header\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -193,30 +190,30 @@ public class ReplaceHeaderTest {
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
             int indexMatch = 0;
+            String headerValue = "";
             for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
                 Header header = enumeration.nextElement();
                 if ("X-Test-Header".equals(header.getName())) {
                     indexMatch++;
-                    if (indexMatch == 3) {
-                        Assert.assertEquals("new test", header.getValue());
-                        break;
-                    }
+                    headerValue = header.getValue();
                 }
             }
+            Assert.assertEquals(indexMatch, 2);
+            Assert.assertEquals("test2", headerValue);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
 
     /*
-     * Replace header value of 2nd from bottom
+     * Delete header value of 2nd from bottom
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testReplaceSecondFromBottomHeader() {
+    public void testDeleteSecondFromBottomHeader() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :index 2 :last :newvalue \"new test\" :contains \"X-Test-Header\" \"test\" \r\n"
+                    + " deleteheader :index 2 :last \"X-Test-Header\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -232,30 +229,30 @@ public class ReplaceHeaderTest {
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
             int indexMatch = 0;
+            String headerValue = "";
             for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
                 Header header = enumeration.nextElement();
                 if ("X-Test-Header".equals(header.getName())) {
                     indexMatch++;
-                    if (indexMatch == 2) {
-                        Assert.assertEquals("new test", header.getValue());
-                        break;
-                    }
+                    headerValue = header.getValue();
                 }
             }
+            Assert.assertEquals(indexMatch, 2);
+            Assert.assertEquals("test3", headerValue);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
 
     /*
-     * Replace subject using is match-type
+     * Delete header using is match-type :is
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testReplaceSubjectHeaderUsingIs() {
+    public void testDeleteHeaderUsingIs() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :newvalue \"new test\" :is \"Subject\" \"example\" \r\n"
+                    + " deleteheader :is \"X-Test-Header\" \"test2\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -270,27 +267,29 @@ public class ReplaceHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
             for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
                 Header header = enumeration.nextElement();
-                if ("Subject".equals(header.getName())) {
-                    Assert.assertEquals("new test", header.getValue());
+                if ("X-Test-Header".equals(header.getName()) && "test2".equals(header.getValue())) {
+                    matchFound = true;
                     break;
                 }
             }
+            Assert.assertFalse(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
 
     /*
-     * Replace subject using matches match-type
+     * Delete header using matches match-type
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testReplaceSubjectHeaderUsingMatches() {
+    public void testDeleteHeaderUsingMatches() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :newvalue \"new test\" :matches \"Subject\" \"ex*\" \r\n"
+                    + " deleteheader :matches \"X-Test-Header\" \"test*\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -305,27 +304,29 @@ public class ReplaceHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
             for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
                 Header header = enumeration.nextElement();
-                if ("Subject".equals(header.getName())) {
-                    Assert.assertEquals("new test", header.getValue());
+                if ("X-Test-Header".equals(header.getName())) {
+                    matchFound = true;
                     break;
                 }
             }
+            Assert.assertFalse(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
 
     /*
-     * Replace name of the header
+     * Delete header using contains match-type
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testReplaceNameOfHeader() {
+    public void testDeleteHeaderUsingContains() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :newname \"X-Test2-Header\" :contains \"X-Test-Header\" \"test1\" \r\n"
+                    + " deleteheader :contains \"X-Test-Header\" \"test2\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -340,27 +341,29 @@ public class ReplaceHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
             for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
                 Header header = enumeration.nextElement();
-                if ("X-Test2-Header".equals(header.getName())) {
-                    Assert.assertEquals("test1", header.getValue());
+                if ("X-Test-Header".equals(header.getName()) && "test2".equals(header.getValue())) {
+                    matchFound = true;
                     break;
                 }
             }
+            Assert.assertFalse(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
 
     /*
-     * Replace header with numeric comparator :value
+     * Delete header with numeric comparator :value
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testReplaceHeaderWithNumericComparisionUsingValue() {
+    public void testDeleteHeaderWithNumericComparisionUsingValue() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :newname \"X-Numeric2-Header\" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"3\" \r\n"
+                    + " deleteheader :value \"lt\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"3\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -375,27 +378,29 @@ public class ReplaceHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
             for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
                 Header header = enumeration.nextElement();
-                if ("X-Numeric2-Header".equals(header.getName())) {
-                    Assert.assertEquals("0", header.getValue());
+                if ("X-Numeric-Header".equals(header.getName()) && Integer.valueOf(header.getValue()) < 3) {
+                    matchFound = true;
                     break;
                 }
             }
+            Assert.assertFalse(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
 
     /*
-     * Replace header with numeric comparator :count
+     * Delete header with numeric comparator :count
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testReplaceHeaderWithNumericComparisionUsingCount() {
+    public void testDeleteHeaderWithNumericComparisionUsingCount() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :newname \"X-Numeric2-Header\" :count \"ge\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"3\" \r\n"
+                    + " deleteheader :count \"ge\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"3\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -410,14 +415,52 @@ public class ReplaceHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
-            int headerCount = 0;
+            boolean matchFound = false;
             for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
                 Header header = enumeration.nextElement();
-                if ("X-Numeric2-Header".equals(header.getName())) {
-                    headerCount++;
+                if ("X-Numeric-Header".equals(header.getName())) {
+                    matchFound = true;
+                    break;
                 }
             }
-            Assert.assertEquals("3", String.valueOf(headerCount));
+            Assert.assertFalse(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Delete header with index, last and match-type
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testDeleteHeaderWithIndexAndMatchType() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + " deleteheader :index 2 :last :contains \"X-Test-Header\" \"2\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test-Header".equals(header.getName()) && "test2".equals(header.getValue())) {
+                    matchFound = true;
+                    break;
+                }
+            }
+            Assert.assertFalse(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }

@@ -16,10 +16,8 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.mail.Header;
@@ -38,7 +36,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
-public class ReplaceHeader extends AbstractCommand {
+public class DeleteHeader extends AbstractCommand {
     private EditHeaderExtension ehe = new EditHeaderExtension();
 
     /** (non-Javadoc)
@@ -46,14 +44,14 @@ public class ReplaceHeader extends AbstractCommand {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Object executeBasic(MailAdapter mail, Arguments arguments,
-            Block block, SieveContext sieveContext) throws SieveException {
+    protected Object executeBasic(MailAdapter mail, Arguments args, Block block, SieveContext sieveContext)
+            throws SieveException {
         if (!(mail instanceof ZimbraMailAdapter)) {
             ZimbraLog.filter.info("Zimbra mail adapter not found.");
             return null;
         }
 
-        // make sure zcs do not edit immutable header
+        // make sure zcs do not delete immutable header
 //        if (ehe.isImmutableHeaderKey()) {
 //            ZimbraLog.filter.info("replaceheader: %s is immutable header, so exiting silently.", ehe.getKey());
 //            return null;
@@ -63,9 +61,6 @@ public class ReplaceHeader extends AbstractCommand {
 
         // replace sieve variables
         ehe.replaceVariablesInValueList(mailAdapter);
-        if (ehe.getNewValue() != null) {
-            ehe.setNewValue(Variables.replaceAllVariables(mailAdapter, ehe.getNewValue()));
-        }
 
         MimeMessage mm = mailAdapter.getMimeMessage();
         Enumeration<Header> headers;
@@ -97,9 +92,7 @@ public class ReplaceHeader extends AbstractCommand {
         try {
             while (headers.hasMoreElements()) {
                 Header header = headers.nextElement();
-                String newHeaderName = null;
-                String newHeaderValue = null;
-                boolean replace = false;
+                boolean deleteCurrentHeader = false;
                 if (!(removedHeaders.contains(header.getName()))) {
                     mm.removeHeader(header.getName());
                     removedHeaders.add(header.getName());
@@ -107,28 +100,22 @@ public class ReplaceHeader extends AbstractCommand {
                 if (header.getName().equalsIgnoreCase(ehe.getKey())){
                     matchIndex++;
                     if (ehe.getIndex() == null || (ehe.getIndex() != null && ehe.getIndex() == matchIndex)) {
-                        for (String value : ehe.getValueList()) {
-
-                            replace = ehe.matchCondition(header, headerCount, value, sieveContext);
-
-                            if (replace) {
-                                if (ehe.getNewName() != null) {
-                                    newHeaderName = ehe.getNewName();
-                                } else {
-                                    newHeaderName = header.getName();
+                        if (ehe.getValueList() == null || ehe.getValueList().isEmpty()) {
+                            deleteCurrentHeader = true;
+                        } else {
+                            for (String value : ehe.getValueList()) {
+                                deleteCurrentHeader = ehe.matchCondition(header, headerCount, value, sieveContext);
+                                if (deleteCurrentHeader) {
+                                    break;
                                 }
-                                if (ehe.getNewValue() != null) {
-                                    newHeaderValue = ehe.getNewValue();
-                                } else {
-                                    newHeaderValue = header.getValue();
-                                }
-                                header = new Header(newHeaderName, newHeaderValue);
-                                break;
                             }
                         }
                     }
                 }
-                mm.addHeader(header.getName() ,header.getValue());
+                // if deleteCurrentHeader is true, don't add header to mime
+                if (!deleteCurrentHeader) {
+                    mm.addHeader(header.getName() ,header.getValue());
+                }
              }
             mm.saveChanges();
             mailAdapter.updateIncomingBlob();
@@ -142,12 +129,11 @@ public class ReplaceHeader extends AbstractCommand {
      * @see org.apache.jsieve.commands.AbstractCommand#validateArguments(org.apache.jsieve.Arguments, org.apache.jsieve.SieveContext)
      */
     @Override
-    protected void validateArguments(Arguments arguments, SieveContext context)
-            throws SieveException {
-        ZimbraLog.filter.debug("replaceheader: " + arguments.getArgumentList().toString());
-        ehe.setupReplaceHeaderData(arguments);
-        if (!ehe.validateReplaceHeaderData()) {
-            throw new SyntaxException("replaceheader : validation failed.");
+    protected void validateArguments(Arguments arguments, SieveContext context) throws SieveException {
+        ZimbraLog.filter.debug("deleteheader: " + arguments.getArgumentList().toString());
+        ehe.setupDeleteHeaderData(arguments);
+        if (!ehe.validateDeleteHeaderData()) {
+            throw new SyntaxException("deleteheader : validation failed.");
         }
     }
 }
