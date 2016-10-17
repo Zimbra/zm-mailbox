@@ -25,6 +25,7 @@ import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.exception.SieveException;
+import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
 import com.zimbra.common.service.ServiceException;
@@ -76,18 +77,18 @@ public class Redirect extends org.apache.jsieve.commands.Redirect {
 	    	copyArg = ((Argument)args.get(0)).getValue().toString();
 	    	// if arguments size is 2; first argument should be :copy
 	    	if (!copyArg.equals(":copy")) {
-	  	      throw context.getCoordinate().syntaxException("Expecting :copy");
+	  	      throw new SyntaxException("Expecting :copy");
 	  	    } 
 	    	// address list argument
 	    	argument = (Argument)args.get(1);
 	    }
 	    // address list argument should be a String list
 	    if (!(argument instanceof StringListArgument)) {
-	      throw context.getCoordinate().syntaxException("Expecting a string-list");
+	      throw new SyntaxException("Expecting a string-list");
 	    } 
 	    // address list argument should contain exactly one address  
 	    if (1 != ((StringListArgument)argument).getList().size()) {
-	      throw context.getCoordinate().syntaxException("Expecting exactly one argument");
+	      throw new SyntaxException("Expecting exactly one argument");
 	    }
 	}
 
