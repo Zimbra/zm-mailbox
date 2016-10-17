@@ -1,3 +1,19 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2016 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.util;
 
 import java.io.FileInputStream;
@@ -49,7 +65,7 @@ public class CertValidationUtil {
                 CertPathValidator cpv;
                 cpv = CertPathValidator.getInstance("PKIX");
                 PKIXCertPathValidatorResult cpv_result = (PKIXCertPathValidatorResult) cpv.validate(cp, params);
-                ZimbraLog.account.debug("Cert Validation Result" +  cpv_result.toString());
+                ZimbraLog.account.debug("Certificate Validation Result %s", cpv_result.toString());
             }
     }
 
@@ -72,7 +88,7 @@ public class CertValidationUtil {
             X509Certificate rootCACert = (X509Certificate)ks.getCertificate(alias);
             TrustAnchor ta = new TrustAnchor(rootCACert, null);
             trustedCertsSet.add(ta);
-            ZimbraLog.account.debug("adding certificate with issuer DN:" + rootCACert.getIssuerDN().toString() + " signature name:"  + rootCACert.getSigAlgName());
+            ZimbraLog.account.debug("adding certificate with issuer DN: %s , signature name: %s", rootCACert.getIssuerDN().toString(), rootCACert.getSigAlgName());
         }
         return trustedCertsSet;
     }
