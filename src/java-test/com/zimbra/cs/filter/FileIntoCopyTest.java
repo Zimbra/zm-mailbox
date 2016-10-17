@@ -42,39 +42,31 @@ public class FileIntoCopyTest {
 
 			+ "if header :contains \"Subject\" \"test\" { fileinto :copy \"Junk\"; }";
 
+	private String filterPlainFileintoScript = "require [\"fileinto\"];\n"
+
+			+ "if header :contains \"Subject\" \"test\" { fileinto \"Junk\"; }";
+
 	@BeforeClass
 
 	public static void init() throws Exception {
-
 		MailboxTestUtil.initServer();
-
 		Provisioning prov = Provisioning.getInstance();
-
 		Account acct = prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-
 		Server server = Provisioning.getInstance().getServer(acct);
-
 		server.setSieveFeatureVariablesEnabled(true);
-
 	}
 
 	@Before
 
 	public void setUp() throws Exception {
-
 		MailboxTestUtil.clearData();
-
 	}
 
 	@Test
 
 	public void testCopyFileInto() {
-
 		try {
-
-			Account account = Provisioning.getInstance().get(Key.AccountBy.name,
-
-					"test@zimbra.com");
+			Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
 
 			RuleManager.clearCachedRules(account);
 
@@ -82,28 +74,47 @@ public class FileIntoCopyTest {
 
 			account.setMailSieveScript(filterScript);
 
-			String raw = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n" + "\n"
-
-					+ "Hello World.";
+			String raw = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n" + "\n" + "Hello World.";
 
 			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-
 					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
-
 					Mailbox.ID_FOLDER_INBOX, true);
 
 			Assert.assertEquals(2, ids.size());
-
 			Message msg = mbox.getMessageById(null, ids.get(0).getId());
-
 			Assert.assertEquals("Test", msg.getSubject());
-
 		} catch (Exception e) {
-
 			e.printStackTrace();
-
 			fail("No exception should be thrown");
+		}
+	}
 
+	@Test
+
+	public void testPlainFileInto() {
+
+		try {
+
+			Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+
+			RuleManager.clearCachedRules(account);
+
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+			account.setMailSieveScript(filterPlainFileintoScript);
+
+			String raw = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n" + "\n" + "Hello World.";
+
+			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+					Mailbox.ID_FOLDER_INBOX, true);
+
+			Assert.assertEquals(1, ids.size());
+			Message msg = mbox.getMessageById(null, ids.get(0).getId());
+			Assert.assertEquals("Test", msg.getSubject());
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("No exception should be thrown");
 		}
 	}
 }
