@@ -160,7 +160,7 @@ public class SaveDocument extends DocDocumentHandler {
             }
             if (itemId == 0) {
                 // create a new page
-                //docItem = createDocument(doc, zsc, octxt, mbox, docElem, is, folderId, MailItem.Type.DOCUMENT);
+                docItem = createDocument(doc, zsc, octxt, mbox, docElem, is, folderId, MailItem.Type.DOCUMENT);
             } else {
                 // add a new revision
                 docItem = mbox.getDocumentById(octxt, itemId);
@@ -404,7 +404,7 @@ public class SaveDocument extends DocDocumentHandler {
 
         public void cleanup() {
             if (up != null) {
-               //FileUploadServlet.deleteUpload(up);
+               FileUploadServlet.deleteUpload(up);
             }
             ByteUtil.closeStream(in);
         }
