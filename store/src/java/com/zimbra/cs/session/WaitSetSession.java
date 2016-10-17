@@ -21,6 +21,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.SyncToken;
 
 /**
@@ -60,6 +61,12 @@ public class WaitSetSession extends Session {
             // to signal IFF the passed-in changeId is after the current
             // synctoken...and we want to cancel the existing signalling
             // if the new synctoken is up to date with the mailbox
+            Mailbox mbox = getMailboxOrNull();
+            if (null == mbox) {
+                throw new UnsupportedOperationException(String.format(
+                            "WaitSetSession must have an associated MailboxStore of class '%s' before calling update",
+                            Mailbox.class.getName()));
+            }
             int mboxHighestChange = (getMailboxOrNull()).getLastChangeID();
             if (mboxHighestChange > mHighestChangeId)
                 mHighestChangeId = mboxHighestChange;
