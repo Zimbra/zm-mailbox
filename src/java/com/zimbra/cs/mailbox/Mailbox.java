@@ -2176,8 +2176,6 @@ public class Mailbox {
                             MailItem.Type.MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
             Folder.create(ID_FOLDER_BRIEFCASE, UUIDUtil.generateUUID(), this, userRoot, "Briefcase", system,
                             MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
-            Folder.create(ID_FOLDER_SMIME_CERT, UUIDUtil.generateUUID(), this, root, "SmimeCertificates", hidden,
-                    MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
         } finally {
             lock.release();
         }
