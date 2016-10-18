@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -40,9 +41,9 @@ import javax.mail.internet.MimePart;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
-import org.apache.jsieve.mail.ActionFileInto;
+//import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.jsieve.mail.ActionKeep;
-import org.apache.jsieve.mail.ActionRedirect;
+//import org.apache.jsieve.mail.ActionRedirect;
 import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.MailUtils;
@@ -60,9 +61,11 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionEreject;
+import com.zimbra.cs.filter.jsieve.ActionFileInto;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionNotify;
 import com.zimbra.cs.filter.jsieve.ActionNotifyMailto;
+import com.zimbra.cs.filter.jsieve.ActionRedirect;
 import com.zimbra.cs.filter.jsieve.ActionReply;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.filter.jsieve.ErejectException;
@@ -122,8 +125,6 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private boolean discardActionPresent = false;
 
     private LmtpEnvelope envelope = null;
-
-    private int inboxMsgId;
 
     public ZimbraMailAdapter(Mailbox mailbox, FilterHandler handler) {
         this.mailbox = mailbox;
@@ -221,7 +222,8 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 return;
             }
 
-            if (getDeliveryActions().isEmpty()) {
+            List<Action> deliveryActions = getDeliveryActions();
+            if (deliveryActions.isEmpty()) {
                 // i.e. no keep/fileinto/redirect actions
                 if (getReplyNotifyRejectActions().isEmpty()) {
                     // if only flag/tag actions are present, we keep the message even if discard
@@ -231,6 +233,25 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     // else if reply/notify/reject/ereject actions are present and there's no discard, do sort
                     // of implicit keep
                     explicitKeep();
+                }
+            } else {
+                ListIterator<Action> li = deliveryActions.listIterator(deliveryActions.size());
+                while (li.hasPrevious()) {
+                    Action lastDeliveryAction = li.previous();
+
+                    if (lastDeliveryAction instanceof ActionFileInto) {
+                        ActionFileInto lastFileIntoAction = (ActionFileInto) lastDeliveryAction;
+                        if (lastFileIntoAction.isCopy() && !discardActionPresent) {
+                            explicitKeep();
+                        }
+                        break;
+                    } else if (lastDeliveryAction instanceof ActionRedirect) {
+                        ActionRedirect lastRedirectAction = (ActionRedirect) lastDeliveryAction;
+                        if (lastRedirectAction.isCopy() && !discardActionPresent) {
+                            explicitKeep();
+                        }
+                        break;
+                    }
                 }
             }
 
@@ -436,7 +457,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             if (msg != null) {
                 filedIntoPaths.add(folderPath);
                 addedMessageIds.add(new ItemId(msg));
-                inboxMsgId = msg.getId();
+               // inboxMsgId = msg.getId();
             }
         }
         return msg;
@@ -798,7 +819,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         }
     }
 
-    public boolean addedToInbox() {
+    /*public boolean addedToInbox() {
         String folderPath;
         try {
             folderPath = handler.getDefaultFolderPath();
@@ -822,5 +843,5 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 }
             }
             addedMessageIds.remove(toRemove);
-    }
+    }*/
 }

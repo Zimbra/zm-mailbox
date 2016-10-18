@@ -16,13 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.filter.FilterUtil;
-import com.zimbra.cs.filter.ZimbraMailAdapter;
-
-import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
@@ -36,46 +30,26 @@ import org.apache.jsieve.mail.MailAdapter;
 public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
 	
     @Override
-    protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context) throws SieveException {
-        if (!(mail instanceof ZimbraMailAdapter))
-            return null;
-    	List<Argument> args = arguments.getArgumentList();
-		if (args.size() == 1) {
-		    // discard from inbox if previous fileinto :copy
-		    boolean addedToInbox =  ((ZimbraMailAdapter) mail).addedToInbox();
-		    System.out.println("addedToInbox:"+addedToInbox);
-		    if(addedToInbox) {
-		        try {
-                    ((ZimbraMailAdapter) mail).discard();
-                } catch (ServiceException e) {
-                    throw new SieveException("Failed to removed copy from inbox.");
-                }
-		    }
-			// default fileinto behavior if :copy argument is absent
-			return super.executeBasic(mail, arguments, block, context);
-		} else {
-			// save a copy to inbox
-			try {
-				FilterUtil.copyToInbox(mail);
-			} catch (ServiceException e) {
-				throw new SieveException("Failed to save copy to inbox");
-			}
-			
-			// remove :copy argument from arguments e.g. fileinto :copy "Junk" => fileinto "Junk"
-			List<Argument> fieldArgumentList = new ArrayList<Argument>();
-			fieldArgumentList.add(args.get(1));
-			Arguments newArguments = new Arguments(fieldArgumentList, null);
-			
-			// default fileinto behavior for specified folder argument => fileinto "Junk"
-			return super.executeBasic(mail, newArguments, block, context);
-		}
+    protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block,
+        SieveContext context) throws SieveException {
+        List<Argument> args = arguments.getArgumentList();
+        if (args.size() == 1) {
+            String folderPath = ((StringListArgument) arguments.getArgumentList().get(0)).getList()
+                .get(0);
+            mail.addAction(new ActionFileInto(folderPath));
+        } else {
+            String folderPath = ((StringListArgument) arguments.getArgumentList().get(1)).getList()
+                .get(0);
+            mail.addAction(new ActionFileInto(folderPath, true));
+        }
+        return null;
     }
 
 	@Override
 	protected void validateArguments(Arguments arguments, SieveContext context) throws SieveException {
 		List<Argument> args = arguments.getArgumentList();
 	    if (args.size() < 1 || args.size() > 2) {
-	      throw context.getCoordinate().syntaxException("Exactly 1 or 2 arguments permitted. Found " + args.size());
+	      throw new SyntaxException("Exactly 1 or 2 arguments permitted. Found " + args.size());
 	    }
 	    
 	    Argument argument;
@@ -101,6 +75,4 @@ public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
 	      throw new SyntaxException("Expecting exactly one argument");
 	    }
 	}
-
-	
 }

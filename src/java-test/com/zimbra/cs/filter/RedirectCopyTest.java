@@ -42,140 +42,147 @@ import com.zimbra.cs.service.util.ItemId;
 
 public class RedirectCopyTest {
 
-	private String filterScript = "require [\"copy\", \"redirect\"];\n"
+    @BeforeClass
+    public static void init() throws Exception {
 
-			+ "if header :contains \"Subject\" \"Test\" { redirect :copy \"test3@zimbra.com\"; }";
+        MailboxTestUtil.initServer();
 
-	private String filterPlainRedirectScript = "require [\"redirect\"];\n"
+        Provisioning prov = Provisioning.getInstance();
 
-			+ "if header :contains \"Subject\" \"Test\" { redirect \"test3@zimbra.com\"; }";
+        Map<String, Object> attrs = Maps.newHashMap();
+        prov.createDomain("zimbra.com", attrs);
 
-	@BeforeClass
-	public static void init() throws Exception {
+        attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        prov.createAccount("test1@zimbra.com", "secret", attrs);
 
-		MailboxTestUtil.initServer();
+        attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        Account acct = prov.createAccount("test2@zimbra.com", "secret", attrs);
 
-		Provisioning prov = Provisioning.getInstance();
+        attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        prov.createAccount("test3@zimbra.com", "secret", attrs);
 
-		Map<String, Object> attrs = Maps.newHashMap();
-		prov.createDomain("zimbra.com", attrs);
+        Server server = Provisioning.getInstance().getServer(acct);
 
-		attrs = Maps.newHashMap();
-		attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-		prov.createAccount("test1@zimbra.com", "secret", attrs);
+        server.setSieveFeatureVariablesEnabled(true);
 
-		attrs = Maps.newHashMap();
-		attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-		Account acct = prov.createAccount("test2@zimbra.com", "secret", attrs);
+        // this MailboxManager does everything except actually send mail
+        MailboxManager.setInstance(new DirectInsertionMailboxManager());
+    }
 
-		attrs = Maps.newHashMap();
-		attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-		prov.createAccount("test3@zimbra.com", "secret", attrs);
+    @Before
+    public void setUp() throws Exception {
 
-		Server server = Provisioning.getInstance().getServer(acct);
+        MailboxTestUtil.clearData();
 
-		server.setSieveFeatureVariablesEnabled(true);
+    }
 
-		// this MailboxManager does everything except actually send mail
-		MailboxManager.setInstance(new DirectInsertionMailboxManager());
-	}
+    @Test
+    public void testCopyRedirect() {
+        String filterScript = "require [\"copy\", \"redirect\"];\n"
 
-	@Before
-	public void setUp() throws Exception {
+                + "if header :contains \"Subject\" \"Test\" { redirect :copy \"test3@zimbra.com\"; }";
+        
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name,
+                "test2@zimbra.com");
+            Account account2 = Provisioning.getInstance().get(Key.AccountBy.name,
+                "test3@zimbra.com");
 
-		MailboxTestUtil.clearData();
+            RuleManager.clearCachedRules(account);
 
-	}
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(account2);
 
-	@Test
-	public void testCopyRedirect() {
-		try {
-			Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
-			Account account2 = Provisioning.getInstance().get(Key.AccountBy.name, "test3@zimbra.com");
+            account.setMailSieveScript(filterScript);
 
-			RuleManager.clearCachedRules(account);
+            String raw = "From: test1@zimbra.com\n" + "To: test2@zimbra.com\n" + "Subject: Test\n"
+                + "\n" + "Hello World";
 
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(account2);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
 
-			account.setMailSieveScript(filterScript);
+            Assert.assertEquals(1, ids.size());
+            Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message notifyMsg = mbox2.getMessageById(null, item);
+            Assert.assertEquals("Hello World", notifyMsg.getFragment());
+            Assert.assertEquals(2, notifyMsg.getFolderId());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
 
-			String raw = "From: test1@zimbra.com\n" + "To: test2@zimbra.com\n" + "Subject: Test\n" + "\n" + "Hello World";
+    @Test
+    public void testPlainRedirect() {
+        String filterPlainRedirectScript = "require [\"redirect\"];\n"
 
-			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
-					Mailbox.ID_FOLDER_INBOX, true);
+            + "if header :contains \"Subject\" \"Test\" { redirect \"test3@zimbra.com\"; }";
+        
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name,
+                "test2@zimbra.com");
+            Account account2 = Provisioning.getInstance().get(Key.AccountBy.name,
+                "test3@zimbra.com");
 
-			Assert.assertEquals(1, ids.size());
-			Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
-			Message notifyMsg = mbox2.getMessageById(null, item);
-			Assert.assertEquals("Hello World", notifyMsg.getFragment());
-			Assert.assertEquals(2, notifyMsg.getFolderId());
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail("No exception should be thrown");
-		}
-	}
+            RuleManager.clearCachedRules(account);
 
-	@Test
-	public void testPlainRedirect() {
-		try {
-			Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
-			Account account2 = Provisioning.getInstance().get(Key.AccountBy.name, "test3@zimbra.com");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(account2);
 
-			RuleManager.clearCachedRules(account);
+            account.setMailSieveScript(filterPlainRedirectScript);
 
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(account2);
+            String raw = "From: test1@zimbra.com\n" + "To: test2@zimbra.com\n" + "Subject: Test\n"
+                + "\n" + "Hello World";
 
-			account.setMailSieveScript(filterPlainRedirectScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
 
-			String raw = "From: test1@zimbra.com\n" + "To: test2@zimbra.com\n" + "Subject: Test\n" + "\n" + "Hello World";
+            Assert.assertEquals(0, ids.size());
+            Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message msg = mbox2.getMessageById(null, item);
+            Assert.assertEquals("Hello World", msg.getFragment());
+            Assert.assertEquals(2, msg.getFolderId());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
 
-			List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-					new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
-					Mailbox.ID_FOLDER_INBOX, true);
+    @Test
+    public void testCopyRedirectThenFileInto() {
+        String filterScriptPattern1 = "require [\"copy\", \"fileinto\"];\n"
+            + "redirect :copy \"test3@zimbra.com\";\n" + "fileinto \"Junk\"; ";
 
-			Assert.assertEquals(0, ids.size());
-			Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
-			Message msg = mbox2.getMessageById(null, item);
-			Assert.assertEquals("Hello World", msg.getFragment());
-			Assert.assertEquals(2, msg.getFolderId());
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail("No exception should be thrown");
-		}
-	}
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name,
+                "test1@zimbra.com");
 
-	@Test
+            RuleManager.clearCachedRules(account);
 
-	public void testCopyRedirectThenFileInto() {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-	    try {
+            account.setMailSieveScript(filterScriptPattern1);
 
-	        String filterScriptPattern1 = "require [\"copy\", \"fileinto\"];\n"
-	            + "redirect :copy \"test3@zimbra.com\";\n"
-	            + "fileinto \"Junk\"; ";
+            String rawReal = "From: test1@zimbra.com\n" + "To: test2@zimbra.com\n"
+                + "Subject: Test\n" + "\n" + "Hello World";
 
-	        Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
-
-	        RuleManager.clearCachedRules(account);
-
-	        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
-	        account.setMailSieveScript(filterScriptPattern1);
-
-	        String rawReal = "From: test1@zimbra.com\n" + "To: test2@zimbra.com\n" + "Subject: Test\n" + "\n" + "Hello World";
-
-	        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-	                new ParsedMessage(rawReal.getBytes(), false), 0, account.getName(), new DeliveryContext(),
-	                Mailbox.ID_FOLDER_INBOX, true);
+            RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(rawReal.getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
 
             // message should not be stored in inbox
-	        Assert.assertNull(mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE));
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        fail("No exception should be thrown");
-	    }
-	}
+            Assert.assertNull(
+                mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
 }

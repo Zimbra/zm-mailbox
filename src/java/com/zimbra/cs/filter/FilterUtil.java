@@ -961,11 +961,5 @@ public final class FilterUtil {
         return (ch == '*' || ch == '?' || ch == '\\');
     }
     
-    public static Object copyToInbox(MailAdapter mail) throws ServiceException {
-		 if (!(mail instanceof ZimbraMailAdapter))
-	            return null;
-		 Message msg = ((ZimbraMailAdapter) mail).doDefaultFiling();
-		 return msg;
-	}
 }
 

@@ -16,9 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
@@ -28,44 +26,31 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.filter.FilterUtil;
-import com.zimbra.cs.filter.ZimbraMailAdapter;
-
 public class Redirect extends org.apache.jsieve.commands.Redirect {
 
-	@Override
-	protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context)
-			throws SieveException {
-		
-		 if (!(mail instanceof ZimbraMailAdapter))
-	            return null;
-	    	List<Argument> args = arguments.getArgumentList();
-			if (args.size() == 1) {
-				// default redirect behavior if :copy argument is absent
-				return super.executeBasic(mail, arguments, block, context);
-			} else {
-				// save a copy to inbox
-				try {
-					FilterUtil.copyToInbox(mail);
-				} catch (ServiceException e) {
-					throw new SieveException("Failed to save copy to inbox");
-				}
-				// remove :copy argument from arguments e.g. redirect :copy "test3@zimbra.com" => redirect "test3@zimbra.com"
-				List<Argument> fieldArgumentList = new ArrayList<Argument>();
-				fieldArgumentList.add(args.get(1));
-				Arguments newArguments = new Arguments(fieldArgumentList, null);
-				
-				// default redirect behavior for specified folder argument => redirect "test3@zimbra.com"
-				return super.executeBasic(mail, newArguments, block, context);
-			}
-	}
+    @Override
+    protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block,
+        SieveContext context) throws SieveException {
+
+        List<Argument> args = arguments.getArgumentList();
+        if (args.size() == 1) {
+            String address = ((StringListArgument) arguments.getArgumentList().get(0)).getList()
+                .get(0);
+            mail.addAction(new ActionRedirect(address));
+        } else {
+            String address = ((StringListArgument) arguments.getArgumentList().get(1)).getList()
+                .get(0);
+            mail.addAction(new ActionRedirect(address, true));
+
+        }
+        return null;
+    }
 
 	@Override
 	protected void validateArguments(Arguments arguments, SieveContext context) throws SieveException {
 		List<Argument> args = arguments.getArgumentList();
 	    if (args.size() < 1 || args.size() > 2) {
-	      throw context.getCoordinate().syntaxException("Exactly 1 or 2 arguments permitted. Found " + args.size());
+	      throw new SyntaxException("Exactly 1 or 2 arguments permitted. Found " + args.size());
 	    }
 	    
 	    Argument argument;
