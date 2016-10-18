@@ -500,11 +500,6 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     }
 
     @Override
-    public boolean isFlaggedAsSyncFolder() {
-        throw new UnsupportedOperationException("ZFolder method not supported yet");
-    }
-
-    @Override
     public int getImapRECENT() throws ServiceException {
         ZimbraLog.mailbox.info("ZFolder.getImapRECENT always returns 0 currently");
         return 0;
@@ -767,6 +762,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         return hasFlags() && mFlags.indexOf(Flag.imapDeleted.getFlagChar()) != -1;
     }
 
+    @Override
     public boolean isSyncFolder() {
         return hasFlags() && mFlags.indexOf(Flag.syncFolder.getFlagChar()) != -1;
     }
