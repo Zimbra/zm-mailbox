@@ -2083,7 +2083,7 @@ abstract class ImapHandler {
                 new ImapPath(owner, folderStore, relativeTo);
             if (path.isVisible()) {
                 if (userAgent != null && userAgent.startsWith(IDInfo.DATASOURCE_IMAP_CLIENT_NAME)
-                        && folderStore.isFlaggedAsSyncFolder()) {
+                        && folderStore.isSyncFolder()) {
                     //bug 72577 - do not display folders synced with IMAP datasource to downstream
                     // IMAP datasource connections
                     continue;
