@@ -44,67 +44,48 @@ public class RedirectCopyTest {
 
     @BeforeClass
     public static void init() throws Exception {
-
         MailboxTestUtil.initServer();
-
         Provisioning prov = Provisioning.getInstance();
-
         Map<String, Object> attrs = Maps.newHashMap();
         prov.createDomain("zimbra.com", attrs);
-
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         prov.createAccount("test1@zimbra.com", "secret", attrs);
-
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         Account acct = prov.createAccount("test2@zimbra.com", "secret", attrs);
-
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         prov.createAccount("test3@zimbra.com", "secret", attrs);
-
         Server server = Provisioning.getInstance().getServer(acct);
-
         server.setSieveFeatureVariablesEnabled(true);
-
         // this MailboxManager does everything except actually send mail
         MailboxManager.setInstance(new DirectInsertionMailboxManager());
     }
 
     @Before
     public void setUp() throws Exception {
-
         MailboxTestUtil.clearData();
-
     }
 
     @Test
     public void testCopyRedirect() {
         String filterScript = "require [\"copy\", \"redirect\"];\n"
-
                 + "if header :contains \"Subject\" \"Test\" { redirect :copy \"test3@zimbra.com\"; }";
-        
         try {
             Account account = Provisioning.getInstance().get(Key.AccountBy.name,
                 "test2@zimbra.com");
             Account account2 = Provisioning.getInstance().get(Key.AccountBy.name,
                 "test3@zimbra.com");
-
             RuleManager.clearCachedRules(account);
-
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(account2);
-
             account.setMailSieveScript(filterScript);
-
             String raw = "From: test1@zimbra.com\n" + "To: test2@zimbra.com\n" + "Subject: Test\n"
                 + "\n" + "Hello World";
-
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-
             Assert.assertEquals(1, ids.size());
             Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
                 .getIds(MailItem.Type.MESSAGE).get(0);
@@ -120,29 +101,21 @@ public class RedirectCopyTest {
     @Test
     public void testPlainRedirect() {
         String filterPlainRedirectScript = "require [\"redirect\"];\n"
-
             + "if header :contains \"Subject\" \"Test\" { redirect \"test3@zimbra.com\"; }";
-        
         try {
             Account account = Provisioning.getInstance().get(Key.AccountBy.name,
                 "test2@zimbra.com");
             Account account2 = Provisioning.getInstance().get(Key.AccountBy.name,
                 "test3@zimbra.com");
-
             RuleManager.clearCachedRules(account);
-
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(account2);
-
             account.setMailSieveScript(filterPlainRedirectScript);
-
             String raw = "From: test1@zimbra.com\n" + "To: test2@zimbra.com\n" + "Subject: Test\n"
                 + "\n" + "Hello World";
-
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-
             Assert.assertEquals(0, ids.size());
             Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
                 .getIds(MailItem.Type.MESSAGE).get(0);
@@ -159,24 +132,17 @@ public class RedirectCopyTest {
     public void testCopyRedirectThenFileInto() {
         String filterScriptPattern1 = "require [\"copy\", \"fileinto\"];\n"
             + "redirect :copy \"test3@zimbra.com\";\n" + "fileinto \"Junk\"; ";
-
         try {
             Account account = Provisioning.getInstance().get(Key.AccountBy.name,
                 "test1@zimbra.com");
-
             RuleManager.clearCachedRules(account);
-
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
             account.setMailSieveScript(filterScriptPattern1);
-
             String rawReal = "From: test1@zimbra.com\n" + "To: test2@zimbra.com\n"
                 + "Subject: Test\n" + "\n" + "Hello World";
-
             RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(rawReal.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-
             // message should not be stored in inbox
             Assert.assertNull(
                 mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE));

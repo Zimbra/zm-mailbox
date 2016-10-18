@@ -31,7 +31,6 @@ public class Redirect extends org.apache.jsieve.commands.Redirect {
     @Override
     protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block,
         SieveContext context) throws SieveException {
-
         List<Argument> args = arguments.getArgumentList();
         if (args.size() == 1) {
             String address = ((StringListArgument) arguments.getArgumentList().get(0)).getList()
@@ -41,7 +40,6 @@ public class Redirect extends org.apache.jsieve.commands.Redirect {
             String address = ((StringListArgument) arguments.getArgumentList().get(1)).getList()
                 .get(0);
             mail.addAction(new ActionRedirect(address, true));
-
         }
         return null;
     }
@@ -52,7 +50,6 @@ public class Redirect extends org.apache.jsieve.commands.Redirect {
 	    if (args.size() < 1 || args.size() > 2) {
 	      throw new SyntaxException("Exactly 1 or 2 arguments permitted. Found " + args.size());
 	    }
-	    
 	    Argument argument;
 	    String copyArg;
 	    if(args.size() == 1) {
@@ -61,7 +58,7 @@ public class Redirect extends org.apache.jsieve.commands.Redirect {
 	    } else {
 	    	copyArg = ((Argument)args.get(0)).getValue().toString();
 	    	// if arguments size is 2; first argument should be :copy
-            if (!copyArg.equals(Copy.COPY)) {
+            if (!copyArg.equalsIgnoreCase(Copy.COPY)) {
 	  	      throw new SyntaxException("Error in sieve fileinto. Expecting argument :copy");
 	  	    } 
 	    	// address list argument
@@ -76,5 +73,4 @@ public class Redirect extends org.apache.jsieve.commands.Redirect {
 	      throw new SyntaxException("Expecting exactly one argument");
 	    }
 	}
-
 }

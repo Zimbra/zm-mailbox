@@ -57,25 +57,17 @@ public class FileIntoCopyTest {
     @Test
     public void testCopyFileInto() {
         String filterScript = "require [\"copy\", \"fileinto\"];\n"
-
             + "if header :contains \"Subject\" \"test\" { fileinto :copy \"Junk\"; }";
-
         try {
             Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-
             RuleManager.clearCachedRules(account);
-
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
             account.setMailSieveScript(filterScript);
-
             String raw = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n"
                 + "\n" + "Hello World.";
-
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-
             Assert.assertEquals(2, ids.size());
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
             Assert.assertEquals("Test", msg.getSubject());
@@ -88,26 +80,17 @@ public class FileIntoCopyTest {
     @Test
     public void testPlainFileInto() {
         String filterPlainFileintoScript = "require [\"fileinto\"];\n"
-
             + "if header :contains \"Subject\" \"test\" { fileinto \"Junk\"; }";
-
         try {
-
             Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-
             RuleManager.clearCachedRules(account);
-
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
             account.setMailSieveScript(filterPlainFileintoScript);
-
             String raw = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n"
                 + "\n" + "Hello World.";
-
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-
             Assert.assertEquals(1, ids.size());
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
             Assert.assertEquals("Test", msg.getSubject());
@@ -129,26 +112,18 @@ public class FileIntoCopyTest {
             String filterScriptPattern1 = "require [\"copy\", \"fileinto\"];\n"
                 + "fileinto :copy \"foo\";\n" + "if header :contains \"Subject\" \"Test\" {\n"
                 + "fileinto \"bar\"; }";
-
             Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-
             RuleManager.clearCachedRules(account);
-
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
             account.setMailSieveScript(filterScriptPattern1);
-
             String rawTest = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n"
                 + "Subject: Test\n" + "\n" + "Hello World";
-
             RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(rawTest.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-
             // message should not be stored in inbox
             Assert.assertNull(
                 mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE));
-
             // message should be stored in foo
             Integer item = mbox
                 .getItemIds(null,
@@ -156,7 +131,6 @@ public class FileIntoCopyTest {
                 .getIds(MailItem.Type.MESSAGE).get(0);
             Message msg = mbox.getMessageById(null, item);
             Assert.assertEquals("Hello World", msg.getFragment());
-
             // message should be stored in bar
             item = mbox
                 .getItemIds(null,
@@ -183,22 +157,15 @@ public class FileIntoCopyTest {
             String filterScriptPattern1 = "require [\"copy\", \"fileinto\"];\n"
                 + "fileinto :copy \"foo\";\n" + "if header :contains \"Subject\" \"Test\" {\n"
                 + "fileinto \"bar\"; }";
-
             Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-
             RuleManager.clearCachedRules(account);
-
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
             account.setMailSieveScript(filterScriptPattern1);
-
             String rawReal = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n"
                 + "Subject: Real\n" + "\n" + "Hello World";
-
             RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage(rawReal.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-
             // message should be stored in foo
             Integer item = mbox
                 .getItemIds(null,
@@ -206,7 +173,6 @@ public class FileIntoCopyTest {
                 .getIds(MailItem.Type.MESSAGE).get(0);
             Message msg = mbox.getMessageById(null, item);
             Assert.assertEquals("Hello World", msg.getFragment());
-
             // message should be stored in inbox
             item = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE)
                 .get(0);
@@ -232,22 +198,15 @@ public class FileIntoCopyTest {
             String filterScriptPattern1 = "require [\"copy\", \"fileinto\"];\n"
                 + "fileinto :copy \"foo\";" + "if header :contains \"Subject\" \"Test\" {\n"
                 + "fileinto :copy \"bar\"; }";
-
             Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-
             RuleManager.clearCachedRules(account);
-
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
             account.setMailSieveScript(filterScriptPattern1);
-
             String rawReal = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n"
                 + "Subject: Test\n" + "\n" + "Hello World";
-
             RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage(rawReal.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-
             // message should be stored in bar
             Integer item = mbox
                 .getItemIds(null,
@@ -255,7 +214,6 @@ public class FileIntoCopyTest {
                 .getIds(MailItem.Type.MESSAGE).get(0);
             Message msg = mbox.getMessageById(null, item);
             Assert.assertEquals("Hello World", msg.getFragment());
-
             // message should be stored in foo
             item = mbox
                 .getItemIds(null,
@@ -263,7 +221,6 @@ public class FileIntoCopyTest {
                 .getIds(MailItem.Type.MESSAGE).get(0);
             msg = mbox.getMessageById(null, item);
             Assert.assertEquals("Hello World", msg.getFragment());
-
             // message should be stored in inbox
             item = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE)
                 .get(0);
@@ -288,22 +245,15 @@ public class FileIntoCopyTest {
             String filterScriptPattern1 = "require [\"copy\", \"fileinto\"];\n"
                 + "fileinto :copy \"foo\";" + "if header :contains \"Subject\" \"Test\" {\n"
                 + "fileinto :copy \"bar\"; }";
-
             Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-
             RuleManager.clearCachedRules(account);
-
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
             account.setMailSieveScript(filterScriptPattern1);
-
             String rawReal = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n"
                 + "Subject: Real\n" + "\n" + "Hello World";
-
             RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage(rawReal.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-
             // message should be stored in foo
             Integer item = mbox
                 .getItemIds(null,
@@ -311,7 +261,6 @@ public class FileIntoCopyTest {
                 .getIds(MailItem.Type.MESSAGE).get(0);
             Message msg = mbox.getMessageById(null, item);
             Assert.assertEquals("Hello World", msg.getFragment());
-
             // message should be stored in inbox
             item = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE)
                 .get(0);
@@ -335,22 +284,15 @@ public class FileIntoCopyTest {
             String filterScriptPattern1 = "require [\"copy\", \"fileinto\"];\n"
                 + "fileinto :copy \"foo\";" + "if header :contains \"Subject\" \"Test\" {\n"
                 + "discard; }";
-
             Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-
             RuleManager.clearCachedRules(account);
-
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
             account.setMailSieveScript(filterScriptPattern1);
-
             String rawReal = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n"
                 + "Subject: Test\n" + "\n" + "Hello World";
-
             RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage(rawReal.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-
             // message should be stored in foo
             Integer item = mbox
                 .getItemIds(null,
@@ -358,7 +300,6 @@ public class FileIntoCopyTest {
                 .getIds(MailItem.Type.MESSAGE).get(0);
             Message msg = mbox.getMessageById(null, item);
             Assert.assertEquals("Hello World", msg.getFragment());
-
             // message should not be stored in inbox
             Assert.assertNull(
                 mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE));
@@ -380,22 +321,15 @@ public class FileIntoCopyTest {
             String filterScriptPattern1 = "require [\"copy\", \"fileinto\"];\n"
                 + "fileinto :copy \"foo\";" + "if header :contains \"Subject\" \"Test\" {\n"
                 + "discard; }";
-
             Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-
             RuleManager.clearCachedRules(account);
-
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
             account.setMailSieveScript(filterScriptPattern1);
-
             String rawReal = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n"
                 + "Subject: Real\n" + "\n" + "Hello World";
-
             RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage(rawReal.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-
             // message should be stored in foo
             Integer item = mbox
                 .getItemIds(null,
@@ -403,7 +337,6 @@ public class FileIntoCopyTest {
                 .getIds(MailItem.Type.MESSAGE).get(0);
             Message msg = mbox.getMessageById(null, item);
             Assert.assertEquals("Hello World", msg.getFragment());
-
             // message should be stored in inbox
             item = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE)
                 .get(0);
