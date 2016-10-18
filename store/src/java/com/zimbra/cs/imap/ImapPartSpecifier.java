@@ -32,7 +32,7 @@ import javax.mail.internet.MimePart;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.common.util.StartOutOfBoundsException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -137,9 +137,9 @@ class ImapPartSpecifier {
     void write(PrintStream ps, OutputStream os, Object obj) throws IOException, BinaryDecodingException, ServiceException {
         InputStream is = null;
         try {
-            Pair<Long, InputStream> contents = getContent(obj);
-            is = contents == null ? null : contents.getSecond();
-            long length = contents == null ? -1 : contents.getFirst();
+            InputStreamWithSize contents = getContent(obj);
+            is = contents == null ? null : contents.stream;
+            long length = contents == null ? -1 : contents.size;
 
             ps.print(this);
             ps.write(' ');
@@ -157,7 +157,7 @@ class ImapPartSpecifier {
                     }
                     if (nul.content == null) {
                         // reload the original InputStream
-                        is = getContent(obj).getSecond();
+                        is = getContent(obj).stream;
                     } else {
                         // use the cached copy
                         is = new ByteArrayInputStream(nul.content);
@@ -179,8 +179,8 @@ class ImapPartSpecifier {
         }
     }
 
-    Pair<Long, InputStream> getContent(Object obj) throws IOException, BinaryDecodingException, ServiceException {
-        Pair<Long, InputStream> contents;
+    InputStreamWithSize getContent(Object obj) throws IOException, BinaryDecodingException, ServiceException {
+        InputStreamWithSize contents;
         if (obj instanceof MimeMessage) {
             contents = getContent((MimeMessage) obj);
         } else if (obj instanceof MailItem) {
@@ -196,8 +196,8 @@ class ImapPartSpecifier {
         if (octetStart >= 0 && contents != null) {
             // if there is a "partial" octet start/length constraint on this
             // part specifier, apply it here
-            InputStream is = contents.getSecond();
-            long statedLength = contents.getFirst();
+            InputStream is = contents.stream;
+            long statedLength = contents.size;
             long realLength = Math.max(0, Math.min(statedLength < 0 ? Integer.MAX_VALUE : statedLength, octetEnd) - octetStart);
             try {
                 int start = octetStart;
@@ -217,7 +217,7 @@ class ImapPartSpecifier {
                 ByteUtil.closeStream(is);
                 throw ioe;
             }
-            contents = new Pair<Long, InputStream>(statedLength < 0 ? -1 : realLength, is);
+            contents = new InputStreamWithSize(is, statedLength < 0 ? -1 : realLength);
         }
         return contents;
     }
@@ -299,7 +299,7 @@ class ImapPartSpecifier {
         return Mime.getMimePart(base, parentPart) == resolved;
     }
 
-    private Pair<Long, InputStream> getContent(MimeMessage msg) throws BinaryDecodingException {
+    private InputStreamWithSize getContent(MimeMessage msg) throws BinaryDecodingException {
         long length = -1;
         InputStream is = null;
 
@@ -390,7 +390,7 @@ class ImapPartSpecifier {
                 return null;
             }
 
-            return new Pair<Long, InputStream>(length, is);
+            return new InputStreamWithSize(is, length);
         } catch (IOException e) {
             ByteUtil.closeStream(is);
             return null;
