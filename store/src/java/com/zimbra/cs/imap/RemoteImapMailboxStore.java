@@ -20,9 +20,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -30,14 +32,18 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.store.Blob;
@@ -108,6 +114,27 @@ public class RemoteImapMailboxStore implements ImapMailboxStore {
     public List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
             throws IOException, ServiceException {
         throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+    }
+
+    @Override
+    public InputStreamWithSize getByImapId(OperationContext octxt, int imapId, String folderId, String resolvedPath)
+    throws ServiceException {
+        AuthToken auth;
+        try {
+            auth = AuthToken.getAuthToken(zMailbox.getAuthToken().getValue());
+        } catch (AuthTokenException ate) {
+            ZimbraLog.imap.error("Problem with auth token", ate);
+            throw ServiceException.AUTH_EXPIRED("Problem creating auth token for use with UserServlet");
+        }
+        HashMap<String, String> params = Maps.newHashMapWithExpectedSize(1);
+        params.put(UserServlet.QP_IMAP_ID, Integer.toString(imapId));
+        UserServlet.HttpInputStream is;
+        try {
+            is = UserServlet.getRemoteContentAsStream(auth, getAccount(), resolvedPath, params);
+            return new InputStreamWithSize(is, (long) is.getContentLength());
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     @Override
