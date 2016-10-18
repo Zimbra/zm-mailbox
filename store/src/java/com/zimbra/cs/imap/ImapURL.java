@@ -40,6 +40,9 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
 
+/**
+ * See https://tools.ietf.org/html/rfc5092 - IMAP URL Scheme
+ */
 final class ImapURL {
     private static class ImapUrlException extends ImapParseException {
         private static final long serialVersionUID = 174398702563521440L;

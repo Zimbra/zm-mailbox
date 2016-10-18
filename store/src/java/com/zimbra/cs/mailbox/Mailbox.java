@@ -7257,6 +7257,11 @@ public class Mailbox implements MailboxStore {
         delete(octxt, new int[] { itemId }, type, null);
     }
 
+    @Override
+    public void deleteFolder(OpContext octxt, String itemId) throws ServiceException {
+        delete((OperationContext) octxt, Integer.parseInt(itemId), MailItem.Type.FOLDER);
+    }
+
     /** Deletes the <tt>MailItem</tt> with the given id.  If there is no such
      *  <tt>MailItem</tt>, nothing happens and no error is generated.  If the
      *  id maps to an existing <tt>MailItem</tt> of an incompatible type,
@@ -8482,6 +8487,12 @@ public class Mailbox implements MailboxStore {
     public void emptyFolder(OperationContext octxt, int folderId, boolean removeSubfolders)
     throws ServiceException {
         emptyFolder(octxt, folderId, false /* removeTopLevelFolder */, removeSubfolders, null /* TargetConstraint */);
+    }
+
+    @Override
+    public void emptyFolder(OpContext octxt, String folderId, boolean removeSubfolders)
+    throws ServiceException {
+        emptyFolder((OperationContext)octxt, Integer.parseInt(folderId), removeSubfolders);
     }
 
     public SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query,
