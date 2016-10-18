@@ -25,6 +25,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -63,6 +64,8 @@ public interface ImapMailboxStore {
     public void deleteMessages(OperationContext octxt, List<Integer> ids);
     public List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
             throws IOException, ServiceException;
+    public InputStreamWithSize getByImapId(OperationContext octxt, int imapId, String folderId, String resolvedPath)
+            throws ServiceException;
     public void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException;
     public int getCurrentMODSEQ(int folderId) throws ServiceException;
     public List<Session> getListeners();
@@ -71,7 +74,7 @@ public interface ImapMailboxStore {
     public int getId();
     public MailboxStore getMailboxStore();
     /** Returns this mailbox's Account. */
-    Account getAccount() throws ServiceException;
+    public Account getAccount() throws ServiceException;
     /** Returns the ID of this mailbox's Account. */
     public String getAccountId();
     public Collection<FolderStore> getVisibleFolders(OperationContext octxt, ImapCredentials credentials,
