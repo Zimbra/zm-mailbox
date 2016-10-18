@@ -1639,7 +1639,7 @@ public class Folder extends MailItem implements FolderStore {
     }
 
     @Override
-    public boolean isFlaggedAsSubscribed() {
+    public boolean isIMAPSubscribed() {
         return isTagged(Flag.FlagInfo.SUBSCRIBED);
     }
 
