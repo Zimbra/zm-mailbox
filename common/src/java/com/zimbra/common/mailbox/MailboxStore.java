@@ -36,6 +36,8 @@ public interface MailboxStore {
             List<Integer> idlist) throws ServiceException;
     public void createFolderForMsgs(OpContext octxt, String path) throws ServiceException;
     public void renameFolder(OpContext octxt, FolderStore folder, String path) throws ServiceException;
+    public void deleteFolder(OpContext octxt, String itemId) throws ServiceException;
+    public void emptyFolder(OpContext octxt, String folderId, boolean removeSubfolders) throws ServiceException;
     public void flagFolderAsSubscribed(OpContext ctxt, FolderStore folder) throws ServiceException;
     public void flagFolderAsUnsubscribed(OpContext ctxt, FolderStore folder) throws ServiceException;
     public List<FolderStore> getUserRootSubfolderHierarchy(OpContext ctxt) throws ServiceException;

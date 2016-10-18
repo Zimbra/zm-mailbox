@@ -32,6 +32,8 @@ public interface FolderStore {
     public String getFolderIdAsString();
     public int getFolderIdInOwnerMailbox();
     public boolean isHidden();
+    public boolean isDeletable();
+    public boolean hasSubfolders();
     public boolean isInboxFolder();
     public boolean isSearchFolder();
     public boolean isContactsFolder();
