@@ -41,9 +41,7 @@ import javax.mail.internet.MimePart;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
-//import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.jsieve.mail.ActionKeep;
-//import org.apache.jsieve.mail.ActionRedirect;
 import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.MailUtils;
@@ -457,7 +455,6 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             if (msg != null) {
                 filedIntoPaths.add(folderPath);
                 addedMessageIds.add(new ItemId(msg));
-               // inboxMsgId = msg.getId();
             }
         }
         return msg;
@@ -818,30 +815,4 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             ctxt.setIncomingBlob(blob);
         }
     }
-
-    /*public boolean addedToInbox() {
-        String folderPath;
-        try {
-            folderPath = handler.getDefaultFolderPath();
-            if(filedIntoPaths.contains(folderPath))
-                return true;
-            else
-                return false;
-        } catch (ServiceException e) {
-            return false;
-        }
-    }
-
-    public void discard() throws ServiceException {
-            mailbox.delete(null, inboxMsgId, MailItem.Type.MESSAGE);
-            filedIntoPaths.remove(handler.getDefaultFolderPath());
-            ItemId toRemove = null;
-            for(ItemId id : addedMessageIds) {
-                if(id.getId() == inboxMsgId) {
-                    toRemove = id;
-                    break;
-                }
-            }
-            addedMessageIds.remove(toRemove);
-    }*/
 }
