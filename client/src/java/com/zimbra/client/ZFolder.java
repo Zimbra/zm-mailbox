@@ -495,6 +495,11 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     }
 
     @Override
+    public boolean isDeletable() {
+        throw new UnsupportedOperationException("ZFolder method not supported yet");
+    }
+
+    @Override
     public boolean isFlaggedAsSyncFolder() {
         throw new UnsupportedOperationException("ZFolder method not supported yet");
     }
@@ -753,6 +758,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         return hasFlags() && mFlags.indexOf(Flag.excludeFreeBusyInfo.getFlagChar()) != -1;
     }
 
+    @Override
     public boolean isIMAPSubscribed() {
         return hasFlags() && mFlags.indexOf(Flag.imapSubscribed.getFlagChar()) != -1;
     }
@@ -819,6 +825,12 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
      */
     public List<ZFolder> getSubFolders() {
         return mSubFolders;
+    }
+
+    /** Returns whether the folder contains any subfolders. */
+    @Override
+    public boolean hasSubfolders() {
+        return (mSubFolders != null && !mSubFolders.isEmpty());
     }
 
     /**
