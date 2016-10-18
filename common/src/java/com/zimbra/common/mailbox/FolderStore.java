@@ -38,7 +38,7 @@ public interface FolderStore {
     public boolean isSearchFolder();
     public boolean isContactsFolder();
     public boolean isChatsFolder();
-    public boolean isFlaggedAsSyncFolder();
+    public boolean isSyncFolder();
     public boolean isIMAPSubscribed();
     public boolean inTrash();
     public boolean isVisibleInImap(boolean displayMailFoldersOnly);
