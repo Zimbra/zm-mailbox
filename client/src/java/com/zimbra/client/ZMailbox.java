@@ -53,11 +53,11 @@ import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.dom4j.QName;
 import org.json.JSONException;
-import org.python.google.common.collect.Lists;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder.Color;
 import com.zimbra.client.ZGrant.GranteeType;
 import com.zimbra.client.ZInvite.ZTimeZone;
