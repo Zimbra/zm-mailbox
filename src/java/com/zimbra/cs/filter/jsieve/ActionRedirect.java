@@ -21,7 +21,7 @@ public class ActionRedirect extends org.apache.jsieve.mail.ActionRedirect {
     private boolean copy;
 
     public ActionRedirect(String address) {
-        super(address);
+        this(address, false);
     }
 
     public ActionRedirect(String address, boolean copy) {
