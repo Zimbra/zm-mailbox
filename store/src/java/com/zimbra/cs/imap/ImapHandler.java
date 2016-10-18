@@ -1778,7 +1778,7 @@ abstract class ImapHandler {
                     throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
                 }
                 FolderStore folder = path.getFolder();
-                if (!folder.isFlaggedAsSubscribed()) {
+                if (!folder.isIMAPSubscribed()) {
                     path.getOwnerMailbox().flagFolderAsSubscribed(getContext(), folder);
                 }
             } else {
@@ -1811,7 +1811,7 @@ abstract class ImapHandler {
             if (path.belongsTo(credentials)) {
                 try {
                     FolderStore folder = path.getFolder();
-                    if (folder.isFlaggedAsSubscribed()) {
+                    if (folder.isIMAPSubscribed()) {
                         path.getOwnerMailbox().flagFolderAsUnsubscribed(getContext(), folder);
                     }
                 } catch (NoSuchItemException e) {
@@ -2190,16 +2190,11 @@ abstract class ImapHandler {
 
     private boolean isPathSubscribed(ImapPath path, Set<String> subscriptions) throws ServiceException {
         if (path.belongsTo(credentials)) {
-            Object folderObj = path.getFolder();
-            if (folderObj instanceof Folder) {
-                Folder folder = (Folder) path.getFolder();
-                return folder.isTagged(Flag.FlagInfo.SUBSCRIBED);
-            } else if (folderObj instanceof ZFolder) {
-                ZFolder folder = (ZFolder) path.getFolder();
-                return folder.isIMAPSubscribed();
+            FolderStore folderStore = path.getFolder();;
+            if (folderStore != null) {
+            	return folderStore.isIMAPSubscribed();
             } else {
-                ZimbraLog.imap.info("Unexpected class %s for folder for path %s",
-                        folderObj.getClass().getName(), path.asZimbraPath());
+                ZimbraLog.imap.info("Null FolderStore for path %s", path.asZimbraPath());
             }
         } else if (subscriptions != null && !subscriptions.isEmpty()) {
             for (String sub : subscriptions) {
@@ -2238,7 +2233,7 @@ abstract class ImapHandler {
                         if ((isMailFolders) && (folder.isChatsFolder() || (folder.getName().equals ("Chats")))) {
                                 continue;
                         }
-                        if (folder.isFlaggedAsSubscribed()) {
+                        if (folder.isIMAPSubscribed()) {
                             checkSubscription(new SubscribedImapPath(
                                     new ImapPath(null, folder, credentials)), pattern, childPattern, hits);
                         }
