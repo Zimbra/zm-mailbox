@@ -161,6 +161,7 @@ import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
+import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
@@ -5393,10 +5394,24 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void updateLastLogon(Account acct) throws ServiceException {
+        if (EphemeralStore.getFactory() instanceof LdapEphemeralStore.Factory) {
+            Config config = Provisioning.getInstance().getConfig();
+            long freq = config.getLastLogonTimestampFrequency();
+            // never update timestamp if frequency is 0
+            if (freq == 0) {
+                return;
+            }
+            Date lastLogon = acct.getLastLogonTimestamp();
+            // don't update if duration specified in zimbraLastLogonTimestampFrequency
+            // hasn't passed since the last timestamp was logged
+            if (lastLogon != null && (lastLogon.getTime() + freq > System.currentTimeMillis())) {
+                return;
+            }
+        }
         try {
             acct.setLastLogonTimestamp(new Date());
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("updating zimbraLastLogonTimestamp", e);
+            ZimbraLog.account.warn("error updating zimbraLastLogonTimestamp", e);
         }
     }
 
