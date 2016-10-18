@@ -55,7 +55,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
@@ -169,7 +169,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
             return item.getSize();
         }
         // FIXME: need to generate the representation of the item to do this correctly...
-        return getContent(item).getFirst();
+        return getContent(item).size;
     }
 
 
@@ -210,11 +210,12 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         GMT_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
-    static final Pair<Long, InputStream> EMPTY_CONTENT = new Pair<Long, InputStream>(0L, new SharedByteArrayInputStream(new byte[0]));
+    static final InputStreamWithSize EMPTY_CONTENT =
+            new InputStreamWithSize(new SharedByteArrayInputStream(new byte[0]), 0L);
 
-    static Pair<Long, InputStream> getContent(MailItem item) throws ServiceException {
+    static InputStreamWithSize getContent(MailItem item) throws ServiceException {
         if (item instanceof Message) {
-            return new Pair<Long, InputStream>(item.getSize(), item.getContentStream());
+            return new InputStreamWithSize(item.getContentStream(),item.getSize());
         } else if (item instanceof Contact) {
             try {
                 VCard vcard = VCard.formatContact((Contact) item);
@@ -231,7 +232,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                 baos.write(header.toString().getBytes(MimeConstants.P_CHARSET_ASCII));
                 baos.write(ImapHandler.LINE_SEPARATOR_BYTES);
                 baos.write(vcard.getFormatted().getBytes(MimeConstants.P_CHARSET_UTF8));
-                return new Pair<Long, InputStream>((long) baos.size(), new SharedByteArrayInputStream(baos.toByteArray()));
+                return new InputStreamWithSize(new SharedByteArrayInputStream(baos.toByteArray()), (long)baos.size());
             } catch (Exception e) {
                 throw ServiceException.FAILURE("problems serializing contact " + item.getId(), e);
             }
@@ -245,7 +246,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
             return ((Message) item).getMimeMessage(false);
         }
 
-        InputStream is = getContent(item).getSecond();
+        InputStream is = getContent(item).stream;
         try {
             return new Mime.FixedMimeMessage(JMSession.getSession(), is);
         } catch (MessagingException e) {
