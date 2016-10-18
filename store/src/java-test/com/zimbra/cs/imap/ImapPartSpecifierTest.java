@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.imap.ImapPartSpecifier.BinaryDecodingException;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -47,12 +47,12 @@ public class ImapPartSpecifierTest {
 
     private void checkPartial(MimeMessage mm, String part, String modifier, int start, int count, String startsWith, String endsWith) throws IOException, BinaryDecodingException, ServiceException {
         ImapPartSpecifier pspec = new ImapPartSpecifier("BODY", part, modifier, start, count);
-        Pair<Long, InputStream> content = pspec.getContent(mm);
+        InputStreamWithSize content = pspec.getContent(mm);
         if (startsWith == null) {
             Assert.assertNull(pspec.getSectionSpec() + " is null", content);
         } else {
-            Assert.assertNotNull(pspec.getSectionSpec() + " is not null", content.getSecond());
-            String data = new String(ByteUtil.getContent(content.getSecond(), content.getFirst().intValue())).trim();
+            Assert.assertNotNull(pspec.getSectionSpec() + " is not null", content.stream);
+            String data = new String(ByteUtil.getContent(content.stream, content.size.intValue())).trim();
             if (startsWith.length() > 0) {
                 Assert.assertTrue(pspec.getSectionSpec() + " start matches", data.startsWith(startsWith));
             } else {
