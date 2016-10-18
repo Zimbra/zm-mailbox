@@ -507,6 +507,7 @@ public class Folder extends MailItem implements FolderStore {
     }
 
     /** Returns whether the folder contains any subfolders. */
+    @Override
     public boolean hasSubfolders() {
         return (subfolders != null && !subfolders.isEmpty());
     }
