@@ -500,11 +500,6 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     }
 
     @Override
-    public boolean isFlaggedAsSubscribed() {
-        throw new UnsupportedOperationException("ZFolder method not supported yet");
-    }
-
-    @Override
     public int getImapRECENT() throws ServiceException {
         ZimbraLog.mailbox.info("ZFolder.getImapRECENT always returns 0 currently");
         return 0;
