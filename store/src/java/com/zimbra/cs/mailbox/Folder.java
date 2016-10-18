@@ -1634,7 +1634,7 @@ public class Folder extends MailItem implements FolderStore {
     }
 
     @Override
-    public boolean isFlaggedAsSyncFolder() {
+    public boolean isSyncFolder() {
         return isTagged(Flag.FlagInfo.SYNCFOLDER);
     }
 
