@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Pattern;
+
 import javax.mail.Address;
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -37,6 +38,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.sun.mail.smtp.SMTPMessage;
@@ -956,6 +958,5 @@ public final class FilterUtil {
     private static boolean isSieveMatcherSpecialChar(char ch) {
         return (ch == '*' || ch == '?' || ch == '\\');
     }
-    
 }
 
