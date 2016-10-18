@@ -1,7 +1,17 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * Zimbra Collaboration Suite, Network Edition.
- * Copyright (C) 2013, 2014 Zimbra, Inc.  All Rights Reserved.
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2016 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
 
@@ -23,10 +33,6 @@ import org.apache.jsieve.mail.MailAdapter;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
-/**
- * @author zimbra
- *
- */
 public class VariableLog extends Log {
 	private Map<String, String> variables = new HashMap<String, String>();
 	private List<String> matchedValues = new ArrayList<String>();
