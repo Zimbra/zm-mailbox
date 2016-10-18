@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
@@ -116,6 +117,16 @@ public class LocalImapMailboxStore implements ImapMailboxStore {
             throws IOException, ServiceException {
         return  mailbox.imapCopy(octxt, itemIds, type, folderId);
 
+    }
+
+    @Override
+    public InputStreamWithSize getByImapId(OperationContext octxt, int imapId, String folderId, String resolvedPath)
+    throws ServiceException {
+        MailItem mitem = mailbox.getItemByImapId(octxt, imapId, Integer.parseInt(folderId));
+        if ((null == mitem) || (!ImapMessage.SUPPORTED_TYPES.contains(mitem.getType()))) {
+            return null;
+        }
+        return ImapMessage.getContent(mitem);
     }
 
     @Override

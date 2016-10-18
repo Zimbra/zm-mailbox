@@ -333,7 +333,7 @@ final class AppendMessage {
             if (literal != null) {
                 return literal.getInputStream();
             } else {
-                return url.getContentAsStream(handler, handler.getCredentials(), tag).getSecond();
+                return url.getContentAsStream(handler, handler.getCredentials(), tag).stream;
             }
         }
 
