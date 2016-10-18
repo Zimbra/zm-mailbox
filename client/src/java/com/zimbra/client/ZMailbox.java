@@ -3225,6 +3225,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return doAction(folderAction("delete", ids));
     }
 
+    @Override
+    public void deleteFolder(OpContext octxt, String itemId) throws ServiceException {
+        deleteFolder(itemId);
+    }
+
     /** move the folder to the Trash, marking all contents as read and
      * renaming the folder if a folder by that name is already present in the Trash
      * @param ids ids to delete
@@ -3254,6 +3259,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZActionResult emptyFolder(String ids, boolean subfolders) throws ServiceException {
         return doAction(folderAction("empty", ids).addAttribute(MailConstants.A_RECURSIVE, subfolders));
+    }
+
+    @Override
+    public void emptyFolder(OpContext octxt, String folderId, boolean removeSubfolders)
+    throws ServiceException {
+        emptyFolder(folderId, removeSubfolders);
     }
 
     /** empties the dumpster
