@@ -3446,6 +3446,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return doAction(action);
     }
 
+    @Override
+    public void modifyFolderRevokeGrant(OpContext ctxt, String folderId, String granteeId) throws ServiceException
+    {
+        modifyFolderRevokeGrant(folderId, granteeId);
+    }
+
     /**
      * set the synchronization url on the folder to {target-url}, empty the folder, and
      * synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean}
