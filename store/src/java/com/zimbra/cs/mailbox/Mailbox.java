@@ -7971,6 +7971,12 @@ public class Mailbox implements MailboxStore {
         revokeAccess(octxt, false, itemId, grantee);
     }
 
+    @Override
+    public void modifyFolderRevokeGrant(OpContext ctxt, String folderId, String granteeId) throws ServiceException
+    {
+        revokeAccess((OperationContext)ctxt, Integer.parseInt(folderId), granteeId);
+    }
+
     public void revokeAccess(OperationContext octxt, boolean dueToExpiry, int itemId, String grantee)
     throws ServiceException {
         RevokeAccess redoPlayer = new RevokeAccess(dueToExpiry, mId, itemId, grantee);
