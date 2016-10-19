@@ -25,9 +25,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONException;
+import org.python.google.common.collect.Lists;
 
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyFolderEvent;
+import com.zimbra.common.mailbox.ACLGrant;
 import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
@@ -814,6 +816,14 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
      */
     public List<ZGrant> getGrants() {
         return mGrants;
+    }
+
+    /**
+     * return grants or empty list if no grants
+     */
+    @Override
+    public List<ACLGrant> getACLGrants() {
+        return Lists.newArrayList(mGrants);
     }
 
     /**
