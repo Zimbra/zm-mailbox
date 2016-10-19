@@ -194,9 +194,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     public static final class Fetch {
         public static final Fetch none              = new Fetch("none");
-        public static final Fetch first			    = new Fetch("first");
-        public static final Fetch hits 			    = new Fetch("hits");
-        public static final Fetch all 			    = new Fetch("all");
+        public static final Fetch first                = new Fetch("first");
+        public static final Fetch hits                 = new Fetch("hits");
+        public static final Fetch all                 = new Fetch("all");
         public static final Fetch unread            = new Fetch("unread");
         public static final Fetch u1                = new Fetch("u1");
         public static final Fetch first_msg         = new Fetch("!");
@@ -5630,13 +5630,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         EndSessionRequest logout = new EndSessionRequest();
         logout.setLogOff(true);
         try {
-			invokeJaxb(logout);
-		} catch (ServiceException e) {
-		    //do not thrown an exception if the authtoken has already expired as when user us redirected to logout tag when authtoken expires.
-		    if(!ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
-		        throw ZClientException.CLIENT_ERROR("Failed to log out", e);
-		    }
-		}
+            invokeJaxb(logout);
+        } catch (ServiceException e) {
+            //do not thrown an exception if the authtoken has already expired as when user us redirected to logout tag when authtoken expires.
+            if(!ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
+                throw ZClientException.CLIENT_ERROR("Failed to log out", e);
+            }
+        }
     }
     private static final int ADMIN_PORT = LC.zimbra_admin_service_port.intValue();
 
@@ -5769,7 +5769,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         ItemActionRequest req = new ItemActionRequest(action);
         return invokeJaxb(req);
     }
-    
+
     /**
      * Copies the items identified in {@link idlist} to folder {@link targetFolder}
      * @param idlist - list of item ids for items to copy
@@ -5785,21 +5785,21 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @Override
     public void flagFolderAsSubscribed(OpContext ctxt, FolderStore folder) throws ServiceException {
         if (folder instanceof ZFolder && !folder.isIMAPSubscribed()) {
-        	ZFolder zFolder = (ZFolder)folder;
-        	String flags = zFolder.getFlags() + String.valueOf(ZFolder.Flag.imapSubscribed.getFlagChar());
-        	updateFolder(zFolder.getFolderIdAsString(), null, null, null, null, flags, null);
+            ZFolder zFolder = (ZFolder)folder;
+            String flags = zFolder.getFlags() + String.valueOf(ZFolder.Flag.imapSubscribed.getFlagChar());
+            updateFolder(zFolder.getFolderIdAsString(), null, null, null, null, flags, null);
         }
     }
 
     @Override
     public void flagFolderAsUnsubscribed(OpContext ctxt, FolderStore folder) throws ServiceException {
         if (folder instanceof ZFolder && folder.isIMAPSubscribed()) {
-        	ZFolder zFolder = (ZFolder)folder;
-        	String flags = zFolder.getFlags().replace(
-        		String.valueOf(ZFolder.Flag.imapSubscribed.getFlagChar()),
-        		""
-        	);
-        	updateFolder(zFolder.getFolderIdAsString(), null, null, null, null, flags, null);
+            ZFolder zFolder = (ZFolder)folder;
+            String flags = zFolder.getFlags().replace(
+                String.valueOf(ZFolder.Flag.imapSubscribed.getFlagChar()),
+                ""
+            );
+            updateFolder(zFolder.getFolderIdAsString(), null, null, null, null, flags, null);
         }
     }
 
