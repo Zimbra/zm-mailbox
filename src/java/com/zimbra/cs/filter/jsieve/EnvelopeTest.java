@@ -47,6 +47,7 @@ import org.apache.jsieve.tests.optional.Envelope;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
@@ -65,6 +66,9 @@ public class EnvelopeTest extends Envelope {
      */
     protected boolean executeBasic(MailAdapter mail, Arguments arguments,
             SieveContext context) throws SieveException {
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }
@@ -102,6 +106,9 @@ public class EnvelopeTest extends Envelope {
     private boolean match(MailAdapter mail, String addressPart, String comparator,
             String matchType, String operator, List<String> headerNames,
             List<String> keys, SieveContext context) throws SieveException {
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }

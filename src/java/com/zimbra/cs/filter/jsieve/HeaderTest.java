@@ -53,6 +53,7 @@ import org.apache.jsieve.mail.SieveMailException;
 import org.apache.jsieve.tests.Header;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
@@ -188,26 +189,26 @@ public class HeaderTest extends Header {
     }
 
     /**
-	 * @param keys
-	 * @param mail
-	 * @return
-	 */
-	public static List<String> replaceVariables(List<String> keys, MailAdapter mail) {
-		List<String> replacedVariables = new ArrayList<String>();
-		if (!(mail instanceof ZimbraMailAdapter)) {
-		    return replacedVariables;
-		}
-		ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
-		for (String key : keys) {
-			String temp = FilterUtil.replaceVariables(zma.getVariables(), zma.getMatchedValues(),
-					key);
-			replacedVariables.add(temp);
-		}
-		
-		return replacedVariables;
-	}
+     * @param keys
+     * @param mail
+     * @return
+     */
+    public static List<String> replaceVariables(List<String> keys, MailAdapter mail) {
+        List<String> replacedVariables = new ArrayList<String>();
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return replacedVariables;
+        }
+        ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
+        for (String key : keys) {
+            String temp = FilterUtil.replaceVariables(zma.getVariables(), zma.getMatchedValues(),
+                    key);
+            replacedVariables.add(temp);
+        }
+        
+        return replacedVariables;
+    }
 
-	/**
+    /**
      * Compares the header field with operator sign
      */
     protected boolean match(MailAdapter mail, String comparator, String matchType,
@@ -281,66 +282,69 @@ public class HeaderTest extends Header {
     }
     
     protected boolean match(MailAdapter mail, String comparator, String matchType, List headerNames, List keys,
-			SieveContext context) throws SieveException {
-		if (!(mail instanceof ZimbraMailAdapter)) {
-			return false;
-		}
-		
-		ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
-		if (matchType.equals(MatchTypeTags.MATCHES_TAG)) {
-			evaluateVarExp(zma, headerNames, keys);
-		}
-		List<String> newKeys = new ArrayList<String>();
-		for (Object key : keys) {
-			String keyT = (String) key;
-			if (keyT.startsWith("$")) {
-				keyT = zma.getVariable(keyT.substring(2, keyT.indexOf("}")));
-				newKeys.add(keyT);
-			} else {
-				newKeys.add(keyT);
-			}
-		}
+            SieveContext context) throws SieveException {
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return false;
+        }
+        
+        ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
+        if (matchType.equals(MatchTypeTags.MATCHES_TAG)) {
+            evaluateVarExp(zma, headerNames, keys);
+        }
+        List<String> newKeys = new ArrayList<String>();
+        for (Object key : keys) {
+            String keyT = (String) key;
+            if (keyT.startsWith("$")) {
+                keyT = zma.getVariable(keyT.substring(2, keyT.indexOf("}")));
+                newKeys.add(keyT);
+            } else {
+                newKeys.add(keyT);
+            }
+        }
 
-		// Iterate over the header names looking for a match
-		boolean isMatched = false;
-		Iterator<String> headerNamesIter = headerNames.iterator();
-		while (!isMatched && headerNamesIter.hasNext()) {
-			Set<String> values = zma.getMatchingHeaderFromAllParts(headerNamesIter.next());
-			isMatched = match(comparator, matchType, new ArrayList<String>(values), newKeys, context);
-		}
-		return isMatched;
-	}
-	
-	public static void evaluateVarExp(ZimbraMailAdapter mailAdapter, List headerNames, List keys) throws SieveMailException, SievePatternException {
-		
-		List<String> varValues = new ArrayList<String>();
+        // Iterate over the header names looking for a match
+        boolean isMatched = false;
+        Iterator<String> headerNamesIter = headerNames.iterator();
+        while (!isMatched && headerNamesIter.hasNext()) {
+            Set<String> values = zma.getMatchingHeaderFromAllParts(headerNamesIter.next());
+            isMatched = match(comparator, matchType, new ArrayList<String>(values), newKeys, context);
+        }
+        return isMatched;
+    }
+    
+    public static void evaluateVarExp(ZimbraMailAdapter mailAdapter, List headerNames, List keys) throws SieveMailException, SievePatternException {
+        
+        List<String> varValues = new ArrayList<String>();
 
-		for (Object headerName : headerNames) {
-			String hn = (String) headerName;
-			List<String> values = mailAdapter.getMatchingHeader(hn);
-			for (String sourceStr : values) {
-				for (Object key : keys) {
-					String keyStr = ((String) key);
-					if (SetVariable.isVariablesExtAvailable(mailAdapter)) {
-						keyStr = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), keyStr);
-					}
-					String regex = FilterUtil.sieveToJavaRegex(keyStr);
-					Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(sourceStr);
-					if (matcher.find() && matcher.groupCount() > 0) {
-						int grpCount = matcher.groupCount();
-						for (int i = 0; i<=grpCount; ++i) {
-							String matchGrp =  matcher.group(i);
-							if (!StringUtils.isEmpty(matchGrp.trim())) {
-								varValues.add(matchGrp);
-								ZimbraLog.filter.debug("The matched variable are: %s", matchGrp );
-							}
-						}
-					}
-				} 
-			}	
-		}
-		
-		ZimbraLog.filter.debug("The matched variables are: %s", varValues );
-		mailAdapter.setMatchedValues(varValues);
-	}
+        for (Object headerName : headerNames) {
+            String hn = (String) headerName;
+            List<String> values = mailAdapter.getMatchingHeader(hn);
+            for (String sourceStr : values) {
+                for (Object key : keys) {
+                    String keyStr = ((String) key);
+                    if (SetVariable.isVariablesExtAvailable(mailAdapter)) {
+                        keyStr = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), keyStr);
+                    }
+                    String regex = FilterUtil.sieveToJavaRegex(keyStr);
+                    Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(sourceStr);
+                    if (matcher.find() && matcher.groupCount() > 0) {
+                        int grpCount = matcher.groupCount();
+                        for (int i = 0; i<=grpCount; ++i) {
+                            String matchGrp =  matcher.group(i);
+                            if (!StringUtils.isEmpty(matchGrp.trim())) {
+                                varValues.add(matchGrp);
+                                ZimbraLog.filter.debug("The matched variable are: %s", matchGrp );
+                            }
+                        }
+                    }
+                } 
+            }    
+        }
+        
+        ZimbraLog.filter.debug("The matched variables are: %s", varValues );
+        mailAdapter.setMatchedValues(varValues);
+    }
 }

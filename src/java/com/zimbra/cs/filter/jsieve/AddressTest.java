@@ -42,6 +42,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.Address;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
@@ -62,6 +63,9 @@ public class AddressTest extends Address {
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments arguments,
             SieveContext context) throws SieveException {
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
 
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;

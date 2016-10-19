@@ -27,6 +27,7 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.Header;
 
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 /**
@@ -40,6 +41,9 @@ public class MimeHeaderTest extends Header {
     protected boolean match(MailAdapter mail, String comparator,
                             String matchType, List headerNames, List keys, SieveContext context)
     throws SieveException {
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }
