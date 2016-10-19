@@ -1238,4 +1238,23 @@ public final class MailConstants {
     public static final String A_SESSION = "session";
 
     public static final String A_ACTION = "action";
+    
+    public static final String OP_TAG = "tag";
+    public static final String OP_FLAG = "flag";
+    public static final String OP_PRIORITY = "priority";
+    public static final String OP_READ = "read";
+    public static final String OP_COLOR = "color";
+    public static final String OP_HARD_DELETE = "delete";
+    public static final String OP_RECOVER = "recover";  // recover by copying then deleting from dumpster
+    public static final String OP_DUMPSTER_DELETE = "dumpsterdelete";  // delete from dumpster
+    public static final String OP_MOVE = "move";
+    public static final String OP_COPY = "copy";
+    public static final String OP_SPAM = "spam";
+    public static final String OP_TRASH = "trash";
+    public static final String OP_RENAME = "rename";
+    public static final String OP_UPDATE = "update";
+    public static final String OP_LOCK = "lock";
+    public static final String OP_UNLOCK = "unlock";
+    public static final String OP_INHERIT = "inherit";
+    public static final String OP_MUTE = "mute";
 }
