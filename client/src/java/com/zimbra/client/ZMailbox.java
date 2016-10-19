@@ -158,8 +158,11 @@ import com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsResponse;
+import com.zimbra.soap.mail.message.ItemActionRequest;
+import com.zimbra.soap.mail.message.ItemActionResponse;
 import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
 import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
+import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.ImportContact;
@@ -5745,16 +5748,30 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return mTransport;
     }
 
+    public ItemActionResponse copyItemAction(int targetFolder,
+            List<Integer> idlist)
+    throws ServiceException {
+        StringBuilder sb = new StringBuilder();
+        for(Integer i : idlist) {
+            sb.append(i.toString()).append(",");
+        }
+        String ids = sb.deleteCharAt(sb.length() - 1).toString();
+        ActionSelector action = ActionSelector.createForIdsAndOperation(ids, MailConstants.OP_COPY);
+        action.setFolder(Integer.toString(targetFolder));
+        ItemActionRequest req = new ItemActionRequest(action);
+        return invokeJaxb(req);
+    }
+    
     /**
      * Copies the items identified in {@link idlist} to folder {@link targetFolder}
      * @param idlist - list of item ids for items to copy
      * @param targetFolder - Destination folder
      */
     @Override
-    public List<ItemIdentifier> copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
+    public void copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
             List<Integer> idlist)
     throws ServiceException {
-        throw new UnsupportedOperationException("ZMailbox does not support copyItemAction yet");
+        copyItemAction(targetFolder.id, idlist);
     }
 
     @Override
