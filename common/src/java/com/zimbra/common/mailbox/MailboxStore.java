@@ -32,7 +32,7 @@ public interface MailboxStore {
      * @param idlist - list of item ids for items to copy
      * @param targetFolder - Destination folder
      */
-    public List<ItemIdentifier> copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
+    public void copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
             List<Integer> idlist) throws ServiceException;
     public void createFolderForMsgs(OpContext octxt, String path) throws ServiceException;
     public void renameFolder(OpContext octxt, FolderStore folder, String path) throws ServiceException;
