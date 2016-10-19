@@ -37,6 +37,13 @@ public class CertificateInfo {
      * @zm-api-field-tag subjectDN
      * @zm-api-field-description details of the subject (The person, or entity identified.)
      */
+    @XmlElement(name=SmimeConstants.E_EMAIL_ADDR, required=true)
+    private String emailAddr;
+
+    /**
+     * @zm-api-field-tag subjectDN
+     * @zm-api-field-description details of the subject (The person, or entity identified.)
+     */
     @XmlElement(name=SmimeConstants.E_SUBJECT_DN, required=true)
     private String subjectDN;
 
@@ -117,6 +124,14 @@ public class CertificateInfo {
         this.defaultCert = ZmBoolean.fromBool(defaultCert, false);
     }
 
+    public String getEmailAddr() {
+        return emailAddr;
+    }
+
+    public void setEmailAddr(String emailAddr) {
+        this.emailAddr = emailAddr;
+    }
+
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper.add("pubCertId", pubCertId)
             .add("pvtKeyId", pvtKeyId)
@@ -124,7 +139,8 @@ public class CertificateInfo {
             .add("subjectDn", subjectDN)
             .add("issuerDn", issuerDN)
             .add("signature", signature)
-            .add("validity", validity);
+            .add("validity", validity)
+            .add("emailAddr", emailAddr);
     }
 
     @Override
