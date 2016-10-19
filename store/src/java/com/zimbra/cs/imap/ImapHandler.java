@@ -50,8 +50,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.WellKnownTimeZones;
@@ -87,7 +85,6 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -1652,14 +1649,13 @@ abstract class ImapHandler {
                 credentials.hideFolder(path);
                 // even pretend-deleting the folder also unsubscribes from it...
                 credentials.unsubscribe(path);
-            } else if (mboxStore instanceof Mailbox) {
-                Mailbox mbox = (Mailbox) mboxStore;
-                Folder folder = (Folder) path.getFolder();
+            } else if (null != mboxStore) {
+                FolderStore folder = path.getFolder();
                 if (!folder.isDeletable()) {
                     throw ImapServiceException.CANNOT_DELETE_SYSTEM_FOLDER(folder.getPath());
                 }
                 if (!folder.hasSubfolders()) {
-                    mbox.delete(getContext(), folder.getId(), MailItem.Type.FOLDER);
+                    mboxStore.deleteFolder(getContext(), folder.getFolderIdAsString());
                     // deleting the folder also unsubscribes from it...
                     credentials.unsubscribe(path);
                 } else {
@@ -1667,19 +1663,8 @@ abstract class ImapHandler {
                     //         names and does not have the \Noselect mailbox name attribute.
                     //         In this case, all messages in that mailbox are removed, and the
                     //         name will acquire the \Noselect mailbox name attribute."
-                    mbox.emptyFolder(getContext(), folder.getId(), false);
+                    mboxStore.emptyFolder(getContext(), folder.getFolderIdAsString(), false);
                     // FIXME: add \Deleted flag to folder
-                }
-            } else if (mboxStore instanceof ZMailbox) {
-                ZMailbox zmbx = (ZMailbox) mboxStore;
-                ZFolder zfolder = (ZFolder) path.getFolder();
-
-                if (zfolder.getSubFolders().isEmpty()) {
-                    zmbx.deleteFolder(zfolder.getId());
-                    // deleting the folder also unsubscribes from it...
-                    credentials.unsubscribe(path);
-                } else {
-                    zmbx.emptyFolder(zfolder.getId(), false);
                 }
             } else {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
@@ -3144,7 +3129,7 @@ abstract class ImapHandler {
 
         boolean changed = false;
         long checkpoint = System.currentTimeMillis();
-        Mailbox selectedMailbox = (Mailbox) selectedFolder.getMailbox();
+        MailboxStore selectedMailbox = selectedFolder.getMailbox();
         for (int i = 1, max = i4folder.getSize(); i <= max; i++) {
             ImapMessage i4msg = i4folder.getBySequence(i);
             if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.BITMASK_DELETED) > 0) {
@@ -3157,7 +3142,7 @@ abstract class ImapHandler {
             if (ids.size() >= (i == max ? 1 : SUGGESTED_DELETE_BATCH_SIZE)) {
                 List<Integer> nonExistingItems = new ArrayList<Integer>();
                 ZimbraLog.imap.debug("  ** deleting: %s", ids);
-                selectedMailbox.delete(getContext(), ArrayUtil.toIntArray(ids), MailItem.Type.UNKNOWN, null, nonExistingItems);
+                selectedMailbox.delete(getContext(), ids, nonExistingItems);
                 ids.clear();
                 for (Integer itemId : nonExistingItems) {
                     i4msg = i4folder.getById(itemId);
@@ -3240,8 +3225,10 @@ abstract class ImapHandler {
         int modseq = 0;
 
         try {
-            Mailbox mbox = (Mailbox)i4folder.getMailbox();
-            if (unsorted && i4search.canBeRunLocally()) {
+            MailboxStore mboxStore = i4folder.getMailbox();
+            // TODO any way this can be optimized for non-Mailbox MailboxStore?
+            if (unsorted && (mboxStore instanceof Mailbox) && i4search.canBeRunLocally()) {
+                Mailbox mbox = (Mailbox) mboxStore;
                 mbox.lock.lock(false);
                 try {
                     hits = i4search.evaluate(i4folder);
@@ -3274,7 +3261,7 @@ abstract class ImapHandler {
             if (saveResults) {
                 i4folder.saveSearchResults(new ImapMessageSet());
             }
-            ZimbraLog.imap.warn(command + " failed", e);
+            ZimbraLog.imap.warn("%s failed", command, e);
             sendNO(tag, command + " failed");
             return true;
         }
