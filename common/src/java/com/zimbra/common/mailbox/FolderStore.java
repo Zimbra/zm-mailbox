@@ -16,6 +16,8 @@
  */
 package com.zimbra.common.mailbox;
 
+import java.util.List;
+
 import com.zimbra.common.service.ServiceException;
 
 public interface FolderStore {
@@ -42,6 +44,7 @@ public interface FolderStore {
     public boolean isIMAPSubscribed();
     public boolean inTrash();
     public boolean isVisibleInImap(boolean displayMailFoldersOnly);
+    public List<ACLGrant> getACLGrants();
     public int getUIDValidity();
     /** @return number of items in folder, including IMAP \Deleted item */
     public int getImapMessageCount();
