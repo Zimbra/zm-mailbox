@@ -44,4 +44,16 @@ public interface MailboxStore {
     public void modifyFolderGrant(OpContext ctxt, FolderStore folder, GrantGranteeType granteeType, String granteeId,
             String perms, String args) throws ServiceException;
     public void modifyFolderRevokeGrant(OpContext ctxt, String folderId, String granteeId) throws ServiceException;
+    /**
+     * Delete <tt>MailItem</tt>s with given ids.  If there is no <tt>MailItem</tt> for a given id, that id is ignored.
+     *
+     * @param octxt operation context or {@code null}
+     * @param itemIds item ids
+     * @param nonExistingItems If not null, This gets populated with the item IDs of nonExisting items
+     */
+    public void delete(OpContext octxt, List<Integer> itemIds, List<Integer> nonExistingItems) throws ServiceException;
+    /** Resets the mailbox's "recent message count" to 0.  A message is considered "recent" if:
+     *     (a) it's not a draft or a sent message, and
+     *     (b) it was added since the last write operation associated with any SOAP session. */
+    public void resetRecentMessageCount(OpContext octxt) throws ServiceException;
 }
