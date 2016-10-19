@@ -55,6 +55,9 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("editheader", com.zimbra.cs.filter.jsieve.EditHeader.class.getName());
         mCommandMap.put("addheader", com.zimbra.cs.filter.jsieve.AddHeader.class.getName());
         mCommandMap.put("replaceheader", com.zimbra.cs.filter.jsieve.ReplaceHeader.class.getName());
+        mCommandMap.put("fileinto", com.zimbra.cs.filter.jsieve.FileInto.class.getName());
+        mCommandMap.put("redirect", com.zimbra.cs.filter.jsieve.Redirect.class.getName());
+        mCommandMap.put("copy", com.zimbra.cs.filter.jsieve.Copy.class.getName());
 
         if (isNotifyActionRFCCompliantAvailable()) {
             mCommandMap.put("notify",  com.zimbra.cs.filter.jsieve.NotifyMailto.class.getName());
