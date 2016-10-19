@@ -232,11 +232,11 @@ public class SaveDocument extends DocDocumentHandler {
 
     protected Document createDocument(Doc doc, ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
             Element docElem, InputStream is, int folderId, MailItem.Type type) throws ServiceException {
-        return createDocument(doc, zsc, octxt, mbox, docElem, is, folderId, type, null, null);
+        return createDocument(doc, zsc, octxt, mbox, docElem, is, folderId, type, null, null, true);
     }
 
     protected Document createDocument(Doc doc, ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
-            Element docElem, InputStream is, int folderId, MailItem.Type type, MailItem parent, CustomMetadata custom) throws ServiceException {
+            Element docElem, InputStream is, int folderId, MailItem.Type type, MailItem parent, CustomMetadata custom, boolean index) throws ServiceException {
         Document docItem = null;
         if (doc.name == null || doc.name.trim().equals("")) {
             throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_NAME, null);
@@ -254,7 +254,7 @@ public class SaveDocument extends DocDocumentHandler {
             ParsedDocument pd = new ParsedDocument(is, doc.name, doc.contentType, System.currentTimeMillis(),
                 getAuthor(zsc), doc.description, descEnabled);
 
-            docItem = mbox.createDocument(octxt, folderId, pd, type, Flag.toBitmask(flags), parent, custom);
+            docItem = mbox.createDocument(octxt, folderId, pd, type, Flag.toBitmask(flags), parent, custom, index);
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to create document", e);
         }
