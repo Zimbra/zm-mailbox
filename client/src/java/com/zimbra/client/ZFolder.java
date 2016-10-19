@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONException;
-import org.python.google.common.collect.Lists;
 
+import com.google.common.collect.Lists;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyFolderEvent;
 import com.zimbra.common.mailbox.ACLGrant;
