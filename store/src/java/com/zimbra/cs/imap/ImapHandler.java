@@ -51,13 +51,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZGrant;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ACLGrant;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.mailbox.ItemIdentifier;
@@ -2519,6 +2519,7 @@ abstract class ImapHandler {
         return true;
     }
 
+    // TODO ZMS-135 does this need to work with remote tags (where getMailbox() returns a MailboxStore)?
     private void deleteTags(List<Tag> ltags) {
         if (ltags == null || ltags.isEmpty())
             return;
@@ -2674,6 +2675,35 @@ abstract class ImapHandler {
         return true;
     }
 
+    public final class GranteeIdAndType {
+        public final String id;
+        public final byte type;
+        public GranteeIdAndType(String granteeId, byte typ) {
+            this.id = granteeId;
+            this.type = typ;
+        }
+    }
+
+    GranteeIdAndType getPrincipalGranteeInfo(String principal) throws ServiceException {
+        String granteeId = null;
+        byte granteeType = ACL.GRANTEE_AUTHUSER;
+        if (principal.equals("anyone")) {
+            granteeId = GuestAccount.GUID_AUTHUSER;
+            granteeType = ACL.GRANTEE_AUTHUSER;
+        } else {
+            granteeType = ACL.GRANTEE_USER;
+            NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
+            if (entry == null) {
+                entry = Provisioning.getInstance().get(Key.DistributionListBy.name, principal);
+                granteeType = ACL.GRANTEE_GROUP;
+            }
+            if (entry != null) {
+                granteeId = entry.getId();
+            }
+        }
+        return new GranteeIdAndType(granteeId, granteeType);
+    }
+
     boolean doSETACL(String tag, ImapPath path, String principal, String i4rights, StoreAction action) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED))
             return true;
@@ -2721,53 +2751,29 @@ abstract class ImapHandler {
             }
 
             // figure out who's being granted permissions
-            String granteeId = null;
-            byte granteeType;
-            if (principal.equals("anyone")) {
-                granteeId = GuestAccount.GUID_AUTHUSER;
-                granteeType = ACL.GRANTEE_AUTHUSER;
-            } else {
-                granteeType = ACL.GRANTEE_USER;
-                NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
-                if (entry == null) {
-                    entry = Provisioning.getInstance().get(Key.DistributionListBy.name, principal);
-                    granteeType = ACL.GRANTEE_GROUP;
-                }
-                if (entry != null) {
-                    granteeId = entry.getId();
-                }
-            }
-            if (granteeId == null) {
+            GranteeIdAndType grantee = getPrincipalGranteeInfo(principal);
+            if (grantee.id == null) {
                 ZimbraLog.imap.info("SETACL failed: cannot resolve principal: %s", principal);
                 sendNO(tag, "SETACL failed");
                 return true;
             }
 
             // figure out the rights already granted on the folder
-            short oldRights = 0, newRights;
-            FolderStore folderobj = path.getFolder();
-            if (folderobj instanceof Folder) {
-                ACL acl = ((Folder) folderobj).getEffectiveACL();
-                if (acl != null) {
-                    for (ACL.Grant grant : acl.getGrants()) {
-                        if (granteeId.equalsIgnoreCase(grant.getGranteeId()) || (granteeType == ACL.GRANTEE_AUTHUSER &&
-                                (grant.getGranteeType() == ACL.GRANTEE_AUTHUSER ||
-                                        grant.getGranteeType() == ACL.GRANTEE_PUBLIC))) {
-                            oldRights |= grant.getGrantedRights();
-                        }
-                    }
-                }
-            } else {
-                for (ZGrant zgrant : ((ZFolder) folderobj).getGrants()) {
-                    if (granteeId.equalsIgnoreCase(zgrant.getGranteeId()) || (granteeType == ACL.GRANTEE_AUTHUSER &&
-                            (zgrant.getGranteeType() == ZGrant.GranteeType.all ||
-                                    zgrant.getGranteeType() == ZGrant.GranteeType.pub))) {
-                        oldRights |= ACL.stringToRights(zgrant.getPermissions());
+            short oldRights = 0;
+            FolderStore folderStore = path.getFolder();
+            if (null != folderStore) {
+                for (ACLGrant grant : folderStore.getACLGrants()) {
+                    if (grantee.id.equalsIgnoreCase(grant.getGranteeId()) ||
+                            (   grantee.type == ACL.GRANTEE_AUTHUSER &&
+                                (   grant.getGrantGranteeType() == GrantGranteeType.all ||
+                                     grant.getGrantGranteeType() == GrantGranteeType.pub))) {
+                        oldRights |= ACL.stringToRights(grant.getPermissions());
                     }
                 }
             }
 
             // calculate the new rights we want granted on the folder
+            short newRights;
             if (action == StoreAction.REMOVE) {
                 newRights = (short) (oldRights & ~rights);
             } else if (action == StoreAction.ADD) {
@@ -2779,8 +2785,8 @@ abstract class ImapHandler {
             // and update the folder appropriately, if necessary
             if (newRights != oldRights) {
                 MailboxStore mboxStore = path.getOwnerMailbox();
-                mboxStore.modifyFolderGrant(getContext(), folderobj, GrantGranteeType.fromByte(granteeType), granteeId,
-                    ACL.rightsToString(newRights), null);
+                mboxStore.modifyFolderGrant(getContext(), folderStore, GrantGranteeType.fromByte(grantee.type),
+                        grantee.id, ACL.rightsToString(newRights), null);
             }
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.PERM_DENIED)) {
@@ -2814,42 +2820,22 @@ abstract class ImapHandler {
             }
 
             // figure out whose permissions are being revoked
-            String granteeId = null;
-            if (principal.equals("anyone")) {
-                granteeId = GuestAccount.GUID_AUTHUSER;
-            } else {
-                NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
-                if (entry == null) {
-                    entry = Provisioning.getInstance().get(Key.DistributionListBy.name, principal);
-                }
-                if (entry != null) {
-                    granteeId = entry.getId();
-                }
-            }
-            if (granteeId == null) {
+            GranteeIdAndType grantee = getPrincipalGranteeInfo(principal);
+            if (grantee.id == null) {
                 ZimbraLog.imap.info("DELETEACL failed: cannot resolve principal: %s", principal);
                 sendNO(tag, "DELETEACL failed");
                 return true;
             }
 
             // and revoke the permissions appropriately
-            Object mboxobj = path.getOwnerMailbox();
-            if (mboxobj instanceof Mailbox) {
-                Mailbox mbox = (Mailbox) mboxobj;
-                Folder folder = (Folder) path.getFolder();
-                if (folder.getEffectiveACL() != null) {
-                    mbox.revokeAccess(getContext(), folder.getId(), granteeId);
-                    if (granteeId == GuestAccount.GUID_AUTHUSER) {
-                        mbox.revokeAccess(getContext(), folder.getId(), GuestAccount.GUID_PUBLIC);
-                    }
-                }
-            } else {
-                ZMailbox zmbx = (ZMailbox) mboxobj;
-                ZFolder zfolder = (ZFolder) path.getFolder();
-                if (!zfolder.getGrants().isEmpty()) {
-                    zmbx.modifyFolderRevokeGrant(zfolder.getId(), granteeId);
-                    if (granteeId == GuestAccount.GUID_AUTHUSER) {
-                        zmbx.modifyFolderRevokeGrant(zfolder.getId(), GuestAccount.GUID_PUBLIC);
+            MailboxStore mboxStore = path.getOwnerMailbox();
+            if (mboxStore != null) {
+                FolderStore folder = path.getFolder();
+                if (!folder.getACLGrants().isEmpty()) {
+                    mboxStore.modifyFolderRevokeGrant(getContext(), folder.getFolderIdAsString(), grantee.id);
+                    if (grantee.id == GuestAccount.GUID_AUTHUSER) {
+                        mboxStore.modifyFolderRevokeGrant(
+                                getContext(), folder.getFolderIdAsString(), GuestAccount.GUID_PUBLIC);
                     }
                 }
             }
@@ -2893,39 +2879,21 @@ abstract class ImapHandler {
             }
             // write out the grants to all users and groups
             Short anyoneRights = null;
-            Object folderobj = path.getFolder();
-            if (folderobj instanceof Folder) {
-                ACL acl = ((Folder) folderobj).getEffectiveACL();
-                if (acl != null) {
-                    for (ACL.Grant grant : acl.getGrants()) {
-                        byte type = grant.getGranteeType();
-                        short rights = grant.getGrantedRights();
-                        if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC) {
-                            anyoneRights = (short) ((anyoneRights == null ? 0 : anyoneRights) | rights);
-                        } else if (type == ACL.GRANTEE_USER || type == ACL.GRANTEE_GROUP) {
-                            NamedEntry entry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), type);
-                            if (entry != null) {
-                                i4acl.append(" \"").append(entry.getName()).append("\" ").append(exportRights(rights));
-                            }
-                        }
-                    }
-                }
-            } else {
-                for (ZGrant zgrant : ((ZFolder) folderobj).getGrants()) {
-                    ZGrant.GranteeType ztype = zgrant.getGranteeType();
-                    short rights = ACL.stringToRights(zgrant.getPermissions());
-                    if (ztype == ZGrant.GranteeType.pub || ztype == ZGrant.GranteeType.all) {
+            FolderStore folderStore = path.getFolder();
+            if (null != folderStore) {
+                for (ACLGrant grant : folderStore.getACLGrants()) {
+                    GrantGranteeType gType = grant.getGrantGranteeType();
+                    short rights = ACL.stringToRights(grant.getPermissions());
+                    if (gType == GrantGranteeType.pub || gType == GrantGranteeType.all) {
                         anyoneRights = (short) ((anyoneRights == null ? 0 : anyoneRights) | rights);
-                    } else if (ztype == ZGrant.GranteeType.usr || ztype == ZGrant.GranteeType.grp) {
-                        byte granteeType = ztype == ZGrant.GranteeType.usr ? ACL.GRANTEE_USER : ACL.GRANTEE_GROUP;
-                        NamedEntry entry = FolderAction.lookupGranteeByZimbraId(zgrant.getGranteeId(), granteeType);
+                    } else if (gType == GrantGranteeType.usr || gType == GrantGranteeType.grp) {
+                        NamedEntry entry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), gType.asByte());
                         if (entry != null) {
                             i4acl.append(" \"").append(entry.getName()).append("\" ").append(exportRights(rights));
                         }
                     }
                 }
             }
-
             // aggregate all the "public" and "auth user" grants into the "anyone" IMAP ACL
             if (anyoneRights != null) {
                 i4acl.append(" anyone ").append(exportRights(anyoneRights));
@@ -4393,5 +4361,4 @@ abstract class ImapHandler {
     void sendResponse(String tag, String msg, boolean flush) throws IOException {
         sendLine((tag == null ? "" : tag + ' ') + (msg == null ? "" : msg), flush);
     }
-
 }
