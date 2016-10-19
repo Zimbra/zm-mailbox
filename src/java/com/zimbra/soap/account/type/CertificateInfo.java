@@ -34,8 +34,8 @@ public class CertificateInfo {
     private ZmBoolean defaultCert;
 
     /**
-     * @zm-api-field-tag subjectDN
-     * @zm-api-field-description details of the subject (The person, or entity identified.)
+     * @zm-api-field-tag emailAddr
+     * @zm-api-field-description email address of the subject
      */
     @XmlElement(name=SmimeConstants.E_EMAIL_ADDR, required=true)
     private String emailAddr;
