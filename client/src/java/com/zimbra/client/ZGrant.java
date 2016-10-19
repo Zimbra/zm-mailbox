@@ -21,13 +21,15 @@ import java.util.Arrays;
 
 import org.json.JSONException;
 
+import com.zimbra.common.mailbox.ACLGrant;
+import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.mail.type.Grant;
 
-public class ZGrant implements ToZJSONObject {
+public class ZGrant implements ACLGrant, ToZJSONObject {
 
     private String mArgs;
     private final String mGranteeName;
@@ -206,6 +208,7 @@ public class ZGrant implements ToZJSONObject {
     /**
      *  some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x)
      */
+    @Override
     public String getPermissions() {
         return mPermissions;
     }
@@ -252,10 +255,16 @@ public class ZGrant implements ToZJSONObject {
         return mGranteeType;
     }
 
+    @Override
+    public GrantGranteeType getGrantGranteeType() {
+        return (mGranteeType == null) ? null : mGranteeType.commonGranteeType;
+    }
+
     /***
      * the display name (*not* the zimbra id) of the principal being granted rights;
      * optional if {grantee-type} is "all"
      */
+    @Override
     public String getGranteeName() {
         return mGranteeName;
     }
@@ -263,6 +272,7 @@ public class ZGrant implements ToZJSONObject {
     /***
      * the zimbraId of the granteee
      */
+    @Override
     public String getGranteeId() {
         return mGranteeId;
     }
@@ -305,4 +315,5 @@ public class ZGrant implements ToZJSONObject {
     public String dump() {
         return ZJSONObject.toString(this);
     }
+
 }
