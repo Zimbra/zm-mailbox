@@ -10244,16 +10244,11 @@ public class Mailbox implements MailboxStore {
      * @param targetFolder - Destination folder
      */
     @Override
-    public List<ItemIdentifier> copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
+    public void copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
             List<Integer> idlist)
     throws ServiceException {
-        List<ItemIdentifier> createdList = Lists.newArrayList();
-        ItemActionHelper op = ItemActionHelper.COPY((OperationContext) ctxt, this, null, idlist,
+        ItemActionHelper.COPY((OperationContext) ctxt, this, null, idlist,
                 MailItem.Type.UNKNOWN, null, new ItemId(targetFolder));
-        for (String createdId : op.getCreatedIds()) {
-            createdList.add(new ItemIdentifier(createdId, authenticatedAcctId));
-        }
-        return createdList;
     }
 
     @Override
