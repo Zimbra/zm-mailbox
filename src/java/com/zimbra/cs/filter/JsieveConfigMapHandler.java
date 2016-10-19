@@ -58,6 +58,7 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("fileinto", com.zimbra.cs.filter.jsieve.FileInto.class.getName());
         mCommandMap.put("redirect", com.zimbra.cs.filter.jsieve.Redirect.class.getName());
         mCommandMap.put("copy", com.zimbra.cs.filter.jsieve.Copy.class.getName());
+	mCommandMap.put("log", com.zimbra.cs.filter.jsieve.VariableLog.class.getName());
 
         if (isNotifyActionRFCCompliantAvailable()) {
             mCommandMap.put("notify",  com.zimbra.cs.filter.jsieve.NotifyMailto.class.getName());
@@ -102,8 +103,6 @@ public class JsieveConfigMapHandler {
         mTestMap.put("me", com.zimbra.cs.filter.jsieve.MeTest.class.getName());
         mTestMap.put("invite", com.zimbra.cs.filter.jsieve.InviteTest.class.getName());
         mTestMap.put("mime_header", com.zimbra.cs.filter.jsieve.MimeHeaderTest.class.getName());
-        // Need to merge code from VariableHeader to HeaderTest, temporarily commenting.
-//        mTestMap.put("header", com.zimbra.cs.filter.jsieve.VariableHeader.class.getName());
         mTestMap.put("current_time", com.zimbra.cs.filter.jsieve.CurrentTimeTest.class.getName());
         mTestMap.put("current_day_of_week", com.zimbra.cs.filter.jsieve.CurrentDayOfWeekTest.class.getName());
         mTestMap.put("conversation", com.zimbra.cs.filter.jsieve.ConversationTest.class.getName());
