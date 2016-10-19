@@ -23,6 +23,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.codec.binary.Hex;
 
+import com.zimbra.common.mailbox.ACLGrant;
+import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -89,7 +91,7 @@ public final class ACL {
 
     private static final int ACCESSKEY_SIZE_BYTES = 16;
 
-    public static class Grant {
+    public static class Grant implements ACLGrant {
         /** The zimbraId of the entry being granted rights. */
         private String mGrantee;
         /** The display name of the grantee, which is often the email address of grantee. */
@@ -147,11 +149,22 @@ public final class ACL {
         /** Returns true if there is an explicit grantee. */
         public boolean hasGrantee() { return mType != ACL.GRANTEE_AUTHUSER && mType != ACL.GRANTEE_PUBLIC; }
         /** Returns the zimbraId of the entry granted rights. */
+        @Override
         public String getGranteeId() { return hasGrantee() ? mGrantee : null; }
         /** Returns type of object the grantee's ID refers to. */
         public byte getGranteeType() { return mType; }
+
+        @Override
+        public GrantGranteeType getGrantGranteeType() {
+            return GrantGranteeType.fromByte(mType);
+        }
         /** Returns the bitmask of the rights granted. */
         public short getGrantedRights() { return mRights; }
+
+        @Override
+        public String getPermissions() {
+            return ACL.rightsToString(getGrantedRights());
+        }
 
         /** Returns the rights granted to the given {@link Account} by this
          *  <tt>Grant</tt>.  If the grant does not apply to the Account,
@@ -194,6 +207,7 @@ public final class ACL {
         }
 
         /** Returns the display name of grantee. */
+        @Override
         public String getGranteeName() { return mName; }
         /** Sets the display name of grantee. */
         public void setGranteeName(String name) { mName = name; }

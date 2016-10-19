@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+import com.zimbra.common.mailbox.ACLGrant;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
@@ -504,6 +506,15 @@ public class Folder extends MailItem implements FolderStore {
             ZimbraLog.mailbox.info("setupParent() Problem re-getting parent for folder id=%s name=%s %s",
                     getId(), getName(), e.getMessage());
         }
+    }
+
+    @Override
+    public List<ACLGrant> getACLGrants() {
+        ACL myACL = getEffectiveACL();
+        if (null == myACL) {
+            return Lists.newArrayListWithExpectedSize(0);
+        }
+        return Lists.newCopyOnWriteArrayList(myACL.getGrants());
     }
 
     /** Returns whether the folder contains any subfolders. */
