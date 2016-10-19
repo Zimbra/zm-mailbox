@@ -43,4 +43,5 @@ public interface MailboxStore {
     public List<FolderStore> getUserRootSubfolderHierarchy(OpContext ctxt) throws ServiceException;
     public void modifyFolderGrant(OpContext ctxt, FolderStore folder, GrantGranteeType granteeType, String granteeId,
             String perms, String args) throws ServiceException;
+    public void modifyFolderRevokeGrant(OpContext ctxt, String folderId, String granteeId) throws ServiceException;
 }
