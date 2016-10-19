@@ -40,6 +40,7 @@ public class SmimeConstants {
     public static final String A_REPLACE_ID = "replaceId";
 
     public static final String E_CERTIFICATE = "certificate";
+    public static final String E_EMAIL_ADDR = "emailAddress";
     public static final String E_SUBJECT_DN = "subjectDn";
     public static final String E_ISSUER_DN = "issuerDn";
     public static final String E_SERIAL_NO = "serialNo";
@@ -55,5 +56,6 @@ public class SmimeConstants {
     public static final String PUB_CERT = "pubCert";
     public static final String PVT_KEY = "pvtKey";
     public static final String ALIAS = "alias";
+    public static final String CERT_FOLDER_NAME = "-smimecertificates";
 
 }
