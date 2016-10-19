@@ -1479,10 +1479,9 @@ public class Mailbox implements MailboxStore {
         return currentChange().recent == MailboxChange.NO_CHANGE ? mData.recentMessages : currentChange().recent;
     }
 
-    /** Resets the mailbox's "recent message count" to 0.  A message is
-     *  considered "recent" if (a) it's not a draft or a sent message, and
-     *  (b) it was added since the last write operation associated with any
-     *  SOAP session. */
+    /** Resets the mailbox's "recent message count" to 0.  A message is considered "recent" if:
+     *     (a) it's not a draft or a sent message, and
+     *     (b) it was added since the last write operation associated with any SOAP session. */
     public void resetRecentMessageCount(OperationContext octxt) throws ServiceException {
         boolean success = false;
         try {
@@ -1494,6 +1493,14 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
+    }
+
+    /** Resets the mailbox's "recent message count" to 0.  A message is considered "recent" if:
+     *     (a) it's not a draft or a sent message, and
+     *     (b) it was added since the last write operation associated with any SOAP session. */
+    @Override
+    public void resetRecentMessageCount(OpContext octxt) throws ServiceException {
+        resetRecentMessageCount((OperationContext)octxt);
     }
 
     public void refreshMailbox(OperationContext octxt) throws ServiceException {
@@ -7369,6 +7376,18 @@ public class Mailbox implements MailboxStore {
     public void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon, List<Integer> nonExistingItems)
     throws ServiceException {
         delete(octxt, itemIds, type, tcon, true /* useEmptyForFolders */, nonExistingItems);
+    }
+
+    /**
+     * Delete <tt>MailItem</tt>s with given ids.  If there is no <tt>MailItem</tt> for a given id, that id is ignored.
+     *
+     * @param octxt operation context or {@code null}
+     * @param itemIds item ids
+     * @param nonExistingItems If not null, This gets populated with the item IDs of nonExisting items
+     */
+    @Override
+    public void delete(OpContext octxt, List<Integer> itemIds, List<Integer> nonExistingItems) throws ServiceException {
+        delete((OperationContext)octxt, ArrayUtil.toIntArray(itemIds), MailItem.Type.UNKNOWN, null, nonExistingItems);
     }
 
     TypedIdList collectPendingTombstones() {

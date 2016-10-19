@@ -156,7 +156,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         sessionData = null;
     }
 
-    /** Returns the selected folder's containing {@link Mailbox}. */
+    /** Returns the selected folder's containing {@link MailboxStore}. */
     public MailboxStore getMailbox() {
         return this.mailboxStore.getMailboxStore();
     }
@@ -285,7 +285,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return path;
     }
 
-    void updatePath(Folder folder) {
+    void updatePath(FolderStore folder) {
         path = new ImapPath(null, folder.getPath(), path.getCredentials());
     }
 
@@ -298,7 +298,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return path.toString();
     }
 
-    /** Returns the UID Validity Value for the {@link Folder}.  This is the
+    /** Returns the UID Validity Value for the {@link FolderStore}.  This is the
      *  folder's <tt>MOD_CONTENT</tt> change sequence number.
      * @see Folder#getSavedSequence() */
     static int getUIDValidity(FolderStore folder) {
