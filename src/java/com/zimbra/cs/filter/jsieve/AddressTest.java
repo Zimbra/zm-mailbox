@@ -63,6 +63,9 @@ public class AddressTest extends Address {
     protected boolean executeBasic(MailAdapter mail, Arguments arguments,
             SieveContext context) throws SieveException {
 
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return false;
+        }
         ZimbraComparatorUtils.TestParameters params = ZimbraComparatorUtils.parseTestArguments(mail, arguments, context);
 
         if (MatchTypeTags.MATCHES_TAG.equals(params.getMatchType())) {

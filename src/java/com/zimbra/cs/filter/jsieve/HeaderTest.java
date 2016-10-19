@@ -194,6 +194,9 @@ public class HeaderTest extends Header {
 	 */
 	public static List<String> replaceVariables(List<String> keys, MailAdapter mail) {
 		List<String> replacedVariables = new ArrayList<String>();
+		if (!(mail instanceof ZimbraMailAdapter)) {
+		    return replacedVariables;
+		}
 		ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
 		for (String key : keys) {
 			String temp = FilterUtil.replaceVariables(zma.getVariables(), zma.getMatchedValues(),
