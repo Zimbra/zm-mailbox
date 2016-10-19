@@ -17,24 +17,31 @@
 
 package com.zimbra.qa.unittest;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.client.ZFeatures;
 import com.zimbra.client.ZGetInfoResult;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
 import com.zimbra.client.ZSignature;
 import com.zimbra.client.ZMailbox.Options;
+import com.zimbra.soap.mail.message.ItemActionResponse;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 public class TestZClient
 extends TestCase {
-    
+    private static String NAME_PREFIX = "TestZClient";
+    private static String RECIPIENT_USER_NAME = "user2";
     private static final String USER_NAME = "user1";
 
     public void setUp()
@@ -103,7 +110,31 @@ extends TestCase {
             // Not UnsupportedOperationException, so we're good.
         }
     }
-    
+
+    public void testCopyItemAction() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String sender = TestUtil.getAddress(USER_NAME);
+        String recipient = TestUtil.getAddress(RECIPIENT_USER_NAME);
+        String subject = NAME_PREFIX + " testCopyItemAction";
+        String content = new MessageBuilder().withSubject(subject).withFrom(sender).withToRecipient(recipient).create();
+
+        // add a msg flagged as sent; filterSent=TRUE
+        mbox.addMessage(Integer.toString(Mailbox.ID_FOLDER_DRAFTS), null, null, System.currentTimeMillis(), content, false, false);
+        ZMessage msg = TestUtil.waitForMessage(mbox, "in:drafts " + subject);
+        List<Integer> ids = new ArrayList<Integer>();
+        ids.add(Integer.parseInt(msg.getId()));
+        ItemActionResponse resp = mbox.copyItemAction(Mailbox.ID_FOLDER_SENT, ids);
+        Assert.assertNotNull(resp);
+        Assert.assertNotNull(resp.getAction());
+        Assert.assertNotNull(resp.getAction().getId());
+        
+        ZMessage copiedMessage = mbox.getMessageById(resp.getAction().getId());
+        Assert.assertNotNull(copiedMessage);
+        Assert.assertEquals(subject, copiedMessage.getSubject());
+        //msg.getId()
+        
+    }
+
     public void tearDown()
     throws Exception {
         cleanUp();
@@ -113,6 +144,8 @@ extends TestCase {
     throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
         account.setPassword(TestUtil.DEFAULT_PASSWORD);
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteTestData(RECIPIENT_USER_NAME, NAME_PREFIX);
     }
     
     public static void main(String[] args)
