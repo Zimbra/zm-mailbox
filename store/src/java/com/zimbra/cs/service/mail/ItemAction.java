@@ -72,25 +72,25 @@ public class ItemAction extends MailDocumentHandler {
 
     protected static final String[] OPERATION_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_OPERATION };
     protected static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_ID };
-
-    public static final String OP_TAG = "tag";
-    public static final String OP_FLAG = "flag";
-    public static final String OP_PRIORITY = "priority";
-    public static final String OP_READ = "read";
-    public static final String OP_COLOR = "color";
-    public static final String OP_HARD_DELETE = "delete";
-    public static final String OP_RECOVER = "recover";  // recover by copying then deleting from dumpster
-    public static final String OP_DUMPSTER_DELETE = "dumpsterdelete";  // delete from dumpster
-    public static final String OP_MOVE = "move";
-    public static final String OP_COPY = "copy";
-    public static final String OP_SPAM = "spam";
-    public static final String OP_TRASH = "trash";
-    public static final String OP_RENAME = "rename";
-    public static final String OP_UPDATE = "update";
-    public static final String OP_LOCK = "lock";
-    public static final String OP_UNLOCK = "unlock";
-    public static final String OP_INHERIT = "inherit";
-    public static final String OP_MUTE = "mute";
+    
+    public static final String OP_TAG = MailConstants.OP_TAG;
+    public static final String OP_FLAG = MailConstants.OP_FLAG;
+    public static final String OP_PRIORITY = MailConstants.OP_PRIORITY;
+    public static final String OP_READ = MailConstants.OP_READ;
+    public static final String OP_COLOR = MailConstants.OP_COLOR;
+    public static final String OP_HARD_DELETE = MailConstants.OP_HARD_DELETE;
+    public static final String OP_RECOVER = MailConstants.OP_RECOVER;  // recover by copying then deleting from dumpster
+    public static final String OP_DUMPSTER_DELETE = MailConstants.OP_DUMPSTER_DELETE;  // delete from dumpster
+    public static final String OP_MOVE = MailConstants.OP_MOVE;
+    public static final String OP_COPY = MailConstants.OP_COPY;
+    public static final String OP_SPAM = MailConstants.OP_SPAM;
+    public static final String OP_TRASH = MailConstants.OP_TRASH;
+    public static final String OP_RENAME = MailConstants.OP_RENAME;
+    public static final String OP_UPDATE = MailConstants.OP_UPDATE;
+    public static final String OP_LOCK = MailConstants.OP_LOCK;
+    public static final String OP_UNLOCK = MailConstants.OP_UNLOCK;
+    public static final String OP_INHERIT = MailConstants.OP_INHERIT;
+    public static final String OP_MUTE = MailConstants.OP_MUTE;
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -147,7 +147,7 @@ public class ItemAction extends MailDocumentHandler {
             String localResults;
 
             // set additional parameters (depends on op type)
-            if (opStr.equals(OP_TAG)) {
+            if (opStr.equals(MailConstants.OP_TAG)) {
                 String tagName = action.getAttribute(MailConstants.A_TAG_NAMES, null);
                 if (tagName == null) {
                     if (action.getAttribute(MailConstants.A_TAG) == null) {
@@ -156,38 +156,38 @@ public class ItemAction extends MailDocumentHandler {
                     tagName = TagUtil.tagIdToName(mbox, octxt, (int) action.getAttributeLong(MailConstants.A_TAG));
                 }
                 localResults = ItemActionHelper.TAG(octxt, mbox, responseProto, local, type, tagName, flagValue, tcon).getResult();
-            } else if (opStr.equals(OP_FLAG)) {
+            } else if (opStr.equals(MailConstants.OP_FLAG)) {
                 localResults = ItemActionHelper.FLAG(octxt, mbox, responseProto, local, type, flagValue, tcon).getResult();
-            } else if (opStr.equals(OP_PRIORITY)) {
+            } else if (opStr.equals(MailConstants.OP_PRIORITY)) {
                 localResults = ItemActionHelper.PRIORITY(octxt, mbox, responseProto, local, type, flagValue, tcon).getResult();
-            } else if (opStr.equals(OP_READ)) {
+            } else if (opStr.equals(MailConstants.OP_READ)) {
                 localResults = ItemActionHelper.READ(octxt, mbox, responseProto, local, type, flagValue, tcon).getResult();
-            } else if (opStr.equals(OP_COLOR)) {
+            } else if (opStr.equals(MailConstants.OP_COLOR)) {
                 Color color = getColor(action);
                 localResults = ItemActionHelper.COLOR(octxt, mbox, responseProto, local, type, tcon, color).getResult();
-            } else if (opStr.equals(OP_HARD_DELETE)) {
+            } else if (opStr.equals(MailConstants.OP_HARD_DELETE)) {
                 localResults = ItemActionHelper.HARD_DELETE(octxt, mbox, responseProto, local, type, tcon).getResult();
-            } else if (opStr.equals(OP_RECOVER)) {
+            } else if (opStr.equals(MailConstants.OP_RECOVER)) {
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
                 localResults = ItemActionHelper.RECOVER(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
-            } else if (opStr.equals(OP_DUMPSTER_DELETE)) {
+            } else if (opStr.equals(MailConstants.OP_DUMPSTER_DELETE)) {
                 localResults = ItemActionHelper.DUMPSTER_DELETE(octxt, mbox, responseProto, local, type, tcon).getResult();
-            } else if (opStr.equals(OP_TRASH)) {
+            } else if (opStr.equals(MailConstants.OP_TRASH)) {
                 localResults = handleTrashOperation(octxt, request, mbox, responseProto, local, type, tcon);
-            } else if (opStr.equals(OP_MOVE)) {
+            } else if (opStr.equals(MailConstants.OP_MOVE)) {
                 localResults = handleMoveOperation(zsc, octxt, request, action, mbox, responseProto, local, type, tcon);
-            } else if (opStr.equals(OP_COPY)) {
+            } else if (opStr.equals(MailConstants.OP_COPY)) {
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
                 localResults = ItemActionHelper.COPY(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
-            } else if (opStr.equals(OP_SPAM)) {
+            } else if (opStr.equals(MailConstants.OP_SPAM)) {
                 String defaultFolder = (flagValue ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX) + "";
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER, defaultFolder), zsc);
                 localResults = ItemActionHelper.SPAM(octxt, mbox, responseProto, local, type, flagValue, tcon, iidFolder).getResult();
-            } else if (opStr.equals(OP_RENAME)) {
+            } else if (opStr.equals(MailConstants.OP_RENAME)) {
                 String name = action.getAttribute(MailConstants.A_NAME);
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER, "-1"), zsc);
                 localResults = ItemActionHelper.RENAME(octxt, mbox, responseProto, local, type, tcon, name, iidFolder).getResult();
-            } else if (opStr.equals(OP_UPDATE)) {
+            } else if (opStr.equals(MailConstants.OP_UPDATE)) {
                 String folderId = action.getAttribute(MailConstants.A_FOLDER, null);
                 ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
                 if (!iidFolder.belongsTo(mbox)) {
@@ -200,14 +200,14 @@ public class ItemAction extends MailDocumentHandler {
                 String[] tags = TagUtil.parseTags(action, mbox, octxt);
                 Color color = getColor(action);
                 localResults = ItemActionHelper.UPDATE(octxt, mbox, responseProto, local, type, tcon, name, iidFolder, flags, tags, color).getResult();
-            } else if (opStr.equals(OP_LOCK)) {
+            } else if (opStr.equals(MailConstants.OP_LOCK)) {
                 localResults = ItemActionHelper.LOCK(octxt, mbox, responseProto, local, type, tcon).getResult();
-            } else if (opStr.equals(OP_UNLOCK)) {
+            } else if (opStr.equals(MailConstants.OP_UNLOCK)) {
                 localResults = ItemActionHelper.UNLOCK(octxt, mbox, responseProto, local, type, tcon).getResult();
-            } else if (opStr.equals(OP_INHERIT)) {
+            } else if (opStr.equals(MailConstants.OP_INHERIT)) {
                 mbox.alterTag(octxt, ArrayUtil.toIntArray(local), type, Flag.FlagInfo.NO_INHERIT, false, tcon);
                 localResults = Joiner.on(",").join(local);
-            } else if (opStr.equals(OP_MUTE) && type == MailItem.Type.CONVERSATION) {
+            } else if (opStr.equals(MailConstants.OP_MUTE) && type == MailItem.Type.CONVERSATION) {
                 // note that "mute" ignores the tcon value
                 localResults = ItemActionHelper.TAG(octxt, mbox, responseProto, local, type, Flag.FlagInfo.MUTED.toString(), flagValue, null).getResult();
                 if (flagValue) {
@@ -439,7 +439,7 @@ public class ItemAction extends MailDocumentHandler {
         SoapSession ss = (SoapSession) session;
 
         // only have to worry about operations where things can get created in other mailboxes (regular notification works for all other cases)
-        if (!op.equals(OP_MOVE) && !op.equals(OP_COPY) && !op.equals(OP_SPAM) && !op.equals(OP_RENAME) && !op.equals(OP_UPDATE)) {
+        if (!op.equals(MailConstants.OP_MOVE) && !op.equals(MailConstants.OP_COPY) && !op.equals(MailConstants.OP_SPAM) && !op.equals(MailConstants.OP_RENAME) && !op.equals(MailConstants.OP_UPDATE)) {
             return null;
         }
         String folderStr = action.getAttribute(MailConstants.A_FOLDER, null);

@@ -29,6 +29,7 @@ import org.junit.Test;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
@@ -102,6 +103,27 @@ public class ItemActionTest {
         Folder newFolder = mbox.getFolderByName(null, Mailbox.ID_FOLDER_USER_ROOT, targetFolderName);
         Message msg = mbox.getMessageById(null, msgId);
         Assert.assertEquals(msg.getFolderId(), newFolder.getId());
+    }
+
+    @Test 
+    public void copyMessageFromDraftsToSent() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+        ParsedMessage pm = MailboxTestUtil.generateMessage("test subject copyMessageFromDraftsToSent");
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_DRAFTS);
+        int msgId = mbox.addMessage(null, pm, dopt, null).getId();
+        ItemId iidTarget = new ItemId(mbox, Mailbox.ID_FOLDER_SENT);
+        ItemActionHelper op = ItemActionHelper.COPY(null, mbox, SoapProtocol.Soap12, Arrays.asList(msgId), MailItem.Type.MESSAGE, null, iidTarget);
+        Assert.assertNotNull(op);
+        Assert.assertNotNull(op.getCreatedIds());
+        Assert.assertEquals(1, op.getCreatedIds().size());
+        ItemId iid = new ItemId(op.getCreatedIds().get(0), acct.getId());
+        Assert.assertNotNull(iid);
+        Message copiedMessage = mbox.getMessageById(null, iid.getId());
+        Assert.assertNotNull(copiedMessage);
+        Assert.assertNotNull(copiedMessage.getSubject());
+        Assert.assertEquals("test subject copyMessageFromDraftsToSent", copiedMessage.getSubject());
+        Assert.assertEquals(copiedMessage.getFolderId(), Mailbox.ID_FOLDER_SENT);
     }
 
     @Test
