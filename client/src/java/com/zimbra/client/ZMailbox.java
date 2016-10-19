@@ -5782,7 +5782,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     @Override
     public void flagFolderAsSubscribed(OpContext ctxt, FolderStore folder) throws ServiceException {
-        throw new UnsupportedOperationException("ZMailbox does not support copyItemAction yet");
+        if (folder instanceof ZFolder && !folder.isIMAPSubscribed()) {
+        	ZFolder zFolder = (ZFolder)folder;
+        	String flags = zFolder.getFlags() + String.valueOf(ZFolder.Flag.imapSubscribed.getFlagChar());
+        	updateFolder(zFolder.getFolderIdAsString(), null, null, null, null, flags, null);
+        }
     }
 
     @Override
