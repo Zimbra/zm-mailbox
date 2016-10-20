@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.soap.SmimeConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -37,6 +38,7 @@ public class CertificateInfo {
      * @zm-api-field-tag emailAddr
      * @zm-api-field-description email address of the subject (The person, or entity identified.)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_EMAIL_ADDR, required=true)
     private String emailAddr;
 
@@ -44,6 +46,7 @@ public class CertificateInfo {
      * @zm-api-field-tag subjectDN
      * @zm-api-field-description details of the subject (The person, or entity identified.)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_SUBJECT_DN, required=true)
     private String subjectDN;
 
@@ -51,6 +54,7 @@ public class CertificateInfo {
      * @zm-api-field-tag issuerDN
      * @zm-api-field-description details of the issuer (who has issued the certificate)
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_ISSUER_DN, required=false)
     private String issuerDN;
 
@@ -58,6 +62,7 @@ public class CertificateInfo {
      * @zm-api-field-tag validity
      * @zm-api-field-description validity of the certificate
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_VALIDITY, required=false)
     private CertificateValidity validity;
 
@@ -65,6 +70,7 @@ public class CertificateInfo {
      * @zm-api-field-tag signature
      * @zm-api-field-description signature details of the certificate
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_SIGNATURE, required=false)
     private CertificateSignature signature;
 
