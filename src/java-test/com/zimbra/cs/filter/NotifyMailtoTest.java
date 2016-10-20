@@ -20,7 +20,10 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+
+import javax.mail.internet.MimeMessage;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,8 +33,10 @@ import org.junit.Test;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
@@ -41,6 +46,8 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.MPartInfo;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 import com.zimbra.cs.service.util.ItemId;
@@ -62,7 +69,9 @@ public class NotifyMailtoTest {
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        prov.createAccount("test1@zimbra.com", "secret", attrs);
+        Account account = prov.createAccount("test1@zimbra.com", "secret", attrs);
+        Server server = Provisioning.getInstance().getServer(account);
+        server.setSieveFeatureVariablesEnabled(true);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
@@ -307,6 +316,100 @@ public class NotifyMailtoTest {
             Assert.assertEquals(1, ids.size());
             Message msg = mbox1.getMessageById(null, ids.get(0).getId());
             Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    /**
+     * Tests a sieve rule with varialbe parameters.
+     */
+    @Test
+    public void testNotify_variable() {
+        String filterScript =
+                "require [\"enotify\", \"tag\"];\n"
+              + "if envelope :matches [\"To\"]     \"*\" {set \"rcptto\"        \"${1}\";}\n"
+              + "if envelope :matches [\"From\"]   \"*\" {set \"mailfrom\"      \"${1}\";}\n"
+              + "if header   :matches  \"Date\"    \"*\" {set \"dateheader\"    \"${1}\";}\n"
+              + "if header   :matches  \"From\"    \"*\" {set \"fromheader\"    \"${1}\";}\n"
+              + "if header   :matches  \"Subject\" \"*\" {set \"subjectheader\" \"${1}\";}\n"
+              + "if anyof(not envelope :is [\"From\"] \"\") {\n"
+              + "  set \"subjectparam\" \"Notification\";\n"
+              + "  set \"bodyparam\" text:\r\n"
+              + "Hello ${rcptto},\n"
+              + "A new massage has arrived.\n"
+              + "Sent: ${dateheader}\n"
+              + "From: ${fromheader}\n"
+              + "Subject: ${subjectheader}\r\n"
+              + ".\r\n"
+              + ";\n"
+              + "  notify :message \"${subjectparam}\"\n"
+              + "         :from \"${rcptto}\"\n"
+              + "         \"mailto:test2@zimbra.com?body=${bodyparam}\";\n"
+              + "}";
+
+        String sampleMsg = "Auto-Submitted: \"no\"\n"
+                + "from: xyz@example.com\n"
+                + "Date: Tue, 11 Oct 2016 12:01:37 +0900\n"
+                + "Subject: [acme-users] [fwd] version 1.0 is out\n"
+                + "to: foo@example.com, baz@example.com\n"
+                + "cc: qux@example.com\n";
+
+        String expectedNotifyMsg = "Hello test1@zimbra.com,\n"
+                + "A new massage has arrived.\n"
+                + "Sent: Tue, 11 Oct 2016 12:01:37 +0900\n"
+                + "From: xyz@example.com\n"
+                + "Subject: [acme-users] [fwd] version 1.0 is out";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
+            RuleManager.clearCachedRules(acct1);
+
+            LmtpEnvelope env = new LmtpEnvelope();
+            LmtpAddress sender = new LmtpAddress("<test2@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+            LmtpAddress recipient = new LmtpAddress("<test1@zimbra.com>", null, null);
+            env.setSender(sender);
+            env.addLocalRecipient(recipient);
+
+            acct1.setMailSieveScript(filterScript);
+            acct1.setMail("test1@zimbra.com");
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    acct1.getName(), env, new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+
+            // The triggered message should be delivered to the target mailbox
+            Assert.assertEquals(1, ids.size());
+
+            // Notification message should be delivered to mailto addresses
+            Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                    .getIds(MailItem.Type.MESSAGE).get(0);
+            Message notifyMsg = mbox2.getMessageById(null, item);
+
+            // Verify the subject line of the notification message
+            Assert.assertEquals("Notification", notifyMsg.getSubject());
+
+            // Verify the from header of the notification message
+            String[] headers = notifyMsg.getMimeMessage().getHeader("from");
+            Assert.assertTrue(headers.length == 1);
+            Assert.assertEquals("test1@zimbra.com", headers[0]);
+
+            // Verify the message body of the notification message
+            MimeMessage mm = notifyMsg.getMimeMessage();
+            List<MPartInfo> parts = Mime.getParts(mm);
+            Set<MPartInfo> bodies = Mime.getBody(parts, false);
+            Assert.assertEquals(1, bodies.size());
+            for (MPartInfo body : bodies) {
+                Object mimeContent = body.getMimePart().getContent();
+                Assert.assertTrue(mimeContent instanceof String);
+                String deliveredNotifyMsg = (String) mimeContent;
+                Assert.assertEquals(expectedNotifyMsg, deliveredNotifyMsg);
+            }
         } catch (Exception e) {
             fail("No exception should be thrown");
         }

@@ -27,6 +27,7 @@ import org.apache.jsieve.commands.AbstractActionCommand;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 public class Variables extends AbstractActionCommand {
@@ -78,6 +79,7 @@ public class Variables extends AbstractActionCommand {
         if (variables == null || sourceStr == null || sourceStr.length() == 0) {
             return sourceStr;
         }
+        sourceStr = FilterUtil.handleQuotedAndEncodedVar(sourceStr);
         StringBuilder resultStr = new StringBuilder();
         int start1 = 0;
         int end = -1;
