@@ -35,7 +35,7 @@ public class CertificateInfo {
 
     /**
      * @zm-api-field-tag emailAddr
-     * @zm-api-field-description email address of the subject
+     * @zm-api-field-description email address of the subject (The person, or entity identified.)
      */
     @XmlElement(name=SmimeConstants.E_EMAIL_ADDR, required=true)
     private String emailAddr;
