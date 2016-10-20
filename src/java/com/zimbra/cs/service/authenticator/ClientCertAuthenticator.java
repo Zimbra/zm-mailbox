@@ -17,7 +17,6 @@
 package com.zimbra.cs.service.authenticator;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,28 +24,17 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.Principal;
-import java.security.Security;
-import java.security.cert.CertPath;
-import java.security.cert.CertPathValidator;
 import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.PKIXCertPathValidatorResult;
-import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -55,9 +43,6 @@ import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import sun.security.x509.AuthorityInfoAccessExtension;
-import sun.security.x509.X509CertImpl;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -69,6 +54,10 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.authenticator.ClientCertPrincipalMap.Rule;
+import com.zimbra.cs.util.CertValidationUtil;
+
+import sun.security.x509.AuthorityInfoAccessExtension;
+import sun.security.x509.X509CertImpl;
 
 public class ClientCertAuthenticator extends SSOAuthenticator {
 
@@ -187,85 +176,43 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
     }
 
     private String getSubjectDNForLogging(X509Certificate cert) {
-        String subjectDn = null;
-        Principal principal = cert.getSubjectDN();
-        if (principal != null) {
-            subjectDn = principal.getName();
-        }
-
-        if (subjectDn == null) {
-            subjectDn = "";
-        }
-
-        return subjectDn;
+        return CertValidationUtil.getSubjectDN(cert);
     }
 
     private void validateClientCert(X509Certificate[] certs) throws ServiceException {
-        for (X509Certificate cert : certs) {
-            FileInputStream fis = null;
+            String subjectDN = null;
             try {
-                cert.checkValidity();
-
                 boolean revocationCheckEnabled = Provisioning.getInstance().getLocalServer().isMailSSLClientCertOCSPEnabled();
-                if(revocationCheckEnabled) {
-                    ZimbraLog.account.debug(LOG_PREFIX +  "found AuthorityInfoAccess extension in client certificate");
-                    List<X509Certificate> certificates = new ArrayList<X509Certificate>();
-                    certificates.add(cert);
-
-                    CertificateFactory    cf = CertificateFactory.getInstance("X509");
-                    CertPath              cp = cf.generateCertPath(certificates);
-
-                    KeyStore ks = KeyStore.getInstance("JKS");
+                Set<TrustAnchor> trustedCertsSet = null;
+                if (revocationCheckEnabled) {
                     char[] pass = LC.client_ssl_truststore_password.value().toCharArray();
-                    fis = new FileInputStream(LC.client_ssl_truststore.value());
-                    ks.load(fis, pass);
+                    trustedCertsSet = CertValidationUtil.loadTrustedAnchors(pass, LC.client_ssl_truststore.value());
+                }
 
-                    Set<TrustAnchor> trustedCertsSet = new HashSet<TrustAnchor>();
-                    Enumeration<String> aliases = ks.aliases();
-                    while (aliases.hasMoreElements()) {
-                        String alias = aliases.nextElement();
-
-                        X509Certificate rootCACert = (X509Certificate)ks.getCertificate(alias);
-                        TrustAnchor ta = new TrustAnchor(rootCACert, null);
-                        trustedCertsSet.add(ta);
-
-                        ZimbraLog.account.debug(LOG_PREFIX +  "adding certificate with issuer DN:" + rootCACert.getIssuerDN().toString() + " signature name:"  + rootCACert.getSigAlgName());
-                      }
-
-                    // init PKIX parameters
-                    PKIXParameters params = new PKIXParameters(trustedCertsSet);
-
-                    params.setRevocationEnabled(revocationCheckEnabled);
-
-                    // perform validation
-                    CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
-                    PKIXCertPathValidatorResult cpv_result = (PKIXCertPathValidatorResult) cpv.validate(cp, params);
-
-                    ZimbraLog.account.debug(LOG_PREFIX +  cpv_result.toString());
+                for (X509Certificate cert : certs) {
+                    subjectDN = getSubjectDNForLogging(cert);
+                    CertValidationUtil.validateCertificate(cert, revocationCheckEnabled, trustedCertsSet);
                 }
             } catch (CertificateExpiredException e) {
-                throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "client certificate expired", e);
+                throw AuthFailedServiceException.AUTH_FAILED(subjectDN, "client certificate expired", e);
             } catch (CertificateNotYetValidException e) {
-                throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "client certificate not yet valid", e);
+                throw AuthFailedServiceException.AUTH_FAILED(subjectDN, "client certificate not yet valid", e);
             } catch (CertificateException e) {
-                throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "can't generate certpath for client certificate", e);
+                throw AuthFailedServiceException.AUTH_FAILED(subjectDN, "can't generate certpath for client certificate", e);
             } catch (KeyStoreException e) {
-                throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "received KeyStoreException while loading KeyStore", e);
+                throw AuthFailedServiceException.AUTH_FAILED(subjectDN, "received KeyStoreException while loading KeyStore", e);
             } catch (NoSuchAlgorithmException e) {
-                throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "received NoSuchAlgorithmException while obtaining instance of certpath validator", e);
+                throw AuthFailedServiceException.AUTH_FAILED(subjectDN, "received NoSuchAlgorithmException while obtaining instance of certpath validator", e);
             } catch (FileNotFoundException e) {
-                throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "mailboxd keystore can't be found", e);
+                throw AuthFailedServiceException.AUTH_FAILED(subjectDN, "mailboxd keystore can't be found", e);
             } catch (IOException e) {
-                throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "received IOException", e);
+                throw AuthFailedServiceException.AUTH_FAILED(subjectDN, "received IOException", e);
             } catch (InvalidAlgorithmParameterException e) {
-                throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "received InvalidAlgorithmParameter while obtaining instance of certpath validator", e);
+                throw AuthFailedServiceException.AUTH_FAILED(subjectDN, "received InvalidAlgorithmParameter while obtaining instance of certpath validator", e);
             } catch (CertPathValidatorException e) {
-                throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "received CertPathValidatorException" + e.getMessage(), e);
-            } finally {
-                ByteUtil.closeStream(fis);
-            }
+                throw AuthFailedServiceException.AUTH_FAILED(subjectDN, "received CertPathValidatorException" + e.getMessage(), e);
+            } 
 
-          }
     }
 
     // examine the certificate's AuthorityInfoAccess extension
