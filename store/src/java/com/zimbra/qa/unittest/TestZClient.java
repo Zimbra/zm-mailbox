@@ -18,37 +18,44 @@
 package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.client.ZFeatures;
-import com.zimbra.client.ZGetInfoResult;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMessage;
-import com.zimbra.client.ZPrefs;
-import com.zimbra.client.ZSignature;
-import com.zimbra.client.ZMailbox.Options;
-import com.zimbra.soap.mail.message.ItemActionResponse;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+
+import org.junit.Test;
+
+import com.zimbra.client.ZFeatures;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZGetInfoResult;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.Options;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZPrefs;
+import com.zimbra.client.ZSignature;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.soap.mail.message.ItemActionResponse;
 
 public class TestZClient
 extends TestCase {
     private static String NAME_PREFIX = "TestZClient";
     private static String RECIPIENT_USER_NAME = "user2";
     private static final String USER_NAME = "user1";
+    private static final String FOLDER_NAME = "testfolder";
+    private static ZFolder folder;
 
+    @Override
     public void setUp()
     throws Exception {
         cleanUp();
     }
-    
+
     /**
      * Confirms that the prefs accessor works (bug 51384).
      */
@@ -59,7 +66,7 @@ extends TestCase {
         ZPrefs prefs = mbox.getPrefs();
         assertEquals(account.getPrefLocale(), prefs.getLocale());
     }
-    
+
     /**
      * Confirms that the features accessor doesn't throw NPE (bug 51384).
      */
@@ -80,17 +87,17 @@ extends TestCase {
         options.setNewPassword("test456");
         options.setUri(TestUtil.getSoapUrl());
         ZMailbox.changePassword(options);
-        
+
         try {
             TestUtil.getZMailbox(USER_NAME);
         } catch (SoapFaultException e) {
             assertEquals(AuthFailedServiceException.AUTH_FAILED, e.getCode());
         }
     }
-    
+
     /**
      * Confirms that the {@code List} of signatures returned by {@link ZMailbox#getSignatures}
-     * is modifiable (see bug 51842). 
+     * is modifiable (see bug 51842).
      */
     public void testModifySignatures()
     throws Exception {
@@ -101,7 +108,7 @@ extends TestCase {
         } catch (IndexOutOfBoundsException e) {
             // Not UnsupportedOperationException, so we're good.
         }
-        
+
         ZGetInfoResult info = mbox.getAccountInfo(true);
         signatures = info.getSignatures();
         try {
@@ -127,27 +134,52 @@ extends TestCase {
         Assert.assertNotNull(resp);
         Assert.assertNotNull(resp.getAction());
         Assert.assertNotNull(resp.getAction().getId());
-        
+
         ZMessage copiedMessage = mbox.getMessageById(resp.getAction().getId());
         Assert.assertNotNull(copiedMessage);
         Assert.assertEquals(subject, copiedMessage.getSubject());
         //msg.getId()
-        
+
     }
 
+    @Test
+    public void testSubscribeFolder() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        try {
+            folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", FOLDER_NAME, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
+        } catch (ServiceException e) {
+            if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
+                folder = mbox.getFolderByPath("/"+FOLDER_NAME);
+            } else {
+                throw e;
+            }
+        }
+        mbox.flagFolderAsSubscribed(null, folder);
+        Assert.assertTrue(folder.isIMAPSubscribed());
+        mbox.flagFolderAsUnsubscribed(null, folder);
+        Assert.assertFalse(folder.isIMAPSubscribed());
+    }
+
+    @Override
     public void tearDown()
     throws Exception {
         cleanUp();
     }
-    
+
     private void cleanUp()
     throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        if (folder != null) {
+            try {
+                mbox.deleteFolder(folder.getId());
+            } catch (ServiceException e) {}
+        }
         Account account = TestUtil.getAccount(USER_NAME);
         account.setPassword(TestUtil.DEFAULT_PASSWORD);
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
         TestUtil.deleteTestData(RECIPIENT_USER_NAME, NAME_PREFIX);
     }
-    
+
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
