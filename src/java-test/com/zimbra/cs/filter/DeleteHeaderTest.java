@@ -18,7 +18,6 @@ package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
 
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.UUID;
