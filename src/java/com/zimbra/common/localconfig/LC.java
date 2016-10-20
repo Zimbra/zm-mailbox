@@ -1352,4 +1352,7 @@ public final class LC {
     public @interface Supported {
 
     }
+
+    public static final KnownKey sieve_immutable_headers = KnownKey.newKey(""
+            + "Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID");
 }
