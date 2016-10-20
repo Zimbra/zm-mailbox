@@ -18,6 +18,7 @@ package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
 
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.UUID;
@@ -97,7 +98,7 @@ public class DeleteHeaderTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testDeleteHeaderAll() {
+    public void testDeleteHeaderXTestHeaderAll() {
         try {
            String filterScript = "require [\"editheader\"];\n"
                     + " deleteheader \"X-Test-Header\" \r\n"
@@ -153,14 +154,14 @@ public class DeleteHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
-            int indexMatch = 0;
+            boolean matchFound = false;
             for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
                 Header header = enumeration.nextElement();
-                if ("X-Test-Header".equals(header.getName())) {
-                    indexMatch++;
+                if ("X-Test-Header".equals(header.getName()) && "test2".equals(header.getValue())) {
+                    matchFound = true;
                 }
             }
-            Assert.assertEquals(indexMatch, 2);
+            Assert.assertFalse(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
@@ -229,16 +230,18 @@ public class DeleteHeaderTest {
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
             int indexMatch = 0;
-            String headerValue = "";
+            boolean matchFound = false;
             for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
                 Header header = enumeration.nextElement();
                 if ("X-Test-Header".equals(header.getName())) {
                     indexMatch++;
-                    headerValue = header.getValue();
+                    if ("test2".equals(header.getValue())) {
+                        matchFound = true;
+                    }
                 }
             }
             Assert.assertEquals(indexMatch, 2);
-            Assert.assertEquals("test3", headerValue);
+            Assert.assertFalse(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
@@ -434,7 +437,7 @@ public class DeleteHeaderTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testDeleteHeaderWithIndexAndMatchType() {
+    public void testDeleteHeaderWithIndexLastAndMatchType() {
         try {
             String filterScript = "require [\"editheader\"];\n"
                     + " deleteheader :index 2 :last :contains \"X-Test-Header\" \"2\" \r\n"
@@ -461,6 +464,189 @@ public class DeleteHeaderTest {
                 }
             }
             Assert.assertFalse(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Delete header than add header
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testDeleteHeaderThanAddHeader() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + " deleteheader :is \"X-Test-Header\" \"test2\" \r\n"
+                    + "  ;\n"
+                    + " addheader \"X-Test-Header\" \"test5\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            boolean newAdded = false;
+            int matchCount = 0;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test-Header".equals(header.getName())){
+                    matchCount++;
+                    if ("test2".equals(header.getValue())) {
+                        matchFound = true;
+                    } else if ("test5".equals(header.getValue())) {
+                        newAdded = true;
+                    }
+                }
+            }
+            Assert.assertFalse(matchFound);
+            Assert.assertTrue(newAdded);
+            Assert.assertEquals(matchCount, 3);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Add header than delete header
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testAddHeaderThanDeleteHeader() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + " addheader :last \"X-Test-Header\" \"test5\" \r\n"
+                    + "  ;\n"
+                    + " deleteheader :is \"X-Test-Header\" \"test2\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            boolean newAdded = false;
+            int matchCount = 0;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test-Header".equals(header.getName())){
+                    matchCount++;
+                    if ("test2".equals(header.getValue())) {
+                        matchFound = true;
+                    }
+                    if ("test5".equals(header.getValue())) {
+                        newAdded = true;
+                    }
+                }
+            }
+            Assert.assertFalse(matchFound);
+            Assert.assertTrue(newAdded);
+            Assert.assertEquals(matchCount, 3);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Add header than delete header than again add header
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testAddHeaderThanDeleteHeaderThanAddHeader() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + " addheader :last \"X-Test-Header\" \"test5\" ;\n"
+                    + " deleteheader :contains \"X-Test-Header\" \"2\" ;\n"
+                    + " addheader :last \"X-Test-Header\" \"test6\" ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            boolean firstAdded = false;
+            boolean secondAdded = false;
+            int matchCount = 0;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test-Header".equals(header.getName())){
+                    matchCount++;
+                    if ("test2".equals(header.getValue())) {
+                        matchFound = true;
+                    }
+                    if ("test5".equals(header.getValue())) {
+                        firstAdded = true;
+                    }
+                    if ("test6".equals(header.getValue())) {
+                        secondAdded = true;
+                    }
+                }
+            }
+            Assert.assertFalse(matchFound);
+            Assert.assertTrue(firstAdded);
+            Assert.assertTrue(secondAdded);
+            Assert.assertEquals(matchCount, 4);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Immutable header test
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testImmutableHeader() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + " deleteheader \"Received\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("Received".equals(header.getName())){
+                    matchFound = true;
+                }
+            }
+            Assert.assertTrue(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }

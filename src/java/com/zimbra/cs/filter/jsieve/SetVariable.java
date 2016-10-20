@@ -232,15 +232,16 @@ public class SetVariable extends AbstractCommand {
 	 * @return true if zimbraSieveFeatureVariablesEnabled is true
 	 */
 	public static boolean isVariablesExtAvailable(ZimbraMailAdapter mailAdapter) {
-		boolean variablesExtAvailable = false;
-		try {
-			Account account = mailAdapter.getMailbox().getAccount();
-			variablesExtAvailable = Provisioning.getInstance().getServer(account)
-					.getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
-		} catch (ServiceException e) {
-			ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
-		}
-		return variablesExtAvailable;
+//		boolean variablesExtAvailable = false;
+//		try {
+//			Account account = mailAdapter.getMailbox().getAccount();
+//			variablesExtAvailable = Provisioning.getInstance().getServer(account)
+//					.getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
+//		} catch (ServiceException e) {
+//			ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
+//		}
+//		return variablesExtAvailable;
+		return true;
 	}
 	
 	

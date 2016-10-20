@@ -57,6 +57,7 @@ public class ReplaceHeaderTest {
             + "X-Numeric-Header: 2\n"
             + "X-Numeric-Header: 3\n"
             + "X-Numeric-Header: 4\n"
+            + "X-Spam-Score: 85\n"
             + "from: test2@zimbra.com\n"
             + "Subject: example\n"
             + "to: test@zimbra.com\n";
@@ -418,6 +419,47 @@ public class ReplaceHeaderTest {
                 }
             }
             Assert.assertEquals("3", String.valueOf(headerCount));
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace header with numeric comparator :count
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderWithXSpamScore() {
+        try {
+            String filterScript = "require [\"editheader\", \"variables\"];\n"
+                    + "if anyof(header :value \"ge\" :comparator \"i;ascii-numeric\" [\"X-Spam-Score\"] [\"80\"]) {"
+                    +"      if exists \"Subject\" {"
+                    +"        replaceheader :newvalue \"[SPAM]${1}\" :matches \"Subject\" \"*\";"
+                    +"      } else {"
+                    +"        addheader :last \"Subject\" \"[SPAM]\";"
+                    +"      }"
+                    +"    }";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String subjectValue = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("Subject".equals(header.getName())) {
+                    subjectValue = header.getValue();
+                }
+            }
+            Assert.assertEquals("[SPAM]example", subjectValue);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
