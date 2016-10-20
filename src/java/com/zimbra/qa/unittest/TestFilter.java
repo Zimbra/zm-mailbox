@@ -662,7 +662,7 @@ public final class TestFilter extends TestCase {
         String mime = new MessageBuilder().withFrom("John Doe <john.doe@example.com>").withSubject(subject).create();
         TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, mime);
         ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
-        assertFalse("Unexpected message flag state (1)", msg.isFlagged());
+        assertFalse("Unexpected message flag state", msg.isFlagged());
 
         // now use the address test
         conditions.add(new ZFilterCondition.ZAddressCondition(
@@ -675,7 +675,7 @@ public final class TestFilter extends TestCase {
         mime = new MessageBuilder().withFrom("John Doe <john.doe@example.com>").withSubject(subject).create();
         TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, mime);
         msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
-        assertTrue("Unexpected message flag state (2)", msg.isFlagged());
+        assertTrue("Unexpected message flag state", msg.isFlagged());
     }
 
     public void testAddressTestPart()
