@@ -31,6 +31,7 @@ import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
@@ -215,6 +216,107 @@ public class EnvelopeTest {
             Assert.assertEquals(1, ids.size());
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
             Assert.assertEquals("From", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testVariable1() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :matches [\"from\"] \"*\" {\n"
+                + "  tag \"env_${1}\";\n"
+                + "}\n"
+                + "if envelope :matches [\"to\"] \"*\" {\n"
+                + "  tag \"env_${1}\";\n"
+                + "}\n"
+                + "if address :matches :comparator \"i;ascii-casemap\" [\"from\"] \"*\" {\n"
+                + "  tag \"adr_${1}\";\n"
+                + "}\n"
+                + "if address :matches :comparator \"i;ascii-casemap\" [\"to\"] \"*\" {\n"
+                + "  tag \"adr_${1}\";\n"
+                + "}\n"
+                + "if header :matches [\"from\"] \"*\" {\n"
+                + "  tag \"hdr_${1}\";\n"
+                + "}\n"
+                + "if header :matches [\"to\"] \"*\" {\n"
+                + "  tag \"hdr_${1}\";\n"
+                + "}\n";
+        testVariable(filterScript);
+    }
+
+    /*
+     * Once Bug 107044 is solved, this pattern should be tested instead testVariable1()
+     */
+    public void testVariable2() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :matches [\"from\"] \"*\" {\n"
+                + "  tag \"env_${1}\";\n"
+                + "}\n"
+                + "if envelope :matches [\"to\"] \"*\" {\n"
+                + "  tag \"env_${1}\";\n"
+                + "}\n"
+                + "if address :matches [\"from\"] \"*\" {\n"
+                + "  tag \"adr_${1}\";\n"
+                + "}\n"
+                + "if address :matches [\"to\"] \"*\" {\n"
+                + "  tag \"adr_${1}\";\n"
+                + "}\n"
+                + "if header :matches [\"from\"] \"*\" {\n"
+                + "  tag \"hdr_${1}\";\n"
+                + "}\n"
+                + "if header :matches [\"to\"] \"*\" {\n"
+                + "  tag \"hdr_${1}\";\n"
+                + "}\n";
+        testVariable(filterScript);
+    }
+
+    public void testVariable(String filterScript) {
+        /*
+         * Checks if numeric variable works
+         */
+        String triggeringMsg =
+                "from: message_header_from@example.com\n"
+              + "to: message_header_to@zimbra.com\n"
+              + "Subject: Example\n";
+
+        String[] expectedTagName = {"env_envelope_from@example.com",
+                                    "env_test@zimbra.com",
+                                    "adr_message_header_from@example.com",
+                                    "adr_message_header_to@zimbra.com",
+                                    "hdr_message_header_from@example.com",
+                                    "hdr_message_header_to@zimbra.com"};
+
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<envelope_from@example.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Server server = Provisioning.getInstance().getServer(account);
+            server.setSieveFeatureVariablesEnabled(true);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(triggeringMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            String[] tags = msg.getTags();
+            Assert.assertTrue(tags != null);
+            Assert.assertEquals(expectedTagName.length, tags.length);
+            for (int i = 0; i < expectedTagName.length; i++) {
+                Assert.assertEquals(expectedTagName[i], tags[i]);
+            }
         } catch (Exception e) {
             fail("No exception should be thrown");
         }

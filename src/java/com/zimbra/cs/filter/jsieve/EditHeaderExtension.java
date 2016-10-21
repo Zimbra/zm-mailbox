@@ -483,7 +483,7 @@ public class EditHeaderExtension {
         }
         List<String> keyList = new ArrayList<String>();
         keyList.add(this.key);
-        HeaderTest.evaluateVarExp(mailAdapter, keyList, this.valueList);
+        HeaderTest.evaluateVarExp(mailAdapter, keyList, false, this.valueList);
         return matchFound;
     }
 

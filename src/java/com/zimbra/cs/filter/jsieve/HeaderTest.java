@@ -281,7 +281,7 @@ public class HeaderTest extends Header {
         return isMatched;
     }
     
-    protected boolean match(MailAdapter mail, String comparator, String matchType, List headerNames, List keys,
+    protected boolean match(MailAdapter mail, String comparator, String matchType, List<String> headerNames, List<String> keys, 
             SieveContext context) throws SieveException {
         if (mail instanceof DummyMailAdapter) {
             return true;
@@ -292,7 +292,7 @@ public class HeaderTest extends Header {
         
         ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
         if (matchType.equals(MatchTypeTags.MATCHES_TAG)) {
-            evaluateVarExp(zma, headerNames, keys);
+            evaluateVarExp(zma, headerNames, false, keys);
         }
         List<String> newKeys = new ArrayList<String>();
         for (Object key : keys) {
@@ -315,13 +315,29 @@ public class HeaderTest extends Header {
         return isMatched;
     }
     
-    public static void evaluateVarExp(ZimbraMailAdapter mailAdapter, List headerNames, List keys) throws SieveMailException, SievePatternException {
+    /**
+     * Matches the wildcard ("?" and "*") in the Address, Envelope, and/or Header test,
+     * and stores one string for each wildcard in the variable ${n} (n=1,2,...,9).
+     *
+     * @param mailAdapter triggering mail object
+     * @param headerNames target header name to be matched
+     * @param envelope if set to TRUE, the headerNames should be looked up within the envelope value (e.g. MAIL FROM, RCPT TO etc.).  Otherwise the headerNames should be looked up from the message header.
+     * @param keys matching key string
+     * @throws SieveMailException
+     * @throws SievePatternException
+     */
+    public static void evaluateVarExp(ZimbraMailAdapter mailAdapter, List<String> headerNames, boolean envelope, List<String> keys) throws SieveMailException, SievePatternException {
         
         List<String> varValues = new ArrayList<String>();
 
         for (Object headerName : headerNames) {
             String hn = (String) headerName;
-            List<String> values = mailAdapter.getMatchingHeader(hn);
+            List<String> values = null;
+            if (envelope) {
+                values = mailAdapter.getEnvelope(hn);
+            } else {
+                values = mailAdapter.getMatchingHeader(hn);
+            }
             for (String sourceStr : values) {
                 for (Object key : keys) {
                     String keyStr = ((String) key);
