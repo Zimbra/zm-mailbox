@@ -48,19 +48,15 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.store.Blob;
 
-public class RemoteImapMailboxStore implements ImapMailboxStore {
+public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     private transient ZMailbox zMailbox;
     private transient String accountId;
 
     public RemoteImapMailboxStore(ZMailbox mailbox, String accountId) {
+        super();
         this.zMailbox = mailbox;
         this.accountId = accountId;
-    }
-
-    @Override
-    public ImapFlag getFlagByName(String name) {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
     }
 
     @Override
