@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.soap.SmimeConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class CertificateSignature {
@@ -14,6 +15,7 @@ public class CertificateSignature {
      * @zm-api-field-tag serialNumber
      * @zm-api-field-description serialNumber of the certificate, which is used to uniquely identify the certificate.
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_SERIAL_NO, required=false)
     private String serialNumber;
 
@@ -21,6 +23,7 @@ public class CertificateSignature {
      * @zm-api-field-tag algorithm
      * @zm-api-field-description algorithm used to create the signature.
      */
+    @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_ALGORITHM, required=false)
     private String algorithm;
 
