@@ -322,7 +322,7 @@ public class NotifyMailtoTest {
     }
 
     /**
-     * Tests a sieve rule with varialbe parameters.
+     * Tests a sieve rule with variable parameters.
      */
     @Test
     public void testNotify_variable() {
