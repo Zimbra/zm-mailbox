@@ -29,6 +29,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import com.google.common.collect.ImmutableSet;
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mailbox.Message;
@@ -80,6 +81,9 @@ public final class FlaggedTest extends AbstractTest {
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments args, SieveContext ctx) throws SieveException {
         assert(flags != null);
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }
