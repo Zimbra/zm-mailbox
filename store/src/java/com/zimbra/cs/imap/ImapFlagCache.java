@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.zimbra.client.ZTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.mailbox.Flag;
@@ -51,6 +52,16 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
             this(ltag.getName(), ltag, true);
         }
 
+        ImapFlag(ZTag ztag) {
+            this(ztag.getName(), ztag, true);
+        }
+
+        ImapFlag(String name, ZTag ztag, boolean positive) {
+            mId   = Integer.valueOf(ztag.getId());    mBitmask = 0;
+            mName = ztag.getName();  mImapName  = normalize(name, mId);
+            mPositive = positive;    mPermanent = true;
+            mListed = VISIBLE;
+        }
         ImapFlag(String name, Tag ltag, boolean positive) {
             mId   = ltag.getId();    mBitmask   = ltag instanceof Flag ? ((Flag) ltag).toBitmask() : 0;
             mName = ltag.getName();  mImapName  = normalize(name, mId);
@@ -128,6 +139,7 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
                     cache(new ImapFlag(ltag));
                 }
             }
+
         } catch (ServiceException e) {
             if (!e.getCode().equals(ServiceException.PERM_DENIED)) {
                 throw e;
