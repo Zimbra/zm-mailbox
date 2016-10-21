@@ -37,25 +37,14 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 
-public class LocalImapMailboxStore implements ImapMailboxStore {
+public class LocalImapMailboxStore extends ImapMailboxStore {
 
     private transient Mailbox mailbox;
-    private transient ImapFlagCache flags;
+
 
     public LocalImapMailboxStore(Mailbox mailbox) {
+        super();
         this.mailbox = mailbox;
-        try {
-            this.flags = ImapFlagCache.getSystemFlags(mailbox);
-        } catch (ServiceException se) {
-            // Realistically shouldn't happen
-            ZimbraLog.imap.debug("Problem getting system flags for mailbox %s - using empty set", mailbox, se);
-            this.flags = new ImapFlagCache();
-        }
-    }
-
-    @Override
-    public ImapFlag getFlagByName(String name) {
-        return flags.getByImapName(name);
     }
 
     @Override
@@ -135,7 +124,7 @@ public class LocalImapMailboxStore implements ImapMailboxStore {
         try {
             // TODO - Code taken with modifications from ImapHandler.doAPPEND
             // TODO - any reason why we can't use this.flags for flagset?
-            ImapFlagCache flagset = ImapFlagCache.getSystemFlags(mailbox);
+            ImapFlagCache flagset = ImapFlagCache.getSystemFlags();
             ImapFlagCache tagset = new ImapFlagCache( mailbox, octxt);
             for (AppendMessage append : appends) {
                 append.checkFlags(flagset, tagset);
