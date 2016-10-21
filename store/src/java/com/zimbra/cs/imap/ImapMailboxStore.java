@@ -62,7 +62,11 @@ public abstract class ImapMailboxStore {
     public ImapFlag getFlagByName(String name) {
         return flags.getByImapName(name);
     }
-    public abstract List<String> getFlagList(boolean permanentOnly);
+
+    public List<String> getFlagList(boolean permanentOnly) {
+        return flags.listNames(permanentOnly);
+    }
+
     public abstract ImapFlag getTagByName(String tag) throws ServiceException;
     public abstract void resetImapUid(List<Integer> renumber) throws ServiceException;
     public abstract Set<ImapMessage> getSubsequence(ImapFolder i4folder, String tag, String sequenceSet, boolean byUID)
