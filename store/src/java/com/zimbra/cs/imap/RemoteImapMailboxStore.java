@@ -28,6 +28,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
@@ -66,7 +67,8 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public ImapFlag getTagByName(String tag) throws ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        ZTag ztag = zMailbox.getTagByName(tag);
+        return new ImapFlag(ztag);
     }
 
     @Override
