@@ -18,9 +18,7 @@ package com.zimbra.cs.filter.jsieve;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -35,7 +33,9 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 public class ReplaceHeader extends AbstractCommand {
@@ -49,68 +49,51 @@ public class ReplaceHeader extends AbstractCommand {
     protected Object executeBasic(MailAdapter mail, Arguments arguments,
             Block block, SieveContext sieveContext) throws SieveException {
         if (!(mail instanceof ZimbraMailAdapter)) {
-            ZimbraLog.filter.info("Zimbra mail adapter not found.");
+            ZimbraLog.filter.info("replaceheader: Zimbra mail adapter not found.");
             return null;
         }
 
         // make sure zcs do not edit immutable header
-//        if (ehe.isImmutableHeaderKey()) {
-//            ZimbraLog.filter.info("replaceheader: %s is immutable header, so exiting silently.", ehe.getKey());
-//            return null;
-//        }
-
+        if (ehe.isImmutableHeaderKey()) {
+            ZimbraLog.filter.info("replaceheader: %s is immutable header, so exiting silently.", ehe.getKey());
+            return null;
+        }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
-
         // replace sieve variables
         ehe.replaceVariablesInValueList(mailAdapter);
         if (ehe.getNewValue() != null) {
-            ehe.setNewValue(Variables.replaceAllVariables(mailAdapter, ehe.getNewValue()));
+            ehe.setNewValue(FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), ehe.getNewValue()));
         }
-
         MimeMessage mm = mailAdapter.getMimeMessage();
         Enumeration<Header> headers;
         try {
             headers = mm.getAllHeaders();
             if (!headers.hasMoreElements()) {
-                ZimbraLog.filter.info("No headers found in mime.");
+                ZimbraLog.filter.info("replaceheader: No headers found in mime.");
                 return null;
             }
         } catch (MessagingException e) {
-            throw new OperationException("Error occured while fetching all headers from mime.", e);
+            throw new OperationException("replaceheader: Error occured while fetching all headers from mime.", e);
         }
-
-        int headerCount = 0;
-        try {
-            String[] headerValues = mm.getHeader(ehe.getKey());
-            headerCount = headerValues != null ? headerValues.length : 0;
-        } catch (MessagingException e) {
-            throw new OperationException("Error occured while fetching " + ehe.getKey() + " headers from mime.", e);
-        }
+        int headerCount = ehe.getHeaderCount(mm);
         if (headerCount < 1) {
-            ZimbraLog.filter.info("No headers found matching with \"%s\" in mime.", ehe.getKey());
+            ZimbraLog.filter.info("replaceheader: No headers found matching with \"%s\" in mime.", ehe.getKey());
             return null;
         }
         ehe.setEffectiveIndex(headerCount);
         int matchIndex = 0;
-        Set<String> removedHeaders = new HashSet<String>();
-
+        List<Header> newHeaderList = new ArrayList<Header>();
         try {
             while (headers.hasMoreElements()) {
                 Header header = headers.nextElement();
                 String newHeaderName = null;
                 String newHeaderValue = null;
                 boolean replace = false;
-                if (!(removedHeaders.contains(header.getName()))) {
-                    mm.removeHeader(header.getName());
-                    removedHeaders.add(header.getName());
-                }
                 if (header.getName().equalsIgnoreCase(ehe.getKey())){
                     matchIndex++;
                     if (ehe.getIndex() == null || (ehe.getIndex() != null && ehe.getIndex() == matchIndex)) {
                         for (String value : ehe.getValueList()) {
-
-                            replace = ehe.matchCondition(header, headerCount, value, sieveContext);
-
+                            replace = ehe.matchCondition(mailAdapter, header, headerCount, value, sieveContext);
                             if (replace) {
                                 if (ehe.getNewName() != null) {
                                     newHeaderName = ehe.getNewName();
@@ -118,7 +101,7 @@ public class ReplaceHeader extends AbstractCommand {
                                     newHeaderName = header.getName();
                                 }
                                 if (ehe.getNewValue() != null) {
-                                    newHeaderValue = ehe.getNewValue();
+                                    newHeaderValue = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), ehe.getNewValue());
                                 } else {
                                     newHeaderValue = header.getValue();
                                 }
@@ -128,12 +111,21 @@ public class ReplaceHeader extends AbstractCommand {
                         }
                     }
                 }
-                mm.addHeader(header.getName() ,header.getValue());
+                newHeaderList.add(header);
              }
+            // now remove all headers from mime and add from new list
+            headers = mm.getAllHeaders();
+            while (headers.hasMoreElements()) {
+                Header header = headers.nextElement();
+                mm.removeHeader(header.getName());
+            }
+            for (Header header : newHeaderList) {
+                mm.addHeader(header.getName(), header.getValue());
+            }
             mm.saveChanges();
             mailAdapter.updateIncomingBlob();
         } catch (MessagingException me) {
-            throw new OperationException("Error occured while operating mime.", me);
+            throw new OperationException("replaceheader: Error occured while operating mime.", me);
         }
         return null;
     }
@@ -144,10 +136,29 @@ public class ReplaceHeader extends AbstractCommand {
     @Override
     protected void validateArguments(Arguments arguments, SieveContext context)
             throws SieveException {
-        ZimbraLog.filter.debug("replaceheader: " + arguments.getArgumentList().toString());
-        ehe.setupReplaceHeaderData(arguments);
-        if (!ehe.validateReplaceHeaderData()) {
-            throw new SyntaxException("replaceheader : validation failed.");
+        ZimbraLog.filter.debug("replaceheader: %s", arguments.getArgumentList().toString());
+        ehe.setupEditHeaderData(arguments, this);
+        // Match type or Comparator type condition must be present
+        if (!(ehe.isIs() || ehe.isContains() || ehe.isMatches() || ehe.isCountTag() || ehe.isValueTag())) {
+            throw new SyntaxException("replaceheader: Match type or Comparator type must be present in replaceheader.");
         }
+
+        // Key and value both must be present at a time
+        if (ehe.getKey() == null || ehe.getValueList() == null) {
+            throw new SyntaxException("replaceheader: key or value not found in replaceheader.");
+        }
+
+        // character set validation
+        if (ehe.getNewName() != null) {
+            if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(ehe.getNewName(), CharsetUtil.US_ASCII))) {
+                throw new SyntaxException("replaceheader: newname must be printable ASCII only in replaceheader.");
+            }
+        }
+        if (ehe.getNewValue() != null) {
+            if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(ehe.getNewValue(), CharsetUtil.US_ASCII))) {
+                throw new SyntaxException("replaceheader: newvalue must be printable ASCII only in replaceheader.");
+            }
+        }
+        ehe.commonValidation();
     }
 }

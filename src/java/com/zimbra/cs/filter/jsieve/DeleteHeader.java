@@ -47,15 +47,15 @@ public class DeleteHeader extends AbstractCommand {
     protected Object executeBasic(MailAdapter mail, Arguments args, Block block, SieveContext sieveContext)
             throws SieveException {
         if (!(mail instanceof ZimbraMailAdapter)) {
-            ZimbraLog.filter.info("Zimbra mail adapter not found.");
+            ZimbraLog.filter.info("deleteheader: Zimbra mail adapter not found.");
             return null;
         }
 
         // make sure zcs do not delete immutable header
-//        if (ehe.isImmutableHeaderKey()) {
-//            ZimbraLog.filter.info("replaceheader: %s is immutable header, so exiting silently.", ehe.getKey());
-//            return null;
-//        }
+        if (ehe.isImmutableHeaderKey()) {
+            ZimbraLog.filter.info("deleteheader: %s is immutable header, so exiting silently.", ehe.getKey());
+            return null;
+        }
 
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
 
@@ -67,22 +67,16 @@ public class DeleteHeader extends AbstractCommand {
         try {
             headers = mm.getAllHeaders();
             if (!headers.hasMoreElements()) {
-                ZimbraLog.filter.info("No headers found in mime.");
+                ZimbraLog.filter.info("deleteheader: No headers found in mime.");
                 return null;
             }
         } catch (MessagingException e) {
-            throw new OperationException("Error occured while fetching all headers from mime.", e);
+            throw new OperationException("deleteheader: Error occured while fetching all headers from mime.", e);
         }
 
-        int headerCount = 0;
-        try {
-            String[] headerValues = mm.getHeader(ehe.getKey());
-            headerCount = headerValues != null ? headerValues.length : 0;
-        } catch (MessagingException e) {
-            throw new OperationException("Error occured while fetching " + ehe.getKey() + " headers from mime.", e);
-        }
+        int headerCount = ehe.getHeaderCount(mm);
         if (headerCount < 1) {
-            ZimbraLog.filter.info("No headers found matching with \"%s\" in mime.", ehe.getKey());
+            ZimbraLog.filter.info("deleteheader: No headers found matching with \"%s\" in mime.", ehe.getKey());
             return null;
         }
         ehe.setEffectiveIndex(headerCount);
@@ -93,10 +87,6 @@ public class DeleteHeader extends AbstractCommand {
             while (headers.hasMoreElements()) {
                 Header header = headers.nextElement();
                 boolean deleteCurrentHeader = false;
-                if (!(removedHeaders.contains(header.getName()))) {
-                    mm.removeHeader(header.getName());
-                    removedHeaders.add(header.getName());
-                }
                 if (header.getName().equalsIgnoreCase(ehe.getKey())){
                     matchIndex++;
                     if (ehe.getIndex() == null || (ehe.getIndex() != null && ehe.getIndex() == matchIndex)) {
@@ -104,13 +94,17 @@ public class DeleteHeader extends AbstractCommand {
                             deleteCurrentHeader = true;
                         } else {
                             for (String value : ehe.getValueList()) {
-                                deleteCurrentHeader = ehe.matchCondition(header, headerCount, value, sieveContext);
+                                deleteCurrentHeader = ehe.matchCondition(mailAdapter, header, headerCount, value, sieveContext);
                                 if (deleteCurrentHeader) {
                                     break;
                                 }
                             }
                         }
                     }
+                }
+                if (!(removedHeaders.contains(header.getName()))) {
+                    mm.removeHeader(header.getName());
+                    removedHeaders.add(header.getName());
                 }
                 // if deleteCurrentHeader is true, don't add header to mime
                 if (!deleteCurrentHeader) {
@@ -120,7 +114,7 @@ public class DeleteHeader extends AbstractCommand {
             mm.saveChanges();
             mailAdapter.updateIncomingBlob();
         } catch (MessagingException me) {
-            throw new OperationException("Error occured while operating mime.", me);
+            throw new OperationException("deleteheader: Error occured while operating mime.", me);
         }
         return null;
     }
@@ -131,9 +125,11 @@ public class DeleteHeader extends AbstractCommand {
     @Override
     protected void validateArguments(Arguments arguments, SieveContext context) throws SieveException {
         ZimbraLog.filter.debug("deleteheader: " + arguments.getArgumentList().toString());
-        ehe.setupDeleteHeaderData(arguments);
-        if (!ehe.validateDeleteHeaderData()) {
-            throw new SyntaxException("deleteheader : validation failed.");
+        ehe.setupEditHeaderData(arguments, this);
+        // Key must be present
+        if (ehe.getKey() == null) {
+            throw new SyntaxException("deleteheader : key not found.");
         }
+        ehe.commonValidation();
     }
 }
