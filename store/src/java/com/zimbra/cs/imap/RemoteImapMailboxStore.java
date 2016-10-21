@@ -61,11 +61,6 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public List<String> getFlagList(boolean permanentOnly) {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
-    }
-
-    @Override
     public ImapFlag getTagByName(String tag) throws ServiceException {
         ZTag ztag = zMailbox.getTagByName(tag);
         return new ImapFlag(ztag);
