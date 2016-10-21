@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
@@ -129,6 +130,13 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
     public ImapFlagCache() {
         mImapNames = Maps.newLinkedHashMap();
         mNames = Maps.newHashMap();
+    }
+
+    ImapFlagCache(ZMailbox mbox) throws ServiceException {
+        this();
+        for (ZTag ztag: mbox.getAllTags()) {
+            cache(new ImapFlag(ztag));
+        }
     }
 
     ImapFlagCache(Mailbox mbox, OperationContext octxt) throws ServiceException {
