@@ -132,7 +132,11 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        ImapFlagCache flagset = ImapFlagCache.getSystemFlags();
+        ImapFlagCache tagset = new ImapFlagCache(zMailbox);
+        for (AppendMessage append : appends) {
+            append.checkFlags(flagset, tagset);
+        }
     }
 
     @Override
