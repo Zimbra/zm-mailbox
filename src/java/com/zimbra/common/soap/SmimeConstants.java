@@ -58,4 +58,12 @@ public class SmimeConstants {
     public static final String ALIAS = "alias";
     public static final String CERT_FOLDER_NAME = "-smimecertificates";
 
+    public static final String CERT_SUFFIX = ".pem";
+    public static final String KEY_SUFFIX = ".key";
+    public static final String PUB_CERT_TYPE = "X.509";
+    public static final String PRIVATE_KEY_ALGORITHM = "keyAlgorithm";
+    public static final String PRIVATE_KEY_FORMAT = "keyFormat";
+    public static final String PRIVATE_KEY_INFO = "privateKeyInfo";
+    public static final String PUBLIC_CERT_INFO = "pubCertInfo";
+
 }
