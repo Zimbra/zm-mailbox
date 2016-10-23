@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2016 Synacor, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.soap.account.type;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -17,7 +31,7 @@ public class CertificateValidity {
      */
     @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_START_DATE, required=false)
-    private String startDate;
+    private long startDate;
 
     /**
      * @zm-api-field-tag endDate
@@ -25,21 +39,21 @@ public class CertificateValidity {
      */
     @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_END_DATE, required=false)
-    private String endDate;
+    private long endDate;
 
-    public String getStartDate() {
+    public long getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(String startDate) {
+    public void setStartDate(long startDate) {
         this.startDate = startDate;
     }
 
-    public String getEndDate() {
+    public long getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(String endDate) {
+    public void setEndDate(long endDate) {
         this.endDate = endDate;
     }
 

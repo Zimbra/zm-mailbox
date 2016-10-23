@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2016 Synacor, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.soap.account.type;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -48,7 +62,7 @@ public class CertificateInfo {
      */
     @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_SUBJECT_DN, required=true)
-    private String subjectDN;
+    private CertificateDN subjectDN;
 
     /**
      * @zm-api-field-tag issuerDN
@@ -56,7 +70,7 @@ public class CertificateInfo {
      */
     @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_ISSUER_DN, required=false)
-    private String issuerDN;
+    private CertificateDN issuerDN;
 
     /**
      * @zm-api-field-tag validity
@@ -74,19 +88,35 @@ public class CertificateInfo {
     @XmlElement(name=SmimeConstants.E_SIGNATURE, required=false)
     private CertificateSignature signature;
 
-    public String getSubjectDN() {
+    /**
+     * @zm-api-field-tag subjectAltName
+     * @zm-api-field-description subjectAltName details of the certificate
+     */
+    @ZimbraJsonAttribute
+    @XmlElement(name=SmimeConstants.E_SUBJECT_ALT_NAME, required=false)
+    private CertificateAltNames subjectAltName;
+
+    /**
+     * @zm-api-field-tag issuerAltName
+     * @zm-api-field-description issuerAltName details of the certificate
+     */
+    @ZimbraJsonAttribute
+    @XmlElement(name=SmimeConstants.E_ISSUER_ALT_NAME, required=false)
+    private CertificateAltNames issuerAltName;
+
+    public CertificateDN getSubjectDN() {
         return subjectDN;
     }
 
-    public void setSubjectDN(String subjectDN) {
+    public void setSubjectDN(CertificateDN subjectDN) {
         this.subjectDN = subjectDN;
     }
 
-    public String getIssuerDN() {
+    public CertificateDN getIssuerDN() {
         return issuerDN;
     }
 
-    public void setIssuerDN(String issuerDN) {
+    public void setIssuerDN(CertificateDN issuerDN) {
         this.issuerDN = issuerDN;
     }
 
@@ -138,15 +168,33 @@ public class CertificateInfo {
         this.emailAddr = emailAddr;
     }
 
+    public CertificateAltNames getSubjectAltName() {
+        return subjectAltName;
+    }
+
+    public void setSubjectAltName(CertificateAltNames subjectAltName) {
+        this.subjectAltName = subjectAltName;
+    }
+
+    public CertificateAltNames getIssuerAltName() {
+        return issuerAltName;
+    }
+
+    public void setIssuerAltName(CertificateAltNames issuerAltName) {
+        this.issuerAltName = issuerAltName;
+    }
+
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper.add("pubCertId", pubCertId)
             .add("pvtKeyId", pvtKeyId)
-            .add("defaultCert", "default")
+            .add("defaultCert", defaultCert)
             .add("subjectDn", subjectDN)
             .add("issuerDn", issuerDN)
             .add("signature", signature)
             .add("validity", validity)
-            .add("emailAddr", emailAddr);
+            .add("emailAddr", emailAddr)
+            .add("subjectAltName", subjectAltName)
+            .add("issuerAltName", issuerAltName);
     }
 
     @Override
