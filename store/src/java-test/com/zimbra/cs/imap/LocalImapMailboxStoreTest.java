@@ -1,7 +1,5 @@
 package com.zimbra.cs.imap;
 
-import static org.junit.Assert.*;
-
 import java.util.HashMap;
 import java.util.Set;
 
@@ -12,7 +10,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -36,7 +33,7 @@ public class LocalImapMailboxStoreTest {
         Provisioning prov = Provisioning.getInstance();
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, "12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
-        acct = prov.createAccount("localimaptest@zimbra.com", "secret", attrs);
+        acct = prov.createAccount(LOCAL_USER, "secret", attrs);
         mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
     }
 
@@ -44,7 +41,7 @@ public class LocalImapMailboxStoreTest {
     public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
     }
-    
+
     @Test
     public void testListSubscriptions() throws Exception {
         String path = "testPath";
@@ -61,7 +58,7 @@ public class LocalImapMailboxStoreTest {
         Assert.assertNotNull(rlist);
         Assert.assertNotNull(rlist.get(0));
         Assert.assertTrue(rlist.get(0).equalsIgnoreCase(path));
-        
+
         //test listSubscriptions method
         LocalImapMailboxStore localStore = new LocalImapMailboxStore(mbox);
         Set<String> subs = localStore.listSubscriptions(null);
@@ -70,5 +67,4 @@ public class LocalImapMailboxStoreTest {
         String sub = subs.iterator().next();
         Assert.assertTrue(sub.equalsIgnoreCase(path));
     }
-
 }
