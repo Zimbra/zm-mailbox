@@ -140,6 +140,7 @@ public class ZimbraSuite  {
         sClasses.add(TestServiceServlet.class);
         sClasses.add(TestModifyDynamicEphemeralAttrs.class);
         sClasses.add(TestSearchTask.class);
+        sClasses.add(TestRemoteImapMailboxStore.class);
     }
 
     /**
