@@ -1230,7 +1230,7 @@ public final class MailConstants {
     public static final String A_SESSION = "session";
 
     public static final String A_ACTION = "action";
-    
+
     public static final String OP_TAG = "tag";
     public static final String OP_FLAG = "flag";
     public static final String OP_PRIORITY = "priority";
@@ -1249,4 +1249,5 @@ public final class MailConstants {
     public static final String OP_UNLOCK = "unlock";
     public static final String OP_INHERIT = "inherit";
     public static final String OP_MUTE = "mute";
+    public static final String OP_RESET_IMAP_UID = "resetimapuid";
 }
