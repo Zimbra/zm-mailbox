@@ -153,6 +153,7 @@ public class SetVariableTest {
         Map<String, String> testCases = new TreeMap<String, String>();
         // RFC 5229 Section 3. Examples
         variables.put("company", "ACME");
+        variables.put("foo", "bar");
 
         testCases.put("${full}", "");
         testCases.put("${company}", "ACME");
@@ -161,16 +162,21 @@ public class SetVariableTest {
         testCases.put("${company", "${company");
         testCases.put("${${company}}", "${ACME}");
         testCases.put("${${${company}}}", "${${ACME}}");
+        testCases.put("${company}.${company}.${company}", "ACME.ACME.ACME");
         testCases.put("&%${}!", "&%${}!");
         testCases.put("${doh!}", "${doh!}");
-        
+        testCases.put("${fo\\o}",   "bar");   /* ${foo}   */
+        testCases.put("${fo\\\\o}", "");      /* ${fo\\o} */
+        testCases.put("\\${foo}",   "bar");   /* ${foo}   */
+        testCases.put("\\\\${foo}", "\\bar"); /* \\${foo} */
+
         // More examples from RFC 5229 Section 3. and RFC 5228 Section 8.1. 
         // variable-ref        =  "${" [namespace] variable-name "}"
         // namespace           =  identifier "." *sub-namespace
         // sub-namespace       =  variable-name "."
         // variable-name       =  num-variable / identifier
         // num-variable        =  1*DIGIT
-        // identifier         = (ALPHA / "_") *(ALPHA / DIGIT / "_")
+        // identifier          = (ALPHA / "_") *(ALPHA / DIGIT / "_")
         variables.put("a.b", "おしらせ");
         variables.put("c_d", "C");
         variables.put("1", "One");
