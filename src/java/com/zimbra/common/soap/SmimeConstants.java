@@ -82,4 +82,11 @@ public class SmimeConstants {
     public static final String ISSUER_DN_KEY = "ib_";
     public static final String SUBJECT_ALT_NAME_KEY = "san_";
     public static final String ISSUER_ALT_NAME_KEY = "ian_";
+    public static final String CERT_SUFFIX = ".pem";
+    public static final String KEY_SUFFIX = ".key";
+    public static final String PUB_CERT_TYPE = "X.509";
+    public static final String PRIVATE_KEY_ALGORITHM = "keyAlgorithm";
+    public static final String PRIVATE_KEY_FORMAT = "keyFormat";
+    public static final String PRIVATE_KEY_INFO = "privateKeyInfo";
+    public static final String PUBLIC_CERT_INFO = "pubCertInfo";
 }
