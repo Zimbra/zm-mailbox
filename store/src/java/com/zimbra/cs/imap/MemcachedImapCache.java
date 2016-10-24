@@ -36,9 +36,9 @@ import com.zimbra.cs.memcached.MemcachedKeyPrefix;
  *
  * @author ysasaki
  */
-final class MemcachedImapCache implements ImapSessionManager.Cache {
+final class MemcachedImapCache implements ImapSessionManager.Cache<String, ImapFolder> {
 
-    private MemcachedMap<ImapMemcachedKey, ImapFolder> map = new MemcachedMap<ImapMemcachedKey, ImapFolder>(
+    private final MemcachedMap<ImapMemcachedKey, ImapFolder> map = new MemcachedMap<ImapMemcachedKey, ImapFolder>(
             MemcachedConnector.getClient(), new ImapMemcachedSerializer());
 
     @Override
