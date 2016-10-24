@@ -27,7 +27,7 @@ public class CertificateValidity {
 
     /**
      * @zm-api-field-tag startDate
-     * @zm-api-field-description The date the certificate is first valid from.Date is returned in String format.ex: Fri Sep 23 02:17:16 PDT 2016
+     * @zm-api-field-description The date the certificate is first valid from.Value is number of milliseconds since epoch.
      */
     @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_START_DATE, required=false)
@@ -35,7 +35,7 @@ public class CertificateValidity {
 
     /**
      * @zm-api-field-tag endDate
-     * @zm-api-field-description The expiration date.Date is returned in String format.ex: Fri Sep 23 02:17:16 PDT 2016
+     * @zm-api-field-description The expiration date.Value is number of milliseconds since epoch.
      */
     @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_END_DATE, required=false)
