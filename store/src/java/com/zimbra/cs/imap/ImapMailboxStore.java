@@ -93,4 +93,5 @@ public abstract class ImapMailboxStore {
     public abstract Collection<FolderStore> getVisibleFolders(OperationContext octxt, ImapCredentials credentials,
             String owner, ImapPath relativeTo)
     throws ServiceException;
+    public Set<String> listSubscriptions(OperationContext octxt) throws ServiceException;
 }

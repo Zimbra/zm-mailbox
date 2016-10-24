@@ -76,12 +76,16 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
+    public Set<String> listSubscriptions(OperationContext octxt) throws ServiceException {
+        return AccountUtil.parseConfig(getConfig(octxt, AccountUtil.SN_IMAP));
+    }
+
+    @Override
     public void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException {
         mailbox.setConfig(octxt, section, config);
     }
 
-    @Override
-    public Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
+    private Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
         return mailbox.getConfig(octxt, section);
     }
 
