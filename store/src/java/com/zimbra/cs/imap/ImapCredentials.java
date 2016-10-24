@@ -123,18 +123,6 @@ class ImapCredentials implements java.io.Serializable {
         }
     }
 
-    private Set<String> parseConfig(Metadata config) throws ServiceException {
-        if (config == null || !config.containsKey(FN_SUBSCRIPTIONS))
-            return null;
-        MetadataList slist = config.getList(FN_SUBSCRIPTIONS, true);
-        if (slist == null || slist.isEmpty())
-            return null;
-        Set<String> subscriptions = new HashSet<String>(slist.size());
-        for (int i = 0; i < slist.size(); i++)
-            subscriptions.add(slist.get(i));
-        return subscriptions;
-    }
-
     private void saveConfig(Set<String> subscriptions) throws ServiceException {
         MetadataList slist = new MetadataList();
         if (subscriptions != null && !subscriptions.isEmpty()) {
@@ -145,7 +133,7 @@ class ImapCredentials implements java.io.Serializable {
     }
 
     Set<String> listSubscriptions() throws ServiceException {
-        return parseConfig(getImapMailboxStore().getConfig(getContext(), SN_IMAP));
+        return getImapMailboxStore().listSubscriptions(getContext());
     }
 
     void subscribe(ImapPath path) throws ServiceException {
