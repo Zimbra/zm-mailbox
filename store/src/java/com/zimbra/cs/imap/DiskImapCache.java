@@ -34,7 +34,7 @@ import com.zimbra.common.util.ByteUtil;
  * @author dkarp
  * @author ysasaki
  */
-final class DiskImapCache implements ImapSessionManager.Cache {
+final class DiskImapCache implements ImapSessionManager.Cache<String, ImapFolder> {
 
     private static final String CACHE_DATA_SUBDIR =
             "data" + File.separator + "mailboxd" + File.separator + "imap" + File.separator + "cache";
@@ -134,7 +134,7 @@ final class DiskImapCache implements ImapSessionManager.Cache {
         File pagefile = new File(CACHE_DIR, key + IMAP_CACHEFILE_SUFFIX);
         pagefile.delete();
     }
-    
+
     @Override
     public void updateAccessTime(String key) {
         //nothing to do; disk cache never expires
