@@ -49,10 +49,13 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 public class AccountUtil {
-
+    public static final String FN_SUBSCRIPTIONS = "subs";
+    public static final String SN_IMAP = "imap";
     /**
      * Returns effective quota for an account which is calculated as the minimum of account level quota and domain
      * max mailbox quota. Returns zero for unlimited effective quota.
@@ -617,5 +620,17 @@ public class AccountUtil {
             return folderId;
         }
         return getRootFolderIdForItem(mbox.getFolderById(null, folderId), mbox, dsRootFolderIds);
+    }
+
+    public static Set<String> parseConfig(Metadata config) throws ServiceException {
+        if (config == null || !config.containsKey(AccountUtil.FN_SUBSCRIPTIONS))
+            return null;
+        MetadataList slist = config.getList(AccountUtil.FN_SUBSCRIPTIONS, true);
+        if (slist == null || slist.isEmpty())
+            return null;
+        Set<String> subscriptions = new HashSet<String>(slist.size());
+        for (int i = 0; i < slist.size(); i++)
+            subscriptions.add(slist.get(i));
+        return subscriptions;
     }
 }
