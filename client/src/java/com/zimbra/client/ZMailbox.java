@@ -55,6 +55,7 @@ import org.dom4j.QName;
 import org.json.JSONException;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -5781,6 +5782,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             List<Integer> idlist)
     throws ServiceException {
         copyItemAction(targetFolder.id, idlist);
+    }
+
+    public ItemActionResponse resetImapUid(List<Integer> idList) throws ServiceException {
+        String ids = Joiner.on(",").join(idList);
+        ActionSelector action = ActionSelector.createForIdsAndOperation(ids, MailConstants.OP_RESET_IMAP_UID);
+        ItemActionRequest req = new ItemActionRequest(action);
+        return invokeJaxb(req);
     }
 
     @Override
