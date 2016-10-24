@@ -83,11 +83,6 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
-    }
-
-    @Override
     public void beginTrackingImap() throws ServiceException {
         throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
     }
@@ -213,5 +208,10 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     public ZMailbox getZMailbox() {
         return zMailbox;
+    }
+
+    @Override
+    public Set<String> listSubscriptions(OperationContext octxt) throws ServiceException {
+        return zMailbox.listSubscriptions();
     }
 }
