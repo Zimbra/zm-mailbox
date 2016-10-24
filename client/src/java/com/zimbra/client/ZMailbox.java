@@ -142,6 +142,8 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
+import com.zimbra.soap.account.message.ListSubscriptionsRequest;
+import com.zimbra.soap.account.message.ListSubscriptionsResponse;
 import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
@@ -5801,6 +5803,28 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
+    /**
+     * Delete <tt>MailItem</tt>s with given ids.  If there is no <tt>MailItem</tt> for a given id, that id is ignored.
+     *
+     * @param octxt operation context or {@code null}
+     * @param itemIds item ids
+     * @param nonExistingItems If not null, This gets populated with the item IDs of nonExisting items
+     */
+    @Override
+    public void delete(OpContext octxt, List<Integer> itemIds, List<Integer> nonExistingItems) throws ServiceException {
+        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+    }
+    /** Resets the mailbox's "recent message count" to 0.  A message is considered "recent" if:
+     *     (a) it's not a draft or a sent message, and
+     *     (b) it was added since the last write operation associated with any SOAP session. */
+    @Override
+    public void resetRecentMessageCount(OpContext octxt) throws ServiceException {
+        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+    }
 
+    public Set<String> listSubscriptions() throws ServiceException {
+        ListSubscriptionsRequest req = new ListSubscriptionsRequest();
+        ListSubscriptionsResponse resp = invokeJaxb(req);
+        return resp.getSubscriptions();
+    }
 }
-
