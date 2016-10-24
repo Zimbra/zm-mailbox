@@ -20,6 +20,10 @@ package com.zimbra.qa.unittest;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -35,6 +39,7 @@ import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
 import com.zimbra.client.ZSignature;
 import com.zimbra.common.account.Key.AccountBy;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
@@ -42,6 +47,9 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.imap.RemoteImapMailboxStore;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.MetadataList;
+
 import com.zimbra.soap.mail.message.ItemActionResponse;
 
 public class TestZClient
@@ -180,6 +188,32 @@ extends TestCase {
         RemoteImapMailboxStore store = new RemoteImapMailboxStore(mbox, TestUtil.getAccount(USER_NAME).getId());
         store.resetImapUid(ids);
     }
+
+    @Test
+    public void testListSubscriptions() throws Exception {
+        String path = NAME_PREFIX + "_testPath";
+        MetadataList slist = new MetadataList();
+        slist.add(path);
+
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        //imitate subscription
+        mbox.setConfig(null, "imap", new Metadata().put("subs", slist));
+
+        //check that subscription was saved in mailbox configuration
+        Metadata config = mbox.getConfig(null, "imap");
+        Assert.assertNotNull(config);
+        MetadataList rlist = config.getList("subs", true);
+        Assert.assertNotNull(rlist);
+        Assert.assertNotNull(rlist.get(0));
+        Assert.assertTrue(rlist.get(0).equalsIgnoreCase(path));   
+
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Set<String> subs = zmbox.listSubscriptions();
+        Assert.assertNotNull(subs);
+        Assert.assertFalse(subs.isEmpty());
+        Assert.assertTrue(path.equalsIgnoreCase(subs.iterator().next()));
+    }
+
     @Override
     public void tearDown()
     throws Exception {
