@@ -9,9 +9,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.message.ListSubscriptionsResponse;
+import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
 
-public class ListSubscriptions extends AccountDocumentHandler {
+public class ListIMAPSubscriptions extends AccountDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -23,7 +23,7 @@ public class ListSubscriptions extends AccountDocumentHandler {
         }
 
         Set<String> subs = AccountUtil.parseConfig(getRequestedMailbox(zsc).getConfig(getOperationContext(zsc, context), AccountUtil.SN_IMAP));
-        ListSubscriptionsResponse resp = new ListSubscriptionsResponse();
+        ListIMAPSubscriptionsResponse resp = new ListIMAPSubscriptionsResponse();
         resp.setSubscriptions(subs);
         return JaxbUtil.jaxbToElement(resp);
     }
