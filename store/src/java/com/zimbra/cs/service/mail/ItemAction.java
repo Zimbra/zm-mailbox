@@ -72,7 +72,7 @@ public class ItemAction extends MailDocumentHandler {
 
     protected static final String[] OPERATION_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_OPERATION };
     protected static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_ID };
-    
+
     public static final String OP_TAG = MailConstants.OP_TAG;
     public static final String OP_FLAG = MailConstants.OP_FLAG;
     public static final String OP_PRIORITY = MailConstants.OP_PRIORITY;
@@ -91,6 +91,7 @@ public class ItemAction extends MailDocumentHandler {
     public static final String OP_UNLOCK = MailConstants.OP_UNLOCK;
     public static final String OP_INHERIT = MailConstants.OP_INHERIT;
     public static final String OP_MUTE = MailConstants.OP_MUTE;
+    public static final String OP_IMAP_RESET = MailConstants.OP_RESET_IMAP_UID;
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -214,6 +215,9 @@ public class ItemAction extends MailDocumentHandler {
                     // when marking muted, items are also marked read
                     ItemActionHelper.READ(octxt, mbox, responseProto, local, type, flagValue, null).getResult();
                 }
+            } else if (opStr.equals(MailConstants.OP_RESET_IMAP_UID)) {
+                mbox.resetImapUid(octxt, local);
+                localResults = Joiner.on(",").join(local);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + opStr, null);
             }
