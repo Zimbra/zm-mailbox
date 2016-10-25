@@ -10,11 +10,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.google.common.collect.Iterables;
 import com.zimbra.common.soap.AccountConstants;
 
-@XmlRootElement(name=AccountConstants.E_LIST_SUBSCRIPTIONS_RESPONSE)
-public class ListSubscriptionsResponse {
+@XmlRootElement(name=AccountConstants.E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE)
+public class ListIMAPSubscriptionsResponse {
 
     /**
-     * @zm-api-field-description Identities
+     * @zm-api-field-description list of folder paths subscribed via IMAP
      */
     @XmlElement(name=AccountConstants.E_SUBSCRIPTION)
     Set<String> subs = new HashSet<String>();
