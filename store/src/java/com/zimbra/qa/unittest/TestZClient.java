@@ -190,7 +190,7 @@ extends TestCase {
     }
 
     @Test
-    public void testListSubscriptions() throws Exception {
+    public void testListIMAPSubscriptions() throws Exception {
         String path = NAME_PREFIX + "_testPath";
         MetadataList slist = new MetadataList();
         slist.add(path);
@@ -208,7 +208,7 @@ extends TestCase {
         Assert.assertTrue(rlist.get(0).equalsIgnoreCase(path));   
 
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
-        Set<String> subs = zmbox.listSubscriptions();
+        Set<String> subs = zmbox.listIMAPSubscriptions();
         Assert.assertNotNull(subs);
         Assert.assertFalse(subs.isEmpty());
         Assert.assertTrue(path.equalsIgnoreCase(subs.iterator().next()));
