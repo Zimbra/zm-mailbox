@@ -1,6 +1,7 @@
 package com.zimbra.cs.imap;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 import junit.framework.Assert;
@@ -65,6 +66,26 @@ public class LocalImapMailboxStoreTest {
         Assert.assertNotNull(subs);
         Assert.assertEquals(1,subs.size());
         String sub = subs.iterator().next();
+        Assert.assertTrue(sub.equalsIgnoreCase(path));
+    }
+
+    @Test
+    public void testSaveSubscriptions() throws Exception {
+        //verify that no subscriptions are saved yet
+        LocalImapMailboxStore localStore = new LocalImapMailboxStore(mbox);
+        Set<String> savedSubscriptions = localStore.listSubscriptions(null);
+        Assert.assertNull(savedSubscriptions);
+
+        String path = "testPath";
+        HashSet<String> subscriptions = new HashSet<String>();
+        subscriptions.add(path);
+
+        //test saving subscriptions
+        localStore.saveSubscriptions(null, subscriptions);
+        savedSubscriptions = localStore.listSubscriptions(null);
+        Assert.assertNotNull(savedSubscriptions);
+        Assert.assertEquals(1,savedSubscriptions.size());
+        String sub = savedSubscriptions.iterator().next();
         Assert.assertTrue(sub.equalsIgnoreCase(path));
     }
 }
