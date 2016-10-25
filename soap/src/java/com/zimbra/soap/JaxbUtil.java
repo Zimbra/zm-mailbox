@@ -1068,8 +1068,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.SaveSmimeCertificateResponse.class,
 
             //IMAP
-            com.zimbra.soap.account.message.ListSubscriptionsRequest.class,
-            com.zimbra.soap.account.message.ListSubscriptionsResponse.class
+            com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest.class,
+            com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse.class
         };
 
         try {
