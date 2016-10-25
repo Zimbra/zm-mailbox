@@ -110,6 +110,7 @@ public class AccountService implements DocumentService {
         // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
         dispatcher.registerHandler(AccountConstants.LIST_IMAP_SUBSCRIPTIONS_REQUEST, new ListIMAPSubscriptions());
+        dispatcher.registerHandler(AccountConstants.SAVE_IMAP_SUBSCRIPTIONS_REQUEST, new SaveIMAPSubscriptions());
     }
 
     /**
