@@ -169,6 +169,8 @@ public class AccountConstants {
     //IMAP
     public static final String E_LIST_IMAP_SUBSCRIPTIONS_REQUEST = "ListIMAPSubscriptionsRequest";
     public static final String E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE = "ListIMAPSubscriptionsResponse";
+    public static final String E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST = "SaveIMAPSubscriptionsRequest";
+    public static final String E_SAVE_IMAP_SUBSCRIPTIONS_RESPONSE = "SaveIMAPSubscriptionsResponse";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -313,6 +315,8 @@ public class AccountConstants {
     //IMAP
     public static final QName LIST_IMAP_SUBSCRIPTIONS_REQUEST = QName.get(E_LIST_IMAP_SUBSCRIPTIONS_REQUEST, NAMESPACE);
     public static final QName LIST_IMAP_SUBSCRIPTIONS_RESPONSE = QName.get(E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
+    public static final QName SAVE_IMAP_SUBSCRIPTIONS_REQUEST = QName.get(E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST, NAMESPACE);
+    public static final QName SAVE_IMAP_SUBSCRIPTIONS_RESPONSE = QName.get(E_SAVE_IMAP_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
