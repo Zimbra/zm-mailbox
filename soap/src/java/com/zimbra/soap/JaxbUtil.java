@@ -1069,7 +1069,9 @@ public final class JaxbUtil {
 
             //IMAP
             com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest.class,
-            com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse.class
+            com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse.class,
+            com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest.class,
+            com.zimbra.soap.account.message.SaveIMAPSubscriptionsResponse.class
         };
 
         try {
