@@ -27,7 +27,7 @@ public class CertificateValidity {
 
     /**
      * @zm-api-field-tag startDate
-     * @zm-api-field-description The date the certificate is first valid from.Value is number of milliseconds since epoch.
+     * @zm-api-field-description The date from which certificate validity starts.Value is number of milliseconds since epoch.
      */
     @ZimbraJsonAttribute
     @XmlElement(name=SmimeConstants.E_START_DATE, required=false)
