@@ -52,7 +52,7 @@ public class SmimeConstants {
     public static final String E_SIGNATURE = "signature";
     public static final String E_START_DATE = "startDate";
     public static final String E_END_DATE = "endDate";
-    public static final String E_SUBJECT_ALT_NAME = "sujectAltName";
+    public static final String E_SUBJECT_ALT_NAME = "subjectAltName";
     public static final String E_ISSUER_ALT_NAME = "issuerAltName";
 
     //distinguished name
