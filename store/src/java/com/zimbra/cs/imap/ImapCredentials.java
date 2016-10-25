@@ -123,13 +123,8 @@ class ImapCredentials implements java.io.Serializable {
         }
     }
 
-    private void saveConfig(Set<String> subscriptions) throws ServiceException {
-        MetadataList slist = new MetadataList();
-        if (subscriptions != null && !subscriptions.isEmpty()) {
-            for (String sub : subscriptions)
-                slist.add(sub);
-        }
-        getImapMailboxStore().setConfig(getContext(), SN_IMAP, new Metadata().put(FN_SUBSCRIPTIONS, slist));
+    private void saveSubscriptions(Set<String> subscriptions) throws ServiceException {
+        getImapMailboxStore().saveSubscriptions(getContext(), subscriptions);
     }
 
     Set<String> listSubscriptions() throws ServiceException {
@@ -148,7 +143,7 @@ class ImapCredentials implements java.io.Serializable {
         if (subscriptions == null)
             subscriptions = new HashSet<String>();
         subscriptions.add(path.asImapPath());
-        saveConfig(subscriptions);
+        saveSubscriptions(subscriptions);
     }
 
     void unsubscribe(ImapPath path) throws ServiceException {
@@ -164,7 +159,7 @@ class ImapCredentials implements java.io.Serializable {
         }
         if (!found)
             return;
-        saveConfig(subscriptions);
+        saveSubscriptions(subscriptions);
     }
 
     void hideFolder(ImapPath path) {
