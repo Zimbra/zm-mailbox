@@ -1353,6 +1353,5 @@ public final class LC {
 
     }
 
-    public static final KnownKey sieve_immutable_headers = KnownKey.newKey(""
-            + "Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID");
+    public static final KnownKey sieve_immutable_headers = new KnownKey("sieve_immutable_headers","Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID");
 }
