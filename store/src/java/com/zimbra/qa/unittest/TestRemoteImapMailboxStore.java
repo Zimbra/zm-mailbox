@@ -1,5 +1,6 @@
 package com.zimbra.qa.unittest;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import junit.framework.Assert;
@@ -15,11 +16,11 @@ import com.zimbra.cs.mailbox.MetadataList;
 
 public class TestRemoteImapMailboxStore extends TestCase {
     private static String NAME_PREFIX = "TestRemoteImapMailboxStore";
-    private static final String USER_NAME = "user1";
+    private static final String USER_NAME = NAME_PREFIX + "_user1";
 
-    public void setUp()
-    throws Exception {
+    public void setUp() throws Exception {
         cleanUp();
+        TestUtil.createAccount(USER_NAME);
     }
 
     @Override
@@ -27,13 +28,38 @@ public class TestRemoteImapMailboxStore extends TestCase {
         cleanUp();
     }
 
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+    private void cleanUp() throws Exception {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
     }
 
     @Test
-    public void test() throws Exception {
+    public void testSaveIMAPSubscriptions() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        RemoteImapMailboxStore remoteStore = new RemoteImapMailboxStore(zmbox, TestUtil.getAccount(USER_NAME).getId());
+
+        //check that there are no subscriptions saved yet
+        Set<String> subs = remoteStore.listSubscriptions(null);
+        Assert.assertNull(subs);
+        
+        String path = NAME_PREFIX + "_testPath";
+        Set<String> newSubs = new HashSet<String>();
+        newSubs.add(path);
+
+        //save subscriptions
+        remoteStore.saveSubscriptions(null, newSubs);
+
+        //verify that subscriptions were saved
+        subs = remoteStore.listSubscriptions(null);
+        Assert.assertNotNull(subs);
+        Assert.assertEquals(1,subs.size());
+        String sub = subs.iterator().next();
+        Assert.assertTrue(sub.equalsIgnoreCase(path));
+    }
+
+    @Test
+    public void testListIMAPSubscriptions() throws Exception {
         String path = NAME_PREFIX + "_testPath";
         MetadataList slist = new MetadataList();
         slist.add(path);
@@ -52,8 +78,8 @@ public class TestRemoteImapMailboxStore extends TestCase {
 
         //test listSubscriptions method
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
-        RemoteImapMailboxStore localStore = new RemoteImapMailboxStore(zmbox, TestUtil.getAccount(USER_NAME).getId());
-        Set<String> subs = localStore.listSubscriptions(null);
+        RemoteImapMailboxStore remoteStore = new RemoteImapMailboxStore(zmbox, TestUtil.getAccount(USER_NAME).getId());
+        Set<String> subs = remoteStore.listSubscriptions(null);
         Assert.assertNotNull(subs);
         Assert.assertEquals(1,subs.size());
         String sub = subs.iterator().next();
