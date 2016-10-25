@@ -144,6 +144,7 @@ import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
+import com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
@@ -5827,5 +5828,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         ListIMAPSubscriptionsRequest req = new ListIMAPSubscriptionsRequest();
         ListIMAPSubscriptionsResponse resp = invokeJaxb(req);
         return resp.getSubscriptions();
+    }
+
+    public void saveIMAPsubscriptions(Set<String> subscriptions) throws ServiceException {
+        SaveIMAPSubscriptionsRequest req = new SaveIMAPSubscriptionsRequest(subscriptions);
+        invokeJaxb(req);
     }
 }
