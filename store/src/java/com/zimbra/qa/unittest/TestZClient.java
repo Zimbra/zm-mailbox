@@ -19,6 +19,7 @@ package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -52,11 +53,11 @@ import com.zimbra.cs.mailbox.MetadataList;
 
 import com.zimbra.soap.mail.message.ItemActionResponse;
 
-public class TestZClient
-extends TestCase {
+public class TestZClient extends TestCase {
     private static String NAME_PREFIX = "TestZClient";
-    private static String RECIPIENT_USER_NAME = "user2";
-    private static final String USER_NAME = "user1";
+<<<<<<< 00203313a589d5a49001fa67d0e1fb9336429d9f
+    private static String RECIPIENT_USER_NAME = NAME_PREFIX + "_user2";
+    private static final String USER_NAME = NAME_PREFIX + "_user1";
     private static final String FOLDER_NAME = "testfolder";
     private static ZFolder folder;
 
@@ -64,13 +65,14 @@ extends TestCase {
     public void setUp()
     throws Exception {
         cleanUp();
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(RECIPIENT_USER_NAME);
     }
 
     /**
      * Confirms that the prefs accessor works (bug 51384).
      */
-    public void testPrefs()
-    throws Exception {
+    public void testPrefs() throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZPrefs prefs = mbox.getPrefs();
@@ -80,15 +82,13 @@ extends TestCase {
     /**
      * Confirms that the features accessor doesn't throw NPE (bug 51384).
      */
-    public void testFeatures()
-    throws Exception {
+    public void testFeatures() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFeatures features = mbox.getFeatures();
         features.getPop3Enabled();
     }
 
-    public void testChangePassword()
-    throws Exception {
+    public void testChangePassword() throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
         Options options = new Options();
         options.setAccount(account.getName());
@@ -109,8 +109,7 @@ extends TestCase {
      * Confirms that the {@code List} of signatures returned by {@link ZMailbox#getSignatures}
      * is modifiable (see bug 51842).
      */
-    public void testModifySignatures()
-    throws Exception {
+    public void testModifySignatures() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZSignature> signatures = mbox.getSignatures();
         try {
@@ -212,6 +211,26 @@ extends TestCase {
         Assert.assertNotNull(subs);
         Assert.assertFalse(subs.isEmpty());
         Assert.assertTrue(path.equalsIgnoreCase(subs.iterator().next()));
+    }
+
+    public void testSaveIMAPSubscriptions() throws Exception {
+        //check that no subscriptions are saved yet
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Set<String> subs = zmbox.listIMAPSubscriptions();
+        Assert.assertNotNull(subs);
+        Assert.assertTrue(subs.isEmpty());
+
+        //save new subscription
+        String path = NAME_PREFIX + "_testPath";
+        HashSet<String> newSubs = new HashSet<String>();
+        newSubs.add(path);
+        zmbox.saveIMAPsubscriptions(newSubs);
+
+        //verify
+        Set<String> savedSubs = zmbox.listIMAPSubscriptions();
+        Assert.assertNotNull(savedSubs);
+        Assert.assertFalse(savedSubs.isEmpty());
+        Assert.assertTrue(path.equalsIgnoreCase(savedSubs.iterator().next()));
     }
 
     @Override

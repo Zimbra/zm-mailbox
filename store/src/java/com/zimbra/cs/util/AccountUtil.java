@@ -623,14 +623,17 @@ public class AccountUtil {
     }
 
     public static Set<String> parseConfig(Metadata config) throws ServiceException {
-        if (config == null || !config.containsKey(AccountUtil.FN_SUBSCRIPTIONS))
+        if (config == null || !config.containsKey(AccountUtil.FN_SUBSCRIPTIONS)) {
             return null;
+        }
         MetadataList slist = config.getList(AccountUtil.FN_SUBSCRIPTIONS, true);
-        if (slist == null || slist.isEmpty())
+        if (slist == null || slist.isEmpty()) {
             return null;
+        }
         Set<String> subscriptions = new HashSet<String>(slist.size());
-        for (int i = 0; i < slist.size(); i++)
+        for (int i = 0; i < slist.size(); i++) {
             subscriptions.add(slist.get(i));
+        }
         return subscriptions;
     }
 }

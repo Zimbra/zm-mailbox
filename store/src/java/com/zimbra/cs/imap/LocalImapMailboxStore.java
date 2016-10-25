@@ -33,6 +33,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
@@ -81,8 +82,13 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException {
-        mailbox.setConfig(octxt, section, config);
+    public void saveSubscriptions(OperationContext octxt, Set<String> subs) throws ServiceException {
+        MetadataList slist = new MetadataList();
+        if (subs != null && !subs.isEmpty()) {
+            for (String sub : subs)
+                slist.add(sub);
+        }
+        mailbox.setConfig(octxt, AccountUtil.SN_IMAP, new Metadata().put(AccountUtil.FN_SUBSCRIPTIONS, slist));
     }
 
     private Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
