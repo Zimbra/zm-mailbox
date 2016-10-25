@@ -142,8 +142,8 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
-import com.zimbra.soap.account.message.ListSubscriptionsRequest;
-import com.zimbra.soap.account.message.ListSubscriptionsResponse;
+import com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest;
+import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
 import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
@@ -5822,9 +5822,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         throw new UnsupportedOperationException("ZMailbox does not support method yet");
     }
 
-    public Set<String> listSubscriptions() throws ServiceException {
-        ListSubscriptionsRequest req = new ListSubscriptionsRequest();
-        ListSubscriptionsResponse resp = invokeJaxb(req);
+    public Set<String> listIMAPSubscriptions() throws ServiceException {
+        ListIMAPSubscriptionsRequest req = new ListIMAPSubscriptionsRequest();
+        ListIMAPSubscriptionsResponse resp = invokeJaxb(req);
         return resp.getSubscriptions();
     }
 }
