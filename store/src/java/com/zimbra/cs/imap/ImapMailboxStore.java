@@ -94,4 +94,5 @@ public abstract class ImapMailboxStore {
             String owner, ImapPath relativeTo)
     throws ServiceException;
     public Set<String> listSubscriptions(OperationContext octxt) throws ServiceException;
+    public void saveSubscriptions(OperationContext octxt, Set<String> subs) throws ServiceException;
 }
