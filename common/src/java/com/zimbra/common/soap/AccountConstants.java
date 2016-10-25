@@ -167,8 +167,8 @@ public class AccountConstants {
     public static final String E_REVOKE_OAUTH_CONSUMER_RESPONSE = "RevokeOAuthConsumerResponse";
 
     //IMAP
-    public static final String E_LIST_SUBSCRIPTIONS_REQUEST = "ListSubscriptionsRequest";
-    public static final String E_LIST_SUBSCRIPTIONS_RESPONSE = "ListSubscriptionsResponse";
+    public static final String E_LIST_IMAP_SUBSCRIPTIONS_REQUEST = "ListIMAPSubscriptionsRequest";
+    public static final String E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE = "ListIMAPSubscriptionsResponse";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -311,8 +311,8 @@ public class AccountConstants {
     public static final QName REVOKE_OAUTH_CONSUMER_RESPONSE = QName.get(E_REVOKE_OAUTH_CONSUMER_RESPONSE, NAMESPACE);
 
     //IMAP
-    public static final QName LIST_SUBSCRIPTIONS_REQUEST = QName.get(E_LIST_SUBSCRIPTIONS_REQUEST, NAMESPACE);
-    public static final QName LIST_SUBSCRIPTIONS_RESPONSE = QName.get(E_LIST_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
+    public static final QName LIST_IMAP_SUBSCRIPTIONS_REQUEST = QName.get(E_LIST_IMAP_SUBSCRIPTIONS_REQUEST, NAMESPACE);
+    public static final QName LIST_IMAP_SUBSCRIPTIONS_RESPONSE = QName.get(E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
