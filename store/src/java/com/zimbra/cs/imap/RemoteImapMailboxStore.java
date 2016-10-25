@@ -212,6 +212,6 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public Set<String> listSubscriptions(OperationContext octxt) throws ServiceException {
-        return zMailbox.listSubscriptions();
+        return zMailbox.listIMAPSubscriptions();
     }
 }
