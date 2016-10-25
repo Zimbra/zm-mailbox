@@ -18,6 +18,7 @@
 package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import junit.framework.Assert;
@@ -38,6 +39,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.imap.RemoteImapMailboxStore;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.mail.message.ItemActionResponse;
@@ -160,6 +162,24 @@ extends TestCase {
         Assert.assertFalse(folder.isIMAPSubscribed());
     }
 
+    @Test
+    public void testResetImapUID() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        try {
+            folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", FOLDER_NAME, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
+        } catch (ServiceException e) {
+            if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
+                folder = mbox.getFolderByPath("/"+FOLDER_NAME);
+            } else {
+                throw e;
+            }
+        }
+        List<Integer> ids = new LinkedList<Integer>();
+        ids.add(Integer.valueOf(TestUtil.addMessage(mbox, "imap message 1")));
+        ids.add(Integer.valueOf(TestUtil.addMessage(mbox, "imap message 2")));
+        RemoteImapMailboxStore store = new RemoteImapMailboxStore(mbox, TestUtil.getAccount(USER_NAME).getId());
+        store.resetImapUid(ids);
+    }
     @Override
     public void tearDown()
     throws Exception {
