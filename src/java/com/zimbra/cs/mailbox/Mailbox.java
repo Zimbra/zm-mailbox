@@ -127,6 +127,7 @@ import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Note.Rectangle;
@@ -9878,6 +9879,23 @@ public class Mailbox {
             beginTransaction("getComments", octxt, null);
             MailItem parent = getItemByUuid(parentUuid, MailItem.Type.UNKNOWN, fromDumpster);
             return parent.getComments(SortBy.DATE_DESC, offset, length);
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public UnderlyingData getFirstChildData(OperationContext octxt, MailItem parent)
+            throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getFirstChildData", octxt, null);
+            List<UnderlyingData> keyItems = DbMailItem.getByParent(parent);
+            if (!keyItems.isEmpty()) {
+                success = true;
+                return keyItems.get(0);
+            } else {
+                throw ServiceException.NOT_FOUND("Data not found");
+            }
         } finally {
             endTransaction(success);
         }
