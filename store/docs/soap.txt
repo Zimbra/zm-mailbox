@@ -2117,7 +2117,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
 
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock"
+  <action id="{list}" op="delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock|resetimapuid"
          [tn="{tag-name/list}"] [l="{folder}"] [name="{item-name}"] [color="{color}"] [rgb="{rgb-color}"]
          [tcon="[-]{constraint}"] [f="{flags}"]/>
 </ItemActionRequest>
