@@ -691,7 +691,11 @@ public class MailSender {
             }
 
             if (mimeProcessor != null) {
-                mimeProcessor.process(mm);
+                try {
+                    mimeProcessor.process(mm, mbox);
+                } finally {
+                    mimeProcessor = null;
+                }
             }
 
             // actually send the message via SMTP
