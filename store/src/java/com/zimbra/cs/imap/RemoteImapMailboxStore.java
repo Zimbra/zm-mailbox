@@ -79,7 +79,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public void saveSubscriptions(OperationContext octxt, Set<String> subs) throws ServiceException {
-        zMailbox.saveIMAPsubscriptions(subs);        
+        zMailbox.saveIMAPsubscriptions(subs);
     }
 
     @Override
