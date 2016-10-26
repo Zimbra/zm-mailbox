@@ -55,7 +55,6 @@ import com.zimbra.soap.mail.message.ItemActionResponse;
 
 public class TestZClient extends TestCase {
     private static String NAME_PREFIX = "TestZClient";
-<<<<<<< 00203313a589d5a49001fa67d0e1fb9336429d9f
     private static String RECIPIENT_USER_NAME = NAME_PREFIX + "_user2";
     private static final String USER_NAME = NAME_PREFIX + "_user1";
     private static final String FOLDER_NAME = "testfolder";

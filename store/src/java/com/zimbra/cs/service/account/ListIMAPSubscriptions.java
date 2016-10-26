@@ -7,7 +7,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
 
@@ -25,6 +24,6 @@ public class ListIMAPSubscriptions extends AccountDocumentHandler {
         Set<String> subs = AccountUtil.parseConfig(getRequestedMailbox(zsc).getConfig(getOperationContext(zsc, context), AccountUtil.SN_IMAP));
         ListIMAPSubscriptionsResponse resp = new ListIMAPSubscriptionsResponse();
         resp.setSubscriptions(subs);
-        return JaxbUtil.jaxbToElement(resp);
+        return zsc.jaxbToElement(resp);
     }
 }
