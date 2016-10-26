@@ -2,13 +2,16 @@ package com.zimbra.cs.mime;
 
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+
 public abstract class MimeProcessor {
 
     private Boolean sign = false;
     private Boolean encrypt = false;
     private String certId = null;
 
-    public abstract void process(MimeMessage mm);
+    public abstract void process(MimeMessage mm, Mailbox mbox) throws ServiceException;
 
     public Boolean isSign() {
         return sign;
