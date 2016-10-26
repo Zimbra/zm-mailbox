@@ -37,6 +37,6 @@ public class SaveIMAPSubscriptions extends AccountDocumentHandler {
         }
 
         SaveIMAPSubscriptionsResponse resp = new SaveIMAPSubscriptionsResponse();
-        return JaxbUtil.jaxbToElement(resp);
+        return zsc.jaxbToElement(resp);
     }
 }
