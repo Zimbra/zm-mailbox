@@ -17,12 +17,12 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -45,7 +45,7 @@ public class ActionSelector {
      * @zm-api-field-tag operation
      * @zm-api-field-description Operation
      * <br />
-     * For ItemAction    - delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock
+     * For ItemAction    - delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock|resetimapuid
      * <br />
      * For MsgAction     - delete|read|flag|tag|move|update|spam|trash
      * <br />
@@ -72,6 +72,7 @@ public class ActionSelector {
      *    removeMembers  remove list members
      *    acceptSubsReq  accept subscription/un-subscription request
      *    rejectSubsReq  reject subscription/un-subscription request
+     *    resetimapuid   reset IMAP item UIDs
      * </pre>
      */
     @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=true)
