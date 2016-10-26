@@ -71,8 +71,6 @@ public abstract class ImapMailboxStore {
     public abstract void resetImapUid(List<Integer> renumber) throws ServiceException;
     public abstract Set<ImapMessage> getSubsequence(ImapFolder i4folder, String tag, String sequenceSet, boolean byUID)
             throws ImapParseException;
-    public abstract void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException;
-    public abstract Metadata getConfig(OperationContext octxt, String section) throws ServiceException;
     public abstract void beginTrackingImap() throws ServiceException;
     public abstract void deleteMessages(OperationContext octxt, List<Integer> ids);
     public abstract List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
@@ -93,6 +91,6 @@ public abstract class ImapMailboxStore {
     public abstract Collection<FolderStore> getVisibleFolders(OperationContext octxt, ImapCredentials credentials,
             String owner, ImapPath relativeTo)
     throws ServiceException;
-    public Set<String> listSubscriptions(OperationContext octxt) throws ServiceException;
-    public void saveSubscriptions(OperationContext octxt, Set<String> subs) throws ServiceException;
+    public abstract Set<String> listSubscriptions(OperationContext octxt) throws ServiceException;
+    public abstract void saveSubscriptions(OperationContext octxt, Set<String> subs) throws ServiceException;
 }
