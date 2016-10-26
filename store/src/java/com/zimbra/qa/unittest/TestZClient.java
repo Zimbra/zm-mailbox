@@ -238,18 +238,13 @@ public class TestZClient extends TestCase {
         cleanUp();
     }
 
-    private void cleanUp()
-    throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        if (folder != null) {
-            try {
-                mbox.deleteFolder(folder.getId());
-            } catch (ServiceException e) {}
+    private void cleanUp() throws Exception {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
         }
-        Account account = TestUtil.getAccount(USER_NAME);
-        account.setPassword(TestUtil.DEFAULT_PASSWORD);
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(RECIPIENT_USER_NAME, NAME_PREFIX);
+        if(TestUtil.accountExists(RECIPIENT_USER_NAME)) {
+            TestUtil.deleteAccount(RECIPIENT_USER_NAME);
+        }
     }
 
     public static void main(String[] args)
