@@ -80,7 +80,6 @@ public abstract class ImapMailboxStore {
     public abstract void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException;
     public abstract int getCurrentMODSEQ(int folderId) throws ServiceException;
     public abstract List<Session> getListeners();
-    public abstract boolean attachmentsIndexingEnabled() throws ServiceException;
     public abstract boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException;
     public abstract int getId();
     public abstract MailboxStore getMailboxStore();
