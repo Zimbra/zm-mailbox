@@ -185,7 +185,7 @@ final class AppendMessage {
     private int store(ImapMailboxStore mboxStore, FolderStore folderStore)
     throws ImapSessionClosedException, ServiceException, IOException {
         if (mboxStore instanceof LocalImapMailboxStore) {
-            boolean idxAttach = mboxStore.attachmentsIndexingEnabled();
+            boolean idxAttach = ((LocalImapMailboxStore)mboxStore).attachmentsIndexingEnabled();
             Long receivedDate = date != null ? date.getTime() : null;
             ParsedMessage pm = new ParsedMessage(content, receivedDate, idxAttach);
             try {
