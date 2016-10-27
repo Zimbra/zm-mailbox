@@ -4553,3 +4553,23 @@ This is OAuth related API used for revoking access for an OAuth consumer.
     xmlns="urn:zimbraAccount"/>
 ```
 <RevokeOAuthConsumerResponse xmlns="urn:zimbraAccount"/>```
+
+-----------------------------
+ListIMAPSubscriptionsRequest:
+Returns the list of folders that this account has subscribed to via IMAP
+
+<ListIMAPSubscriptionsRequest/>
+
+<ListIMAPSubscriptionsResponse xmlns="urn:zimbraAccount">
+    [<sub>{folder path}</sub>]+
+</ListIMAPSubscriptionsResponse>
+
+-----------------------------
+SaveIMAPSubscriptionsRequest:
+Saves the list of folders that this account has subscribed to via IMAP
+
+<SaveIMAPSubscriptionsRequest>
+    [<sub>{folder path}</sub>]+
+</SaveIMAPSubscriptionsRequest>
+
+<SaveIMAPSubscriptionsResponse xmlns="urn:zimbraAccount"/>
