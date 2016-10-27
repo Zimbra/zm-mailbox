@@ -29,7 +29,11 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.lmtpserver.LmtpAddress;
+import com.zimbra.cs.lmtpserver.LmtpReply;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -38,6 +42,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.AddressException;
+
 
 /**
  * Class NotifyMailto implements the Notify Command as defined in
@@ -96,7 +104,18 @@ public class NotifyMailto extends AbstractActionCommand {
                             if (stringList.size() != 1) {
                                 throw new SyntaxException("Expecting exactly one String for " + NOTIFY_FROM);
                             }
-                            from = Variables.replaceAllVariables(mail, (String) stringList.get(0));
+                            String email = Variables.replaceAllVariables(mail, (String) stringList.get(0));
+                            // Check if the value of the ":from" tag has an valid email address.
+                            // Because this value is eventually used as a parameter of the MAIL FROM, use
+                            // a method of the LmtpAddress to validate the email address.
+                            LmtpAddress addr = new LmtpAddress("<" + email + ">", new String[] { "BODY", "SIZE" }, null);
+                            if (addr.isValid()) {
+                                from = email;
+                            } else {
+							    // if the :from addr is not valid, the FilterUtil.notifyMailto() method takes 
+								// care of the From header before composing the notification message.
+                                ZimbraLog.filter.info("The value of the \":from\" [" + email + "] is not valid");
+                            }
                         } else {
                             throw new SyntaxException("Expecting a StringList for " + NOTIFY_FROM);
                         }
