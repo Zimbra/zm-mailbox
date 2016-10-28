@@ -126,7 +126,7 @@ abstract class ImapHandler {
     String lastCommand;
     int consecutiveError;
     private ImapProxy imapProxy;
-    ImapSession selectedFolder;
+    ImapSession selectedFolderListener;
     private String idleTag;
     private String origRemoteIp;
     private String via;
@@ -200,7 +200,7 @@ abstract class ImapHandler {
 
     void setLoggingContext() {
         ZimbraLog.clearContext();
-        ImapSession i4selected = selectedFolder;
+        ImapSession i4selected = selectedFolderListener;
         MailboxStore mbox = i4selected == null ? null : i4selected.getMailbox();
 
         if (credentials != null) {
@@ -322,7 +322,7 @@ abstract class ImapHandler {
         }
 
         // check target folder owner's account status before executing command
-        ImapSession i4selected = selectedFolder;
+        ImapSession i4selected = selectedFolderListener;
         if (i4selected == null) {
             return true;
         }
@@ -966,7 +966,7 @@ abstract class ImapHandler {
     State getState() {
         if (goodbyeSent) {
             return State.LOGOUT;
-        } else if (selectedFolder != null || imapProxy != null) {
+        } else if (selectedFolderListener != null || imapProxy != null) {
             return State.SELECTED;
         } else if (isAuthenticated()) {
             return State.AUTHENTICATED;
@@ -996,7 +996,7 @@ abstract class ImapHandler {
     }
 
     ImapSession getCurrentSession() {
-        return getState() == State.LOGOUT ? null : selectedFolder;
+        return getState() == State.LOGOUT ? null : selectedFolderListener;
     }
 
     ImapFolder getSelectedFolder() throws ImapSessionClosedException {
@@ -1005,8 +1005,8 @@ abstract class ImapHandler {
     }
 
     void unsetSelectedFolder(boolean sendClosed) throws IOException {
-        ImapSession i4selected = selectedFolder;
-        selectedFolder = null;
+        ImapSession i4selected = selectedFolderListener;
+        selectedFolderListener = null;
         if (i4selected != null) {
             ImapSessionManager.getInstance().closeFolder(i4selected, false);
             if (sendClosed && sessionActivated(ImapExtension.QRESYNC)) {
@@ -1030,7 +1030,7 @@ abstract class ImapHandler {
             return new Pair<ImapSession, InitialFolderValues>(null, null);
         }
         Pair<ImapSession, InitialFolderValues> selectdata = ImapSessionManager.getInstance().openFolder(path, params, this);
-        selectedFolder = selectdata.getFirst();
+        selectedFolderListener = selectdata.getFirst();
 
         ZimbraLog.imap.info("selected folder " + selectdata.getFirst().getPath());
         return selectdata;
@@ -1044,7 +1044,7 @@ abstract class ImapHandler {
         if (!isAuthenticated()) {
             throw ServiceException.AUTH_REQUIRED();
         }
-        return credentials.getContext().setSession(selectedFolder);
+        return credentials.getContext().setSession(selectedFolderListener);
     }
 
     OperationContext getContextOrNull() {
@@ -3129,7 +3129,7 @@ abstract class ImapHandler {
 
         boolean changed = false;
         long checkpoint = System.currentTimeMillis();
-        MailboxStore selectedMailbox = selectedFolder.getMailbox();
+        MailboxStore selectedMailbox = selectedFolderListener.getMailbox();
         for (int i = 1, max = i4folder.getSize(); i <= max; i++) {
             ImapMessage i4msg = i4folder.getBySequence(i);
             if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.BITMASK_DELETED) > 0) {
@@ -3871,7 +3871,7 @@ abstract class ImapHandler {
 
         String command = (byUID ? "UID STORE" : "STORE");
         List<Tag> newTags = (operation != StoreAction.REMOVE ? new ArrayList<Tag>() : null);
-        Mailbox mbox = (Mailbox) selectedFolder.getMailbox();
+        Mailbox mbox = (Mailbox) selectedFolderListener.getMailbox();
 
         Set<ImapMessage> i4set;
         mbox.lock.lock();
@@ -4111,7 +4111,7 @@ abstract class ImapHandler {
             List<ImapMessage> i4list = new ArrayList<ImapMessage>(SUGGESTED_COPY_BATCH_SIZE);
             List<Integer> idlist = new ArrayList<Integer>(SUGGESTED_COPY_BATCH_SIZE);
             List<Integer> createdList = new ArrayList<Integer>(SUGGESTED_COPY_BATCH_SIZE);
-            String selectedFldrAcctId = selectedFolder.getAuthenticatedAccountId();
+            String selectedFldrAcctId = selectedFolderListener.getAuthenticatedAccountId();
             for (ImapMessage i4msg : i4set) {
                 // we're sending 'em off in batches of 50
                 i4list.add(i4msg);  idlist.add(i4msg.msgId);
