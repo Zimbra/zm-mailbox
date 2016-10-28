@@ -41,6 +41,9 @@ public class MimeConstants {
     public static final String CT_APPLICATION_PGP = "application/pgp-encrypted";
     public static final String CT_APPLICATION_SHOCKWAVE_FLASH = "application/x-shockwave-flash";
     public static final String CT_APPLICATION_SMIME = "application/pkcs7-mime";
+    public static final String CT_APPLICATION_SMIME_SIGNATURE = "application/pkcs7-signature";
+    public static final String CT_APPLICATION_SMIME_OLD = "application/x-pkcs7-mime";
+    public static final String CT_APPLICATION_SMIME_SIGNATURE_OLD = "application/x-pkcs7-signature";
     public static final String CT_APPLICATION_TNEF = "application/ms-tnef";
     public static final String CT_APPLICATION_XHTML = "application/xhtml+xml";
     public static final String CT_APPLICATION_ZIMBRA_DOC = "application/x-zimbra-doc";
