@@ -109,7 +109,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     private boolean processRequest(NioImapRequest req) throws IOException {
-        ImapSession i4selected = selectedFolder;
+        ImapSession i4selected = selectedFolderListener;
         if (i4selected != null)
             i4selected.updateAccessTime();
 
