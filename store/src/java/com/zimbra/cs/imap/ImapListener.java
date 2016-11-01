@@ -29,4 +29,6 @@ public interface ImapListener {
     public void closeFolder(boolean isUnregistering);
     public boolean isWritable();
     public int getFolderId();
+    public void incrementRenumber(ImapMessage msg);
+    public boolean isFailedRenumber(ImapMessage msg);
 }
