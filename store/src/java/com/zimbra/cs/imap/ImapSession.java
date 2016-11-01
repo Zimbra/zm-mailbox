@@ -85,7 +85,7 @@ public class ImapSession extends Session implements ImapListener {
         mFolder    = i4folder;
         this.handler = handler;
 
-        i4folder.setSession(this);
+        i4folder.setFolderListener(this);
     }
 
     ImapHandler getHandler() {
