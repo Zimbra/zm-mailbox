@@ -126,7 +126,7 @@ abstract class ImapHandler {
     String lastCommand;
     int consecutiveError;
     private ImapProxy imapProxy;
-    ImapSession selectedFolderListener;
+    ImapListener selectedFolderListener;
     private String idleTag;
     private String origRemoteIp;
     private String via;
@@ -200,7 +200,7 @@ abstract class ImapHandler {
 
     void setLoggingContext() {
         ZimbraLog.clearContext();
-        ImapSession i4selected = selectedFolderListener;
+        ImapListener i4selected = selectedFolderListener;
         MailboxStore mbox = i4selected == null ? null : i4selected.getMailbox();
 
         if (credentials != null) {
@@ -322,7 +322,7 @@ abstract class ImapHandler {
         }
 
         // check target folder owner's account status before executing command
-        ImapSession i4selected = selectedFolderListener;
+        ImapListener i4selected = selectedFolderListener;
         if (i4selected == null) {
             return true;
         }
@@ -995,20 +995,20 @@ abstract class ImapHandler {
         }
     }
 
-    ImapSession getCurrentSession() {
+    ImapListener getCurrentImapListener() {
         return getState() == State.LOGOUT ? null : selectedFolderListener;
     }
 
     ImapFolder getSelectedFolder() throws ImapSessionClosedException {
-        ImapSession i4selected = getCurrentSession();
+        ImapListener i4selected = getCurrentImapListener();
         return i4selected == null ? null : i4selected.getImapFolder();
     }
 
     void unsetSelectedFolder(boolean sendClosed) throws IOException {
-        ImapSession i4selected = selectedFolderListener;
+        ImapListener i4selected = selectedFolderListener;
         selectedFolderListener = null;
         if (i4selected != null) {
-            ImapSessionManager.getInstance().closeFolder(i4selected, false);
+            i4selected.closeFolder(false);
             if (sendClosed && sessionActivated(ImapExtension.QRESYNC)) {
                 sendUntagged("OK [CLOSED] mailbox closed");
             }
@@ -1044,7 +1044,11 @@ abstract class ImapHandler {
         if (!isAuthenticated()) {
             throw ServiceException.AUTH_REQUIRED();
         }
-        return credentials.getContext().setSession(selectedFolderListener);
+        OperationContext oc = credentials.getContext();
+        if (selectedFolderListener instanceof ImapSession) {
+            oc.setSession((ImapSession) selectedFolderListener);
+        }
+        return oc;
     }
 
     OperationContext getContextOrNull() {
@@ -1634,7 +1638,7 @@ abstract class ImapHandler {
             }
             // don't want the DELETE to cause *this* connection to drop if the deleted folder is currently selected
             if (getState() == State.SELECTED) {
-                ImapSession i4selected = getCurrentSession();
+                ImapListener i4selected = getCurrentImapListener();
                 if (i4selected != null && path.isEquivalent(i4selected.getPath())) {
                     unsetSelectedFolder(true);
                 } else if (imapProxy != null && path.isEquivalent(imapProxy.getPath())) {
@@ -4221,7 +4225,7 @@ abstract class ImapHandler {
             return;
         }
 
-        ImapSession i4selected = getCurrentSession();
+        ImapListener i4selected = getCurrentImapListener();
         if (i4selected == null || !i4selected.hasNotifications()) {
             return;
         }
