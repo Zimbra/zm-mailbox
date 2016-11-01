@@ -60,6 +60,7 @@ import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.AccessBoundedRegex;
@@ -91,7 +92,6 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.security.sasl.Authenticator;
@@ -2162,7 +2162,8 @@ abstract class ImapHandler {
                     attrs.append(attrs.length() == 0 ? "" : " ").append(returnXList ? "\\Spam" : "\\Junk");
                     break;
                 default:
-                    String query = path.getFolder() instanceof SearchFolder ? ((SearchFolder) path.getFolder()).getQuery() : null;
+                    String query = path.getFolder() instanceof SearchFolderStore ?
+                            ((SearchFolderStore) path.getFolder()).getQuery() : null;
                     if (query != null) {
                         if (query.equalsIgnoreCase("is:flagged")) {
                             attrs.append(attrs.length() == 0 ? "" : " ").append(returnXList ? "\\Starred" : "\\Flagged");
