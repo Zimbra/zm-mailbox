@@ -48,7 +48,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.session.Session;
 
-public class ImapSession extends Session {
+public class ImapSession extends Session implements ImapListener {
     private static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
 
     interface ImapFolderData {
@@ -92,12 +92,14 @@ public class ImapSession extends Session {
         return handler;
     }
 
-    ImapFolder getImapFolder() throws ImapSessionClosedException {
+    @Override
+    public ImapFolder getImapFolder() throws ImapSessionClosedException {
         MANAGER.recordAccess(this);
         return reload();
     }
 
-    ImapPath getPath() {
+    @Override
+    public ImapPath getPath() {
         return mPath;
     }
 
@@ -105,6 +107,7 @@ public class ImapSession extends Session {
         return handler != null;
     }
 
+    @Override
     public boolean isWritable() {
         return isInteractive() && mFolder.isWritable();
     }
@@ -113,11 +116,13 @@ public class ImapSession extends Session {
         return mIsVirtual;
     }
 
+    @Override
     public int getFolderId() {
         return mFolderId;
     }
 
-    boolean hasNotifications() {
+    @Override
+    public boolean hasNotifications() {
         return mFolder.hasNotifications();
     }
 
@@ -251,6 +256,11 @@ public class ImapSession extends Session {
     public Session unregister() {
         MANAGER.closeFolder(this, true);
         return detach();
+    }
+
+    @Override
+    public void closeFolder(boolean isUnregistering) {
+        ImapSessionManager.getInstance().closeFolder(this, false);
     }
 
     Session detach() {
