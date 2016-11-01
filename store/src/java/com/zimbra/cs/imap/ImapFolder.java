@@ -447,8 +447,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
                 idx--;
             } else {
                 ZimbraLog.imap.warn("message added out of order occurs before message which is already visible to client. Must renumber %s", i4msg);
-                ((ImapSession)folderListener).incrementRenumber(i4msg);
-                if (((ImapSession)folderListener).isFailedRenumber(i4msg)) {
+                folderListener.incrementRenumber(i4msg);
+                if (folderListener.isFailedRenumber(i4msg)) {
                     throw new ImapRenumberException();
                 }
                 //prev has higher UID, but it has already been displayed to client

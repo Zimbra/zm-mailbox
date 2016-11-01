@@ -163,7 +163,8 @@ public class ImapSession extends Session implements ImapListener {
         return (count == null ? 0 : count);
     }
 
-    void incrementRenumber(ImapMessage msg) {
+    @Override
+    public void incrementRenumber(ImapMessage msg) {
         Integer count = renumberCount.get(msg.msgId);
         count = (count != null ? count + 1 : 1);
         renumberCount.put(msg.msgId, count);
@@ -183,7 +184,7 @@ public class ImapSession extends Session implements ImapListener {
         return false;
     }
 
-    boolean isFailedRenumber(ImapMessage msg) {
+    public boolean isFailedRenumber(ImapMessage msg) {
         Integer count = renumberCount.get(msg.msgId);
         return (count == null ? false : isFailed(count));
     }
