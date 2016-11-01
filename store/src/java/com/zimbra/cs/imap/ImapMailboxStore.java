@@ -40,11 +40,14 @@ public abstract class ImapMailboxStore {
         this.flags = ImapFlagCache.getSystemFlags();
     }
 
-    public static ImapMailboxStore get(Mailbox mbox) {
-        if (mbox == null) {
-            return null;
+    public static ImapMailboxStore get(MailboxStore mbox) throws ServiceException {
+        if (mbox instanceof Mailbox) {
+            return new LocalImapMailboxStore((Mailbox) mbox);
         }
-        return new LocalImapMailboxStore(mbox);
+        if (mbox instanceof ZMailbox) {
+            return new RemoteImapMailboxStore((ZMailbox) mbox);
+        }
+        return null;
     }
 
     public static ImapMailboxStore get(MailboxStore mailboxStore, String accountId) {
