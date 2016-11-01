@@ -72,4 +72,16 @@ public class ImapRemoteListener implements ImapListener {
     public int getFolderId() {
         throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
     }
+
+    @Override
+    public void incrementRenumber(ImapMessage msg) {
+        // TODO: Would be nice to be able to share code with ImapSession for this
+        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+    }
+
+    @Override
+    public boolean isFailedRenumber(ImapMessage msg) {
+        // TODO: Would be nice to be able to share code with ImapSession for this
+        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+    }
 }
