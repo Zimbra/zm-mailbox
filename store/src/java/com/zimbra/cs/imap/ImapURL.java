@@ -72,7 +72,7 @@ final class ImapURL {
         if (mPath == null || mPath.asZimbraPath().length() == 0) {
             if (handler.getState() != ImapHandler.State.SELECTED)
                 throw new ImapUrlException(tag, url, "IMAP URL must specify folder if session not SELECTED");
-            mPath = handler.getCurrentSession().getPath();
+            mPath = handler.getCurrentImapListener().getPath();
         }
 
         if (mUsername == null || mUsername.length() == 0) {
@@ -232,8 +232,11 @@ final class ImapURL {
             if (acct == null) {
                 throw new ImapUrlException(tag, mURL, "cannot find user: " + mUsername);
             }
-            ImapSession i4session = handler.getCurrentSession();
-            OperationContext octxt = creds.getContext().setSession(i4session);
+            ImapListener i4session = handler.getCurrentImapListener();
+            OperationContext octxt = null;
+            if (i4session instanceof ImapSession) {
+                octxt = creds.getContext().setSession((ImapSession)i4session);
+            } // else { TODO for remote case? }
             InputStreamWithSize content = null;
             // special-case the situation where the relevant folder is already SELECTed
             ImapFolder i4folder = handler.getSelectedFolder();
