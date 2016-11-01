@@ -29,7 +29,6 @@ import com.google.common.collect.Sets;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
@@ -52,6 +51,12 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     private transient ZMailbox zMailbox;
     private transient String accountId;
+
+    public RemoteImapMailboxStore(ZMailbox mailbox) throws ServiceException {
+        super();
+        this.zMailbox = mailbox;
+        this.accountId = mailbox.getAccountId();
+    }
 
     public RemoteImapMailboxStore(ZMailbox mailbox, String accountId) {
         super();
