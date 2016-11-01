@@ -43,11 +43,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.store.Blob;
 
 public class RemoteImapMailboxStore extends ImapMailboxStore {
@@ -156,7 +154,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public List<Session> getListeners() {
+    public List<ImapListener> getListeners() {
         throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
     }
 

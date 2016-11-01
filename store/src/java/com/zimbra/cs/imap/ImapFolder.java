@@ -51,7 +51,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.session.Session;
 
 /**
  * @since Apr 30, 2005
@@ -64,7 +63,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
     // attributes of the folder itself, irrespective of the session state
     private transient ImapMailboxStore mailboxStore;
-    private transient ImapSession session;
+    private transient ImapListener session;
     private transient ImapPath path;
     private transient SessionData sessionData;
     private transient Map<Integer, ImapMessage> messageIds;
@@ -142,7 +141,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         imap.addAttribute("folder", path.asImapPath()).addAttribute("query", query);
     }
 
-    void setSession(ImapSession value) {
+    void setSession(ImapListener value) {
         assert(session == null || session == value || sessionData == null);
         session = value;
     }
@@ -448,8 +447,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
                 idx--;
             } else {
                 ZimbraLog.imap.warn("message added out of order occurs before message which is already visible to client. Must renumber %s", i4msg);
-                session.incrementRenumber(i4msg);
-                if (session.isFailedRenumber(i4msg)) {
+                ((ImapSession)session).incrementRenumber(i4msg);
+                if (((ImapSession)session).isFailedRenumber(i4msg)) {
                     throw new ImapRenumberException();
                 }
                 //prev has higher UID, but it has already been displayed to client
@@ -1075,7 +1074,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return removed;
     }
 
-    void restore(ImapSession sess, SessionData sdata) throws ImapSessionClosedException, ServiceException {
+    void restore(ImapListener sess, SessionData sdata) throws ImapSessionClosedException, ServiceException {
         session = sess;
         MailboxStore sessMbox = session.getMailbox();
         if (sessMbox == null) {
@@ -1169,12 +1168,11 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
         added.sort();
         boolean recent = true;
-        for (Session s : mailboxStore.getListeners()) {
+        for (ImapListener i4session : mailboxStore.getListeners()) {
             // added messages are only \Recent if we're the first IMAP session notified about them
-            ImapSession i4session = (ImapSession) s;
             if (i4session == session) {
                 break;
-            } else if (i4session.isWritable() && i4session.getFolderId() == folderId) {
+            } else if (i4session.isWritable() && (i4session.getFolderId() == folderId)) {
                 recent = false;
                 break;
             }
