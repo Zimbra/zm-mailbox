@@ -17,20 +17,21 @@
 package com.zimbra.cs.mailbox;
 
 import com.google.common.base.Objects;
+import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.SearchFolderStore;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.common.mailbox.Color;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @since Aug 23, 2004
  * @author dkarp
  */
-public final class SearchFolder extends Folder {
+public final class SearchFolder extends Folder implements SearchFolderStore {
 
     /** The search folder's query. */
     private String mQuery;
@@ -42,7 +43,7 @@ public final class SearchFolder extends Folder {
     public SearchFolder(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
-    
+
     public SearchFolder(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
         if (mData.type != Type.SEARCHFOLDER.toByte()) {
@@ -51,18 +52,18 @@ public final class SearchFolder extends Folder {
     }
 
     /** Returns the query associated with this search folder. */
+    @Override
     public String getQuery() {
         return (mQuery == null ? "" : mQuery);
     }
 
-    /** Returns the set of item types returned by this search, or
-     *  <code>""</code> if none were specified. */
+    /** Returns the set of item types returned by this search, or <code>""</code> if none were specified. */
+    @Override
     public String getReturnTypes() {
         return (mTypes == null ? "" : mTypes);
     }
 
-    /** Returns the field this search is sorted on, or <code>""</code>
-     *  if none was specified. */
+    /** Returns the field this search is sorted on, or <code>""</code> if none was specified. */
     public String getSortField() {
         return (mSort == null ? "" : mSort);
     }
