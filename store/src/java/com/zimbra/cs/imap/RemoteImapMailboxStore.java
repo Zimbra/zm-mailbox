@@ -73,12 +73,6 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public Set<ImapMessage> getSubsequence(ImapFolder i4folder, String tag, String sequenceSet, boolean byUID)
-    throws ImapParseException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
-    }
-
-    @Override
     public void saveSubscriptions(OperationContext octxt, Set<String> subs) throws ServiceException {
         zMailbox.saveIMAPsubscriptions(subs);
     }
