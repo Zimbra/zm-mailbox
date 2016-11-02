@@ -21,7 +21,9 @@ import java.io.InputStream;
 
 import javax.mail.internet.MimeMessage;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -38,6 +40,16 @@ public class ImapPartSpecifierTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     private void checkBody(MimeMessage mm, String part, String modifier, String startsWith, String endsWith)
