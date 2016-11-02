@@ -134,7 +134,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public int getCurrentMODSEQ(int folderId) throws ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        return zMailbox.getFolderById(Integer.toString(folderId)).getImapMODSEQ();
     }
 
     @Override
