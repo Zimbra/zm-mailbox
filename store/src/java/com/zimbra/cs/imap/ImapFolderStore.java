@@ -28,7 +28,7 @@ public interface ImapFolderStore {
     public boolean isIMAPDeleted();
     public FolderStore getFolderStore();
 
-    public static ImapFolderStore get(Object folder) throws ServiceException {
+    public static ImapFolderStore get(FolderStore folder) throws ServiceException {
         if (folder == null) {
             return null;
         }
