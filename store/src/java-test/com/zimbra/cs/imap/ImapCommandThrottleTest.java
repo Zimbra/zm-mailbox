@@ -21,46 +21,54 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import junit.framework.Assert;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.imap.AbstractListCommand;
-import com.zimbra.cs.imap.AppendCommand;
-import com.zimbra.cs.imap.AppendMessage;
-import com.zimbra.cs.imap.CopyCommand;
-import com.zimbra.cs.imap.ExamineCommand;
-import com.zimbra.cs.imap.FetchCommand;
-import com.zimbra.cs.imap.ImapCommand;
-import com.zimbra.cs.imap.ImapCommandThrottle;
-import com.zimbra.cs.imap.ImapHandler;
-import com.zimbra.cs.imap.ImapPartSpecifier;
-import com.zimbra.cs.imap.ImapPath;
-import com.zimbra.cs.imap.ListCommand;
-import com.zimbra.cs.imap.Literal;
-import com.zimbra.cs.imap.QResyncInfo;
-import com.zimbra.cs.imap.SearchCommand;
-import com.zimbra.cs.imap.SelectCommand;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.AppendMessage.Part;
 import com.zimbra.cs.imap.ImapHandler.StoreAction;
-import com.zimbra.cs.imap.ImapSearch.SequenceSearch;
-import com.zimbra.cs.imap.ImapSearch.FlagSearch;
-import com.zimbra.cs.imap.ImapSearch.AndOperation;
-import com.zimbra.cs.imap.ImapSearch.OrOperation;
 import com.zimbra.cs.imap.ImapSearch.AllSearch;
+import com.zimbra.cs.imap.ImapSearch.AndOperation;
+import com.zimbra.cs.imap.ImapSearch.FlagSearch;
+import com.zimbra.cs.imap.ImapSearch.OrOperation;
+import com.zimbra.cs.imap.ImapSearch.SequenceSearch;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 public class ImapCommandThrottleTest {
+    private Account acct = null;
+    ImapCredentials creds = null;
+    private static final String LOCAL_USER = "localimaptest@zimbra.com";
 
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+        Provisioning prov = Provisioning.getInstance();
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraId, "12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
+        acct = prov.createAccount(LOCAL_USER, "secret", attrs);
+        acct.setFeatureAntispamEnabled(true);
+        creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     @Test
@@ -105,22 +113,22 @@ public class ImapCommandThrottleTest {
     public void select() {
         String pathName = "testfolder";
 
-        SelectCommand select = new SelectCommand(new ImapPath(pathName, null), (byte) 123, makeQri());
+        SelectCommand select = new SelectCommand(new ImapPath(pathName, creds), (byte) 123, makeQri());
 
         Assert.assertTrue("same obj", select.isDuplicate(select));
 
-        SelectCommand select2 = new SelectCommand(new ImapPath(pathName, null), (byte) 123, makeQri());
+        SelectCommand select2 = new SelectCommand(new ImapPath(pathName, creds), (byte) 123, makeQri());
         Assert.assertTrue("diff obj same fields", select.isDuplicate(select2));
 
-        SelectCommand select3 = new SelectCommand(new ImapPath(pathName + "foo", null), (byte) 123, makeQri());
+        SelectCommand select3 = new SelectCommand(new ImapPath(pathName + "foo", creds), (byte) 123, makeQri());
         Assert.assertFalse("different path", select.isDuplicate(select3));
 
-        SelectCommand select4 = new SelectCommand(new ImapPath(pathName, null), (byte) 101, makeQri());
+        SelectCommand select4 = new SelectCommand(new ImapPath(pathName, creds), (byte) 101, makeQri());
         Assert.assertFalse("different params", select.isDuplicate(select4));
 
         QResyncInfo qri = makeQri();
         qri.setKnownUIDs("foo");
-        SelectCommand select5 = new SelectCommand(new ImapPath(pathName, null), (byte) 123, qri);
+        SelectCommand select5 = new SelectCommand(new ImapPath(pathName, creds), (byte) 123, qri);
         Assert.assertFalse("different qri", select.isDuplicate(select5));
     }
 
@@ -128,25 +136,25 @@ public class ImapCommandThrottleTest {
     public void examine() {
         String pathName = "testfolder";
 
-        ExamineCommand examine = new ExamineCommand(new ImapPath(pathName, null), (byte) 123, makeQri());
+        ExamineCommand examine = new ExamineCommand(new ImapPath(pathName, creds), (byte) 123, makeQri());
 
         Assert.assertTrue("same obj", examine.isDuplicate(examine));
 
-        SelectCommand select = new SelectCommand(new ImapPath(pathName, null), (byte) 123, makeQri());
+        SelectCommand select = new SelectCommand(new ImapPath(pathName, creds), (byte) 123, makeQri());
         Assert.assertFalse("select vs examine", examine.isDuplicate(select));
 
-        ExamineCommand examine2 = new ExamineCommand(new ImapPath(pathName, null), (byte) 123, makeQri());
+        ExamineCommand examine2 = new ExamineCommand(new ImapPath(pathName, creds), (byte) 123, makeQri());
         Assert.assertTrue("diff obj same fields", examine.isDuplicate(examine2));
 
-        ExamineCommand examine3 = new ExamineCommand(new ImapPath(pathName + "foo", null), (byte) 123, makeQri());
+        ExamineCommand examine3 = new ExamineCommand(new ImapPath(pathName + "foo", creds), (byte) 123, makeQri());
         Assert.assertFalse("different path", examine.isDuplicate(examine3));
 
-        ExamineCommand examine4 = new ExamineCommand(new ImapPath(pathName, null), (byte) 101, makeQri());
+        ExamineCommand examine4 = new ExamineCommand(new ImapPath(pathName, creds), (byte) 101, makeQri());
         Assert.assertFalse("different params", examine.isDuplicate(examine4));
 
         QResyncInfo qri = makeQri();
         qri.setKnownUIDs("foo");
-        ExamineCommand examine5 = new ExamineCommand(new ImapPath(pathName, null), (byte) 123, qri);
+        ExamineCommand examine5 = new ExamineCommand(new ImapPath(pathName, creds), (byte) 123, qri);
         Assert.assertFalse("different qri", examine.isDuplicate(examine5));
     }
 
@@ -247,17 +255,17 @@ public class ImapCommandThrottleTest {
         String destFolder = "destFolder";
         String sequenceSet = "10:20";
 
-        CopyCommand copy = new CopyCommand(sequenceSet, new ImapPath(destFolder, null));
+        CopyCommand copy = new CopyCommand(sequenceSet, new ImapPath(destFolder, creds));
 
         Assert.assertTrue("same obj", copy.isDuplicate(copy));
 
-        CopyCommand copy2 = new CopyCommand(sequenceSet, new ImapPath(destFolder, null));
+        CopyCommand copy2 = new CopyCommand(sequenceSet, new ImapPath(destFolder, creds));
         Assert.assertTrue("diff obj same fields", copy.isDuplicate(copy2));
 
-        CopyCommand copy3 = new CopyCommand(sequenceSet, new ImapPath(destFolder + "foo", null));
+        CopyCommand copy3 = new CopyCommand(sequenceSet, new ImapPath(destFolder + "foo", creds));
         Assert.assertFalse("diff dest path", copy.isDuplicate(copy3));
 
-        CopyCommand copy4 = new CopyCommand("20:30", new ImapPath(destFolder + "foo", null));
+        CopyCommand copy4 = new CopyCommand("20:30", new ImapPath(destFolder + "foo", creds));
         Assert.assertFalse("diff dest path", copy.isDuplicate(copy4));
     }
 
@@ -295,21 +303,21 @@ public class ImapCommandThrottleTest {
     }
 
     @Test
-    public void append() throws IOException {
+    public void append() throws Exception {
         String path = "testPath";
-        AppendCommand append = new AppendCommand(new ImapPath(path, null), makeAppends());
+        AppendCommand append = new AppendCommand(new ImapPath(path, creds), makeAppends());
 
         Assert.assertTrue("same obj", append.isDuplicate(append));
 
-        AppendCommand append2 = new AppendCommand(new ImapPath(path, null), makeAppends());
+        AppendCommand append2 = new AppendCommand(new ImapPath(path, creds), makeAppends());
         Assert.assertTrue("diff obj same params", append.isDuplicate(append2));
 
-        AppendCommand append3 = new AppendCommand(new ImapPath(path + "foo", null), makeAppends());
+        AppendCommand append3 = new AppendCommand(new ImapPath(path + "foo", creds), makeAppends());
         Assert.assertFalse("different path", append.isDuplicate(append3));
 
         List<AppendMessage> appends = makeAppends();
         appends.remove(0);
-        AppendCommand append4 = new AppendCommand(new ImapPath(path, null), appends);
+        AppendCommand append4 = new AppendCommand(new ImapPath(path, creds), appends);
         Assert.assertFalse("different length appends", append.isDuplicate(append4));
 
         appends = makeAppends();
@@ -319,7 +327,7 @@ public class ImapCommandThrottleTest {
         parts.add(makeAppendPart(appendMsg2, 215, (byte) 215));
 
         appends.add(0, appendMsg2);
-        AppendCommand append5 = new AppendCommand(new ImapPath(path, null), appends);
+        AppendCommand append5 = new AppendCommand(new ImapPath(path, creds), appends);
         Assert.assertFalse("different append parts", append.isDuplicate(append5));
 
         parts = new ArrayList<Part>();
@@ -327,7 +335,7 @@ public class ImapCommandThrottleTest {
         parts.add(makeAppendPart(appendMsg2, 123, (byte) 99));
         appends.remove(0);
         appends.add(0, appendMsg2);
-        AppendCommand append6 = new AppendCommand(new ImapPath(path, null), appends);
+        AppendCommand append6 = new AppendCommand(new ImapPath(path, creds), appends);
         Assert.assertFalse("different date", append.isDuplicate(append6));
 
         parts = new ArrayList<Part>();
@@ -338,7 +346,7 @@ public class ImapCommandThrottleTest {
         parts.add(makeAppendPart(appendMsg2, 123, (byte) 99));
         appends.remove(0);
         appends.add(0, appendMsg2);
-        AppendCommand append7 = new AppendCommand(new ImapPath(path, null), appends);
+        AppendCommand append7 = new AppendCommand(new ImapPath(path, creds), appends);
         Assert.assertFalse("different flag names", append.isDuplicate(append7));
     }
 
@@ -425,18 +433,18 @@ public class ImapCommandThrottleTest {
     @Test
     public void create() {
         String pathName = "folder123";
-        CreateCommand create = new CreateCommand(new ImapPath(pathName, null));
+        CreateCommand create = new CreateCommand(new ImapPath(pathName, creds));
 
         Assert.assertTrue("same obj", create.isDuplicate(create));
 
-        CreateCommand create2 = new CreateCommand(new ImapPath(pathName, null));
+        CreateCommand create2 = new CreateCommand(new ImapPath(pathName, creds));
         Assert.assertTrue("same fields", create.isDuplicate(create2));
 
-        create2 = new CreateCommand(new ImapPath("foo", null));
+        create2 = new CreateCommand(new ImapPath("foo", creds));
         Assert.assertFalse("different path", create.isDuplicate(create2));
 
         for (int repeats = 0; repeats < LC.imap_throttle_command_limit.intValue(); repeats++) {
-            create2 = new CreateCommand(new ImapPath("foo"+repeats, null));
+            create2 = new CreateCommand(new ImapPath("foo"+repeats, creds));
             Assert.assertFalse(create2.throttle(create));
             create = create2;
         }
