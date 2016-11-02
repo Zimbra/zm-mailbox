@@ -64,19 +64,6 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public Set<ImapMessage> getSubsequence(ImapFolder i4folder, String tag, String sequenceSet, boolean byUID)
-    throws ImapParseException {
-        Set<ImapMessage> i4set;
-        mailbox.lock.lock();
-        try {
-            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
-        } finally {
-            mailbox.lock.release();
-        }
-        return i4set;
-    }
-
-    @Override
     public Set<String> listSubscriptions(OperationContext octxt) throws ServiceException {
         return AccountUtil.parseConfig(getConfig(octxt, AccountUtil.SN_IMAP));
     }
