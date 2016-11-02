@@ -78,10 +78,12 @@ public class ZFolderTest {
         xml = "<folder id='1' rev='1' s='0' i4next='2' i4ms='1' name='X' ms='1' n='0' l='11'/>";
         folder = new ZFolder(Element.parseXML(xml), null, null);
         Assert.assertEquals(ZFolder.View.unknown, folder.getDefaultView());
+        Assert.assertEquals(1, folder.getImapMODSEQ());
 
-        xml = "<folder id='1' rev='1' s='0' i4next='2' i4ms='1' name='X' ms='1' n='0' l='11' view='XXX'/>";
+        xml = "<folder id='1' rev='1' s='0' i4next='2' i4ms='2' name='X' ms='1' n='0' l='11' view='XXX'/>";
         folder = new ZFolder(Element.parseXML(xml), null, null);
         Assert.assertEquals(ZFolder.View.unknown, folder.getDefaultView());
+        Assert.assertEquals(2, folder.getImapMODSEQ());
     }
 
 }
