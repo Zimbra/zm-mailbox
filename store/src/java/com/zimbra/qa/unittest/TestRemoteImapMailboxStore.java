@@ -8,8 +8,11 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
+import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.cs.imap.RemoteImapMailboxStore;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
@@ -84,5 +87,21 @@ public class TestRemoteImapMailboxStore extends TestCase {
         Assert.assertEquals(1,subs.size());
         String sub = subs.iterator().next();
         Assert.assertTrue(sub.equalsIgnoreCase(path));
+    }
+
+    @Test
+    public void testGetCurrentModseq() throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Folder folder = mbox.createFolder(null, NAME_PREFIX, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
+        int folderId = folder.getId();
+
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        RemoteImapMailboxStore remoteStore = new RemoteImapMailboxStore(zmbox, TestUtil.getAccount(USER_NAME).getId());
+        Assert.assertEquals("Before adding a message, remoteStore.getCurrentMODSEQ returns value different from folder.getImapMODSEQ", remoteStore.getCurrentMODSEQ(folderId), folder.getImapMODSEQ());
+
+        // add a message to the folder
+        TestUtil.addMessage(mbox, "Message 1");
+        folder = mbox.getFolderById(null, folderId);
+        Assert.assertEquals("After adding a message, remoteStore.getCurrentMODSEQ returns value different from folder.getImapMODSEQ", remoteStore.getCurrentMODSEQ(folderId), folder.getImapMODSEQ());
     }
 }
