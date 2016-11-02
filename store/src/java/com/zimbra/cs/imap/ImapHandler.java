@@ -4068,9 +4068,14 @@ abstract class ImapHandler {
         if (i4folder == null) {
             throw new ImapSessionClosedException();
         }
-        ImapMailboxStore selectedImapMboxStore = i4folder.getImapMailboxStore();
-
-        Set<ImapMessage> i4set = selectedImapMboxStore.getSubsequence(i4folder, tag, sequenceSet, byUID);
+        Mailbox mbox = (Mailbox)i4folder.getMailbox();
+        Set<ImapMessage> i4set;
+        mbox.lock.lock(false);
+        try {
+            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
+        } finally {
+            mbox.lock.release();
+        }
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
         if (!byUID && i4set.contains(null)) {
@@ -4092,6 +4097,7 @@ abstract class ImapHandler {
             FolderStore folder = path.getFolder();
 
             // check target folder permissions before attempting the copy
+            ImapMailboxStore selectedImapMboxStore = i4folder.getImapMailboxStore();
             boolean sameMailbox = selectedImapMboxStore.getAccountId().equalsIgnoreCase(mbxStore.getAccountId());
             int uvv = folder.getUIDValidity();
             ItemId iidTarget = new ItemId(folder, path.getOwnerAccount().getId());
