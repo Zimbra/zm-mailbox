@@ -174,6 +174,10 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
         return mailbox.getListeners(Session.Type.IMAP);
     }
 
+    public boolean attachmentsIndexingEnabled() throws ServiceException {
+        return mailbox.attachmentsIndexingEnabled();
+    }
+
     @Override
     public boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException {
         return (AccountUtil.addressMatchesAccountOrSendAs(mailbox.getAccount(), givenAddress));
