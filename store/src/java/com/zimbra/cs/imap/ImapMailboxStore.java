@@ -69,8 +69,6 @@ public abstract class ImapMailboxStore {
 
     public abstract ImapFlag getTagByName(String tag) throws ServiceException;
     public abstract void resetImapUid(List<Integer> renumber) throws ServiceException;
-    public abstract Set<ImapMessage> getSubsequence(ImapFolder i4folder, String tag, String sequenceSet, boolean byUID)
-            throws ImapParseException;
     public abstract void beginTrackingImap() throws ServiceException;
     public abstract void deleteMessages(OperationContext octxt, List<Integer> ids);
     public abstract List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
