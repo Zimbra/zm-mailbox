@@ -112,6 +112,11 @@ public class ImapPath implements Comparable<ImapPath> {
                 mPath = "Sent" + mPath.substring(10);
             }
         }
+        try {
+            this.imapFolderStore = getImapFolderStore();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error(e);
+        }
     }
 
     ImapPath(String owner, String zimbraPath, ImapCredentials creds) {
@@ -133,6 +138,7 @@ public class ImapPath implements Comparable<ImapPath> {
         imapMboxStore = other.imapMboxStore;
         folder = other.folder;
         mItemId = other.mItemId;
+        this.imapFolderStore = other.imapFolderStore;
     }
 
     ImapPath(String owner, FolderStore folderStore, ImapCredentials creds) throws ServiceException {
@@ -140,6 +146,7 @@ public class ImapPath implements Comparable<ImapPath> {
         imapMboxStore = ImapMailboxStore.get(folderStore.getMailboxStore(), accountIdFromCredentials());
         this.folder = folderStore;
         mItemId = new ItemId(folderStore.getFolderIdAsString(), accountIdFromCredentials());
+        this.imapFolderStore = getImapFolderStore();
     }
 
     ImapPath(String owner, FolderStore folderStore, ImapPath mountpoint) throws ServiceException {
@@ -147,6 +154,7 @@ public class ImapPath implements Comparable<ImapPath> {
         (mReferent = new ImapPath(owner, folderStore, mCredentials)).mScope = Scope.REFERENCE;
         int start = mountpoint.getReferent().mPath.length() + 1;
         mPath = mountpoint.mPath + "/" + mReferent.mPath.substring(start == 1 ? 0 : start);
+        this.imapFolderStore = getImapFolderStore();
     }
 
     public boolean isEquivalent(ImapPath other) {
