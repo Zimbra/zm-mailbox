@@ -233,10 +233,7 @@ final class ImapURL {
                 throw new ImapUrlException(tag, mURL, "cannot find user: " + mUsername);
             }
             ImapListener i4session = handler.getCurrentImapListener();
-            OperationContext octxt = null;
-            if (i4session instanceof ImapSession) {
-                octxt = creds.getContext().setSession((ImapSession)i4session);
-            } // else { TODO for remote case? }
+            OperationContext octxt = creds.getContext().setSession(i4session);
             InputStreamWithSize content = null;
             // special-case the situation where the relevant folder is already SELECTed
             ImapFolder i4folder = handler.getSelectedFolder();
