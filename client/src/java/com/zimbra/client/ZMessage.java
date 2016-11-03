@@ -17,6 +17,7 @@
 
 package com.zimbra.client;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,12 +27,15 @@ import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyMessageEvent;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.zclient.ZClientException;
 
-public class ZMessage implements ZItem, ToZJSONObject {
+public class ZMessage implements ZItem, ToZJSONObject, ZimbraMailItem {
 
     private final String mId;
     private String mFlags;
@@ -170,6 +174,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         return mReplyType;
     }
 
+    @Override
     public long getSize() {
         return mSize;
     }
@@ -508,7 +513,6 @@ public class ZMessage implements ZItem, ToZJSONObject {
         getMailbox().flagMessage(getId(), flag);
     }
 
-
     public void tag(String nameOrId, boolean tagged) throws ServiceException {
         ZTag tag = mMailbox.getTag(nameOrId);
         if (tag == null)
@@ -551,5 +555,38 @@ public class ZMessage implements ZItem, ToZJSONObject {
 
     public long getAutoSendTime() {
         return mAutoSendTime;
+    }
+
+    @Override
+    public long getDate() {
+        return this.getReceivedDate();
+    }
+
+    @Override
+    public InputStream getContentStream() throws ServiceException {
+        // TODO - needs to handle both when data is provided by getContent and when provided by
+        // getContentURL
+        throw new UnsupportedOperationException("ZMessage method not supported yet");
+    }
+
+    @Override
+    public int getIdInMailbox() throws ServiceException {
+        String acctId = null;
+        try {
+            acctId = mMailbox.getAccountId();
+        } catch (ServiceException e) {
+        }
+        ItemIdentifier itemId = new ItemIdentifier(this.getId(), acctId);
+        return itemId.id;
+    }
+
+    @Override
+    public MailItemType getMailItemType() {
+        return MailItemType.MESSAGE;
+    }
+
+    @Override
+    public int getModifiedSequence() {
+        throw new UnsupportedOperationException("ZMessage method not supported yet");
     }
 }
