@@ -179,11 +179,6 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public int getId() {
-        return mailbox.getId();
-    }
-
-    @Override
     public MailboxStore getMailboxStore() {
         return mailbox;
     }
