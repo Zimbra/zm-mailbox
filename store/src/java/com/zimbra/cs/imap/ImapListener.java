@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.imap;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.imap.ImapSession.ImapFolderData;
 import com.zimbra.cs.session.Session;
@@ -27,6 +30,8 @@ public abstract class ImapListener extends Session {
     final boolean  mIsVirtual;
     ImapFolderData mFolder;
     ImapHandler handler;
+
+    private final Map<Integer, Integer> renumberCount = new ConcurrentHashMap<Integer, Integer>();
 
     ImapListener(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
@@ -42,8 +47,6 @@ public abstract class ImapListener extends Session {
     public abstract ImapFolder getImapFolder() throws ImapSessionClosedException;
     public abstract boolean hasNotifications();
     public abstract void closeFolder(boolean isUnregistering);
-    public abstract void incrementRenumber(ImapMessage msg);
-    public abstract boolean isFailedRenumber(ImapMessage msg);
 
     ImapHandler getHandler() {
         return handler;
@@ -72,5 +75,39 @@ public abstract class ImapListener extends Session {
     @Override
     protected long getSessionIdleLifetime() {
         return handler.getConfig().getAuthenticatedMaxIdleTime() * 1000;
+    }
+
+    int getRenumberCount(ImapMessage msg) {
+        Integer count = renumberCount.get(msg.msgId);
+        return (count == null ? 0 : count);
+    }
+
+    public void incrementRenumber(ImapMessage msg) {
+        Integer count = renumberCount.get(msg.msgId);
+        count = (count != null ? count + 1 : 1);
+        renumberCount.put(msg.msgId, count);
+    }
+
+    void resetRenumber() {
+        renumberCount.clear();
+    }
+
+    boolean hasFailedRenumber() {
+        //check if any id has been repeatedly renumbered
+        for (Integer count : renumberCount.values()) {
+            if (count > 5) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isFailedRenumber(ImapMessage msg) {
+        Integer count = renumberCount.get(msg.msgId);
+        return (count == null ? false : isFailed(count));
+    }
+
+    private boolean isFailed(Integer count) {
+        return count > 5;
     }
 }
