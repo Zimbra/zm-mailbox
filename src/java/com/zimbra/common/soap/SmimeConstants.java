@@ -34,6 +34,8 @@ public class SmimeConstants {
     public static final QName SAVE_SMIME_CERTIFICATE_RESPONSE = QName.get(E_SAVE_SMIME_CERTIFICATE_RESPONSE, AccountConstants.NAMESPACE);
 
     public static final String A_SIGN = "sign";
+    public static final String A_SIGNED = "signed";
+    public static final String A_SIGNATURE_VALIDITY = "signatureValidity";
     public static final String A_ENCRYPT = "encrypt";
     public static final String A_CERT_ID = "certId";
     public static final String A_CERTIFICATE_PASSWORD = "password";
