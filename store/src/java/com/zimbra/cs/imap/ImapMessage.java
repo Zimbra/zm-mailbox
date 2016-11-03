@@ -48,6 +48,10 @@ import org.apache.commons.codec.net.BCodec;
 import org.apache.commons.codec.net.QCodec;
 
 import com.google.common.base.Objects;
+import com.zimbra.client.ZContact;
+import com.zimbra.client.ZMessage;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeCompoundHeader;
@@ -142,6 +146,10 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         return (sflags & FLAG_IS_CONTACT) == 0 ? MailItem.Type.MESSAGE : MailItem.Type.CONTACT;
     }
 
+    MailItemType getMailItemType() {
+        return (sflags & FLAG_IS_CONTACT) == 0 ? MailItemType.MESSAGE : MailItemType.CONTACT;
+    }
+
     boolean isTagged(ImapFlag i4flag) {
         return i4flag == null ? false : i4flag.matches(this);
     }
@@ -164,7 +172,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         return this;
     }
 
-    long getSize(MailItem item) throws ServiceException {
+    long getSize(ZimbraMailItem item) throws ServiceException {
         if (item instanceof Message) {
             return item.getSize();
         }
@@ -213,9 +221,9 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     static final InputStreamWithSize EMPTY_CONTENT =
             new InputStreamWithSize(new SharedByteArrayInputStream(new byte[0]), 0L);
 
-    static InputStreamWithSize getContent(MailItem item) throws ServiceException {
+    static InputStreamWithSize getContent(ZimbraMailItem item) throws ServiceException {
         if (item instanceof Message) {
-            return new InputStreamWithSize(item.getContentStream(),item.getSize());
+            return new InputStreamWithSize(item.getContentStream(), item.getSize());
         } else if (item instanceof Contact) {
             try {
                 VCard vcard = VCard.formatContact((Contact) item);
@@ -234,14 +242,16 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                 baos.write(vcard.getFormatted().getBytes(MimeConstants.P_CHARSET_UTF8));
                 return new InputStreamWithSize(new SharedByteArrayInputStream(baos.toByteArray()), (long)baos.size());
             } catch (Exception e) {
-                throw ServiceException.FAILURE("problems serializing contact " + item.getId(), e);
+                throw ServiceException.FAILURE("problems serializing contact " + item.getIdInMailbox(), e);
             }
+        } else if (item instanceof ZMessage || item instanceof ZContact) {
+            return new InputStreamWithSize(item.getContentStream(), item.getSize());
         } else {
             return EMPTY_CONTENT;
         }
     }
 
-    static MimeMessage getMimeMessage(MailItem item) throws ServiceException {
+    static MimeMessage getMimeMessage(ZimbraMailItem item) throws ServiceException {
         if (item instanceof Message) {
             return ((Message) item).getMimeMessage(false);
         }
@@ -250,13 +260,14 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         try {
             return new Mime.FixedMimeMessage(JMSession.getSession(), is);
         } catch (MessagingException e) {
-            throw ServiceException.FAILURE("error creating MimeMessage for " + item.getType() + ' ' + item.getId(), e);
+            throw ServiceException.FAILURE(String.format("error creating MimeMessage for %s %s",
+                    ((MailItem)item).getType(), item.getIdInMailbox()), e);
         } finally {
             ByteUtil.closeStream(is);
         }
     }
 
-    int getModseq(MailItem item) {
+    int getModseq(ZimbraMailItem item) {
         return item.getModifiedSequence();
     }
 
