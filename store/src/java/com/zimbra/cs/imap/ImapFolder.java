@@ -1125,7 +1125,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     }
 
     @Override
-    public void handleFolderRename(int changeId, Folder folder, Change chg) {
+    public void handleFolderRename(int changeId, FolderStore folder, Change chg) {
         updatePath(folder);
         // FIXME: can we change the folder's UIDVALIDITY?
         //        if not, how do we persist it for the session?
