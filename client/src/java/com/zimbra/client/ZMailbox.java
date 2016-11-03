@@ -100,8 +100,10 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
@@ -2574,6 +2576,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZActionResult markMessageRead(String ids, boolean read) throws ServiceException {
         return doAction(messageAction(read ? "read" : "!read", ids));
+    }
+
+    @Override
+    public void flagItemAsRead(OpContext octxt, ItemIdentifier itemId, MailItemType type) throws ServiceException {
+        /* TODO: will this work for contacts - and does it even need to? */
+        markMessageRead(itemId.toString(), true);
     }
 
     /**
@@ -5832,6 +5840,28 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         throw new UnsupportedOperationException("ZMailbox does not support method yet");
     }
 
+    /** Acquire an in process lock relevant for this type of MailboxStore */
+    @Override
+    public void lock(boolean write) {
+        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+    }
+
+    /** Release an in process lock relevant for this type of MailboxStore */
+    @Override
+    public void unlock() {
+        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+    }
+
+    /**
+     *  Will not return modified folders or tags
+     * @return a List of IDs of all caller-visible MailItems modified since the checkpoint
+     */
+    @Override
+    public List<Integer> getIdsOfModifiedItemsInFolder(OpContext octxt, int lastSync, int folderId)
+    throws ServiceException {
+        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+    }
+
     public Set<String> listIMAPSubscriptions() throws ServiceException {
         ListIMAPSubscriptionsRequest req = new ListIMAPSubscriptionsRequest();
         ListIMAPSubscriptionsResponse resp = invokeJaxb(req);
@@ -5841,5 +5871,37 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public void saveIMAPsubscriptions(Set<String> subscriptions) throws ServiceException {
         SaveIMAPSubscriptionsRequest req = new SaveIMAPSubscriptionsRequest(subscriptions);
         invokeJaxb(req);
+    }
+
+    @Override
+    public ZimbraMailItem getItemById(OpContext octxt, ItemIdentifier id, MailItemType type) throws ServiceException {
+        if (MailItemType.MESSAGE != type) {
+            // TODO - should at least be able to support contacts for IMAP usage
+            throw new UnsupportedOperationException("ZMailbox does not support method yet");
+        }
+        return getMessageById(id.toString());
+    }
+
+    @Override
+    public List<ZimbraMailItem> getItemsById(OpContext octxt, Collection<ItemIdentifier> ids) throws ServiceException {
+        List<ZimbraMailItem> zmis = Lists.newArrayListWithExpectedSize(ids.size());
+        for (ItemIdentifier id : ids) {
+            zmis.add(getItemById(octxt, id, MailItemType.UNKNOWN));
+        }
+        return zmis;
+    }
+
+    @Override
+    public void alterTag(OpContext octxt, Collection<ItemIdentifier> ids, String tagName, boolean addTag)
+            throws ServiceException {
+        // Probably need to get the items and then do a tag operation on them
+        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+    }
+
+    @Override
+    public void setTags(OpContext octxt, Collection<ItemIdentifier> itemIds, int flags, Collection<String> tags)
+            throws ServiceException {
+        // Probably need to get the items and then do a tag operation on them
+        throw new UnsupportedOperationException("ZMailbox does not support method yet");
     }
 }
