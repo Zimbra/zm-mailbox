@@ -17,8 +17,26 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.Session;
 
-public class ImapRemoteListener implements ImapListener {
+public class ImapRemoteListener extends ImapListener {
+
+    ImapRemoteListener(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
+        super(i4folder, handler);
+    }
+
+    @Override
+    protected boolean isMailboxListener() {
+        return false;
+    }
+
+    @Override
+    protected boolean isRegisteredInCache() {
+        return true;
+    }
 
     @Override
     public String getAuthenticatedAccountId() {
@@ -83,5 +101,19 @@ public class ImapRemoteListener implements ImapListener {
     public boolean isFailedRenumber(ImapMessage msg) {
         // TODO: Would be nice to be able to share code with ImapSession for this
         throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+    }
+
+    @Override
+    public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
+        ZimbraLog.imap.warn("Unexpected call to notifyPendingChanges %s", ZimbraLog.getStackTrace(20));
+    }
+
+    @Override
+    protected void cleanup() {
+        ImapHandler i4handler = handler;
+        if (i4handler != null) {
+            ZimbraLog.imap.debug("dropping connection because Session is closing %s", this);
+            i4handler.close();
+        }
     }
 }
