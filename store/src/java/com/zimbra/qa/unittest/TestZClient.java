@@ -18,6 +18,7 @@
 package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,12 +43,15 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.imap.RemoteImapMailboxStore;
+import com.zimbra.cs.mailbox.DeliveryOptions;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 
 public class TestZClient extends TestCase {
@@ -236,13 +240,19 @@ public class TestZClient extends TestCase {
 
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder zfolder = zmbox.getFolderById(Integer.toString(folderId));
-        Assert.assertEquals("Before addinga message, ZFolder modseq is not the same as folder modseq", zfolder.getImapMODSEQ(), folder.getImapMODSEQ());
+        int zmodSeq = zfolder.getImapMODSEQ();
+        Assert.assertEquals("Before adding a message, ZFolder modseq is not the same as folder modseq", zmodSeq, folder.getImapMODSEQ());
 
         // add a message to the folder (there is a test in FolderTest which verifies that adding a message modifies imapmodseq)
-        TestUtil.addMessage(mbox, "Message 1");
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setFlags(Flag.BITMASK_UNREAD);
+        String message = TestUtil.getTestMessage(NAME_PREFIX, mbox.getAccount().getName(), "someone@zimbra.com", "nothing here", new Date(System.currentTimeMillis()));
+        ParsedMessage pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
+        mbox.addMessage(null, pm, dopt, null);
+        zmbox.noOp(); //get notifications and update folder cache
         zfolder = zmbox.getFolderById(Integer.toString(folderId));
         folder = mbox.getFolderById(null, folderId);
         Assert.assertEquals("After adding a message, ZFolder modseq is not the same as folder modseq", zfolder.getImapMODSEQ(), folder.getImapMODSEQ());
+        Assert.assertFalse("ZFolder modseq did not change after adding a message", zmodSeq == zfolder.getImapMODSEQ());
     }
 
     @Override
