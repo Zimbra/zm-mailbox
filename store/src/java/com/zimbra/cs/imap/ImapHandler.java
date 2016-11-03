@@ -61,10 +61,10 @@ import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.SearchFolderStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.AccessBoundedRegex;
-import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Pair;
@@ -3231,13 +3231,12 @@ abstract class ImapHandler {
             MailboxStore mboxStore = i4folder.getMailbox();
             // TODO any way this can be optimized for non-Mailbox MailboxStore?
             if (unsorted && (mboxStore instanceof Mailbox) && i4search.canBeRunLocally()) {
-                Mailbox mbox = (Mailbox) mboxStore;
-                mbox.lock.lock(false);
+                mboxStore.lock(false);
                 try {
                     hits = i4search.evaluate(i4folder);
                     hits.remove(null);
                 } finally {
-                    mbox.lock.release();
+                    mboxStore.unlock();
                 }
             } else {
                 ZimbraQueryResults zqr = runSearch(i4search, i4folder, sort,
@@ -3340,7 +3339,7 @@ abstract class ImapHandler {
 
     private ZimbraQueryResults runSearch(ImapSearch i4search, ImapFolder i4folder, SortBy sort,
             SearchParams.Fetch fetch) throws ImapParseException, ServiceException {
-        Mailbox mbox = (Mailbox) i4folder.getMailbox();
+        MailboxStore mbox = i4folder.getMailbox();
         if (mbox == null) {
             throw ServiceException.FAILURE("unexpected session close during search", null);
         }
@@ -3348,7 +3347,7 @@ abstract class ImapHandler {
         TimeZone tz = acct == null ? null : WellKnownTimeZones.getTimeZoneById(acct.getAttr(Provisioning.A_zimbraPrefTimeZoneId));
 
         String search;
-        mbox.lock.lock(false);
+        mbox.lock(false);
         try {
             search = i4search.toZimbraSearch(i4folder);
             if (!i4folder.isVirtual()) {
@@ -3360,7 +3359,7 @@ abstract class ImapHandler {
             }
             ZimbraLog.imap.info("[ search is: " + search + " ]");
         } finally {
-            mbox.lock.release();
+            mbox.unlock();
         }
 
         SearchParams params = new SearchParams();
@@ -3373,7 +3372,8 @@ abstract class ImapHandler {
         params.setFetchMode(fetch);
         params.setTimeZone(tz);
 
-        return mbox.index.search(SoapProtocol.Soap12, getContext(), params);
+        // TODO runSearch returns ZimbraQueryResults which is very Mailboxy
+        return ((Mailbox)mbox).index.search(SoapProtocol.Soap12, getContext(), params);
     }
 
     boolean doTHREAD(String tag, ImapSearch i4search, boolean byUID) throws IOException, ImapException {
@@ -3544,13 +3544,13 @@ abstract class ImapHandler {
         }
 
         ImapMessageSet i4set;
-        Mailbox mbox = (Mailbox)i4folder.getMailbox();
-        mbox.lock.lock(false);
+        MailboxStore mbox = i4folder.getMailbox();
+        mbox.lock(false);
         try {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID, allowOutOfRangeMsgSeq, true /* includeExpunged */);
             i4set.remove(null);
         } finally {
-            mbox.lock.release();
+            mbox.unlock();
         }
 
         // if VANISHED was requested, we need to return the set of UIDs that *don't* exist in the folder
@@ -3590,9 +3590,8 @@ abstract class ImapHandler {
         if (changedSince >= 0) {
             try {
                 // get a list of all the messages modified since the checkpoint
-                Set<Integer> folderId = new HashSet<Integer>(Arrays.asList(i4folder.getId()));
                 ImapMessageSet modified = new ImapMessageSet();
-                for (int id : mbox.getModifiedItems(getContext(), changedSince, MailItem.Type.UNKNOWN, folderId).getFirst()) {
+                for (int id : mbox.getIdsOfModifiedItemsInFolder(getContext(), changedSince, i4folder.getId())) {
                     ImapMessage i4msg = i4folder.getById(id);
                     if (i4msg != null) {
                         modified.add(i4msg);
@@ -3609,14 +3608,14 @@ abstract class ImapHandler {
             }
         }
 
-        mbox.lock.lock();
+        mbox.lock(true);
         try {
             if (i4folder.areTagsDirty()) {
                 sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
                 i4folder.setTagsDirty(false);
             }
         } finally {
-            mbox.lock.release();
+            mbox.unlock();
         }
         ReentrantLock lock = null;
         try {
@@ -3632,14 +3631,16 @@ abstract class ImapHandler {
 
                     boolean markMessage = markRead && (i4msg.flags & Flag.BITMASK_UNREAD) != 0;
                     boolean empty = true;
-                    MailItem item = null;
+                    ZimbraMailItem item = null;
                     MimeMessage mm;
                     if (!fullMessage.isEmpty() || (parts != null && !parts.isEmpty()) || (attributes & ~FETCH_FROM_CACHE) != 0) {
                         if (lock == null && LC.imap_throttle_fetch.booleanValue()) {
                             lock = commandThrottle.lock(credentials.getAccountId());
                         }
                         try {
-                            item = mbox.getItemById(getContext(), i4msg.msgId, i4msg.getType());
+                            ItemIdentifier iid =
+                                    ItemIdentifier.fromAccountIdAndItemId(mbox.getAccountId(), i4msg.msgId);
+                            item = mbox.getItemById(getContext(), iid, i4msg.getType().toCommon());
                         } catch (NoSuchItemException nsie) {
                             // just in case we're out of sync, force this message back into sync
                             i4folder.markMessageExpunged(i4msg);
@@ -3707,7 +3708,9 @@ abstract class ImapHandler {
                     //         change, they SHOULD be included as part of the FETCH responses."
                     // FIXME: optimize by doing a single mark-read op on multiple messages
                     if (markMessage) {
-                        mbox.alterTag(getContext(), i4msg.msgId, i4msg.getType(), Flag.FlagInfo.UNREAD, false, null);
+                        ItemIdentifier iid =
+                                ItemIdentifier.fromAccountIdAndItemId(mbox.getAccountId(), i4msg.msgId);
+                        mbox.flagItemAsRead(getContext(), iid, i4msg.getMailItemType());
                     }
                     ImapFolder.DirtyMessage unsolicited = i4folder.undirtyMessage(i4msg);
                     if ((attributes & FETCH_FLAGS) != 0 || unsolicited != null) {
@@ -3874,14 +3877,14 @@ abstract class ImapHandler {
 
         String command = (byUID ? "UID STORE" : "STORE");
         List<Tag> newTags = (operation != StoreAction.REMOVE ? new ArrayList<Tag>() : null);
-        Mailbox mbox = (Mailbox) selectedFolderListener.getMailbox();
+        MailboxStore mbox = selectedFolderListener.getMailbox();
 
         Set<ImapMessage> i4set;
-        mbox.lock.lock();
+        mbox.lock(true);
         try {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
         } finally {
-            mbox.lock.release();
+            mbox.unlock();
         }
         boolean allPresent = byUID || !i4set.contains(null);
         i4set.remove(null);
@@ -3939,13 +3942,14 @@ abstract class ImapHandler {
                 if (++i % SUGGESTED_BATCH_SIZE != 0 && i != i4set.size()) {
                     continue;
                 }
-                mbox.lock.lock();
+                mbox.lock(true);
                 try {
+                    List<ItemIdentifier> itemIds = ItemIdentifier.fromAccountIdAndItemIds(mbox.getAccountId(), idlist);
                     if (modseq >= 0) {
-                        MailItem[] items = mbox.getItemById(getContext(), idlist, MailItem.Type.UNKNOWN);
-                        for (int idx = items.length - 1; idx >= 0; idx--) {
+                        List<ZimbraMailItem> items = mbox.getItemsById(getContext(), itemIds);
+                        for (int idx = items.size() - 1; idx >= 0; idx--) {
                             ImapMessage i4msg = i4list.get(idx);
-                            if (i4msg.getModseq(items[idx]) > modseq) {
+                            if (i4msg.getModseq(items.get(idx)) > modseq) {
                                 modifyConflicts.add(i4msg);
                                 i4list.remove(idx);  idlist.remove(idx);
                                 allPresent = false;
@@ -3960,7 +3964,7 @@ abstract class ImapHandler {
                         }
                         if (operation == StoreAction.REPLACE) {
                             // replace real tags and flags on all messages
-                            mbox.setTags(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, flags, tags.toArray(new String[tags.size()]), null);
+                            mbox.setTags(getContext(), itemIds, flags, tags);
                             // replace session tags on all messages
                             for (ImapMessage i4msg : i4list) {
                                 i4msg.setSessionFlags(sflags, i4folder);
@@ -3973,7 +3977,7 @@ abstract class ImapHandler {
                                     if((i4flag.mBitmask & Flag.BITMASK_DELETED) > 0) {
                                         ZimbraLog.imap.info("IMAP client has flagged the item with id %d to be Deleted altertag", msg.msgId);
                                     }
-                                    mbox.alterTag(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, i4flag.mName, add, null);
+                                    mbox.alterTag(getContext(), itemIds, i4flag.mName, add);
                                 } else {
                                     // session tag; update one-by-one in memory only
                                     for (ImapMessage i4msg : i4list) {
@@ -3984,7 +3988,7 @@ abstract class ImapHandler {
                             boolean add = operation == StoreAction.ADD;
                             //add (or remove) Tags
                             for (String tagName : tags) {
-                                mbox.alterTag(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, tagName, add, null);
+                                mbox.alterTag(getContext(), itemIds, tagName, add);
                             }
                         }
                     } finally {
@@ -3992,7 +3996,7 @@ abstract class ImapHandler {
                         i4folder.enableNotifications();
                     }
                 } finally {
-                    mbox.lock.release();
+                    mbox.unlock();
                 }
 
                 if (!silent || modseqEnabled) {
@@ -4228,7 +4232,7 @@ abstract class ImapHandler {
         if (i4selected == null || !i4selected.hasNotifications()) {
             return;
         }
-        Mailbox mbox = (Mailbox) i4selected.getMailbox();
+        MailboxStore mbox = i4selected.getMailbox();
         if (mbox == null) {
             return;
         }
@@ -4241,7 +4245,7 @@ abstract class ImapHandler {
 
         List<String> notifications = new ArrayList<String>();
         // XXX: is this the right thing to synchronize on?
-        mbox.lock.lock();
+        mbox.lock(true);
         try {
             // FIXME: notify untagged NO if close to quota limit
 
@@ -4288,7 +4292,7 @@ abstract class ImapHandler {
                 notifications.add(i4folder.getRecentCount() + " RECENT");
             }
         } finally {
-            mbox.lock.release();
+            mbox.unlock();
         }
 
         // no I/O while the Mailbox is locked...
