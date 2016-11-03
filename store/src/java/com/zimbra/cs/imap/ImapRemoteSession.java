@@ -22,9 +22,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 
-public class ImapRemoteListener extends ImapListener {
+public class ImapRemoteSession extends ImapListener {
 
-    ImapRemoteListener(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
+    ImapRemoteSession(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(i4folder, handler);
     }
 
@@ -40,32 +40,32 @@ public class ImapRemoteListener extends ImapListener {
 
     @Override
     public String getAuthenticatedAccountId() {
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
     public String getTargetAccountId() {
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
     public MailboxStore getMailbox() {
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
     public ImapFolder getImapFolder() throws ImapSessionClosedException {
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
     public ImapPath getPath() {
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
     public boolean hasNotifications() {
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     /**
@@ -73,34 +73,34 @@ public class ImapRemoteListener extends ImapListener {
      */
     @Override
     public void updateAccessTime() {
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
     public void closeFolder(boolean isUnregistering) {
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
     public boolean isWritable() {
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
     public int getFolderId() {
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
     public void incrementRenumber(ImapMessage msg) {
         // TODO: Would be nice to be able to share code with ImapSession for this
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
     public boolean isFailedRenumber(ImapMessage msg) {
         // TODO: Would be nice to be able to share code with ImapSession for this
-        throw new UnsupportedOperationException("ImapRemoteListener method not supported yet");
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
