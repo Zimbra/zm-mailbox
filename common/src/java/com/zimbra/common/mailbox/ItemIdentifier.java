@@ -16,6 +16,11 @@
  */
 package com.zimbra.common.mailbox;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 
 public class ItemIdentifier {
@@ -80,7 +85,33 @@ public class ItemIdentifier {
         return new ItemIdentifier(ownerId, Integer.parseInt(remoteId));
     }
 
+    public static ItemIdentifier fromAccountIdAndItemId(String accountId, int id) {
+        return new ItemIdentifier(accountId, id);
+    }
+
     public static ItemIdentifier fromOwnerAndFolder(String ownerId, FolderStore folderStore) {
         return fromOwnerAndRemoteId(ownerId, folderStore.getFolderIdAsString());
+    }
+
+    public static List<ItemIdentifier> fromAccountIdAndItemIds(String accountId, Collection<Integer> ids) {
+        if (null == ids) {
+            return Collections.emptyList();
+        }
+        List<ItemIdentifier>iidlist = Lists.newArrayListWithExpectedSize(ids.size());
+        for (Integer idnum : ids) {
+            iidlist.add(ItemIdentifier.fromAccountIdAndItemId(accountId, idnum));
+        }
+        return iidlist;
+    }
+
+    public static List<Integer> toIds(Collection<ItemIdentifier> ids) {
+        if (null == ids) {
+            return Collections.emptyList();
+        }
+        List<Integer>idnums = Lists.newArrayListWithExpectedSize(ids.size());
+        for (ItemIdentifier id : ids) {
+            idnums.add(id.id);
+        }
+        return idnums;
     }
 }
