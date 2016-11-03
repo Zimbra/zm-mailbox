@@ -16,6 +16,7 @@
  */
 package com.zimbra.common.mailbox;
 
+import java.util.Collection;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
@@ -56,4 +57,25 @@ public interface MailboxStore {
      *     (a) it's not a draft or a sent message, and
      *     (b) it was added since the last write operation associated with any SOAP session. */
     public void resetRecentMessageCount(OpContext octxt) throws ServiceException;
+    /** Acquire an in process lock relevant for this type of MailboxStore */
+    public void lock(boolean write);
+    /** Release an in process lock relevant for this type of MailboxStore */
+    public void unlock();
+    /** Returns the IDs of all items modified since a given change number.
+     *  Will not return modified folders or tags; for these you need to call
+     * @return a List of IDs of all caller-visible MailItems of the given type modified since the checkpoint
+     */
+    public List<Integer> getIdsOfModifiedItemsInFolder(OpContext octxt, int lastSync, int folderId)
+            throws ServiceException;
+    /**
+     * @return the item with the specified ID.
+     * @throws NoSuchItemException if the item does not exist
+     */
+    public ZimbraMailItem getItemById(OpContext octxt, ItemIdentifier id, MailItemType type) throws ServiceException;
+    public void flagItemAsRead(OpContext octxt, ItemIdentifier itemId, MailItemType type) throws ServiceException;
+    public List<ZimbraMailItem> getItemsById(OpContext octxt, Collection<ItemIdentifier> ids) throws ServiceException;
+    public void alterTag(OpContext octxt, Collection<ItemIdentifier> ids, String tagName, boolean addTag)
+            throws ServiceException;
+    public void setTags(OpContext octxt, Collection<ItemIdentifier> itemIds, int flags, Collection<String> tags)
+            throws ServiceException;
 }
