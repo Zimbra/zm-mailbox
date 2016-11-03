@@ -80,7 +80,6 @@ public abstract class ImapMailboxStore {
     public abstract int getCurrentMODSEQ(int folderId) throws ServiceException;
     public abstract List<ImapListener> getListeners();
     public abstract boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException;
-    public abstract int getId();
     public abstract MailboxStore getMailboxStore();
     /** Returns this mailbox's Account. */
     public abstract Account getAccount() throws ServiceException;
