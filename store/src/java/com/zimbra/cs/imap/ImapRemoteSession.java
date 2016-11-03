@@ -92,18 +92,6 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    public void incrementRenumber(ImapMessage msg) {
-        // TODO: Would be nice to be able to share code with ImapSession for this
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    public boolean isFailedRenumber(ImapMessage msg) {
-        // TODO: Would be nice to be able to share code with ImapSession for this
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
     public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
         ZimbraLog.imap.warn("Unexpected call to notifyPendingChanges %s", ZimbraLog.getStackTrace(20));
     }
