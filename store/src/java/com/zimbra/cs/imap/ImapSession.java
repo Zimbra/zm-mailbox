@@ -48,7 +48,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.session.Session;
 
-public class ImapSession extends Session implements ImapListener {
+public class ImapSession extends ImapListener {
     private static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
 
     interface ImapFolderData {
@@ -70,55 +70,17 @@ public class ImapSession extends Session implements ImapListener {
         void finishNotification(int changeId) throws IOException;
     }
 
-    private final ImapPath mPath;
-    private final int      mFolderId;
-    private final boolean  mIsVirtual;
-    private ImapFolderData mFolder;
-    private ImapHandler handler;
     private final Map<Integer, Integer> renumberCount = new ConcurrentHashMap<Integer, Integer>();
 
     ImapSession(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
-        super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
-        mPath      = i4folder.getPath();
-        mFolderId  = i4folder.getId();
-        mIsVirtual = i4folder.isVirtual();
-        mFolder    = i4folder;
-        this.handler = handler;
-
-        i4folder.setFolderListener(this);
-    }
-
-    ImapHandler getHandler() {
-        return handler;
+        // super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
+        super(i4folder, handler);
     }
 
     @Override
     public ImapFolder getImapFolder() throws ImapSessionClosedException {
         MANAGER.recordAccess(this);
         return reload();
-    }
-
-    @Override
-    public ImapPath getPath() {
-        return mPath;
-    }
-
-    boolean isInteractive() {
-        return handler != null;
-    }
-
-    @Override
-    public boolean isWritable() {
-        return isInteractive() && mFolder.isWritable();
-    }
-
-    boolean isVirtual() {
-        return mIsVirtual;
-    }
-
-    @Override
-    public int getFolderId() {
-        return mFolderId;
     }
 
     @Override
@@ -184,6 +146,7 @@ public class ImapSession extends Session implements ImapListener {
         return false;
     }
 
+    @Override
     public boolean isFailedRenumber(ImapMessage msg) {
         Integer count = renumberCount.get(msg.msgId);
         return (count == null ? false : isFailed(count));
@@ -245,11 +208,6 @@ public class ImapSession extends Session implements ImapListener {
     @Override
     public void doEncodeState(Element parent) {
         mFolder.doEncodeState(parent.addNonUniqueElement("imap"));
-    }
-
-    @Override
-    protected long getSessionIdleLifetime() {
-        return handler.getConfig().getAuthenticatedMaxIdleTime() * 1000;
     }
 
     // XXX: need to handle the abrupt disconnect case, the LOGOUT case, the timeout case, and the too-many-sessions disconnect case
