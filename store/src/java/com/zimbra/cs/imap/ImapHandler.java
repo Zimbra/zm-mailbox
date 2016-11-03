@@ -1045,9 +1045,7 @@ abstract class ImapHandler {
             throw ServiceException.AUTH_REQUIRED();
         }
         OperationContext oc = credentials.getContext();
-        if (selectedFolderListener instanceof ImapSession) {
-            oc.setSession((ImapSession) selectedFolderListener);
-        }
+        oc.setSession(selectedFolderListener);
         return oc;
     }
 
