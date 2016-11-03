@@ -46,6 +46,8 @@ import java.util.regex.Pattern;
 import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
 
+import org.python.google.common.collect.Sets;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -75,8 +77,10 @@ import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
@@ -2824,6 +2828,15 @@ public class Mailbox implements MailboxStore {
     }
 
     /**
+     * @return the item with the specified ID.
+     * @throws NoSuchItemException if the item does not exist
+     */
+    @Override
+    public ZimbraMailItem getItemById(OpContext octxt, ItemIdentifier id, MailItemType type) throws ServiceException {
+        return getItemById(OperationContext.asOperationContext(octxt), id.id, MailItem.Type.fromCommon(type), false);
+    }
+
+    /**
      * Returns the <tt>MailItem</tt> with the specified id.
      * @throws NoSuchItemException if the item does not exist
      */
@@ -2996,8 +3009,25 @@ public class Mailbox implements MailboxStore {
     }
 
     /**
-     * Returns <tt>MailItem</tt>s with the specified ids.
-     * @throws NoSuchItemException any item does not exist
+     * @returns MailItems with the specified ids.
+     * @throws NoSuchItemException if any item does not exist
+     */
+    @Override
+    public List<ZimbraMailItem> getItemsById(OpContext octxt, Collection<ItemIdentifier> ids) throws ServiceException {
+        List<Integer> idInts = Lists.newArrayListWithCapacity(ids.size());
+        for (ItemIdentifier iid : ids) {
+            idInts.add(iid.id);
+        }
+        MailItem[] mitms = getItemById(OperationContext.asOperationContext(octxt), idInts, MailItem.Type.UNKNOWN);
+        if (null == mitms || (mitms.length == 0)) {
+            return Collections.emptyList();
+        }
+        return Lists.newArrayList(mitms);
+    }
+
+    /**
+     * @return <tt>MailItem</tt>s with the specified ids.
+     * @throws NoSuchItemException if any item does not exist
      */
     public MailItem[] getItemById(OperationContext octxt, Collection<Integer> ids, MailItem.Type type)
             throws ServiceException {
@@ -3810,6 +3840,18 @@ public class Mailbox implements MailboxStore {
         } finally {
             lock.release();
         }
+    }
+
+    /** Returns the IDs of all items modified since a given change number.
+     *  Will not return modified folders or tags; for these you need to call
+     * @return a List of IDs of all caller-visible MailItems of the given type modified since the checkpoint
+     */
+    @Override
+    public List<Integer> getIdsOfModifiedItemsInFolder(OpContext octxt, int lastSync, int folderId)
+    throws ServiceException {
+        Set<Integer> folderIds = Sets.newHashSet(folderId);
+        return getModifiedItems(OperationContext.asOperationContext(octxt),
+                lastSync, MailItem.Type.UNKNOWN, folderIds).getFirst();
     }
 
     /** Returns the IDs of all items modified since a given change number.
@@ -6617,6 +6659,13 @@ public class Mailbox implements MailboxStore {
                 Flag.FlagInfo.SUBSCRIBED, false, null);
     }
 
+    @Override
+    public void flagItemAsRead(OpContext octxt, ItemIdentifier itemId, MailItemType type)
+    throws ServiceException {
+        alterTag(OperationContext.asOperationContext(octxt), itemId.id, MailItem.Type.fromCommon(type),
+                Flag.FlagInfo.UNREAD, false, null);
+    }
+
     public void alterTag(OperationContext octxt, int itemId, MailItem.Type type, Flag.FlagInfo finfo,
             boolean addTag, TargetConstraint tcon)
     throws ServiceException {
@@ -6644,6 +6693,13 @@ public class Mailbox implements MailboxStore {
             boolean addTag, TargetConstraint tcon)
     throws ServiceException {
         alterTag(octxt, new int[] { itemId }, type, tagName, addTag, tcon);
+    }
+
+    @Override
+    public void alterTag(OpContext octxt, Collection<ItemIdentifier> ids, String tagName, boolean addTag)
+    throws ServiceException {
+        alterTag(OperationContext.asOperationContext(octxt),
+                ArrayUtil.toIntArray(ItemIdentifier.toIds(ids)), MailItem.Type.UNKNOWN, tagName, addTag, null);
     }
 
     public void alterTag(OperationContext octxt, int[] itemIds, MailItem.Type type, String tagName,
@@ -6711,6 +6767,14 @@ public class Mailbox implements MailboxStore {
             TargetConstraint tcon)
     throws ServiceException {
         setTags(octxt, new int[] { itemId }, type, flags, tags, tcon);
+    }
+
+    @Override
+    public void setTags(OpContext octxt, Collection<ItemIdentifier> itemIds, int flags, Collection<String> tags)
+    throws ServiceException {
+        List<Integer> ids = ItemIdentifier.toIds(itemIds);
+        setTags(OperationContext.asOperationContext(octxt), ArrayUtil.toIntArray(ids), MailItem.Type.UNKNOWN,
+                flags, tags.toArray(new String[tags.size()]), null);
     }
 
     public void setTags(OperationContext octxt, int[] itemIds, MailItem.Type type, int flags, String[] tags,
@@ -10275,5 +10339,17 @@ public class Mailbox implements MailboxStore {
         List<Folder> fldrs = getFolderById((OperationContext)ctxt, Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy();
         List<FolderStore> folderStores = Lists.newArrayList(fldrs);
         return folderStores;
+    }
+
+    /** Acquire an in process lock relevant for this type of MailboxStore */
+    @Override
+    public void lock(boolean write) {
+        lock.lock(write);
+    }
+
+    /** Release an in process lock relevant for this type of MailboxStore */
+    @Override
+    public void unlock() {
+        lock.release();
     }
 }
