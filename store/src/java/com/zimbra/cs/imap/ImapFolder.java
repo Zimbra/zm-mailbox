@@ -1084,7 +1084,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
             throw new ImapSessionClosedException();
         }
         mailboxStore = ImapMailboxStore.get(sessMbox, sessMbox.getAccountId());
-        path = folderListener.getPath();
+        path = session.getPath();
         // FIXME: NOT RESTORING sequence.msg.sflags PROPERLY -- need to serialize it!!!
         sessionData = sdata;
     }
