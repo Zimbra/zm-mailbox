@@ -104,6 +104,23 @@ public final class MailboxTest {
     }
 
     @Test
+    public void testRecentMessageCount() throws Exception {
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.id, MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Assert.assertEquals("recent message count should be 0 before adding a message", 0, mbox.getRecentMessageCount()); 
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
+        Assert.assertEquals("recent message count should be 1 after adding one message", 1, mbox.getRecentMessageCount());
+        mbox.resetRecentMessageCount(new OperationContext(acct1));
+        Assert.assertEquals("recent message count should be 0 after reset", 0, mbox.getRecentMessageCount());
+        mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test1-3@sub1.zimbra.com".getBytes(), false), dopt, null);
+        Assert.assertEquals("recent message count should be 2 after adding two messages", 2, mbox.getRecentMessageCount());
+        mbox.resetRecentMessageCount(new OperationContext(acct1));
+        Assert.assertEquals("recent message count should be 0 after the second reset", 0, mbox.getRecentMessageCount());
+    }
+
+    @Test
     public void threadDraft() throws Exception {
         Account acct = Provisioning.getInstance().getAccount("test@zimbra.com");
         acct.setMailThreadingAlgorithm(MailThreadingAlgorithm.subject);
