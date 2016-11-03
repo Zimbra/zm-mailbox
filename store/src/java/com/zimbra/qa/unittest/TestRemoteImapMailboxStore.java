@@ -1,5 +1,6 @@
 package com.zimbra.qa.unittest;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,11 +12,14 @@ import org.junit.Test;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.cs.imap.RemoteImapMailboxStore;
+import com.zimbra.cs.mailbox.DeliveryOptions;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mime.ParsedMessage;
 
 public class TestRemoteImapMailboxStore extends TestCase {
     private static String NAME_PREFIX = "TestRemoteImapMailboxStore";
@@ -98,10 +102,16 @@ public class TestRemoteImapMailboxStore extends TestCase {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         RemoteImapMailboxStore remoteStore = new RemoteImapMailboxStore(zmbox, TestUtil.getAccount(USER_NAME).getId());
         Assert.assertEquals("Before adding a message, remoteStore.getCurrentMODSEQ returns value different from folder.getImapMODSEQ", remoteStore.getCurrentMODSEQ(folderId), folder.getImapMODSEQ());
+        int oldModSeq = remoteStore.getCurrentMODSEQ(folderId);
 
         // add a message to the folder
-        TestUtil.addMessage(mbox, "Message 1");
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setFlags(Flag.BITMASK_UNREAD);
+        String message = TestUtil.getTestMessage(NAME_PREFIX, mbox.getAccount().getName(), "someone@zimbra.com", "nothing here", new Date(System.currentTimeMillis()));
+        ParsedMessage pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
+        mbox.addMessage(null, pm, dopt, null);
+        zmbox.noOp();
         folder = mbox.getFolderById(null, folderId);
         Assert.assertEquals("After adding a message, remoteStore.getCurrentMODSEQ returns value different from folder.getImapMODSEQ", remoteStore.getCurrentMODSEQ(folderId), folder.getImapMODSEQ());
+        Assert.assertFalse("Modseq should have changed after adding a message", remoteStore.getCurrentMODSEQ(folderId) == oldModSeq);
     }
 }
