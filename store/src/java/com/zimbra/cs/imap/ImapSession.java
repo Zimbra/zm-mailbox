@@ -70,7 +70,6 @@ public class ImapSession extends ImapListener {
     }
 
     ImapSession(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
-        // super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
         super(i4folder, handler);
     }
 
