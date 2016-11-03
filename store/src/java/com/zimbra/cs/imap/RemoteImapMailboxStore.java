@@ -179,11 +179,6 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public int getId() {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
-    }
-
-    @Override
     public MailboxStore getMailboxStore() {
         return zMailbox;
     }
