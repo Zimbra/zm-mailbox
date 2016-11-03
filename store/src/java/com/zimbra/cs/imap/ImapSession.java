@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -69,8 +68,6 @@ public class ImapSession extends ImapListener {
         void handleAddedMessages(int changeId, AddedItems added);
         void finishNotification(int changeId) throws IOException;
     }
-
-    private final Map<Integer, Integer> renumberCount = new ConcurrentHashMap<Integer, Integer>();
 
     ImapSession(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         // super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
@@ -118,42 +115,6 @@ public class ImapSession extends ImapListener {
     boolean requiresReload() {
         ImapFolderData fdata = mFolder;
         return fdata instanceof ImapFolder ? false : ((PagedFolderData) fdata).notificationsFull();
-    }
-
-    int getRenumberCount(ImapMessage msg) {
-        Integer count = renumberCount.get(msg.msgId);
-        return (count == null ? 0 : count);
-    }
-
-    @Override
-    public void incrementRenumber(ImapMessage msg) {
-        Integer count = renumberCount.get(msg.msgId);
-        count = (count != null ? count + 1 : 1);
-        renumberCount.put(msg.msgId, count);
-    }
-
-    void resetRenumber() {
-        renumberCount.clear();
-    }
-
-    boolean hasFailedRenumber() {
-        //check if any id has been repeatedly renumbered
-        for (Integer count : renumberCount.values()) {
-            if (count > 5) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isFailedRenumber(ImapMessage msg) {
-        Integer count = renumberCount.get(msg.msgId);
-        return (count == null ? false : isFailed(count));
-    }
-
-    private boolean isFailed(Integer count) {
-        return count > 5;
     }
 
     void inactivate() {
