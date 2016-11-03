@@ -200,6 +200,17 @@ public class OperationContext implements OpContext {
         }
     }
 
+    /**
+     * @param op
+     * @return op if it is an OperationContext, otherwise null
+     */
+    public static OperationContext asOperationContext(OpContext op) {
+        if (op instanceof OperationContext) {
+            return (OperationContext) op;
+        }
+        return null;
+    }
+
     public SoapProtocol getmResponseProtocol() {
         return mResponseProtocol;
     }
