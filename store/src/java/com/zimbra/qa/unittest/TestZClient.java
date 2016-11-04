@@ -19,11 +19,14 @@ package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import junit.framework.Assert;
+import junit.framework.TestCase;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
@@ -51,6 +54,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 
