@@ -68,7 +68,6 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     private transient SessionData sessionData;
     private transient Map<Integer, ImapMessage> messageIds;
 
-    private final String folderIdString;
     private final int folderId;
     private final int uidValidity;
     private String query;
@@ -107,7 +106,6 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     ImapFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
         this.path = path;
         FolderStore folder = path.getFolder();
-        this.folderIdString = folder.getFolderIdAsString();
         this.folderId = folder.getFolderIdInOwnerMailbox();
         // FIXME: Folder object may be stale since it's cached in ImapPath
         this.uidValidity = getUIDValidity(folder);
@@ -449,8 +447,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
                 idx--;
             } else {
                 ZimbraLog.imap.warn("message added out of order occurs before message which is already visible to client. Must renumber %s", i4msg);
-                ((ImapSession)session).incrementRenumber(i4msg);
-                if (((ImapSession)session).isFailedRenumber(i4msg)) {
+                session.incrementRenumber(i4msg);
+                if (session.isFailedRenumber(i4msg)) {
                     throw new ImapRenumberException();
                 }
                 //prev has higher UID, but it has already been displayed to client
