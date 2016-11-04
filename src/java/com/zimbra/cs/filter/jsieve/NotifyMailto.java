@@ -31,8 +31,10 @@ import org.apache.jsieve.mail.MailAdapter;
 
 import com.zimbra.common.util.StringUtil;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -185,8 +187,10 @@ public class NotifyMailto extends AbstractActionCommand {
         }
         if (method == null) {
             throw context.getCoordinate().syntaxException("Expecting a method string");
+        } else {
+            method = Variables.replaceAllVariables(mail, method);
         }
-
+        
         mailtoParams = new HashMap<String, List<String>>();
         try {
             URL url = new URL(method);
@@ -204,8 +208,26 @@ public class NotifyMailto extends AbstractActionCommand {
                             throw new SyntaxException("'mailto' method syntax error: empty parameter");
                         }
                     }
-                    String headerName = Variables.replaceAllVariables(mail, token[0]).toLowerCase();
-                    String headerValue = Variables.replaceAllVariables(mail, token[1]);
+                    // If the value or parameter name is URL encoded, it should be
+                    // decoded.  If it is not even URL encoded, more or less decoding
+                    // the string does not do harm the contents.
+                    String headerName = null;
+                    String headerValue = null;
+                    try {
+                        headerName = URLDecoder.decode(token[0].toLowerCase(), "UTF-8");
+                    } catch (UnsupportedEncodingException e)  {
+                        // No exception should be thrown because the charset is always "UTF-8"
+                    } catch (IllegalArgumentException e) {
+                        headerName = token[0].toLowerCase();
+                    }
+                    try {
+                        headerValue = URLDecoder.decode(token[1], "UTF-8");
+                    } catch (UnsupportedEncodingException e)  {
+                        // No exception should be thrown because the charset is always "UTF-8"
+                    } catch (IllegalArgumentException e) {
+                        headerValue = token[1];
+                    }
+
                     if (!mailtoParams.containsKey(headerName)) {
                         // Create a new entry for a header
                         List<String> value = new ArrayList<String>();
