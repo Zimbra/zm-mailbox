@@ -4075,13 +4075,13 @@ abstract class ImapHandler {
         if (i4folder == null) {
             throw new ImapSessionClosedException();
         }
-        Mailbox mbox = (Mailbox)i4folder.getMailbox();
+        MailboxStore mbox = i4folder.getMailbox();
         Set<ImapMessage> i4set;
-        mbox.lock.lock(false);
+        mbox.lock(false);
         try {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
         } finally {
-            mbox.lock.release();
+            mbox.unlock();
         }
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
