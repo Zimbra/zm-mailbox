@@ -46,8 +46,6 @@ import java.util.regex.Pattern;
 import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
 
-import org.python.google.common.collect.Sets;
-
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -55,6 +53,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
