@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.imap;
 
-import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.PendingModifications;
@@ -39,55 +38,24 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    public String getAuthenticatedAccountId() {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    public String getTargetAccountId() {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    public MailboxStore getMailbox() {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
     public ImapFolder getImapFolder() throws ImapSessionClosedException {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    public ImapPath getPath() {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    public boolean hasNotifications() {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    /**
-     * TODO - do we really need this?
-     */
-    @Override
-    public void updateAccessTime() {
+        // ImapSession does:
+        //     MANAGER.recordAccess(this);
+        //     return reload();
         throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
     public void closeFolder(boolean isUnregistering) {
+        // ImapSession does:
+        //     ImapSessionManager.getInstance().closeFolder(this, false);
         throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
     @Override
-    public boolean isWritable() {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    public int getFolderId() {
+    public void updateAccessTime() {
+        /** Assuming we are using active and inactive session caches, similar to those in ImapSessionManager,
+         *  should update the access time in those */
         throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 
