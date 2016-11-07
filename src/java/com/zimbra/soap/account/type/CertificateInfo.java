@@ -51,6 +51,22 @@ public class CertificateInfo {
     private ZmBoolean defaultCert;
 
     /**
+     * @zm-api-field-tag error code
+     * @zm-api-field-description error code
+     */
+    @ZimbraJsonAttribute
+    @XmlElement(name=SmimeConstants.E_ERROR_CODE, required=false)
+    private String errorCode;
+
+    /**
+     * @zm-api-field-tag error detail
+     * @zm-api-field-description error detail
+     */
+    @ZimbraJsonAttribute
+    @XmlElement(name=SmimeConstants.E_ERROR_DETAIL, required=false)
+    private String errorDetail;
+
+    /**
      * @zm-api-field-tag emailAddr
      * @zm-api-field-description email address of the subject (The person, or entity identified.)
      */
@@ -184,6 +200,22 @@ public class CertificateInfo {
 
     public void setIssuerAltName(CertificateAltNames issuerAltName) {
         this.issuerAltName = issuerAltName;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public String getErrorDetail() {
+        return errorDetail;
+    }
+
+    public void setErrorDetail(String errorDetail) {
+        this.errorDetail = errorDetail;
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
