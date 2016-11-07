@@ -16,7 +16,9 @@ package com.zimbra.cs.mime;
 
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class GetMsgResponseProcessor {
@@ -31,5 +33,5 @@ public abstract class GetMsgResponseProcessor {
         return processorInstance;
     }
 
-    public abstract void process(Element m, MimeMessage mm, ZimbraSoapContext zsc);
+    public abstract void process(Mailbox mbox, Element m, MimeMessage mm, ZimbraSoapContext zsc) throws ServiceException;
 }
