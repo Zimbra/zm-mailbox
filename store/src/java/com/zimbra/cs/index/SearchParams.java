@@ -65,7 +65,7 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 public final class SearchParams implements Cloneable {
 
-	private static final int DEFAULT_LIMIT = 10; // Default limit per query
+    private static final int DEFAULT_LIMIT = 10; // Default limit per query
     private static final int MAX_OFFSET = 10000000; // 10M
     private static final int MAX_PARSABLE_LIMIT = 1000; // 1K
     private static final int MAX_LIMIT = 10000000; // 10M
@@ -930,15 +930,15 @@ public final class SearchParams implements Cloneable {
 
         private ExpandResults(String name,List<ItemId> ids)
         {
-        	this.name = name;
-        	this.itemIds = ids;
+            this.name = name;
+            this.itemIds = ids;
         }
         public boolean matches(MailItem item) {
             return itemIds != null && item != null && matches(new ItemId(item));
         }
 
         public boolean matches(ItemId id) {
-        	return itemIds != null && itemIds.contains(id);
+            return itemIds != null && itemIds.contains(id);
         }
 
         public static ExpandResults valueOf(String value, ZimbraSoapContext zsc) throws ServiceException {
@@ -951,12 +951,12 @@ public final class SearchParams implements Cloneable {
                 return result;
             }
             try {
-            	String[] split = value.split(",");
-            	ArrayList<ItemId> itemIds = new ArrayList<ItemId>();
-            	for (int i = 0; i < split.length; i++) {
-            		itemIds.add(new ItemId(split[i],zsc));
-            	}
-            	return new ExpandResults(value,itemIds);
+                String[] split = value.split(",");
+                ArrayList<ItemId> itemIds = new ArrayList<ItemId>();
+                for (int i = 0; i < split.length; i++) {
+                    itemIds.add(new ItemId(split[i],zsc));
+                }
+                return new ExpandResults(value,itemIds);
             } catch (Exception e) {
                 throw ServiceException.INVALID_REQUEST("invalid 'fetch' value: " + value, null);
             }
