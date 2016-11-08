@@ -34,6 +34,7 @@ public class SmimeConstants {
     public static final QName SAVE_SMIME_CERTIFICATE_RESPONSE = QName.get(E_SAVE_SMIME_CERTIFICATE_RESPONSE, AccountConstants.NAMESPACE);
 
     public static final String A_SIGN = "sign";
+    public static final String A_IS_SIGNED = "isSigned";
     public static final String A_ENCRYPT = "encrypt";
     public static final String A_CERT_ID = "certId";
     public static final String A_CERTIFICATE_PASSWORD = "password";
@@ -54,6 +55,8 @@ public class SmimeConstants {
     public static final String E_END_DATE = "endDate";
     public static final String E_SUBJECT_ALT_NAME = "subjectAltName";
     public static final String E_ISSUER_ALT_NAME = "issuerAltName";
+    public static final String E_ERROR_CODE = "errorCode";
+    public static final String E_ERROR_DETAIL = "errorDetail";
 
     //distinguished name
     public static final String E_COUNTRY = "c";
@@ -89,4 +92,10 @@ public class SmimeConstants {
     public static final String PRIVATE_KEY_FORMAT = "keyFormat";
     public static final String PRIVATE_KEY_INFO = "privateKeyInfo";
     public static final String PUBLIC_CERT_INFO = "pubCertInfo";
+    public static final String MIME_TYPE_MULTIPART_SIGNED = "multipart/signed";
+    public static final String MIME_TYPE_APPLICATION_PKCS7MIME = "application/pkcs7-mime";
+    public static final String MIME_TYPE_APPLICATION_XPKCS7MIME = "application/x-pkcs7-mime";
+
+    public static final String CMS_VERIFIER_CERTIFICATE_NOT_VALID_EXCEPTION_MESSAGE = "verifier not valid at signingTime";
+    public static final String CMS_SIGNER_DIGEST_MISMATCH_EXCEPTION_MESSAGE = "message-digest attribute value does not match calculated value";
 }

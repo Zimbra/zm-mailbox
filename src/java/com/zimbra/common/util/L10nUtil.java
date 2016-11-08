@@ -270,7 +270,17 @@ public class L10nUtil {
         spnego_browser_setup_wiki,
 
         errorTitle,
-        zipFile
+        zipFile,
+
+        // smime error message
+        errCodeSignerInformationNotVerified,
+        errDetailSignerInformationNotVerified,
+        errCodeSignerDigestMismatch,
+        errDetailSignerDigestMismatch,
+        errCodeVerifierCertificateNotValid,
+        errDetailVerifierCertificateNotValid,
+        errCodeInvalidCMSSignature,
+        errCodeCMSSignatureValidationFailed
 
         // add other messages in the future...
     }
