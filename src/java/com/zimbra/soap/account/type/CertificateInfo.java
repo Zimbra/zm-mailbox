@@ -18,6 +18,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.soap.SmimeConstants;
@@ -25,6 +26,7 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
+@XmlRootElement(name = SmimeConstants.E_CERTIFICATE)
 public class CertificateInfo {
 
     /**
@@ -47,6 +49,22 @@ public class CertificateInfo {
      */
     @XmlAttribute(name=SmimeConstants.A_DEFAULT, required=false)
     private ZmBoolean defaultCert;
+
+    /**
+     * @zm-api-field-tag error code
+     * @zm-api-field-description error code
+     */
+    @ZimbraJsonAttribute
+    @XmlElement(name=SmimeConstants.E_ERROR_CODE, required=false)
+    private String errorCode;
+
+    /**
+     * @zm-api-field-tag error detail
+     * @zm-api-field-description error detail
+     */
+    @ZimbraJsonAttribute
+    @XmlElement(name=SmimeConstants.E_ERROR_DETAIL, required=false)
+    private String errorDetail;
 
     /**
      * @zm-api-field-tag emailAddr
@@ -182,6 +200,22 @@ public class CertificateInfo {
 
     public void setIssuerAltName(CertificateAltNames issuerAltName) {
         this.issuerAltName = issuerAltName;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public String getErrorDetail() {
+        return errorDetail;
+    }
+
+    public void setErrorDetail(String errorDetail) {
+        this.errorDetail = errorDetail;
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
