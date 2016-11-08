@@ -18,24 +18,25 @@
 package com.zimbra.client;
 
 
+import java.util.TimeZone;
+
+import org.json.JSONException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.type.SearchSortBy;
-import org.json.JSONException;
-
-import java.util.TimeZone;
 
 public class ZSearchParams implements ToZJSONObject {
 
     public static final String TYPE_CONVERSATION = "conversation";
 
     public static final String TYPE_GAL = "gal";
-    
+
     public static final String TYPE_MESSAGE = "message";
-    
+
     public static final String TYPE_CONTACT = "contact";
-    
+
     public static final String TYPE_VOICE_MAIL = "voicemail";
 
     public static final String TYPE_CALL = "calllog";
@@ -47,7 +48,7 @@ public class ZSearchParams implements ToZJSONObject {
     public static final String TYPE_DOCUMENT = "document";
 
     public static final String TYPE_BRIEFCASE = "briefcase";
-    
+
     public static final String TYPE_WIKI = "wiki";
 
     public static String getCanonicalTypes(String list) throws ServiceException  {
@@ -60,7 +61,7 @@ public class ZSearchParams implements ToZJSONObject {
                 sb.append(TYPE_CONVERSATION);
             else if (s.startsWith("m") && TYPE_MESSAGE.startsWith(s))
                 sb.append(TYPE_MESSAGE);
-            else if (s.startsWith("cont") && TYPE_CONTACT.startsWith(s)) 
+            else if (s.startsWith("cont") && TYPE_CONTACT.startsWith(s))
                 sb.append(TYPE_CONTACT);
             else if (s.startsWith("a") && TYPE_APPOINTMENT.startsWith(s))
                 sb.append(TYPE_APPOINTMENT);
@@ -79,23 +80,23 @@ public class ZSearchParams implements ToZJSONObject {
         }
         return sb.toString();
     }
-    
+
     /**
      *  max number of results to return
      */
     private int mLimit = 100;
-    
+
     /**
      * offset is an integer specifying the 0-based offset into the results list to return as
-     * the first result for this search operation. 
+     * the first result for this search operation.
      */
     private int mOffset;
-    
+
     /**
      * dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc(default is "dateDesc")
      */
     private SearchSortBy mSortBy = SearchSortBy.dateDesc;
-    
+
     /**
      * comma-separated list.  Legal values are:
      *          conversation|message|contact|appointment|note
@@ -108,17 +109,17 @@ public class ZSearchParams implements ToZJSONObject {
      * fetch the first part (messages only at this point) in the result
      */
     private ZMailbox.Fetch mFetch;
-    
+
     /**
      * if fetchFirstMessage is true, grab the HTML part if available
      */
     private boolean mPreferHtml;
-    
+
     /**
      * if fetchFirstMessage is true, mark first message as read
      */
     private boolean mMarkAsRead;
- 
+
     /**
      * if recip="1" is specified:
      * + returned sent messages will contain the set of "To:" recipients instead of the sender
@@ -136,7 +137,7 @@ public class ZSearchParams implements ToZJSONObject {
      * the search query to run
      */
     private String mQuery;
-    
+
     private Cursor mCursor;
 
     private long mCalExpandInstStart;
@@ -153,6 +154,7 @@ public class ZSearchParams implements ToZJSONObject {
      */
     private boolean mInDumpster;
 
+    @Override
     public int hashCode() {
         if (mConvId != null)
             return (mQuery+mConvId).hashCode();
@@ -160,6 +162,7 @@ public class ZSearchParams implements ToZJSONObject {
             return mQuery.hashCode();
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (! (obj instanceof ZSearchParams)) return false;
@@ -230,7 +233,7 @@ public class ZSearchParams implements ToZJSONObject {
     public void setTimeZone(TimeZone tz) { this.mTimeZone = tz; }
 
     public TimeZone getTimeZone() { return this.mTimeZone; }
-    
+
     public Cursor getCursor() {
         return mCursor;
     }
@@ -238,7 +241,7 @@ public class ZSearchParams implements ToZJSONObject {
     public void setCursor(Cursor cursor) {
         mCursor = cursor;
     }
-    
+
     public ZMailbox.Fetch getFetch() {
         return mFetch;
     }
@@ -347,6 +350,7 @@ public class ZSearchParams implements ToZJSONObject {
         mInDumpster = inDumpster;
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         if (mFetch != null) zjo.put("fetch", mFetch.name());
@@ -368,6 +372,7 @@ public class ZSearchParams implements ToZJSONObject {
         return zjo;
     }
 
+    @Override
     public String toString() {
        return String.format("[ZSearchParams %s]", mQuery == null ? "" : mQuery);
     }
@@ -388,15 +393,15 @@ public class ZSearchParams implements ToZJSONObject {
     public void setField(String field) {
         mField = field;
     }
-    
-    public static class Cursor implements ToZJSONObject {
-        
-        private String mPreviousId;
 
-        private String mPreviousSortValue;
+    public static class Cursor implements ToZJSONObject {
+
+        private final String mPreviousId;
+
+        private final String mPreviousSortValue;
 
         /**
-         * cursorPreviousId and cursorPreviousSortValue 
+         * cursorPreviousId and cursorPreviousSortValue
          * correspond to the last hit on the previous page (assuming you're
          * going forward -- if you're backing up then th
          * ey should be the first
@@ -410,7 +415,7 @@ public class ZSearchParams implements ToZJSONObject {
             mPreviousId = prevoiusId;
             mPreviousSortValue = previousSortValue;
         }
-        
+
         public String getPreviousId() {
             return mPreviousId;
         }
@@ -419,10 +424,12 @@ public class ZSearchParams implements ToZJSONObject {
             return mPreviousSortValue;
         }
 
+        @Override
         public int hashCode() {
             return (mPreviousId + mPreviousSortValue).hashCode();
         }
 
+        @Override
         public boolean equals(Object obj) {
             if (obj == this) return true;
             if (! (obj instanceof Cursor)) return false;
@@ -432,6 +439,7 @@ public class ZSearchParams implements ToZJSONObject {
             return true;
         }
 
+        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("previousId", mPreviousId);
@@ -439,6 +447,7 @@ public class ZSearchParams implements ToZJSONObject {
             return zjo;
         }
 
+        @Override
         public String toString() {
             return String.format("[Cursor id=%s sort=%s]", mPreviousId, mPreviousSortValue);
         }
