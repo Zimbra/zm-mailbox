@@ -104,6 +104,7 @@ import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
@@ -5906,5 +5907,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             throws ServiceException {
         // Probably need to get the items and then do a tag operation on them
         throw new UnsupportedOperationException("ZMailbox does not support method yet");
+    }
+
+    @Override
+    public ZimbraSearchParams createSearchParams(String queryString) {
+        return new ZSearchParams(queryString);
     }
 }
