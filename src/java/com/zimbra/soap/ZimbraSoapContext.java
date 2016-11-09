@@ -996,4 +996,8 @@ public final class ZimbraSoapContext {
         }
         return false;
     }
+
+    public SoapProtocol getmResponseProtocol() {
+        return mResponseProtocol;
+    }
 }
