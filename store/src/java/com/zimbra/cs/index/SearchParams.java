@@ -36,6 +36,10 @@ import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.ZimbraFetchMode;
+import com.zimbra.common.mailbox.ZimbraSearchParams;
+import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -63,7 +67,7 @@ import com.zimbra.soap.type.ZmBoolean;
  * {@link #encodeParams(Element)} and {@link #parse(Element, ZimbraSoapContext, String)}) APIs.
  * This IS NOT optional and will break cross-server search if you do not comply.
  */
-public final class SearchParams implements Cloneable {
+public final class SearchParams implements Cloneable, ZimbraSearchParams {
 
     private static final int DEFAULT_LIMIT = 10; // Default limit per query
     private static final int MAX_OFFSET = 10000000; // 10M
@@ -139,6 +143,7 @@ public final class SearchParams implements Cloneable {
         return calItemExpandEnd;
     }
 
+    @Override
     public String getQueryString() {
         return queryString;
     }
@@ -183,6 +188,7 @@ public final class SearchParams implements Cloneable {
         return recipients;
     }
 
+    @Override
     public TimeZone getTimeZone() {
         return timezone;
     }
@@ -191,6 +197,7 @@ public final class SearchParams implements Cloneable {
         return locale;
     }
 
+    @Override
     public boolean getPrefetch() {
         return prefetch;
     }
@@ -203,6 +210,7 @@ public final class SearchParams implements Cloneable {
         return defaultField;
     }
 
+    @Override
     public final boolean getIncludeTagDeleted() {
         return includeTagDeleted;
     }
@@ -215,6 +223,7 @@ public final class SearchParams implements Cloneable {
         return allowableTaskStatuses;
     }
 
+    @Override
     public int getLimit() {
         return limit;
     }
@@ -247,6 +256,7 @@ public final class SearchParams implements Cloneable {
         hopCount = value;
     }
 
+    @Override
     public void setQueryString(String value) {
         queryString = value;
     }
@@ -255,6 +265,7 @@ public final class SearchParams implements Cloneable {
         offset = Math.min(value, MAX_OFFSET);
     }
 
+    @Override
     public void setLimit(int value) {
         limit = Math.min(value, MAX_LIMIT);
     }
@@ -266,6 +277,7 @@ public final class SearchParams implements Cloneable {
         defaultField = value;
     }
 
+    @Override
     public final void setIncludeTagDeleted(boolean value) {
         includeTagDeleted = value;
     }
@@ -403,6 +415,7 @@ public final class SearchParams implements Cloneable {
         }
     }
 
+    @Override
     public void setTimeZone(TimeZone value) {
         timezone = value;
     }
@@ -423,6 +436,7 @@ public final class SearchParams implements Cloneable {
         cursor = value;
     }
 
+    @Override
     public void setPrefetch(boolean value) {
         prefetch = value;
     }
@@ -1042,15 +1056,70 @@ public final class SearchParams implements Cloneable {
 
     public enum Fetch {
         /* Everything. */
-        NORMAL,
+        NORMAL(ZimbraFetchMode.NORMAL),
         /* Only IMAP data. */
-        IMAP,
+        IMAP(ZimbraFetchMode.IMAP),
         /* Only the metadata modification sequence number. */
-        MODSEQ,
+        MODSEQ(ZimbraFetchMode.MODSEQ),
         /* Only the ID of the item's parent (-1 if no parent). */
-        PARENT,
+        PARENT(ZimbraFetchMode.PARENT),
         /* Only ID. */
-        IDS;
+        IDS(ZimbraFetchMode.IDS);
+
+        private final ZimbraFetchMode zfm;
+
+        private Fetch(ZimbraFetchMode zimbraFetchMode) {
+            zfm = zimbraFetchMode;
+        }
+
+        public static Fetch fromZimbraFetchMode(ZimbraFetchMode zimbraFetchMode) {
+            for (Fetch typ :Fetch.values()) {
+                if (typ.zfm == zimbraFetchMode) {
+                    return typ;
+                }
+            }
+            throw new IllegalArgumentException("Unrecognised ZimbraFetchMode:" + zimbraFetchMode);
+        }
+
+        public ZimbraFetchMode toZimbraFetchMode() {
+            return zfm;
+        }
+    }
+
+    @Override
+    public Set<MailItemType> getMailItemTypes() {
+        return MailItem.Type.toCommon(types);
+    }
+
+    @Override
+    public ZimbraSearchParams setMailItemTypes(Set<MailItemType> values) {
+        types = MailItem.Type.fromCommon(values);
+        return this;
+    }
+
+    @Override
+    public ZimbraSortBy getZimbraSortBy() {
+        throw new UnsupportedOperationException("SearchParams method not supported yet");
+    }
+
+    @Override
+    public ZimbraSearchParams setZimbraSortBy(ZimbraSortBy value) {
+        throw new UnsupportedOperationException("SearchParams method not supported yet");
+    }
+
+    @Override
+    public ZimbraFetchMode getZimbraFetchMode() {
+        Fetch fet =  this.getFetchMode();
+        if (null == fet) {
+            return ZimbraFetchMode.NORMAL;
+        }
+        return fet.toZimbraFetchMode();
+    }
+
+    @Override
+    public ZimbraSearchParams setZimbraFetchMode(ZimbraFetchMode value) {
+        setFetchMode(Fetch.fromZimbraFetchMode(value));
+        return this;
     }
 
 }
