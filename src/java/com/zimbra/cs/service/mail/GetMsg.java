@@ -35,7 +35,6 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
-import com.zimbra.cs.mime.GetMsgResponseProcessor;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -116,9 +115,6 @@ public class GetMsg extends MailDocumentHandler {
             } else {
                 ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize,
                         wantHTML, neuter, headers, false, needGroupInfo, LC.mime_encode_missing_blob.booleanValue(), wantContent);
-            }
-            if (GetMsgResponseProcessor.getProcessor() != null) {
-                GetMsgResponseProcessor.getProcessor().process(mbox, response, msg.getMimeMessage(), msg.getId(), zsc);
             }
         }
         return response;

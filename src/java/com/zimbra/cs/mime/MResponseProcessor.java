@@ -18,20 +18,23 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.cs.account.Account;
 
-public abstract class GetMsgResponseProcessor {
+public abstract class MResponseProcessor {
 
-    private static GetMsgResponseProcessor processorInstance = null;
+    private static MResponseProcessor processorInstance = null;
 
-    public static void registerProcessor(GetMsgResponseProcessor processor) {
+    public static void registerProcessor(MResponseProcessor processor) {
         processorInstance = processor;
     }
 
-    public static GetMsgResponseProcessor getProcessor() {
+    public static MResponseProcessor getProcessor() {
         return processorInstance;
     }
 
     public abstract void process(Mailbox mbox, Element m, MimeMessage mm, int mailItemId, ZimbraSoapContext zsc) throws ServiceException;
+    public abstract void process(Account account, Element m, MimeMessage mm,
+        SoapProtocol mResponseProtocol) throws ServiceException;
+
 }
