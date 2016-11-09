@@ -20,11 +20,12 @@ package com.zimbra.cs.index;
 import java.util.Comparator;
 
 import com.google.common.base.Objects;
+import com.zimbra.common.mailbox.ZimbraQueryHit;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapMessage;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
 
 /**
@@ -33,7 +34,7 @@ import com.zimbra.cs.service.util.ItemId;
  *
  * @since Oct 15, 2004
  */
-public abstract class ZimbraHit {
+public abstract class ZimbraHit implements ZimbraQueryHit {
 
     protected final Mailbox mailbox;
     protected final ZimbraQueryResults results;
