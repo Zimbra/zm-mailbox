@@ -104,6 +104,7 @@ import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraQueryHitResults;
 import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.RemoteServiceException;
@@ -5908,6 +5909,21 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         // Probably need to get the items and then do a tag operation on them
         throw new UnsupportedOperationException("ZMailbox does not support method yet");
     }
+
+    @Override
+    public ZimbraQueryHitResults search(OpContext octx, ZimbraSearchParams params)
+    throws ServiceException {
+        // Mailbox does:
+        //     ZimbraQueryResults zqr = this.index.search(SoapProtocol.Soap12, octx, (SearchParams) params);
+        //     return new LocalZimbraQueryHitResults(zqr);
+        // Note that existing ZSearchHit doesn't have ZimbraQueryHit methods:
+        //     public int getItemId() throws ServiceException;  (maybe easily derivable from String getId())
+        //     public int getParentId() throws ServiceException;
+        //     public int getModifiedSequence() throws ServiceException;
+        // so may not be totally trivial to implement
+        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+    }
+
 
     @Override
     public ZimbraSearchParams createSearchParams(String queryString) {
