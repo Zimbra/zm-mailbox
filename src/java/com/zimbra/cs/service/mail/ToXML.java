@@ -148,6 +148,7 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.MPartInfo;
+import com.zimbra.cs.mime.MResponseProcessor;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.handler.TextEnrichedHandler;
@@ -1594,6 +1595,8 @@ public final class ToXML {
                             msg.getMailbox().getAccount(), m, mm, octxt.getmResponseProtocol());
                     }
                 }
+            if (MResponseProcessor.getProcessor() != null) {
+                MResponseProcessor.getProcessor().process(msg.getMailbox().getAccount(), m, mm, octxt.getmResponseProtocol());
             }
             return m;
         } catch (IOException ex) {
