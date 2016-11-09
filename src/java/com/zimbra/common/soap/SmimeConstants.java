@@ -96,6 +96,8 @@ public class SmimeConstants {
     public static final String MIME_TYPE_APPLICATION_PKCS7MIME = "application/pkcs7-mime";
     public static final String MIME_TYPE_APPLICATION_XPKCS7MIME = "application/x-pkcs7-mime";
 
-    public static final String CMS_VERIFIER_CERTIFICATE_NOT_VALID_EXCEPTION_MESSAGE = "verifier not valid at signingTime";
-    public static final String CMS_SIGNER_DIGEST_MISMATCH_EXCEPTION_MESSAGE = "message-digest attribute value does not match calculated value";
+    public static final String CMS_VERIFIER_NOT_VALID_AT_SIGNINGTIME_ERROR_MESSAGE = "verifier not valid at signingTime";
+    public static final String CMS_SIGNER_DIGEST_MISMATCH_ERROR_MESSAGE = "message-digest attribute value does not match calculated value";
+    public static final String CMS_EMAILADDRESS_NOMATCH_ERROR_MESSAGE = "Email address doesn't match";
+    public static final String CMS_CLIENT_CERTIFICATE_EXPIRED_ERROR_MESSAGE = "client certificate expired";
 }

@@ -278,7 +278,9 @@ public class L10nUtil {
         errCodeSignerDigestMismatch,
         errDetailSignerDigestMismatch,
         errCodeVerifierCertificateNotValid,
-        errDetailVerifierCertificateNotValid,
+        errDetailVerifierNotValidAtSigningTime,
+        errDetailClientCertificateExpired,
+        errDetailEmailAddressDoesNotMatch,
         errCodeInvalidCMSSignature,
         errCodeCMSSignatureValidationFailed
 
