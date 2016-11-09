@@ -18,16 +18,21 @@
 package com.zimbra.client;
 
 
+import java.util.Set;
 import java.util.TimeZone;
 
 import org.json.JSONException;
 
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.ZimbraFetchMode;
+import com.zimbra.common.mailbox.ZimbraSearchParams;
+import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.type.SearchSortBy;
 
-public class ZSearchParams implements ToZJSONObject {
+public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
 
     public static final String TYPE_CONVERSATION = "conversation";
 
@@ -230,8 +235,10 @@ public class ZSearchParams implements ToZJSONObject {
         mSortBy = folder.getSortBy();
     }
 
+    @Override
     public void setTimeZone(TimeZone tz) { this.mTimeZone = tz; }
 
+    @Override
     public TimeZone getTimeZone() { return this.mTimeZone; }
 
     public Cursor getCursor() {
@@ -250,10 +257,12 @@ public class ZSearchParams implements ToZJSONObject {
         mFetch = fetch;
     }
 
+    @Override
     public int getLimit() {
         return mLimit;
     }
 
+    @Override
     public void setLimit(int limit) {
         mLimit = limit;
     }
@@ -455,6 +464,65 @@ public class ZSearchParams implements ToZJSONObject {
         public String dump() {
             return ZJSONObject.toString(this);
         }
+    }
 
+    @Override
+    public boolean getIncludeTagDeleted() {
+        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+    }
+
+    @Override
+    public void setIncludeTagDeleted(boolean value) {
+        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+    }
+
+    @Override
+    public String getQueryString() {
+        return getQuery();
+    }
+
+    @Override
+    public void setQueryString(String value) {
+        setQuery(value);
+    }
+
+    @Override
+    public Set<MailItemType> getMailItemTypes() {
+        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+    }
+
+    @Override
+    public ZimbraSearchParams setMailItemTypes(Set<MailItemType> values) {
+        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+    }
+
+    @Override
+    public ZimbraSortBy getZimbraSortBy() {
+        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+    }
+
+    @Override
+    public ZimbraSearchParams setZimbraSortBy(ZimbraSortBy value) {
+        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+    }
+
+    @Override
+    public ZimbraFetchMode getZimbraFetchMode() {
+        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+    }
+
+    @Override
+    public ZimbraSearchParams setZimbraFetchMode(ZimbraFetchMode value) {
+        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+    }
+
+    @Override
+    public boolean getPrefetch() {
+        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+    }
+
+    @Override
+    public void setPrefetch(boolean value) {
+        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
     }
 }
