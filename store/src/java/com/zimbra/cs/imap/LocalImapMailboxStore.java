@@ -105,11 +105,11 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     @Override
     public List<ZimbraMailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException {
-        List<ZimbraMailItem> zmis = Lists.newArrayListWithCapacity(20);
         List<MailItem> mis = mailbox.imapCopy(octxt, itemIds, MailItem.Type.fromCommon(type), folderId);
         if (null == mis) {
             return Collections.emptyList();
         }
+        List<ZimbraMailItem> zmis = Lists.newArrayListWithCapacity(mis.size());
         zmis.addAll(mis);
         return zmis;
     }
