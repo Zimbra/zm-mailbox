@@ -18,13 +18,16 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.common.util.ZimbraLog;
@@ -100,10 +103,15 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
+    public List<ZimbraMailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException {
-        return  mailbox.imapCopy(octxt, itemIds, type, folderId);
-
+        List<ZimbraMailItem> zmis = Lists.newArrayListWithCapacity(20);
+        List<MailItem> mis = mailbox.imapCopy(octxt, itemIds, MailItem.Type.fromCommon(type), folderId);
+        if (null == mis) {
+            return Collections.emptyList();
+        }
+        zmis.addAll(mis);
+        return zmis;
     }
 
     @Override
