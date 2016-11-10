@@ -7308,7 +7308,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGalSyncMaxConcurrentClients = "zimbraGalSyncMaxConcurrentClients";
 
     /**
-     * Maximum entries that should be returned for SyncGalRequest
+     * Page size control for SyncGalRequest. By default not more than 30000
+     * entries will be returned for every SyncGalRequest
      *
      * @since ZCS 8.7.0
      */
