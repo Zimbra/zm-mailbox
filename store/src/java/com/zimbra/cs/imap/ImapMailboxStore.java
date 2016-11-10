@@ -23,12 +23,13 @@ import java.util.Set;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 
@@ -72,7 +73,7 @@ public abstract class ImapMailboxStore {
     public abstract void resetImapUid(List<Integer> renumber) throws ServiceException;
     public abstract void beginTrackingImap() throws ServiceException;
     public abstract void deleteMessages(OperationContext octxt, List<Integer> ids);
-    public abstract List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
+    public abstract List<ZimbraMailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException;
     public abstract InputStreamWithSize getByImapId(OperationContext octxt, int imapId, String folderId, String resolvedPath)
             throws ServiceException;
