@@ -59,6 +59,7 @@ import com.zimbra.common.mailbox.ACLGrant;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
@@ -4067,7 +4068,7 @@ abstract class ImapHandler {
         }
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
-        List<MailItem> copies = new ArrayList<MailItem>();
+        List<ZimbraMailItem> copies = new ArrayList<ZimbraMailItem>();
 
         ImapFolder i4folder = getSelectedFolder();
         if (i4folder == null) {
@@ -4124,17 +4125,17 @@ abstract class ImapHandler {
                     continue;
                 }
                 if (sameMailbox) {
-                    List<MailItem> copyMsgs;
+                    List<ZimbraMailItem> copyMsgs;
                     try {
-                        MailItem.Type type = MailItem.Type.UNKNOWN;
+                        MailItemType type = MailItemType.UNKNOWN;
                         int[] mItemIds = new int[i4list.size()];
                         int counter  = 0;
                         for (ImapMessage curMsg : i4list) {
                             mItemIds[counter++] = curMsg.msgId;
                             if (counter == 1) {
-                                type = curMsg.getType();
-                            } else if (curMsg.getType() != type) {
-                                type = MailItem.Type.UNKNOWN;
+                                type = curMsg.getMailItemType();
+                            } else if (curMsg.getMailItemType() != type) {
+                                type = MailItemType.UNKNOWN;
                             }
                         }
                         copyMsgs = selectedImapMboxStore.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
@@ -4143,7 +4144,7 @@ abstract class ImapHandler {
                     }
 
                     copies.addAll(copyMsgs);
-                    for (MailItem target : copyMsgs) {
+                    for (ZimbraMailItem target : copyMsgs) {
                         createdList.add(target.getImapUid());
                     }
                 } else {
