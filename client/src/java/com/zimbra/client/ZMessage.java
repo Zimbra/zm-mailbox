@@ -589,4 +589,9 @@ public class ZMessage implements ZItem, ToZJSONObject, ZimbraMailItem {
     public int getModifiedSequence() {
         throw new UnsupportedOperationException("ZMessage method not supported yet");
     }
+
+    @Override
+    public int getImapUid() {
+        throw new UnsupportedOperationException("ZMessage method not supported yet");
+    }
 }
