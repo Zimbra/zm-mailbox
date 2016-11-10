@@ -63,22 +63,32 @@ public class SyncGalRequest {
     @XmlAttribute(name=AccountConstants.A_ID_ONLY /* idOnly */, required=false)
     private ZmBoolean idOnly;
 
+    /**
+     * @zm-api-field-tag limit
+     * @zm-api-field-description Maximum entries to be fetched
+     */
+    @XmlAttribute(name=MailConstants.A_LIMIT /* limit */, required=false)
+    private Integer limit;
+
     public SyncGalRequest() {
     }
 
     public void setToken(String token) { this.token = token; }
     public void setGalAccountId(String galAccountId) { this.galAccountId = galAccountId; }
     public void setIdOnly(Boolean idOnly) { this.idOnly = ZmBoolean.fromBool(idOnly); }
+    public void setLimit(int limit) { this.limit = limit; }
     public String getToken() { return token; }
     public String getGalAccountId() { return galAccountId; }
     public Boolean getIdOnly() { return ZmBoolean.toBool(idOnly); }
+    public int getLimit() { return limit; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
             .add("token", token)
             .add("galAccountId", galAccountId)
-            .add("idOnly", idOnly);
+            .add("idOnly", idOnly)
+            .add("limit", limit);
     }
 
     @Override
