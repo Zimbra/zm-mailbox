@@ -275,14 +275,22 @@ public class L10nUtil {
         // smime error message
         errCodeSignerInformationNotVerified,
         errDetailSignerInformationNotVerified,
+
         errCodeSignerDigestMismatch,
         errDetailSignerDigestMismatch,
+
         errCodeVerifierCertificateNotValid,
         errDetailVerifierNotValidAtSigningTime,
         errDetailClientCertificateExpired,
+        errDetailClientCertificateNotYetValid,
         errDetailEmailAddressDoesNotMatch,
+        errDetailSignerCertificateValidationFailed,
+
         errCodeInvalidCMSSignature,
-        errCodeCMSSignatureValidationFailed
+        errDetailInvalidCMSSignature,
+
+        errCodeCMSSignatureValidationFailed,
+        errDetailCMSSignatureValidationFailed
 
         // add other messages in the future...
     }

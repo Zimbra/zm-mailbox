@@ -100,4 +100,5 @@ public class SmimeConstants {
     public static final String CMS_SIGNER_DIGEST_MISMATCH_ERROR_MESSAGE = "message-digest attribute value does not match calculated value";
     public static final String CMS_EMAILADDRESS_NOMATCH_ERROR_MESSAGE = "Email address doesn't match";
     public static final String CMS_CLIENT_CERTIFICATE_EXPIRED_ERROR_MESSAGE = "client certificate expired";
+    public static final String CMS_CLIENT_CERTIFICATE_NOT_YET_VALID_ERROR_MESSAGE = "client certificate not yet valid";
 }
