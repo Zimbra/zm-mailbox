@@ -939,10 +939,12 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return IndexStatus.of(mData.indexId);
     }
 
-    /** Returns the UID the item is referenced by in the IMAP server.  Returns
-     *  <tt>0</tt> for items that require renumbering because of moves.
-     *  The "IMAP UID" will be the same as the item ID unless the item has
-     *  been moved after the mailbox owner's first IMAP session. */
+    /**
+     * @return the UID the item is referenced by in the IMAP server.  Returns <tt>0</tt> for items that require
+     * renumbering because of moves.
+     * The "IMAP UID" will be the same as the item ID unless the item has been moved after the mailbox owner's first
+     * IMAP session. */
+    @Override
     public int getImapUid() {
         return mData.imapId;
     }
