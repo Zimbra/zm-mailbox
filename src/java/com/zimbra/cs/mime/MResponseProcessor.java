@@ -37,4 +37,5 @@ public abstract class MResponseProcessor {
     public abstract void process(Account account, Element m, MimeMessage mm,
         SoapProtocol mResponseProtocol) throws ServiceException;
 
+    public abstract void process(Mailbox mbox, Element m, MimeMessage mm, ZimbraSoapContext zsc) throws ServiceException;
 }
