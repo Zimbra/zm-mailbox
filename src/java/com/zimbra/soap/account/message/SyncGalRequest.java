@@ -98,7 +98,8 @@ public class SyncGalRequest {
             .add("token", token)
             .add("galAccountId", galAccountId)
             .add("idOnly", idOnly)
-            .add("limit", limit);
+            .add("limit", limit)
+            .add("ldapOffset", ldapOffset);
     }
 
     @Override
