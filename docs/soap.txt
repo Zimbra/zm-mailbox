@@ -881,7 +881,11 @@ import and export of addressbook.
 
 ----------------------------
 
- <SyncGalRequest [token="{previous-token}] [idOnly={true|false}]"/>
+ <SyncGalRequest [limit={limit}] [ldapOffset={ldapOffset}][token="{previous-token}] [idOnly={true|false}]"/>
+
+  {limit} - Page size control for SyncGalRequest. The maximum entries that can be returned for
+ every SyncGal Request can be controlled by specifying this limit.
+  {ldapOffset} - The page offset token from where sync gal should be resumed.
 
  <SyncGalResponse token="{new-token}" [galDefinitionLastModified="{timestamp}"] [throttled="{throttled-flag}"]
                                      [fullSyncRecommended="{fullSyncRecommended-flag}"] >

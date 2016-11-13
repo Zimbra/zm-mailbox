@@ -233,7 +233,9 @@ public class LdapGalSearch {
                           params.getLimit(),
                           cfg.getRules(),
                           params.getSyncToken(),
-                          params.getResult());
+                          params.getResult(),
+                          params.getLdapOffset(),
+                          params.getOp());
             } else {
                 getGalEntryByDn(zlc, galType, fetchEntryByDn, cfg.getRules(), params.getResult());
             }
@@ -304,6 +306,7 @@ public class LdapGalSearch {
             result.setToken(LdapUtil.getLaterTimestamp(result.getToken(), mts));
             String cts = (String) lgc.getAttrs().get("createTimeStamp");
             result.setToken(LdapUtil.getLaterTimestamp(result.getToken(), cts));
+            result.setToken(mts);
             try {
                 result.addMatch(lgc);
             } catch (ServiceException e) {
@@ -315,6 +318,18 @@ public class LdapGalSearch {
     }
 
     public static void searchGal(ZLdapContext zlc,
+        GalSearchConfig.GalType galType,
+        int pageSize,
+        String base,
+        String query,
+        int maxResults,
+        LdapGalMapRules rules,
+        String token,
+        SearchGalResult result) throws ServiceException {
+        searchGal(zlc, galType, pageSize, base, query, maxResults, rules, token, result, 0, null);
+    }
+
+    public static void searchGal(ZLdapContext zlc,
                                  GalSearchConfig.GalType galType,
                                  int pageSize,
                                  String base,
@@ -322,7 +337,9 @@ public class LdapGalSearch {
                                  int maxResults,
                                  LdapGalMapRules rules,
                                  String token,
-                                 SearchGalResult result) throws ServiceException {
+                                 SearchGalResult result,
+                                 int ldapOffset,
+                                 GalOp op) throws ServiceException {
 
         String tk = token != null && !token.equals("")? token : LdapConstants.EARLIEST_SYNC_TOKEN;
         result.setToken(tk);
@@ -351,6 +368,9 @@ public class LdapGalSearch {
                 reqAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
 
         searchOpts.setResultPageSize(pageSize);
+        searchOpts.setSearchGalResult(result);
+        searchOpts.setLdapOffset(ldapOffset);
+        searchOpts.setGalOp(op);
 
         try {
             zlc.searchPaged(searchOpts);
@@ -368,7 +388,10 @@ public class LdapGalSearch {
                 Date parsedToken = LdapDateUtil.parseGeneralizedTime(newToken);
                 if (parsedToken != null) {
                     long ts = parsedToken.getTime();
-                    ts += 1000;
+                    if (result.getLdapOffset() == 0) {
+                        ts += 1000;
+                    }
+
 
                     // Note, this will "normalize" the token to our standard format
                     // DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT
