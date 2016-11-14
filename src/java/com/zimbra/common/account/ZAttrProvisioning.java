@@ -7308,6 +7308,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGalSyncMaxConcurrentClients = "zimbraGalSyncMaxConcurrentClients";
 
     /**
+     * Page size control for SyncGalRequest. By default not more than 30000
+     * entries will be returned for every SyncGalRequest
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public static final String A_zimbraGalSyncSizeLimit = "zimbraGalSyncSizeLimit";
+
+    /**
      * LDAP generalized time format for external GAL sync
      *
      * @since ZCS 6.0.0_BETA2
