@@ -2020,6 +2020,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
          private String mToken;
          private boolean mHadMore; // for auto-complete only
          private final List<GalContact> mMatches;
+         private int mLdapOffset;
 
         /*
          * for auto-complete and search only
@@ -2060,6 +2061,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         public String getTokenizeKey() {
             return mTokenizeKey;
+        }
+
+        public int getLdapOffset() {
+            return mLdapOffset;
+        }
+
+        public void setLdapOffset(int offset) {
+            mLdapOffset = offset;
         }
 
         public void setTokenizeKey(String tokenizeKey) {

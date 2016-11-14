@@ -2733,8 +2733,14 @@ public class DbMailItem {
         int sinceDate, Set<Integer> visible) throws ServiceException {
         return getModifiedItems(mbox, type, lastSync, sinceDate, visible, -1);
     }
+
+    public static Pair<List<Integer>, TypedIdList> getModifiedItems(Mailbox mbox, MailItem.Type type, long lastSync,
+        int sinceDate, Set<Integer> visible, int lastDeleteSync) throws ServiceException {
+        return getModifiedItems(mbox, type, lastSync, sinceDate, visible, -1, 0);
+    }
+
     public static Pair<List<Integer>,TypedIdList> getModifiedItems(Mailbox mbox, MailItem.Type type, long lastSync,
-            int sinceDate, Set<Integer> visible, int lastDeleteSync)
+            int sinceDate, Set<Integer> visible, int lastDeleteSync, int limit)
     throws ServiceException {
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
@@ -2744,10 +2750,16 @@ public class DbMailItem {
         try {
             String typeConstraint = type == MailItem.Type.UNKNOWN ? "type NOT IN " + NON_SYNCABLE_TYPES : typeIn(type);
             String dateConstraint = sinceDate > 0 ? "date > ? AND " : "";
-            stmt = conn.prepareStatement("SELECT id, type, folder_id, uuid, mod_metadata" +
-                        " FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + dateConstraint + typeConstraint +
-                        " ORDER BY mod_metadata, id");
+            StringBuilder buf = new StringBuilder();
+            buf.append("SELECT id, type, folder_id, uuid, mod_metadata" +
+                " FROM " + getMailItemTableName(mbox) +
+                " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + dateConstraint + typeConstraint +
+                " ORDER BY mod_metadata, id");
+            if (limit > 0 && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                buf.append(" ").append(Db.getInstance().limit(limit));
+            }
+
+            stmt = conn.prepareStatement(buf.toString());
             if (type == MailItem.Type.MESSAGE) {
                 Db.getInstance().enableStreaming(stmt);
             }

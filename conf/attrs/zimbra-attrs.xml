@@ -9250,4 +9250,9 @@ TODO: delete them permanently from here
   <desc>Whether to enable the Sieve "Variables" extension defined in RFC 5229.</desc>
 </attr>
 
+<attr id="2097" name="zimbraGalSyncSizeLimit" type="integer" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="8.7.0">
+  <globalConfigValue>30000</globalConfigValue>
+  <desc>Page size control for SyncGalRequest. By default not more than 30000 entries will be returned for every SyncGalRequest</desc>
+</attr>
+
 </attrs>

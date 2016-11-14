@@ -52,6 +52,8 @@ public class GalSearchParams {
     private GalSyncToken mSyncToken;
     private SearchGalResult mResult;
     private ZimbraSoapContext mSoapContext;
+    private int mLdapOffset;
+    private String[] mLdapOffsetToken = {"", "0", "", "0"};
 
     private Account mAccount;
     private String mUserAgent;
@@ -106,6 +108,14 @@ public class GalSearchParams {
 
     public int getLimit() {
         return mLimit;
+    }
+
+    public int getLdapOffset() {
+        return mLdapOffset;
+    }
+
+    public String[] getLdapOffsetToken() {
+        return mLdapOffsetToken;
     }
 
     public Integer getLdapLimit() {
@@ -248,8 +258,16 @@ public class GalSearchParams {
         mLdapLimit = limit;
     }
 
+    public void setLdapOffset(int offset) {
+        mLdapOffset = offset;
+    }
+
     public void setPageSize(int pageSize) {
         mPageSize = pageSize;
+    }
+
+    public void setLdapOffsetToken(String[] token) {
+        mLdapOffsetToken = token;
     }
 
     public void setQuery(String query) {

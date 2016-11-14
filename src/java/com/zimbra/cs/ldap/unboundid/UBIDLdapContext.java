@@ -54,6 +54,8 @@ import com.unboundid.ldap.sdk.schema.Schema;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
@@ -520,6 +522,28 @@ public class UBIDLdapContext extends ZLdapContext {
         Set<String> binaryAttrs = searchOptions.getBinaryAttrs();
         SearchScope searchScope = ((UBIDSearchScope) searchOptions.getSearchScope()).getNative();
         SearchLdapOptions.SearchLdapVisitor visitor = searchOptions.getVisitor();
+        SearchGalResult searchGalResult = searchOptions.getSearchGalResult();
+        int pageSize = searchOptions.getResultPageSize();
+        int offset = searchOptions.getLdapOffset();
+        int limit = maxResults;
+        if (limit == 0) {
+            limit = Integer.MAX_VALUE;
+        }
+        if (GalOp.sync == searchOptions.getGalOp()) {
+            //sync operation should use zero size limit in searchRequestfor ldapSearch so that
+            // we get all the results in ldapSearch and then we can use offset to
+            //to decide the entry from where we need to start sync
+            maxResults = 0;
+        }
+        int pageCount = 0;
+        int pageOffset = 0;
+        int currentPage = 0;
+        int index = 0;
+        if (offset > 0) {
+            pageCount = offset / pageSize;
+            pageOffset = offset % pageSize;
+        }
+        String oldToken = searchGalResult != null ? searchGalResult.getToken() : "";
 
         boolean wantPartialResult = true;  // TODO: this is the legacy behavior, we can make it a param
 
@@ -535,7 +559,7 @@ public class UBIDLdapContext extends ZLdapContext {
             searchRequest.setAttributes(searchOptions.getReturnAttrs());
 
             //Set the page size and initialize the cookie that we pass back in subsequent pages
-            int pageSize = searchOptions.getResultPageSize();
+
             ASN1OctetString cookie = null;
 
             do {
@@ -572,14 +596,20 @@ public class UBIDLdapContext extends ZLdapContext {
                     throw e;
                 }
 
-                for (SearchResultEntry entry : result.getSearchEntries()) {
-                    String dn = entry.getDN();
-                    UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
-                    if (visitor.wantAttrMapOnVisit()) {
-                        visitor.visit(dn, ubidAttrs.getAttrs(binaryAttrs), ubidAttrs);
-                    } else {
-                        visitor.visit(dn, ubidAttrs);
+                List<SearchResultEntry> entries = result.getSearchEntries();
+                if (currentPage >= pageCount) {
+                    for (index = pageOffset; index < entries.size() && limit > 0; index++) {
+                        SearchResultEntry entry = entries.get(index);
+                        String dn = entry.getDN();
+                        UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
+                        if (visitor.wantAttrMapOnVisit()) {
+                            visitor.visit(dn, ubidAttrs.getAttrs(binaryAttrs), ubidAttrs);
+                        } else {
+                            visitor.visit(dn, ubidAttrs);
+                        }
+                        limit--;
                     }
+                    pageOffset = 0;
                 }
 
                 cookie = null;
@@ -588,7 +618,15 @@ public class UBIDLdapContext extends ZLdapContext {
                         cookie = ((SimplePagedResultsControl) c).getCookie();
                     }
                 }
-            } while ((cookie != null) && (cookie.getValueLength() > 0));
+
+                if (limit == 0 && searchGalResult != null
+                    && (index < entries.size() || (cookie != null) && (cookie.getValueLength() > 0))) {
+                    searchGalResult.setHadMore(true);
+                    searchGalResult.setToken(oldToken);
+                    searchGalResult.setLdapOffset((pageCount * pageSize) + index);
+                }
+                currentPage++;
+            } while ((cookie != null) && (cookie.getValueLength() > 0) && limit > 0);
         } catch (SearchLdapOptions.StopIteratingException e) {
             // break out of the loop and close the ne
         } catch (LDAPException e) {

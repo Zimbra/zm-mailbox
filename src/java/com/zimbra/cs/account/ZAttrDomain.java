@@ -13096,6 +13096,83 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Page size control for SyncGalRequest. By default not more than 30000
+     * entries will be returned for every SyncGalRequest
+     *
+     * @return zimbraGalSyncSizeLimit, or 30000 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public int getGalSyncSizeLimit() {
+        return getIntAttr(Provisioning.A_zimbraGalSyncSizeLimit, 30000);
+    }
+
+    /**
+     * Page size control for SyncGalRequest. By default not more than 30000
+     * entries will be returned for every SyncGalRequest
+     *
+     * @param zimbraGalSyncSizeLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public void setGalSyncSizeLimit(int zimbraGalSyncSizeLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncSizeLimit, Integer.toString(zimbraGalSyncSizeLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Page size control for SyncGalRequest. By default not more than 30000
+     * entries will be returned for every SyncGalRequest
+     *
+     * @param zimbraGalSyncSizeLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public Map<String,Object> setGalSyncSizeLimit(int zimbraGalSyncSizeLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncSizeLimit, Integer.toString(zimbraGalSyncSizeLimit));
+        return attrs;
+    }
+
+    /**
+     * Page size control for SyncGalRequest. By default not more than 30000
+     * entries will be returned for every SyncGalRequest
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public void unsetGalSyncSizeLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncSizeLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Page size control for SyncGalRequest. By default not more than 30000
+     * entries will be returned for every SyncGalRequest
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2097)
+    public Map<String,Object> unsetGalSyncSizeLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncSizeLimit, "");
+        return attrs;
+    }
+
+    /**
      * LDAP generalized time format for external GAL sync
      *
      * @return zimbraGalSyncTimestampFormat, or "yyyyMMddHHmmss'Z'" if unset

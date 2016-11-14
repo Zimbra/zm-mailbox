@@ -208,9 +208,11 @@ public class GalSearchControl {
             // against LDAP server to keep the client up to date.
             boolean useGalSyncAccount = gst.doMailboxSync() && (mParams.isIdOnly() || domain.isLdapGalSyncDisabled());
             if (useGalSyncAccount) {
+                ZimbraLog.mailbox.debug("sync against galsync account");
                 try {
                     if (galAcct == null)
                         galAcct = getGalSyncAccountForSync();
+                    ZimbraLog.mailbox.debug("start syncing galsync account %s", galAcct.getId());
                     accountSync(galAcct);
                     // account based sync was finished
                     return;
@@ -513,7 +515,7 @@ public class GalSearchControl {
             syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
 
             if (syncLocalResources) {
-                doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds,
+                doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, mParams.getLimit(),
                         Provisioning.A_zimbraAccountCalendarUserType, "RESOURCE");
                 syncLocalResources = false;
             }
@@ -538,32 +540,29 @@ public class GalSearchControl {
             }
         }
 
-        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds);
+        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, mParams.getLimit());
 
         if (deleted != null) {
             for (int itemId : deleted) {
                 callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
             }
         }
-
-        GalSyncToken newToken = new GalSyncToken(syncToken, galAcct.getId(), mbox.getLastChangeID());
-        ZimbraLog.gal.debug("computing new sync token for %s:%s", galAcct.getId(), newToken);
-        callback.setNewToken(newToken);
-        callback.setHasMoreResult(false);
     }
 
     private void doLocalGalAccountSync(GalSearchResultCallback callback, Mailbox mbox,
-            OperationContext octxt, int changeId, Set<Integer> folderIds) throws ServiceException {
-        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, null, null);
+        OperationContext octxt, int changeId, Set<Integer> folderIds, String syncToken, int limit) throws ServiceException {
+        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, limit, null, null);
     }
 
     private void doLocalGalAccountSync(GalSearchResultCallback callback, Mailbox mbox,
-            OperationContext octxt, int changeId, Set<Integer> folderIds,
+        OperationContext octxt, int changeId, Set<Integer> folderIds, String syncToken, int limit,
             String filterAttr, String filterValue) throws ServiceException {
+        ZimbraLog.gal.info("Using limit %d for gal account sync", limit);
         Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
-                MailItem.Type.CONTACT, folderIds);
+                0, MailItem.Type.CONTACT, folderIds, -1, limit);
 
         int count = 0;
+        boolean hasMore = false;
         for (int itemId : changed.getFirst()) {
             try {
                 MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
@@ -579,6 +578,12 @@ public class GalSearchControl {
                     if (count % 100 == 0) {
                         ZimbraLog.gal.trace("processing #%s", count);
                     }
+
+                    changeId = item.getModifiedSequence();
+                    if (count == limit) {
+                        hasMore = true;
+                        break;
+                    }
                 }
             } catch (MailServiceException mse) {
                 if (MailServiceException.NO_SUCH_ITEM.equals(mse.getId())) {
@@ -588,6 +593,11 @@ public class GalSearchControl {
                 }
             }
         }
+
+        GalSyncToken newToken = new GalSyncToken(syncToken, mbox.getAccountId(), changeId);
+        ZimbraLog.gal.debug("computing new sync token for %s:%s", mbox.getAccountId(), newToken);
+        callback.setNewToken(newToken);
+        callback.setHasMoreResult(hasMore);
     }
 
     private boolean proxyGalAccountSearch(Account galSyncAcct) throws IOException, ServiceException {
@@ -700,7 +710,19 @@ public class GalSearchControl {
             if (galLastModified != null) {
                 mParams.getResultCallback().setGalDefinitionLastModified(galLastModified);
             }
+
+            int domainLimit = domain.getGalSyncSizeLimit();
+            // Use the lower value in case of non zero values of limit and domainLimit
+            if (limit != 0 && domainLimit != 0) {
+                limit = limit > domainLimit ? domainLimit : limit;
+            } else if (limit == 0) {
+                //if limit is zero use domainLimit
+                limit = domainLimit;
+            }
+            ZimbraLog.gal.info("Using limit %d for SyncGalRequest", limit);
         }
+
+        mParams.setLimit(limit);
 
         if (galMode == GalMode.both) {
             // make two gal searches for 1/2 results each
@@ -712,32 +734,43 @@ public class GalSearchControl {
             type = GalType.zimbra;
         }
         mParams.createSearchConfig(type);
+        mParams.setToken(mParams.getLdapOffsetToken()[0]);
+        mParams.setLdapOffset(Integer.parseInt(mParams.getLdapOffsetToken()[1]));
         try {
             prov.searchGal(mParams);
         } catch (Exception e) {
             throw ServiceException.FAILURE("ldap search failed", e);
         }
 
+        String[] offsetToken = {"", "0", "", "0"};
         boolean hadMore = mParams.getResult().getHadMore();
         String newToken = mParams.getResult().getToken();
+        offsetToken[0] = newToken;
+        offsetToken[1] = String.valueOf(mParams.getResult().getLdapOffset());
         if (mParams.getResult().getTokenizeKey() != null)
             hadMore = true;
         if (galMode == GalMode.both) {
             // do the second query
             mParams.createSearchConfig(GalType.ldap);
+            mParams.setToken(mParams.getLdapOffsetToken()[2]);
+            mParams.setLdapOffset(Integer.parseInt(mParams.getLdapOffsetToken()[3]));
             try {
                 prov.searchGal(mParams);
             } catch (Exception e) {
                 throw ServiceException.FAILURE("ldap search failed", e);
             }
             hadMore |= mParams.getResult().getHadMore();
+            offsetToken[2] = mParams.getResult().getToken();
+            offsetToken[3] = String.valueOf(mParams.getResult().getLdapOffset());
             newToken = LdapUtil.getLaterTimestamp(newToken, mParams.getResult().getToken());
             if (mParams.getResult().getTokenizeKey() != null)
                 hadMore = true;
         }
 
-        if (mParams.getOp() == GalOp.sync)
+        if (mParams.getOp() == GalOp.sync) {
             mParams.getResultCallback().setNewToken(newToken);
+            mParams.getResultCallback().setLdapOffset(offsetToken);
+        }
         mParams.getResultCallback().setHasMoreResult(hadMore);
     }
 
