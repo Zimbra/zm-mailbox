@@ -63,22 +63,43 @@ public class SyncGalRequest {
     @XmlAttribute(name=AccountConstants.A_ID_ONLY /* idOnly */, required=false)
     private ZmBoolean idOnly;
 
+    /**
+     * @zm-api-field-tag limit
+     * @zm-api-field-description Page size control for SyncGalRequest. The maximum entries that can be returned for
+ every SyncGal Request can be controlled by specifying this limit.
+     */
+    @XmlAttribute(name=MailConstants.A_LIMIT /* limit */, required=false)
+    private Integer limit;
+
+    /**
+     * @zm-api-field-tag Ldap offset token
+     * @zm-api-field-description The page offset token from where sync gal should be resumed
+     */
+    @XmlAttribute(name=MailConstants.A_LDAP_OFFSET /* offset */, required=false)
+    private String ldapOffset;
+
     public SyncGalRequest() {
     }
 
     public void setToken(String token) { this.token = token; }
     public void setGalAccountId(String galAccountId) { this.galAccountId = galAccountId; }
     public void setIdOnly(Boolean idOnly) { this.idOnly = ZmBoolean.fromBool(idOnly); }
+    public void setLimit(int limit) { this.limit = limit; }
+    public void setLdapOffset(String ldapOffset) { this.ldapOffset = ldapOffset; }
     public String getToken() { return token; }
     public String getGalAccountId() { return galAccountId; }
     public Boolean getIdOnly() { return ZmBoolean.toBool(idOnly); }
+    public Integer getLimit() { return (limit != null ? limit : 0); }
+    public String getLdapOffset() { return ldapOffset; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
             .add("token", token)
             .add("galAccountId", galAccountId)
-            .add("idOnly", idOnly);
+            .add("idOnly", idOnly)
+            .add("limit", limit)
+            .add("ldapOffset", ldapOffset);
     }
 
     @Override
