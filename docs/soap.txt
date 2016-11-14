@@ -887,7 +887,7 @@ import and export of addressbook.
  every SyncGal Request can be controlled by specifying this limit.
   {ldapOffset} - The page offset token from where sync gal should be resumed.
 
- <SyncGalResponse token="{new-token}" [galDefinitionLastModified="{timestamp}"] [throttled="{throttled-flag}"]
+ <SyncGalResponse token="{new-token}" [ldapOffset={ldapOffset}] [galDefinitionLastModified="{timestamp}"] [throttled="{throttled-flag}"]
                                      [fullSyncRecommended="{fullSyncRecommended-flag}"] >
    <cn>...</cn>*
    <deleted id="{itemId}">*

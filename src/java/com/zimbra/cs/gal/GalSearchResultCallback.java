@@ -223,10 +223,10 @@ public class GalSearchResultCallback implements GalContact.Visitor {
 
     public void setLdapOffset(String[] offset) {
         StringBuilder builder = new StringBuilder();
-        if (!offset[0].isEmpty()) {
+        if (offset.length >= 2 && !offset[0].isEmpty()) {
             builder.append(offset[0]).append(":").append(offset[1]);
         }
-        if (!offset[2].isEmpty()) {
+        if (offset.length >= 4 && !offset[2].isEmpty()) {
             builder.append(offset[2]).append(":").append(offset[3]);
         }
         mResponse.addAttribute(MailConstants.A_LDAP_OFFSET, builder.toString());
