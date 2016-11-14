@@ -1099,12 +1099,19 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
 
     @Override
     public ZimbraSortBy getZimbraSortBy() {
-        throw new UnsupportedOperationException("SearchParams method not supported yet");
+        if (null == sortBy) {
+            return ZimbraSortBy.none;
+        }
+        return sortBy.toZimbraSortBy();
     }
 
     @Override
     public ZimbraSearchParams setZimbraSortBy(ZimbraSortBy value) {
-        throw new UnsupportedOperationException("SearchParams method not supported yet");
+        if (null == value) {
+            setSortBy(SortBy.NONE);
+        }
+        setSortBy(SortBy.fromZimbraSortBy(value));
+        return this;
     }
 
     @Override
