@@ -1,20 +1,17 @@
 package com.zimbra.cs.imap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.Assert;
-
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -23,10 +20,11 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
-import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.server.ServerThrottle;
-import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.qa.unittest.TestUtil;
+
+import junit.framework.Assert;
 
 public class ImapHandlerTest {
     private static final String LOCAL_USER = "localimaptest@zimbra.com";
@@ -64,11 +62,11 @@ public class ImapHandlerTest {
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m1.getId()).getFolderId());
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
-       
+
        ImapHandler handler = new MockImapHandler();
        ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
        ImapPath pathSpam = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM), creds);
-       ImapPath pathInbox = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX), creds); 
+       ImapPath pathInbox = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX), creds);
        handler.setCredentials(creds);
        byte params = 0;
        handler.setSelectedFolder(pathSpam, params);
@@ -79,10 +77,13 @@ public class ImapHandlerTest {
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, newIds.get(0)).getFolderId());
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, newIds.get(1)).getFolderId());
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, newIds.get(2)).getFolderId());
-       Assert.assertTrue("message IDs should not have changed", m1.getId() == newIds.get(0));
-       Assert.assertTrue("message IDs should not have changed", m2.getId() == newIds.get(1));
-       Assert.assertTrue("message IDs should not have changed", m3.getId() == newIds.get(2));
-       
+       Assert.assertTrue(String.format("message IDs should not have changed 1st ID=%s newIds=%s", m1.getId(), newIds),
+               m1.getId() == newIds.get(0));
+       Assert.assertTrue(String.format("message IDs should not have changed 2nd ID=%s newIds=%s", m2.getId(), newIds),
+               m2.getId() == newIds.get(1));
+       Assert.assertTrue(String.format("message IDs should not have changed 3rd ID=%s newIds=%s", m3.getId(), newIds),
+               m3.getId() == newIds.get(2));
+
        handler.setSelectedFolder(pathInbox, params);
        ImapFolder i4folder = handler.getSelectedFolder();
        Assert.assertEquals(3,i4folder.getSize());
@@ -92,11 +93,11 @@ public class ImapHandlerTest {
        Assert.assertFalse("Message IDs should have changed", newIds.contains(m1.getId()));
        Assert.assertFalse("Message IDs should have changed", newIds.contains(m3.getId()));
        Assert.assertFalse("Message IDs should have changed", newIds.contains(m3.getId()));
-       
+
        Assert.assertEquals("Message should have been copied to Junk", Mailbox.ID_FOLDER_SPAM, mbox.getMessageById(null, newIds.get(0)).getFolderId());
        Assert.assertEquals("Message should have been copied to Junk", Mailbox.ID_FOLDER_SPAM, mbox.getMessageById(null, newIds.get(1)).getFolderId());
        Assert.assertEquals("Message should have been copied to Junk", Mailbox.ID_FOLDER_SPAM, mbox.getMessageById(null, newIds.get(2)).getFolderId());
-       
+
        Assert.assertEquals("original messages should have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m1.getId()).getFolderId());
        Assert.assertEquals("original messages should have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
        Assert.assertEquals("original messages should have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
@@ -113,7 +114,7 @@ public class ImapHandlerTest {
        ImapHandler handler = new MockImapHandler();
        ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
        ImapPath pathSpam = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM), creds);
-       ImapPath pathInbox = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX), creds); 
+       ImapPath pathInbox = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX), creds);
        handler.setCredentials(creds);
        byte params = 0;
        handler.setSelectedFolder(pathSpam, params);
@@ -128,7 +129,7 @@ public class ImapHandlerTest {
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m1.getId()).getFolderId());
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
-       
+
        sequenceSet = "1:3";
        handler.setSelectedFolder(pathInbox, params);
        Assert.assertTrue(handler.doCOPY(null, sequenceSet, pathSpam, true));
@@ -137,7 +138,7 @@ public class ImapHandlerTest {
        Assert.assertEquals("Original message should have stayed in Inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
        List<Integer> newIds = TestUtil.search(mbox, "in:junk", MailItem.Type.MESSAGE);
        assertEquals("should not have copied anything to Junk with an invalid sequence set", 0, newIds.size());
-       
+
        ImapFolder i4folder = handler.getSelectedFolder();
        Assert.assertEquals(3, i4folder.getSize());
        Assert.assertTrue(handler.doCOPY(null, sequenceSet, pathSpam, false));
@@ -148,11 +149,38 @@ public class ImapHandlerTest {
        Assert.assertEquals("Message should have been copied to Junk", Mailbox.ID_FOLDER_SPAM, mbox.getMessageById(null, newIds.get(0)).getFolderId());
        Assert.assertEquals("Message should have been copied to Junk", Mailbox.ID_FOLDER_SPAM, mbox.getMessageById(null, newIds.get(1)).getFolderId());
        Assert.assertEquals("Message should have been copied to Junk", Mailbox.ID_FOLDER_SPAM, mbox.getMessageById(null, newIds.get(2)).getFolderId());
-       
+
        Assert.assertEquals("original messages should have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m1.getId()).getFolderId());
        Assert.assertEquals("original messages should have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
        Assert.assertEquals("original messages should have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
 
+    }
+
+    @Test
+    public void testDoSearch() throws Exception {
+        Message m1 =  TestUtil.addMessage(mbox, "Message 1");
+        Message m2 =  TestUtil.addMessage(mbox, "Message 2");
+        Message m3 =  TestUtil.addMessage(mbox, "Message 3");
+        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m1.getId()).getFolderId());
+        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
+        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
+
+        ImapHandler handler = new MockImapHandler();
+        ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
+        ImapPath pathInbox = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX), creds);
+        handler.setCredentials(creds);
+        byte params = 0;
+        handler.setSelectedFolder(pathInbox, params);
+        Integer options = null;
+        boolean byUID = false;
+        ImapSearch.LogicalOperation i4srch = new ImapSearch.AndOperation();
+        ImapSearch child = new ImapSearch.AndOperation(new ImapSearch.FlagSearch("\\Recent"),
+                new ImapSearch.NotOperation(new ImapSearch.FlagSearch("\\Seen")));
+        i4srch.addChild(child);
+        i4srch.addChild(new ImapSearch.ContentSearch("Message"));
+        Assert.assertTrue(handler.doSEARCH("searchtag", i4srch, byUID, options));
+        ByteArrayOutputStream baos = (ByteArrayOutputStream) handler.output;
+        Assert.assertEquals("Output of SEARCH", "* SEARCH 1 2 3\r\nsearchtag OK SEARCH completed\r\n", baos.toString());
     }
 
     class MockImapPath extends ImapPath {
@@ -161,7 +189,7 @@ public class ImapHandlerTest {
             super(other);
             // TODO Auto-generated constructor stub
         }
-        
+
         MockImapPath(String owner, FolderStore folderStore, ImapCredentials creds) throws ServiceException {
             super(owner, folderStore, creds);
         }
