@@ -22,6 +22,7 @@ class MockImapHandler extends ImapHandler {
     @Override
     void sendLine(String line, boolean flush) throws IOException {
         output.write(line.getBytes(Charsets.UTF_8));
+        output.write(LINE_SEPARATOR_BYTES);
     }
 
     @Override
