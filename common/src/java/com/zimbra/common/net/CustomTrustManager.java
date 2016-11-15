@@ -183,7 +183,7 @@ public class CustomTrustManager implements X509TrustManager {
         throw new KeyStoreException(TrustManagerFactory.getDefaultAlgorithm() + " trust manager not supported");
     }
 
-    private static KeyStore loadKeyStore() throws GeneralSecurityException {
+    public static KeyStore loadKeyStore() throws GeneralSecurityException {
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         boolean isKeyStoreInitialized = false;
         InputStream in = null;
