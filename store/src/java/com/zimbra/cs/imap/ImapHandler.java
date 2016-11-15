@@ -82,6 +82,7 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
+import com.zimbra.cs.imap.ImapSessionManager.FolderDetails;
 import com.zimbra.cs.imap.ImapSessionManager.InitialFolderValues;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
@@ -1026,15 +1027,15 @@ abstract class ImapHandler {
         }
     }
 
-    Pair<ImapListener, InitialFolderValues> setSelectedFolder(ImapPath path, byte params) throws ServiceException, IOException {
+    FolderDetails setSelectedFolder(ImapPath path, byte params) throws ServiceException, IOException {
         unsetSelectedFolder(true);
         if (path == null) {
-            return new Pair<ImapListener, InitialFolderValues>(null, null);
+            return new FolderDetails(null, null);
         }
-        Pair<ImapListener, InitialFolderValues> selectdata = ImapSessionManager.getInstance().openFolder(path, params, this);
-        selectedFolderListener = selectdata.getFirst();
+        FolderDetails selectdata = ImapSessionManager.getInstance().openFolder(path, params, this);
+        selectedFolderListener = selectdata.listener;
 
-        ZimbraLog.imap.info("selected folder " + selectdata.getFirst().getPath());
+        ZimbraLog.imap.info("selected folder " + selectdata.listener.getPath());
         return selectdata;
     }
 
@@ -1502,9 +1503,9 @@ abstract class ImapHandler {
                 return true;
             }
 
-            Pair<ImapListener, InitialFolderValues> selectdata = setSelectedFolder(path, params);
-            i4folder = selectdata.getFirst().getImapFolder();
-            initial  = selectdata.getSecond();
+            FolderDetails selectdata = setSelectedFolder(path, params);
+            i4folder = selectdata.listener.getImapFolder();
+            initial  = selectdata.initialFolderValues;
 
             writable = i4folder.isWritable();
             if (writable) {
