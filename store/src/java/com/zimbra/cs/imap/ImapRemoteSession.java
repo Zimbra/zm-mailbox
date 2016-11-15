@@ -65,11 +65,61 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
+    protected int getEstimatedSize() {
+        return mFolder.getSize();
+    }
+
+    @Override
+    public boolean hasExpunges() {
+        return mFolder.hasExpunges();
+    }
+
+    @Override
+    protected void inactivate() {
+        mFolder.endSelect();
+        // removes this session from the global SessionCache, *not* from ImapSessionManager
+        removeFromSessionCache();
+        handler = null;
+        /* Above is some of the things that happen in ImapSession, but NOT all.
+         * TODO: Check what else needs doing.
+         */
+        throw new UnsupportedOperationException("ImapRemoteSession method not FULLY supported yet");
+    }
+
+    @Override
     protected void cleanup() {
         ImapHandler i4handler = handler;
         if (i4handler != null) {
             ZimbraLog.imap.debug("dropping connection because Session is closing %s", this);
             i4handler.close();
         }
+    }
+
+    @Override
+    protected ImapListener detach() {
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
+    }
+
+    @Override
+    protected boolean isSerialized() {
+        /* ImapSession does:
+         *     return mFolder instanceof PagedFolderData;
+         */
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
+    }
+
+    @Override
+    protected void unload(boolean active) throws ServiceException {
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
+    }
+
+    @Override
+    protected ImapFolder reload() throws ImapSessionClosedException {
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
+    }
+
+    @Override
+    protected boolean requiresReload() {
+        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
 }
