@@ -85,7 +85,8 @@ public class ImapSession extends ImapListener {
         return mFolder.hasNotifications();
     }
 
-    boolean hasExpunges() {
+    @Override
+    protected boolean hasExpunges() {
         return mFolder.hasExpunges();
     }
 
@@ -99,7 +100,8 @@ public class ImapSession extends ImapListener {
         }
     }
 
-    boolean isSerialized() {
+    @Override
+    protected boolean isSerialized() {
         return mFolder instanceof PagedFolderData;
     }
 
@@ -108,16 +110,19 @@ public class ImapSession extends ImapListener {
         return mFolder instanceof ImapFolder ? ((ImapFolder) mFolder).getSize() : 0;
     }
 
-    int getEstimatedSize() {
+    @Override
+    protected int getEstimatedSize() {
         return mFolder.getSize();
     }
 
-    boolean requiresReload() {
+    @Override
+    protected boolean requiresReload() {
         ImapFolderData fdata = mFolder;
         return fdata instanceof ImapFolder ? false : ((PagedFolderData) fdata).notificationsFull();
     }
 
-    void inactivate() {
+    @Override
+    protected void inactivate() {
         if (!isInteractive()) {
             return;
         }
@@ -183,7 +188,8 @@ public class ImapSession extends ImapListener {
         ImapSessionManager.getInstance().closeFolder(this, false);
     }
 
-    Session detach() {
+    @Override
+    public ImapListener detach() {
         Mailbox mbox = (Mailbox) mailbox;
         if (mbox != null) { // locking order is always Mailbox then Session
             mbox.lock.lock();
@@ -191,7 +197,7 @@ public class ImapSession extends ImapListener {
         try {
             synchronized (this) {
                 MANAGER.uncacheSession(this);
-                return isRegistered() ? super.unregister() : this;
+                return isRegistered() ? (ImapSession)super.unregister() : this;
             }
         } finally {
             if (mbox != null) {
@@ -242,7 +248,8 @@ public class ImapSession extends ImapListener {
      *
      * @param active true to use active session cache, otherwise use inactive session cache
      */
-    void unload(boolean active) throws ServiceException {
+    @Override
+    protected void unload(boolean active) throws ServiceException {
         Mailbox mbox = (Mailbox) mailbox;
         if (mbox == null) {
             return;
@@ -281,7 +288,8 @@ public class ImapSession extends ImapListener {
         }
     }
 
-    ImapFolder reload() throws ImapSessionClosedException {
+    @Override
+    protected ImapFolder reload() throws ImapSessionClosedException {
         Mailbox mbox = (Mailbox) mailbox;
         if (mbox == null) {
             throw new ImapSessionClosedException();
