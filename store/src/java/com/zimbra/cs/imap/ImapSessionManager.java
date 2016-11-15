@@ -36,7 +36,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
 import com.zimbra.cs.index.SearchParams;
@@ -253,7 +252,17 @@ final class ImapSessionManager {
         }
     }
 
-    Pair<ImapListener, InitialFolderValues> openFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
+    protected static class FolderDetails {
+        final ImapListener listener;
+        final InitialFolderValues initialFolderValues;
+
+        protected FolderDetails(ImapListener listener, InitialFolderValues initialFolderValues) {
+        this.listener = listener;
+        this.initialFolderValues = initialFolderValues;
+        }
+    }
+
+    protected FolderDetails openFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
         ZimbraLog.imap.debug("opening folder: %s", path);
 
         if (!path.isSelectable()) {
@@ -335,7 +344,7 @@ final class ImapSessionManager {
                 session = new ImapSession(i4folder, handler);
                 session.register();
                 sessions.put(session, session /* cannot be null for ConcurrentLinkedHashMap */);
-                return new Pair<ImapListener, InitialFolderValues>(session, initial);
+                return new FolderDetails(session, initial);
             } catch (ServiceException e) {
                 if (session != null) {
                     session.unregister();
