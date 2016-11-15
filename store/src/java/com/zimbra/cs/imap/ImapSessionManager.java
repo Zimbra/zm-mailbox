@@ -27,6 +27,7 @@ import java.util.concurrent.Executors;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
@@ -72,8 +73,8 @@ final class ImapSessionManager {
      * maintains information to easily iterate over the keys by order of most recent access.
      * Note that the values are not currently used at all.
      */
-    private final ConcurrentLinkedHashMap<ImapSession, Object> sessions =
-            new ConcurrentLinkedHashMap.Builder<ImapSession, Object>()
+    private final ConcurrentLinkedHashMap<ImapListener, ImapListener> sessions =
+            new ConcurrentLinkedHashMap.Builder<ImapListener, ImapListener>()
             .initialCapacity(128)
             .maximumWeightedCapacity(Long.MAX_VALUE) // we manually manage evictions
             .build();
@@ -114,11 +115,11 @@ final class ImapSessionManager {
      *  i.e. iterator returns the keys whose order of iteration is the ascending order in which its entries are
      *       considered eligible for retention, from the least-likely to be retained to the most-likely or vice versa.
      */
-    void recordAccess(ImapSession session) {
+    void recordAccess(ImapListener session) {
         sessions.get(session);
     }
 
-    void uncacheSession(ImapSession session) {
+    void uncacheSession(ImapListener session) {
         sessions.remove(session);
     }
 
@@ -144,15 +145,15 @@ final class ImapSessionManager {
                 nonInteractiveCutoff = (nonInteractiveCutoff > 0) ?
                         System.currentTimeMillis() - nonInteractiveCutoff : Long.MIN_VALUE;
 
-                List<ImapSession> overflow = new ArrayList<ImapSession>();
-                List<ImapSession> pageable = new ArrayList<ImapSession>();
-                List<ImapSession> droppable = new ArrayList<ImapSession>();
+                List<ImapListener> overflow = Lists.newArrayList();
+                List<ImapListener> pageable = Lists.newArrayList();
+                List<ImapListener> droppable = Lists.newArrayList();
 
                 // first, figure out the set of sessions that'll need to be brought into memory and reserialized
                 int maxOverflow = 0;
-                Iterator<ImapSession> unorderedIterator = sessions.keySet().iterator();
+                Iterator<ImapListener> unorderedIterator = sessions.keySet().iterator();
                 while (unorderedIterator.hasNext()) {
-                    ImapSession session = unorderedIterator.next();
+                    ImapListener session = unorderedIterator.next();
                     if (session.requiresReload()) {
                         overflow.add(session);
                         // note that these will add to the memory footprint temporarily, so need the largest size...
@@ -165,9 +166,9 @@ final class ImapSessionManager {
 
                 // As we are more likely to decide to drop or page out sessions we process later, we want to start
                 // with the most recently used ones as they are more likely to be useful again.
-                Iterator<ImapSession> mostRecentToLeastRecentIterator = sessions.descendingKeySet().iterator();
+                Iterator<ImapListener> mostRecentToLeastRecentIterator = sessions.descendingKeySet().iterator();
                 while (mostRecentToLeastRecentIterator.hasNext()) {
-                    ImapSession session = mostRecentToLeastRecentIterator.next();
+                    ImapListener session = mostRecentToLeastRecentIterator.next();
                     int size = session.getEstimatedSize();
                     // want to serialize enough sessions to get below the memory threshold
                     // also going to serialize anything that's been idle for a while
@@ -182,7 +183,7 @@ final class ImapSessionManager {
                     }
                 }
 
-                for (ImapSession session : pageable) {
+                for (ImapListener session : pageable) {
                     try {
                         ZimbraLog.imap.debug("Paging out session due to staleness or total memory footprint: %s",
                                 session);
@@ -194,7 +195,7 @@ final class ImapSessionManager {
                     }
                 }
 
-                for (ImapSession session : overflow) {
+                for (ImapListener session : overflow) {
                     try {
                         ZimbraLog.imap.debug("Loading/unloading paged session due to queued notification overflow: %s",
                                 session);
@@ -214,7 +215,7 @@ final class ImapSessionManager {
                     }
                 }
 
-                for (ImapSession session : droppable) {
+                for (ImapListener session : droppable) {
                     ZimbraLog.imap.debug("Removing session due to having too many noninteractive sessions: %s", session);
                     // only noninteractive sessions get added to droppable list, so this next conditional should never be true
                     quietRemoveSession(session);
@@ -224,7 +225,7 @@ final class ImapSessionManager {
             }
         }
 
-        private void quietRemoveSession(final ImapSession session) {
+        private void quietRemoveSession(final ImapListener session) {
             // XXX: make sure this doesn't result in a loop
             try {
                 if (session.isInteractive()) {
@@ -252,7 +253,7 @@ final class ImapSessionManager {
         }
     }
 
-    Pair<ImapSession, InitialFolderValues> openFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
+    Pair<ImapListener, InitialFolderValues> openFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
         ZimbraLog.imap.debug("opening folder: %s", path);
 
         if (!path.isSelectable()) {
@@ -283,10 +284,14 @@ final class ImapSessionManager {
             int recentCutoff = folder.getImapRECENTCutoff();
 
             if (i4list == null) {
-                List<Session> listeners = mbox.getListeners(Session.Type.IMAP);
+                List<Session> mboxListeners = mbox.getListeners(Session.Type.IMAP);
+                List<ImapListener> listners = Lists.newArrayListWithCapacity(mboxListeners.size());
+                for (Session sess : mboxListeners) {
+                    listners.add((ImapSession) sess);
+                }
                 // first option is to duplicate an existing registered session
                 //   (could try to just activate an inactive session, but this logic is simpler for now)
-                i4list = duplicateExistingSession(folderId, listeners);
+                i4list = duplicateExistingSession(folderId, listners);
                 // no matching session means we next check for serialized folder data
                 if (i4list == null) {
                     i4list = duplicateSerializedFolder(folder);
@@ -325,12 +330,12 @@ final class ImapSessionManager {
             i4folder.setInitialSize();
             ZimbraLog.imap.debug("Folder with id=%s added message list %s", folderId, i4list);
 
-            ImapSession session = null;
+            ImapListener session = null;
             try {
                 session = new ImapSession(i4folder, handler);
                 session.register();
                 sessions.put(session, session /* cannot be null for ConcurrentLinkedHashMap */);
-                return new Pair<ImapSession, InitialFolderValues>(session, initial);
+                return new Pair<ImapListener, InitialFolderValues>(session, initial);
             } catch (ServiceException e) {
                 if (session != null) {
                     session.unregister();
@@ -383,9 +388,8 @@ final class ImapSessionManager {
         return i4list;
     }
 
-    private static List<ImapMessage> duplicateExistingSession(int folderId, List<Session> sessionList) {
-        for (Session session : sessionList) {
-            ImapSession i4listener = (ImapSession) session;
+    private static List<ImapMessage> duplicateExistingSession(int folderId, List<ImapListener> sessionList) {
+        for (ImapListener i4listener : sessionList) {
             if (i4listener.getFolderId() == folderId) {
                 //   FIXME: may want to prefer loaded folders over paged-out folders
                 synchronized (i4listener) {
@@ -522,7 +526,7 @@ final class ImapSessionManager {
         }
     }
 
-    void closeFolder(ImapSession session, boolean isUnregistering) {
+    void closeFolder(ImapListener session, boolean isUnregistering) {
         // XXX: does this require synchronization?
 
         // detach session from handler and jettison session state from folder
@@ -605,13 +609,13 @@ final class ImapSessionManager {
     }
 
     /**
-     * Generates a cache key for the {@link ImapSession}.
+     * Generates a cache key for the {@link ImapListener}.
      *
      * @param session IMAP session
      * @param active true to use active session cache, otherwise inactive session cache.
      * @return cache key
      */
-    String cacheKey(ImapSession session, boolean active) throws ServiceException {
+    String cacheKey(ImapListener session, boolean active) throws ServiceException {
         Mailbox mbox = (Mailbox) session.getMailbox();
         if (mbox == null) {
             mbox = MailboxManager.getInstance().getMailboxByAccountId(session.getTargetAccountId());

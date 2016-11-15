@@ -113,4 +113,15 @@ public abstract class ImapListener extends Session {
     private boolean isFailed(Integer count) {
         return count > 5;
     }
+
+    protected abstract ImapListener detach();
+    protected abstract void unload(boolean active) throws ServiceException;
+    protected abstract boolean requiresReload();
+    protected abstract boolean hasExpunges();
+    protected abstract int getEstimatedSize();
+    protected abstract ImapFolder reload() throws ImapSessionClosedException;
+    @Override
+    protected abstract void cleanup();
+    protected abstract void inactivate();
+    protected abstract boolean isSerialized();
 }

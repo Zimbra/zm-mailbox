@@ -1026,12 +1026,12 @@ abstract class ImapHandler {
         }
     }
 
-    Pair<ImapSession, InitialFolderValues> setSelectedFolder(ImapPath path, byte params) throws ServiceException, IOException {
+    Pair<ImapListener, InitialFolderValues> setSelectedFolder(ImapPath path, byte params) throws ServiceException, IOException {
         unsetSelectedFolder(true);
         if (path == null) {
-            return new Pair<ImapSession, InitialFolderValues>(null, null);
+            return new Pair<ImapListener, InitialFolderValues>(null, null);
         }
-        Pair<ImapSession, InitialFolderValues> selectdata = ImapSessionManager.getInstance().openFolder(path, params, this);
+        Pair<ImapListener, InitialFolderValues> selectdata = ImapSessionManager.getInstance().openFolder(path, params, this);
         selectedFolderListener = selectdata.getFirst();
 
         ZimbraLog.imap.info("selected folder " + selectdata.getFirst().getPath());
@@ -1502,7 +1502,7 @@ abstract class ImapHandler {
                 return true;
             }
 
-            Pair<ImapSession, InitialFolderValues> selectdata = setSelectedFolder(path, params);
+            Pair<ImapListener, InitialFolderValues> selectdata = setSelectedFolder(path, params);
             i4folder = selectdata.getFirst().getImapFolder();
             initial  = selectdata.getSecond();
 
