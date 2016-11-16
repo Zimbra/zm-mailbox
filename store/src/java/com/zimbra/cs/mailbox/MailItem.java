@@ -1053,6 +1053,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     /** Returns the "external" flag bitmask, which includes
      *  {@link Flag#BITMASK_UNREAD} when the item is unread. */
+    @Override
     public int getFlagBitmask() {
         int flags = mData.getFlags();
         if (isUnread()) {
@@ -1130,6 +1131,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
     }
 
+    @Override
     public String[] getTags() {
         String[] tags = mData.getTags(), copy = tags.length == 0 ? tags : new String[tags.length];
         System.arraycopy(tags, 0, copy, 0, tags.length);
