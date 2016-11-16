@@ -35,6 +35,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.service.ServiceException;
@@ -212,9 +213,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return Strings.nullToEmpty(query);
     }
 
-    /**
-     * Constrain the search to the actually-requested types.
-     */
+    /** Constrain the search to the actually-requested types. */
     static Set<MailItem.Type> getTypeConstraint(SearchFolderStore search) {
         String typestr = search.getReturnTypes().toLowerCase();
         Set<MailItem.Type> types;
@@ -236,10 +235,21 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return types;
     }
 
+    /** Constrain the search to the actually-requested types. */
+    static Set<MailItemType> getMailItemTypeConstraint(SearchFolderStore search) {
+        return MailItem.Type.toCommon(getTypeConstraint(search));
+    }
+
     /** Returns the types of items exposed in this IMAP folder.  Defaults to
      *  {@link ImapHandler#ITEM_TYPES} except for search folders. */
     Set<MailItem.Type> getTypeConstraint() {
         return typeConstraint;
+    }
+
+    /** Returns the types of items exposed in this IMAP folder.  Defaults to
+     *  {@link ImapHandler#ITEM_TYPES} except for search folders. */
+    Set<MailItemType> getMailItemTypeConstraint() {
+        return MailItem.Type.toCommon(typeConstraint);
     }
 
     /** Returns the folder's IMAP UID validity value.
