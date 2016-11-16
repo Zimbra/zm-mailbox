@@ -47,4 +47,7 @@ public interface ZimbraMailItem {
      * The "IMAP UID" will be the same as the item ID unless the item has been moved after the mailbox owner's first
      * IMAP session. */
     public int getImapUid();
+    /** Returns the "external" flag bitmask, which includes {@link Flag#BITMASK_UNREAD} when the item is unread. */
+    public int getFlagBitmask();
+    public String[] getTags();
 }
