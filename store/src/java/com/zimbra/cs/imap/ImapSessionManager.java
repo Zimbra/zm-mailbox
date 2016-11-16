@@ -33,18 +33,20 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.SearchFolderStore;
+import com.zimbra.common.mailbox.ZimbraFetchMode;
+import com.zimbra.common.mailbox.ZimbraQueryHit;
+import com.zimbra.common.mailbox.ZimbraQueryHitResults;
+import com.zimbra.common.mailbox.ZimbraSearchParams;
+import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException.MailboxInMaintenanceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -356,35 +358,33 @@ final class ImapSessionManager {
         }
     }
 
-    /** Fetches the messages contained within a search folder.  When a search
-     *  folder is IMAP-visible, it appears in folder listings, is SELECTable
-     *  READ-ONLY, and appears to have all matching messages as its contents.
-     *  If it is not visible, it will be completely hidden from all IMAP
-     *  commands.
+    /**
+     * Fetches the messages contained within a search folder.  When a search folder is IMAP-visible, it appears in
+     * folder listings, is SELECTable READ-ONLY, and appears to have all matching messages as its contents.
+     * If it is not visible, it will be completely hidden from all IMAP commands.
      * @param octxt   Encapsulation of the authenticated user.
      * @param search  The search folder being exposed. */
-    private static List<ImapMessage> loadVirtualFolder(OperationContext octxt, SearchFolder search) throws ServiceException {
-        List<ImapMessage> i4list = new ArrayList<ImapMessage>();
+    private static List<ImapMessage> loadVirtualFolder(OperationContext octxt, SearchFolderStore search)
+    throws ServiceException {
+        List<ImapMessage> i4list = Lists.newArrayList();
 
-        Set<MailItem.Type> types = ImapFolder.getTypeConstraint(search);
+        Set<MailItemType> types = ImapFolder.getMailItemTypeConstraint(search);
         if (types.isEmpty()) {
             return i4list;
         }
 
-        SearchParams params = new SearchParams();
-        params.setQueryString(search.getQuery());
+        MailboxStore mbox = search.getMailboxStore();
+        ZimbraSearchParams params = mbox.createSearchParams(search.getQuery());
         params.setIncludeTagDeleted(true);
-        params.setTypes(types);
-        params.setSortBy(SortBy.DATE_ASC);
-        params.setChunkSize(1000);
-        params.setFetchMode(SearchParams.Fetch.IMAP);
-
-        Mailbox mbox = search.getMailbox();
+        params.setMailItemTypes(types);
+        params.setZimbraSortBy(ZimbraSortBy.dateAsc);
+        params.setLimit(1000);
+        params.setZimbraFetchMode(ZimbraFetchMode.IMAP);
         try {
-            ZimbraQueryResults zqr = mbox.index.search(SoapProtocol.Soap12, octxt, params);
+            ZimbraQueryHitResults zqr = mbox.search(octxt, params);
             try {
-                for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
-                    i4list.add(hit.getImapMessage());
+                for (ZimbraQueryHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
+                    i4list.add(new ImapMessage(hit));
                 }
             } finally {
                 zqr.close();
