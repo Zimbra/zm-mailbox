@@ -52,6 +52,7 @@ import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMessage;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraQueryHit;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeCompoundHeader;
@@ -125,8 +126,24 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         this.tags    = tags;
     }
 
+    public ImapMessage(int id, MailItemType type, int imapId, int flags, String[] tags) {
+        this.msgId   = id;
+        this.imapUid = imapId;
+        this.sflags  = (type == MailItemType.CONTACT ? FLAG_IS_CONTACT : 0);
+        this.flags   = flags & IMAP_FLAGS;
+        this.tags    = tags;
+    }
+
+    public ImapMessage(ZimbraMailItem item) throws ServiceException {
+        this(item.getIdInMailbox(), item.getMailItemType(), item.getImapUid(), item.getFlagBitmask(), item.getTags());
+    }
+
     public ImapMessage(MailItem item) {
-        this(item.getId(), item.getType(), item.getImapUid(), item.getFlagBitmask(), item.getTags());
+        this(item.getIdInMailbox(), item.getMailItemType(), item.getImapUid(), item.getFlagBitmask(), item.getTags());
+    }
+
+    public ImapMessage(ZimbraQueryHit hit) throws ServiceException {
+        this(hit.getItemId(), hit.getMailItemType(), hit.getImapUid(), hit.getFlagBitmask(), hit.getTags());
     }
 
     ImapMessage(ImapMessage i4msg) {
