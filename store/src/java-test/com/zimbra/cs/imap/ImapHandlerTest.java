@@ -21,6 +21,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.qa.unittest.TestUtil;
 
@@ -77,12 +78,13 @@ public class ImapHandlerTest {
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, newIds.get(0)).getFolderId());
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, newIds.get(1)).getFolderId());
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, newIds.get(2)).getFolderId());
+       /* Note, messages may not be returned in the original order */
        Assert.assertTrue(String.format("message IDs should not have changed 1st ID=%s newIds=%s", m1.getId(), newIds),
-               m1.getId() == newIds.get(0));
+               newIds.contains(m1.getId()));
        Assert.assertTrue(String.format("message IDs should not have changed 2nd ID=%s newIds=%s", m2.getId(), newIds),
-               m2.getId() == newIds.get(1));
+               newIds.contains(m2.getId()));
        Assert.assertTrue(String.format("message IDs should not have changed 3rd ID=%s newIds=%s", m3.getId(), newIds),
-               m3.getId() == newIds.get(2));
+               newIds.contains(m3.getId()));
 
        handler.setSelectedFolder(pathInbox, params);
        ImapFolder i4folder = handler.getSelectedFolder();
@@ -158,9 +160,9 @@ public class ImapHandlerTest {
 
     @Test
     public void testDoSearch() throws Exception {
-        Message m1 =  TestUtil.addMessage(mbox, "Message 1");
-        Message m2 =  TestUtil.addMessage(mbox, "Message 2");
-        Message m3 =  TestUtil.addMessage(mbox, "Message 3");
+        Message m1 =  TestUtil.addMessage(mbox, "Message 1 blue");
+        Message m2 =  TestUtil.addMessage(mbox, "Message 2 green red");
+        Message m3 =  TestUtil.addMessage(mbox, "Message 3 green white");
         Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m1.getId()).getFolderId());
         Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
         Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
@@ -177,11 +179,41 @@ public class ImapHandlerTest {
         ImapSearch child = new ImapSearch.AndOperation(new ImapSearch.FlagSearch("\\Recent"),
                 new ImapSearch.NotOperation(new ImapSearch.FlagSearch("\\Seen")));
         i4srch.addChild(child);
-        i4srch.addChild(new ImapSearch.ContentSearch("Message"));
+        i4srch.addChild(new ImapSearch.ContentSearch("green"));
         Assert.assertTrue(handler.doSEARCH("searchtag", i4srch, byUID, options));
         ByteArrayOutputStream baos = (ByteArrayOutputStream) handler.output;
-        Assert.assertEquals("Output of SEARCH", "* SEARCH 1 2 3\r\nsearchtag OK SEARCH completed\r\n", baos.toString());
+        Assert.assertEquals("Output of SEARCH", "* SEARCH 2 3\r\nsearchtag OK SEARCH completed\r\n", baos.toString());
     }
+
+    @Test
+    public void testSearchInSearchFolder() throws Exception {
+        Message m1 =  TestUtil.addMessage(mbox, "Message 1 blue");
+        Message m2 =  TestUtil.addMessage(mbox, "Message 2 green red");
+        Message m3 =  TestUtil.addMessage(mbox, "Message 3 green white");
+        SearchFolder searchFolder = mbox.createSearchFolder(null, Mailbox.ID_FOLDER_USER_ROOT,
+                "lookForGreen" /* name */, "green" /* query */, "message", "none", 0, (byte) 0);
+        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m1.getId()).getFolderId());
+        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
+        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
+
+        ImapHandler handler = new MockImapHandler();
+        ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
+        ImapPath pathSearchFldr = new MockImapPath(null, searchFolder, creds);
+        handler.setCredentials(creds);
+        byte params = 0;
+        handler.setSelectedFolder(pathSearchFldr, params);
+        Integer options = null;
+        boolean byUID = false;
+        ImapSearch.LogicalOperation i4srch = new ImapSearch.AndOperation();
+        ImapSearch child = new ImapSearch.AndOperation(new ImapSearch.FlagSearch("\\Recent"),
+                new ImapSearch.NotOperation(new ImapSearch.FlagSearch("\\Seen")));
+        i4srch.addChild(child);
+        i4srch.addChild(new ImapSearch.ContentSearch("white"));
+        Assert.assertTrue(handler.doSEARCH("searchtag", i4srch, byUID, options));
+        ByteArrayOutputStream baos = (ByteArrayOutputStream) handler.output;
+        Assert.assertEquals("Output of SEARCH", "* SEARCH 2\r\nsearchtag OK SEARCH completed\r\n", baos.toString());
+    }
+
 
     class MockImapPath extends ImapPath {
 
