@@ -19,12 +19,15 @@ package com.zimbra.client;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONException;
 
+import com.google.common.collect.Sets;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyMessageEvent;
 import com.zimbra.common.mailbox.ItemIdentifier;
@@ -586,12 +589,28 @@ public class ZMessage implements ZItem, ToZJSONObject, ZimbraMailItem {
     }
 
     @Override
+    public String[] getTags() {
+        Set<String> tagIds = Sets.newHashSet();
+        String tagIdString = getTagIds();
+        if (tagIdString != null) {
+            tagIds.addAll(Arrays.asList(tagIdString.split(",")));
+        }
+        return tagIds.toArray(new String[0]);
+    }
+
+    @Override
     public int getModifiedSequence() {
         throw new UnsupportedOperationException("ZMessage method not supported yet");
     }
 
     @Override
     public int getImapUid() {
+        throw new UnsupportedOperationException("ZMessage method not supported yet");
+    }
+
+    @Override
+    public int getFlagBitmask() {
+        // presume info is in field mFlags.  May need new zm-common types to get at info
         throw new UnsupportedOperationException("ZMessage method not supported yet");
     }
 }
