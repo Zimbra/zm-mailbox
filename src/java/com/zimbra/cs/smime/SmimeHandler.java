@@ -1,38 +1,40 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2016 Synacor, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.smime;
 
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
-
 import javax.mail.internet.MimeMessage;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Mailbox;
 
 public abstract class SmimeHandler {
 
-    private static SmimeHandler sInstance;
+    private static SmimeHandler instance = null;
 
-    public static SmimeHandler getInstance() throws ServiceException {
-        if (sInstance == null) {
-            synchronized (SmimeHandler.class) {
-                if (sInstance != null) {
-                    return sInstance;
-                }
-
-                String className = "com.zimbra.cs.smime.SmimeCryptoHandler";
-                try {
-                    sInstance = (SmimeHandler) ExtensionUtil.findClass(className).newInstance();
-                } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-                    throw ServiceException.FORBIDDEN("Operation not supported");
-                }
-            }
-        }
-        return sInstance;
+    public static void registerHandler(SmimeHandler handler) {
+        instance = handler;
     }
 
-    public abstract Boolean verifySignedMessage(MimeMessage mime) throws ServiceException;
+    public static SmimeHandler getHandler() {
+        return instance;
+    }
 
-    public abstract Boolean decryptAndVerifySignedMessage(MimeMessage mime, X509Certificate publicCert,
-            PrivateKey privKey) throws ServiceException;
+    public abstract boolean verifyMessageSignature(Account account, Element m, MimeMessage mm,
+        SoapProtocol mResponseProtocol);
+
+    public abstract boolean decryptMessage(Mailbox mbox, MimeMessage mime);
 
 }

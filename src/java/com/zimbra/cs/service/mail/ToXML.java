@@ -147,7 +147,6 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.MPartInfo;
-import com.zimbra.cs.mime.MResponseProcessor;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.handler.TextEnrichedHandler;
@@ -155,6 +154,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.smime.SmimeHandler;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.AlarmDataInfo;
 import com.zimbra.soap.mail.type.CalendarReply;
@@ -1405,6 +1405,13 @@ public final class ToXML {
             MimeMessage mm = null;
             try {
                 mm = msg.getMimeMessage();
+                // if the mime is encrypted
+                if (mm != null
+                    && mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)) {
+                    if (SmimeHandler.getHandler() != null) {
+                        SmimeHandler.getHandler().decryptMessage(msg.getMailbox(), mm);
+                    }
+                }
             } catch (MailServiceException e) {
                 if (encodeMissingBlobs && MailServiceException.NO_SUCH_BLOB.equals(e.getCode())) {
                     ZimbraLog.mailbox.error("Unable to get blob while encoding message", e);
@@ -1445,6 +1452,7 @@ public final class ToXML {
             // Add fragment before emails to maintain consistent ordering
             // of elements with encodeConversation - need to do this to
             // overcome JAXB issues.
+
             String fragment = msg.getFragment();
             if (fragment != null && !fragment.isEmpty()) {
                 m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
@@ -1546,8 +1554,15 @@ public final class ToXML {
             }
 
             success = true;
-            if (MResponseProcessor.getProcessor() != null) {
-                MResponseProcessor.getProcessor().process(msg.getMailbox().getAccount(), m, mm, octxt.getmResponseProtocol());
+            // if the mime is not encrypted and it is signed
+            if (!mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)
+                && (mm.getContentType().contains(MimeConstants.CT_MULTIPART_SIGNED)
+                    || mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME)
+                    || mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME_OLD))) {
+                if (SmimeHandler.getHandler() != null) {
+                    SmimeHandler.getHandler().verifyMessageSignature(msg.getMailbox().getAccount(), m,
+                        mm, octxt.getmResponseProtocol());
+                }
             }
             return m;
         } catch (IOException ex) {
