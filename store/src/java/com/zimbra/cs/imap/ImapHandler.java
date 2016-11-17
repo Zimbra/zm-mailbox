@@ -99,6 +99,7 @@ import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.util.ItemId;
@@ -1439,14 +1440,16 @@ abstract class ImapHandler {
         if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
             sendNO(tag, "account does not have IMAP access enabled");
             return null;
-        } else if (!ZimbraAuthenticator.MECHANISM.equals(mechanism) && !Provisioning.onLocalServer(account)) {
-            String correctHost = account.getMailHost();
-            ZimbraLog.imap.info(command + " failed; should be on host " + correctHost);
-            if (correctHost == null || correctHost.trim().equals("") || !extensionEnabled("LOGIN_REFERRALS")) {
+        } 
+        
+        if(!Provisioning.canUseLocalIMAP(account)) {
+            List<String> preferredServers = Provisioning.getPreferredIMAPServers(account);
+            ZimbraLog.imap.info("%s failed; should be contacting one of these hosts: %s ", command, String.join(", ", preferredServers));
+            if (!extensionEnabled("LOGIN_REFERRALS") || preferredServers.isEmpty()) {
                 sendNO(tag, command + " failed (wrong host)");
             } else {
                 sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' +
-                        correctHost + "/] " + command + " failed");
+                        Provisioning.getPreferredIMAPServers(account).get(0) + "/] " + command + " failed");
             }
             return null;
         }
