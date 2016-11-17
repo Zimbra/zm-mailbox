@@ -148,7 +148,6 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.MPartInfo;
-import com.zimbra.cs.mime.MResponseProcessor;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.handler.TextEnrichedHandler;
@@ -1572,8 +1571,13 @@ public final class ToXML {
             success = true;
             // update crypto flags - isSigned/isEncrypted
             if (SmimeHandler.getHandler() != null) {
-                MimeMessage originalMimeMessage = msg.getMimeMessage(false);
-                SmimeHandler.getHandler().updateCryptoFlags(msg, m, originalMimeMessage, mm);
+                if (!wholeMessage) {
+                    // check content type of attachment message for encryption flag
+                    SmimeHandler.getHandler().updateCryptoFlags(msg, m, mm, mm);
+                } else {
+                    MimeMessage originalMimeMessage = msg.getMimeMessage(false);
+                    SmimeHandler.getHandler().updateCryptoFlags(msg, m, originalMimeMessage, mm);
+                }
             }
 
             // if the mime it is signed
@@ -1595,8 +1599,6 @@ public final class ToXML {
                             msg.getMailbox().getAccount(), m, mm, octxt.getmResponseProtocol());
                     }
                 }
-            if (MResponseProcessor.getProcessor() != null) {
-                MResponseProcessor.getProcessor().process(msg.getMailbox().getAccount(), m, mm, octxt.getmResponseProtocol());
             }
             return m;
         } catch (IOException ex) {
