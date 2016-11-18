@@ -1446,10 +1446,9 @@ abstract class ImapHandler {
             List<String> preferredServers = Provisioning.getPreferredIMAPServers(account);
             ZimbraLog.imap.info("%s failed; should be contacting one of these hosts: %s ", command, String.join(", ", preferredServers));
             if (!extensionEnabled("LOGIN_REFERRALS") || preferredServers.isEmpty()) {
-                sendNO(tag, command + " failed (wrong host)");
+                sendNO(tag, "%s failed (wrong host)", command);
             } else {
-                sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' +
-                        Provisioning.getPreferredIMAPServers(account).get(0) + "/] " + command + " failed");
+                sendNO(tag, "[REFERRAL imap://%s@%s/] %s failed", URLEncoder.encode(account.getName(), "utf-8"), preferredServers.get(0), command);
             }
             return null;
         }
@@ -4313,6 +4312,10 @@ abstract class ImapHandler {
     void sendOK(String tag, String response) throws IOException {
         consecutiveError = 0;
         sendResponse(tag, "OK " + (Strings.isNullOrEmpty(response) ? " " : response), true);
+    }
+
+    void sendNO(String tag, String responsePattern, Object... args) throws IOException {
+        sendNO(tag, String.format(responsePattern, args));
     }
 
     void sendNO(String tag, String response) throws IOException {
