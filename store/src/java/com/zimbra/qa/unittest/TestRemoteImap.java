@@ -1,26 +1,32 @@
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import junit.framework.Assert;
+
+import org.junit.After;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
 
-public class TestRemoteImap extends TestCase {
+public class TestRemoteImap {
     private static final String USER = "TestRemoteImap-user";
     private static final String PASS = "test123";
     private String[] imapServersForLocalhost = null;
@@ -28,13 +34,19 @@ public class TestRemoteImap extends TestCase {
     private Server imapServer = null;
     private Account acc = null;
     private ImapConnection connection;
-    
-    @Override
-    public void setUp() throws Exception {
+    private static final Provisioning prov = Provisioning.getInstance();
+    private static List<Server> servers;
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        servers = prov.getAllServers(Provisioning.SERVICE_MAILBOX);
+    }
+
+    @Before
+    public void setUp() throws ServiceException, IOException  {
+        Assume.assumeTrue(servers.size() > 1);
         cleanup();
-        Provisioning prov  = Provisioning.getInstance();
-        List<Server> servers = prov.getAllServers(Provisioning.SERVICE_MAILBOX);
-        if(servers.size() > 1) {
+        //if(servers.size() > 1) {
             homeServer = servers.get(0);
             imapServer = servers.get(1);
             Map<String, Object> attrs = Maps.newHashMap();
@@ -49,17 +61,17 @@ public class TestRemoteImap extends TestCase {
             //homeServer will be the mailbox server and imapServer will be the remote IMAP
             homeServer.setReverseProxyUpstreamImapServers(new String[]{imapServer.getServiceHostname()});
             connection = connect();
-        }
+        //}
     }
 
-    private void cleanup() throws Exception {
+    private void cleanup() throws ServiceException {
         if(TestUtil.accountExists(USER)) {
             TestUtil.deleteAccount(USER);
         }
     }
 
-    @Override
-    public void tearDown() throws Exception {
+    @After
+    public void tearDown() throws ServiceException  {
         cleanup();
         if(homeServer != null) {
             homeServer.setReverseProxyUpstreamImapServers(imapServersForLocalhost);
@@ -67,21 +79,23 @@ public class TestRemoteImap extends TestCase {
     }
 
     @Test
-    public void testAUTHENTICATE() throws Exception {
-        if(imapServer != null && homeServer != null) {
+    public void testAUTHENTICATE() throws IOException  {
+        Assume.assumeTrue(servers.size() > 1);
+        //if(imapServer != null && homeServer != null) {
             connection.login(PASS);
-            Assert.assertTrue("IMAP connection is not authenticated", connection.isAuthenticated());
-        }
+            assertTrue("IMAP connection is not authenticated", connection.isAuthenticated());
+        //}
     }
 
     @Test
-    public void testLIST() throws Exception {
-        if(imapServer != null && homeServer != null) {
+    public void testLIST() throws IOException  {
+        Assume.assumeTrue(servers.size() > 1);
+        //if(imapServer != null && homeServer != null) {
             connection.login(PASS);
             Assert.assertTrue("IMAP connection is not authenticated", connection.isAuthenticated());
             List<ListData> listResult = connection.list("", "*");
             assertNotNull(listResult);
-        } 
+        //} 
     }
 
     private ImapConnection connect() throws IOException {
