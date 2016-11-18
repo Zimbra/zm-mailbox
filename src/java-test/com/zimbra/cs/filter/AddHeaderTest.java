@@ -158,4 +158,41 @@ public class AddHeaderTest {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
+    /*
+     * Adding new header with multiline value
+     */
+    @Test
+    public void testAddHeaderWithMultilineValue() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + " addheader :last \"X-Test-Header\" \"line1\r\n\tline2\r\n\tline3\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            int index = 0;
+            String value = "";
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                index++;
+                if ("X-Test-Header".equals(temp.getName())) {
+                    value = temp.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals(value, "line1\r\n\tline2\r\n\tline3");
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
 }
