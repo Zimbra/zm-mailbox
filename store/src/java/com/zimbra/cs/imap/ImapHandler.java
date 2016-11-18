@@ -1441,10 +1441,10 @@ abstract class ImapHandler {
             sendNO(tag, "account does not have IMAP access enabled");
             return null;
         } 
-        
-        if(!Provisioning.canUseLocalIMAP(account)) {
+
+        if(!Provisioning.canUseLocalIMAP(account) && !ZimbraAuthenticator.MECHANISM.equals(mechanism)) {
             List<String> preferredServers = Provisioning.getPreferredIMAPServers(account);
-            ZimbraLog.imap.info("%s failed; should be contacting one of these hosts: %s ", command, String.join(", ", preferredServers));
+            ZimbraLog.imap.info("%s failed; mechanism: %s. Should be contacting one of these hosts: %s ", command, mechanism, String.join(", ", preferredServers));
             if (!extensionEnabled("LOGIN_REFERRALS") || preferredServers.isEmpty()) {
                 sendNO(tag, "%s failed (wrong host)", command);
             } else {
