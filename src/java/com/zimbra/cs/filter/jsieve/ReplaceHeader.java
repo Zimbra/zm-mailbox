@@ -22,7 +22,9 @@ import java.util.List;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
@@ -105,7 +107,9 @@ public class ReplaceHeader extends AbstractCommand {
                                 } else {
                                     newHeaderValue = header.getValue();
                                 }
-                                header = new Header(newHeaderName, newHeaderValue);
+                                InternetHeaders ihs = new InternetHeaders();
+                                ihs.addHeader(newHeaderName, newHeaderValue);
+                                header = (Header) ihs.getAllHeaders().nextElement();
                                 break;
                             }
                         }

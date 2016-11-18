@@ -31,6 +31,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import javax.mail.MessagingException;
+
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.comparators.AsciiCasemap;
@@ -74,7 +76,11 @@ public class AddressTest extends Address {
 
         if (MatchTypeTags.MATCHES_TAG.equals(params.getMatchType())) {
             ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
-            HeaderTest.evaluateVarExp(zma, params.getHeaderNames(), false, params.getKeys());
+            try {
+                HeaderTest.evaluateVarExp(zma, params.getHeaderNames(), false, params.getKeys());
+            } catch (MessagingException e) {
+                throw new SieveException("Exception occured while evaluating variable expression.", e);
+            }
         }
         if (COUNT_TAG.equals(params.getMatchType()) || VALUE_TAG.equals(params.getMatchType())) {
             return match(mail,

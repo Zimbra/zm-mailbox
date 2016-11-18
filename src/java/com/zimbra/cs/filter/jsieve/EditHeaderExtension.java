@@ -24,6 +24,7 @@ import java.util.List;
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
@@ -395,39 +396,41 @@ public class EditHeaderExtension {
      * @return true if header needs to be replaced
      * @throws SieveException 
      * @throws LookupException 
+     * @throws MessagingException 
      */
-    public boolean matchCondition(ZimbraMailAdapter mailAdapter, Header header, int headerCount, String value, SieveContext context) throws LookupException, SieveException {
+    public boolean matchCondition(ZimbraMailAdapter mailAdapter, Header header, int headerCount, String value, SieveContext context) throws LookupException, SieveException, MessagingException {
         boolean matchFound = false;
+        String unfoldedHeaderValue = MimeUtility.unfold(header.getValue());
         if (this.comparator.equals(I_ASCII_NUMERIC)) {
             if (this.valueTag) {
                 switch (this.relationalComparator) {
                 case MatchRelationalOperators.GT_OP:
-                    if (Integer.valueOf(header.getValue()) > Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedHeaderValue) > Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.GE_OP:
-                    if (Integer.valueOf(header.getValue()) >= Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedHeaderValue) >= Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.LT_OP:
-                    if (Integer.valueOf(header.getValue()) < Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedHeaderValue) < Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.LE_OP:
-                    if (Integer.valueOf(header.getValue()) <= Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedHeaderValue) <= Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.EQ_OP:
-                    if (Integer.valueOf(header.getValue()) == Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedHeaderValue) == Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.NE_OP:
-                    if (Integer.valueOf(header.getValue()) != Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedHeaderValue) != Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
@@ -472,11 +475,11 @@ public class EditHeaderExtension {
             } else {
                 throw new SyntaxException(":value or :count not found for numeric operation in replaceheader.");
             }
-        } else if (this.is && ComparatorUtils.is(this.comparator, header.getValue(), value, context)) {
+        } else if (this.is && ComparatorUtils.is(this.comparator, unfoldedHeaderValue, value, context)) {
             matchFound = true;
-        } else if (this.contains && ComparatorUtils.contains(this.comparator, header.getValue(), value, context)) {
+        } else if (this.contains && ComparatorUtils.contains(this.comparator, unfoldedHeaderValue, value, context)) {
             matchFound = true;
-        } else if (this.matches && ComparatorUtils.matches(this.comparator, header.getValue(), value, context)) {
+        } else if (this.matches && ComparatorUtils.matches(this.comparator, unfoldedHeaderValue, value, context)) {
             matchFound = true;
         } else {
             ZimbraLog.filter.debug("Key: %s and Value: %s pair not matching requested criteria.", this.key, value);

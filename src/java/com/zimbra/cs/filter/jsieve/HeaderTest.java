@@ -32,12 +32,15 @@ import static org.apache.jsieve.comparators.MatchTypeTags.MATCHES_TAG;
 import static org.apache.jsieve.tests.ComparatorTags.COMPARATOR_TAG;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.Argument;
@@ -292,7 +295,11 @@ public class HeaderTest extends Header {
         
         ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
         if (matchType.equals(MatchTypeTags.MATCHES_TAG)) {
-            evaluateVarExp(zma, headerNames, false, keys);
+            try {
+                evaluateVarExp(zma, headerNames, false, keys);
+            } catch (MessagingException e) {
+                throw new SieveException("Exception occured while evaluating variable expression.", e);
+            }
         }
         List<String> newKeys = new ArrayList<String>();
         for (Object key : keys) {
@@ -325,8 +332,9 @@ public class HeaderTest extends Header {
      * @param keys matching key string
      * @throws SieveMailException
      * @throws SievePatternException
+     * @throws MessagingException 
      */
-    public static void evaluateVarExp(ZimbraMailAdapter mailAdapter, List<String> headerNames, boolean envelope, List<String> keys) throws SieveMailException, SievePatternException {
+    public static void evaluateVarExp(ZimbraMailAdapter mailAdapter, List<String> headerNames, boolean envelope, List<String> keys) throws SieveMailException, SievePatternException, MessagingException {
         
         List<String> varValues = new ArrayList<String>();
 
@@ -336,7 +344,7 @@ public class HeaderTest extends Header {
             if (envelope) {
                 values = mailAdapter.getEnvelope(hn);
             } else {
-                values = mailAdapter.getMatchingHeader(hn);
+                values = Arrays.asList(mailAdapter.getMimeMessage().getHeader(hn));
             }
             for (String sourceStr : values) {
                 for (Object key : keys) {
@@ -345,7 +353,7 @@ public class HeaderTest extends Header {
                         keyStr = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), keyStr);
                     }
                     String regex = FilterUtil.sieveToJavaRegex(keyStr);
-                    Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(sourceStr);
+                    Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE|Pattern.DOTALL).matcher(sourceStr);
                     if (matcher.find() && matcher.groupCount() > 0) {
                         int grpCount = matcher.groupCount();
                         for (int i = 0; i<=grpCount; ++i) {
@@ -359,7 +367,6 @@ public class HeaderTest extends Header {
                 } 
             }    
         }
-        
         ZimbraLog.filter.debug("The matched variables are: %s", varValues );
         mailAdapter.setMatchedValues(varValues);
     }
