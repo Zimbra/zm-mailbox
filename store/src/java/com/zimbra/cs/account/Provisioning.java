@@ -1499,6 +1499,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static boolean canUseLocalIMAP(Account account) throws ServiceException {
+        if(account == null) {
+            return false;
+        }
         Server homeServer = account.getServer();
         if(homeServer == null) {
             return false;
