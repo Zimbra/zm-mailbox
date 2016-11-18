@@ -16,14 +16,20 @@
  */
 package com.zimbra.qa.unittest;
 
-import com.zimbra.common.util.ZimbraLog;
-
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
+import com.zimbra.common.util.ZimbraLog;
+
 public class TestLogger extends RunListener {
+
+    @Override
+    public void testAssumptionFailure(Failure failure) {
+        Description desc = failure.getDescription();
+        ZimbraLog.test.info("Test %s.%s skipped.", desc.getClassName(), desc.getMethodName());
+    }
 
     @Override
     public void testRunStarted(Description description) throws Exception {

@@ -30,7 +30,7 @@ import com.zimbra.qa.unittest.TestResults;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.ZimbraSuite;
 import com.zimbra.soap.ZimbraSoapContext;
-
+import com.zimbra.qa.unittest.TestResults.TestStatus;
 /**
  * @author bburtin
  */
@@ -65,7 +65,7 @@ public class RunUnitTests extends AdminDocumentHandler {
         Element resultsElement = response.addNonUniqueElement("results");
 
         int numPassed = 0;
-        for (TestResults.Result result : results.getResults(true)) {
+        for (TestResults.Result result : results.getResults(TestStatus.SUCCESS)) {
             Element completedElement = resultsElement.addNonUniqueElement("completed");
             completedElement.addAttribute("name", result.methodName);
             double execSeconds = (double) result.execMillis / 1000;
@@ -74,8 +74,20 @@ public class RunUnitTests extends AdminDocumentHandler {
             numPassed++;
         }
 
+        int numSkipped = 0;
+        List<TestResults.Result> skippedTests = results.getResults(TestStatus.SKIPPED);
+        for (TestResults.Result result : skippedTests) {
+            Element skippedElement = resultsElement.addNonUniqueElement("skipped");
+            skippedElement.addAttribute("name", result.methodName);
+            if (result.errorMessage != null) {
+                skippedElement.setText(result.errorMessage);
+            }
+            skippedElement.addAttribute("class", result.className);
+            numSkipped++;
+        }
+
         int numFailed = 0;
-        for (TestResults.Result result : results.getResults(false)) {
+        for (TestResults.Result result : results.getResults(TestStatus.FAILURE)) {
             Element failureElement = resultsElement.addNonUniqueElement("failure");
             failureElement.addAttribute("name", result.methodName);
             double execSeconds = (double) result.execMillis / 1000;
@@ -88,6 +100,7 @@ public class RunUnitTests extends AdminDocumentHandler {
         }
 
         response.addAttribute(AdminConstants.A_NUM_EXECUTED, numPassed + numFailed);
+        response.addAttribute(AdminConstants.A_NUM_SKIPPED, numSkipped);
         response.addAttribute(AdminConstants.A_NUM_FAILED, numFailed);
         return response;
     }
