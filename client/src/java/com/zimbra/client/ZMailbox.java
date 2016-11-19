@@ -512,6 +512,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private long mSize;
     private boolean mNoTagCache;
     private ZContactByPhoneCache mContactByPhoneCache;
+    private ZMailboxLock lock;
 
     private final List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
@@ -550,6 +551,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZMailbox(Options options) throws ServiceException {
+        lock = new ZMailboxLock(
+                LC.zimbra_mailbox_lock_max_waiting_threads.intValue(),
+                LC.zimbra_mailbox_lock_timeout.intValue());
         mHandlers.add(new InternalEventHandler());
         mSearchPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_PAGERS, true);
         mHandlers.add(mSearchPagerCache);
@@ -5872,13 +5876,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     /** Acquire an in process lock relevant for this type of MailboxStore */
     @Override
     public void lock(boolean write) {
-        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+        lock.lock();
     }
 
     /** Release an in process lock relevant for this type of MailboxStore */
     @Override
     public void unlock() {
-        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+        lock.release();
     }
 
     /**
