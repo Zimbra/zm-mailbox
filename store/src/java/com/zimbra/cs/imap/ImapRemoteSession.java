@@ -23,8 +23,8 @@ import com.zimbra.cs.session.Session;
 
 public class ImapRemoteSession extends ImapListener {
 
-    ImapRemoteSession(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
-        super(i4folder, handler);
+    ImapRemoteSession(ImapMailboxStore imapStore, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
+        super(imapStore, i4folder, handler);
     }
 
     @Override
