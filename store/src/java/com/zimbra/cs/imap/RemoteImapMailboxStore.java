@@ -67,6 +67,11 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
+    public ImapListener createListener(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
+        return new ImapRemoteSession(this, i4folder, handler);
+    }
+
+    @Override
     public ImapFlag getTagByName(String tag) throws ServiceException {
         ZTag ztag = zMailbox.getTagByName(tag);
         return new ImapFlag(ztag);
