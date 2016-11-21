@@ -16,7 +16,11 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +32,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.MimePartDataSource;
 
+import org.apache.commons.io.IOUtils;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -35,6 +40,7 @@ import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SmimeConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
@@ -288,13 +294,41 @@ public class CreateContact extends MailDocumentHandler  {
         return new ParsedContact(existing).modify(deltaList, attachments, discardExistingMembers);
     }
 
+    private static String parseCertificate(Element elt, String name, ZimbraSoapContext zsc, OperationContext octxt,
+        Contact existing) throws ServiceException {
+        String attachId = elt.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
+        String result = "";
+        if (attachId != null) {
+            Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
+            try {
+                InputStream in = up.getInputStream();
+                byte[] certBytes = IOUtils.toByteArray(in);
+                // Load the certificate using Keystore just to make sure it is a valid certificate file.
+                // No other validation is done here.
+                CertificateFactory factory = CertificateFactory.getInstance(SmimeConstants.PUB_CERT_TYPE);
+                factory.generateCertificate(new ByteArrayInputStream(certBytes));
+                result = ByteUtil.encodeLDAPBase64(certBytes);
+            } catch (IOException | CertificateException e) {
+                ZimbraLog.contact.warn("Exception in adding user certificate with aid=%s for account %s", attachId,
+                    zsc.getRequestedAccountId());
+                throw ServiceException.INVALID_REQUEST("Exception in adding certificate", e);
+            }
+        }
+        return result;
+    }
+
     private static Attachment parseAttachment(Element elt, String name, ZimbraSoapContext zsc, OperationContext octxt, Contact existing) throws ServiceException {
         // check for uploaded attachment
         String attachId = elt.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         if (attachId != null) {
-            Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
-            UploadDataSource uds = new UploadDataSource(up);
-            return new Attachment(new DataHandler(uds), name, (int) up.getSize());
+            if (Contact.isSMIMECertField(name)) {
+                elt.setText(parseCertificate(elt, name, zsc, octxt, existing));
+                return null;
+            } else {
+                Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
+                UploadDataSource uds = new UploadDataSource(up);
+                return new Attachment(new DataHandler(uds), name, (int) up.getSize());
+            }
         }
 
         int itemId = (int) elt.getAttributeLong(MailConstants.A_ID, -1);
