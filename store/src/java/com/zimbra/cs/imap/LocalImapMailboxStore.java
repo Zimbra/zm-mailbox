@@ -54,6 +54,11 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
+    public ImapListener createListener(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
+        return new ImapSession(this, i4folder, handler);
+    }
+
+    @Override
     public List<String> getFlagList(boolean permanentOnly) {
         return flags.listNames(permanentOnly);
     }
