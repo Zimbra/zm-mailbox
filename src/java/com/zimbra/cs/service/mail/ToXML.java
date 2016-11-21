@@ -1408,6 +1408,7 @@ public final class ToXML {
                 // if the mime is encrypted
                 if (mm != null
                     && mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)) {
+                    ZimbraLog.mailbox.debug("The message is encrypted. Forwarding it to SmimeHandler for decryption.");
                     if (SmimeHandler.getHandler() != null) {
                         SmimeHandler.getHandler().decryptMessage(msg.getMailbox(), mm);
                     }
