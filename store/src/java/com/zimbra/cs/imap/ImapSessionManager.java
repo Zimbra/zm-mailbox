@@ -36,6 +36,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.mailbox.ZimbraFetchMode;
 import com.zimbra.common.mailbox.ZimbraQueryHit;
@@ -48,7 +49,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException.MailboxInMaintenanceException;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
@@ -340,7 +340,7 @@ final class ImapSessionManager {
 
             ImapListener session = null;
             try {
-                session = new ImapSession(imapStore, i4folder, handler);
+                session = imapStore.createListener(i4folder, handler);
                 session.register();
                 sessions.put(session, session /* cannot be null for ConcurrentLinkedHashMap */);
                 return new FolderDetails(session, initial);
@@ -622,12 +622,17 @@ final class ImapSessionManager {
      * @return cache key
      */
     String cacheKey(ImapListener session, boolean active) throws ServiceException {
-        Mailbox mbox = (Mailbox) session.getMailbox();
+        MailboxStore mbox = session.getMailbox();
         if (mbox == null) {
-            mbox = MailboxManager.getInstance().getMailboxByAccountId(session.getTargetAccountId());
+            if (session instanceof ImapSession) {
+                mbox = MailboxManager.getInstance().getMailboxByAccountId(session.getTargetAccountId());
+            } else {
+                ImapMailboxStore imapStore = session.mPath.getOwnerImapMailboxStore(true /* force remote */);
+                mbox = imapStore.getMailboxStore();
+            }
         }
-
-        String cachekey = cacheKey(mbox.getFolderById(null, session.getFolderId()), active);
+        FolderStore fstore = mbox.getFolderById((OpContext)null, Integer.toString(session.getFolderId()));
+        String cachekey = cacheKey(fstore, active);
         // if there are unnotified expunges, *don't* use the default cache key
         //   ('+' is a good separator because it alpha-sorts before the '.' of the filename extension)
         return session.hasExpunges() ? cachekey + "+" + session.getQualifiedSessionId() : cachekey;
