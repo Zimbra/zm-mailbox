@@ -33,6 +33,10 @@ import javax.mail.internet.MimePart;
 import javax.mail.internet.MimePartDataSource;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.builder.StandardToStringStyle;
+
+import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -298,10 +302,11 @@ public class CreateContact extends MailDocumentHandler  {
         Contact existing) throws ServiceException {
         String attachId = elt.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         String result = "";
-        if (attachId != null) {
+        InputStream in = null;
+        if (Strings.isNullOrEmpty(attachId)) {
             Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
             try {
-                InputStream in = up.getInputStream();
+                in = up.getInputStream();
                 byte[] certBytes = IOUtils.toByteArray(in);
                 // Load the certificate using Keystore just to make sure it is a valid certificate file.
                 // No other validation is done here.
@@ -309,9 +314,17 @@ public class CreateContact extends MailDocumentHandler  {
                 factory.generateCertificate(new ByteArrayInputStream(certBytes));
                 result = ByteUtil.encodeLDAPBase64(certBytes);
             } catch (IOException | CertificateException e) {
-                ZimbraLog.contact.warn("Exception in adding user certificate with aid=%s for account %s", attachId,
+                ZimbraLog.contact.error("Exception in adding user certificate with aid=%s for account %s", attachId,
                     zsc.getRequestedAccountId());
                 throw ServiceException.INVALID_REQUEST("Exception in adding certificate", e);
+            } finally {
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        ZimbraLog.contact.error("Exception in closing inputstream for attachment",e);
+                    }
+                }
             }
         }
         return result;
