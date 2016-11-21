@@ -303,7 +303,7 @@ public class CreateContact extends MailDocumentHandler  {
         String attachId = elt.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         String result = "";
         InputStream in = null;
-        if (Strings.isNullOrEmpty(attachId)) {
+        if (!Strings.isNullOrEmpty(attachId)) {
             Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
             try {
                 in = up.getInputStream();
