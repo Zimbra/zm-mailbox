@@ -784,7 +784,7 @@ public final class ToXML {
                 //      an existing attribute with null or empty string value?
                 String value = contact.get(name);
                 if (!Strings.isNullOrEmpty(value)) {
-                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic);
+                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt);
                 } else if (attachments != null) {
                     for (Attachment attach : attachments) {
                         if (attach.getName().equals(name)) {
@@ -813,7 +813,7 @@ public final class ToXML {
                 }
 
                 if (name != null && !name.trim().isEmpty() && !Strings.isNullOrEmpty(value)) {
-                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic);
+                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt);
                 }
             }
             if (attachments != null) {
@@ -824,7 +824,7 @@ public final class ToXML {
         }
 
         if (migratedDlist != null) {
-            encodeContactAttr(el, ContactConstants.A_dlist, migratedDlist, contact, false);
+            encodeContactAttr(el, ContactConstants.A_dlist, migratedDlist, contact, false, octxt);
         } else if (contactGroup != null) {
             encodeContactGroup(el, contactGroup, memberAttrFilter, ifmt, octxt, summary, fields);
         }
@@ -833,12 +833,15 @@ public final class ToXML {
     }
 
     private static void encodeContactAttr(Element elem, String name, String value,
-            Contact contact, boolean encodeContactGroupMembers) {
+            Contact contact, boolean encodeContactGroupMembers, OperationContext octxt) {
         if (Contact.isMultiValueAttr(value)) {
             try {
                 for (String v : Contact.parseMultiValueAttr(value)) {
                     if (Contact.isUrlField(name)) {
                         v = DefangFilter.sanitize(v, true);
+                    } else if (Contact.isSMIMECertField(name)) {
+                        encodeCertificate(octxt, elem, name, value);
+                        continue;
                     }
                     elem.addKeyValuePair(name, v);
                 }
@@ -861,8 +864,19 @@ public final class ToXML {
         } else {
             if (Contact.isUrlField(name)) {
                 value = DefangFilter.sanitize(value, true);
+            } else if (Contact.isSMIMECertField(name)) {
+                encodeCertificate(octxt, elem, name, value);
+                return;
             }
             elem.addKeyValuePair(name, value);
+        }
+    }
+
+    private static void encodeCertificate(OperationContext octxt, Element elem, String name, String value) {
+        Account account = octxt.getAuthenticatedUser();
+        elem.addKeyValuePair(name, value);
+        if (SmimeHandler.getHandler() != null) {
+            SmimeHandler.getHandler().encodeCertificate(account, elem, value, octxt.getmResponseProtocol());
         }
     }
 
