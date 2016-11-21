@@ -1559,6 +1559,7 @@ public final class ToXML {
                 && (mm.getContentType().contains(MimeConstants.CT_MULTIPART_SIGNED)
                     || mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME)
                     || mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME_OLD))) {
+                ZimbraLog.mailbox.debug("The message is signed. Forwarding it to SmimeHandler for signature verification.");
                 if (SmimeHandler.getHandler() != null) {
                     SmimeHandler.getHandler().verifyMessageSignature(msg.getMailbox().getAccount(), m,
                         mm, octxt.getmResponseProtocol());
