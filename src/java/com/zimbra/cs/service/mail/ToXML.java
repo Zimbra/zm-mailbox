@@ -146,7 +146,6 @@ import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.util.TagUtil;
-import com.zimbra.cs.mime.CertificateProcessor;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -876,8 +875,8 @@ public final class ToXML {
     private static void encodeCertificate(OperationContext octxt, Element elem, String name, String value) {
         Account account = octxt.getAuthenticatedUser();
         elem.addKeyValuePair(name, value);
-        if (CertificateProcessor.getProcessor() != null) {
-            CertificateProcessor.getProcessor().process(account, elem, value, octxt.getmResponseProtocol());
+        if (SmimeHandler.getHandler() != null) {
+            SmimeHandler.getHandler().encodeCertificate(account, elem, value, octxt.getmResponseProtocol());
         }
     }
 
