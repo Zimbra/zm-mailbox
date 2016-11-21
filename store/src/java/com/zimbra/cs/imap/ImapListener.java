@@ -30,11 +30,13 @@ public abstract class ImapListener extends Session {
     final boolean  mIsVirtual;
     ImapFolderData mFolder;
     ImapHandler handler;
+    private final ImapMailboxStore imapMboxStore;
 
     private final Map<Integer, Integer> renumberCount = new ConcurrentHashMap<Integer, Integer>();
 
-    ImapListener(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
+    ImapListener(ImapMailboxStore store, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
+        this.imapMboxStore = store;
         mPath      = i4folder.getPath();
         mFolderId  = i4folder.getId();
         mIsVirtual = i4folder.isVirtual();
@@ -42,6 +44,10 @@ public abstract class ImapListener extends Session {
         this.handler = handler;
 
         i4folder.setSession(this);
+    }
+
+    ImapMailboxStore getImapMboxStore() {
+        return imapMboxStore;
     }
 
     public abstract ImapFolder getImapFolder() throws ImapSessionClosedException;

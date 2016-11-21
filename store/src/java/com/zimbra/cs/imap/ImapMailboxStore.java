@@ -23,6 +23,7 @@ import java.util.Set;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
@@ -91,4 +92,8 @@ public abstract class ImapMailboxStore {
     throws ServiceException;
     public abstract Set<String> listSubscriptions(OperationContext octxt) throws ServiceException;
     public abstract void saveSubscriptions(OperationContext octxt, Set<String> subs) throws ServiceException;
+    public abstract int getImapRECENTCutoff(FolderStore folder);
+    public abstract int getImapRECENT(OperationContext ctxt, FolderStore folder) throws ServiceException;
+    public abstract List<ImapMessage> openImapFolder(OperationContext octxt, ItemIdentifier folderId)
+            throws ServiceException;
 }
