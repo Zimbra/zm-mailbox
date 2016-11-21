@@ -34,6 +34,7 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.mailbox.ACLGrant;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
@@ -316,7 +317,6 @@ public class Folder extends MailItem implements FolderStore {
      *  selected.)</i>  Otherwise, it is the number of messages/chats/contacts
      *  added to the folder, moved to the folder, or edited in the folder
      *  since the last such IMAP session. */
-    @Override
     public int getImapRECENT() throws ServiceException {
         // no contents means no \Recent items (duh)
         if (getSize() == 0) {
@@ -1613,6 +1613,11 @@ public class Folder extends MailItem implements FolderStore {
             }
         }
         return false;
+    }
+
+    @Override
+    public ItemIdentifier getFolderItemIdentifier() {
+        return ItemIdentifier.fromAccountIdAndItemId(mMailbox.getAccountId(), getId());
     }
 
     @Override
