@@ -31,6 +31,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
@@ -169,6 +170,32 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
         throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
     }
 
+    @Override
+    public int getImapRECENTCutoff(FolderStore folder) {
+        /* See notes on getImapRECENT */
+        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+    }
+
+    /**
+     * Returns the number of messages in the folder that would be considered \Recent in an IMAP session.
+     * If there is currently a READ-WRITE IMAP session open on the folder, by definition all other IMAP connections
+     *  will see no \Recent messages.  <i>(Note that as such, this method should <u>not</u> be called by IMAP sessions
+     *  that have this folder selected.)</i>  Otherwise, it is the number of messages/chats/contacts added to the
+     *  folder, moved to the folder, or edited in the folder since the last such IMAP session.
+     */
+    @Override
+    public int getImapRECENT(OperationContext octxt, FolderStore folder) throws ServiceException {
+        /* The equivalent Local case ends up in Folder.getImapRECENT() which loops over sessions
+         * to see if the folder is in use anywhere.
+         * The implementation of this needs to have a similar notion of whether the folder is in
+         * use anywhere. (Interesting other thought.  Does it need to be an IMAP session to qualify?
+         * If the folder is seen by some other SOAP client or a Sync client, doesn't that invalidate
+         * the recency test just as much as another IMAP client?  So, could consider all listeners
+         * here AND on the mailbox??  Thinking that just remote listeners may not cut it)
+         */
+        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+    }
+
     public int store(String folderId, Blob content, Date date, int msgFlags)
     throws ImapSessionClosedException, ServiceException, IOException {
         String id;
@@ -208,4 +235,10 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
             return null;
         }
     }
+
+    @Override
+    public List<ImapMessage> openImapFolder(OperationContext octxt, ItemIdentifier folderId) throws ServiceException {
+        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+    }
 }
+
