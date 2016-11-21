@@ -80,4 +80,11 @@ public interface MailboxStore {
             throws ServiceException;
     public ZimbraSearchParams createSearchParams(String queryString);
     public ZimbraQueryHitResults search(OpContext octx, ZimbraSearchParams params) throws ServiceException;
+    /**
+     * Returns the change sequence number for the most recent transaction.  This will be either the change number
+     * for the current transaction or, if no database changes have yet been made in this transaction, the sequence
+     * number for the last committed change.
+     */
+    public int getLastChangeID();
+    public List<Integer> resetImapUid(OpContext octxt, List<Integer> itemIds) throws ServiceException;
 }
