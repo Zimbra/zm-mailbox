@@ -1,6 +1,10 @@
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.sql.Date;
@@ -25,7 +29,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
@@ -160,7 +163,7 @@ public class TestRemoteImap {
         List<ListData> listResult = connection.list("", "*");
         assertNotNull(listResult);
         Assert.assertTrue("Should have at least 5 subscriptions ", listResult.size() >= 5);
-        TestImap.verifyFolderSubscriptions(listResult);
+        TestImap.verifyFolderList(listResult);
     }
 
     @Test
