@@ -5802,6 +5802,30 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return invokeJaxb(req);
     }
 
+    /**
+     * @return the list of new IMAP UIDs corresponding to the specified items
+     */
+    @Override
+    public List<Integer> resetImapUid(OpContext octxt, List<Integer> itemIds) throws ServiceException {
+        if ((null == itemIds) || itemIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        resetImapUid(itemIds);
+        // TODO:  ItemAction returns the original IDs.  However, the underlying mailbox
+        //        operation on the server returns the new UIDs - i.e. ItemAction throws away that information.
+        //        If performance is a problem probably worth creating a dedicated SOAP request.
+        List<ZimbraMailItem> zmis =
+                getItemsById(octxt, ItemIdentifier.fromAccountIdAndItemIds(getAccountId(), itemIds));
+        if ((null == zmis) || zmis.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Integer> newImapUIDs = Lists.newArrayListWithExpectedSize(zmis.size());
+        for (ZimbraMailItem zmi : zmis) {
+            newImapUIDs.add(zmi.getImapUid());
+        }
+        return newImapUIDs;
+    }
+
     @Override
     public void flagFolderAsSubscribed(OpContext ctxt, FolderStore folder) throws ServiceException {
         if (folder instanceof ZFolder && !folder.isIMAPSubscribed()) {
@@ -5921,12 +5945,23 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         //     public int getParentId() throws ServiceException;
         //     public int getModifiedSequence() throws ServiceException;
         // so may not be totally trivial to implement
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        throw new UnsupportedOperationException("ZMailbox method not supported yet");
     }
 
 
     @Override
     public ZimbraSearchParams createSearchParams(String queryString) {
         return new ZSearchParams(queryString);
+    }
+
+    /**
+     * Returns the change sequence number for the most recent transaction.  This will be either the change number
+     * for the current transaction or, if no database changes have yet been made in this transaction, the sequence
+     * number for the last committed change.
+     */
+    @Override
+    public int getLastChangeID() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("ZMailbox method not supported yet");
     }
 }
