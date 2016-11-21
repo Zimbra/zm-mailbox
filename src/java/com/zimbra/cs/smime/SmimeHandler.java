@@ -37,4 +37,6 @@ public abstract class SmimeHandler {
 
     public abstract boolean decryptMessage(Mailbox mbox, MimeMessage mime);
 
+    public abstract void encodeCertificate(Account account, Element elem, String certData, SoapProtocol mResponseProtocol);
+
 }
