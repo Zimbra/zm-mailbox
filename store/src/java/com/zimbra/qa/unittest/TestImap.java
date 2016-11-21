@@ -419,7 +419,7 @@ public class TestImap {
         List<ListData> listResult = connection.list("", "*");
         Assert.assertNotNull(listResult);
         Assert.assertTrue("List result should have atleast 8  entries", listResult.size() >= 8);
-        verifyFolderSubscriptions(listResult);
+        verifyFolderList(listResult);
     }
 
     @Test
@@ -995,7 +995,7 @@ public class TestImap {
         TestUtil.runTest(TestImapImport.class);
     }
     
-    public static void verifyFolderSubscriptions(List<ListData> listResult) {
+    public static void verifyFolderList(List<ListData> listResult) {
         boolean hasContacts = false;
         boolean hasChats = false;
         boolean hasEmailedContacts = false;
