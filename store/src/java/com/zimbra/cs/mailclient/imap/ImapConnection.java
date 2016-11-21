@@ -296,7 +296,7 @@ public final class ImapConnection extends MailConnection {
         throws IOException {
         ImapRequest req = newRequest(cmd, new MailboxName(ref), new MailboxName(mbox));
         List<ListData> results = new ArrayList<ListData>();
-        req.setResponseHandler(new BasicResponseHandler(CAtom.LIST.atom(), results));
+        req.setResponseHandler(new BasicResponseHandler(cmd, results));
         req.sendCheckStatus();
         return results;
     }
