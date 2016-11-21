@@ -78,6 +78,7 @@ public class MimeConstants {
     public static final String CT_DEFAULT = CT_TEXT_PLAIN;
     public static final String CT_APPLEFILE = "application/applefile";
     public static final String CT_APPLICATION_ZIP = "application/zip";
+    public static final String CT_SMIME_TYPE_ENVELOPED_DATA = "enveloped-data";
 
     // encodings
     public static final String ET_7BIT = "7bit";

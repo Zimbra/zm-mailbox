@@ -95,6 +95,7 @@ public class SmimeConstants {
     public static final String MIME_TYPE_MULTIPART_SIGNED = "multipart/signed";
     public static final String MIME_TYPE_APPLICATION_PKCS7MIME = "application/pkcs7-mime";
     public static final String MIME_TYPE_APPLICATION_XPKCS7MIME = "application/x-pkcs7-mime";
+    public static final String SMIME_CONTENT_TRANSFER_ENCODING_BASE64 = "base64";
 
     public static final String CMS_VERIFIER_NOT_VALID_AT_SIGNINGTIME_ERROR_MESSAGE = "verifier not valid at signingTime";
     public static final String CMS_SIGNER_DIGEST_MISMATCH_ERROR_MESSAGE = "message-digest attribute value does not match calculated value";
