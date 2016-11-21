@@ -33,6 +33,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.SearchFolderStore;
@@ -46,7 +47,6 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException.MailboxInMaintenanceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -54,7 +54,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.memcached.MemcachedConnector;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.EhcacheManager;
 import com.zimbra.cs.util.Zimbra;
 
@@ -248,13 +247,13 @@ final class ImapSessionManager {
         final int uidnext, modseq;
         int firstUnread = -1;
 
-        InitialFolderValues(Folder folder) {
+        InitialFolderValues(FolderStore folder) {
             uidnext = folder.getImapUIDNEXT();
             modseq = folder.getImapMODSEQ();
         }
     }
 
-    protected static class FolderDetails {
+    static class FolderDetails {
         final ImapListener listener;
         final InitialFolderValues initialFolderValues;
 
@@ -274,13 +273,15 @@ final class ImapSessionManager {
             handler.activateExtension(ImapExtension.CONDSTORE);
         }
 
-        Folder folder = (Folder) path.getFolder();
-        int folderId = folder.getId();
-        Mailbox mbox = folder.getMailbox();
+        FolderStore folder = path.getFolder();
+        String folderIdAsString = folder.getFolderIdAsString();
+        int folderId = folder.getFolderIdInOwnerMailbox();
+        MailboxStore mbox = folder.getMailboxStore();
+        ImapMailboxStore imapStore = ImapMailboxStore.get(mbox);
         // don't have a session when the folder is loaded...
         OperationContext octxt = handler.getCredentials().getContext();
 
-        mbox.beginTrackingImap();
+        imapStore.beginTrackingImap();
 
         List<ImapMessage> i4list = null;
         // *always* recalculate the contents of search folders
@@ -288,18 +289,14 @@ final class ImapSessionManager {
             i4list = loadVirtualFolder(octxt, (SearchFolder) folder);
         }
 
-        mbox.lock.lock();
+        mbox.lock(true);
         try {
             // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
-            folder = mbox.getFolderById(octxt, folderId);
-            int recentCutoff = folder.getImapRECENTCutoff();
+            folder = mbox.getFolderById(octxt, folderIdAsString);
+            int recentCutoff = imapStore.getImapRECENTCutoff(folder);
 
             if (i4list == null) {
-                List<Session> mboxListeners = mbox.getListeners(Session.Type.IMAP);
-                List<ImapListener> listners = Lists.newArrayListWithCapacity(mboxListeners.size());
-                for (Session sess : mboxListeners) {
-                    listners.add((ImapSession) sess);
-                }
+                List<ImapListener> listners = imapStore.getListeners();
                 // first option is to duplicate an existing registered session
                 //   (could try to just activate an inactive session, but this logic is simpler for now)
                 i4list = duplicateExistingSession(folderId, listners);
@@ -313,11 +310,11 @@ final class ImapSessionManager {
                 }
                 // do the consistency check, if requested
                 if (CONSISTENCY_CHECK) {
-                    i4list = consistencyCheck(i4list, mbox, octxt, folder);
+                    i4list = consistencyCheck(i4list, imapStore, octxt, folder);
                 }
                 // no matching serialized session means we have to go to the DB to get the messages
                 if (i4list == null) {
-                    i4list = mbox.openImapFolder(octxt, folderId);
+                    i4list = imapStore.openImapFolder(octxt, folder.getFolderItemIdentifier());
                 }
             }
 
@@ -328,7 +325,7 @@ final class ImapSessionManager {
             ImapFolder i4folder = new ImapFolder(path, params, handler);
 
             // don't rely on the <code>Folder</code> object being updated in place
-            folder = mbox.getFolderById(octxt, folderId);
+            folder = mbox.getFolderById(octxt, folderIdAsString);
             // can't set these until *after* loading the folder because UID renumbering affects them
             InitialFolderValues initial = new InitialFolderValues(folder);
 
@@ -339,11 +336,11 @@ final class ImapSessionManager {
                 }
             }
             i4folder.setInitialSize();
-            ZimbraLog.imap.debug("Folder with id=%s added message list %s", folderId, i4list);
+            ZimbraLog.imap.debug("Folder with id=%s added message list %s", folderIdAsString, i4list);
 
             ImapListener session = null;
             try {
-                session = new ImapSession(i4folder, handler);
+                session = new ImapSession(imapStore, i4folder, handler);
                 session.register();
                 sessions.put(session, session /* cannot be null for ConcurrentLinkedHashMap */);
                 return new FolderDetails(session, initial);
@@ -354,7 +351,7 @@ final class ImapSessionManager {
                 throw e;
             }
         } finally {
-            mbox.lock.release();
+            mbox.unlock();
         }
     }
 
@@ -437,7 +434,7 @@ final class ImapSessionManager {
         return null;
     }
 
-    private List<ImapMessage> duplicateSerializedFolder(Folder folder) {
+    private List<ImapMessage> duplicateSerializedFolder(FolderStore folder) {
         ImapFolder i4folder = getCache(folder);
         if (i4folder == null) { // cache miss
             return null;
@@ -457,14 +454,15 @@ final class ImapSessionManager {
         return i4list;
     }
 
-    private List<ImapMessage> consistencyCheck(List<ImapMessage> i4list, Mailbox mbox, OperationContext octxt, Folder folder) {
+    private List<ImapMessage> consistencyCheck(
+            List<ImapMessage> i4list, ImapMailboxStore imapStore, OperationContext octxt, FolderStore folder) {
         if (i4list == null) {
             return i4list;
         }
 
-        String fid = mbox.getAccountId() + ":" + folder.getId();
+        String fid = folder.getFolderIdAsString();
         try {
-            List<ImapMessage> actual = mbox.openImapFolder(octxt, folder.getId());
+            List<ImapMessage> actual = imapStore.openImapFolder(octxt, folder.getFolderItemIdentifier());
             Collections.sort(actual);
             if (i4list.size() != actual.size()) {
                 ZimbraLog.imap.error("IMAP session cache consistency check failed: inconsistent list lengths " +
@@ -518,7 +516,7 @@ final class ImapSessionManager {
         return dupes;
     }
 
-    private static void renumberMessages(OperationContext octxt, Mailbox mbox, List<ImapMessage> i4sorted)
+    private static void renumberMessages(OperationContext octxt, MailboxStore mbox, List<ImapMessage> i4sorted)
     throws ServiceException {
         List<ImapMessage> unnumbered = new ArrayList<ImapMessage>();
         List<Integer> renumber = new ArrayList<Integer>();
@@ -579,12 +577,11 @@ final class ImapSessionManager {
         }
 
         // if there are still other listeners on this folder, this session is unnecessary
-        Mailbox mbox = (Mailbox) session.getMailbox();
+        MailboxStore mbox = session.getMailbox();
         if (mbox != null) {
-            mbox.lock.lock();
+            mbox.lock(true);
             try {
-                for (Session listener : mbox.getListeners(Session.Type.IMAP)) {
-                    ImapSession i4listener = (ImapSession) listener;
+                for (ImapListener i4listener : session.getImapMboxStore().getListeners()) {
                     if (i4listener != session && i4listener.getFolderId() == session.getFolderId()) {
                         ZimbraLog.imap.trace("more recent listener exists for folder.  Detaching %s", session);
                         session.detach();
@@ -593,7 +590,7 @@ final class ImapSessionManager {
                     }
                 }
             } finally {
-                mbox.lock.release();
+                mbox.unlock();
             }
         }
     }
@@ -601,7 +598,7 @@ final class ImapSessionManager {
     /**
      * Try to retrieve from inactive session cache, then fall back to active session cache.
      */
-    private ImapFolder getCache(Folder folder) {
+    private ImapFolder getCache(FolderStore folder) {
         ImapFolder i4folder = inactiveSessionCache.get(cacheKey(folder, false));
         if (i4folder != null) {
             return i4folder;
@@ -612,7 +609,7 @@ final class ImapSessionManager {
     /**
      * Remove cached values from both active session cache and inactive session cache.
      */
-    private void clearCache(Folder folder) {
+    private void clearCache(FolderStore folder) {
         activeSessionCache.remove(cacheKey(folder, true));
         inactiveSessionCache.remove(cacheKey(folder, false));
     }
@@ -636,14 +633,20 @@ final class ImapSessionManager {
         return session.hasExpunges() ? cachekey + "+" + session.getQualifiedSessionId() : cachekey;
     }
 
-    private String cacheKey(Folder folder, boolean active) {
-        Mailbox mbox = folder.getMailbox();
-        int modseq = folder instanceof SearchFolder ? mbox.getLastChangeID() : folder.getImapMODSEQ();
-        int uvv = folder instanceof SearchFolder ? mbox.getLastChangeID() : ImapFolder.getUIDValidity(folder);
+    private String cacheKey(FolderStore folder, boolean active) {
+        MailboxStore mbox = folder.getMailboxStore();
+        int modseq = folder instanceof SearchFolderStore ? mbox.getLastChangeID() : folder.getImapMODSEQ();
+        int uvv = folder instanceof SearchFolderStore ? mbox.getLastChangeID() : ImapFolder.getUIDValidity(folder);
+        String acctId = null;
+        try {
+            acctId = mbox.getAccountId();
+        } catch (ServiceException e) {
+            acctId = "<unknown>";
+        }
         if (active) { // use '_' as separator
-            return String.format("%s_%d_%d_%d", mbox.getAccountId(), folder.getId(), modseq, uvv);
+            return String.format("%s_%d_%d_%d", acctId, folder.getFolderIdInOwnerMailbox(), modseq, uvv);
         } else { // use ':' as a separator
-            return String.format("%s:%d:%d:%d", mbox.getAccountId(), folder.getId(), modseq, uvv);
+            return String.format("%s:%d:%d:%d", acctId, folder.getFolderIdInOwnerMailbox(), modseq, uvv);
         }
     }
 
