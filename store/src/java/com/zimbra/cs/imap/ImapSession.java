@@ -70,8 +70,8 @@ public class ImapSession extends ImapListener {
         void finishNotification(int changeId) throws IOException;
     }
 
-    ImapSession(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
-        super(i4folder, handler);
+    ImapSession(ImapMailboxStore imapStore, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
+        super(imapStore, i4folder, handler);
     }
 
     @Override
