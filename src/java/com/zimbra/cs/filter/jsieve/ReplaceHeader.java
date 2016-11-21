@@ -16,9 +16,12 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -104,6 +107,12 @@ public class ReplaceHeader extends AbstractCommand {
                                 }
                                 if (ehe.getNewValue() != null) {
                                     newHeaderValue = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), ehe.getNewValue());
+                                    if (isEncoded(header.getValue())) {
+                                        String []values = header.getValue().split("\\?");
+                                        String charset = values[1];
+                                        String encoding = values[2];
+                                        newHeaderValue = MimeUtility.encodeText(newHeaderValue, charset, encoding);
+                                    }
                                 } else {
                                     newHeaderValue = header.getValue();
                                 }
@@ -130,6 +139,8 @@ public class ReplaceHeader extends AbstractCommand {
             mailAdapter.updateIncomingBlob();
         } catch (MessagingException me) {
             throw new OperationException("replaceheader: Error occured while operating mime.", me);
+        } catch (UnsupportedEncodingException uee) {
+            throw new OperationException("replaceheader: Error occured while encoding header value.", uee);
         }
         return null;
     }
@@ -164,5 +175,15 @@ public class ReplaceHeader extends AbstractCommand {
             }
         }
         ehe.commonValidation();
+    }
+
+    private boolean isEncoded(String input) {
+        String regex = "=\\?.*\\?[BQ]{1}\\?.*\\?=";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+        if (matcher.matches()) {
+            return true;
+        }
+        return false;
     }
 }

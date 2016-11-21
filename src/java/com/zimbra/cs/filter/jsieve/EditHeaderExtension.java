@@ -16,10 +16,13 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -400,37 +403,42 @@ public class EditHeaderExtension {
      */
     public boolean matchCondition(ZimbraMailAdapter mailAdapter, Header header, int headerCount, String value, SieveContext context) throws LookupException, SieveException, MessagingException {
         boolean matchFound = false;
-        String unfoldedHeaderValue = MimeUtility.unfold(header.getValue());
+        String decodedHeaderValue = "";
+        try {
+            decodedHeaderValue =  MimeUtility.decodeText(header.getValue());
+        } catch (UnsupportedEncodingException uee) {
+            throw new MessagingException("Exception occured while decoding header value.", uee);
+        }
         if (this.comparator.equals(I_ASCII_NUMERIC)) {
             if (this.valueTag) {
                 switch (this.relationalComparator) {
                 case MatchRelationalOperators.GT_OP:
-                    if (Integer.valueOf(unfoldedHeaderValue) > Integer.valueOf(value)) {
+                    if (Integer.valueOf(decodedHeaderValue) > Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.GE_OP:
-                    if (Integer.valueOf(unfoldedHeaderValue) >= Integer.valueOf(value)) {
+                    if (Integer.valueOf(decodedHeaderValue) >= Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.LT_OP:
-                    if (Integer.valueOf(unfoldedHeaderValue) < Integer.valueOf(value)) {
+                    if (Integer.valueOf(decodedHeaderValue) < Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.LE_OP:
-                    if (Integer.valueOf(unfoldedHeaderValue) <= Integer.valueOf(value)) {
+                    if (Integer.valueOf(decodedHeaderValue) <= Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.EQ_OP:
-                    if (Integer.valueOf(unfoldedHeaderValue) == Integer.valueOf(value)) {
+                    if (Integer.valueOf(decodedHeaderValue) == Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.NE_OP:
-                    if (Integer.valueOf(unfoldedHeaderValue) != Integer.valueOf(value)) {
+                    if (Integer.valueOf(decodedHeaderValue) != Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
@@ -475,11 +483,11 @@ public class EditHeaderExtension {
             } else {
                 throw new SyntaxException(":value or :count not found for numeric operation in replaceheader.");
             }
-        } else if (this.is && ComparatorUtils.is(this.comparator, unfoldedHeaderValue, value, context)) {
+        } else if (this.is && ComparatorUtils.is(this.comparator, decodedHeaderValue, value, context)) {
             matchFound = true;
-        } else if (this.contains && ComparatorUtils.contains(this.comparator, unfoldedHeaderValue, value, context)) {
+        } else if (this.contains && ComparatorUtils.contains(this.comparator, decodedHeaderValue, value, context)) {
             matchFound = true;
-        } else if (this.matches && ComparatorUtils.matches(this.comparator, unfoldedHeaderValue, value, context)) {
+        } else if (this.matches && matchValue(value, decodedHeaderValue)) {
             matchFound = true;
         } else {
             ZimbraLog.filter.debug("Key: %s and Value: %s pair not matching requested criteria.", this.key, value);
@@ -592,5 +600,17 @@ public class EditHeaderExtension {
         // TODO Work on to create new ldap attribute and store all the immutable header names in that
         List<String> immutableHeaders = Arrays.asList(LC.sieve_immutable_headers.value().split(","));
         return immutableHeaders.contains(this.key) ? true : false;
+    }
+
+    /**
+     * @param regex
+     * @param value
+     * @return
+     */
+    private boolean matchValue(String regex, String value) {
+        regex = ComparatorUtils.sieveToJavaRegex(regex);
+        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(value);
+        return matcher.matches();
     }
 }

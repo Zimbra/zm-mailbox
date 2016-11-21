@@ -31,6 +31,7 @@ import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.MATCHES_TAG;
 import static org.apache.jsieve.tests.ComparatorTags.COMPARATOR_TAG;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -41,6 +42,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.Argument;
@@ -345,6 +347,15 @@ public class HeaderTest extends Header {
                 values = mailAdapter.getEnvelope(hn);
             } else {
                 values = Arrays.asList(mailAdapter.getMimeMessage().getHeader(hn));
+                List<String> decodedValues = new ArrayList<>();
+                for (String value : values) {
+                    try {
+                        decodedValues.add(MimeUtility.decodeText(value));
+                    } catch (UnsupportedEncodingException e) {
+                        throw new SieveMailException("Exception occured while decoding header value", e);
+                    }
+                }
+                values = decodedValues;
             }
             for (String sourceStr : values) {
                 for (Object key : keys) {
@@ -353,7 +364,7 @@ public class HeaderTest extends Header {
                         keyStr = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), keyStr);
                     }
                     String regex = FilterUtil.sieveToJavaRegex(keyStr);
-                    Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE|Pattern.DOTALL).matcher(sourceStr);
+                    Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(sourceStr);
                     if (matcher.find() && matcher.groupCount() > 0) {
                         int grpCount = matcher.groupCount();
                         for (int i = 0; i<=grpCount; ++i) {
