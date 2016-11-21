@@ -1205,13 +1205,12 @@ public class Mailbox implements MailboxStore {
         return mData.itemcacheCheckpoint;
     }
 
-    /** Returns the change sequence number for the most recent
-     *  transaction.  This will be either the change number for the
-     *  current transaction or, if no database changes have yet been
-     *  made in this transaction, the sequence number for the last
-     *  committed change.
-     *
+    /**
+     * Returns the change sequence number for the most recent transaction.  This will be either the change number
+     * for the current transaction or, if no database changes have yet been made in this transaction, the sequence
+     * number for the last committed change.
      * @see #getOperationChangeID */
+    @Override
     public int getLastChangeID() {
         return currentChange().changeId == MailboxChange.NO_CHANGE ? mData.lastChangeId : Math.max(mData.lastChangeId,
                         currentChange().changeId);
@@ -6536,13 +6535,17 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    public List<Integer> resetImapUid(OperationContext octxt, List<Integer> itemIds) throws ServiceException {
+    /**
+     * @return the list of new IMAP UIDs corresponding to the specified items
+     */
+    @Override
+    public List<Integer> resetImapUid(OpContext octxt, List<Integer> itemIds) throws ServiceException {
         SetImapUid redoRecorder = new SetImapUid(mId, itemIds);
 
         List<Integer> newIds = new ArrayList<Integer>();
         boolean success = false;
         try {
-            beginTransaction("resetImapUid", octxt, redoRecorder);
+            beginTransaction("resetImapUid", OperationContext.asOperationContext(octxt), redoRecorder);
             SetImapUid redoPlayer = (SetImapUid) currentChange().getRedoPlayer();
 
             for (int id : itemIds) {
