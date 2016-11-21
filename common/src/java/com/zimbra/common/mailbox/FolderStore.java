@@ -18,8 +18,6 @@ package com.zimbra.common.mailbox;
 
 import java.util.List;
 
-import com.zimbra.common.service.ServiceException;
-
 public interface FolderStore {
     /** Returns the folder's absolute path.  Paths are UNIX-style with <code>'/'</code> as the path delimiter.
      * Paths are relative to *  the user root folder, which has the path <code>"/"</code>.  So the Inbox's path is
@@ -31,6 +29,7 @@ public interface FolderStore {
      */
     public MailboxStore getMailboxStore();
     public String getName();
+    public ItemIdentifier getFolderItemIdentifier();
     public String getFolderIdAsString();
     public int getFolderIdInOwnerMailbox();
     public boolean isHidden();
@@ -50,14 +49,6 @@ public interface FolderStore {
     public int getImapMessageCount();
     /** @return number of unread items in folder, including IMAP \Deleted items */
     public int getImapUnreadCount();
-    /**
-     * Returns the number of messages in the folder that would be considered \Recent in an IMAP session.
-     * If there is currently a READ-WRITE IMAP session open on the folder, by definition all other IMAP connections
-     *  will see no \Recent messages.  <i>(Note that as such, this method should <u>not</u> be called by IMAP sessions
-     *  that have this folder selected.)</i>  Otherwise, it is the number of messages/chats/contacts added to the
-     *  folder, moved to the folder, or edited in the folder since the last such IMAP session.
-     */
-    public int getImapRECENT() throws ServiceException;
     /** Returns a counter that increments each time an item is added to the folder. */
     public int getImapUIDNEXT();
     /** Returns the change number of the last time
