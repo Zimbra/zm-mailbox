@@ -62,6 +62,8 @@ public abstract class ImapMailboxStore {
         return null;
     }
 
+    public abstract ImapListener createListener(ImapFolder i4folder, ImapHandler handler) throws ServiceException;
+
     public ImapFlag getFlagByName(String name) {
         return flags.getByImapName(name);
     }
