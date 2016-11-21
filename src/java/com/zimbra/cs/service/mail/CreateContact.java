@@ -306,6 +306,7 @@ public class CreateContact extends MailDocumentHandler  {
         if (!Strings.isNullOrEmpty(attachId)) {
             Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
             try {
+                ZimbraLog.contact.debug("start processing contact certificate with aid=%s for account=%s", attachId, zsc.getRequestedAccountId());
                 in = up.getInputStream();
                 byte[] certBytes = IOUtils.toByteArray(in);
                 // Load the certificate using Keystore just to make sure it is a valid certificate file.
