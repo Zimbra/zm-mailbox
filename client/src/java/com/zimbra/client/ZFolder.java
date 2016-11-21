@@ -443,22 +443,28 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     }
 
     @Override
-    public String getFolderIdAsString() {
-        return getId();
-    }
-
-    @Override
-    public int getFolderIdInOwnerMailbox() {
+    public ItemIdentifier getFolderItemIdentifier() {
         ItemIdentifier fId;
         try {
             fId = new ItemIdentifier(getFolderIdAsString(), null);
-            return fId.id;
+            return fId;
         } catch (ServiceException e) {
             ZimbraLog.mailbox.debug("Problem understanding folderId '%s' - assume hidden", getFolderIdAsString(), e);
             throw new RuntimeException(
                     String.format("Problem understanding folderId '%s' - assume hidden", getFolderIdAsString()), e);
         }
+    }
 
+    @Override
+    public String getFolderIdAsString() {
+        return getId();
+    }
+
+    /* TODO.  Explore what happens with shared folders. */
+    @Override
+    public int getFolderIdInOwnerMailbox() {
+        ItemIdentifier fId = this.getFolderItemIdentifier();
+        return fId.id;
     }
 
     /**
@@ -499,12 +505,6 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     @Override
     public boolean isDeletable() {
         throw new UnsupportedOperationException("ZFolder method not supported yet");
-    }
-
-    @Override
-    public int getImapRECENT() throws ServiceException {
-        ZimbraLog.mailbox.info("ZFolder.getImapRECENT always returns 0 currently");
-        return 0;
     }
 
     /**
