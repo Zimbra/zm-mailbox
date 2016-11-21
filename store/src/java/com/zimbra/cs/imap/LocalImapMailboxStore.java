@@ -25,6 +25,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
@@ -204,5 +205,20 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
 
     public Mailbox getMailbox() {
         return mailbox;
+    }
+
+    @Override
+    public int getImapRECENTCutoff(FolderStore folder) {
+        return ((Folder)folder).getImapRECENTCutoff();
+    }
+
+    @Override
+    public int getImapRECENT(OperationContext ctxt, FolderStore folder) throws ServiceException {
+        return mailbox.getImapRecent(ctxt, folder.getFolderIdInOwnerMailbox());
+    }
+
+    @Override
+    public List<ImapMessage> openImapFolder(OperationContext octxt, ItemIdentifier folderId) throws ServiceException {
+        return mailbox.openImapFolder(octxt, folderId.id);
     }
 }
