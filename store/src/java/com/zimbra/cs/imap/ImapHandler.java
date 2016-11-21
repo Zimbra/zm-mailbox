@@ -2406,7 +2406,8 @@ abstract class ImapHandler {
             } else if (i4folder != null && path.isEquivalent(i4folder.getPath())) {
                 recent = i4folder.getRecentCount();
             } else {
-                recent = folder.getImapRECENT();
+                ImapMailboxStore imapStore = path.getOwnerImapMailboxStore();
+                recent = imapStore.getImapRECENT(this.getContext(), folder);
             }
             uidnext = folder.isSearchFolder() ? -1 : folder.getImapUIDNEXT();
             uvv = folder.getUIDValidity();
