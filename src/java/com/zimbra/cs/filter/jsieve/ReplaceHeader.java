@@ -20,8 +20,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -107,12 +105,7 @@ public class ReplaceHeader extends AbstractCommand {
                                 }
                                 if (ehe.getNewValue() != null) {
                                     newHeaderValue = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), ehe.getNewValue());
-                                    if (isEncoded(header.getValue())) {
-                                        String []values = header.getValue().split("\\?");
-                                        String charset = values[1];
-                                        String encoding = values[2];
-                                        newHeaderValue = MimeUtility.encodeText(newHeaderValue, charset, encoding);
-                                    }
+                                    newHeaderValue = MimeUtility.fold(header.getName().length() + 2, MimeUtility.encodeText(newHeaderValue));
                                 } else {
                                     newHeaderValue = header.getValue();
                                 }
@@ -175,15 +168,5 @@ public class ReplaceHeader extends AbstractCommand {
             }
         }
         ehe.commonValidation();
-    }
-
-    private boolean isEncoded(String input) {
-        String regex = "=\\?.*\\?[BQ]{1}\\?.*\\?=";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
-        if (matcher.matches()) {
-            return true;
-        }
-        return false;
     }
 }

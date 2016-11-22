@@ -403,9 +403,9 @@ public class EditHeaderExtension {
      */
     public boolean matchCondition(ZimbraMailAdapter mailAdapter, Header header, int headerCount, String value, SieveContext context) throws LookupException, SieveException, MessagingException {
         boolean matchFound = false;
-        String decodedHeaderValue = "";
+        String unfoldedAndDecodedHeaderValue = "";
         try {
-            decodedHeaderValue =  MimeUtility.decodeText(header.getValue());
+            unfoldedAndDecodedHeaderValue =  MimeUtility.decodeText(MimeUtility.unfold(header.getValue()));
         } catch (UnsupportedEncodingException uee) {
             throw new MessagingException("Exception occured while decoding header value.", uee);
         }
@@ -413,32 +413,32 @@ public class EditHeaderExtension {
             if (this.valueTag) {
                 switch (this.relationalComparator) {
                 case MatchRelationalOperators.GT_OP:
-                    if (Integer.valueOf(decodedHeaderValue) > Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) > Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.GE_OP:
-                    if (Integer.valueOf(decodedHeaderValue) >= Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) >= Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.LT_OP:
-                    if (Integer.valueOf(decodedHeaderValue) < Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) < Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.LE_OP:
-                    if (Integer.valueOf(decodedHeaderValue) <= Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) <= Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.EQ_OP:
-                    if (Integer.valueOf(decodedHeaderValue) == Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) == Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
                 case MatchRelationalOperators.NE_OP:
-                    if (Integer.valueOf(decodedHeaderValue) != Integer.valueOf(value)) {
+                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) != Integer.valueOf(value)) {
                         matchFound = true;
                     }
                     break;
@@ -483,11 +483,11 @@ public class EditHeaderExtension {
             } else {
                 throw new SyntaxException(":value or :count not found for numeric operation in replaceheader.");
             }
-        } else if (this.is && ComparatorUtils.is(this.comparator, decodedHeaderValue, value, context)) {
+        } else if (this.is && ComparatorUtils.is(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
-        } else if (this.contains && ComparatorUtils.contains(this.comparator, decodedHeaderValue, value, context)) {
+        } else if (this.contains && ComparatorUtils.contains(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
-        } else if (this.matches && matchValue(value, decodedHeaderValue)) {
+        } else if (this.matches && matchValue(value, unfoldedAndDecodedHeaderValue)) {
             matchFound = true;
         } else {
             ZimbraLog.filter.debug("Key: %s and Value: %s pair not matching requested criteria.", this.key, value);

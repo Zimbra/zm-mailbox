@@ -350,7 +350,7 @@ public class HeaderTest extends Header {
                 List<String> decodedValues = new ArrayList<>();
                 for (String value : values) {
                     try {
-                        decodedValues.add(MimeUtility.decodeText(value));
+                        decodedValues.add(MimeUtility.decodeText(MimeUtility.unfold(value)));
                     } catch (UnsupportedEncodingException e) {
                         throw new SieveMailException("Exception occured while decoding header value", e);
                     }
