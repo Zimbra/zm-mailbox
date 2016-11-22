@@ -105,7 +105,7 @@ public class ReplaceHeader extends AbstractCommand {
                                 }
                                 if (ehe.getNewValue() != null) {
                                     newHeaderValue = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), ehe.getNewValue());
-                                    newHeaderValue = MimeUtility.fold(header.getName().length() + 2, MimeUtility.encodeText(newHeaderValue));
+                                    newHeaderValue = MimeUtility.fold(newHeaderName.length() + 2, MimeUtility.encodeText(newHeaderValue));
                                 } else {
                                     newHeaderValue = header.getValue();
                                 }
