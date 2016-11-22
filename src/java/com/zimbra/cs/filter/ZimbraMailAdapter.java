@@ -56,6 +56,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionEreject;
@@ -96,6 +97,9 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private Map<String, String> variables = new HashMap<String, String>();
     private List<String> matchedValues = new ArrayList<String>();
 
+    public enum VARIABLETYPE { UNKNOWN, OFF, AVAILABLE};
+    private VARIABLETYPE variablesExtAvailable = VARIABLETYPE.UNKNOWN;
+
     /**
      * Keeps track of folders into which we filed messages, so we don't file twice
      * (RFC 3028 2.10.3).
@@ -126,6 +130,19 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     public ZimbraMailAdapter(Mailbox mailbox, FilterHandler handler) {
         this.mailbox = mailbox;
         this.handler = handler;
+
+        try {
+            Account account = getMailbox().getAccount();
+            boolean variablesExtAvailable = Provisioning.getInstance().getServer(account)
+                    .getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, true);
+            if (variablesExtAvailable) {
+                this.setVariablesExtAvailable(VARIABLETYPE.AVAILABLE);
+            } else {
+                this.setVariablesExtAvailable(VARIABLETYPE.OFF);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
+        }
     }
 
     public void setAllowFilterToMountpoint(boolean allowFilterToMountpoint) {
@@ -814,4 +831,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             ctxt.setIncomingBlob(blob);
         }
     }
+
+    public void clearValues() {
+        matchedValues.clear();
+        variables.clear();
+    }
+
+    public VARIABLETYPE getVariablesExtAvailable() { return variablesExtAvailable; }
+    public void setVariablesExtAvailable(VARIABLETYPE type) { this.variablesExtAvailable = type; }
 }

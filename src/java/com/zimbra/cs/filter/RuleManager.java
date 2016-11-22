@@ -23,6 +23,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ErejectException;
+import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -215,6 +216,7 @@ public final class RuleManager {
         Node node = (Node) account.getCachedData(rulesCacheKey);
         if (node == null) {
             String script = getRules(account, sieveScriptAttrName);
+            String debugScript = script;
             if (useAdminRule) {
                 /*
                  * Sandwitches the user-defined sieve rule
@@ -223,23 +225,47 @@ public final class RuleManager {
                 StringBuilder requiresPart = new StringBuilder();
                 String adminRuleBefore = getRules(account, adminRuleBeforeAttrName);
                 String adminRuleAfter  = getRules(account, adminRuleAfterAttrName);
+                String debugAdminRuleBefore = adminRuleBefore;
+                String debugAdminRuleAfter  = adminRuleAfter;
 
                 if (adminRuleBefore == null) {
+                    debugAdminRuleBefore = "";
                     adminRuleBefore = "";
+                } else {
+                    List<String> splits = splitScript(adminRuleBefore);
+                    requiresPart.append(splits.get(0));
+                    debugAdminRuleBefore = splits.get(1);;
+                    if (SetVariable.getZimbraAdminSieveFeatureVariablesEnabled(account)) {
+                        adminRuleBefore = "\nzimbravariablesctrl :on;\n" + splits.get(1);
+                    } else {
+                        adminRuleBefore = "\nzimbravariablesctrl :off;\n" + splits.get(1);
+                    }
                 }
                 if (script == null) {
+                    debugScript = "";
                     script = "";
                 } else if (!adminRuleBefore.isEmpty()) {
                     List<String> splits = splitScript(script);
                     requiresPart.append(splits.get(0));
-                    script = splits.get(1);
+                    debugScript = splits.get(1);
+                    if (SetVariable.getZimbraSieveFeatureVariablesEnabled(account)) {
+                        script = "\nzimbravariablesctrl :reset :on;\n" + splits.get(1);
+                    } else {
+                        script = "\nzimbravariablesctrl :reset :off;\n" + splits.get(1);
+                    }
                 }
                 if (adminRuleAfter == null) {
+                    debugAdminRuleAfter = "";
                     adminRuleAfter = "";
                 } else if (!adminRuleBefore.isEmpty() || !script.isEmpty()) {
                     List<String> splits = splitScript(adminRuleAfter);
                     requiresPart.append(splits.get(0));
-                    adminRuleAfter = splits.get(1);
+                    debugAdminRuleAfter = splits.get(1);
+                    if (SetVariable.getZimbraAdminSieveFeatureVariablesEnabled(account)) {
+                        adminRuleAfter = "\nzimbravariablesctrl :reset :on;\n" + splits.get(1);
+                    } else {
+                        adminRuleAfter = "\nzimbravariablesctrl :reset :off;\n" + splits.get(1);
+                    }
                 }
                 /*
                  * Since "require" is only allowed before other commands,
@@ -249,11 +275,12 @@ public final class RuleManager {
                  * "require" commands multiple times.
                  */
                 script = requiresPart.toString() + adminRuleBefore + script + adminRuleAfter;
+                debugScript = requiresPart.toString() + "# AdminBefore script\n" + debugAdminRuleBefore + "# End user script\n" + debugScript + "# AdminAfter script\n" + debugAdminRuleAfter;
             }
             if (script == null) {
                 script = "";
             }
-            ZimbraLog.filter.debug("filterType[%s] useAdminRule[%s] rule[%s]", filterType == FilterType.INCOMING ? "incoming" : "outgoing", useAdminRule ? "true" : "false", script);
+            ZimbraLog.filter.debug("filterType[%s] useAdminRule[%s] rule[%s]", filterType == FilterType.INCOMING ? "incoming" : "outgoing", useAdminRule ? "true" : "false", debugScript);
             node = parse(script);
             account.setCachedData(rulesCacheKey, node);
         }
