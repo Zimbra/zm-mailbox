@@ -36,6 +36,7 @@ import java.io.Writer;
 import java.net.Socket;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -46,12 +47,23 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 
+import com.google.common.collect.Maps;
+import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.datasource.imap.ImapAppender;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConfig;
@@ -83,11 +95,13 @@ public class TestImapClient {
 
     private static final Logger LOG = Logger.getLogger(TestImapClient.class);
 
-    private static final String HOST = "localhost";
-    private static final int PORT = 7143;
-    private static final int SSL_PORT = 7993;
-    private static final String USER = "user1";
+    private static final String USER = "TestImapClient-user1";
     private static final String PASS = "test123";
+
+    private static SoapProvisioning sp;
+    private static Provisioning prov;
+    private static Server homeServer;
+    private static String[] imapServersForLocalhost = null;
 
     private static final String MESSAGE =
         "Return-Path: dac@zimbra.com\r\n" +
@@ -97,19 +111,54 @@ public class TestImapClient {
         "\r\n" +
         "This is a test message.\r\n";
 
-    static {
+    @BeforeClass
+    public static void beforeClass() throws Exception {
         BasicConfigurator.configure();
         Logger.getRootLogger().setLevel(Level.INFO);
         LOG.setLevel(Level.DEBUG);
+        sp = new SoapProvisioning();
+        prov = Provisioning.getInstance();
+        homeServer = prov.getLocalServer();
+        sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + homeServer.getServiceHostname() + ":" + homeServer.getAdminPort()
+                + AdminConstants.ADMIN_SERVICE_URI);
+        sp.soapZimbraAdminAuthenticate();
+
+        //preserve settings
+        imapServersForLocalhost = homeServer.getReverseProxyUpstreamImapServers();
+        homeServer.setReverseProxyUpstreamImapServers(new String[] {});
+        sp.flushCache("all", null, true);
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        if(homeServer != null) {
+            homeServer.setReverseProxyUpstreamImapServers(imapServersForLocalhost);
+        }
     }
 
     @After
     public void tearDown() throws Exception {
+        cleanup();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        cleanup();
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraMailHost, homeServer.getServiceHostname());
+        attrs.put(Provisioning.A_zimbraFeatureIMEnabled, ProvisioningConstants.TRUE);
+        TestUtil.createAccount(USER, attrs);
+    }
+
+    private void cleanup() throws Exception {
         if (connection != null) {
             connection.close();
         }
         config = null;
         connection = null;
+        if(TestUtil.accountExists(USER)) {
+            TestUtil.deleteAccount(USER);
+        }
     }
 
     @Test
@@ -191,7 +240,7 @@ public class TestImapClient {
         });
         assertTrue(connection.isIdling());
         // Send test message
-        sendTestMessage();
+        TestUtil.addMessage(TestUtil.getZMailbox(USER), "TestImapClient testIdle");
         // Wait for message delivery...
         synchronized (exists) {
             while (exists.get() <= 0) {
@@ -203,35 +252,6 @@ public class TestImapClient {
         // Check mailbox status
         MailboxInfo mb = connection.getMailboxInfo();
         assertEquals(mb.getExists(), exists.get());
-    }
-
-    private void sendTestMessage() throws IOException {
-        Socket sock = new Socket("localhost", 7025);
-        Writer out = new OutputStreamWriter(sock.getOutputStream());
-        BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-        smtpSend(in, out, "LHLO localhost");
-        smtpSend(in, out, "MAIL FROM: <user1@localhost>");
-        smtpSend(in, out, "RCPT TO: <user1>");
-        smtpSend(in, out, "DATA");
-        smtpSend(in, out, "Hello, world\r\n.\r\n");
-        smtpSend(in, out, "QUIT");
-    }
-
-    private static void smtpSend(BufferedReader in, Writer out, String cmd) throws IOException {
-        System.out.println("SMTP C: " + cmd);
-        out.write(cmd);
-        out.write("\r\n");
-        out.flush();
-        String line;
-        while ((line = in.readLine()) != null) {
-            System.out.println("SMTP S: " + line);
-            if (line.matches("5.. .*")) {
-                throw new IOException("SMTP command failed: " + line);
-            }
-            if (!line.matches("2..-.*")) {
-                return;
-            }
-        }
     }
 
     @Test
@@ -326,10 +346,11 @@ public class TestImapClient {
         assertNotNull(id1);
         assertEquals("Zimbra", id1.get(IDInfo.NAME));
         IDInfo id2 = connection.id(new IDInfo());
-        assertEquals(id1, id2);
+        assertEquals(id1.get(IDInfo.NAME), id2.get(IDInfo.NAME));
+        assertEquals(id1.get(IDInfo.VERSION), id2.get(IDInfo.VERSION));
     }
 
-    @Test
+    @Ignore ("deprecated")
     public void testYahoo() throws Exception {
         ImapConfig config = new ImapConfig();
         config.getLogger().setLevel(Log.Level.trace);
@@ -346,7 +367,7 @@ public class TestImapClient {
         createTestMailbox("Large", 10000);
     }
 
-    @Test
+    @Ignore ("deprecated")
     public void testGMailAppend() throws Exception {
         ImapConfig config = new ImapConfig();
         config.getLogger().setLevel(Log.Level.trace);
@@ -530,13 +551,13 @@ public class TestImapClient {
         connection.connect();
     }
 
-    private static ImapConfig getConfig(MailConfig.Security security) {
-        ImapConfig config = new ImapConfig(HOST);
-        config.setPort(PORT);
+    private ImapConfig getConfig(MailConfig.Security security) {
+        ImapConfig config = new ImapConfig(homeServer.getServiceHostname());
+        config.setPort(homeServer.getImapBindPort());
         if (security != null) {
             config.setSecurity(security);
             if (security == MailConfig.Security.SSL) {
-                config.setPort(SSL_PORT);
+                config.setPort(homeServer.getImapSSLBindPort());
                 config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
             }
         }
