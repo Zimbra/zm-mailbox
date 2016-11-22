@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.client.ZMailboxLock;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -606,4 +607,84 @@ public class MailboxLockTest {
         mbox.lock.release();
     }
 
+    @Test
+    public void testZMailboxReenter() throws Exception {
+        ZMailboxLock lock = new ZMailboxLock(1, 1);
+        for (int i = 0; i < 3; i++) {
+            lock.lock();
+        }
+        Assert.assertEquals(3, lock.getHoldCount());
+        for (int i = 0; i < 3; i++) {
+            lock.release();
+        }
+        Assert.assertEquals(0, lock.getHoldCount());
+    }
+
+    @Test
+    public void testZMailboxLockTimeout() throws Exception {
+        int maxNumThreads = 3;
+        int timeout = 0;
+        ZMailboxLock lock = new ZMailboxLock(maxNumThreads, timeout);
+        Thread thread = new Thread(String.format("MailboxLockTest-ZMailbox")) {
+            @Override
+            public void run() {
+                lock.lock();
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } finally {
+                    lock.release();
+                }
+            }
+        };
+        thread.setDaemon(true);
+        thread.start();
+        Thread.sleep(100);
+        try {
+            lock.lock();
+            Assert.fail("should not be able to acquire the lock; should time out");
+        } catch (com.zimbra.client.ZMailboxLock.LockFailedException e) {
+            Assert.assertTrue(e.getMessage().startsWith("lock timeout"));
+        }
+        thread.join();
+    }
+
+    @Test
+    public void testZMailboxLockTooManyWaiters() throws Exception {
+        int maxNumThreads = 3;
+        int timeout = 10;
+        ZMailboxLock lock = new ZMailboxLock(maxNumThreads, timeout);
+        final Set<Thread> threads = new HashSet<Thread>();
+        for (int i = 0; i < maxNumThreads + 1; i++) {
+            // one thread will acquire the lock, 3 will wait
+            Thread thread = new Thread(String.format("MailboxLockTest-ZMailbox-%s", i)) {
+                @Override
+                public void run() {
+                    lock.lock();
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    lock.release();
+                }
+            };
+            thread.setDaemon(true);
+            threads.add(thread);
+        }
+        for (Thread t: threads) {
+            t.start();
+        }
+        Thread.sleep(100);
+        try {
+            lock.lock();
+            Assert.fail("should not be able to acquire lock due to too many waiting threads");
+        } catch (com.zimbra.client.ZMailboxLock.LockFailedException e) {
+            Assert.assertTrue(e.getMessage().startsWith("too many waiters"));
+        }
+        for (Thread t: threads) {
+            t.join();
+        }
+    }
 }
