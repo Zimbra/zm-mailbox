@@ -1788,6 +1788,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
+     * RFC 5229 in the admin-defined sieve rules.
+     *
+     * @return zimbraAdminSieveFeatureVariablesEnabled, or true if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public boolean isAdminSieveFeatureVariablesEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, true);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
+     * RFC 5229 in the admin-defined sieve rules.
+     *
+     * @param zimbraAdminSieveFeatureVariablesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public void setAdminSieveFeatureVariablesEnabled(boolean zimbraAdminSieveFeatureVariablesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, zimbraAdminSieveFeatureVariablesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
+     * RFC 5229 in the admin-defined sieve rules.
+     *
+     * @param zimbraAdminSieveFeatureVariablesEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public Map<String,Object> setAdminSieveFeatureVariablesEnabled(boolean zimbraAdminSieveFeatureVariablesEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, zimbraAdminSieveFeatureVariablesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
+     * RFC 5229 in the admin-defined sieve rules.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public void unsetAdminSieveFeatureVariablesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
+     * RFC 5229 in the admin-defined sieve rules.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public Map<String,Object> unsetAdminSieveFeatureVariablesEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, "");
+        return attrs;
+    }
+
+    /**
      * URL prefix for where the zimbraAdmin app resides on this server
      *
      * @return zimbraAdminURL, or "/zimbraAdmin" if unset
@@ -63217,7 +63294,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229.
+     * RFC 5229 in the user-defined sieve rule.
      *
      * @return zimbraSieveFeatureVariablesEnabled, or true if unset
      *
@@ -63230,7 +63307,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229.
+     * RFC 5229 in the user-defined sieve rule.
      *
      * @param zimbraSieveFeatureVariablesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -63246,7 +63323,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229.
+     * RFC 5229 in the user-defined sieve rule.
      *
      * @param zimbraSieveFeatureVariablesEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -63263,7 +63340,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229.
+     * RFC 5229 in the user-defined sieve rule.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -63278,7 +63355,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229.
+     * RFC 5229 in the user-defined sieve rule.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
