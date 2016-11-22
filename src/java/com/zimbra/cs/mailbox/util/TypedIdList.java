@@ -31,6 +31,7 @@ public final class TypedIdList implements Iterable<Map.Entry<MailItem.Type, List
         int id;
         String uuid;
         int modSequence;
+        String prev_folders;
 
         public ItemInfo(int id, String uuid) {
             this.id = id;
@@ -40,6 +41,11 @@ public final class TypedIdList implements Iterable<Map.Entry<MailItem.Type, List
         public ItemInfo(int id, String uuid, int modSequence) {
             this(id, uuid);
             this.modSequence = modSequence;
+        }
+
+        public ItemInfo(int id, String uuid, int modSequence, String prevFolders) {
+            this(id, uuid, modSequence);
+            this.prev_folders = prevFolders;
         }
 
         public int getId() {
@@ -52,6 +58,10 @@ public final class TypedIdList implements Iterable<Map.Entry<MailItem.Type, List
 
         public int getModSequence() {
             return this.modSequence;
+        }
+
+        public String getPrevFolders() {
+            return this.prev_folders;
         }
     }
 
@@ -86,6 +96,17 @@ public final class TypedIdList implements Iterable<Map.Entry<MailItem.Type, List
             type2ids.put(type, items = new ArrayList<ItemInfo>(1));
         }
         items.add(new ItemInfo(id, uuid, modSequence));
+    }
+
+    public void add(MailItem.Type type, Integer id, String uuid, int modSequence, String prevFolders) {
+        if (id == null)
+            return;
+
+        List<ItemInfo> items = type2ids.get(type);
+        if (items == null) {
+            type2ids.put(type, items = new ArrayList<ItemInfo>(1));
+        }
+        items.add(new ItemInfo(id, uuid, modSequence, prevFolders));
     }
 
     /** Adds all contents of another TypedIdList to this TypedIdList. */

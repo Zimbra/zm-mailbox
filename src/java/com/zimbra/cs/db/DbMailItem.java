@@ -2751,7 +2751,7 @@ public class DbMailItem {
             String typeConstraint = type == MailItem.Type.UNKNOWN ? "type NOT IN " + NON_SYNCABLE_TYPES : typeIn(type);
             String dateConstraint = sinceDate > 0 ? "date > ? AND " : "";
             StringBuilder buf = new StringBuilder();
-            buf.append("SELECT id, type, folder_id, uuid, mod_metadata" +
+            buf.append("SELECT id, type, folder_id, uuid, mod_metadata, prev_folders" +
                 " FROM " + getMailItemTableName(mbox) +
                 " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + dateConstraint + typeConstraint +
                 " ORDER BY mod_metadata, id");
@@ -2778,7 +2778,7 @@ public class DbMailItem {
         }
     }
 
-    public static  List<Map<String,String>> getItemsChangedSinceDate(Mailbox mbox,
+    public static Pair<List<Map<String,String>>, TypedIdList> getItemsChangedSinceDate(Mailbox mbox,
         MailItem.Type type,  int changeDate, Set<Integer> visible)
         throws ServiceException {
         int lastDeleteSync = -1;
@@ -2787,14 +2787,14 @@ public class DbMailItem {
                 null);
         }
         List<Map<String,String>> idList = new ArrayList<Map<String,String>>();
-
+        TypedIdList missed = new TypedIdList();
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             String typeConstraint = type == MailItem.Type.UNKNOWN ? "type NOT IN "
                 + NON_SYNCABLE_TYPES : typeIn(type);
             String dateConstraint = changeDate > 0 ? "change_date > ? AND " : "";
-            stmt = conn.prepareStatement("SELECT id, type, parent_id, folder_id, prev_folders, date, mod_metadata, change_date" + " FROM "
+            stmt = conn.prepareStatement("SELECT id, type, parent_id, folder_id, prev_folders, date, mod_metadata, change_date, uuid" + " FROM "
                 + getMailItemTableName(mbox) + " WHERE " + IN_THIS_MAILBOX_AND
                 + dateConstraint + typeConstraint
                 + " ORDER BY mod_metadata, id");
@@ -2827,7 +2827,7 @@ public class DbMailItem {
                     } else {
                         int modSeq = rs.getInt(6);
                         if (modSeq > lastDeleteSync) {
-                            idList.add(resultData);
+                            missed.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1), rs.getString(9), modSeq, rs.getString(5));
                         }
                     }
                 }
@@ -2841,7 +2841,7 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
 
-        return idList;
+        return new Pair<List<Map<String,String>>, TypedIdList>(idList, missed);
     }
 
     /**
@@ -2866,7 +2866,7 @@ public class DbMailItem {
                 } else {
                     int modSeq = rs.getInt(5);
                     if (modSeq > lastDeleteSync) {
-                        missed.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1), rs.getString(4), modSeq);
+                        missed.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1), rs.getString(4), modSeq, rs.getString(6));
                     }
                 }
             }
