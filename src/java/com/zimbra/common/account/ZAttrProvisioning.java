@@ -3001,6 +3001,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminSavedSearches = "zimbraAdminSavedSearches";
 
     /**
+     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
+     * RFC 5229 in the admin-defined sieve rules.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2098)
+    public static final String A_zimbraAdminSieveFeatureVariablesEnabled = "zimbraAdminSieveFeatureVariablesEnabled";
+
+    /**
      * URL prefix for where the zimbraAdmin app resides on this server
      */
     @ZAttr(id=497)
@@ -15014,7 +15023,7 @@ public class ZAttrProvisioning {
 
     /**
      * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229.
+     * RFC 5229 in the user-defined sieve rule.
      *
      * @since ZCS 8.7.0
      */
