@@ -21,6 +21,7 @@ import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationCallback;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.SingleAccountSource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.ZimbraMigrationCallback;
+import com.zimbra.cs.extension.ExtensionUtil;
 
 /**
  * Command-line utility to migrate attributes to ephemeral storage
@@ -63,6 +64,7 @@ public class AttributeMigrationUtil {
         AttributeMigration migration = new AttributeMigration(attrsToMigrate, numThreads);
         MigrationCallback callback;
         if (!dryRun) {
+            initEphemeralExtensions();
             callback = new ZimbraMigrationCallback();
         } else {
             callback = new DryRunMigrationCallback();
@@ -81,6 +83,10 @@ public class AttributeMigrationUtil {
             migration.setDeleteOriginal(false);
         }
         migration.migrateAllAccounts();
+    }
+
+    private static void initEphemeralExtensions() {
+        ExtensionUtil.init("com.zimbra.ssdb.SSDBEphemeralStoreExtension");
     }
 
     private static void usage() {
