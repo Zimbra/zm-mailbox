@@ -248,7 +248,7 @@ public class TestImapClient {
         connection.stopIdle();
         // Check mailbox status
         MailboxInfo mb = connection.getMailboxInfo();
-        assertEquals("got wrong number of messages", mb.getExists(), exists.get());
+        assertEquals(String.format("got wrong number of messages. mb.getExists(): %d. exists.get(): %d", mb.getExists(), exists.get()), mb.getExists(), exists.get());
     }
 
     @Test
