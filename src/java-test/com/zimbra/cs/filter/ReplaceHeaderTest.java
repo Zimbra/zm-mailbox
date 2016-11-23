@@ -61,6 +61,59 @@ public class ReplaceHeaderTest {
             + "from: test2@zimbra.com\n"
             + "Subject: example\n"
             + "to: test@zimbra.com\n";
+    private static String sampleBaseMsg2 = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
+            + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
+            + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+            + "Received: from localhost (localhost [127.0.0.1])\n"
+            + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
+            + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+            + "X-Test-Header: line1\n"
+            + "\tline2\n"
+            + "\tline3\n"
+            + "X-Spam-Score: 85\n"
+            + "from: test2@zimbra.com\n"
+            + "Subject: example\n"
+            + "to: test@zimbra.com\n";
+    private static String sampleBaseMsg3 = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
+            + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
+            + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+            + "Received: from localhost (localhost [127.0.0.1])\n"
+            + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
+            + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+            + "X-Test-Header: =?utf-8?B?W1NQQU1d5pel5pys6Kqe44Gu5Lu25ZCN?=\n"
+            + "X-Spam-Score: 85\n"
+            + "from: test2@zimbra.com\n"
+            + "Subject: example\n"
+            + "to: test@zimbra.com\n";
+    private static String sampleBaseMsg4 = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
+            + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
+            + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+            + "Received: from localhost (localhost [127.0.0.1])\n"
+            + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
+            + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+            + "X-Test-Header: =?utf-8?B?W1NQQU1d5pel5\r\n\tpys6Kqe44Gu5Lu25ZCN?=\n"
+            + "X-Spam-Score: 85\n"
+            + "from: test2@zimbra.com\n"
+            + "Subject: example\n"
+            + "to: test@zimbra.com\n";
+    private static String sampleBaseMsg5 = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
+            + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
+            + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+            + "Received: from localhost (localhost [127.0.0.1])\n"
+            + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
+            + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+            + "X-Test-Header: =?utf-8?B?44GT44KM44Gv6KSH5pWw6KGM44Gr5rih44KL?=\n"
+            + "\t=?utf-8?B?5Lu25ZCN44Gn44GZ44CC5Lu25ZCN44Gv44Kt?=\n"
+            + "\t=?utf-8?B?44Oj44Op44Kv44K/44O844K744OD44OI44GM?=\n"
+            + "\t=?utf-8?B?44Om44O844OG44Kj44O844Ko44OV44Ko44Kk?=\n"
+            + "\t=?utf-8?B?44OI44Gn44CB44OZ44O844K55YWt5Y2B5Zub?=\n"
+            + "\t=?utf-8?B?44Gn44Ko44Oz44Kz44O844OJ44GV44KM44G+?=\n"
+            + "\t=?utf-8?B?44GZ44CC6KGM44GM6ZW344GE44Gu44Gn44CB?=\n"
+            + "\t=?utf-8?B?5oqY44KK5puy44GS44KJ44KM44G+44GZ44CC?=\n"
+            + "X-Spam-Score: 85\n"
+            + "from: test2@zimbra.com\n"
+            + "Subject: example\n"
+            + "to: test@zimbra.com\n";
 
     @BeforeClass
     public static void init() throws Exception {
@@ -460,6 +513,159 @@ public class ReplaceHeaderTest {
                 }
             }
             Assert.assertEquals("[SPAM]example", subjectValue);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace header with multiline valued header
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderForMultilineValuedHeader() {
+        try {
+            String filterScript = "require [\"editheader\", \"variables\"];\n"
+                    +"        replaceheader :newvalue \"${1}[test]${2}\" :matches \"X-Test-Header\" \"*line2*\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg2.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String headerValue = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test-Header".equals(header.getName())) {
+                    headerValue = header.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals("line1 [test] line3", headerValue);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace encoded header value
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderForEncodedHeaderValue() {
+        try {
+            String filterScript = "require [\"editheader\", \"variables\"];\n"
+                    +"        replaceheader :newvalue \"[test]${1}\" :matches \"X-Test-Header\" \"*\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg3.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String headerValue = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test-Header".equals(header.getName())) {
+                    headerValue = header.getValue();
+                    break;
+                }
+            }
+            String matchValue = "=?UTF-8?Q?[test][SP?=\r\n"
+                    + " =?UTF-8?Q?AM]=E6=97=A5=E6=9C=AC=E8=AA=9E=E3=81=AE=E4=BB=B6=E5=90=8D?=";
+            Assert.assertEquals(matchValue, headerValue);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace invalid encoded multiline header value
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderForInvalidEncodedMultilineHeaderValue() {
+        try {
+            String filterScript = "require [\"editheader\", \"variables\"];\n"
+                    +"        replaceheader :newvalue \"[test]${1}\" :matches \"X-Test-Header\" \"*\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg4.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String headerValue = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test-Header".equals(header.getName())) {
+                    headerValue = header.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals("[test]=?utf-8?B?W1NQQU1d5pel5 pys6Kqe44Gu5Lu25ZCN?=", headerValue);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace valid encoded multiline header value
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderForValidEncodedMultilineHeaderValue() {
+        try {
+            String filterScript = "require [\"editheader\", \"variables\"];\n"
+                    +"        replaceheader :newvalue \"[test]${1}\" :matches \"X-Test-Header\" \"*\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg5.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String headerValue = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test-Header".equals(header.getName())) {
+                    headerValue = header.getValue();
+                    break;
+                }
+            }
+            String matchValue = "=?UTF-8?B?W3Rlc3Rd44GT44KM44Gv6KSH5pWw6KGM44Gr5rih44KL5Lu25ZCN44Gn44GZ?=\r\n"
+                    + " =?UTF-8?B?44CC5Lu25ZCN44Gv44Kt44Oj44Op44Kv44K/44O8?=\r\n"
+                    + " =?UTF-8?B?44K744OD44OI44GM44Om44O844OG44Kj44O844Ko?=\r\n"
+                    + " =?UTF-8?B?44OV44Ko44Kk44OI44Gn44CB44OZ44O844K5?=\r\n"
+                    + " =?UTF-8?B?5YWt5Y2B5Zub44Gn44Ko44Oz44Kz44O844OJ44GV?=\r\n"
+                    + " =?UTF-8?B?44KM44G+44GZ44CC6KGM44GM6ZW344GE44Gu44Gn?=\r\n"
+                    + " =?UTF-8?B?44CB5oqY44KK5puy44GS44KJ44KM44G+44GZ44CC?=";
+            Assert.assertEquals(matchValue, headerValue);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
