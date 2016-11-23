@@ -406,7 +406,10 @@ public class EditHeaderExtension {
         String unfoldedAndDecodedHeaderValue = "";
         try {
             unfoldedAndDecodedHeaderValue =  MimeUtility.decodeText(MimeUtility.unfold(header.getValue()));
+            ZimbraLog.filter.debug("Header value before unfolding and decoding: %s", header.getValue());
+            ZimbraLog.filter.debug("Header value after unfolding and decoding: %s", unfoldedAndDecodedHeaderValue);
         } catch (UnsupportedEncodingException uee) {
+            ZimbraLog.filter.debug("Failed to decode \"%s\"", MimeUtility.unfold(header.getValue()));
             throw new MessagingException("Exception occured while decoding header value.", uee);
         }
         if (this.comparator.equals(I_ASCII_NUMERIC)) {

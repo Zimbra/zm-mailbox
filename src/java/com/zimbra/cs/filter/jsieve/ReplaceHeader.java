@@ -18,6 +18,7 @@ package com.zimbra.cs.filter.jsieve;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -94,7 +95,9 @@ public class ReplaceHeader extends AbstractCommand {
                 if (header.getName().equalsIgnoreCase(ehe.getKey())){
                     matchIndex++;
                     if (ehe.getIndex() == null || (ehe.getIndex() != null && ehe.getIndex() == matchIndex)) {
+                        ZimbraLog.filter.debug("replaceheader: header before processing\n%d  %s: %s", matchIndex, header.getName(), header.getValue());
                         for (String value : ehe.getValueList()) {
+                            ZimbraLog.filter.debug("replaceheader: working with %s value", value);
                             replace = ehe.matchCondition(mailAdapter, header, headerCount, value, sieveContext);
                             if (replace) {
                                 if (ehe.getNewName() != null) {
@@ -108,6 +111,7 @@ public class ReplaceHeader extends AbstractCommand {
                                 } else {
                                     newHeaderValue = header.getValue();
                                 }
+                                ZimbraLog.filter.debug("replaceheader: header after processing\n%s: %s", newHeaderName, newHeaderValue);
                                 header = new Header(newHeaderName, newHeaderValue);
                                 break;
                             }
@@ -152,14 +156,18 @@ public class ReplaceHeader extends AbstractCommand {
         if (ehe.getKey() == null || ehe.getValueList() == null) {
             throw new SyntaxException("replaceheader: key or value not found in replaceheader.");
         }
+        ZimbraLog.filter.debug("replaceheader: header key in sieve script = %s", ehe.getKey());
+        ZimbraLog.filter.debug("replaceheader: header values in sieve script = %s", Arrays.toString(ehe.getValueList().toArray()));
 
         // character set validation
         if (ehe.getNewName() != null) {
+            ZimbraLog.filter.debug("replaceheader: new header name in sieve script = %s", ehe.getNewName());
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(ehe.getNewName(), CharsetUtil.US_ASCII))) {
                 throw new SyntaxException("replaceheader: newname must be printable ASCII only in replaceheader.");
             }
         }
         if (ehe.getNewValue() != null) {
+            ZimbraLog.filter.debug("replaceheader: new header vlaue in sieve script = %s", ehe.getNewValue());
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(ehe.getNewValue(), CharsetUtil.US_ASCII))) {
                 throw new SyntaxException("replaceheader: newvalue must be printable ASCII only in replaceheader.");
             }
