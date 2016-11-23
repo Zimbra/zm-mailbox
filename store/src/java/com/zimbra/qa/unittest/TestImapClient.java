@@ -33,6 +33,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.mail.MessagingException;
@@ -221,15 +223,15 @@ public class TestImapClient {
         login();
         assertFalse(connection.isIdling());
         final AtomicLong exists = new AtomicLong(-1);
+        final CountDownLatch doneSignal = new CountDownLatch(1);
         // Start IDLE...
         connection.idle(new ResponseHandler() {
             @Override
             public void handleResponse(ImapResponse res) {
                 System.out.println("XXX res = " + res);
                 if (res.getCCode() == CAtom.EXISTS) {
-                    synchronized (exists) {
-                        exists.set(res.getNumber());
-                    }
+                    exists.set(res.getNumber());
+                    doneSignal.countDown();
                 }
             }
         });
@@ -237,16 +239,16 @@ public class TestImapClient {
         // Send test message
         TestUtil.addMessage(TestUtil.getZMailbox(USER), "TestImapClient testIdle");
         // Wait for message delivery...
-        synchronized (exists) {
-            while (exists.get() <= 0) {
-                exists.wait();
-            }
+        try {
+            doneSignal.await(5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            fail("Wait interrupted. ");
         }
         // Stop IDLE...
         connection.stopIdle();
         // Check mailbox status
         MailboxInfo mb = connection.getMailboxInfo();
-        assertEquals(mb.getExists(), exists.get());
+        assertEquals("got wrong number of messages", mb.getExists(), exists.get());
     }
 
     @Test
