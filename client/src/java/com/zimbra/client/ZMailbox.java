@@ -808,23 +808,26 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public Element invoke(Element request, String requestedAccountId) throws ServiceException {
         lock();
         try {
-            boolean nosession = mNotifyPreference == NotifyPreference.nosession;
-            Element response = mTransport.invoke(request, false, nosession, requestedAccountId);
-            return response;
-        } catch (SoapFaultException e) {
-            throw e; // for now, later, try to map to more specific exception
-        } catch (Exception e) {
-            Throwable t = SystemUtil.getInnermostException(e);
-            RemoteServiceException.doConnectionFailures(mTransport.getURI(), t);
-            RemoteServiceException.doSSLFailures(t.getMessage(), t);
-            if (e instanceof IOException) {
-                throw ZClientException.IO_ERROR(e.getMessage(), e);
+            try {
+                boolean nosession = mNotifyPreference == NotifyPreference.nosession;
+                Element response = mTransport.invoke(request, false, nosession, requestedAccountId);
+                return response;
+            } catch (SoapFaultException e) {
+                throw e; // for now, later, try to map to more specific exception
+            } catch (Exception e) {
+                Throwable t = SystemUtil.getInnermostException(e);
+                RemoteServiceException.doConnectionFailures(mTransport.getURI(), t);
+                RemoteServiceException.doSSLFailures(t.getMessage(), t);
+                if (e instanceof IOException) {
+                    throw ZClientException.IO_ERROR(e.getMessage(), e);
+                }
+                throw ServiceException.FAILURE(e.getMessage(), e);
+            } finally {
+                Element context = mTransport.getZimbraContext();
+                mTransport.clearZimbraContext();
+                handleResponseContext(context);
             }
-            throw ServiceException.FAILURE(e.getMessage(), e);
         } finally {
-            Element context = mTransport.getZimbraContext();
-            mTransport.clearZimbraContext();
-            handleResponseContext(context);
             unlock();
         }
     }
