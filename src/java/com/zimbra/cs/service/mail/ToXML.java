@@ -1419,14 +1419,6 @@ public final class ToXML {
             MimeMessage mm = null;
             try {
                 mm = msg.getMimeMessage();
-                // if the mime is encrypted
-                if (mm != null
-                    && mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)) {
-                    ZimbraLog.mailbox.debug("The message is encrypted. Forwarding it to SmimeHandler for decryption.");
-                    if (SmimeHandler.getHandler() != null) {
-                        SmimeHandler.getHandler().decryptMessage(msg.getMailbox(), mm);
-                    }
-                }
             } catch (MailServiceException e) {
                 if (encodeMissingBlobs && MailServiceException.NO_SUCH_BLOB.equals(e.getCode())) {
                     ZimbraLog.mailbox.error("Unable to get blob while encoding message", e);
@@ -1460,6 +1452,13 @@ public final class ToXML {
                     throw MailServiceException.NO_SUCH_PART(part);
                 }
                 mm = (MimeMessage) content;
+                // for recursive decryption
+                if (SmimeHandler.getHandler() != null) {
+                    MimeMessage decrypted = SmimeHandler.getHandler().decryptMessage(msg.getMailbox(), mm);
+                    if(decrypted != null) {
+                        mm = decrypted;
+                    }
+                }
             } else {
                 part = "";
             }
@@ -1558,7 +1557,6 @@ public final class ToXML {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
                 addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg), bestEffort, wantContent);
             }
-
             if (wantExpandGroupInfo) {
                 ZimbraLog.gal.trace("want expand group info");
                 Account authedAcct = octxt.getAuthenticatedUser();
@@ -1569,6 +1567,13 @@ public final class ToXML {
             }
 
             success = true;
+
+            // update decryption flag
+            if (SmimeHandler.getHandler() != null) {
+                MimeMessage originalMimeMessage = msg.getMimeMessage(false);
+                SmimeHandler.getHandler().updateDecryptionFlag(msg.getAccount(), m, originalMimeMessage, mm);
+            }
+
             // if the mime is not encrypted and it is signed
             if (!mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)
                 && (mm.getContentType().contains(MimeConstants.CT_MULTIPART_SIGNED)
