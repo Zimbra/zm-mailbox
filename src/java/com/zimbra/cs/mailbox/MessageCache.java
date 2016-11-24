@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
@@ -34,6 +35,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ExpandMimeMessage;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.smime.SmimeHandler;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
@@ -181,13 +183,38 @@ public class MessageCache {
             if (expand && cnode.expanded == null) {
                 sLog.debug("Expanding MimeMessage for item %d.", item.getId());
                 cacheHit = false;
+                MimeMessage decryptedMimeMessage = null;
+                if (item instanceof Message) {
+                    // if the mime is encrypted; decrypt it first
+                    if (cnode.message != null && cnode.message.getContentType()
+                        .contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)) {
+                        sLog.debug(
+                            "The message %d is encrypted. Forwarding it to SmimeHandler for decryption.",
+                            item.getId());
+                        if (SmimeHandler.getHandler() != null) {
+                            decryptedMimeMessage = SmimeHandler.getHandler()
+                                .decryptMessage(((Message) item).getMailbox(), cnode.message);
+                        }
+                    }
+                }
                 try {
-                    ExpandMimeMessage expander = new ExpandMimeMessage(cnode.message);
-                    expander.expand();
-                    cnode.expanded = expander.getExpanded();
-                    if (cnode.expanded != cnode.message) {
-                        sDataSize += cnode.size;
-                        cnode.size *= 2;
+                    ExpandMimeMessage expander = new ExpandMimeMessage(cnode.message
+                        .getContentType().contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)
+                        && decryptedMimeMessage != null ? decryptedMimeMessage : cnode.message);
+                    // if original message is encrypted and decryption failed;
+                    // do not try to expand the cnode.message
+                    if ((cnode.message.getContentType().contains(
+                        MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA) && decryptedMimeMessage != null)
+                        || !cnode.message.getContentType()
+                            .contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)) {
+                        expander.expand();
+                        cnode.expanded = expander.getExpanded();
+                        if (cnode.expanded != cnode.message) {
+                            sDataSize += cnode.size;
+                            cnode.size *= 2;
+                        }
+                    } else {
+                        cnode.expanded = cnode.message;
                     }
                 } catch (Exception e) {
                     // if the conversion bombs for any reason, revert to the original
