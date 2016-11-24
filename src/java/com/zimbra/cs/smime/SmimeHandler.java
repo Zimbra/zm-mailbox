@@ -37,7 +37,7 @@ public abstract class SmimeHandler {
 
     public abstract MimeMessage decryptMessage(Mailbox mailbox, MimeMessage mime);
 
-    public abstract void updateDecryptionFlag(Account account, Element m, MimeMessage originalMimeMessage, MimeMessage cachedMimeMessage);
+    public abstract void updateEncryptionFlag(Account account, Element m, MimeMessage originalMimeMessage);
 
     public abstract void encodeCertificate(Account account, Element elem, String certData, SoapProtocol mResponseProtocol);
 
