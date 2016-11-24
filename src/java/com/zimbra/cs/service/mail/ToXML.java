@@ -1571,7 +1571,7 @@ public final class ToXML {
             // update decryption flag
             if (SmimeHandler.getHandler() != null) {
                 MimeMessage originalMimeMessage = msg.getMimeMessage(false);
-                SmimeHandler.getHandler().updateDecryptionFlag(msg.getAccount(), m, originalMimeMessage, mm);
+                SmimeHandler.getHandler().updateEncryptionFlag(msg.getAccount(), m, originalMimeMessage);
             }
 
             // if the mime is not encrypted and it is signed
