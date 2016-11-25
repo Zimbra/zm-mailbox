@@ -252,7 +252,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         public String name(){
             return name;
         }
-
     }
 
     private enum NotifyPreference {
@@ -1543,7 +1542,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
         if (attrs != null) {
             for (String name : attrs) {
-                req.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
+                req.addNonUniqueElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
             }
         }
 
@@ -1642,7 +1641,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         addAttrsAndAttachments(cn, attrs, attachments);
         if (members != null) {
             for (Map.Entry<String, String> entry : members.entrySet()) {
-                Element memberEl = cn.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
+                Element memberEl = cn.addNonUniqueElement(MailConstants.E_CONTACT_GROUP_MEMBER);
                 memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, entry.getKey());
                 memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, entry.getValue());
             }
@@ -1661,7 +1660,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             for (String name : attachments.keySet()) {
                 ZAttachmentInfo info = attachments.get(name);
 
-                Element attachEl =  cn.addElement(MailConstants.E_ATTRIBUTE);
+                Element attachEl =  cn.addNonUniqueElement(MailConstants.E_ATTRIBUTE);
                 attachEl.addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
                 if (info.getAttachmentId() != null) {
                     attachEl.addAttribute(MailConstants.A_ATTACHMENT_ID, info.getAttachmentId());
@@ -1730,7 +1729,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         addAttrsAndAttachments(cn, attrs, attachments);
         if (members != null) {
             for (Map.Entry<String, String> entry : members.entrySet()) {
-                Element memberEl = cn.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
+                Element memberEl = cn.addNonUniqueElement(MailConstants.E_CONTACT_GROUP_MEMBER);
                 memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, entry.getKey());
                 memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, entry.getValue());
             }
@@ -1762,11 +1761,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
         if (!StringUtil.isNullOrEmpty(ids)) {
             req.addAttribute(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, true);
-            req.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, ids);
+            req.addNonUniqueElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, ids);
         }
         if (attrs != null) {
             for (String name : attrs) {
-                req.addElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
+                req.addNonUniqueElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
             }
         }
         List<ZContact> result = new ArrayList<ZContact>();
@@ -1791,7 +1790,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (result == null || result.isDirty()) {
             Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
             req.addAttribute(MailConstants.A_SYNC, true);
-            req.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, id);
+            req.addNonUniqueElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, id);
             req.addAttribute(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, true);
             result = new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
             mContactCache.put(id, result);
@@ -2459,7 +2458,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             m.addAttribute(MailConstants.A_DATE, receivedDate);
         }
         m.addAttribute(MailConstants.A_NO_ICAL, noICal);
-        m.addElement(MailConstants.E_CONTENT).setText(content);
+        m.addNonUniqueElement(MailConstants.E_CONTENT).setText(content);
         return invoke(req).getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_ID);
     }
 
@@ -2543,7 +2542,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 String reqHdrs = params.getReqHeaders();
                 if (reqHdrs != null && reqHdrs.length() > 0) {
                     for (String hdrName : reqHdrs.split(",")) {
-                        Element headerEl = msgEl.addElement(MailConstants.A_HEADER);
+                        Element headerEl = msgEl.addNonUniqueElement(MailConstants.A_HEADER);
                         headerEl.addAttribute(MailConstants.A_ATTRIBUTE_NAME, hdrName);
                     }
                 }
@@ -2786,7 +2785,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZFolder getFolderRequestById(String id) throws ServiceException {
         Element req = newRequestElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true);
-        req.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, id);
+        req.addNonUniqueElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, id);
 
         Element response = invoke(req);
         Element eFolder = response.getOptionalElement(MailConstants.E_FOLDER);
@@ -3516,7 +3515,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             action.addAttribute(MailConstants.A_FLAGS, flags);
         }
         if (acl != null) {
-            Element aclEl = action.addElement(MailConstants.E_ACL);
+            Element aclEl = action.addNonUniqueElement(MailConstants.E_ACL);
             for (ZGrant grant : acl) {
                 grant.toElement(aclEl);
             }
@@ -3563,7 +3562,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
         if (params.getTypes().equals(ZSearchParams.TYPE_GAL)) {
             req.addAttribute(AccountConstants.A_TYPE, GalEntryType.account.name());
-            req.addElement(AccountConstants.E_NAME).setText(params.getQuery());
+            req.addNonUniqueElement(AccountConstants.E_NAME).setText(params.getQuery());
             //req.addAttribute(MailConstants.A_SORTBY, SearchSortBy.nameAsc.name());
 
         }
@@ -3615,7 +3614,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
         if (params.getCursor() != null) {
             Cursor cursor = params.getCursor();
-            Element cursorEl = req.addElement(MailConstants.E_CURSOR);
+            Element cursorEl = req.addNonUniqueElement(MailConstants.E_CURSOR);
             if (cursor.getPreviousId() != null) {
                 cursorEl.addAttribute(MailConstants.A_ID, cursor.getPreviousId());
             }
@@ -3983,10 +3982,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             public void setAttachSubParts(List<AttachedMessagePart> attachSubParts) { mAttachSubParts = attachSubParts; }
 
             public Element toElement(Element parent) {
-                Element mpEl = parent.addElement(MailConstants.E_MIMEPART);
+                Element mpEl = parent.addNonUniqueElement(MailConstants.E_MIMEPART);
                 mpEl.addAttribute(MailConstants.A_CONTENT_TYPE, mContentType);
                 if (mContent != null) {
-                    mpEl.addElement(MailConstants.E_CONTENT).setText(mContent);
+                    mpEl.addNonUniqueElement(MailConstants.E_CONTENT).setText(mContent);
                 }
                 if (mSubParts != null) {
                     for (MessagePart subPart : mSubParts) {
@@ -3997,11 +3996,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 if (mAttachSubParts != null) {
 
                     for (AttachedMessagePart subPart : mAttachSubParts) {
-                        Element e = parent.addElement(MailConstants.E_MIMEPART);
+                        Element e = parent.addNonUniqueElement(MailConstants.E_MIMEPART);
                         e.addAttribute(MailConstants.A_CONTENT_ID, subPart.getContentId());
-                        Element attach = e.addElement(MailConstants.E_ATTACH);
+                        Element attach = e.addNonUniqueElement(MailConstants.E_ATTACH);
                         if (subPart.getMessageId() != null) {
-                            Element el = attach.addElement(MailConstants.E_MIMEPART);
+                            Element el = attach.addNonUniqueElement(MailConstants.E_MIMEPART);
                             el.addAttribute(MailConstants.A_MESSAGE_ID,subPart.getMessageId());
                             el.addAttribute(MailConstants.A_PART,subPart.getPartName());
                         } else {
@@ -4089,7 +4088,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public Element getMessageElement(Element req, ZOutgoingMessage message, ZMountpoint mountpoint) {
-        Element m = req.addElement(MailConstants.E_MSG);
+        Element m = req.addNonUniqueElement(MailConstants.E_MSG);
 
         String id = message.getOriginalMessageId();
         if (mountpoint != null) {
@@ -4121,15 +4120,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             for (ZEmailAddress addr : message.getAddresses()) {
                 if (mountpoint != null && addr.getType().equals(ZEmailAddress.EMAIL_TYPE_FROM)) {
                     //  For on behalf of messages, replace the from: and add a sender:
-                    Element e = m.addElement(MailConstants.E_EMAIL);
+                    Element e = m.addNonUniqueElement(MailConstants.E_EMAIL);
                     e.addAttribute(MailConstants.A_TYPE, ZEmailAddress.EMAIL_TYPE_SENDER);
                     e.addAttribute(MailConstants.A_ADDRESS, addr.getAddress());
 
-                    e = m.addElement(MailConstants.E_EMAIL);
+                    e = m.addNonUniqueElement(MailConstants.E_EMAIL);
                     e.addAttribute(MailConstants.A_TYPE, ZEmailAddress.EMAIL_TYPE_FROM);
                     e.addAttribute(MailConstants.A_ADDRESS, mountpoint.getOwnerDisplayName());
                 } else {
-                    Element e = m.addElement(MailConstants.E_EMAIL);
+                    Element e = m.addNonUniqueElement(MailConstants.E_EMAIL);
                     e.addAttribute(MailConstants.A_TYPE, addr.getType());
                     e.addAttribute(MailConstants.A_ADDRESS, addr.getAddress());
                     e.addAttribute(MailConstants.A_PERSONAL, addr.getPersonal());
@@ -4138,7 +4137,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
 
         if (message.getSubject() != null) {
-            m.addElement(MailConstants.E_SUBJECT).setText(message.getSubject());
+            m.addNonUniqueElement(MailConstants.E_SUBJECT).setText(message.getSubject());
         }
 
         if (message.getPriority() != null && message.getPriority().length() != 0) {
@@ -4146,7 +4145,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
 
         if (message.getInReplyTo() != null) {
-            m.addElement(MailConstants.E_IN_REPLY_TO).setText(message.getInReplyTo());
+            m.addNonUniqueElement(MailConstants.E_IN_REPLY_TO).setText(message.getInReplyTo());
         }
 
         if (message.getMessagePart() != null) {
@@ -4156,39 +4155,39 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         Element attach = null;
 
         if (message.getAttachmentUploadId() != null) {
-            attach = m.addElement(MailConstants.E_ATTACH);
+            attach = m.addNonUniqueElement(MailConstants.E_ATTACH);
             attach.addAttribute(MailConstants.A_ATTACHMENT_ID, message.getAttachmentUploadId());
         }
 
         if (message.getMessageIdsToAttach() != null) {
             if (attach == null) {
-                attach = m.addElement(MailConstants.E_ATTACH);
+                attach = m.addNonUniqueElement(MailConstants.E_ATTACH);
             }
             for (String mid: message.getMessageIdsToAttach()) {
-                attach.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, mid);
+                attach.addNonUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, mid);
             }
         }
         if (message.getDocIdsToAttach() != null) {
             if (attach == null) {
-                attach = m.addElement(MailConstants.E_ATTACH);
+                attach = m.addNonUniqueElement(MailConstants.E_ATTACH);
             }
             for (String did: message.getDocIdsToAttach()) {
-                attach.addElement(MailConstants.E_DOC).addAttribute(MailConstants.A_ID, did);
+                attach.addNonUniqueElement(MailConstants.E_DOC).addAttribute(MailConstants.A_ID, did);
             }
         }
         if (message.getContactIdsToAttach() != null) {
-            if (attach == null) attach = m.addElement(MailConstants.E_ATTACH);
+            if (attach == null) attach = m.addNonUniqueElement(MailConstants.E_ATTACH);
             for (String cid: message.getContactIdsToAttach()) {
-                attach.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, cid);
+                attach.addNonUniqueElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, cid);
             }
         }
         if (message.getMessagePartsToAttach() != null) {
             if (attach == null) {
-                attach = m.addElement(MailConstants.E_ATTACH);
+                attach = m.addNonUniqueElement(MailConstants.E_ATTACH);
             }
             for (AttachedMessagePart part: message.getMessagePartsToAttach()) {
                 if(part.getContentId() == null || part.getContentId().equals("")) {
-                    attach.addElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_MESSAGE_ID, part.getMessageId()).addAttribute(MailConstants.A_PART, part.getPartName());
+                    attach.addNonUniqueElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_MESSAGE_ID, part.getMessageId()).addAttribute(MailConstants.A_PART, part.getPartName());
                 }
             }
         }
@@ -4519,7 +4518,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (isNote) {
             doc.addAttribute(MailConstants.A_FLAGS, ZItem.Flag.note.toString());
         }
-        Element upload = doc.addElement(MailConstants.E_UPLOAD);
+        Element upload = doc.addNonUniqueElement(MailConstants.E_UPLOAD);
         upload.addAttribute(MailConstants.A_ID, attachmentId);
         return invoke(req).getElement(MailConstants.E_DOC).getAttribute(MailConstants.A_ID);
     }
@@ -4629,14 +4628,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             if(condition instanceof ArrayList)
             {
                 // Conditions
-                Element element = parentCondition.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND);
+                Element element = parentCondition.addNonUniqueElement(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND);
                 element.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OR, true);
                 applyConditions((ArrayList<Object>)condition, element);
             }
             if(condition instanceof String[])
             {
                 String conditionAttr[] = (String [])condition;
-                Element conditionElem = parentCondition.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND);
+                Element conditionElem = parentCondition.addNonUniqueElement(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND);
                 conditionElem.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_ATTR, conditionAttr[0]);
                 conditionElem.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OP, conditionAttr[1]);
                 conditionElem.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_VALUE, conditionAttr[2]);
@@ -4649,12 +4648,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (type != null) {
             req.addAttribute(AccountConstants.A_TYPE, type.name());
         }
-        req.addElement(AccountConstants.E_NAME).setText(query);
+        req.addNonUniqueElement(AccountConstants.E_NAME).setText(query);
 
         if(conditions.size() > 0)
         {
-            Element searchFilterElem = req.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER);
-            Element condsElement = searchFilterElem.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND);
+            Element searchFilterElem = req.addNonUniqueElement(AccountConstants.E_ENTRY_SEARCH_FILTER);
+            Element condsElement = searchFilterElem.addNonUniqueElement(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND);
             condsElement.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OR, false);
 
             applyConditions(conditions, condsElement);
@@ -4674,7 +4673,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             req.addAttribute(AccountConstants.A_TYPE, type.name());
         }
         req.addAttribute(AccountConstants.A_LIMIT, limit);
-        req.addElement(AccountConstants.E_NAME).setText(query);
+        req.addNonUniqueElement(AccountConstants.E_NAME).setText(query);
         Element resp = invoke(req);
         List<ZContact> contacts = new ArrayList<ZContact>();
         for (Element contact : resp.listElements(MailConstants.E_CONTACT)) {
@@ -4771,7 +4770,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 req.addAttribute(MailConstants.A_CAL_START_TIME, startMsec);
                 req.addAttribute(MailConstants.A_CAL_END_TIME, endMsec);
                 for (String folderId : folderIds) {
-                    Element folderElem = req.addElement(MailConstants.E_FOLDER);
+                    Element folderElem = req.addNonUniqueElement(MailConstants.E_FOLDER);
                     folderElem.addAttribute(MailConstants.A_ID, folderId);
                 }
                 Element resp = invoke(req);
@@ -4828,8 +4827,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 Element batch = newRequestElement(ZimbraNamespace.E_BATCH_REQUEST);
                 //Element resp;
                 for (String id : mountpointIds) {
-                    Element folderrequest = batch.addElement(MailConstants.GET_FOLDER_REQUEST);
-                    Element e = folderrequest.addElement(MailConstants.E_FOLDER);
+                    Element folderrequest = batch.addNonUniqueElement(MailConstants.GET_FOLDER_REQUEST);
+                    Element e = folderrequest.addNonUniqueElement(MailConstants.E_FOLDER);
                     e.addAttribute(MailConstants.A_FOLDER, id);
                 }
 
@@ -5191,7 +5190,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         Element req = newRequestElement(MailConstants.IMPORT_APPOINTMENTS_REQUEST);
         req.addAttribute(MailConstants.A_CONTENT_TYPE, type);
         req.addAttribute(MailConstants.A_FOLDER, folderId);
-        Element content = req.addElement(MailConstants.E_CONTENT);
+        Element content = req.addNonUniqueElement(MailConstants.E_CONTENT);
         content.addAttribute(MailConstants.A_ATTACHMENT_ID, attachmentId);
         return new ZImportAppointmentsResult(invoke(req).getElement(MailConstants.E_APPOINTMENT));
     }
@@ -5241,7 +5240,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         Element req = newRequestElement(MailConstants.GET_FREE_BUSY_REQUEST);
         req.addAttribute(MailConstants.A_CAL_START_TIME, startTime);
         req.addAttribute(MailConstants.A_CAL_END_TIME, endTime);
-        Element userElem = req.addElement(MailConstants.E_FREEBUSY_USER);
+        Element userElem = req.addNonUniqueElement(MailConstants.E_FREEBUSY_USER);
         userElem.addAttribute(MailConstants.A_NAME, email);
         if (folder != CALENDAR_FOLDER_ALL) {
             userElem.addAttribute(MailConstants.A_FOLDER, folder);
@@ -5401,7 +5400,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     private void setVoiceStorePrincipal(Element req) {
-        req.addElement(mVoiceStorePrincipal.clone());
+        req.addNonUniqueElement(mVoiceStorePrincipal.clone());
     }
 
     public ZPhoneAccount getPhoneAccount(String name) throws ServiceException {
@@ -5412,7 +5411,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public String uploadVoiceMail(String phone, String id) throws ServiceException {
         Element req = newRequestElement(VoiceConstants.UPLOAD_VOICE_MAIL_REQUEST);
         setVoiceStorePrincipal(req);
-        Element actionEl = req.addElement(VoiceConstants.E_VOICEMSG);
+        Element actionEl = req.addNonUniqueElement(VoiceConstants.E_VOICEMSG);
         actionEl.addAttribute(MailConstants.A_ID, id);
         actionEl.addAttribute(VoiceConstants.A_PHONE, phone);
         Element response = invoke(req);
@@ -5422,11 +5421,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public void loadCallFeatures(ZCallFeatures features) throws ServiceException {
         Element req = newRequestElement(VoiceConstants.GET_VOICE_FEATURES_REQUEST);
         setVoiceStorePrincipal(req);
-        Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
+        Element phoneEl = req.addNonUniqueElement(VoiceConstants.E_PHONE);
         phoneEl.addAttribute(MailConstants.A_NAME, features.getPhone().getName());
         Collection<ZCallFeature> featureList = features.getSubscribedFeatures();
         for (ZCallFeature feature : featureList) {
-            phoneEl.addElement(feature.getName());
+            phoneEl.addNonUniqueElement(feature.getName());
         }
         Element response = invoke(req);
 
@@ -5444,11 +5443,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         // Build up the soap request.
         Element req = newRequestElement(VoiceConstants.MODIFY_VOICE_FEATURES_REQUEST);
         setVoiceStorePrincipal(req);
-        Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
+        Element phoneEl = req.addNonUniqueElement(VoiceConstants.E_PHONE);
         phoneEl.addAttribute(MailConstants.A_NAME, newFeatures.getPhone().getName());
         Collection<ZCallFeature> list = newFeatures.getAllFeatures();
         for (ZCallFeature newFeature : list) {
-            Element element = phoneEl.addElement(newFeature.getName());
+            Element element = phoneEl.addNonUniqueElement(newFeature.getName());
             newFeature.toElement(element);
         }
         invoke(req);
@@ -5492,7 +5491,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
         Element req = newRequestElement(VoiceConstants.GET_VOICE_FOLDER_REQUEST);
         setVoiceStorePrincipal(req);
-        Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
+        Element phoneEl = req.addNonUniqueElement(VoiceConstants.E_PHONE);
         phoneEl.addAttribute(MailConstants.A_NAME, phone);
         Element response = invoke(req);
 
@@ -5539,7 +5538,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private Element voiceAction(String op, String phone, String id, int folderId) {
         Element req = newRequestElement(VoiceConstants.VOICE_MSG_ACTION_REQUEST);
         setVoiceStorePrincipal(req);
-        Element actionEl = req.addElement(MailConstants.E_ACTION);
+        Element actionEl = req.addNonUniqueElement(MailConstants.E_ACTION);
         actionEl.addAttribute(MailConstants.A_ID, id);
         actionEl.addAttribute(MailConstants.A_OPERATION, op);
         actionEl.addAttribute(VoiceConstants.A_PHONE, phone);
@@ -5578,8 +5577,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         List<String> docIds = new ArrayList<String>();
         for(String pid: partIds){               //!TODO We should do batch request for performance
             Element req = newRequestElement(MailConstants.SAVE_DOCUMENT_REQUEST);
-            Element doc = req.addElement(MailConstants.E_DOC).addAttribute(MailConstants.A_FOLDER,folderId);
-            Element m = doc.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID,mid);
+            Element doc = req.addNonUniqueElement(MailConstants.E_DOC).addAttribute(MailConstants.A_FOLDER,folderId);
+            Element m = doc.addNonUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID,mid);
             m.addAttribute(MailConstants.A_PART,pid);
             Element rDoc = invoke(req).getElement(MailConstants.E_DOC);
             if(rDoc == null){
@@ -5604,7 +5603,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     public void deleteSignature(String id) throws ServiceException {
         Element req = newRequestElement(AccountConstants.DELETE_SIGNATURE_REQUEST);
-        req.addElement(AccountConstants.E_SIGNATURE).addAttribute(AccountConstants.A_ID, id);
+        req.addNonUniqueElement(AccountConstants.E_SIGNATURE).addAttribute(AccountConstants.A_ID, id);
         invoke(req);
         updateSigs();
     }
@@ -5620,7 +5619,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         Element req = newRequestElement(AccountConstants.GET_RIGHTS_REQUEST);
         if (rights != null && rights.length > 0) {
             for (String right : rights) {
-                req.addElement(AccountConstants.E_ACE).addAttribute(AccountConstants.A_RIGHT, right);
+                req.addNonUniqueElement(AccountConstants.E_ACE).addAttribute(AccountConstants.A_RIGHT, right);
             }
         }
         Element resp = invoke(req);
@@ -5655,13 +5654,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     public boolean checkRights(String name, List<String> rights) throws ServiceException {
         Element req = newRequestElement(AccountConstants.CHECK_RIGHTS_REQUEST);
-        Element eTarget = req.addElement(AccountConstants.E_TARGET);
+        Element eTarget = req.addNonUniqueElement(AccountConstants.E_TARGET);
         eTarget.addAttribute(AccountConstants.A_TARGET_TYPE, "account");
         eTarget.addAttribute(AccountConstants.A_TARGET_BY, "name");
         eTarget.addAttribute(AccountConstants.A_KEY, name);
 
         for (String right : rights) {
-            Element eRight = eTarget.addElement(AccountConstants.E_RIGHT);
+            Element eRight = eTarget.addNonUniqueElement(AccountConstants.E_RIGHT);
             eRight.setText(right);
         }
         Element resp = invoke(req);
