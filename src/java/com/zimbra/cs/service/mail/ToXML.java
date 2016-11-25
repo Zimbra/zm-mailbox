@@ -1440,7 +1440,7 @@ public final class ToXML {
                 mm = (MimeMessage) content;
                 // for recursive decryption
                 if (SmimeHandler.getHandler() != null) {
-                    MimeMessage decrypted = SmimeHandler.getHandler().decryptMessage(msg.getMailbox(), mm);
+                    MimeMessage decrypted = SmimeHandler.getHandler().decryptMessage(msg.getMailbox(), mm, msg.getId());
                     if(decrypted != null) {
                         mm = decrypted;
                     }
