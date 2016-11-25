@@ -274,7 +274,7 @@ public class SetVariable extends AbstractCommand {
         boolean variablesExtAvailable = false;
         try {
             variablesExtAvailable = Provisioning.getInstance().getServer(account)
-                    .getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, true);
+                    .getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
         } catch (ServiceException e) {
             ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
         }

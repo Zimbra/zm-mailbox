@@ -275,7 +275,7 @@ public final class RuleManager {
                  * "require" commands multiple times.
                  */
                 script = requiresPart.toString() + adminRuleBefore + script + adminRuleAfter;
-                debugScript = requiresPart.toString() + "# AdminBefore script\n" + debugAdminRuleBefore + "# End user script\n" + debugScript + "# AdminAfter script\n" + debugAdminRuleAfter;
+                debugScript = requiresPart.toString() + "\n# AdminBefore script\n" + debugAdminRuleBefore + "\n# End user script\n" + debugScript + "\n# AdminAfter script\n" + debugAdminRuleAfter;
             }
             if (script == null) {
                 script = "";
