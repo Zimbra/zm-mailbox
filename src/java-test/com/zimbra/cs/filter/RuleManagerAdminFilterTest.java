@@ -275,7 +275,7 @@ public final class RuleManagerAdminFilterTest {
         account.unsetMailSieveScript();
         account.unsetMailAdminSieveScriptAfter();
 
-        String enduserScript = "require [\"tag\", \"log\"];"
+        String enduserScript = "require [\"tag\", \"log\", \"variables\"];"
                 + "set \"var\" \"bar\";"
                 + "tag \"enduser-${var}\";";
         account.setMailAdminSieveScriptBefore(variableScripts[0]);
