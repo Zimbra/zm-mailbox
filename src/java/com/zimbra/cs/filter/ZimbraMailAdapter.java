@@ -97,8 +97,8 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private Map<String, String> variables = new HashMap<String, String>();
     private List<String> matchedValues = new ArrayList<String>();
 
-    public enum VARIABLETYPE { UNKNOWN, OFF, AVAILABLE};
-    private VARIABLETYPE variablesExtAvailable = VARIABLETYPE.UNKNOWN;
+    public enum VARIABLEFEATURETYPE { UNKNOWN, OFF, AVAILABLE};
+    private VARIABLEFEATURETYPE variablesExtAvailable = VARIABLEFEATURETYPE.UNKNOWN;
 
     /**
      * Keeps track of folders into which we filed messages, so we don't file twice
@@ -136,9 +136,9 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             boolean variablesExtAvailable = Provisioning.getInstance().getServer(account)
                     .getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, true);
             if (variablesExtAvailable) {
-                this.setVariablesExtAvailable(VARIABLETYPE.AVAILABLE);
+                this.setVariablesExtAvailable(VARIABLEFEATURETYPE.AVAILABLE);
             } else {
-                this.setVariablesExtAvailable(VARIABLETYPE.OFF);
+                this.setVariablesExtAvailable(VARIABLEFEATURETYPE.OFF);
             }
         } catch (ServiceException e) {
             ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
@@ -837,6 +837,6 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         variables.clear();
     }
 
-    public VARIABLETYPE getVariablesExtAvailable() { return variablesExtAvailable; }
-    public void setVariablesExtAvailable(VARIABLETYPE type) { this.variablesExtAvailable = type; }
+    public VARIABLEFEATURETYPE getVariablesExtAvailable() { return variablesExtAvailable; }
+    public void setVariablesExtAvailable(VARIABLEFEATURETYPE type) { this.variablesExtAvailable = type; }
 }

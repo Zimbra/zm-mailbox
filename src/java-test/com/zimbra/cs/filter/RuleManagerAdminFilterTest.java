@@ -182,14 +182,14 @@ public final class RuleManagerAdminFilterTest {
 
     String[] variableScripts = {
             // admin-before
-              "require [\"tag\", \"log\"];"
+              "require [\"tag\", \"log\", \"variables\"];"
             + "set \"var\" \"foo\";"
             + "tag \"before-${var}\";",
             // enduser
-              "require [\"tag\", \"log\"];"
+              "require [\"tag\", \"log\", \"variables\"];"
             + "tag \"enduser-${var}\";",
             // admin-after
-              "require [\"tag\", \"log\"];"
+              "require [\"tag\", \"log\", \"variables\"];"
             + "tag \"after-${var}\";"};
 
     @Test

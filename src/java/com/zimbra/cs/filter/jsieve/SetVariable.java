@@ -252,9 +252,9 @@ public class SetVariable extends AbstractCommand {
      * true if zimbraSieveFeatureVariablesEnabled is true; otherwise return false.
      */
     public static boolean isVariablesExtAvailable(ZimbraMailAdapter mailAdapter) {
-        ZimbraMailAdapter.VARIABLETYPE type = mailAdapter.getVariablesExtAvailable();
-        if (type != ZimbraMailAdapter.VARIABLETYPE.UNKNOWN) {
-            if (type == ZimbraMailAdapter.VARIABLETYPE.OFF) {
+        ZimbraMailAdapter.VARIABLEFEATURETYPE type = mailAdapter.getVariablesExtAvailable();
+        if (type != ZimbraMailAdapter.VARIABLEFEATURETYPE.UNKNOWN) {
+            if (type == ZimbraMailAdapter.VARIABLEFEATURETYPE.OFF) {
                 return false;
             } else {
                 return true;
