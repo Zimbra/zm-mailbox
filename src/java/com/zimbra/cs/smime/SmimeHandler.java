@@ -35,7 +35,7 @@ public abstract class SmimeHandler {
     public abstract boolean verifyMessageSignature(Account account, Element m, MimeMessage mm,
         SoapProtocol mResponseProtocol);
 
-    public abstract MimeMessage decryptMessage(Mailbox mailbox, MimeMessage mime);
+    public abstract MimeMessage decryptMessage(Mailbox mailbox, MimeMessage mime, int itemId);
 
     public abstract void updateEncryptionFlag(Account account, Element m, MimeMessage originalMimeMessage);
 
