@@ -60,6 +60,7 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("copy", com.zimbra.cs.filter.jsieve.Copy.class.getName());
         mCommandMap.put("log", com.zimbra.cs.filter.jsieve.VariableLog.class.getName());
         mCommandMap.put("deleteheader", com.zimbra.cs.filter.jsieve.DeleteHeader.class.getName());
+        mCommandMap.put("zimbravariablesctrl", com.zimbra.cs.filter.jsieve.ZimbraVariablesCtrl.class.getName());
 
         if (isNotifyActionRFCCompliantAvailable()) {
             mCommandMap.put("notify",  com.zimbra.cs.filter.jsieve.NotifyMailto.class.getName());

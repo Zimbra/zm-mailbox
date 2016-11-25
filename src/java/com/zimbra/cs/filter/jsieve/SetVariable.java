@@ -247,14 +247,45 @@ public class SetVariable extends AbstractCommand {
     }
     
     /**
-     * @return true if zimbraSieveFeatureVariablesEnabled is true
+     * @return the current value of the variablesExtAvailable stored in
+     * the ZimbraMailAdapter object.  If it has not been set yet, returns
+     * true if zimbraSieveFeatureVariablesEnabled is true; otherwise return false.
      */
     public static boolean isVariablesExtAvailable(ZimbraMailAdapter mailAdapter) {
+        ZimbraMailAdapter.VARIABLEFEATURETYPE type = mailAdapter.getVariablesExtAvailable();
+        if (type != ZimbraMailAdapter.VARIABLEFEATURETYPE.UNKNOWN) {
+            if (type == ZimbraMailAdapter.VARIABLEFEATURETYPE.OFF) {
+                return false;
+            } else {
+                return true;
+            }
+        }
         boolean variablesExtAvailable = false;
         try {
             Account account = mailAdapter.getMailbox().getAccount();
+            variablesExtAvailable = getZimbraSieveFeatureVariablesEnabled(account);
+        } catch (ServiceException e) {
+            ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
+        }
+        return variablesExtAvailable;
+    }
+
+    public static boolean getZimbraSieveFeatureVariablesEnabled(Account account) {
+        boolean variablesExtAvailable = false;
+        try {
             variablesExtAvailable = Provisioning.getInstance().getServer(account)
                     .getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, true);
+        } catch (ServiceException e) {
+            ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
+        }
+        return variablesExtAvailable;
+    }
+
+    public static boolean getZimbraAdminSieveFeatureVariablesEnabled(Account account) {
+        boolean variablesExtAvailable = false;
+        try {
+            variablesExtAvailable = Provisioning.getInstance().getServer(account)
+                    .getBooleanAttr(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, true);
         } catch (ServiceException e) {
             ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
         }
