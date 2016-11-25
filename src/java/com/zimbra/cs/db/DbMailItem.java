@@ -2825,7 +2825,7 @@ public class DbMailItem {
                     if (visible == null || visible.contains(rs.getInt(3))) {
                         idList.add(resultData);
                     } else {
-                        int modSeq = rs.getInt(6);
+                        int modSeq = rs.getInt(7);
                         if (modSeq > lastDeleteSync) {
                             missed.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1), rs.getString(9), modSeq, rs.getString(5));
                         }
