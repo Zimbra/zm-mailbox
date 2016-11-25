@@ -63065,13 +63065,13 @@ public abstract class ZAttrConfig extends Entry {
      * Whether to enable the Sieve &quot;Variables&quot; extension defined in
      * RFC 5229 in the user-defined sieve rule.
      *
-     * @return zimbraSieveFeatureVariablesEnabled, or true if unset
+     * @return zimbraSieveFeatureVariablesEnabled, or false if unset
      *
      * @since ZCS 8.7.0
      */
     @ZAttr(id=2096)
     public boolean isSieveFeatureVariablesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
     }
 
     /**
