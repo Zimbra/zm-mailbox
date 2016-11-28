@@ -27,7 +27,6 @@ import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyMessageEvent;
-import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
@@ -35,13 +34,11 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.zclient.ZClientException;
 
-public class ZMessage implements ZItem, ToZJSONObject, ZimbraMailItem {
+public class ZMessage extends ZBaseItem implements ZItem, ToZJSONObject, ZimbraMailItem {
 
     private final String mId;
-    private String mFlags;
     private final String mSubject;
     private final String mFragment;
-    private String mTags;
     private String mFolderId;
     private String mConversationId;
     private final String mPartName;
@@ -58,16 +55,15 @@ public class ZMessage implements ZItem, ToZJSONObject, ZimbraMailItem {
     private final String mOrigId;
     private ZInvite mInvite;
     private ZShare mShare;
-    private final ZMailbox mMailbox;
     private final Map<String, String> mReqHdrs;
     private final String mIdentityId;
     private final long mAutoSendTime;
 
-    public ZMessage(Element e, ZMailbox mailbox) throws ServiceException {
-        mMailbox = mailbox;
+    public ZMessage(Element e, ZMailbox zmailbox) throws ServiceException {
+        mMailbox = zmailbox;
         mId = e.getAttribute(MailConstants.A_ID);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
-        mTags = e.getAttribute(MailConstants.A_TAGS, null);
+        mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
         mReplyType = e.getAttribute(MailConstants.A_REPLY_TYPE, null);
         mOrigId = e.getAttribute(MailConstants.A_ORIG_ID, null);
         mSubject = e.getAttribute(MailConstants.E_SUBJECT, null);
@@ -123,19 +119,15 @@ public class ZMessage implements ZItem, ToZJSONObject, ZimbraMailItem {
 
     @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
-    	if (event instanceof ZModifyMessageEvent) {
-    		ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
+        if (event instanceof ZModifyMessageEvent) {
+            ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
             if (mevent.getId().equals(mId)) {
                 mFlags = mevent.getFlags(mFlags);
-                mTags = mevent.getTagIds(mTags);
+                mTagIds = mevent.getTagIds(mTagIds);
                 mFolderId = mevent.getFolderId(mFolderId);
                 mConversationId = mevent.getConversationId(mConversationId);
             }
         }
-    }
-
-    public ZMailbox getMailbox() {
-        return mMailbox;
     }
 
     public  ZShare getShare() {
@@ -185,24 +177,11 @@ public class ZMessage implements ZItem, ToZJSONObject, ZimbraMailItem {
     }
 
     @Override
-    public String getUuid() {
-        return null;
-    }
-
-    public boolean hasFlags() {
-        return mFlags != null && mFlags.length() > 0;
-    }
-
-    public boolean hasTags() {
-        return mTags != null && mTags.length() > 0;
-    }
-
-    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("id", mId);
         zjo.put("flags", mFlags);
-        zjo.put("tagIds", mTags);
+        zjo.put("tagIds", mTagIds);
         zjo.put("inReplyTo", mInReplyTo);
         zjo.put("originalId", mOrigId);
         zjo.put("subject", mSubject);
@@ -256,20 +235,12 @@ public class ZMessage implements ZItem, ToZJSONObject, ZimbraMailItem {
         return mPartName;
     }
 
-    public String getFlags() {
-        return mFlags;
-    }
-
     public String getSubject() {
         return mSubject;
     }
 
     public String getFragment() {
         return mFragment;
-    }
-
-    public String getTagIds() {
-        return mTags;
     }
 
     public String getConversationId() {
@@ -570,40 +541,12 @@ public class ZMessage implements ZItem, ToZJSONObject, ZimbraMailItem {
     }
 
     @Override
-    public int getIdInMailbox() throws ServiceException {
-        String acctId = null;
-        try {
-            acctId = mMailbox.getAccountId();
-        } catch (ServiceException e) {
-        }
-        ItemIdentifier itemId = new ItemIdentifier(this.getId(), acctId);
-        return itemId.id;
-    }
-
-    @Override
     public MailItemType getMailItemType() {
         return MailItemType.MESSAGE;
     }
 
     @Override
-    public String[] getTags() {
-        String tagIdString = getTagIds();
-        return (tagIdString == null) ? new String[0] : tagIdString.split(",");
-    }
-
-    @Override
-    public int getModifiedSequence() {
-        throw new UnsupportedOperationException("ZMessage method not supported yet");
-    }
-
-    @Override
     public int getImapUid() {
-        throw new UnsupportedOperationException("ZMessage method not supported yet");
-    }
-
-    @Override
-    public int getFlagBitmask() {
-        // presume info is in field mFlags.  May need new zm-common types to get at info
         throw new UnsupportedOperationException("ZMessage method not supported yet");
     }
 }
