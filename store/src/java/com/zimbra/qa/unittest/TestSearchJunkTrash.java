@@ -22,6 +22,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,24 +34,23 @@ import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
 import com.zimbra.common.service.ServiceException;
 
-public class TestSearchJunkTrash extends TestCase {
-    private static final String USER_NAME = "junktrashuser1";
-    private static final String REMOTE_USER_NAME = "junktrashuser2";
+public class TestSearchJunkTrash {
+    private static final String USER_NAME = "TestSearchJunkTrash-user1";
+    private static final String REMOTE_USER_NAME = "TestSearchJunkTrash-user2";
     private static ZMailbox mbox;
     private static ZMailbox remote_mbox;
     private static ZFolder folder;
-    private static ZMountpoint mPoint;
 
-    @Override
     @Before
     public void setUp() throws Exception {
+        cleanup();
         TestUtil.createAccount(USER_NAME);
         TestUtil.createAccount(REMOTE_USER_NAME);
         mbox = TestUtil.getZMailbox(USER_NAME);
         remote_mbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         folder = remote_mbox.createFolder("1", "my shared folder", ZFolder.View.message, null, null, null);
         remote_mbox.modifyFolderGrant(folder.getId(),ZGrant.GranteeType.usr, USER_NAME, "r", null);
-        mPoint = mbox.createMountpoint("1", folder.getName(), ZFolder.View.message, ZFolder.Color.BLUE, null,
+        mbox.createMountpoint("1", folder.getName(), ZFolder.View.message, ZFolder.Color.BLUE, null,
                 ZMailbox.OwnerBy.BY_NAME, REMOTE_USER_NAME, ZMailbox.SharedItemBy.BY_ID, folder.getId(), false);
         Map<String, Object> prefs = new HashMap<String, Object>();
         prefs.put("zimbraPrefIncludeSharedItemsInSearch", "TRUE");
@@ -60,32 +60,39 @@ public class TestSearchJunkTrash extends TestCase {
         TestUtil.addMessage(mbox, "a trash message", ZFolder.ID_TRASH);
     }
 
-    @Override
     @After
     public void tearDown() throws Exception {
-        TestUtil.deleteAccount(USER_NAME);
-        TestUtil.deleteAccount(REMOTE_USER_NAME);
+        cleanup();
+    }
+
+    private void cleanup() throws Exception {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
+        if(TestUtil.accountExists(REMOTE_USER_NAME)) {
+            TestUtil.deleteAccount(REMOTE_USER_NAME);
+        }
     }
 
     @Test
     public void testJunk() throws ServiceException {
         ZSearchParams params = new ZSearchParams(String.format("(in:junk) (inid:%s OR is:local)",folder.getId()));
         ZSearchResult results = mbox.search(params);
-      assertEquals(2, results.getHits().size());
+        Assert.assertEquals(2, results.getHits().size());
     }
 
     @Test
     public void testTrash() throws ServiceException {
         ZSearchParams params = new ZSearchParams(String.format("(in:trash) (inid:%s OR is:local)",folder.getId()));
         ZSearchResult results = mbox.search(params);
-      assertEquals(1, results.getHits().size());
+        Assert.assertEquals(1, results.getHits().size());
     }
 
     @Test
     public void testTrashOrJunk() throws ServiceException {
         ZSearchParams params = new ZSearchParams(String.format("(in:trash OR in:junk) (inid:%s OR is:local)",folder.getId()));
         ZSearchResult results = mbox.search(params);
-      assertEquals(3, results.getHits().size());
+        Assert.assertEquals(3, results.getHits().size());
     }
 
     @Test
@@ -93,7 +100,7 @@ public class TestSearchJunkTrash extends TestCase {
         //resolves to trash only
         ZSearchParams params = new ZSearchParams(String.format("(in:trash OR NOT in:junk) (inid:%s OR is:local)",folder.getId()));
         ZSearchResult results = mbox.search(params);
-      assertEquals(1, results.getHits().size());
+        Assert.assertEquals(1, results.getHits().size());
     }
 
     @Test
@@ -101,6 +108,6 @@ public class TestSearchJunkTrash extends TestCase {
         //resolves to junk only
         ZSearchParams params = new ZSearchParams(String.format("(NOT(in:trash OR NOT in:junk)) (inid:%s OR is:local)",folder.getId()));
         ZSearchResult results = mbox.search(params);
-      assertEquals(2, results.getHits().size());
+        Assert.assertEquals(2, results.getHits().size());
     }
 }
