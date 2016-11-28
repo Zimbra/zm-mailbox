@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 
@@ -91,6 +92,23 @@ public class ItemIdentifier {
 
     public static ItemIdentifier fromOwnerAndFolder(String ownerId, FolderStore folderStore) {
         return fromOwnerAndRemoteId(ownerId, folderStore.getFolderIdAsString());
+    }
+
+    @Override
+    public String toString() {
+        return toString((String) null);
+    }
+
+    public String toString(String authAccountId) {
+        StringBuilder sb = new StringBuilder();
+        if (!Strings.isNullOrEmpty(accountId) && !accountId.equals(authAccountId)) {
+            sb.append(accountId).append(ACCOUNT_DELIMITER);
+        }
+        sb.append(this.id);
+        if (this.subPartId >= 0) {
+            sb.append(ItemIdentifier.PART_DELIMITER).append(this.subPartId);
+        }
+        return sb.toString();
     }
 
     public static List<ItemIdentifier> fromAccountIdAndItemIds(String accountId, Collection<Integer> ids) {
