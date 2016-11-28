@@ -909,6 +909,15 @@ public class TestImap {
         });
     }
 
+    @Test
+    public void testCreate() throws Exception {
+        String folderName = "TestImap-testCreate";
+        Assert.assertFalse(connection.exists(folderName));
+        connection.create(folderName);
+        Assert.assertTrue(connection.exists(folderName));
+        
+    }
+
     private String url(String mbox, AppendResult res) {
         return String.format("/%s;UIDVALIDITY=%d/;UID=%d",
                              mbox, res.getUidValidity(), res.getUid());
