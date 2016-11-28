@@ -141,6 +141,8 @@ public class ZimbraSuite  {
         sClasses.add(TestRemoteImapMailboxStore.class);
         sClasses.add(TestRemoteImap.class);
         sClasses.add(TestImapClient.class);
+        sClasses.add(TestDraftCount.class);
+        sClasses.add(TestMinusOperator.class);
     }
 
     /**
