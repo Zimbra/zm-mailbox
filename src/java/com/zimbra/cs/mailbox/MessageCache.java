@@ -25,7 +25,6 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
@@ -35,7 +34,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ExpandMimeMessage;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.smime.SmimeHandler;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
@@ -195,23 +193,6 @@ public class MessageCache {
                     // if the conversion bombs for any reason, revert to the original
                     sLog.warn("MIME converter failed for message %d.  Reverting to original.", item.getId(), e);
                     cnode.expanded = cnode.message;
-                }
-                MimeMessage decryptedMimeMessage = null;
-                if (item instanceof Message) {
-                    // if the mime is encrypted; decrypt it first
-                    if (cnode.expanded != null && cnode.expanded.getContentType()
-                        .contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)) {
-                        sLog.debug(
-                            "The message %d is encrypted. Forwarding it to SmimeHandler for decryption.",
-                            item.getId());
-                        if (SmimeHandler.getHandler() != null) {
-                            decryptedMimeMessage = SmimeHandler.getHandler().decryptMessage(
-                                ((Message) item).getMailbox(), cnode.expanded, item.getId());
-                        }
-                    }
-                    if (decryptedMimeMessage != null) {
-                        cnode.expanded = decryptedMimeMessage;
-                    }
                 }
             }
 
