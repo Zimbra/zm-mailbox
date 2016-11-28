@@ -24,17 +24,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.common.util.StringUtil;
 import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyContactEvent;
 import com.zimbra.client.event.ZModifyEvent;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 
-public class ZContact implements ZItem, ToZJSONObject {
+public class ZContact extends ZBaseItem implements ZItem, ZimbraMailItem, ToZJSONObject {
 
     /** "File as" setting: &nbsp;<code>Last, First</code> */
     public static final String FA_LAST_C_FIRST = "1";
@@ -54,10 +56,10 @@ public class ZContact implements ZItem, ToZJSONObject {
     public static final String FA_EXPLICIT = "8";
 
     public static class ZContactAttachmentInfo {
-        private String mContentType;
-        private String mFileName;
-        private String mPart;
-        private long mLength;
+        private final String mContentType;
+        private final String mFileName;
+        private final String mPart;
+        private final long mLength;
 
         public ZContactAttachmentInfo(String part, String fileName, String contentType, long length) {
             mPart = part;
@@ -80,11 +82,9 @@ public class ZContact implements ZItem, ToZJSONObject {
         }
     }
 
-    private String mId;
+    private final String mId;
     private String mRefId;
-    private String mFlags;
     private String mFolderId;
-    private String mTagIds;
     private String mRevision;
     private long mDate;
     private long mMetaDataChangedDate;
@@ -92,10 +92,10 @@ public class ZContact implements ZItem, ToZJSONObject {
     private Map<String, ZContact> mMembers;
     private Map<String, ZContactAttachmentInfo> mAttachments;
     private boolean mGalContact;
-    private ZMailbox mMailbox;
     private boolean isDirty;
     private ContactMemberType mContactMemberType;
 
+    /* Note for contacts, use a more limited set of flags than in ZItem */
     public enum Flag {
         flagged('f'),
         attachment('a');
@@ -132,7 +132,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         inlineContact("I");
 
         private String contactMemberType;
-        
+
         public String getContactMemberType() { return contactMemberType;}
 
         ContactMemberType(String type) {
@@ -165,9 +165,9 @@ public class ZContact implements ZItem, ToZJSONObject {
         mContactMemberType = galContact ? ContactMemberType.galContact : ContactMemberType.contact;
     }
 
-    public ZContact(Element e, ZMailbox mailbox) throws ServiceException {
+    public ZContact(Element e, ZMailbox zmailbox) throws ServiceException {
         isDirty = false;
-        mMailbox = mailbox;
+        mMailbox = zmailbox;
         mId = e.getAttribute(MailConstants.A_ID);
         mRefId = e.getAttribute(MailConstants.A_REF, null);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
@@ -203,7 +203,7 @@ public class ZContact implements ZItem, ToZJSONObject {
             Element cnEl = memberEl.getOptionalElement(MailConstants.E_CONTACT);
             ZContact contact = null;
             if (cnEl != null)
-                contact = new ZContact(cnEl, type.equals("G") ? true : false, mailbox);
+                contact = new ZContact(cnEl, type.equals("G") ? true : false, zmailbox);
             else
                 /**
                  * Inline contacts only have the email address as value and type as I.
@@ -212,10 +212,6 @@ public class ZContact implements ZItem, ToZJSONObject {
             members.put(id, contact);
         }
         mMembers = Collections.unmodifiableMap(members);
-    }
-
-    public ZMailbox getMailbox() {
-        return mMailbox;
     }
 
     public String getFolderId() {
@@ -229,11 +225,6 @@ public class ZContact implements ZItem, ToZJSONObject {
     @Override
     public String getId() {
         return mId;
-    }
-
-    @Override
-    public String getUuid() {
-        return null;
     }
 
     public String getRefId() {
@@ -295,10 +286,6 @@ public class ZContact implements ZItem, ToZJSONObject {
         return ZJSONObject.toString(this);
     }
 
-    public String getFlags() {
-        return mFlags;
-    }
-
     public Map<String, String> getAttrs() {
         return mAttrs;
     }
@@ -331,6 +318,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         return mAttachments.get(name);
     }
 
+    @Override
     public long getDate() {
         return mDate;
     }
@@ -343,22 +331,12 @@ public class ZContact implements ZItem, ToZJSONObject {
         return mRevision;
     }
 
-    public String getTagIds() {
-        return mTagIds;
-    }
-
-    public boolean hasFlags() {
-        return mFlags != null && mFlags.length() > 0;
-    }
-
-    public boolean hasTags() {
-        return mTagIds != null && mTagIds.length() > 0;
-    }
-
+    @Override
     public boolean hasAttachment() {
         return hasFlags() && mFlags.indexOf(Flag.attachment.getFlagChar()) != -1;
     }
 
+    @Override
     public boolean isFlagged() {
         return hasFlags() && mFlags.indexOf(Flag.flagged.getFlagChar()) != -1;
     }
@@ -368,8 +346,8 @@ public class ZContact implements ZItem, ToZJSONObject {
     }
 	@Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
-		if (event instanceof ZModifyContactEvent) {
-			ZModifyContactEvent cevent = (ZModifyContactEvent) event;
+        if (event instanceof ZModifyContactEvent) {
+            ZModifyContactEvent cevent = (ZModifyContactEvent) event;
             if (cevent.getId().equals(mId)) {
                 mTagIds = cevent.getTagIds(mTagIds);
                 mFolderId = cevent.getFolderId(mFolderId);
@@ -435,9 +413,28 @@ public class ZContact implements ZItem, ToZJSONObject {
     }
 
     // TODO: better handling of folder/tag ids
-    public void update(String destFolderId, String tagList, String flags) throws ServiceException {
+    public void update(String destFolderId, String tagList, String myflags) throws ServiceException {
         if (isGalContact()) throw ZClientException.CLIENT_ERROR("can't modify GAL contact", null);
-        mMailbox.updateContact(mId, destFolderId, tagList, flags);
+        mMailbox.updateContact(mId, destFolderId, tagList, myflags);
     }
 
+    @Override
+    public MailItemType getMailItemType() {
+        return MailItemType.CONTACT;
+    }
+
+    @Override
+    public long getSize() {
+        throw new UnsupportedOperationException("ZContact method not supported yet");
+    }
+
+    @Override
+    public InputStream getContentStream() throws ServiceException {
+        throw new UnsupportedOperationException("ZContact method not supported yet");
+    }
+
+    @Override
+    public int getImapUid() {
+        throw new UnsupportedOperationException("ZContact method not supported yet");
+    }
 }
