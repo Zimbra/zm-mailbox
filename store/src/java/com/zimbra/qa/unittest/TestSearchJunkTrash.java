@@ -19,8 +19,6 @@ package com.zimbra.qa.unittest;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,7 +27,6 @@ import org.junit.Test;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGrant;
 import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMountpoint;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
 import com.zimbra.common.service.ServiceException;
