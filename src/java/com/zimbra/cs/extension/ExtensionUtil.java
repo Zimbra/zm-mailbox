@@ -158,23 +158,21 @@ public class ExtensionUtil {
                     ZimbraExtension ext = (ZimbraExtension) clazz.newInstance();
                     try {
                         ext.init();
-                        ZimbraLog.extensions.info("Initialized extension " +
-                                ext.getName() + ": " + className + "@" + zcl);
+                        ZimbraLog.extensions.info("Initialized extension %s: %s@%s", ext.getName(), className, zcl);
                         sInitializedExtensions.put(ext.getName(), ext);
                         found = true;
                         break;
                     } catch (ExtensionException e) {
-                        ZimbraLog.extensions.info(
-                                "Disabled '" + ext.getName() + "' " + e.getMessage());
+                        ZimbraLog.extensions.info("Disabled '%s' %s", ext.getName(), e.getMessage());
                         ext.destroy();
                     } catch (Exception e) {
-                        ZimbraLog.extensions.warn("exception in " + className + ".init()", e);
+                        ZimbraLog.extensions.warn("exception in %s.init()", className, e);
                         RedoableOp.deregisterClassLoader(
                                 ext.getClass().getClassLoader());
                     }
                 }
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-                ZimbraLog.extensions.warn("exception occurred initializing extension " + className, e);
+                ZimbraLog.extensions.warn("exception occurred initializing extension %s",className, e);
             }
         }
         if (!found) {
