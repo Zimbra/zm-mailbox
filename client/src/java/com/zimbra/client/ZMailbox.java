@@ -537,7 +537,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     /**
      * for use with changePassword
      */
-    private ZMailbox() { }
+    private ZMailbox() {
+        lock = new ZMailboxLock(
+                LC.zimbra_mailbox_lock_max_waiting_threads.intValue(),
+                LC.zimbra_mailbox_lock_timeout.intValue());
+    }
 
     /**
      * change password. You must pass in an options with an account, password, newPassword, and Uri.
@@ -565,9 +569,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZMailbox(Options options) throws ServiceException {
-        lock = new ZMailboxLock(
-                LC.zimbra_mailbox_lock_max_waiting_threads.intValue(),
-                LC.zimbra_mailbox_lock_timeout.intValue());
+        this();
         mHandlers.add(new InternalEventHandler());
         mSearchPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_PAGERS, true);
         mHandlers.add(mSearchPagerCache);
