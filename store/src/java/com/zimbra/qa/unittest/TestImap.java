@@ -364,7 +364,7 @@ public class TestImap {
         Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(true);
         List<ListData> listResult = connection.list("", "*");
         Assert.assertNotNull(listResult);
-        Assert.assertTrue("List result should have atleast 5  entries", listResult.size() >= 5);
+        Assert.assertTrue("List result should have at least 5  entries", listResult.size() >= 5);
 	    boolean hasContacts = false;
 	    boolean hasChats = false;
 	    boolean hasEmailedContacts = false;
@@ -417,7 +417,7 @@ public class TestImap {
     public void testFoldersList() throws Exception {
         List<ListData> listResult = connection.list("", "*");
         Assert.assertNotNull(listResult);
-        Assert.assertTrue("List result should have atleast 8 entries. Got " + listResult.size(), listResult.size() >= 8);
+        Assert.assertTrue("List result should have at least 8 entries. Got " + listResult.size(), listResult.size() >= 8);
         verifyFolderList(listResult);
     }
 
@@ -426,7 +426,7 @@ public class TestImap {
     List<ListData> listResult = connection.list("", "*Contacts*");
          Assert.assertNotNull(listResult);
          // 'Contacts' and 'Emailed Contacts'
-         Assert.assertTrue("List result should have at least 2 entries. Fot " + listResult.size(), listResult.size() >= 2);
+         Assert.assertTrue("List result should have at least 2 entries. Got " + listResult.size(), listResult.size() >= 2);
          for (ListData le : listResult) {
             Assert.assertTrue(String.format("mailbox '%s' contains 'Contacts'", le.getMailbox()),
                     le.getMailbox().contains("Contacts"));
