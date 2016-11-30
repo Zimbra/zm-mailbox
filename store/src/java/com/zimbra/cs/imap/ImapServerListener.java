@@ -16,24 +16,34 @@
  */
 package com.zimbra.cs.imap;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.zimbra.common.service.ServiceException;
 
 public class ImapServerListener {
-    private final String server;
-
-    private final Multimap<String, ImapRemoteSession> accountToSessionMap = HashMultimap.create();
-
-    ImapServerListener(String svr) {
-        this.server = svr;
+    protected static ImapServerListener instance;
+    
+    public static synchronized ImapServerListener getInstance() {
+        if(instance == null) {
+            instance = new ImapServerListener();
+        }
+        return instance;
+    }
+    
+    ImapServerListener() {
     }
 
-    public void addListener(ImapRemoteSession listener) throws ServiceException {
-        accountToSessionMap.put(listener.getTargetAccountId(), listener);
+    public void addListener(ImapListener listener) {
+    }
+    
+    public void removeListener(ImapListener listener) {
+    }
+    
+    public boolean isListeningOn(String accountId) {
+        return false;
     }
 
-    public void removeListener(ImapRemoteSession listener) throws ServiceException {
-        accountToSessionMap.remove(listener.getTargetAccountId(), listener);
+    /**
+     * Deletes any remaining waitsets to release resources on remote servers. ImapServer should call this method before dying.
+     */
+    public void shutdown() {
+       
     }
 }
