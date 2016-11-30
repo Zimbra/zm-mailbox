@@ -107,7 +107,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 
-abstract class ImapHandler {
+public abstract class ImapHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
 
     enum ImapExtension { CONDSTORE, QRESYNC }
@@ -122,7 +122,7 @@ abstract class ImapHandler {
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
 
     ImapConfig config;
-    OutputStream output;
+    protected OutputStream output;
     Authenticator authenticator;
     ImapCredentials credentials;
     boolean startedTLS;
@@ -143,14 +143,14 @@ abstract class ImapHandler {
             "APPEND", "COPY", "CREATE", "EXAMINE", "FETCH", "LIST",
             "LSUB", "UID", "SEARCH", "SELECT", "SORT", "STORE", "XLIST");
 
-    ImapHandler(ImapConfig config) {
+    protected ImapHandler(ImapConfig config) {
         this.config = config;
         startedTLS = config.isSslEnabled();
         reqThrottle = ServerThrottle.getThrottle(config.getProtocol());
         commandThrottle = new ImapCommandThrottle(LC.imap_throttle_command_limit.intValue());
     }
 
-    abstract void sendLine(String line, boolean flush) throws IOException;
+    protected abstract void sendLine(String line, boolean flush) throws IOException;
 
     /**
      * Close the connection.
@@ -158,23 +158,23 @@ abstract class ImapHandler {
      * If closing from outside of this IMAP handler, you must use {@link #close()} instead, otherwise concurrency issues
      * arise.
      */
-    abstract void dropConnection(boolean sendBanner);
+    protected abstract void dropConnection(boolean sendBanner);
 
     /**
      * Close the connection. It's safe to call from outside of this IMAP handler.
      */
-    abstract void close();
+    protected abstract void close();
 
-    abstract void enableInactivityTimer() throws IOException;
-    abstract void completeAuthentication() throws IOException;
-    abstract boolean doSTARTTLS(String tag) throws IOException;
-    abstract InetSocketAddress getLocalAddress();
+    protected abstract void enableInactivityTimer() throws IOException;
+    protected abstract void completeAuthentication() throws IOException;
+    protected abstract boolean doSTARTTLS(String tag) throws IOException;
+    protected abstract InetSocketAddress getLocalAddress();
 
     ImapCredentials getCredentials() {
         return credentials;
     }
 
-    ImapHandler setCredentials(ImapCredentials creds) {
+    public ImapHandler setCredentials(ImapCredentials creds) {
         credentials = creds;
         return this;
     }
@@ -187,7 +187,7 @@ abstract class ImapHandler {
         return config;
     }
 
-    abstract String getRemoteIp();
+    protected abstract String getRemoteIp();
 
     String getOrigRemoteIp() {
         return origRemoteIp;
@@ -4365,7 +4365,7 @@ abstract class ImapHandler {
         goodbyeSent = true;
     }
 
-    void sendResponse(String tag, String msg, boolean flush) throws IOException {
+    protected void sendResponse(String tag, String msg, boolean flush) throws IOException {
         sendLine((tag == null ? "" : tag + ' ') + (msg == null ? "" : msg), flush);
     }
 }
