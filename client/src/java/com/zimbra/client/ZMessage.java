@@ -28,13 +28,12 @@ import org.json.JSONException;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyMessageEvent;
 import com.zimbra.common.mailbox.MailItemType;
-import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.zclient.ZClientException;
 
-public class ZMessage extends ZBaseItem implements ZItem, ToZJSONObject, ZimbraMailItem {
+public class ZMessage extends ZBaseItem implements ToZJSONObject {
 
     private final String mId;
     private final String mSubject;
@@ -420,6 +419,7 @@ public class ZMessage extends ZBaseItem implements ZItem, ToZJSONObject, ZimbraM
         }
     }
 
+    @Override
     public boolean hasAttachment() {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.attachment.getFlagChar()) != -1;
     }
@@ -432,6 +432,7 @@ public class ZMessage extends ZBaseItem implements ZItem, ToZJSONObject, ZimbraM
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.draft.getFlagChar()) != -1;
     }
 
+    @Override
     public boolean isFlagged() {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.flagged.getFlagChar()) != -1;
     }
