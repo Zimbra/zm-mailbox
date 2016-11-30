@@ -5974,13 +5974,29 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         invokeJaxb(req);
     }
 
+    /**
+     * Note that only messages and contacts can be returned by this currently.
+     */
     @Override
     public ZimbraMailItem getItemById(OpContext octxt, ItemIdentifier id, MailItemType type) throws ServiceException {
-        if (MailItemType.MESSAGE != type) {
-            // TODO - should at least be able to support contacts for IMAP usage
-            throw new UnsupportedOperationException("ZMailbox does not support method yet");
+        switch (type) {
+        case CHAT:
+            // ImapHandler suggests that chats have item type of message
+            return getMessageById(id.toString());
+        case CONTACT:
+            return getContact(id.toString());
+        case MESSAGE:
+            return getMessageById(id.toString());
+        case UNKNOWN:
+            try {
+                return getContact(id.toString());
+            } catch (ServiceException se) {
+            }
+            return getMessageById(id.toString());
+        default:
+            break;
         }
-        return getMessageById(id.toString());
+        throw ZClientException.NO_SUCH_ITEM(id.id);
     }
 
     @Override
