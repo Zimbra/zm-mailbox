@@ -1002,8 +1002,12 @@ public class TestImap {
         TestUtil.cliSetup();
         TestUtil.runTest(TestImapImport.class);
     }
-    
+
     public static void verifyFolderList(List<ListData> listResult) {
+        verifyFolderList(listResult, false);
+    }
+
+    public static void verifyFolderList(List<ListData> listResult, boolean mailOnly) {
         boolean hasContacts = false;
         boolean hasChats = false;
         boolean hasEmailedContacts = false;
@@ -1031,14 +1035,20 @@ public class TestImap {
                 hasJunk = true;
             }
         }
-        Assert.assertTrue("folderList * contains chats", hasChats);
-        Assert.assertTrue("folderList * contains contacts", hasContacts);
-        Assert.assertTrue("folderList * contains emailed contacts", hasEmailedContacts);
-        Assert.assertTrue("folderList * contains Trash", hasTrash);
-        Assert.assertTrue("folderList * contains Drafts ", hasDrafts);
-        Assert.assertTrue("folderList * contains Inbox", hasInbox);
-        Assert.assertTrue("folderList * contains Sent", hasSent);
-        Assert.assertTrue("folderList * contains Junk", hasJunk);
+        if(mailOnly) {
+            Assert.assertFalse("mail-only folderList contains Chats", hasChats);
+            Assert.assertFalse("mail-only folderList contains Contacts", hasContacts);
+            Assert.assertFalse("mail-only folderList contains Emailed Contacts", hasEmailedContacts);
+        } else {
+            Assert.assertTrue("folderList * does not contain Chats", hasChats);
+            Assert.assertTrue("folderList * does not contain Contacts", hasContacts);
+            Assert.assertTrue("folderList * does not contain Emailed Contacts", hasEmailedContacts);
+        }
+        Assert.assertTrue("folderList * does not contain Trash", hasTrash);
+        Assert.assertTrue("folderList * does not contain Drafts ", hasDrafts);
+        Assert.assertTrue("folderList * does not contain Inbox", hasInbox);
+        Assert.assertTrue("folderList * does not contain Sent", hasSent);
+        Assert.assertTrue("folderList * does not contain Junk", hasJunk);
     }
 
     private void cleanup() throws Exception {
