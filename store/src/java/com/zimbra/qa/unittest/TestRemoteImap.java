@@ -56,6 +56,8 @@ public class TestRemoteImap {
     private static final String USER = "TestRemoteImap-user";
     private static final String PASS = "test123";
     private String[] imapServersForLocalhost = null;
+    private static boolean mHomeDisplayMailFoldersOnly;
+    private static boolean mIMAPDisplayMailFoldersOnly;
     private Server homeServer = null;
     private Server imapServer = null;
     private Account acc = null;
@@ -80,6 +82,10 @@ public class TestRemoteImap {
         cleanup();
         homeServer = servers.get(0);
         imapServer = servers.get(1);
+        mHomeDisplayMailFoldersOnly = homeServer.isImapDisplayMailFoldersOnly();
+        mIMAPDisplayMailFoldersOnly = imapServer.isImapDisplayMailFoldersOnly();
+        homeServer.setImapDisplayMailFoldersOnly(false);
+        imapServer.setImapDisplayMailFoldersOnly(false);
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraMailHost, homeServer.getServiceHostname());
         attrs.put(Provisioning.A_zimbraFeatureIMEnabled, ProvisioningConstants.TRUE);
@@ -106,6 +112,10 @@ public class TestRemoteImap {
         cleanup();
         if(homeServer != null) {
             homeServer.setReverseProxyUpstreamImapServers(imapServersForLocalhost);
+            homeServer.setImapDisplayMailFoldersOnly(mHomeDisplayMailFoldersOnly);
+        }
+        if(imapServer != null) {
+            imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
         }
     }
 
@@ -164,6 +174,19 @@ public class TestRemoteImap {
         assertNotNull(listResult);
         Assert.assertTrue("Should have at least 5 subscriptions ", listResult.size() >= 5);
         TestImap.verifyFolderList(listResult);
+    }
+
+    @Test
+    public void testMailOnlyFolderList() throws IOException, ServiceException  {
+        Assume.assumeTrue(servers.size() > 1);
+        imapServer.setImapDisplayMailFoldersOnly(true);
+        connection = connect(imapServer);
+        connection.login(PASS);
+        Assert.assertTrue("IMAP connection is not authenticated", connection.isAuthenticated());
+        List<ListData> listResult = connection.list("", "*");
+        assertNotNull(listResult);
+        Assert.assertTrue("Should have at least 5 subscriptions ", listResult.size() >= 5);
+        TestImap.verifyFolderList(listResult, true);
     }
 
     @Test
@@ -269,6 +292,17 @@ public class TestRemoteImap {
         listResult = connection.lsub("", "*");
         assertNotNull(listResult);
         Assert.assertEquals("Should have 0 subscriptions after unsubscribing", 0, listResult.size());
+    }
+
+    @Test
+    public void testCreate() throws Exception {
+        Assume.assumeTrue(servers.size() > 1);
+        String folderName = "TestRemoteImap-testCreate";
+        connection = connect(imapServer);
+        connection.login(PASS);
+        Assert.assertFalse(connection.exists(folderName));
+        connection.create(folderName);
+        Assert.assertTrue(connection.exists(folderName));
     }
 
     private byte[] fetchBody(long uid) throws IOException {
