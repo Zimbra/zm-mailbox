@@ -25,9 +25,11 @@ import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers
- * 
+ *
  */
 public class ZClientException extends ServiceException {
+
+    private static final long serialVersionUID = -728413545620278749L;
 
     public static final String CLIENT_ERROR       = "zclient.CLIENT_ERROR";
     public static final String IO_ERROR           = "zclient.IO_ERROR";
@@ -38,7 +40,7 @@ public class ZClientException extends ServiceException {
     private ZClientException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
     }
-    
+
     private ZClientException(String message, String code, boolean isReceiversFault, Throwable cause) {
         super(message, code, isReceiversFault, cause);
     }
@@ -61,5 +63,17 @@ public class ZClientException extends ServiceException {
 
     public static ZClientException ZIMBRA_SHARE_PARSE_ERROR(String msg, Throwable cause) {
         return new ZClientException(msg, ZIMBRA_SHARE_PARSE_ERROR, SENDERS_FAULT, cause);
+    }
+
+    public static class ZClientNoSuchItemException extends ZClientException {
+        private static final long serialVersionUID = 6322647788472338821L;
+
+        public ZClientNoSuchItemException(int id) {
+            super("no such item: "+ id, CLIENT_ERROR, SENDERS_FAULT, null);
+        }
+    }
+
+    public static ZClientException NO_SUCH_ITEM(int id) {
+        return new ZClientNoSuchItemException(id);
     }
 }
