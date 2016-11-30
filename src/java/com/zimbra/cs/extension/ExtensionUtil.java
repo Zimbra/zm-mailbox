@@ -149,6 +149,37 @@ public class ExtensionUtil {
         }
     }
 
+    public static synchronized void init(String className) {
+        boolean found = false;
+        for (ZimbraExtensionClassLoader zcl : sClassLoaders) {
+            try {
+                if (zcl.getExtensionClassNames().contains(className)) {
+                    Class<?> clazz = zcl.loadClass(className);
+                    ZimbraExtension ext = (ZimbraExtension) clazz.newInstance();
+                    try {
+                        ext.init();
+                        ZimbraLog.extensions.info("Initialized extension %s: %s@%s", ext.getName(), className, zcl);
+                        sInitializedExtensions.put(ext.getName(), ext);
+                        found = true;
+                        break;
+                    } catch (ExtensionException e) {
+                        ZimbraLog.extensions.info("Disabled '%s' %s", ext.getName(), e.getMessage());
+                        ext.destroy();
+                    } catch (Exception e) {
+                        ZimbraLog.extensions.warn("exception in %s.init()", className, e);
+                        RedoableOp.deregisterClassLoader(
+                                ext.getClass().getClassLoader());
+                    }
+                }
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                ZimbraLog.extensions.warn("exception occurred initializing extension %s",className, e);
+            }
+        }
+        if (!found) {
+            ZimbraLog.extensions.warn("unable to locate extension class %s, not found", className);
+        }
+    }
+
     public static synchronized void postInitAll() {
         ZimbraLog.extensions.info("Post-Initializing extensions");
 
@@ -213,6 +244,6 @@ public class ExtensionUtil {
 
 
     public static synchronized ZimbraExtension getExtension(String name) {
-        return (ZimbraExtension) sInitializedExtensions.get(name);
+        return sInitializedExtensions.get(name);
     }
 }
