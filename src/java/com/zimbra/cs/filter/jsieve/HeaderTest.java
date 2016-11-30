@@ -346,7 +346,12 @@ public class HeaderTest extends Header {
             if (envelope) {
                 values = mailAdapter.getEnvelope(hn);
             } else {
-                values = Arrays.asList(mailAdapter.getMimeMessage().getHeader(hn));
+                String[] headerValues = mailAdapter.getMimeMessage().getHeader(hn);
+                if (headerValues != null && headerValues.length > 0) {
+                    values = Arrays.asList(headerValues);
+                } else {
+                    values = new ArrayList<String>();
+                }
                 List<String> decodedValues = new ArrayList<>();
                 for (String value : values) {
                     try {
