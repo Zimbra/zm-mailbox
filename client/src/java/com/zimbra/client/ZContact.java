@@ -29,14 +29,13 @@ import org.json.JSONException;
 import com.zimbra.client.event.ZModifyContactEvent;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.common.mailbox.MailItemType;
-import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 
-public class ZContact extends ZBaseItem implements ZItem, ZimbraMailItem, ToZJSONObject {
+public class ZContact extends ZBaseItem implements ToZJSONObject {
 
     /** "File as" setting: &nbsp;<code>Last, First</code> */
     public static final String FA_LAST_C_FIRST = "1";

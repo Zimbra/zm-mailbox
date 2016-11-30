@@ -113,4 +113,6 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
      * IMAP session. */
     @Override
     public abstract int getImapUid();
+    @Override
+    public abstract String getId();
 }
