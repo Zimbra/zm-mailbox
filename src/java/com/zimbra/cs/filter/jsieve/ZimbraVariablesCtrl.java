@@ -24,7 +24,7 @@ import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.TagArgument;
-import org.apache.jsieve.commands.AbstractActionCommand;
+import org.apache.jsieve.commands.AbstractCommand;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
@@ -46,7 +46,7 @@ import com.zimbra.cs.filter.ZimbraMailAdapter;
  *  <li>{@code :off} From now onward, the Variable feature is not available.
  * </ul>
  */
-public class ZimbraVariablesCtrl extends AbstractActionCommand {
+public class ZimbraVariablesCtrl extends AbstractCommand {
     static final String RESET = ":reset";
     static final String VARIABLE_OFF = ":off";
     static final String VARIABLE_ON  = ":on";

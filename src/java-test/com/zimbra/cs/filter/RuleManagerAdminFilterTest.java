@@ -16,9 +16,12 @@
  */
 package com.zimbra.cs.filter;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.mail.Header;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -386,6 +389,123 @@ public final class RuleManagerAdminFilterTest {
         Assert.assertEquals("Hello World", msg.getFragment());
         String tags[] = msg.getTags();
         Assert.assertEquals(2, tags.length);
+    }
+
+    // Verification for the ZCS-272
+    @Test
+    public void deleteHeaderInAdminBefore() throws Exception {
+        String adminBefore = "require [\"editheader\",\"log\"];\n"
+                           + "deleteheader :matches \"X-Test-Header\" \"Ran*\";\n";
+
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        RuleManager.clearCachedRules(account);
+
+        account.unsetMailAdminSieveScriptBefore();
+        account.unsetMailSieveScript();
+        account.unsetMailAdminSieveScriptAfter();
+
+        account.setMailAdminSieveScriptBefore(adminBefore);
+
+        String rawTest = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: Test\n"
+                       + "X-Test-Header: Random\n"
+                       + "\n"
+                       + "Hello World";
+        RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(rawTest.getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+
+        Integer itemId = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+        Message message = mbox.getMessageById(null, itemId);
+        boolean headerDeleted = true;
+        for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+            Header temp = enumeration.nextElement();
+            if ("X-Test-Header".equals(temp.getName())) {
+                headerDeleted = false;
+                break;
+            }
+        }
+        Assert.assertTrue(headerDeleted);
+    }
+
+    // Verification for the ZCS-272
+    @Test
+    public void deleteHeaderInUser() throws Exception {
+        String endUser = "require [\"editheader\",\"log\"];\n"
+                       + "deleteheader :matches \"X-Test-Header\" \"Ran*\";\n";
+
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        RuleManager.clearCachedRules(account);
+
+        account.unsetMailAdminSieveScriptBefore();
+        account.unsetMailSieveScript();
+        account.unsetMailAdminSieveScriptAfter();
+
+        account.setMailSieveScript(endUser);
+
+        String rawTest = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: Test\n"
+                       + "X-Test-Header: Random\n"
+                       + "\n"
+                       + "Hello World";
+        RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(rawTest.getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+
+        Integer itemId = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+        Message message = mbox.getMessageById(null, itemId);
+        boolean headerDeleted = true;
+        for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+            Header temp = enumeration.nextElement();
+            if ("X-Test-Header".equals(temp.getName())) {
+                headerDeleted = false;
+                break;
+            }
+        }
+        Assert.assertTrue(headerDeleted);
+    }
+
+    // Verification for the ZCS-272
+    @Test
+    public void deleteHeaderInAdminAfter() throws Exception {
+        String adminAfter = "require [\"editheader\",\"log\"];\n"
+                          + "deleteheader :matches \"X-Test-Header\" \"Ran*\";\n";
+
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        RuleManager.clearCachedRules(account);
+
+        account.unsetMailAdminSieveScriptBefore();
+        account.unsetMailSieveScript();
+        account.unsetMailAdminSieveScriptAfter();
+
+        account.setMailAdminSieveScriptAfter(adminAfter);
+
+        String rawTest = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: Test\n"
+                       + "X-Test-Header: Random\n"
+                       + "\n"
+                       + "Hello World";
+        RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(rawTest.getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+
+        Integer itemId = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+        Message message = mbox.getMessageById(null, itemId);
+        boolean headerDeleted = true;
+        for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+            Header temp = enumeration.nextElement();
+            if ("X-Test-Header".equals(temp.getName())) {
+                headerDeleted = false;
+                break;
+            }
+        }
+        Assert.assertTrue(headerDeleted);
     }
 }
 
