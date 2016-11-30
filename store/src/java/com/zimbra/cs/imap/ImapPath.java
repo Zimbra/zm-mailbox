@@ -80,7 +80,7 @@ public class ImapPath implements Comparable<ImapPath> {
      * @param imapPath   The client-provided logical IMAP pathname.
      * @param creds      The authenticated user's login credentials.
      * @see #exportPath(String, ImapCredentials) */
-    ImapPath(String imapPath, ImapCredentials creds) {
+    public ImapPath(String imapPath, ImapCredentials creds) {
         this(imapPath, creds, Scope.CONTENT);
     }
 
