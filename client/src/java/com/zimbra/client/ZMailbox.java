@@ -511,7 +511,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private long mSize;
     private boolean mNoTagCache;
     private ZContactByPhoneCache mContactByPhoneCache;
-    private ZMailboxLock lock;
+    private final ZMailboxLock lock;
 
     private final List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
@@ -1779,6 +1779,17 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return getContactsForFolder(null, ids, sortBy, sync, attrs);
     }
 
+    public ZContact getContact(ItemIdentifier itemId) throws ServiceException {
+        try {
+        return getContact(itemId.toString());
+        } catch (SoapFaultException sfe) {
+            if (sfe.getMessage().startsWith("no such contact")) {
+                throw ZClientException.NO_SUCH_CONTACT(itemId.id, sfe);
+            }
+            throw sfe;
+        }
+    }
+
     /**
      *
      * @param id single contact id to fetch
@@ -2566,6 +2577,17 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         ZGetMessageParams params = new ZGetMessageParams();
         params.setId(id);
         return getMessage(params);
+    }
+
+    public ZMessage getMessageById(ItemIdentifier itemId) throws ServiceException {
+        try {
+        return getMessageById(itemId.toString());
+        } catch (SoapFaultException sfe) {
+            if (sfe.getMessage().startsWith("no such message")) {
+                throw ZClientException.NO_SUCH_CONTACT(itemId.id, sfe);
+            }
+            throw sfe;
+        }
     }
 
     /**
@@ -5982,17 +6004,17 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         switch (type) {
         case CHAT:
             // ImapHandler suggests that chats have item type of message
-            return getMessageById(id.toString());
+            return getMessageById(id);
         case CONTACT:
-            return getContact(id.toString());
+            return getContact(id);
         case MESSAGE:
-            return getMessageById(id.toString());
+            return getMessageById(id);
         case UNKNOWN:
             try {
-                return getContact(id.toString());
+                return getContact(id);
             } catch (ServiceException se) {
             }
-            return getMessageById(id.toString());
+            return getMessageById(id);
         default:
             break;
         }
