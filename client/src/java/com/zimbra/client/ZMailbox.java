@@ -147,8 +147,11 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
+import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
+import com.zimbra.soap.account.message.OpenImapFolderRequest;
+import com.zimbra.soap.account.message.OpenImapFolderResponse;
 import com.zimbra.soap.account.message.ResetRecentMessageCountRequest;
 import com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.type.AuthToken;
@@ -6073,5 +6076,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public int getLastChangeID() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("ZMailbox method not supported yet");
+    }
+
+    public List<ImapMessageInfo> openImapFolder(ItemIdentifier folderId) throws ServiceException {
+        OpenImapFolderRequest req = new OpenImapFolderRequest();
+        req.setFolderId(String.valueOf(folderId.id));
+        OpenImapFolderResponse resp = invokeJaxb(req);
+        return resp.getImapMessageInfo();
+
     }
 }
