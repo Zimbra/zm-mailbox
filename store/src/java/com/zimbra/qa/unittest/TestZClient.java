@@ -19,19 +19,14 @@ package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
+import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFeatures;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGetInfoResult;
@@ -41,11 +36,17 @@ import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
 import com.zimbra.client.ZSignature;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.OpContext;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.imap.RemoteImapMailboxStore;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -54,9 +55,11 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.mail.message.ItemActionResponse;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 public class TestZClient extends TestCase {
     private static String NAME_PREFIX = "TestZClient";
@@ -67,6 +70,9 @@ public class TestZClient extends TestCase {
     @Override
     public void setUp()
     throws Exception {
+        if (!TestUtil.fromRunUnitTests) {
+            TestUtil.cliSetup();
+        }
         cleanUp();
         TestUtil.createAccount(USER_NAME);
         TestUtil.createAccount(RECIPIENT_USER_NAME);
@@ -159,7 +165,8 @@ public class TestZClient extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder = null;
         try {
-            folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", FOLDER_NAME, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
+            folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"",
+                    FOLDER_NAME, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
         } catch (ServiceException e) {
             if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
                 folder = mbox.getFolderByPath("/"+FOLDER_NAME);
@@ -176,18 +183,75 @@ public class TestZClient extends TestCase {
     @Test
     public void testResetImapUID() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        try {
-            mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", FOLDER_NAME, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
-        } catch (ServiceException e) {
-            if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
-                throw e;
-            }
-        }
         List<Integer> ids = new LinkedList<Integer>();
         ids.add(Integer.valueOf(TestUtil.addMessage(mbox, "imap message 1")));
         ids.add(Integer.valueOf(TestUtil.addMessage(mbox, "imap message 2")));
         RemoteImapMailboxStore store = new RemoteImapMailboxStore(mbox, TestUtil.getAccount(USER_NAME).getId());
+        // TODO: change to use List<Integer> newUIDs = mbox.resetImapUid(null, ids);
         store.resetImapUid(ids);
+    }
+
+    @Test
+    public void testGetMessageItemById() throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+
+        Integer id = Integer.valueOf(TestUtil.addMessage(zmbox, "testGetItemById test msg"));
+        ItemIdentifier msgItemId = ItemIdentifier.fromAccountIdAndItemId(zmbox.getAccountId(), id);
+
+        Contact contact = TestUtil.createContactInDefaultFolder(mbox, "testzclient@example.com");
+        ItemIdentifier contactId = ItemIdentifier.fromAccountIdAndItemId(zmbox.getAccountId(), contact.getId());
+
+        /* getting message using message id */
+        ZimbraMailItem mItemAsMsg = zmbox.getItemById((OpContext) null, msgItemId, MailItemType.MESSAGE);
+        Assert.assertNotNull("getItemById returned null when got with type MESSAGE", mItemAsMsg);
+        Assert.assertEquals(
+                "Different ID when got with type MESSAGE", id, Integer.valueOf(mItemAsMsg.getIdInMailbox()));
+        Assert.assertTrue(
+                String.format("%s Not a ZMessage when got with type MESSAGE", mItemAsMsg.getClass().getName()),
+                mItemAsMsg instanceof ZMessage);
+
+        /* getting item using message id */
+        mItemAsMsg = zmbox.getItemById((OpContext) null, msgItemId, MailItemType.UNKNOWN);
+        Assert.assertNotNull("getItemById returned null when got with type UNKNOWN", mItemAsMsg);
+        Assert.assertEquals(
+                "Different ID when got with type UNKNOWN", id, Integer.valueOf(mItemAsMsg.getIdInMailbox()));
+        Assert.assertTrue(
+                String.format("%s Not a ZMessage when got with type UNKNOWN", mItemAsMsg.getClass().getName()),
+                mItemAsMsg instanceof ZMessage);
+
+
+        /* getting contact using id of contact */
+        ZimbraMailItem mItemAsContact = zmbox.getItemById((OpContext) null, contactId, MailItemType.CONTACT);
+        Assert.assertNotNull("getItemById returned null when got with type CONTACT", mItemAsContact);
+        Assert.assertEquals(
+                "Different ID when got with type CONTACT", contactId.id, mItemAsContact.getIdInMailbox());
+        Assert.assertTrue(
+                String.format("%s Not a ZContact when got with type CONTACT", mItemAsContact.getClass().getName()),
+                mItemAsContact instanceof ZContact);
+
+        /* getting message using contact id */
+        try {
+            zmbox.getItemById((OpContext) null, contactId, MailItemType.MESSAGE);
+            Assert.fail("ZClientNoSuchItemException was not thrown when getting contact as message");
+        } catch (ZClientException.ZClientNoSuchItemException zcnsie) {
+        }
+
+        /* getting message using non-existent id */
+        ItemIdentifier nonexistent = ItemIdentifier.fromAccountIdAndItemId(zmbox.getAccountId(), 9099);
+        try {
+            zmbox.getItemById((OpContext) null, nonexistent, MailItemType.UNKNOWN);
+            Assert.fail("ZClientNoSuchItemException was not thrown");
+        } catch (ZClientException.ZClientNoSuchItemException zcnsie) {
+        }
+
+
+        /* getting contact using id of message */
+        try {
+            zmbox.getItemById((OpContext) null, msgItemId, MailItemType.CONTACT);
+            Assert.fail("ZClientNoSuchItemException was not thrown");
+        } catch (ZClientException.ZClientNoSuchContactException zcnsce) {
+        }
     }
 
     @Test
@@ -206,7 +270,7 @@ public class TestZClient extends TestCase {
         MetadataList rlist = config.getList("subs", true);
         Assert.assertNotNull(rlist);
         Assert.assertNotNull(rlist.get(0));
-        Assert.assertTrue(rlist.get(0).equalsIgnoreCase(path));   
+        Assert.assertTrue(rlist.get(0).equalsIgnoreCase(path));
 
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Set<String> subs = zmbox.listIMAPSubscriptions();
@@ -258,7 +322,7 @@ public class TestZClient extends TestCase {
         Assert.assertEquals("After adding a message, ZFolder modseq is not the same as folder modseq", zfolder.getImapMODSEQ(), folder.getImapMODSEQ());
         Assert.assertFalse("ZFolder modseq did not change after adding a message", zmodSeq == zfolder.getImapMODSEQ());
     }
-    
+
     @Test
     public void testRecentMessageCount() throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
