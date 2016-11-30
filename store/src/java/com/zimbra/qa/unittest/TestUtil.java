@@ -94,6 +94,7 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.localconfig.LocalConfig;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -129,6 +130,7 @@ import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -137,6 +139,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.rmgmt.RemoteCommands;
 import com.zimbra.cs.rmgmt.RemoteMailQueue;
@@ -165,6 +168,7 @@ import com.zimbra.soap.type.TargetBy;
 import com.zimbra.soap.type.TargetType;
 
 import junit.framework.Assert;
+
 
 /**
  * @author bburtin
@@ -311,6 +315,15 @@ public class TestUtil extends Assert {
             throws ServiceException, MessagingException, IOException {
         return new MessageBuilder().withSubject(subject).withToRecipient(recipient).withFrom(sender).withDate(date)
                 .withBody(body).create();
+    }
+
+    public static Contact createContact(Mailbox mbox, int folderId, String emailAddr) throws ServiceException {
+        return mbox.createContact(null,
+                new ParsedContact(Collections.singletonMap(ContactConstants.A_email, emailAddr)), folderId, null);
+    }
+
+    public static Contact createContactInDefaultFolder(Mailbox mbox, String emailAddr) throws ServiceException {
+        return createContact(mbox, Mailbox.ID_FOLDER_CONTACTS, emailAddr);
     }
 
     static String addDomainIfNecessary(String user) throws ServiceException {
