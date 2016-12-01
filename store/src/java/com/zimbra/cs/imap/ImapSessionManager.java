@@ -31,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
@@ -343,6 +344,12 @@ final class ImapSessionManager {
                 session = imapStore.createListener(i4folder, handler);
                 session.register();
                 sessions.put(session, session /* cannot be null for ConcurrentLinkedHashMap */);
+                if (mbox instanceof ZMailbox) {
+                    ImapServerListener svrListener = ImapServerListenerPool.getInstance().get((ZMailbox)mbox);
+                    if (null != svrListener) {
+                        svrListener.addListener((ImapRemoteSession)session);
+                    }
+                }
                 return new FolderDetails(session, initial);
             } catch (ServiceException e) {
                 if (session != null) {
