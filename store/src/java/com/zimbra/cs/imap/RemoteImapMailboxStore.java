@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -48,6 +49,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
+import com.zimbra.soap.account.message.ImapMessageInfo;
 
 public class RemoteImapMailboxStore extends ImapMailboxStore {
 
@@ -243,7 +245,11 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public List<ImapMessage> openImapFolder(OperationContext octxt, ItemIdentifier folderId) throws ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        List<ImapMessage> msgs = new LinkedList<ImapMessage>();
+        for (ImapMessageInfo msg: zMailbox.openImapFolder(folderId.id, 1000)) {
+            msgs.add(new ImapMessage(msg));
+        }
+        return msgs;
     }
 
     @Override
