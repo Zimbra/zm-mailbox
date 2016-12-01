@@ -32,4 +32,8 @@ public class ImapServerListener {
     public void addListener(ImapRemoteSession listener) throws ServiceException {
         accountToSessionMap.put(listener.getTargetAccountId(), listener);
     }
+
+    public void removeListener(ImapRemoteSession listener) throws ServiceException {
+        accountToSessionMap.remove(listener.getTargetAccountId(), listener);
+    }
 }
