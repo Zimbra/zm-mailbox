@@ -12,9 +12,9 @@ import com.zimbra.cs.service.account.AccountDocumentHandler;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.admin.message.ImapMessageInfo;
-import com.zimbra.soap.admin.message.OpenImapFolderRequest;
-import com.zimbra.soap.admin.message.OpenImapFolderResponse;
+import com.zimbra.soap.account.message.ImapMessageInfo;
+import com.zimbra.soap.account.message.OpenImapFolderRequest;
+import com.zimbra.soap.account.message.OpenImapFolderResponse;
 
 public class OpenImapFolder extends AccountDocumentHandler {
 
