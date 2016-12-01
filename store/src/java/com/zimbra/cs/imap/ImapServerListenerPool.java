@@ -30,9 +30,16 @@ import com.zimbra.cs.account.Provisioning;
 
 public class ImapServerListenerPool {
     private static final ImapServerListenerPool SINGLETON = new ImapServerListenerPool();
+
+    /**
+     * Only supporting one ImapServerListener per server.  Initially planned to allow for multiple
+     * listeners per server to ensure timely updates when handling large numbers of accounts but
+     * believe this can be addressed by having more IMAP server front loaders.
+     * May revisit this later if needed.
+     */
     private final LoadingCache <String, ImapServerListener> serverToListenerMap = CacheBuilder.newBuilder()
             .concurrencyLevel(4)
-            .initialCapacity(10) /* TODO - base on the total number of servers? */
+            .initialCapacity(16) /* TODO - base on the total number of servers or use LDAP config? */
             .build(new CacheLoader<String, ImapServerListener>() {
 
     @Override
