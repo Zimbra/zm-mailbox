@@ -92,6 +92,7 @@ public class AddHeader extends AbstractCommand {
         }
 
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        headerName = Variables.replaceAllVariables(mailAdapter, headerName);
         headerValue = Variables.replaceAllVariables(mailAdapter, headerValue);
 
         validateArguments(arguments, context);
