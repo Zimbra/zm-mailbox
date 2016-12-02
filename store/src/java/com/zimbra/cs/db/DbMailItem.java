@@ -3463,29 +3463,65 @@ public class DbMailItem {
         MailItem.Type.CONTACT.toByte() + ")";
 
     public static List<ImapMessage> loadImapFolder(Folder folder) throws ServiceException {
+        return loadImapFolder(folder, null, null).getFirst();
+    }
+
+    public static Pair<List<ImapMessage>, Boolean> loadImapFolder(Folder folder, Integer limit, Integer offset) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         List<ImapMessage> result = new ArrayList<ImapMessage>();
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
+        boolean hasLimit = limit != null && limit > 0 && offset != null && offset >= 0;
         try {
-            stmt = conn.prepareStatement("SELECT " + IMAP_FIELDS +
-                        " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + IMAP_TYPES);
-            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS) {
+            StringBuilder query = new StringBuilder("SELECT " + IMAP_FIELDS +
+                    " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + IMAP_TYPES);
+
+
+            if (hasLimit && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                query.append(" ").append(Db.getInstance().limit(offset, limit+1));
+            }
+            stmt = conn.prepareStatement(query.toString());
+            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS && !hasLimit) {
                 Db.getInstance().enableStreaming(stmt);
             }
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folder.getId());
-            rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                int flags = rs.getBoolean(4) ? Flag.BITMASK_UNREAD | rs.getInt(5) : rs.getInt(5);
-                result.add(new ImapMessage(rs.getInt(1), MailItem.Type.of(rs.getByte(2)), rs.getInt(3), flags, DbTag.deserializeTags(rs.getString(6))));
+            if (hasLimit && !Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                stmt.setMaxRows(offset + limit + 2);
             }
-            return result;
+            rs = stmt.executeQuery();
+            boolean hasMore = false;
+            if (!hasLimit) {
+                while (rs.next()) {
+                    int flags = rs.getBoolean(4) ? Flag.BITMASK_UNREAD | rs.getInt(5) : rs.getInt(5);
+                    result.add(new ImapMessage(rs.getInt(1), MailItem.Type.of(rs.getByte(2)), rs.getInt(3), flags, DbTag.deserializeTags(rs.getString(6))));
+                }
+            } else if (!Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                while (rs.next()) {
+                    if (offset-- > 0) {
+                        continue;
+                    }
+                    if (limit-- <= 0) {
+                        hasMore = rs.next();
+                        break;
+                    }
+                    int flags = rs.getBoolean(4) ? Flag.BITMASK_UNREAD | rs.getInt(5) : rs.getInt(5);
+                    result.add(new ImapMessage(rs.getInt(1), MailItem.Type.of(rs.getByte(2)), rs.getInt(3), flags, DbTag.deserializeTags(rs.getString(6))));
+                }
+            } else {
+                int n = 0;
+                while (n < limit && rs.next()) {
+                    n++;
+                    int flags = rs.getBoolean(4) ? Flag.BITMASK_UNREAD | rs.getInt(5) : rs.getInt(5);
+                    result.add(new ImapMessage(rs.getInt(1), MailItem.Type.of(rs.getByte(2)), rs.getInt(3), flags, DbTag.deserializeTags(rs.getString(6))));
+                }
+                hasMore = rs.next();
+            }
+            return new Pair<List<ImapMessage>, Boolean>(result, hasMore);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("loading IMAP folder data: " + folder.getPath(), e);
         } finally {
