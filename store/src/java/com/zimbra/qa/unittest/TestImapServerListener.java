@@ -7,14 +7,12 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
