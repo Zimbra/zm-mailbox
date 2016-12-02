@@ -1,10 +1,12 @@
 package com.zimbra.cs.service.mail;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -27,7 +29,12 @@ public class OpenImapFolder extends AccountDocumentHandler {
         OpenImapFolderRequest req = JaxbUtil.elementToJaxb(request);
         OpenImapFolderResponse resp = new OpenImapFolderResponse();
         ItemId folderId = new ItemId(req.getFolderId(), zsc);
-        for (ImapMessage msg: mbox.openImapFolder(octxt, folderId.getId())) {
+        int limit = req.getLimit();
+        int offset = req.getOffset() == null ? 0 : req.getOffset();
+        Pair<List<ImapMessage>, Boolean> openFolderResults = mbox.openImapFolder(octxt, folderId.getId(), limit, offset);
+        List<ImapMessage> msgs = openFolderResults.getFirst();
+        boolean hasMore = openFolderResults.getSecond();
+        for (ImapMessage msg: msgs) {
             int id = msg.getMsgId();
             int imapId = msg.getImapId();
             String type = msg.getType().toString();
@@ -36,6 +43,7 @@ public class OpenImapFolder extends AccountDocumentHandler {
             ImapMessageInfo info = new ImapMessageInfo(id, imapId, type, flags, tags);
             resp.addImapMessageInfo(info);
         }
+        resp.setHasMore(hasMore);
         return JaxbUtil.jaxbToElement(resp);
     }
 
