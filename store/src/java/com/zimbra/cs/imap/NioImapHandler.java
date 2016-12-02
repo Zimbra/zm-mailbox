@@ -42,7 +42,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    String getRemoteIp() {
+    protected String getRemoteIp() {
         return connection.getRemoteAddress().getAddress().getHostAddress();
     }
 
@@ -181,7 +181,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    void sendLine(String line, boolean flush) throws IOException {
+    protected void sendLine(String line, boolean flush) throws IOException {
         NioOutputStream out = (NioOutputStream) output;
         if (out != null) {
             out.write(line);
@@ -199,7 +199,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
      * issues are taken care of.
      */
     @Override
-    void dropConnection(boolean sendBanner) {
+    protected void dropConnection(boolean sendBanner) {
         if (credentials != null && !goodbyeSent) {
             ZimbraLog.imap.info("dropping connection for user %s (server-initiated)", credentials.getUsername());
         }
@@ -213,17 +213,17 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    void close() {
+    protected void close() {
         dropConnection(true);
     }
 
     @Override
-    void enableInactivityTimer() {
+    protected void enableInactivityTimer() {
         connection.setMaxIdleSeconds(config.getAuthenticatedMaxIdleTime());
     }
 
     @Override
-    void completeAuthentication() throws IOException {
+    protected void completeAuthentication() throws IOException {
         if (authenticator.isEncryptionEnabled()) {
             connection.startSasl(authenticator.getSaslServer());
         }
@@ -231,7 +231,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    boolean doSTARTTLS(String tag) throws IOException {
+    protected boolean doSTARTTLS(String tag) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED)) {
             return true;
         } else if (startedTLS) {
@@ -246,7 +246,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    InetSocketAddress getLocalAddress() {
+    protected InetSocketAddress getLocalAddress() {
         return connection.getLocalAddress();
     }
 }
