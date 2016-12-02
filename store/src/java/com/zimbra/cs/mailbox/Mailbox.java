@@ -3594,11 +3594,15 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<ImapMessage> openImapFolder(OperationContext octxt, int folderId) throws ServiceException {
+        return openImapFolder(octxt, folderId, null, null).getFirst();
+    }
+
+    public Pair<List<ImapMessage>, Boolean> openImapFolder(OperationContext octxt, int folderId, Integer limit, Integer offset) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("openImapFolder", octxt);
             Folder folder = getFolderById(folderId);
-            List<ImapMessage> i4list = DbMailItem.loadImapFolder(folder);
+            Pair<List<ImapMessage>, Boolean> i4list = DbMailItem.loadImapFolder(folder, limit, offset);
             success = true;
             return i4list;
         } finally {
