@@ -31,6 +31,7 @@ import com.zimbra.cs.imap.ImapListener;
 import com.zimbra.cs.imap.ImapMailboxStore;
 import com.zimbra.cs.imap.ImapPath;
 import com.zimbra.cs.imap.ImapServerListener;
+import com.zimbra.cs.imap.ImapServerListenerPool;
 import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
@@ -115,9 +116,10 @@ public class TestImapServerListener {
     public void testRegisterUnregister() throws ServiceException {
         Assume.assumeNotNull(remoteServer);
         Assume.assumeNotNull(remoteAccount);
-        ImapServerListener remoteListener = new ImapServerListener(remoteServer.getServiceHostname());
-        assertNotNull("ImapServerListener instance should not be null", remoteListener);
         MailboxStore mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
+        assertNotNull("ImapServerListener instance should not be null", remoteListener);
+        
         ImapMailboxStore imapStore = ImapMailboxStore.get(mboxStore);
         assertNotNull("ImapMailboxStore instance should not be null", imapStore);
         ImapCredentials creds = new ImapCredentials(remoteAccount);
