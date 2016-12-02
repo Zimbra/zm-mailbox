@@ -114,34 +114,10 @@ public class TestImapServerListener {
     }
 
     @Test
-    public void testRegisterLocalAccount() throws ServiceException {
-        ImapServerListener remoteListener = ImapServerListener.getInstance();
-        assertNotNull("ImapServerListener instance should not be null", remoteListener);
-        MailboxStore mboxStore = TestUtil.getZMailbox(LOCAL_USER_NAME);
-        ImapMailboxStore imapStore = ImapMailboxStore.get(mboxStore);
-        assertNotNull("ImapMailboxStore instance should not be null", imapStore);
-        ImapCredentials creds = new ImapCredentials(remoteAccount);
-        ImapPath path = new ImapPath("INBOX", creds);
-        byte params = 0;
-        ImapHandler handler = new MockImapHandler().setCredentials(creds);
-        ImapFolder i4folder = new ImapFolder(path, params, handler);
-        assertNotNull("ImapFolder instance should not be null", i4folder);
-        assertNotNull("ImapFolder.getCredentials() should not return null", i4folder.getCredentials());
-        assertNotNull("ImapFolder.getPath() should not return null", i4folder.getPath());
-        try {
-            imapStore.createListener(i4folder, handler);
-        } catch (ServiceException ex) {
-            assertNotNull(ex);
-            return;
-        }
-        fail("Should have caught an exception");
-    }
-
-    @Test
     public void testRegisterUnregister() throws ServiceException {
         Assume.assumeNotNull(remoteServer);
         Assume.assumeNotNull(remoteAccount);
-        ImapServerListener remoteListener = ImapServerListener.getInstance();
+        ImapServerListener remoteListener = new ImapServerListener(remoteServer.getServiceHostname());
         assertNotNull("ImapServerListener instance should not be null", remoteListener);
         MailboxStore mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
         ImapMailboxStore imapStore = ImapMailboxStore.get(mboxStore);
