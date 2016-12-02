@@ -158,6 +158,7 @@ public class TestImapServerListener {
         
         ImapListener session = imapStore.createListener(i4folder, handler);
         assertNotNull("ImapListener instance should not be null", session);
+        assertFalse("Expecting ImapServerListener::isListeningOn to return false before calling addListener", remoteListener.isListeningOn(session.getTargetAccountId()));
         remoteListener.addListener(session);
         assertTrue("Expecting ImapServerListener::isListeningOn to return true after calling addListener", remoteListener.isListeningOn(session.getTargetAccountId()));
         remoteListener.removeListener(session);
