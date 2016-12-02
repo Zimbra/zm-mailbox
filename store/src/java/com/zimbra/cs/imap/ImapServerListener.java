@@ -16,77 +16,29 @@
  */
 package com.zimbra.cs.imap;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-
 
 public class ImapServerListener {
-    protected static ImapServerListener instance;
-    private final Map<String, List<ImapListener>> listeners;
-    private final Map<String, String> accountsToWaitsets;
-    private final Map<String, String> serversToWaitsets;
-    public static synchronized ImapServerListener getInstance() {
-        if(instance == null) {
-            instance = new ImapServerListener();
-        }
-        return instance;
-    }
+    private final String server;
 
-    ImapServerListener() {
-        listeners = new ConcurrentHashMap<String, List<ImapListener>>();
-        accountsToWaitsets = new ConcurrentHashMap<String, String>();
-        serversToWaitsets = new ConcurrentHashMap<String, String>();
+    private final ConcurrentMap<String, ImapListener> accountToSessionMap = new ConcurrentHashMap<String, ImapListener>();
+
+    public ImapServerListener(String svr) {
+        this.server = svr;
     }
 
     public void addListener(ImapListener listener) throws ServiceException {
-        String accountId = listener.getTargetAccountId();
-        Account acc = Provisioning.getInstance().getAccountById(accountId);
-        if(acc != null) {
-            if(!listeners.containsKey(accountId)) {
-                listeners.put(accountId, Collections.synchronizedList(new ArrayList<ImapListener>()));
-            }
-            listeners.get(accountId).add(listener);
-            
-        } else {
-            ZimbraLog.imap.error("Tried registering IMAP listener for a non-existent account %s", accountId);
-        }
+        accountToSessionMap.put(listener.getTargetAccountId(), listener);
     }
 
-    public void removeListener(ImapListener listener) {
-        if(listeners.containsKey(listener.getTargetAccountId())) {
-            listeners.get(listener.getTargetAccountId()).remove(listener);
-            if(listeners.get(listener.getTargetAccountId()).isEmpty()) {
-                //remove this account from waitset for the server
-            }
-        }
+    public void removeListener(ImapListener listener) throws ServiceException {
+        accountToSessionMap.remove(listener.getTargetAccountId(), listener);
     }
 
     public boolean isListeningOn(String accountId) {
-        return listeners.containsKey(accountId);
-    }
-
-    private void addAccountToWaitset(Account acc) {
-        if(!accountsToWaitsets.containsKey(acc.getId())) {
-            //we don't have a waitset for this account yet
-            if(!serversToWaitsets.containsKey(acc.getMailHost())) {
-                //we are not listening on this server yet
-            }
-                
-        }
-    }
-    /**
-     * Deletes any remaining waitsets to release resources on remote servers. ImapServer should call this method before dying.
-     */
-    public void shutdown() {
-       
+        return accountToSessionMap.containsKey(accountId);
     }
 }
