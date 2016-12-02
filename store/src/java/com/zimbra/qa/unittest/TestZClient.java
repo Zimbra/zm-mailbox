@@ -34,7 +34,9 @@ import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFeatures;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGetInfoResult;
+import com.zimbra.client.ZImapFolderInfo;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.OpenImapFolderParams;
 import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
@@ -358,12 +360,45 @@ public class TestZClient extends TestCase {
         Folder folder = mbox.createFolder(null, "TestOpenImapFolder", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
         int folderId = folder.getId();
         List<ImapMessage> expected = new LinkedList<ImapMessage>();
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 1; i <= 10; i++) {
             Message msg = TestUtil.addMessage(mbox, folderId, String.format("imap message %s", i), System.currentTimeMillis());
             expected.add(new ImapMessage(msg));
         }
 
-        List<ImapMessageInfo> actual = zmbox.openImapFolder(folderId, 1000);
+        //test pagination
+        OpenImapFolderParams params = new OpenImapFolderParams(folderId);
+
+        params.setLimit(100); //test fetching all results
+        ZImapFolderInfo result = zmbox.fetchImapFolderChunk(params);
+        assertEquals(10, result.getMessageInfo().size());
+        assertFalse(result.hasMore());
+
+        params.setLimit(5); //test fetching first 5
+        result = zmbox.fetchImapFolderChunk(params);
+        assertEquals(5, result.getMessageInfo().size());
+        for (int i = 0; i < result.getMessageInfo().size(); i++) {
+            assertEquals(result.getMessageInfo().get(i).getId(), (Integer) expected.get(i).getMsgId());
+        }
+        assertTrue(result.hasMore());
+
+        params.setOffset(3); //test fetching 5 with offset, more results left
+        result = zmbox.fetchImapFolderChunk(params);
+        assertEquals(5, result.getMessageInfo().size());
+        for (int i = 0; i < result.getMessageInfo().size(); i++) {
+            assertEquals(result.getMessageInfo().get(i).getId(), (Integer) expected.get(i+3).getMsgId());
+        }
+        assertTrue(result.hasMore());
+
+        params.setOffset(7); //test fetching 5 with offset that exhausts results
+        result = zmbox.fetchImapFolderChunk(params);
+        assertEquals(3, result.getMessageInfo().size());
+        for (int i = 0; i < result.getMessageInfo().size(); i++) {
+            assertEquals(result.getMessageInfo().get(i).getId(), (Integer) expected.get(i+7).getMsgId());
+        }
+        assertFalse(result.hasMore());
+
+        //test getting all messages in batches
+        List<ImapMessageInfo> actual = zmbox.openImapFolder(folderId, 3);
         Collections.sort(expected);
         Collections.sort(actual);
         assertEquals("expected and actual lists have different lengths", expected.size(), actual.size());
