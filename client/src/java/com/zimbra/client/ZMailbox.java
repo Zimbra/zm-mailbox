@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,6 +55,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.dom4j.QName;
 import org.json.JSONException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -151,7 +153,6 @@ import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
 import com.zimbra.soap.account.message.OpenImapFolderRequest;
-import com.zimbra.soap.account.message.OpenImapFolderResponse;
 import com.zimbra.soap.account.message.ResetRecentMessageCountRequest;
 import com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.type.AuthToken;
@@ -6078,11 +6079,57 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         throw new UnsupportedOperationException("ZMailbox method not supported yet");
     }
 
-    public List<ImapMessageInfo> openImapFolder(ItemIdentifier folderId) throws ServiceException {
+    @VisibleForTesting
+    public ZImapFolderInfo fetchImapFolderChunk(OpenImapFolderParams params) throws ServiceException {
         OpenImapFolderRequest req = new OpenImapFolderRequest();
-        req.setFolderId(String.valueOf(folderId.id));
-        OpenImapFolderResponse resp = invokeJaxb(req);
-        return resp.getImapMessageInfo();
+        req.setFolderId(String.valueOf(params.getFolderId()));
+        req.setLimit(params.getLimit());
+        if (params.getOffset() > 0) {
+            req.setOffset(params.getOffset());
+        }
+        return new ZImapFolderInfo(invokeJaxb(req));
+    }
 
+    /**
+     * Iterate OpenImapFolderRequests until all results have been returned
+     * @param params
+     * @return
+     * @throws ServiceException
+     */
+    public List<ImapMessageInfo> openImapFolder(int folderId, int chunkSize) throws ServiceException {
+        List<ImapMessageInfo> msgs = new LinkedList<ImapMessageInfo>();
+        ZImapFolderInfo folderInfo = null;
+        do {
+            OpenImapFolderParams params = new OpenImapFolderParams(folderId);
+            params.setLimit(chunkSize);
+            if (msgs.size() > 0) {
+                params.setOffset(msgs.size());
+            }
+            folderInfo = fetchImapFolderChunk(params);
+            msgs.addAll(folderInfo.getMessageInfo());
+        } while (folderInfo.hasMore());
+        return msgs;
+    }
+
+    public static class OpenImapFolderParams {
+
+        private static final int DEFAULT_LIMIT = 1000;
+        private int folderId;
+        private int limit;
+        private int offset;
+
+        public OpenImapFolderParams(int folderId) {
+            this.folderId = folderId;
+            this.limit = DEFAULT_LIMIT;
+            this.offset = 0;
+        }
+
+        public int getFolderId() { return folderId; }
+
+        public void setLimit(int limit) { this.limit = limit; }
+        public int getLimit() { return limit; }
+
+        public void setOffset(int offset) { this.offset = offset; }
+        public int getOffset() { return offset; }
     }
 }
