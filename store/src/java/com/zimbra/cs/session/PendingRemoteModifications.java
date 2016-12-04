@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 
 import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -101,4 +102,20 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
     }
 
+    @Override
+    public void recordModified(MailboxStore mbox, int reason) {
+        // Not recording preModify state of the mailbox for now
+        String actId = null;
+        try {
+            actId = mbox.getAccountId();
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("error retrieving account id in mailboxstore", e);
+        }
+        recordModified(new PendingModifications.ModificationKey(actId, 0), mbox, reason, null, false);
+    }
+
+    private void recordModified(PendingModifications.ModificationKey key, Object item, int reason, Object preModifyObj,
+            boolean snapshotItem) {
+        // TODO - Implement
+    }
 }
