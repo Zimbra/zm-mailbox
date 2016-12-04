@@ -19,7 +19,9 @@ package com.zimbra.cs.session;
 import java.util.LinkedHashMap;
 
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
 public final class PendingLocalModifications extends PendingModifications<MailItem> {
 
@@ -48,6 +50,11 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         public ModificationKey(MailItem item) {
             super(item.getMailbox().getAccountId(), item.getId());
         }
+    }
+
+    @Override
+    protected void delete(PendingModifications.ModificationKey key, Type type, MailItem itemSnapshot) {
+        delete(key, new Change(type, Change.NONE, itemSnapshot));
     }
 
     @Override
