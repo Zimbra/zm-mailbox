@@ -45,7 +45,7 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
                     idInMbox = item.getIdInMailbox();
                 } catch (ServiceException e) {
                 }
-                sb.append(MailItem.Type.fromCommon(item.getMailItemType())).append(' ').append(idInMbox).append(":");
+                sb.append(getItemType(item)).append(' ').append(idInMbox).append(":");
             } else if (what instanceof ZMailbox) {
                 sb.append("mailbox:");
             }
@@ -75,6 +75,10 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         }
     }
 
+    public static MailItem.Type getItemType(ZBaseItem item) {
+        return MailItem.Type.fromCommon(item.getMailItemType());
+    }
+
     @Override
     protected void delete(PendingModifications.ModificationKey key, Type type, ZBaseItem itemSnapshot) {
         delete(key, new Change(type, Change.NONE, itemSnapshot));
@@ -85,9 +89,16 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         if (created == null) {
             created = new LinkedHashMap<PendingModifications.ModificationKey, ZBaseItem>();
         }
-        changedTypes.add(MailItem.Type.fromCommon(item.getMailItemType()));
+        changedTypes.add(getItemType(item));
         created.put(new ModificationKey(item), item);
 
+    }
+
+    @Override
+    public void recordDeleted(ZBaseItem itemSnapshot) {
+        MailItem.Type type = getItemType(itemSnapshot);
+        changedTypes.add(type);
+        delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
     }
 
 }
