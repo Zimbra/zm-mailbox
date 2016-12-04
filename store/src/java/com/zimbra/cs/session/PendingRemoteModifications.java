@@ -120,6 +120,12 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         recordModified(new ModificationKey(item), item, reason, null, true);
     }
 
+    @Override
+    public void recordModified(ZBaseItem item, int reason, ZBaseItem preModifyItem) {
+        changedTypes.add(getItemType(item));
+        recordModified(new ModificationKey(item), item, reason, preModifyItem, false);
+    }
+
     private void recordModified(PendingModifications.ModificationKey key, Object item, int reason, Object preModifyObj,
             boolean snapshotItem) {
         // TODO - Implement
