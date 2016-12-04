@@ -50,7 +50,7 @@ import com.zimbra.cs.mailbox.util.TypedIdList;
  * @param <T> - MailItem (local mailbox) | ZBaseItem (remote mailbox)
 */
 public abstract class PendingModifications<T> {
-    public static final class Change {
+    public static abstract class Change {
         public static final int NONE             = 0x00000000;
         public static final int UNREAD           = 0x00000001;
         public static final int TAGS             = 0x00000002;
@@ -95,12 +95,7 @@ public abstract class PendingModifications<T> {
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            if (what instanceof MailItem) {
-                MailItem item = (MailItem) what;
-                sb.append(item.getType()).append(' ').append(item.getId()).append(":");
-            } else if (what instanceof Mailbox) {
-                sb.append("mailbox:");
-            }
+            toStringInit(sb);
 
             if (why == 0) sb.append(" **NONE**");
             if ((why & UNREAD) != 0)    sb.append(" UNREAD");
@@ -134,6 +129,8 @@ public abstract class PendingModifications<T> {
 
             return sb.toString();
         }
+
+        protected abstract void toStringInit(StringBuilder sb);
     }
 
     public static class ModificationKey extends Pair<String, Integer> {
