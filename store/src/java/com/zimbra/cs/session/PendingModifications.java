@@ -227,11 +227,7 @@ public abstract class PendingModifications<T> {
         }
     }
 
-    public void recordDeleted(MailItem itemSnapshot) {
-        MailItem.Type type = itemSnapshot.getType();
-        changedTypes.add(type);
-        delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
-    }
+    public abstract void recordDeleted(T itemSnapshot);
 
     public void recordDeleted(Map<ModificationKey, Change> deletes) {
         if (deletes != null && !deletes.isEmpty()) {
