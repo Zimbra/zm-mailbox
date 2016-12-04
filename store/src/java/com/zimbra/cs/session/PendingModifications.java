@@ -165,11 +165,9 @@ public abstract class PendingModifications<T> {
      */
     public Set<MailItem.Type> changedTypes = EnumSet.noneOf(MailItem.Type.class);
 
-    public LinkedHashMap<ModificationKey, MailItem> created;
+    public LinkedHashMap<ModificationKey, T> created;
     public Map<ModificationKey, Change> modified;
     public Map<ModificationKey, Change> deleted;
-
-    public PendingModifications() { }
 
     public boolean hasNotifications() {
         return (deleted  != null && !deleted.isEmpty()) ||
