@@ -17,10 +17,35 @@
 package com.zimbra.cs.session;
 
 import com.zimbra.client.ZBaseItem;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.MailItem;
 
 public final class PendingRemoteModifications extends PendingModifications<ZBaseItem> {
+
+    public static final class Change extends PendingModifications.Change {
+
+        Change(Object thing, int reason, Object preModifyObj) {
+            super(thing, reason, preModifyObj);
+        }
+
+        @Override
+        protected void toStringInit(StringBuilder sb) {
+            if (what instanceof ZBaseItem) {
+                ZBaseItem item = (ZBaseItem) what;
+                int idInMbox = 0;
+                try {
+                    idInMbox = item.getIdInMailbox();
+                } catch (ServiceException e) {
+                }
+                sb.append(MailItem.Type.fromCommon(item.getMailItemType())).append(' ').append(idInMbox).append(":");
+            } else if (what instanceof ZMailbox) {
+                sb.append("mailbox:");
+            }
+        }
+
+    }
 
     public static final class ModificationKey extends PendingModifications.ModificationKey {
 
