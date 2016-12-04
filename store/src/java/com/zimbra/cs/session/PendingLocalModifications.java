@@ -83,6 +83,12 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         }
     }
 
+    @Override
+    public void recordModified(MailItem item, int reason) {
+        changedTypes.add(item.getType());
+        recordModified(new ModificationKey(item), item, reason, null, true);
+    }
+
     private void recordModified(PendingModifications.ModificationKey key, Object item, int reason, Object preModifyObj,
             boolean snapshotItem) {
         // TODO - Implement
