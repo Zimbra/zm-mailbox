@@ -265,10 +265,7 @@ public abstract class PendingModifications<T> {
 
     public abstract void recordModified(MailboxStore mbox, int reason);
 
-    public void recordModified(MailItem item, int reason) {
-        changedTypes.add(item.getType());
-        recordModified(new ModificationKey(item), item, reason, null, true);
-    }
+    public abstract void recordModified(T item, int reason);
 
     public void recordModified(MailItem item, int reason, MailItem preModifyItem) {
         changedTypes.add(item.getType());
