@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -262,10 +263,7 @@ public abstract class PendingModifications<T> {
         recordModified(mkey, chg.what, chg.why, chg.preModifyObj, false);
     }
 
-    public void recordModified(Mailbox mbox, int reason) {
-        // Not recording preModify state of the mailbox for now
-        recordModified(new ModificationKey(mbox.getAccountId(), 0), mbox, reason, null, false);
-    }
+    public abstract void recordModified(MailboxStore mbox, int reason);
 
     public void recordModified(MailItem item, int reason) {
         changedTypes.add(item.getType());
