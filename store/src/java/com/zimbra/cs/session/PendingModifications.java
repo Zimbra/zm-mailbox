@@ -136,13 +136,9 @@ public abstract class PendingModifications<T> {
         }
     }
 
-    public static final class ModificationKey extends Pair<String, Integer> {
+    public static class ModificationKey extends Pair<String, Integer> {
         public ModificationKey(String accountId, Integer itemId) {
             super(accountId, itemId);
-        }
-
-        public ModificationKey(MailItem item) {
-            super(item.getMailbox().getAccountId(), item.getId());
         }
 
         public ModificationKey(ModificationKey mkey) {
@@ -155,6 +151,14 @@ public abstract class PendingModifications<T> {
 
         public Integer getItemId() {
             return getSecond();
+        }
+
+        public void setAccountId(String accountId) {
+            setFirst(accountId);
+        }
+
+        public void setItemId(Integer itemId) {
+            setSecond(itemId);
         }
     }
 
