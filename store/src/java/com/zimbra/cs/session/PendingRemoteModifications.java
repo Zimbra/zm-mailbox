@@ -24,6 +24,9 @@ import com.zimbra.cs.mailbox.MailItem;
 
 public final class PendingRemoteModifications extends PendingModifications<ZBaseItem> {
 
+    public PendingRemoteModifications() {
+    }
+
     public static final class Change extends PendingModifications.Change {
 
         Change(Object thing, int reason, Object preModifyObj) {
