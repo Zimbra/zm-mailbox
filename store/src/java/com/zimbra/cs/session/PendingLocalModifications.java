@@ -17,9 +17,28 @@
 package com.zimbra.cs.session;
 
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 
 public final class PendingLocalModifications extends PendingModifications<MailItem> {
-    
+
+    public static final class Change extends PendingModifications.Change {
+
+        Change(Object thing, int reason, Object preModifyObj) {
+            super(thing, reason, preModifyObj);
+        }
+
+        @Override
+        protected void toStringInit(StringBuilder sb) {
+            if (what instanceof MailItem) {
+                MailItem item = (MailItem) what;
+                sb.append(item.getType()).append(' ').append(item.getId()).append(":");
+            } else if (what instanceof Mailbox) {
+                sb.append("mailbox:");
+            }
+
+        }
+    }
+
     public static final class ModificationKey extends PendingModifications.ModificationKey {
         public ModificationKey(MailItem item) {
             super(item.getMailbox().getAccountId(), item.getId());
