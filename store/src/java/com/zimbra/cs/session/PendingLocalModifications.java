@@ -19,4 +19,11 @@ package com.zimbra.cs.session;
 import com.zimbra.cs.mailbox.MailItem;
 
 public final class PendingLocalModifications extends PendingModifications<MailItem> {
+    
+    public static final class ModificationKey extends PendingModifications.ModificationKey {
+        public ModificationKey(MailItem item) {
+            super(item.getMailbox().getAccountId(), item.getId());
+        }
+    }
+
 }
