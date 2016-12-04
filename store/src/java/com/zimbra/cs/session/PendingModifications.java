@@ -242,11 +242,9 @@ public abstract class PendingModifications<T> {
         }
     }
 
-    private void delete(ModificationKey key, MailItem.Type type, MailItem itemSnapshot) {
-        delete(key, new Change(type, Change.NONE, itemSnapshot));
-    }
+    protected abstract void delete(ModificationKey key, MailItem.Type type, T itemSnapshot);
 
-    private void delete(ModificationKey key, Change chg) {
+    protected void delete(ModificationKey key, Change chg) {
         if (created != null && created.remove(key) != null)
             return;
 
