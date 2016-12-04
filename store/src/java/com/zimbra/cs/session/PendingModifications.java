@@ -45,7 +45,11 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 
-public final class PendingModifications {
+
+/**
+ * @param <T> - MailItem (local mailbox) | ZBaseItem (remote mailbox)
+*/
+public abstract class PendingModifications<T> {
     public static final class Change {
         public static final int NONE             = 0x00000000;
         public static final int UNREAD           = 0x00000001;
