@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.session;
 
+import java.util.LinkedHashMap;
+
 import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
@@ -70,6 +72,16 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
             setAccountId(actId);
             setItemId(Integer.valueOf(idInMbox));
         }
+    }
+
+    @Override
+    public void recordCreated(ZBaseItem item) {
+        if (created == null) {
+            created = new LinkedHashMap<PendingModifications.ModificationKey, ZBaseItem>();
+        }
+        changedTypes.add(MailItem.Type.fromCommon(item.getMailItemType()));
+        created.put(new ModificationKey(item), item);
+
     }
 
 }
