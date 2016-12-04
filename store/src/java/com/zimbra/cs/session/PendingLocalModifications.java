@@ -21,6 +21,9 @@ import com.zimbra.cs.mailbox.Mailbox;
 
 public final class PendingLocalModifications extends PendingModifications<MailItem> {
 
+    public PendingLocalModifications() {
+    }
+
     public static final class Change extends PendingModifications.Change {
 
         Change(Object thing, int reason, Object preModifyObj) {
