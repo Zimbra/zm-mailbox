@@ -18,6 +18,7 @@ package com.zimbra.cs.session;
 
 import java.util.LinkedHashMap;
 
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -73,4 +74,17 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
     }
 
+    @Override
+    public void recordModified(MailboxStore mbox, int reason) {
+        // Not recording preModify state of the mailbox for now
+        if (mbox instanceof Mailbox) {
+            Mailbox mb = (Mailbox) mbox;
+            recordModified(new PendingModifications.ModificationKey(mb.getAccountId(), 0), mbox, reason, null, false);
+        }
+    }
+
+    private void recordModified(PendingModifications.ModificationKey key, Object item, int reason, Object preModifyObj,
+            boolean snapshotItem) {
+        // TODO - Implement
+    }
 }
