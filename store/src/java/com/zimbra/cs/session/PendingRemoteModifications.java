@@ -23,6 +23,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.Type;
 
 public final class PendingRemoteModifications extends PendingModifications<ZBaseItem> {
 
@@ -72,6 +73,11 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
             setAccountId(actId);
             setItemId(Integer.valueOf(idInMbox));
         }
+    }
+
+    @Override
+    protected void delete(PendingModifications.ModificationKey key, Type type, ZBaseItem itemSnapshot) {
+        delete(key, new Change(type, Change.NONE, itemSnapshot));
     }
 
     @Override
