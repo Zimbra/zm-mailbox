@@ -207,13 +207,7 @@ public abstract class PendingModifications<T> {
         return false;
     }
 
-    public void recordCreated(MailItem item) {
-        if (created == null) {
-            created = new LinkedHashMap<ModificationKey, MailItem>();
-        }
-        changedTypes.add(item.getType());
-        created.put(new ModificationKey(item), item);
-    }
+    public abstract void recordCreated(T item);
 
     public void recordDeleted(String acctId, int id, MailItem.Type type) {
         if (type != MailItem.Type.UNKNOWN) {
