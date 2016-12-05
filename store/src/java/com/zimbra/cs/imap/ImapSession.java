@@ -43,6 +43,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
@@ -370,8 +371,10 @@ public class ImapSession extends ImapListener {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
-    public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
+    public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
+        PendingLocalModifications pns = (PendingLocalModifications) pnsIn;
         if (!pns.hasNotifications()) {
             return;
         }
@@ -506,7 +509,7 @@ public class ImapSession extends ImapListener {
         private final String cacheKey;
         private final int originalSize;
         private PagedSessionData pagedSessionData; // guarded by PagedFolderData.this
-        private Map<Integer, PendingModifications> queuedChanges;
+        private Map<Integer, PendingLocalModifications> queuedChanges;
 
         PagedFolderData(String cachekey, ImapFolder i4folder) {
             cacheKey = cachekey;
@@ -538,7 +541,7 @@ public class ImapSession extends ImapListener {
             if (queuedChanges == null || queuedChanges.isEmpty()) {
                 return false;
             }
-            for (PendingModifications pms : queuedChanges.values()) {
+            for (PendingLocalModifications pms : queuedChanges.values()) {
                 if (pms.deleted != null && !pms.deleted.isEmpty()) {
                     return true;
                 }
@@ -563,7 +566,7 @@ public class ImapSession extends ImapListener {
             }
 
             int count = 0;
-            for (PendingModifications pms : queuedChanges.values()) {
+            for (PendingLocalModifications pms : queuedChanges.values()) {
                 count += pms.getScaledNotificationCount();
             }
             return count > RESERIALIZATION_THRESHOLD;
@@ -597,13 +600,13 @@ public class ImapSession extends ImapListener {
             }
         }
 
-        private PendingModifications getQueuedNotifications(int changeId) {
+        private PendingLocalModifications getQueuedNotifications(int changeId) {
             if (queuedChanges == null) {
-                queuedChanges = new TreeMap<Integer, PendingModifications>();
+                queuedChanges = new TreeMap<Integer, PendingLocalModifications>();
             }
-            PendingModifications pns = queuedChanges.get(changeId);
+            PendingLocalModifications pns = queuedChanges.get(changeId);
             if (pns == null) {
-                queuedChanges.put(changeId, pns = new PendingModifications());
+                queuedChanges.put(changeId, pns = new PendingLocalModifications());
             }
             return pns;
         }
@@ -632,8 +635,8 @@ public class ImapSession extends ImapListener {
 
             resetRenumber();
 
-            for (Iterator<Map.Entry<Integer, PendingModifications>> it = queuedChanges.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<Integer, PendingModifications> entry = it.next();
+            for (Iterator<Map.Entry<Integer, PendingLocalModifications>> it = queuedChanges.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<Integer, PendingLocalModifications> entry = it.next();
                 notifyPendingChanges(entry.getValue(), entry.getKey(), null);
                 it.remove();
             }
