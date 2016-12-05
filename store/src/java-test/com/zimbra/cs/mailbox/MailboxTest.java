@@ -47,7 +47,8 @@ import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.PendingModifications;
-import com.zimbra.cs.session.PendingModifications.ModificationKey;
+import com.zimbra.cs.session.PendingLocalModifications;
+import com.zimbra.cs.session.PendingLocalModifications.ModificationKey;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
 
@@ -217,10 +218,10 @@ public final class MailboxTest {
          * Information on creations/modifications and deletions seen since
          * {@link clear} was last called (or listener was instantiated)
          */
-        PendingModifications pms;
+        PendingLocalModifications pms;
 
         @Override public void notify(ChangeNotification notification) {
-            PendingModifications newPms = notification.mods;
+            PendingLocalModifications newPms = notification.mods;
 
             if (this.pms == null) {
                 this.pms = newPms;
@@ -246,7 +247,7 @@ public final class MailboxTest {
             }
         }
 
-        public PendingModifications getPms() {
+        public PendingLocalModifications getPms() {
             return pms;
         }
 
