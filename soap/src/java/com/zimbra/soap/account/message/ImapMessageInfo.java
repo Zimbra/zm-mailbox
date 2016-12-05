@@ -14,8 +14,8 @@ public class ImapMessageInfo implements Comparable<ImapMessageInfo> {
     @XmlAttribute(name=MailConstants.A_ID, required=true)
     private Integer id;
 
-    @XmlAttribute(name=MailConstants.A_IMAP_ID, required=true)
-    private Integer imapId;
+    @XmlAttribute(name=MailConstants.A_IMAP_UID, required=true)
+    private Integer imapUid;
 
     @XmlAttribute(name=MailConstants.A_TYPE, required=true)
     private String type;
@@ -26,16 +26,16 @@ public class ImapMessageInfo implements Comparable<ImapMessageInfo> {
     @XmlAttribute(name=MailConstants.A_TAGS, required=true)
     private String tags;
 
-    public ImapMessageInfo(Integer id, Integer imapId, String type, Integer flags, String tags) {
+    public ImapMessageInfo(Integer id, Integer imapUid, String type, Integer flags, String tags) {
         this.id = id;
-        this.imapId = imapId;
+        this.imapUid = imapUid;
         this.type = type;
         this.flags = flags;
         this.tags = tags;
     }
 
     public Integer getId() { return id; }
-    public Integer getImapId() { return imapId; }
+    public Integer getImapUid() { return imapUid; }
     public String getType() { return type; }
     public Integer getFlags() { return flags; }
     public String getTags() { return tags; }
