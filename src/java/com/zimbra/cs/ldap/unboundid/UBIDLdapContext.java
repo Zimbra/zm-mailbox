@@ -523,7 +523,7 @@ public class UBIDLdapContext extends ZLdapContext {
         SearchScope searchScope = ((UBIDSearchScope) searchOptions.getSearchScope()).getNative();
         SearchLdapOptions.SearchLdapVisitor visitor = searchOptions.getVisitor();
         SearchGalResult searchGalResult = searchOptions.getSearchGalResult();
-        int pageSize = 10;//TODO searchOptions.getResultPageSize();
+        int pageSize = searchOptions.getResultPageSize();
         int offset = 0;
         boolean pagination = false;
         String prevLeCreateDate = null;

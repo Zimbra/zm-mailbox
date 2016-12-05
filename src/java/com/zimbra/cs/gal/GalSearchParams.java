@@ -130,9 +130,6 @@ public class GalSearchParams {
     }
 
     public String getSyncToken() {
-//        if (mSyncToken == null)
-//            return null;
-//        return mSyncToken.getLdapTimestamp();
         return !StringUtils.isEmpty(ldapTimeStamp) ? ldapTimeStamp : (mSyncToken != null ? mSyncToken.getLdapTimestamp() : null);
     }
 
@@ -341,7 +338,6 @@ public class GalSearchParams {
 
     public String generateLdapQuery() throws ServiceException {
         assert(mConfig != null);
-        //String token =  mSyncToken.getLdapTimestamp(mConfig.mTimestampFormat) : null;
         String token = (mSyncToken != null) ? mSyncToken.getLdapTimestamp(mConfig.mTimestampFormat, ldapTimeStamp) : null;
 
         String extraQuery = null;

@@ -751,8 +751,6 @@ public class GalSearchControl {
 
         String resultToken = getLdapSearchResultToken(mParams.getResult(), "");
         boolean intLdapHasMore = mParams.getResult().getHadMore();
-//        if (mParams.getResult().getTokenizeKey() != null)
-//            hadMore = true;
 
         if (galMode == GalMode.both) {
             // do the second query
