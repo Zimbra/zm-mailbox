@@ -149,6 +149,7 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
+import com.zimbra.soap.account.message.ImapCursorInfo;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
@@ -6084,8 +6085,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         OpenImapFolderRequest req = new OpenImapFolderRequest();
         req.setFolderId(String.valueOf(params.getFolderId()));
         req.setLimit(params.getLimit());
-        if (params.getOffset() > 0) {
-            req.setOffset(params.getOffset());
+        if (params.getCursorId() != null) {
+            req.setCursor(new ImapCursorInfo(params.getCursorId()));
         }
         return new ZImapFolderInfo(invokeJaxb(req));
     }
@@ -6098,15 +6099,18 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public List<ImapMessageInfo> openImapFolder(int folderId, int chunkSize) throws ServiceException {
         List<ImapMessageInfo> msgs = new LinkedList<ImapMessageInfo>();
+        Integer cursorId = null;
         ZImapFolderInfo folderInfo = null;
         do {
             OpenImapFolderParams params = new OpenImapFolderParams(folderId);
             params.setLimit(chunkSize);
-            if (msgs.size() > 0) {
-                params.setOffset(msgs.size());
+            if (cursorId != null) {
+                params.setCursorId(String.valueOf(cursorId));
             }
             folderInfo = fetchImapFolderChunk(params);
-            msgs.addAll(folderInfo.getMessageInfo());
+            List<ImapMessageInfo> results = folderInfo.getMessageInfo();
+            cursorId = results.get(results.size() - 1).getId();
+            msgs.addAll(results);
         } while (folderInfo.hasMore());
         return msgs;
     }
@@ -6116,12 +6120,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         private static final int DEFAULT_LIMIT = 1000;
         private int folderId;
         private int limit;
-        private int offset;
+        private String cursorId;
 
         public OpenImapFolderParams(int folderId) {
             this.folderId = folderId;
             this.limit = DEFAULT_LIMIT;
-            this.offset = 0;
+            this.cursorId = null;
         }
 
         public int getFolderId() { return folderId; }
@@ -6129,7 +6133,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         public void setLimit(int limit) { this.limit = limit; }
         public int getLimit() { return limit; }
 
-        public void setOffset(int offset) { this.offset = offset; }
-        public int getOffset() { return offset; }
+        public void setCursorId(String id) { this.cursorId =id; }
+        public String getCursorId() { return cursorId; }
     }
 }
