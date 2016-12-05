@@ -30,6 +30,9 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.http.client.CookieStore;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.cookie.BasicClientCookie;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.net.ProxyHostConfiguration;
@@ -78,6 +81,30 @@ public class HttpClientUtil {
             }
         }
         return state;
+    }
+
+    /**
+     * Returns cookie store for Apache HTTP Components HttpClient 4.x
+     * @param authToken
+     * @param host
+     * @param isAdmin
+     * @return {@link CookieStore}
+     */
+    public static CookieStore newCookieStore(ZAuthToken authToken, String host, boolean isAdmin) {
+        CookieStore cookieStore = new BasicCookieStore();
+        if (authToken != null) {
+            Map<String, String> cookieMap = authToken.cookieMap(isAdmin);
+            if (cookieMap != null) {
+                for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
+                    BasicClientCookie cookie = new BasicClientCookie(ck.getKey(), ck.getValue());
+                    cookie.setDomain(host);
+                    cookie.setPath("/");
+                    cookie.setSecure(false);
+                    cookieStore.addCookie(cookie);
+                }
+            }
+        }
+        return cookieStore;
     }
 }
 
