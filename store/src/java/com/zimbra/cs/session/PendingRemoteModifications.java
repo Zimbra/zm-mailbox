@@ -103,6 +103,11 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     }
 
     @Override
+    public void recordModified(PendingModifications.ModificationKey mkey, PendingModifications.Change chg) {
+        recordModified(mkey, chg.what, chg.why, chg.preModifyObj, false);
+    }
+
+    @Override
     public void recordModified(MailboxStore mbox, int reason) {
         // Not recording preModify state of the mailbox for now
         String actId = null;
