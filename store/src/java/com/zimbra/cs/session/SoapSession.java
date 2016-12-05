@@ -121,7 +121,9 @@ public class SoapSession extends Session {
 
         @Override public void cleanup()  { }
 
-        @Override public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
+        @SuppressWarnings("rawtypes")
+        @Override public void notifyPendingChanges(PendingModifications pmsIn, int changeId, Session source) {
+            PendingLocalModifications pms = (PendingLocalModifications) pmsIn;
             try {
                 if (calculateVisibleFolders(false))
                     pms = filterNotifications(pms);
@@ -190,7 +192,7 @@ public class SoapSession extends Session {
             }
         }
 
-        private boolean folderRecalcRequired(PendingModifications pms) {
+        private boolean folderRecalcRequired(PendingLocalModifications pms) {
             boolean recalc = false;
             if (pms.created != null && !pms.created.isEmpty()) {
                 for (MailItem item : pms.created.values()) {
@@ -211,7 +213,7 @@ public class SoapSession extends Session {
         private static final int BASIC_CONVERSATION_FLAGS = Change.FLAGS | Change.TAGS | Change.UNREAD;
         private static final int MODIFIED_CONVERSATION_FLAGS = BASIC_CONVERSATION_FLAGS | Change.SIZE  | Change.SENDERS;
 
-        private PendingModifications filterNotifications(PendingModifications pms) throws ServiceException {
+        private PendingLocalModifications filterNotifications(PendingLocalModifications pms) throws ServiceException {
             // first, recalc visible folders if any folders got created or moved or had their ACL changed
             if (folderRecalcRequired(pms) && !calculateVisibleFolders(true)) {
                 return pms;
@@ -222,7 +224,7 @@ public class SoapSession extends Session {
             }
 
             OperationContext octxt = new OperationContext(getAuthenticatedAccountId());
-            PendingModifications filtered = new PendingModifications();
+            PendingLocalModifications filtered = new PendingLocalModifications();
             filtered.changedTypes = pms.changedTypes;
             if (pms.deleted != null && !pms.deleted.isEmpty()) {
                 filtered.recordDeleted(pms.deleted);
@@ -289,7 +291,7 @@ public class SoapSession extends Session {
         }
 
         private void forceConversationModification(
-                Message msg, Change chg, PendingModifications pms, PendingModifications filtered, int changeMask) {
+                Message msg, Change chg, PendingLocalModifications pms, PendingLocalModifications filtered, int changeMask) {
             int convId = msg.getConversationId();
             Mailbox mbox = msg.getMailbox();
             ModificationKey mkey = new ModificationKey(mbox.getAccountId(), convId);
@@ -384,7 +386,7 @@ public class SoapSession extends Session {
     class QueuedNotifications {
         /** ExternalEventNotifications are kept sequentially */
         List<ExternalEventNotification> mExternalNotifications;
-        PendingModifications mMailboxChanges;
+        PendingLocalModifications mMailboxChanges;
         RemoteNotifications mRemoteChanges;
         boolean mHasLocalChanges;
 
@@ -420,11 +422,11 @@ public class SoapSession extends Session {
             mExternalNotifications.add(extra);
         }
 
-        void addNotification(PendingModifications pms) {
+        void addNotification(PendingLocalModifications pms) {
             if (pms == null || !pms.hasNotifications())
                 return;
             if (mMailboxChanges == null)
-                mMailboxChanges = new PendingModifications();
+                mMailboxChanges = new PendingLocalModifications();
             mMailboxChanges.add(pms);
             if (!mHasLocalChanges)
                 mHasLocalChanges |= pms.overlapsWithAccount(mAuthenticatedAccountId);
@@ -854,7 +856,8 @@ public class SoapSession extends Session {
      * @param changeId  The change ID of the change.
      * @param source    The (optional) Session which initiated these changes. */
     @Override
-    public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
+    public void notifyPendingChanges(PendingModifications pmsIn, int changeId, Session source) {
+        PendingLocalModifications pms = (PendingLocalModifications) pmsIn;
         Mailbox mbox = this.getMailboxOrNull();
         if (pms == null || mbox == null || !pms.hasNotifications()) {
             return;
@@ -886,7 +889,7 @@ public class SoapSession extends Session {
         handleNotifications(pms, source == this);
     }
 
-    boolean hasSerializableChanges(PendingModifications pms) {
+    boolean hasSerializableChanges(PendingLocalModifications pms) {
         // catch cases where the only notifications are mailbox config changes, which we don't serialize
         if (pms.created != null && !pms.created.isEmpty()) {
             return true;
@@ -904,7 +907,7 @@ public class SoapSession extends Session {
         return false;
     }
 
-    void handleNotifications(PendingModifications pms, boolean fromThisSession) {
+    void handleNotifications(PendingLocalModifications pms, boolean fromThisSession) {
         if (!hasSerializableChanges(pms)) {
             return;
         }
@@ -920,7 +923,7 @@ public class SoapSession extends Session {
         }
     }
 
-    private void cacheNotifications(PendingModifications pms, boolean fromThisSession) {
+    private void cacheNotifications(PendingLocalModifications pms, boolean fromThisSession) {
         // XXX: should constrain to folders, tags, and stuff relevant to the current query?
 
         synchronized (sentChanges) {
@@ -973,13 +976,13 @@ public class SoapSession extends Session {
         }
     }
 
-    private synchronized void notifyPushChannel(final PendingModifications pms) throws ServiceException {
+    private synchronized void notifyPushChannel(final PendingLocalModifications pms) throws ServiceException {
         // don't clear the persistent push channels after each use
         boolean persistent = pushChannel == null ? false : pushChannel.isPersistent();
         notifyPushChannel(pms, !persistent);
     }
 
-    private synchronized void notifyPushChannel(final PendingModifications pms, final boolean clearChannel)
+    private synchronized void notifyPushChannel(final PendingLocalModifications pms, final boolean clearChannel)
             throws ServiceException {
         // don't have to lock the Mailbox before locking the Session to avoid deadlock because we're not calling any ToXML functions
         if (pushChannel == null) {
@@ -1299,8 +1302,8 @@ public class SoapSession extends Session {
         }
     }
 
-    public Collection<PendingModifications> getNotifications() {
-        List<PendingModifications> ret = new ArrayList<PendingModifications>();
+    public Collection<PendingLocalModifications> getNotifications() {
+        List<PendingLocalModifications> ret = new ArrayList<PendingLocalModifications>();
         synchronized (sentChanges) {
             for (QueuedNotifications notification : sentChanges) {
                 if (notification.hasNotifications()) {
@@ -1413,7 +1416,7 @@ public class SoapSession extends Session {
         return parent.getClass().equals(newChild.getClass());
     }
 
-    /** Write a single instance of the PendingModifications structure into the
+    /** Write a single instance of the PendingLocalModifications structure into the
      *  passed-in <ctxt> block. */
     protected void putQueuedNotifications(Mailbox mbox, QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) {
         // create the base "notify" block:  <notify seq="6"/>
@@ -1431,7 +1434,7 @@ public class SoapSession extends Session {
 
         boolean debug = ZimbraLog.session.isDebugEnabled();
 
-        PendingModifications pms = ntfn.mMailboxChanges;
+        PendingLocalModifications pms = ntfn.mMailboxChanges;
         RemoteNotifications rns = ntfn.mRemoteChanges;
 
         Element eDeleted = eNotify.addUniqueElement(ZimbraNamespace.E_DELETED);
@@ -1497,7 +1500,7 @@ public class SoapSession extends Session {
                         try {
                             Element elt = ToXML.encodeItem(eModified, ifmt, octxt, item, chg.why);
                             if (elt == null) {
-                                ModificationKey mkey = new ModificationKey(item);
+                                ModificationKey mkey = new PendingLocalModifications.ModificationKey(item);
                                 addDeletedNotification(mkey, deletedIds);
                                 if (debug) {
                                     ZimbraLog.session.debug("marking nonserialized item as a delete: %s", mkey);
@@ -1574,7 +1577,7 @@ public class SoapSession extends Session {
     }
 
     public interface ActivityCallback {
-        public void putActivities(PendingModifications pms, Element notify, ItemIdFormatter ifmt) throws ServiceException;
+        public void putActivities(PendingLocalModifications pms, Element notify, ItemIdFormatter ifmt) throws ServiceException;
     }
 
     private static ActivityCallback activityCb;
