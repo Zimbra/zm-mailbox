@@ -6110,8 +6110,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             }
             folderInfo = fetchImapFolderChunk(params);
             List<ImapMessageInfo> results = folderInfo.getImapMessageInfo();
-            cursorId = results.get(results.size() - 1).getId();
-            msgs.addAll(results);
+            if (results.isEmpty()) {
+                break;
+            } else {
+                cursorId = results.get(results.size() - 1).getId();
+                msgs.addAll(results);
+            }
         } while (folderInfo.getHasMore());
         return msgs;
     }
