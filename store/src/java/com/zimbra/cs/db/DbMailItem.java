@@ -3466,22 +3466,27 @@ public class DbMailItem {
         return loadImapFolder(folder, null, null).getFirst();
     }
 
-    public static Pair<List<ImapMessage>, Boolean> loadImapFolder(Folder folder, Integer limit, Integer offset) throws ServiceException {
+    public static Pair<List<ImapMessage>, Boolean> loadImapFolder(Folder folder, Integer limit, Integer cursorId) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         List<ImapMessage> result = new ArrayList<ImapMessage>();
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        boolean hasLimit = limit != null && limit > 0 && offset != null && offset >= 0;
+        boolean hasLimit = limit != null && limit > 0;
+        boolean hasCursor = cursorId != null;
+
         try {
             StringBuilder query = new StringBuilder("SELECT " + IMAP_FIELDS +
                     " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + IMAP_TYPES);
 
 
+            if (hasCursor) {
+                query.append(" AND mi.id > ? ORDER BY mi.id");
+            }
             if (hasLimit && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                query.append(" ").append(Db.getInstance().limit(offset, limit+1));
+                query.append(" ").append(Db.getInstance().limit(limit+1));
             }
             stmt = conn.prepareStatement(query.toString());
             if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS && !hasLimit) {
@@ -3490,8 +3495,11 @@ public class DbMailItem {
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folder.getId());
+            if (hasCursor) {
+                stmt.setInt(pos++, cursorId);
+            }
             if (hasLimit && !Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                stmt.setMaxRows(offset + limit + 2);
+                stmt.setMaxRows(limit + 2);
             }
             rs = stmt.executeQuery();
             boolean hasMore = false;
@@ -3502,9 +3510,6 @@ public class DbMailItem {
                 }
             } else if (!Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 while (rs.next()) {
-                    if (offset-- > 0) {
-                        continue;
-                    }
                     if (limit-- <= 0) {
                         hasMore = rs.next();
                         break;
