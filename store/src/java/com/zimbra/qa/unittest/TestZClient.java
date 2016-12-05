@@ -34,7 +34,6 @@ import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFeatures;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGetInfoResult;
-import com.zimbra.client.ZImapFolderInfo;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.OpenImapFolderParams;
 import com.zimbra.client.ZMailbox.Options;
@@ -65,6 +64,7 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.account.message.ImapMessageInfo;
+import com.zimbra.soap.account.message.OpenImapFolderResponse;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 
 public class TestZClient extends TestCase {
@@ -369,41 +369,46 @@ public class TestZClient extends TestCase {
         OpenImapFolderParams params = new OpenImapFolderParams(folderId);
 
         params.setLimit(100); //test fetching all results
-        ZImapFolderInfo result = zmbox.fetchImapFolderChunk(params);
-        assertEquals(10, result.getMessageInfo().size());
-        assertFalse(result.hasMore());
+        OpenImapFolderResponse result = zmbox.fetchImapFolderChunk(params);
+        assertEquals(10, result.getImapMessageInfo().size());
+        assertFalse(result.getHasMore());
 
         params.setLimit(5); //test fetching first 5
         result = zmbox.fetchImapFolderChunk(params);
-        assertEquals(5, result.getMessageInfo().size());
-        for (int i = 0; i < result.getMessageInfo().size(); i++) {
-            assertEquals(result.getMessageInfo().get(i).getId(), (Integer) expected.get(i).getMsgId());
+        List<ImapMessageInfo> messages = result.getImapMessageInfo();
+        assertEquals(5, messages.size());
+        for (int i = 0; i < messages.size(); i++) {
+            assertEquals(messages.get(i).getId(), (Integer) expected.get(i).getMsgId());
         }
-        assertTrue(result.hasMore());
+        assertTrue(result.getHasMore());
 
-        params.setOffset(3); //test fetching 5 with offset, more results left
+        Integer cursorId = expected.get(2).getMsgId(); //test fetching 5 items starting at 3rd item, (more results left)
+        params.setCursorId(String.valueOf(cursorId));
         result = zmbox.fetchImapFolderChunk(params);
-        assertEquals(5, result.getMessageInfo().size());
-        for (int i = 0; i < result.getMessageInfo().size(); i++) {
-            assertEquals(result.getMessageInfo().get(i).getId(), (Integer) expected.get(i+3).getMsgId());
+        messages = result.getImapMessageInfo();
+        assertEquals(5, messages.size());
+        for (int i = 0; i < messages.size(); i++) {
+            assertEquals(messages.get(i).getId(), (Integer) expected.get(i+3).getMsgId());
         }
-        assertTrue(result.hasMore());
+        assertTrue(result.getHasMore());
 
-        params.setOffset(7); //test fetching 5 with offset that exhausts results
+        cursorId = expected.get(6).getMsgId();//test fetching 5 items starting at 7th item, exhausting all results
+        params.setCursorId(String.valueOf(cursorId));
         result = zmbox.fetchImapFolderChunk(params);
-        assertEquals(3, result.getMessageInfo().size());
-        for (int i = 0; i < result.getMessageInfo().size(); i++) {
-            assertEquals(result.getMessageInfo().get(i).getId(), (Integer) expected.get(i+7).getMsgId());
+        messages = result.getImapMessageInfo();
+        assertEquals(3, messages.size());
+        for (int i = 0; i < messages.size(); i++) {
+            assertEquals(messages.get(i).getId(), (Integer) expected.get(i+7).getMsgId());
         }
-        assertFalse(result.hasMore());
+        assertFalse(result.getHasMore());
 
-        //test getting all messages in batches
+        //test getting all messages in batches of 3, so pagination is used
         List<ImapMessageInfo> actual = zmbox.openImapFolder(folderId, 3);
         Collections.sort(expected);
         Collections.sort(actual);
         assertEquals("expected and actual lists have different lengths", expected.size(), actual.size());
         for (int i = 0; i < expected.size(); i++) {
-            assertEquals((Integer) expected.get(i).getImapId(), actual.get(i).getImapId());
+            assertEquals((Integer) expected.get(i).getImapUId(), actual.get(i).getImapUid());
         }
     }
 
