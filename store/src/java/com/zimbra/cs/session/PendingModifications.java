@@ -20,30 +20,17 @@
  */
 package com.zimbra.cs.session;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import com.zimbra.common.mailbox.MailboxStore;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 
 
@@ -308,171 +295,4 @@ public abstract class PendingModifications<T> {
 
     }
 
-    private Map<ModificationKeyMeta, ChangeMeta> getSerializable(Map<ModificationKey, Change> map) {
-        if (map == null) {
-            return null;
-        }
-        Map<ModificationKeyMeta, ChangeMeta> ret = new LinkedHashMap<ModificationKeyMeta, ChangeMeta>();
-        Iterator<Entry<ModificationKey, Change>> iter = map.entrySet().iterator();
-        while (iter.hasNext()) {
-            Entry<ModificationKey, Change> entry = iter.next();
-            Change change = entry.getValue();
-            ChangeMeta.ObjectType whatType;
-            String metaWhat;
-            ChangeMeta.ObjectType metaPreModifyObjType = null;
-            String metaPreModifyObj = null;
-            if (change.what instanceof MailItem) {
-                whatType = ChangeMeta.ObjectType.MAILITEM;
-                metaWhat = ((MailItem) change.what).serializeUnderlyingData().toString();
-            } else if (change.what instanceof MailItem.Type) {
-                whatType = ChangeMeta.ObjectType.MAILITEMTYPE;
-                metaWhat = ((MailItem.Type) change.what).name();
-            } else if (change.what instanceof Mailbox) {
-                whatType = ChangeMeta.ObjectType.MAILBOX;
-                // do not serialize mailbox. let the other server load the mailbox again.
-                metaWhat = null;
-            } else {
-                ZimbraLog.session.warn("Unexpected mailbox change : " + change.what);
-                continue;
-            }
-
-            if (change.preModifyObj instanceof MailItem) {
-                metaPreModifyObjType = ChangeMeta.ObjectType.MAILITEM;
-                metaPreModifyObj =  ((MailItem) change.preModifyObj).serializeUnderlyingData().toString();
-            } else if (change.preModifyObj instanceof MailItem.Type) {
-                metaPreModifyObjType = ChangeMeta.ObjectType.MAILITEMTYPE;
-                metaPreModifyObj = ((MailItem.Type) change.preModifyObj).name();
-            } else if (change.preModifyObj instanceof Mailbox) {
-                metaPreModifyObjType = ChangeMeta.ObjectType.MAILBOX;
-                metaPreModifyObj = null;
-            }
-
-            ModificationKeyMeta keyMeta = new ModificationKeyMeta(entry.getKey().getAccountId(), entry.getKey().getItemId());
-            ChangeMeta changeMeta = new ChangeMeta(whatType, metaWhat, change.why, metaPreModifyObjType, metaPreModifyObj);
-            ret.put(keyMeta, changeMeta);
-        }
-        return ret;
-    }
-
-    public byte[] getSerializedBytes() throws IOException {
-        // assemble temporary created, modified, deleted with Metadata
-        LinkedHashMap<ModificationKeyMeta, String> metaCreated = null;
-        Map<ModificationKeyMeta, ChangeMeta> metaModified = null;
-        Map<ModificationKeyMeta, ChangeMeta> metaDeleted = null;
-
-        if (created != null) {
-            metaCreated = new LinkedHashMap<ModificationKeyMeta, String>();
-            Iterator<Entry<ModificationKey, MailItem>> iter = created.entrySet().iterator();
-            while (iter.hasNext()) {
-                Entry<ModificationKey, MailItem> entry = iter.next();
-                ModificationKeyMeta keyMeta = new ModificationKeyMeta(entry.getKey().getAccountId(), entry.getKey().getItemId());
-                MailItem item = entry.getValue();
-                Metadata meta = item.serializeUnderlyingData();
-                metaCreated.put(keyMeta, meta.toString());
-            }
-        }
-        metaModified = getSerializable(modified);
-        metaDeleted = getSerializable(deleted);
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(bos);
-        oos.writeObject(changedTypes);
-        oos.writeObject(metaCreated);
-        oos.writeObject(metaModified);
-        oos.writeObject(metaDeleted);
-        oos.flush();
-        oos.close();
-        return bos.toByteArray();
-    }
-
-
-    private static Map<ModificationKey, Change> getOriginal(Mailbox mbox, Map<ModificationKeyMeta, ChangeMeta> map) throws ServiceException {
-        if (map == null) {
-            return null;
-        }
-        Map<ModificationKey, Change> ret = new LinkedHashMap<ModificationKey, Change>();
-        Iterator<Entry<ModificationKeyMeta, ChangeMeta>> iter = map.entrySet().iterator();
-        while (iter.hasNext()) {
-            Entry<ModificationKeyMeta, ChangeMeta> entry = iter.next();
-            ModificationKey key = new ModificationKey(entry.getKey().accountId, entry.getKey().itemId);
-            ChangeMeta changeMeta = entry.getValue();
-            Object what = null;
-            Object preModifyObj = null;
-            if (changeMeta.whatType == ChangeMeta.ObjectType.MAILITEM) {
-                Metadata meta = new Metadata(changeMeta.metaWhat);
-                MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
-                ud.deserialize(meta);
-                what = MailItem.constructItem(mbox, ud, true);
-                if (what instanceof Folder) {
-                    Folder folder = ((Folder) what);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
-                }
-            } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILITEMTYPE) {
-                what = MailItem.Type.of(changeMeta.metaWhat);
-            } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILBOX) {
-                mbox.refreshMailbox(null);
-                what = mbox;
-            } else {
-                ZimbraLog.session.warn("Unexpected mailbox change type received : " + changeMeta.whatType);
-                continue;
-            }
-
-            if (changeMeta.preModifyObjType == ChangeMeta.ObjectType.MAILITEM) {
-                Metadata meta = new Metadata(changeMeta.metaPreModifyObj);
-                MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
-                ud.deserialize(meta);
-                preModifyObj = MailItem.constructItem(mbox, ud, true);
-                if (preModifyObj instanceof Folder) {
-                    Folder folder = ((Folder) preModifyObj);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
-                }
-            } else if (changeMeta.preModifyObjType == ChangeMeta.ObjectType.MAILITEMTYPE) {
-                preModifyObj = MailItem.Type.of(changeMeta.metaPreModifyObj);
-            } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILBOX) {
-                what = mbox;
-            } else {
-                ZimbraLog.session.warn("Unexpected mailbox change type received : " + changeMeta.whatType);
-                continue;
-            }
-            Change change = new Change(what, changeMeta.metaWhy, preModifyObj);
-            ret.put(key, change);
-        }
-        return ret;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static PendingModifications deserialize(Mailbox mbox, byte[] data) throws IOException, ClassNotFoundException, ServiceException {
-        ByteArrayInputStream bis = new ByteArrayInputStream(data);
-        ObjectInputStream ois = new ObjectInputStream(bis);
-        PendingModifications pms = new PendingModifications();
-        pms.changedTypes = (Set<Type>) ois.readObject();
-
-        LinkedHashMap<ModificationKeyMeta, String> metaCreated = (LinkedHashMap<ModificationKeyMeta, String>) ois.readObject();
-        if (metaCreated != null) {
-            pms.created = new LinkedHashMap<ModificationKey, MailItem>();
-            Iterator<Entry<ModificationKeyMeta, String>> iter = metaCreated.entrySet().iterator();
-            while (iter.hasNext()) {
-                Entry<ModificationKeyMeta, String> entry = iter.next();
-                Metadata meta = new Metadata(entry.getValue());
-                MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
-                ud.deserialize(meta);
-                MailItem item = MailItem.constructItem(mbox, ud, true);
-                if (item instanceof Folder) {
-                    Folder folder = ((Folder) item);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
-
-                }
-                ModificationKey key = new ModificationKey(entry.getKey().accountId, entry.getKey().itemId);
-                pms.created.put(key, item);
-            }
-        }
-
-        Map<ModificationKeyMeta, ChangeMeta> metaModified =  (Map<ModificationKeyMeta, ChangeMeta>) ois.readObject();
-        pms.modified = getOriginal(mbox, metaModified);
-
-        Map<ModificationKeyMeta, ChangeMeta> metaDeleted =  (Map<ModificationKeyMeta, ChangeMeta>) ois.readObject();
-        pms.deleted = getOriginal(mbox, metaDeleted);
-
-        return pms;
-    }
 }
