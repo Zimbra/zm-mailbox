@@ -259,9 +259,7 @@ public abstract class PendingModifications<T> {
         }
     }
 
-    public void recordModified(ModificationKey mkey, Change chg) {
-        recordModified(mkey, chg.what, chg.why, chg.preModifyObj, false);
-    }
+    public abstract void recordModified(ModificationKey mkey, Change chg);
 
     public abstract void recordModified(MailboxStore mbox, int reason);
 
