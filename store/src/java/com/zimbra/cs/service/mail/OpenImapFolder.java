@@ -14,6 +14,7 @@ import com.zimbra.cs.service.account.AccountDocumentHandler;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.account.message.ImapCursorInfo;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.OpenImapFolderRequest;
 import com.zimbra.soap.account.message.OpenImapFolderResponse;
@@ -30,13 +31,17 @@ public class OpenImapFolder extends AccountDocumentHandler {
         OpenImapFolderResponse resp = new OpenImapFolderResponse();
         ItemId folderId = new ItemId(req.getFolderId(), zsc);
         int limit = req.getLimit();
-        int offset = req.getOffset() == null ? 0 : req.getOffset();
-        Pair<List<ImapMessage>, Boolean> openFolderResults = mbox.openImapFolder(octxt, folderId.getId(), limit, offset);
+        ImapCursorInfo cursor = req.getCursor();
+        Integer cursorMsgId = null;
+        if (cursor != null) {
+            cursorMsgId = new ItemId(cursor.getId(), mbox.getAccountId()).getId();
+        }
+        Pair<List<ImapMessage>, Boolean> openFolderResults = mbox.openImapFolder(octxt, folderId.getId(), limit, cursorMsgId);
         List<ImapMessage> msgs = openFolderResults.getFirst();
         boolean hasMore = openFolderResults.getSecond();
         for (ImapMessage msg: msgs) {
             int id = msg.getMsgId();
-            int imapId = msg.getImapId();
+            int imapId = msg.getImapUId();
             String type = msg.getType().toString();
             int flags = msg.getFlags();
             String tags = msg.getTags() == null ? null : Joiner.on(",").join(msg.getTags());
