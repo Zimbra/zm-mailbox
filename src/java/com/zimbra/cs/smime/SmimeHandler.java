@@ -37,8 +37,15 @@ public abstract class SmimeHandler {
 
     public abstract String decryptMessage(Mailbox mailbox, MimeMessage mime, int itemId);
 
-    public abstract void updateCryptoFlags(Account account, Element m, MimeMessage originalMimeMessage, MimeMessage decryptedMimeMessage, String errMsg);
+    public abstract void updateCryptoFlags(Account account, Element m,
+        MimeMessage originalMimeMessage, MimeMessage decryptedMimeMessage, String errMsg);
 
-    public abstract void encodeCertificate(Account account, Element elem, String certData, SoapProtocol mResponseProtocol);
+    public abstract MimeMessage decodePKCS7Message(Account account, MimeMessage pkcs7MimeMessage);
+
+    public abstract void addPKCS7SignedMessageSignatureDetails(Account account, Element m,
+        MimeMessage mm, SoapProtocol mResponseProtocol);
+
+    public abstract void encodeCertificate(Account account, Element elem, String certData,
+        SoapProtocol mResponseProtocol);
 
 }
