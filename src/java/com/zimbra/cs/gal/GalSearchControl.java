@@ -22,6 +22,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
+
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
@@ -43,6 +46,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.db.DbDataSource;
@@ -734,44 +738,41 @@ public class GalSearchControl {
             type = GalType.zimbra;
         }
         mParams.createSearchConfig(type);
-        mParams.setToken(mParams.getLdapOffsetToken()[0]);
-        mParams.setLdapOffset(Integer.parseInt(mParams.getLdapOffsetToken()[1]));
+        mParams.setLdapTimeStamp(mParams.getGalSyncToken().getIntLdapTs());
+        mParams.setLdapMatchCount(mParams.getGalSyncToken().getIntLdapMatchCount());
+        mParams.setLdapHasMore(mParams.getGalSyncToken().intLdapHasMore());
+        mParams.setMaxLdapTimeStamp(mParams.getGalSyncToken().getIntMaxLdapTs());
+
         try {
             prov.searchGal(mParams);
         } catch (Exception e) {
             throw ServiceException.FAILURE("ldap search failed", e);
         }
 
-        String[] offsetToken = {"", "0", "", "0"};
-        boolean hadMore = mParams.getResult().getHadMore();
-        String newToken = mParams.getResult().getToken();
-        offsetToken[0] = newToken;
-        offsetToken[1] = String.valueOf(mParams.getResult().getLdapOffset());
-        if (mParams.getResult().getTokenizeKey() != null)
-            hadMore = true;
+        String resultToken = getLdapSearchResultToken(mParams.getResult(), "");
+        boolean intLdapHasMore = mParams.getResult().getHadMore();
+//        if (mParams.getResult().getTokenizeKey() != null)
+//            hadMore = true;
+
         if (galMode == GalMode.both) {
             // do the second query
             mParams.createSearchConfig(GalType.ldap);
-            mParams.setToken(mParams.getLdapOffsetToken()[2]);
-            mParams.setLdapOffset(Integer.parseInt(mParams.getLdapOffsetToken()[3]));
+            mParams.setLdapTimeStamp(mParams.getGalSyncToken().getExtLdapTs());
+            mParams.setLdapMatchCount(mParams.getGalSyncToken().getExtLdapMatchCount());
+            mParams.setLdapHasMore(mParams.getGalSyncToken().extLdapHasMore());
+            mParams.setMaxLdapTimeStamp(mParams.getGalSyncToken().getExtMaxLdapTs());
             try {
                 prov.searchGal(mParams);
             } catch (Exception e) {
                 throw ServiceException.FAILURE("ldap search failed", e);
             }
-            hadMore |= mParams.getResult().getHadMore();
-            offsetToken[2] = mParams.getResult().getToken();
-            offsetToken[3] = String.valueOf(mParams.getResult().getLdapOffset());
-            newToken = LdapUtil.getLaterTimestamp(newToken, mParams.getResult().getToken());
-            if (mParams.getResult().getTokenizeKey() != null)
-                hadMore = true;
+            resultToken = getLdapSearchResultToken(mParams.getResult(), resultToken);
         }
-
+        boolean extLdapHasMore = mParams.getResult().getHadMore();
         if (mParams.getOp() == GalOp.sync) {
-            mParams.getResultCallback().setNewToken(newToken);
-            mParams.getResultCallback().setLdapOffset(offsetToken);
+            mParams.getResultCallback().setNewToken(resultToken);
         }
-        mParams.getResultCallback().setHasMoreResult(hadMore);
+        mParams.getResultCallback().setHasMoreResult(intLdapHasMore || extLdapHasMore);
     }
 
 
@@ -832,6 +833,19 @@ public class GalSearchControl {
         }
 
         return true;
+    }
+
+    private String getLdapSearchResultToken(SearchGalResult result, String initialString) {
+        StringBuilder buf;
+        if(StringUtils.isEmpty(initialString)) {
+           buf = new StringBuilder();
+        } else {
+           buf = new StringBuilder(initialString);
+           buf.append("_");
+        }
+        buf.append(result.getLdapTimeStamp()).append("_").append(result.getLdapMatchCount()).append("_").append(BooleanUtils.toInteger(result.getHadMore()));
+        buf.append("_").append(result.getToken());
+        return buf.toString();
     }
 
 }

@@ -32,6 +32,11 @@ public class GalUtil {
 
     public static String expandFilter(String tokenize, String filterTemplate, String key, String token, String extraQuery)
     throws ServiceException {
+          return expandFilter(tokenize, filterTemplate, key, token, extraQuery, false);
+    }
+
+    public static String expandFilter(String tokenize, String filterTemplate, String key, String token, String extraQuery, boolean hasMore)
+    throws ServiceException {
         String query;
 
         if (key != null) {
@@ -45,12 +50,17 @@ public class GalUtil {
         query = expandKey(tokenize, filterTemplate, key);
 
         if (query.indexOf("**") > 0) {
-        	query = query.replaceAll("\\*\\*", "*");
+            query = query.replaceAll("\\*\\*", "*");
         }
 
         if (token != null && token.length() > 0) {
-        	String arg = LdapUtil.escapeSearchFilterArg(token);
-        	query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query+")";
+            String arg = LdapUtil.escapeSearchFilterArg(token);
+            if (hasMore) {
+                query = "(&(createTimeStamp>="+arg+")"+query+")";
+            } else {
+                query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query+")";
+            }
+
         }
 
         if (extraQuery != null) {

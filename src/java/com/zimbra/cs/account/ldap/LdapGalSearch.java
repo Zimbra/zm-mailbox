@@ -23,6 +23,8 @@ import java.util.Date;
 
 import javax.security.auth.login.LoginException;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -35,6 +37,7 @@ import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.gal.GalSyncToken;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -225,6 +228,11 @@ public class LdapGalSearch {
 
             String fetchEntryByDn = params.getSearchEntryByDn();
             if (fetchEntryByDn == null) {
+                SearchGalResult sgr = params.getResult();
+                sgr.setLdapTimeStamp(params.getLdapTimeStamp());
+                sgr.setLdapMatchCount(params.getLdapMatchCount());
+                sgr.setHadMore(params.ldapHasMore());
+                sgr.setMaxLdapTimeStamp(params.getMaxLdapTimeStamp());
                 searchGal(zlc,
                           galType,
                           cfg.getPageSize(),
@@ -234,7 +242,6 @@ public class LdapGalSearch {
                           cfg.getRules(),
                           params.getSyncToken(),
                           params.getResult(),
-                          params.getLdapOffset(),
                           params.getOp());
             } else {
                 getGalEntryByDn(zlc, galType, fetchEntryByDn, cfg.getRules(), params.getResult());
@@ -306,7 +313,6 @@ public class LdapGalSearch {
             result.setToken(LdapUtil.getLaterTimestamp(result.getToken(), mts));
             String cts = (String) lgc.getAttrs().get("createTimeStamp");
             result.setToken(LdapUtil.getLaterTimestamp(result.getToken(), cts));
-            result.setToken(mts);
             try {
                 result.addMatch(lgc);
             } catch (ServiceException e) {
@@ -326,7 +332,7 @@ public class LdapGalSearch {
         LdapGalMapRules rules,
         String token,
         SearchGalResult result) throws ServiceException {
-        searchGal(zlc, galType, pageSize, base, query, maxResults, rules, token, result, 0, null);
+        searchGal(zlc, galType, pageSize, base, query, maxResults, rules, token, result, null);
     }
 
     public static void searchGal(ZLdapContext zlc,
@@ -338,11 +344,13 @@ public class LdapGalSearch {
                                  LdapGalMapRules rules,
                                  String token,
                                  SearchGalResult result,
-                                 int ldapOffset,
                                  GalOp op) throws ServiceException {
-
         String tk = token != null && !token.equals("")? token : LdapConstants.EARLIEST_SYNC_TOKEN;
         result.setToken(tk);
+        String maxLdapTs = result.getMaxLdapTimeStamp();
+        if (!StringUtils.isEmpty(maxLdapTs)) {
+           result.setToken(maxLdapTs);
+        }
 
         String reqAttrs[] = rules.getLdapAttrs();
 
@@ -369,7 +377,6 @@ public class LdapGalSearch {
 
         searchOpts.setResultPageSize(pageSize);
         searchOpts.setSearchGalResult(result);
-        searchOpts.setLdapOffset(ldapOffset);
         searchOpts.setGalOp(op);
 
         try {
@@ -379,31 +386,35 @@ public class LdapGalSearch {
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to search gal", e);
         } finally {
-            boolean gotNewToken = true;
-            String newToken = result.getToken();
-            if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapConstants.EARLIEST_SYNC_TOKEN))
-                gotNewToken = false;
+            if (!result.getHadMore()) {
+                //full sync completed
+                boolean gotNewToken = true;
+                String newToken = result.getToken();
+                if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapConstants.EARLIEST_SYNC_TOKEN))
+                    gotNewToken = false;
 
-            if (gotNewToken) {
-                Date parsedToken = LdapDateUtil.parseGeneralizedTime(newToken);
-                if (parsedToken != null) {
-                    long ts = parsedToken.getTime();
-                    if (result.getLdapOffset() == 0) {
+                if (gotNewToken) {
+                    Date parsedToken = LdapDateUtil.parseGeneralizedTime(newToken);
+                    if (parsedToken != null) {
+                        long ts = parsedToken.getTime();
                         ts += 1000;
+
+
+                        // Note, this will "normalize" the token to our standard format
+                        // DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT
+                        // Whenever we've got a new token, it will be returned in the
+                        // normalized format.
+                        String deltaToken = LdapDateUtil.toGeneralizedTime(new Date(ts));
+                        result.setToken(deltaToken);
+                        result.setLdapTimeStamp(deltaToken);
                     }
-
-
-                    // Note, this will "normalize" the token to our standard format
-                    // DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT
-                    // Whenever we've got a new token, it will be returned in the
-                    // normalized format.
-                    result.setToken(LdapDateUtil.toGeneralizedTime(new Date(ts)));
+                    /*
+                     * in the rare case when an LDAP implementation does not conform to generalized time and
+                     * we cannot parser the token, just leave it alone.
+                     */
                 }
-                /*
-                 * in the rare case when an LDAP implementation does not conform to generalized time and
-                 * we cannot parser the token, just leave it alone.
-                 */
             }
+
         }
     }
 

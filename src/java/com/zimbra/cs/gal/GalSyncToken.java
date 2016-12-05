@@ -21,6 +21,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.TimeZone;
 
+import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.ldap.LdapDateUtil;
@@ -29,6 +32,7 @@ import com.zimbra.cs.ldap.LdapUtil;
 public class GalSyncToken {
     public GalSyncToken(String token) {
         parse(token);
+        parseLdapTimestamp();
     }
 
     public GalSyncToken(String ldapTs, String accountId, int changeId) {
@@ -39,6 +43,14 @@ public class GalSyncToken {
 
     private String mLdapTimestamp;
     private HashMap<String,String> mChangeIdMap;
+    private String intLdapTs = "";
+    private String extLdapTs = "";
+    private String intMaxLdapTs = "";
+    private String extMaxLdapTs = "";
+    private int intLdapMatchCount = 0;
+    private int extLdapMatchCount = 0;
+    private boolean intLdapHasMore = true;
+    private boolean extLdapHasMore = true;
 
     private void parse(String token) {
         mChangeIdMap = new HashMap<String,String>();
@@ -68,16 +80,58 @@ public class GalSyncToken {
         }
     }
 
+    private void parseLdapTimestamp() {
+      if (!StringUtils.isEmpty(mLdapTimestamp)) {
+         int pos = mLdapTimestamp.indexOf('_');
+         if ( pos != -1) {
+            String[] parsedToken = mLdapTimestamp.split("_");
+            if (parsedToken.length >= 4) {
+                intLdapTs = parsedToken[0];
+                intLdapMatchCount = Integer.parseInt(parsedToken[1]);
+                intLdapHasMore = BooleanUtils.toBoolean(Integer.parseInt(parsedToken[2]));
+                intMaxLdapTs = parsedToken[3];
+            }
+
+            if (parsedToken.length == 8) {
+                extLdapTs = parsedToken[4];
+                extLdapMatchCount = Integer.parseInt(parsedToken[5]);
+                extLdapHasMore = BooleanUtils.toBoolean(Integer.parseInt(parsedToken[6]));
+                extMaxLdapTs = parsedToken[7];
+            }
+         } //else its internal gal sync only.no ldap sync.
+      }
+    }
+
+    public String getIntMaxLdapTs() {
+        return intMaxLdapTs;
+    }
+
+    public void setIntMaxLdapTs(String intMaxLdapTs) {
+        this.intMaxLdapTs = intMaxLdapTs;
+    }
+
+    public String getExtMaxLdapTs() {
+        return extMaxLdapTs;
+    }
+
+    public void setExtMaxLdapTs(String extMaxLdapTs) {
+        this.extMaxLdapTs = extMaxLdapTs;
+    }
+
     public String getLdapTimestamp() {
         return mLdapTimestamp;
     }
 
     public String getLdapTimestamp(String format) throws ServiceException {
+        return getLdapTimestamp(format, mLdapTimestamp);
+    }
+
+    public String getLdapTimestamp(String format, String ldapTimestamp) throws ServiceException {
         // mLdapTimestamp should be always in this format
         SimpleDateFormat fmt = new SimpleDateFormat(format);
-        Date ts = LdapDateUtil.parseGeneralizedTime(mLdapTimestamp);
+        Date ts = LdapDateUtil.parseGeneralizedTime(ldapTimestamp);
         if (ts == null) {
-            return mLdapTimestamp;
+            return ldapTimestamp;
         } else {
             if (format.endsWith("'Z'")) {
                 //make sure we're returning the correct timezone
@@ -86,6 +140,54 @@ public class GalSyncToken {
             }
             return fmt.format(ts);
         }
+    }
+
+    public String getIntLdapTs() {
+        return intLdapTs;
+    }
+
+    public void setIntLdapTs(String intLdapTs) {
+       this.intLdapTs = intLdapTs;
+    }
+
+    public String getExtLdapTs() {
+       return extLdapTs;
+    }
+
+    public void setExtLdapTs(String extLdapTs) {
+       this.extLdapTs = extLdapTs;
+    }
+
+    public int getIntLdapMatchCount() {
+       return intLdapMatchCount;
+    }
+
+    public void setIntLdapMatchCount(int intLdapMatchCount) {
+       this.intLdapMatchCount = intLdapMatchCount;
+    }
+
+    public int getExtLdapMatchCount() {
+       return extLdapMatchCount;
+    }
+
+    public void setExtLdapMatchCount(int extLdapMatchCount) {
+      this.extLdapMatchCount = extLdapMatchCount;
+    }
+
+    public boolean intLdapHasMore() {
+        return intLdapHasMore;
+    }
+
+    public void setIntLdapHasMore(boolean intLdapHasMore) {
+        this.intLdapHasMore = intLdapHasMore;
+    }
+
+    public boolean extLdapHasMore() {
+         return extLdapHasMore;
+    }
+
+    public void setExtLdapHasMore(boolean extLdapHasMore) {
+        this.extLdapHasMore = extLdapHasMore;
     }
 
     public int getChangeId(String accountId) {

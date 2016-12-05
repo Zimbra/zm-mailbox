@@ -221,17 +221,6 @@ public class GalSearchResultCallback implements GalContact.Visitor {
         mResponse.addAttribute(MailConstants.A_QUERY_MORE, more);
     }
 
-    public void setLdapOffset(String[] offset) {
-        StringBuilder builder = new StringBuilder();
-        if (offset.length >= 2 && !offset[0].isEmpty()) {
-            builder.append(offset[0]).append(":").append(offset[1]);
-        }
-        if (offset.length >= 4 && !offset[2].isEmpty()) {
-            builder.append(offset[2]).append(":").append(offset[3]);
-        }
-        mResponse.addAttribute(MailConstants.A_LDAP_OFFSET, builder.toString());
-    }
-
     public void setThrottled(boolean throttled) {
         mResponse.addAttribute(MailConstants.A_GALSYNC_THROTTLED, throttled);
     }

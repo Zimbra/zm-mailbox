@@ -110,7 +110,6 @@ public class SearchLdapOptions {
     private boolean isUseControl = true;
     private boolean isManageDSAit = false;
     private SearchGalResult searchGalResult;
-    private int ldapOffset;
     private GalOp galOp;
 
     // TODO: retire this
@@ -135,10 +134,6 @@ public class SearchLdapOptions {
         setBinaryAttrs(binaryAttrs);
         setSearchScope(searchScope);
         setVisitor(visitor);
-    }
-
-    public int getLdapOffset() {
-        return ldapOffset;
     }
 
     public GalOp getGalOp() {
@@ -178,10 +173,6 @@ public class SearchLdapOptions {
 
     public SearchGalResult getSearchGalResult() {
         return searchGalResult;
-    }
-
-    public void setLdapOffset(int ldapOffset) {
-         this.ldapOffset = ldapOffset;
     }
 
     public void setGalOp(GalOp galOp) {
