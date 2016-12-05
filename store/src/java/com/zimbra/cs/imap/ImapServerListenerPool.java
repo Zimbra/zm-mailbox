@@ -43,11 +43,11 @@ public class ImapServerListenerPool {
             .initialCapacity(16) /* TODO - base on the total number of servers or use LDAP config? */
             .build(new CacheLoader<String, ImapServerListener>() {
 
-    @Override
-    public ImapServerListener load(String serverName) throws Exception {
-        return new ImapServerListener(serverName);
-    }
-});
+        @Override
+        public ImapServerListener load(String serverName) throws Exception {
+            return new ImapServerListener(serverName);
+        }
+    });
 
     private ImapServerListenerPool() {
     }
@@ -56,7 +56,7 @@ public class ImapServerListenerPool {
         return SINGLETON;
     }
 
-    public ImapServerListener get(MailboxStore zmbox) throws ServiceException {
+    public ImapServerListener get(ZMailbox zmbox) throws ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.id, zmbox.getAccountId());
         try {
             return serverToListenerMap.get(acct.getServerName());
