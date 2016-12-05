@@ -3499,7 +3499,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, cursorId);
             }
             if (hasLimit && !Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                stmt.setMaxRows(limit + 2);
+                stmt.setMaxRows(limit + 1);
             }
             rs = stmt.executeQuery();
             boolean hasMore = false;
@@ -3510,7 +3510,7 @@ public class DbMailItem {
             } else if (!Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 while (rs.next()) {
                     if (limit-- <= 0) {
-                        hasMore = rs.next();
+                        hasMore = true;
                         break;
                     }
                     addImapResult(result, rs);
