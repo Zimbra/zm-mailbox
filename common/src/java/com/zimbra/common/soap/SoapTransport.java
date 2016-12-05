@@ -18,6 +18,17 @@ package com.zimbra.common.soap;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.concurrent.Future;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -368,6 +379,17 @@ public abstract class SoapTransport {
             return e;
     }
 
+    public abstract Future<HttpResponse> invokeAsync(Element document, boolean raw, boolean noSession, String requestedAccountId,
+            String changeToken, String tokenType, FutureCallback<HttpResponse> cb) throws IOException, ServiceException;
+
+    public final Future<HttpResponse> invokeAsync(Element document, FutureCallback<HttpResponse> cb) throws IOException, ServiceException {
+        return invokeAsync(document, false, false, null, null, null, cb);
+    }
+
+    public final Future<HttpResponse> invokeWithoutSessionAsync(Element document, FutureCallback<HttpResponse> cb) throws IOException, ServiceException {
+        return invokeAsync(document, false, true, null, null, null, cb);
+    }
+    
     /**
      * Sends the specified document as a Soap message
      * and parses the response as a Soap message. <p>
