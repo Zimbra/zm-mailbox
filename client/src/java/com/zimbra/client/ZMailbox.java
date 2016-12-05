@@ -154,6 +154,7 @@ import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
 import com.zimbra.soap.account.message.OpenImapFolderRequest;
+import com.zimbra.soap.account.message.OpenImapFolderResponse;
 import com.zimbra.soap.account.message.ResetRecentMessageCountRequest;
 import com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.type.AuthToken;
@@ -6081,14 +6082,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     @VisibleForTesting
-    public ZImapFolderInfo fetchImapFolderChunk(OpenImapFolderParams params) throws ServiceException {
+    public OpenImapFolderResponse fetchImapFolderChunk(OpenImapFolderParams params) throws ServiceException {
         OpenImapFolderRequest req = new OpenImapFolderRequest();
         req.setFolderId(String.valueOf(params.getFolderId()));
         req.setLimit(params.getLimit());
         if (params.getCursorId() != null) {
             req.setCursor(new ImapCursorInfo(params.getCursorId()));
         }
-        return new ZImapFolderInfo(invokeJaxb(req));
+        return invokeJaxb(req);
     }
 
     /**
@@ -6100,7 +6101,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public List<ImapMessageInfo> openImapFolder(int folderId, int chunkSize) throws ServiceException {
         List<ImapMessageInfo> msgs = new LinkedList<ImapMessageInfo>();
         Integer cursorId = null;
-        ZImapFolderInfo folderInfo = null;
+        OpenImapFolderResponse folderInfo = null;
         do {
             OpenImapFolderParams params = new OpenImapFolderParams(folderId);
             params.setLimit(chunkSize);
@@ -6108,10 +6109,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 params.setCursorId(String.valueOf(cursorId));
             }
             folderInfo = fetchImapFolderChunk(params);
-            List<ImapMessageInfo> results = folderInfo.getMessageInfo();
+            List<ImapMessageInfo> results = folderInfo.getImapMessageInfo();
             cursorId = results.get(results.size() - 1).getId();
             msgs.addAll(results);
-        } while (folderInfo.hasMore());
+        } while (folderInfo.getHasMore());
         return msgs;
     }
 
