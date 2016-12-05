@@ -34,7 +34,7 @@ public abstract class ImapListener extends Session {
 
     private final Map<Integer, Integer> renumberCount = new ConcurrentHashMap<Integer, Integer>();
 
-    ImapListener(ImapMailboxStore store, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
+    protected ImapListener(ImapMailboxStore store, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
         this.imapMboxStore = store;
         mPath      = i4folder.getPath();
