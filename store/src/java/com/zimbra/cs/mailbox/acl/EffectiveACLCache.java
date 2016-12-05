@@ -36,7 +36,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.memcached.MemcachedConnector;
-import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
@@ -109,7 +109,7 @@ public final class EffectiveACLCache {
         mMemcachedLookup.removeMulti(keys);
     }
 
-    public void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    public void notifyCommittedChanges(PendingLocalModifications mods, int changeId) {
         Set<EffectiveACLCacheKey> keysToInvalidate = new HashSet<EffectiveACLCacheKey>();
         if (mods.modified != null) {
             for (Map.Entry<ModificationKey, Change> entry : mods.modified.entrySet()) {
