@@ -213,6 +213,7 @@ public class TestUtil extends Assert {
 
     public static String getBaseUrl() throws ServiceException {
         String scheme;
+        String hostname = Provisioning.getInstance().getLocalServer().getServiceHostname();
         int port;
         port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailPort, 0);
         if (port > 0) {

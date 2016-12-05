@@ -84,6 +84,11 @@ public class TestWaitSetRequest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         cleanUp();
+        try {
+            soapProv.soapLogOut();
+        } catch (ServiceException e) {
+            //ignore
+        }
     }
 
     private void cleanUp() throws Exception {
@@ -99,7 +104,6 @@ public class TestWaitSetRequest extends TestCase {
             WaitSetMgr.destroy(null, null, waitSetId);
             waitSetId = null;
         }
-        soapProv.soapLogOut();
         failureMessage = null;
         success = false;
     }
@@ -379,7 +383,7 @@ public class TestWaitSetRequest extends TestCase {
         waitSetReq.setBlock(true);
 
         final CountDownLatch doneSignal = new CountDownLatch(1);
-        soapProv.invokeJaxbAsync(waitSetReq, new FutureCallback<HttpResponse>() {
+        mbox.getTransport().invokeAsync(JaxbUtil.jaxbToElement(waitSetReq), new FutureCallback<HttpResponse>() {
             public void completed(final HttpResponse response) {
                 cbCalled = true;
                 int respCode = response.getStatusLine().getStatusCode();
