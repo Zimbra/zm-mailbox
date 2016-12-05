@@ -290,13 +290,7 @@ public class L10nUtil {
         errDetailInvalidCMSSignature,
 
         errCodeCMSSignatureValidationFailed,
-        errDetailCMSSignatureValidationFailed,
-
-        errSmimeFeatureNotEnabled,
-        errMimeMessageNotFound,
-        errLoadCertificateFailed,
-        errLoadPrivateKeyFailed,
-        errDecryptionFailed
+        errDetailCMSSignatureValidationFailed
 
         // add other messages in the future...
     }
