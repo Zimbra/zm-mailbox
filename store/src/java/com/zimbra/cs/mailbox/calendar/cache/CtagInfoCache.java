@@ -46,7 +46,7 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.util.AccountUtil;
@@ -225,7 +225,7 @@ public class CtagInfoCache {
         mMemcachedLookup.removeMulti(keys);
     }
 
-    void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    void notifyCommittedChanges(PendingLocalModifications mods, int changeId) {
         int inboxFolder = Mailbox.ID_FOLDER_INBOX;
         Set<CalendarKey> keysToInvalidate = new HashSet<CalendarKey>();
         if (mods.created != null) {

@@ -49,7 +49,7 @@ import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.service.mail.CalendarUtils;
-import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -746,7 +746,7 @@ public class CalSummaryCache {
         }
     }
 
-    void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    void notifyCommittedChanges(PendingLocalModifications mods, int changeId) {
         if (mods.created != null) {
             for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
                 MailItem item = entry.getValue();
