@@ -157,7 +157,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
 
     ImapMessage(ImapMessageInfo msgInfo) {
         this.msgId   = msgInfo.getId();
-        this.imapUid = msgInfo.getImapId();
+        this.imapUid = msgInfo.getImapUid();
         this.flags   = msgInfo.getFlags();
         this.tags    = msgInfo.getTags() == null ? null : msgInfo.getTags().split(",");
         this.sflags  = msgInfo.getType().equalsIgnoreCase(MailItem.Type.CONTACT.name()) ? FLAG_IS_CONTACT : 0;
@@ -744,7 +744,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     }
 
     public int getMsgId() { return msgId; }
-    public int getImapId() { return imapUid; }
+    public int getImapUId() { return imapUid; }
     public int getFlags() { return flags; }
     public String[] getTags() { return tags; }
 
