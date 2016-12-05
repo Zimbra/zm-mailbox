@@ -43,6 +43,7 @@ public class SmimeConstants {
     public static final String A_PUB_CERT_ID = "pubCertId";
     public static final String A_PVT_KEY_ID = "pvtKeyId";
     public static final String A_DEFAULT = "default";
+    public static final String A_ERROR = "error";
 
     public static final String E_CERTIFICATE = "certificate";
     public static final String E_EMAIL_ADDR = "emailAddress";
