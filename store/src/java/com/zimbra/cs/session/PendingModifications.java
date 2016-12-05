@@ -267,33 +267,7 @@ public abstract class PendingModifications<T> {
 
     public abstract void recordModified(T item, int reason, T preModifyItem);
 
-    PendingModifications add(PendingModifications other) {
-        changedTypes.addAll(other.changedTypes);
-
-        if (other.deleted != null) {
-            for (Map.Entry<ModificationKey, Change> entry : other.deleted.entrySet()) {
-                delete(entry.getKey(), entry.getValue());
-            }
-        }
-
-        if (other.created != null) {
-            for (MailItem item : other.created.values()) {
-                recordCreated(item);
-            }
-        }
-
-        if (other.modified != null) {
-            for (Change chg : other.modified.values()) {
-                if (chg.what instanceof MailItem) {
-                    recordModified((MailItem) chg.what, chg.why, (MailItem) chg.preModifyObj);
-                } else if (chg.what instanceof Mailbox) {
-                    recordModified((Mailbox) chg.what, chg.why);
-                }
-            }
-        }
-
-        return this;
-    }
+    abstract PendingModifications<T> add(PendingModifications<T> other);
 
     public void clear()  {
         created = null;
