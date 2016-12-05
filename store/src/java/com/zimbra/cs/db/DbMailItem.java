@@ -3505,8 +3505,7 @@ public class DbMailItem {
             boolean hasMore = false;
             if (!hasLimit) {
                 while (rs.next()) {
-                    int flags = rs.getBoolean(4) ? Flag.BITMASK_UNREAD | rs.getInt(5) : rs.getInt(5);
-                    result.add(new ImapMessage(rs.getInt(1), MailItem.Type.of(rs.getByte(2)), rs.getInt(3), flags, DbTag.deserializeTags(rs.getString(6))));
+                    addImapResult(result, rs);
                 }
             } else if (!Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 while (rs.next()) {
@@ -3514,15 +3513,13 @@ public class DbMailItem {
                         hasMore = rs.next();
                         break;
                     }
-                    int flags = rs.getBoolean(4) ? Flag.BITMASK_UNREAD | rs.getInt(5) : rs.getInt(5);
-                    result.add(new ImapMessage(rs.getInt(1), MailItem.Type.of(rs.getByte(2)), rs.getInt(3), flags, DbTag.deserializeTags(rs.getString(6))));
+                    addImapResult(result, rs);
                 }
             } else {
                 int n = 0;
                 while (n < limit && rs.next()) {
                     n++;
-                    int flags = rs.getBoolean(4) ? Flag.BITMASK_UNREAD | rs.getInt(5) : rs.getInt(5);
-                    result.add(new ImapMessage(rs.getInt(1), MailItem.Type.of(rs.getByte(2)), rs.getInt(3), flags, DbTag.deserializeTags(rs.getString(6))));
+                    addImapResult(result, rs);
                 }
                 hasMore = rs.next();
             }
@@ -3533,6 +3530,11 @@ public class DbMailItem {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
+    }
+
+    private static void addImapResult(List<ImapMessage> result, ResultSet rs) throws SQLException {
+        int flags = rs.getBoolean(4) ? Flag.BITMASK_UNREAD | rs.getInt(5) : rs.getInt(5);
+        result.add(new ImapMessage(rs.getInt(1), MailItem.Type.of(rs.getByte(2)), rs.getInt(3), flags, DbTag.deserializeTags(rs.getString(6))));
     }
 
     public static int countImapRecent(Folder folder, int uidCutoff) throws ServiceException {
