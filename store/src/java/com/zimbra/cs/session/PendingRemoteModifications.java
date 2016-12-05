@@ -18,6 +18,7 @@ package com.zimbra.cs.session;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZMailbox;
@@ -75,6 +76,34 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
             setAccountId(actId);
             setItemId(Integer.valueOf(idInMbox));
         }
+    }
+
+    @Override
+    PendingModifications<ZBaseItem> add(PendingModifications<ZBaseItem> other) {
+        if (other.deleted != null) {
+            for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : other.deleted
+                    .entrySet()) {
+                delete(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (other.created != null) {
+            for (ZBaseItem item : other.created.values()) {
+                recordCreated(item);
+            }
+        }
+
+        if (other.modified != null) {
+            for (PendingModifications.Change chg : other.modified.values()) {
+                if (chg.what instanceof ZBaseItem) {
+                    recordModified((ZBaseItem) chg.what, chg.why, (ZBaseItem) chg.preModifyObj);
+                } else if (chg.what instanceof ZMailbox) {
+                    recordModified((ZMailbox) chg.what, chg.why);
+                }
+            }
+        }
+
+        return this;
     }
 
     public static MailItem.Type getItemType(ZBaseItem item) {
