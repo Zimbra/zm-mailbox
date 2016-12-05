@@ -43,6 +43,7 @@ public class SmimeConstants {
     public static final String A_PUB_CERT_ID = "pubCertId";
     public static final String A_PVT_KEY_ID = "pvtKeyId";
     public static final String A_DEFAULT = "default";
+    public static final String A_DECRYPTION_ERROR_CODE = "decryptionErrorCode";
 
     public static final String E_CERTIFICATE = "certificate";
     public static final String E_EMAIL_ADDR = "emailAddress";
@@ -103,4 +104,8 @@ public class SmimeConstants {
     public static final String CMS_EMAILADDRESS_NOMATCH_ERROR_MESSAGE = "Email address doesn't match";
     public static final String CMS_CLIENT_CERTIFICATE_EXPIRED_ERROR_MESSAGE = "client certificate expired";
     public static final String CMS_CLIENT_CERTIFICATE_NOT_YET_VALID_ERROR_MESSAGE = "client certificate not yet valid";
+
+    public static final String ERR_LOAD_CERTIFICATE_FAILED = "LOAD_CERTIFICATE_FAILED";
+    public static final String ERR_LOAD_PRIVATE_KEY_FAILED = "LOAD_PRIVATE_KEY_FAILED";
+    public static final String ERR_DECRYPTION_FAILED = "DECRYPTION_FAILED";
 }
