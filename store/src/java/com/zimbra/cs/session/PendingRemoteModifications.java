@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.session;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import com.zimbra.client.ZBaseItem;
@@ -133,6 +134,37 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
 
     private void recordModified(PendingModifications.ModificationKey key, Object item, int reason, Object preModifyObj,
             boolean snapshotItem) {
-        // TODO - Implement
+        PendingModifications.Change chg = null;
+        if (created != null && created.containsKey(key)) {
+            if (item instanceof ZBaseItem) {
+                recordCreated((ZBaseItem) item);
+            }
+            return;
+        } else if (deleted != null && deleted.containsKey(key)) {
+            return;
+        } else if (modified == null) {
+            modified = new HashMap<PendingModifications.ModificationKey, PendingModifications.Change>();
+        } else {
+            chg = modified.get(key);
+            if (chg != null) {
+                chg.what = item;
+                chg.why |= reason;
+                if (chg.preModifyObj == null) {
+                    chg.preModifyObj = preModifyObj == null && snapshotItem ? snapshotItemIgnoreEx(item) : preModifyObj;
+                }
+            }
+        }
+        if (chg == null) {
+            chg = new Change(item, reason,
+                    preModifyObj == null && snapshotItem ? snapshotItemIgnoreEx(item) : preModifyObj);
+        }
+        modified.put(key, chg);
+
     }
+
+    private static Object snapshotItemIgnoreEx(Object item) {
+        // TODO - Do we need to be able to snapshot ZBaseItems?
+        return null;
+    }
+
 }

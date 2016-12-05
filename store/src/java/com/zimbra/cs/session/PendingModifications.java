@@ -267,46 +267,6 @@ public abstract class PendingModifications<T> {
 
     public abstract void recordModified(T item, int reason, T preModifyItem);
 
-    private void recordModified(ModificationKey key, Object item, int reason,
-            Object preModifyObj, boolean snapshotItem) {
-        Change chg = null;
-        if (created != null && created.containsKey(key)) {
-            if (item instanceof MailItem) {
-                recordCreated((MailItem) item);
-            }
-            return;
-        } else if (deleted != null && deleted.containsKey(key)) {
-            return;
-        } else if (modified == null) {
-            modified = new HashMap<ModificationKey, Change>();
-        } else {
-            chg = modified.get(key);
-            if (chg != null) {
-                chg.what = item;
-                chg.why |= reason;
-                if (chg.preModifyObj == null) {
-                    chg.preModifyObj = preModifyObj == null && snapshotItem ? snapshotItemIgnoreEx(item) : preModifyObj;
-                }
-            }
-        }
-        if (chg == null) {
-            chg = new Change(item, reason,
-                    preModifyObj == null && snapshotItem ? snapshotItemIgnoreEx(item) : preModifyObj);
-        }
-        modified.put(key, chg);
-    }
-
-    private static Object snapshotItemIgnoreEx(Object item) {
-        if (item instanceof MailItem) {
-            try {
-                return ((MailItem) item).snapshotItem();
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("Error in taking item snapshot", e);
-            }
-        }
-        return null;
-    }
-
     PendingModifications add(PendingModifications other) {
         changedTypes.addAll(other.changedTypes);
 

@@ -16,9 +16,12 @@
  */
 package com.zimbra.cs.session;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -102,6 +105,42 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
 
     private void recordModified(PendingModifications.ModificationKey key, Object item, int reason, Object preModifyObj,
             boolean snapshotItem) {
-        // TODO - Implement
+        PendingModifications.Change chg = null;
+        if (created != null && created.containsKey(key)) {
+            if (item instanceof MailItem) {
+                recordCreated((MailItem) item);
+            }
+            return;
+        } else if (deleted != null && deleted.containsKey(key)) {
+            return;
+        } else if (modified == null) {
+            modified = new HashMap<PendingModifications.ModificationKey, PendingModifications.Change>();
+        } else {
+            chg = modified.get(key);
+            if (chg != null) {
+                chg.what = item;
+                chg.why |= reason;
+                if (chg.preModifyObj == null) {
+                    chg.preModifyObj = preModifyObj == null && snapshotItem ? snapshotItemIgnoreEx(item) : preModifyObj;
+                }
+            }
+        }
+        if (chg == null) {
+            chg = new Change(item, reason,
+                    preModifyObj == null && snapshotItem ? snapshotItemIgnoreEx(item) : preModifyObj);
+        }
+        modified.put(key, chg);
     }
+
+    private static Object snapshotItemIgnoreEx(Object item) {
+        if (item instanceof MailItem) {
+            try {
+                return ((MailItem) item).snapshotItem();
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("Error in taking item snapshot", e);
+            }
+        }
+        return null;
+    }
+
 }
