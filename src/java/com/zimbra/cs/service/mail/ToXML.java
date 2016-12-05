@@ -1417,6 +1417,7 @@ public final class ToXML {
             }
 
             MimeMessage mm = null;
+            String decryptionStatus = null;
             try {
                 mm = msg.getMimeMessage();
                 // if the mime is encrypted
@@ -1424,7 +1425,7 @@ public final class ToXML {
                     && mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)) {
                     ZimbraLog.mailbox.debug("The message is encrypted. Forwarding it to SmimeHandler for decryption.");
                     if (SmimeHandler.getHandler() != null) {
-                        SmimeHandler.getHandler().decryptMessage(msg.getMailbox(), mm, msg.getId());
+                        decryptionStatus = SmimeHandler.getHandler().decryptMessage(msg.getMailbox(), mm, msg.getId());
                     }
                 }
             } catch (MailServiceException e) {
@@ -1572,7 +1573,7 @@ public final class ToXML {
             // update crypto flags - isSigned/isEncrypted
             if (SmimeHandler.getHandler() != null) {
                 MimeMessage originalMimeMessage = msg.getMimeMessage(false);
-                SmimeHandler.getHandler().updateCryptoFlags(msg.getAccount(), m, originalMimeMessage, mm);
+                SmimeHandler.getHandler().updateCryptoFlags(msg.getAccount(), m, originalMimeMessage, mm, decryptionStatus);
             }
 
             // if the mime is not encrypted and it is signed
