@@ -408,7 +408,7 @@ public class TestZClient extends TestCase {
         Collections.sort(actual);
         assertEquals("expected and actual lists have different lengths", expected.size(), actual.size());
         for (int i = 0; i < expected.size(); i++) {
-            assertEquals((Integer) expected.get(i).getImapUId(), actual.get(i).getImapUid());
+            assertEquals((Integer) expected.get(i).getImapUid(), actual.get(i).getImapUid());
         }
     }
 
