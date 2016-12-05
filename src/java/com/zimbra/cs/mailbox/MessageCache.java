@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
@@ -34,6 +35,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ExpandMimeMessage;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.smime.SmimeHandler;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
@@ -182,7 +184,22 @@ public class MessageCache {
                 sLog.debug("Expanding MimeMessage for item %d.", item.getId());
                 cacheHit = false;
                 try {
-                    ExpandMimeMessage expander = new ExpandMimeMessage(cnode.message);
+                    MimeMessage decodedMimeMessage = null;
+                    if (!cnode.message.getContentType()
+                        .contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)
+                        && (cnode.message.getContentType()
+                            .contains(MimeConstants.CT_APPLICATION_SMIME)
+                            || cnode.message.getContentType()
+                                .contains(MimeConstants.CT_APPLICATION_SMIME_OLD))) {
+                        ZimbraLog.mailbox.debug(
+                            "The message is PKCS7 signed. Forwarding it to SmimeHandler for decoding.");
+                        if (SmimeHandler.getHandler() != null) {
+                            decodedMimeMessage = SmimeHandler.getHandler()
+                                .decodePKCS7Message(item.getAccount(), cnode.message);
+                        }
+                    }
+                    ExpandMimeMessage expander = new ExpandMimeMessage(
+                        decodedMimeMessage != null ? decodedMimeMessage : cnode.message);
                     expander.expand();
                     cnode.expanded = expander.getExpanded();
                     if (cnode.expanded != cnode.message) {
