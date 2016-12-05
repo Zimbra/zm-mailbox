@@ -24,7 +24,7 @@ public class OpenImapFolderRequest {
      * @zm-api-field-description The maximum number of results to return
      */
     @XmlAttribute(name=MailConstants.A_QUERY_LIMIT /* limit */, required=true)
-    private Integer limit;
+    private int limit;
 
     /**
      * @zm-api-field-description Specifies the 0-based offset into the message list
@@ -38,7 +38,7 @@ public class OpenImapFolderRequest {
 
     public void setLimit(Integer limit) { this.limit = limit; }
 
-    public Integer getLimit() { return limit; }
+    public int getLimit() { return limit; }
 
     public void setOffset(Integer offset) { this.offset = offset; }
 
