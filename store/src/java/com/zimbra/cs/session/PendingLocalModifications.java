@@ -18,6 +18,7 @@ package com.zimbra.cs.session;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
@@ -53,6 +54,36 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         public ModificationKey(MailItem item) {
             super(item.getMailbox().getAccountId(), item.getId());
         }
+    }
+
+    @Override
+    PendingModifications<MailItem> add(PendingModifications<MailItem> other) {
+        changedTypes.addAll(other.changedTypes);
+
+        if (other.deleted != null) {
+            for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : other.deleted
+                    .entrySet()) {
+                delete(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (other.created != null) {
+            for (MailItem item : other.created.values()) {
+                recordCreated(item);
+            }
+        }
+
+        if (other.modified != null) {
+            for (PendingModifications.Change chg : other.modified.values()) {
+                if (chg.what instanceof MailItem) {
+                    recordModified((MailItem) chg.what, chg.why, (MailItem) chg.preModifyObj);
+                } else if (chg.what instanceof Mailbox) {
+                    recordModified((Mailbox) chg.what, chg.why);
+                }
+            }
+        }
+
+        return this;
     }
 
     @Override
