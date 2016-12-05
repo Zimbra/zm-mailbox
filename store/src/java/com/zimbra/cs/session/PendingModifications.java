@@ -265,6 +265,7 @@ public abstract class PendingModifications<T> {
 
     public static final class ModificationKeyMeta implements Serializable {
 
+        private static final long serialVersionUID = -5509441698584047140L;
         String accountId;
         Integer itemId;
 
@@ -276,6 +277,9 @@ public abstract class PendingModifications<T> {
     }
 
     public static final class ChangeMeta implements Serializable {
+
+        private static final long serialVersionUID = 5910956366698510738L;
+
         public static enum ObjectType {
             MAILBOX, MAILITEM, MAILITEMTYPE
         }
