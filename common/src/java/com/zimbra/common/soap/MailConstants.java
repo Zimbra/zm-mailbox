@@ -706,7 +706,7 @@ public final class MailConstants {
     public static final String A_VISIBLE = "visible";
     public static final String A_URL = "url";
     public static final String A_NUM = "n";
-    public static final String A_IMAP_ID ="imapid";
+    public static final String A_IMAP_UID ="i4uid";
     public static final String A_IMAP_NUM = "i4n";
     public static final String A_IMAP_MODSEQ = "i4ms";
     public static final String A_IMAP_UIDNEXT = "i4next";
