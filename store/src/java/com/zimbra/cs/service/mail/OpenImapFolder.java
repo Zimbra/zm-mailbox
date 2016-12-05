@@ -41,15 +41,15 @@ public class OpenImapFolder extends AccountDocumentHandler {
         boolean hasMore = openFolderResults.getSecond();
         for (ImapMessage msg: msgs) {
             int id = msg.getMsgId();
-            int imapId = msg.getImapUId();
+            int imapUid = msg.getImapUid();
             String type = msg.getType().toString();
             int flags = msg.getFlags();
             String tags = msg.getTags() == null ? null : Joiner.on(",").join(msg.getTags());
-            ImapMessageInfo info = new ImapMessageInfo(id, imapId, type, flags, tags);
+            ImapMessageInfo info = new ImapMessageInfo(id, imapUid, type, flags, tags);
             resp.addImapMessageInfo(info);
         }
         resp.setHasMore(hasMore);
-        return JaxbUtil.jaxbToElement(resp);
+        return zsc.jaxbToElement(resp);
     }
 
 }

@@ -744,7 +744,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     }
 
     public int getMsgId() { return msgId; }
-    public int getImapUId() { return imapUid; }
+    public int getImapUid() { return imapUid; }
     public int getFlags() { return flags; }
     public String[] getTags() { return tags; }
 

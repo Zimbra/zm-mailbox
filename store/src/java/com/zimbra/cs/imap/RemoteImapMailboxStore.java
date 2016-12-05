@@ -18,10 +18,10 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -245,7 +245,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public List<ImapMessage> openImapFolder(OperationContext octxt, ItemIdentifier folderId) throws ServiceException {
-        List<ImapMessage> msgs = new LinkedList<ImapMessage>();
+        List<ImapMessage> msgs = new ArrayList<ImapMessage>();
         Integer chunkSize = Provisioning.getInstance().getLocalServer().getOpenImapFolderRequestChunkSize();
         for (ImapMessageInfo msg: zMailbox.openImapFolder(folderId.id, chunkSize)) {
             msgs.add(new ImapMessage(msg));
