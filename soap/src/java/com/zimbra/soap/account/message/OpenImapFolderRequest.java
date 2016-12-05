@@ -1,6 +1,7 @@
 package com.zimbra.soap.account.message;
 
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
@@ -27,10 +28,10 @@ public class OpenImapFolderRequest {
     private int limit;
 
     /**
-     * @zm-api-field-description Specifies the 0-based offset into the message list
+     * @zm-api-field-description Cursor specifying the last item on the previous results page
      */
-    @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
-    private Integer offset;
+    @XmlElement(name=MailConstants.E_CURSOR /* cursor */, required=false)
+    private ImapCursorInfo cursor;
 
     public void setFolderId(String id) { this.folderId = id; }
 
@@ -40,7 +41,7 @@ public class OpenImapFolderRequest {
 
     public int getLimit() { return limit; }
 
-    public void setOffset(Integer offset) { this.offset = offset; }
+    public void setCursor(ImapCursorInfo cursor) { this.cursor = cursor; }
 
-    public Integer getOffset() { return offset == null ? 0 : offset; }
+    public ImapCursorInfo getCursor() { return cursor; }
 }
