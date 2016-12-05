@@ -21,7 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.memcached.MemcachedConnector;
-import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingLocalModifications;
 
 public class MemcachedCacheManager extends MailboxListener {
 
@@ -33,7 +33,7 @@ public class MemcachedCacheManager extends MailboxListener {
 
     @Override
     public void notify(ChangeNotification notification) {
-        PendingModifications mods = notification.mods;
+        PendingLocalModifications mods = notification.mods;
         int changeId = notification.lastChangeId;
         // We have to notify calendar cache before checking memcached connectedness
         // because a portion of calendar cache is not memcached-based.
