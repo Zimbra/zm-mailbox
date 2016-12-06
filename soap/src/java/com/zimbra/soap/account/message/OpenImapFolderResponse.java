@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
@@ -19,7 +20,8 @@ public class OpenImapFolderResponse {
     /**
      * @zm-api-field-description list of ImapMessageInfo elements
      */
-    @XmlElement(name=MailConstants.E_MSG, /* msg */ required=true)
+    @XmlElementWrapper(name=MailConstants.E_FOLDER)
+    @XmlElement(name=MailConstants.E_MSG, /* m */ required=true)
     private List<ImapMessageInfo> messages = new LinkedList<ImapMessageInfo>();
 
     /**
