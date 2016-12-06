@@ -4613,6 +4613,9 @@ set to the item ID of the last message in the previous result set.
 </OpenImapFolderRequest>
 
 <OpenImapFolderResponse more="0|1">
-    [<m i4uid="{imap-uid}" t="{type}" f="{flags}" id="{item-id}"/>]
-    ...
+    <folder>
+        [<m i4uid="{imap-uid}" t="{type}" f="{flags}" id="{item-id}"/>]
+        ...
+    </folder>
+    [<cursor id="{prev-id}"]
 </OpenImapFolderResponse>
