@@ -89,19 +89,11 @@ public class SyncGalResponse {
     })
     private List<Object> hits = Lists.newArrayList();
 
-    /**
-     * @zm-api-field-tag new LdapOffset
-     * @zm-api-field-description New ldapOffset from where paged LDAP sync should resume.
-     */
-    @XmlAttribute(name=MailConstants.A_LDAP_OFFSET /* token */, required=false)
-    private String ldapOffset;
-
     public SyncGalResponse() {
     }
 
     public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setToken(String token) { this.token = token; }
-    public void setLdapOffset(String ldapOffset) {this.ldapOffset = ldapOffset;}
     public void setGalDefinitionLastModified(String timestamp) { this.galDefinitionLastModified = timestamp; }
     public void setThrottled(Boolean throttled) { this.throttled = ZmBoolean.fromBool(throttled); }
     public void setFullSyncRecommended(Boolean value) { this.fullSyncRecommended = ZmBoolean.fromBool(value); }
@@ -120,7 +112,6 @@ public class SyncGalResponse {
     public Boolean getThrottled() { return ZmBoolean.toBool(throttled); }
     public Boolean getFullSyncRecommended() { return ZmBoolean.toBool(fullSyncRecommended); }
     public String getToken() { return token; }
-    public String getLdapOffset() {return ldapOffset;}
     public String getGalDefinitionLastModified() { return galDefinitionLastModified; }
     public List<Object> getHits() {
         return Collections.unmodifiableList(hits);
@@ -131,7 +122,6 @@ public class SyncGalResponse {
         return helper
             .add("more", more)
             .add("token", token)
-            .add("ldapOffset", ldapOffset)
             .add("galDefinitionLastModified", galDefinitionLastModified)
             .add("throttled", throttled)
             .add("fullSyncRecommended", fullSyncRecommended)
