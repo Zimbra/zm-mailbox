@@ -198,7 +198,7 @@ public class TestZClient extends TestCase {
     }
 
     @Test
-    public void testGetMessageItemById() throws Exception {
+    public void testZMailboxGetItemById() throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
 
@@ -251,12 +251,18 @@ public class TestZClient extends TestCase {
         } catch (ZClientException.ZClientNoSuchItemException zcnsie) {
         }
 
-
         /* getting contact using id of message */
         try {
             zmbox.getItemById((OpContext) null, msgItemId, MailItemType.CONTACT);
             Assert.fail("ZClientNoSuchItemException was not thrown");
         } catch (ZClientException.ZClientNoSuchContactException zcnsce) {
+        }
+
+        /* getting document using id of message */
+        try {
+            zmbox.getItemById((OpContext) null, msgItemId, MailItemType.DOCUMENT);
+            Assert.fail("ZClientNoSuchItemException was not thrown");
+        } catch (ZClientException.ZClientNoSuchItemException zcnsce) {
         }
     }
 
