@@ -1586,6 +1586,14 @@ public final class ToXML {
                     SmimeHandler.getHandler().verifyMessageSignature(msg.getMailbox().getAccount(), m,
                         mm, octxt.getmResponseProtocol());
                 }
+            } else {
+                if ((mm instanceof Mime.FixedMimeMessage)
+                    && ((Mime.FixedMimeMessage) mm).isPKCS7Signed()) {
+                    if (SmimeHandler.getHandler() != null) {
+                        SmimeHandler.getHandler().addPKCS7SignedMessageSignatureDetails(
+                            msg.getMailbox().getAccount(), m, mm, octxt.getmResponseProtocol());
+                    }
+                }
             }
             return m;
         } catch (IOException ex) {

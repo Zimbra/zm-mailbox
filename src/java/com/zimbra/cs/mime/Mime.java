@@ -89,6 +89,7 @@ import com.zimbra.common.zmime.ZMimePart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.account.type.CertificateInfo;
 
 /**
  * @since Apr 17, 2004
@@ -120,6 +121,8 @@ public class Mime {
     private static final int MAX_PREAMBLE_LENGTH = 1024;
 
     public static class FixedMimeMessage extends ZMimeMessage {
+        private boolean isPKCS7Signed = false;
+        private List<CertificateInfo> signerCerts = null;
         public FixedMimeMessage(Session session) {
             super(session);
         }
@@ -134,9 +137,28 @@ public class Mime {
 
         public FixedMimeMessage(MimeMessage source, Account acct) throws MessagingException {
             super(source);
+            if(source instanceof FixedMimeMessage) {
+                this.isPKCS7Signed = ((FixedMimeMessage)source).isPKCS7Signed;
+                this.signerCerts = ((FixedMimeMessage)source).signerCerts;
+            }
             if (acct != null) {
                 setProperty("mail.mime.charset", acct.getPrefMailDefaultCharset());
             }
+        }
+
+        public boolean isPKCS7Signed() {
+            return isPKCS7Signed;
+        }
+
+        public List<CertificateInfo> getSignerCerts() {
+            return signerCerts;
+        }
+        public void setPKCS7Signed(boolean isPKCS7Signed) {
+            this.isPKCS7Signed = isPKCS7Signed;
+        }
+
+        public void setSignerCerts(List<CertificateInfo> signerCerts) {
+            this.signerCerts = signerCerts;
         }
 
         /**
