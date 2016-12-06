@@ -412,6 +412,10 @@ public class LdapGalSearch {
                      * in the rare case when an LDAP implementation does not conform to generalized time and
                      * we cannot parser the token, just leave it alone.
                      */
+                } else {
+                    //no records found
+                    result.setToken(newToken);
+                    result.setLdapTimeStamp(newToken);
                 }
             }
 
