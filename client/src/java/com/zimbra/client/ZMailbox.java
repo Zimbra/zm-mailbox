@@ -6099,20 +6099,26 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public List<ImapMessageInfo> openImapFolder(int folderId, int chunkSize) throws ServiceException {
         List<ImapMessageInfo> msgs = new ArrayList<ImapMessageInfo>();
-        Integer cursorId = null;
+        String cursorId = null;
         OpenImapFolderResponse folderInfo = null;
         do {
             OpenImapFolderParams params = new OpenImapFolderParams(folderId);
             params.setLimit(chunkSize);
             if (cursorId != null) {
-                params.setCursorId(String.valueOf(cursorId));
+                params.setCursorId(cursorId);
             }
             folderInfo = fetchImapFolderChunk(params);
             List<ImapMessageInfo> results = folderInfo.getImapMessageInfo();
             if (results.isEmpty()) {
                 break;
             } else {
-                cursorId = results.get(results.size() - 1).getId();
+                ImapCursorInfo cursor = folderInfo.getCursor();
+                if (cursor == null) {
+                    //fall back to last message of this results page
+                    cursorId = String.valueOf(results.get(results.size() - 1).getId());
+                } else {
+                    cursorId = cursor.getId();
+                }
                 msgs.addAll(results);
             }
         } while (folderInfo.getHasMore());
