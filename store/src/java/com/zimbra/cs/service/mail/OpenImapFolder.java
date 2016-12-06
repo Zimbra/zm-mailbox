@@ -39,14 +39,18 @@ public class OpenImapFolder extends AccountDocumentHandler {
         Pair<List<ImapMessage>, Boolean> openFolderResults = mbox.openImapFolder(octxt, folderId.getId(), limit, cursorMsgId);
         List<ImapMessage> msgs = openFolderResults.getFirst();
         boolean hasMore = openFolderResults.getSecond();
+        Integer msgId = null;
         for (ImapMessage msg: msgs) {
-            int id = msg.getMsgId();
+            msgId = msg.getMsgId();
             int imapUid = msg.getImapUid();
             String type = msg.getType().toString();
             int flags = msg.getFlags();
             String tags = msg.getTags() == null ? null : Joiner.on(",").join(msg.getTags());
-            ImapMessageInfo info = new ImapMessageInfo(id, imapUid, type, flags, tags);
+            ImapMessageInfo info = new ImapMessageInfo(msgId, imapUid, type, flags, tags);
             resp.addImapMessageInfo(info);
+        }
+        if (hasMore && msgId != null) {
+             resp.setCursor(new ImapCursorInfo(msgId.toString()));
         }
         resp.setHasMore(hasMore);
         return zsc.jaxbToElement(resp);
