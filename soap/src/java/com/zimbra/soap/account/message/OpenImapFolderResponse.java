@@ -28,18 +28,21 @@ public class OpenImapFolderResponse {
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private ZmBoolean hasMore;
 
-    public void addImapMessageInfo(ImapMessageInfo info) {
-        messages.add(info);
-    }
+    /**
+     * @zm-api-field-description Cursor to be used by the next request, if more results exist
+     */
+    @XmlElement(name=MailConstants.E_CURSOR /* cursor */, required=false)
+    private ImapCursorInfo cursor;
 
-    public List<ImapMessageInfo> getImapMessageInfo() {
-        return messages;
-    }
+    public void addImapMessageInfo(ImapMessageInfo info) { messages.add(info); }
 
-    public void setHasMore(Boolean bool) {
-        hasMore = ZmBoolean.fromBool(bool);
+    public List<ImapMessageInfo> getImapMessageInfo() { return messages; }
+
+    public void setHasMore(Boolean bool) { hasMore = ZmBoolean.fromBool(bool);
     }
-    public boolean getHasMore() {
-        return ZmBoolean.toBool(hasMore, false);
-    }
+    public boolean getHasMore() {return ZmBoolean.toBool(hasMore, false); }
+
+    public void setCursor(ImapCursorInfo cursor) { this.cursor = cursor; }
+
+    public ImapCursorInfo getCursor() { return cursor; }
 }
