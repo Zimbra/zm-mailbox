@@ -191,9 +191,9 @@ public class MessageCache {
                             .contains(MimeConstants.CT_APPLICATION_SMIME)
                             || cnode.message.getContentType()
                                 .contains(MimeConstants.CT_APPLICATION_SMIME_OLD))) {
-                        ZimbraLog.mailbox.debug(
-                            "The message is PKCS7 signed. Forwarding it to SmimeHandler for decoding.");
                         if (SmimeHandler.getHandler() != null) {
+                            ZimbraLog.mailbox.debug(
+                                "The message is PKCS7 signed. Forwarding it to SmimeHandler for decoding.");
                             decodedMimeMessage = SmimeHandler.getHandler()
                                 .decodePKCS7Message(item.getAccount(), cnode.message);
                         }
