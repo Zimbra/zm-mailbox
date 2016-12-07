@@ -172,12 +172,15 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public List<ImapListener> getListeners() {
+    public List<ImapListener> getListeners(int folderId) {
         List<Session> sessions = mailbox.getListeners(Session.Type.IMAP);
         List<ImapListener> listeners = Lists.newArrayListWithCapacity(sessions.size());
         for (Session sess : sessions) {
             if (sess instanceof ImapSession) {
-                listeners.add((ImapSession)sess);
+                ImapSession imapSess = (ImapSession) sess;
+                if (folderId == imapSess.getFolderId()) {
+                    listeners.add((ImapSession)sess);
+                }
             }
         }
         return listeners;
