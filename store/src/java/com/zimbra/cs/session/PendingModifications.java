@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.MailItem;
@@ -119,6 +120,14 @@ public abstract class PendingModifications<T> {
         }
 
         protected abstract void toStringInit(StringBuilder sb);
+
+        /** @return ID of folder ID or -1 if not known/appropriate */
+        public int getFolderId() {
+            if (preModifyObj instanceof MailItem) {
+                return ((MailItem) preModifyObj).getFolderId();
+            }
+            return -1;
+        }
     }
 
     public static class ModificationKey extends Pair<String, Integer> {
@@ -152,6 +161,9 @@ public abstract class PendingModifications<T> {
      * Set of all the MailItem types that are included in this structure
      */
     public Set<MailItem.Type> changedTypes = EnumSet.noneOf(MailItem.Type.class);
+
+    /** Only use addChangedFolderId(int folderId)/ addChangedFolderIds(Set<Integer> folderIds) to add to this */
+    public Set<Integer> changedFolders = Sets.newHashSet();
 
     public LinkedHashMap<ModificationKey, T> created;
     public Map<ModificationKey, Change> modified;
@@ -197,15 +209,17 @@ public abstract class PendingModifications<T> {
 
     public abstract void recordCreated(T item);
 
-    public void recordDeleted(String acctId, int id, MailItem.Type type) {
+    public void recordDeleted(String acctId, int id, int parentFolderId, MailItem.Type type) {
         if (type != MailItem.Type.UNKNOWN) {
             changedTypes.add(type);
         }
+        addChangedFolderId(parentFolderId);
         ModificationKey key = new ModificationKey(acctId, id);
         delete(key, type, null);
     }
 
     public void recordDeleted(String acctId, TypedIdList idlist) {
+        /* TODO - we need to know the affected folders here */
         changedTypes.addAll(idlist.types());
         for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> entry : idlist) {
             MailItem.Type type = entry.getKey();
@@ -221,6 +235,7 @@ public abstract class PendingModifications<T> {
         if (deletes != null && !deletes.isEmpty()) {
             for (Map.Entry<ModificationKey, Change> entry : deletes.entrySet()) {
                 changedTypes.add((MailItem.Type) entry.getValue().what);
+                addChangedFolderId(entry.getValue().getFolderId());
                 delete(entry.getKey(), entry.getValue());
             }
         }
@@ -255,12 +270,26 @@ public abstract class PendingModifications<T> {
     public abstract void recordModified(T item, int reason, T preModifyItem);
 
     abstract PendingModifications<T> add(PendingModifications<T> other);
+    abstract boolean trackingFolderIds();
+
+    void addChangedFolderId(int folderId) {
+        if ((folderId != -1) && trackingFolderIds()) {
+            changedFolders.add(folderId);
+        }
+    }
+
+    void addChangedFolderIds(Set<Integer> folderIds) {
+        if (trackingFolderIds()) {
+            changedFolders.addAll(folderIds);
+        }
+    }
 
     public void clear()  {
         created = null;
         deleted = null;
         modified = null;
         changedTypes.clear();
+        changedFolders.clear();
     }
 
     public static final class ModificationKeyMeta implements Serializable {
