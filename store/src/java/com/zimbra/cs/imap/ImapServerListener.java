@@ -61,21 +61,22 @@ public class ImapServerListener {
     }
 
     private void checkAuth() throws ServiceException {
-        if(soapProv.isExpired()) {
-            soapProv.soapZimbraAdminAuthenticate();
+        synchronized(soapProv) {
+            if(soapProv.isExpired()) {
+                soapProv.soapZimbraAdminAuthenticate();
+            }
         }
     }
 
-    public void shutdown() {
-        synchronized(soapProv) {
-            try {
-                deleteWaitSet();
+    public void shutdown() throws ServiceException {
+        try {
+            deleteWaitSet();
+            sessionMap.clear();
+            lastSequence.clear();
+        } finally {
+            synchronized(soapProv) {
                 soapProv.soapLogOut();
-                sessionMap.clear();
-                lastSequence.clear();
-            } catch (ServiceException e) {
-                ZimbraLog.imap.error("Failed to log out from admin SOAP session", e);
-            }
+            } 
         }
     }
 
@@ -161,33 +162,67 @@ public class ImapServerListener {
                 add.setId(accountId);
                 req.addAccount(add);
                 checkAuth();
-                AdminCreateWaitSetResponse resp = soapProv.invokeJaxb(req, server);
+                AdminCreateWaitSetResponse resp;
+                try {
+                    resp = soapProv.invokeJaxb(req, server);
+                } catch (ServiceException ex) {
+                    if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode())) {
+                        soapProv.soapZimbraAdminAuthenticate();
+                        resp = soapProv.invokeJaxb(req, server);
+                    } else {
+                        throw ex;
+                    }
+                }
+                if(resp == null) {
+                    throw ServiceException.FAILURE("Received null response from AdminCreateWaitSetRequest", null);
+                }
                 wsID = resp.getWaitSetId();
                 lastSequence.put(wsID, resp.getSequence());
             }
+
             //send asynchronous WaitSetRequest
             AdminWaitSetRequest waitSetReq = new AdminWaitSetRequest(wsID, Integer.toString(lastSequence.get(wsID)));
             WaitSetAddSpec add = new WaitSetAddSpec();
             add.setId(accountId);
             waitSetReq.addAddAccount(add);
             cancelPendingRequest();
-            pendingRequest = soapProv.invokeJaxbAsync(waitSetReq, server, cb);
+            try {
+                pendingRequest = soapProv.invokeJaxbAsync(waitSetReq, server, cb);
+            } catch (ServiceException ex) {
+                if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode())) {
+                    soapProv.soapZimbraAdminAuthenticate();
+                    pendingRequest = soapProv.invokeJaxbAsync(waitSetReq, server, cb);
+                } else {
+                    throw ex;
+                }
+            }
         }
     }
 
     private void deleteWaitSet() throws ServiceException {
         cancelPendingRequest();
-
         if(wsID != null) {
             AdminDestroyWaitSetRequest req = new AdminDestroyWaitSetRequest(wsID);
             checkAuth();
-            synchronized(soapProv) {
-                soapProv.invokeJaxb(req);
+            try {
+                synchronized(soapProv) {
+                    soapProv.invokeJaxb(req);
+                }
+            } catch (ServiceException ex) {
+                if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode())) {
+                    synchronized(soapProv) {
+                        soapProv.soapZimbraAdminAuthenticate();
+                        soapProv.invokeJaxb(req);
+                    }
+                } else {
+                   throw ex;
+                }
+            } finally {
+                if(lastSequence.containsKey(wsID)) {
+                    lastSequence.remove(wsID);
+                }
+                wsID = null;
             }
-            if(lastSequence.containsKey(wsID)) {
-                lastSequence.remove(wsID);
-            }
-            wsID = null;
         }
     }
 
@@ -200,13 +235,25 @@ public class ImapServerListener {
                 synchronized(soapProv) {
                     pendingRequest = soapProv.invokeJaxbAsync(waitSetReq, server, cb);
                 }
-            } catch (ServiceException e) {
-                ZimbraLog.imap.error("Failed to send WaitSetRequest. ", e);
+            } catch (ServiceException ex) {
+                if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode())) {
+                    synchronized(soapProv) {
+                        try {
+                            soapProv.soapZimbraAdminAuthenticate();
+                            pendingRequest = soapProv.invokeJaxbAsync(waitSetReq, server, cb);
+                        } catch (ServiceException e2) {
+                            ZimbraLog.imap.error("Failed to send WaitSetRequest. ", ex);
+                        }
+                    }
+                } else {
+                    ZimbraLog.imap.error("Failed to send WaitSetRequest. ", ex);    
+                }
             }
         } else {
             ZimbraLog.imap.error("Cannot continue to poll waitset, because waitset ID is not known");
         }
     }
+
     @VisibleForTesting
     public String getWSId() {
         return wsID;
