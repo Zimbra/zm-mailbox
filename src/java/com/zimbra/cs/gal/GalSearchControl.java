@@ -208,6 +208,20 @@ public class GalSearchControl {
             Account galAcct = mParams.getGalSyncAccount();
             GalSyncToken gst = mParams.getGalSyncToken();
             Domain domain = mParams.getDomain();
+
+            if (mParams.getOp() == GalOp.sync) {
+                int limit = mParams.getLimit();
+                int domainLimit = domain.getGalSyncSizeLimit();
+                // Use the lower value in case of non zero values of limit and domainLimit
+                if (limit != 0 && domainLimit != 0) {
+                    limit = limit > domainLimit ? domainLimit : limit;
+                } else if (limit == 0) {
+                    //if limit is zero use domainLimit
+                    limit = domainLimit;
+                }
+                mParams.setLimit(limit);
+            }
+
             // if the presented sync token is old LDAP timestamp format, we need to sync
             // against LDAP server to keep the client up to date.
             boolean useGalSyncAccount = gst.doMailboxSync() && (mParams.isIdOnly() || domain.isLdapGalSyncDisabled());
@@ -713,18 +727,9 @@ public class GalSearchControl {
             if (galLastModified != null) {
                 mParams.getResultCallback().setGalDefinitionLastModified(galLastModified);
             }
-
-            int domainLimit = domain.getGalSyncSizeLimit();
-            // Use the lower value in case of non zero values of limit and domainLimit
-            if (limit != 0 && domainLimit != 0) {
-                limit = limit > domainLimit ? domainLimit : limit;
-            } else if (limit == 0) {
-                //if limit is zero use domainLimit
-                limit = domainLimit;
-            }
-            ZimbraLog.gal.info("Using limit %d for SyncGalRequest", limit);
         }
 
+        ZimbraLog.gal.info("Using limit %d for SyncGalRequest", limit);
         mParams.setLimit(limit);
 
         if (galMode == GalMode.both) {
