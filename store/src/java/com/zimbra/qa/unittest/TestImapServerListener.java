@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -18,6 +19,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
+import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
@@ -148,7 +150,50 @@ public class TestImapServerListener {
         remoteListener.removeListener(session);
     }
 
-    //TODO: add notification tests for other folders when AdminWaitSet supports folder subscription
+    //TODO: this test will be failing until AdminWaitSet supports folder subscription
+    @Test
+    public void testNotifyNewFolder() throws Exception {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+        ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        ZFolder folder = TestUtil.createFolder(mboxStore, "/TestImapServerListener-testNotifyNewFolder");
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+        ImapPath path = new ImapPath(folder.getPath(), creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+        MockImapListener session =new MockImapListener(imapStore, i4folder, handler);
+        remoteListener.addListener(session);
+        TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotifyNewFolder", folder.getId());
+        Thread.sleep(5000);
+        assertTrue("Expected session to be triggered", session.wasTriggered());
+        remoteListener.removeListener(session);
+    }
+
+    //TODO: this test will be failing until AdminWaitSet supports folder subscription
+    @Test
+    public void testNotifyWrongFolder() throws Exception {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+        ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        ZFolder folder = TestUtil.createFolder(mboxStore, "/TestImapServerListener-testNotifyNewFolder");
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+        ImapPath path = new ImapPath("INBOX", creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
+        remoteListener.addListener(session);
+        TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotifyWrongFolder", folder.getId());
+        Thread.sleep(5000);
+        assertFalse("Expected session to not be triggered", session.wasTriggered());
+        remoteListener.removeListener(session);
+    }
+
     @Test
     public void testRegisterUnregister() throws ServiceException, IOException {
         Assume.assumeNotNull(remoteServer);
@@ -218,6 +263,69 @@ public class TestImapServerListener {
         assertTrue("expecting an empty list after removing a listener", sessions.isEmpty());
     }
 
+    @Test
+    public void testShutdown() throws ServiceException, IOException {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+        ImapPath path = new ImapPath("INBOX", creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+        ImapRemoteSession session = (ImapRemoteSession) imapStore.createListener(i4folder, handler);
+        remoteListener.addListener(session);
+        assertNotNull("Should have a waitset after addig a listener", remoteListener.getWSId());
+        remoteListener.shutdown();
+        assertNull("Should not have a waitset after shutting down ImapServerListener", remoteListener.getWSId());
+    }
+
+    @Test
+    public void testRemoveFolderInterest() throws ServiceException, IOException {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+
+        //add listener on INBOX
+        ImapPath path = new ImapPath("INBOX", creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+        ImapRemoteSession inboxSession = (ImapRemoteSession) imapStore.createListener(i4folder, handler);
+        remoteListener.addListener(inboxSession);
+
+        //check created waitset
+        QueryWaitSetRequest req = new QueryWaitSetRequest(remoteListener.getWSId());
+        SoapTransport transport = TestUtil.getAdminSoapTransport(remoteServer);
+        QueryWaitSetResponse resp = JaxbUtil.elementToJaxb(transport.invoke(JaxbUtil.jaxbToElement(req)));
+        assertNotNull(resp);
+        List<WaitSetInfo> wsInfoList = resp.getWaitsets();
+        assertFalse(wsInfoList.isEmpty());
+        assertEquals(1, wsInfoList.size());
+        WaitSetInfo wsInfo = wsInfoList.get(0);
+        assertNotNull(wsInfo);
+        assertEquals(remoteListener.getWSId(), wsInfo.getWaitSetId());
+
+        //add listener on DRAFTS
+        path = new ImapPath("DRAFTS", creds);
+        params = 0;
+        i4folder = new ImapFolder(path, params, handler);
+        ImapRemoteSession draftsSession = (ImapRemoteSession) imapStore.createListener(i4folder, handler);
+        remoteListener.addListener(draftsSession);
+
+        //check that waitset was updated
+        req = new QueryWaitSetRequest(remoteListener.getWSId());
+        resp = JaxbUtil.elementToJaxb(transport.invoke(JaxbUtil.jaxbToElement(req)));
+        assertNotNull(resp);
+        wsInfoList = resp.getWaitsets();
+        assertFalse(wsInfoList.isEmpty());
+        fail("This test should faul until AdminWaitSet adds support for folders");
+
+        remoteListener.removeListener(inboxSession);
+        //check that waitset was updated after removing a listener
+    }
+
     class MockImapHandler extends ImapHandler {
 
         MockImapHandler() {
@@ -273,6 +381,10 @@ public class TestImapServerListener {
 
         public boolean wasTriggered() {
             return triggered;
+        }
+
+        public void resetTrigger() {
+            triggered = false;
         }
     }
 }
