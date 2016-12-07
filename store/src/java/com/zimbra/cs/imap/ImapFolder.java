@@ -1178,11 +1178,11 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
         added.sort();
         boolean recent = true;
-        for (ImapListener i4session : mailboxStore.getListeners()) {
+        for (ImapListener i4session : mailboxStore.getListeners(folderId)) {
             // added messages are only \Recent if we're the first IMAP session notified about them
             if (i4session == session) {
                 break;
-            } else if (i4session.isWritable() && (i4session.getFolderId() == folderId)) {
+            } else if (i4session.isWritable()) {
                 recent = false;
                 break;
             }
