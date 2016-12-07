@@ -40,8 +40,6 @@ import com.zimbra.soap.admin.message.AdminCreateWaitSetResponse;
 import com.zimbra.soap.admin.message.AdminDestroyWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetResponse;
-import com.zimbra.soap.mail.message.WaitSetRequest;
-import com.zimbra.soap.mail.message.WaitSetResponse;
 import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.WaitSetAddSpec;
 
