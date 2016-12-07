@@ -71,6 +71,8 @@ public class ImapServerListener {
             try {
                 deleteWaitSet();
                 soapProv.soapLogOut();
+                sessionMap.clear();
+                lastSequence.clear();
             } catch (ServiceException e) {
                 ZimbraLog.imap.error("Failed to log out from admin SOAP session", e);
             }
