@@ -18,6 +18,7 @@ package com.zimbra.cs.gal;
 
 import java.util.EnumSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
@@ -52,8 +53,6 @@ public class GalSearchParams {
     private GalSyncToken mSyncToken;
     private SearchGalResult mResult;
     private ZimbraSoapContext mSoapContext;
-    private int mLdapOffset;
-    private String[] mLdapOffsetToken = {"", "0", "", "0"};
 
     private Account mAccount;
     private String mUserAgent;
@@ -73,6 +72,10 @@ public class GalSearchParams {
     private boolean mNeedSMIMECerts;
     private boolean mFetchGroupMembers;
     private boolean mWildCardSearch = true;
+    private String ldapTimeStamp = "";
+    private String maxLdapTimeStamp = "";
+    private int ldapMatchCount = 0;
+    private boolean ldapHasMore = true;
 
     private GalOp mOp;
 
@@ -110,14 +113,6 @@ public class GalSearchParams {
         return mLimit;
     }
 
-    public int getLdapOffset() {
-        return mLdapOffset;
-    }
-
-    public String[] getLdapOffsetToken() {
-        return mLdapOffsetToken;
-    }
-
     public Integer getLdapLimit() {
         return mLdapLimit;
     }
@@ -135,9 +130,15 @@ public class GalSearchParams {
     }
 
     public String getSyncToken() {
-        if (mSyncToken == null)
-            return null;
-        return mSyncToken.getLdapTimestamp();
+        return !StringUtils.isEmpty(ldapTimeStamp) ? ldapTimeStamp : (mSyncToken != null ? mSyncToken.getLdapTimestamp() : null);
+    }
+
+    public String getMaxLdapTimeStamp() {
+        return maxLdapTimeStamp;
+    }
+
+    public void setMaxLdapTimeStamp(String maxldapTimeStamp) {
+       this.maxLdapTimeStamp = maxldapTimeStamp;
     }
 
     public GalSyncToken getGalSyncToken() {
@@ -258,16 +259,8 @@ public class GalSearchParams {
         mLdapLimit = limit;
     }
 
-    public void setLdapOffset(int offset) {
-        mLdapOffset = offset;
-    }
-
     public void setPageSize(int pageSize) {
         mPageSize = pageSize;
-    }
-
-    public void setLdapOffsetToken(String[] token) {
-        mLdapOffsetToken = token;
     }
 
     public void setQuery(String query) {
@@ -345,7 +338,7 @@ public class GalSearchParams {
 
     public String generateLdapQuery() throws ServiceException {
         assert(mConfig != null);
-        String token = (mSyncToken != null) ? mSyncToken.getLdapTimestamp(mConfig.mTimestampFormat) : null;
+        String token = (mSyncToken != null) ? mSyncToken.getLdapTimestamp(mConfig.mTimestampFormat, ldapTimeStamp) : null;
 
         String extraQuery = null;
         if (GalSearchConfig.GalType.zimbra == mConfig.getGalType() && mExtraQueryCallback != null) {
@@ -355,7 +348,7 @@ public class GalSearchParams {
         if (!mWildCardSearch) {
            filterTemplate = filterTemplate.replaceAll("\\*", "");
         }
-        return GalUtil.expandFilter(mConfig.getTokenizeKey(), filterTemplate, mQuery, token, extraQuery);
+        return GalUtil.expandFilter(mConfig.getTokenizeKey(), filterTemplate, mQuery, token, extraQuery, ldapHasMore);
     }
 
     public void setGalSyncAccount(Account acct) {
@@ -401,6 +394,30 @@ public class GalSearchParams {
 
     public void setWildCardSearch(boolean wildCardSearch) {
         mWildCardSearch = wildCardSearch;
+    }
+
+    public String getLdapTimeStamp() {
+        return ldapTimeStamp;
+    }
+
+    public void setLdapTimeStamp(String ldapTimeStamp) {
+        this.ldapTimeStamp = ldapTimeStamp;
+    }
+
+    public int getLdapMatchCount() {
+        return ldapMatchCount;
+    }
+
+    public void setLdapMatchCount(int ldapMatchCount) {
+        this.ldapMatchCount = ldapMatchCount;
+    }
+
+    public boolean ldapHasMore() {
+        return ldapHasMore;
+    }
+
+    public void setLdapHasMore(boolean ldapHasMore) {
+        this.ldapHasMore = ldapHasMore;
     }
 
     public String getUserInfo() {

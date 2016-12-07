@@ -60,33 +60,23 @@ public class SyncGal extends GalDocumentHandler {
         String galAcctId = request.getAttribute(AccountConstants.A_GAL_ACCOUNT_ID, null);
         boolean idOnly   = request.getAttributeBool(AccountConstants.A_ID_ONLY, false);
         int limit = request.getAttributeInt(MailConstants.A_LIMIT, 0);
-        String[] ldapOffsetToken = parseLdapOffsetToken(request.getAttribute(MailConstants.A_LDAP_OFFSET, ""));
 
         GalSearchParams params = new GalSearchParams(account, zsc);
         params.setType(GalSearchType.all);
+        ZimbraLog.gal.debug("SyncGalRequest token: %s  limit: %d", tokenAttr, limit);
         params.setToken(tokenAttr);
         params.setRequest(request);
         params.setResponseName(AccountConstants.SYNC_GAL_RESPONSE);
         params.setIdOnly(idOnly);
         params.setUserAgent(zsc.getUserAgent());
         params.setLimit(limit);
-        params.setLdapOffsetToken(ldapOffsetToken);
         if (galAcctId != null)
-        	params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
+            params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
         params.setResultCallback(new SyncGalCallback(params));
 
         GalSearchControl gal = new GalSearchControl(params);
         gal.sync();
         return params.getResultCallback().getResponse();
-    }
-
-    private String[] parseLdapOffsetToken(String offsetToken) {
-        String[] token = {"","0","","0"};
-        String[] parsedToken = offsetToken.split(":");
-        for (int i = 0; i < parsedToken.length; i++) {
-            token[i] = parsedToken[i];
-        }
-        return token;
     }
 
     @Override
