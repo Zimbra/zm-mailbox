@@ -613,7 +613,7 @@ public class ImapSession extends ImapListener {
 
         private synchronized void queueDelete(int changeId, int itemId, Change chg) {
             getQueuedNotifications(changeId).recordDeleted(
-                    getTargetAccountId(), itemId, (MailItem.Type) chg.what);
+                    getTargetAccountId(), itemId, chg.getFolderId(), (MailItem.Type) chg.what);
         }
 
         private synchronized void queueCreate(int changeId, MailItem item) {
