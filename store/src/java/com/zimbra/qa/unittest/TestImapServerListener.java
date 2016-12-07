@@ -129,7 +129,7 @@ public class TestImapServerListener {
     }
 
     @Test
-    public void testNotify() throws Exception {
+    public void testNotifyInbox() throws Exception {
         Assume.assumeNotNull(remoteServer);
         Assume.assumeNotNull(remoteAccount);
         ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
@@ -147,6 +147,8 @@ public class TestImapServerListener {
         assertTrue("Expected session to be triggered", session.wasTriggered());
         remoteListener.removeListener(session);
     }
+
+    //TODO: add notification tests for other folders when AdminWaitSet supports folder subscription
     @Test
     public void testRegisterUnregister() throws ServiceException, IOException {
         Assume.assumeNotNull(remoteServer);
@@ -167,10 +169,10 @@ public class TestImapServerListener {
         
         ImapRemoteSession session = (ImapRemoteSession) imapStore.createListener(i4folder, handler);
         assertNotNull("ImapListener instance should not be null", session);
-        assertFalse("Expecting ImapServerListener::isListeningOn to return false before calling addListener", remoteListener.isListeningOn(session.getTargetAccountId()));
+        assertFalse("Expecting ImapServerListener::isListeningOn to return false before calling addListener", remoteListener.isListeningOn(session.getTargetAccountId(), session.getFolderId()));
         assertNull("Should not have a waitset before registering first listener", remoteListener.getWSId());
         remoteListener.addListener(session);
-        assertTrue("Expecting ImapServerListener::isListeningOn to return true after calling addListener", remoteListener.isListeningOn(session.getTargetAccountId()));
+        assertTrue("Expecting ImapServerListener::isListeningOn to return true after calling addListener", remoteListener.isListeningOn(session.getTargetAccountId(), session.getFolderId()));
         assertNotNull("Should have a waitset after registering first listener", remoteListener.getWSId());
         QueryWaitSetRequest req = new QueryWaitSetRequest(remoteListener.getWSId());
         SoapTransport transport = TestUtil.getAdminSoapTransport(remoteServer);
@@ -184,8 +186,36 @@ public class TestImapServerListener {
         assertNotNull(wsInfo);
         assertEquals(remoteListener.getWSId(), wsInfo.getWaitSetId());
         remoteListener.removeListener(session);
-        assertFalse("Expecting ImapServerListener::isListeningOn to return false after calling removeListener", remoteListener.isListeningOn(session.getTargetAccountId()));
+        assertFalse("Expecting ImapServerListener::isListeningOn to return false after calling removeListener", remoteListener.isListeningOn(session.getTargetAccountId(), session.getFolderId()));
         assertNull("Should not have a waitset after removing last listener", remoteListener.getWSId());
+    }
+
+    @Test
+    public void testGetListeners() throws ServiceException, IOException {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+        assertNotNull("ImapServerListener instance should not be null", remoteListener);
+
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+        ImapPath path = new ImapPath("INBOX", creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+
+        ImapRemoteSession session = (ImapRemoteSession) imapStore.createListener(i4folder, handler);
+        assertNotNull("ImapListener instance should not be null", session);
+        List<ImapRemoteSession> sessions = remoteListener.getListeners(remoteAccount.getId(), i4folder.getId());
+        assertNotNull("getListeners should not return NULL before adding a listener", sessions);
+        assertTrue("expecting an empty list before adding a listener", sessions.isEmpty());
+        remoteListener.addListener(session);
+        sessions = remoteListener.getListeners(remoteAccount.getId(), i4folder.getId());
+        assertNotNull("getListeners should not return NULL after adding a listener", sessions);
+        assertFalse("expecting a non empty list after adding a listener", sessions.isEmpty());
+        remoteListener.removeListener(session);
+        sessions = remoteListener.getListeners(remoteAccount.getId(), i4folder.getId());
+        assertNotNull("getListeners should not return NULL after removing a listener", sessions);
+        assertTrue("expecting an empty list after removing a listener", sessions.isEmpty());
     }
 
     class MockImapHandler extends ImapHandler {
