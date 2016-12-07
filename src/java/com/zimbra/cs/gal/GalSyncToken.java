@@ -43,10 +43,10 @@ public class GalSyncToken {
 
     private String mLdapTimestamp;
     private HashMap<String,String> mChangeIdMap;
-    private String intLdapTs = "";
-    private String extLdapTs = "";
-    private String intMaxLdapTs = "";
-    private String extMaxLdapTs = "";
+    private String intLdapCreateDateTs = "";
+    private String extLdapCreateDateTs = "";
+    private String intMaxModificationDateLdapTs = "";
+    private String extMaxModificationDateLdapTs = "";
     private int intLdapMatchCount = 0;
     private int extLdapMatchCount = 0;
     private boolean intLdapHasMore = true;
@@ -86,36 +86,36 @@ public class GalSyncToken {
          if ( pos != -1) {
             String[] parsedToken = mLdapTimestamp.split("_");
             if (parsedToken.length >= 4) {
-                intLdapTs = parsedToken[0];
+                intLdapCreateDateTs = parsedToken[0];
                 intLdapMatchCount = Integer.parseInt(parsedToken[1]);
                 intLdapHasMore = BooleanUtils.toBoolean(Integer.parseInt(parsedToken[2]));
-                intMaxLdapTs = parsedToken[3];
+                intMaxModificationDateLdapTs = parsedToken[3];
             }
 
             if (parsedToken.length == 8) {
-                extLdapTs = parsedToken[4];
+                extLdapCreateDateTs = parsedToken[4];
                 extLdapMatchCount = Integer.parseInt(parsedToken[5]);
                 extLdapHasMore = BooleanUtils.toBoolean(Integer.parseInt(parsedToken[6]));
-                extMaxLdapTs = parsedToken[7];
+                extMaxModificationDateLdapTs = parsedToken[7];
             }
          } //else its internal gal sync only.no ldap sync.
       }
     }
 
     public String getIntMaxLdapTs() {
-        return intMaxLdapTs;
+        return intMaxModificationDateLdapTs;
     }
 
     public void setIntMaxLdapTs(String intMaxLdapTs) {
-        this.intMaxLdapTs = intMaxLdapTs;
+        this.intMaxModificationDateLdapTs = intMaxLdapTs;
     }
 
     public String getExtMaxLdapTs() {
-        return extMaxLdapTs;
+        return extMaxModificationDateLdapTs;
     }
 
     public void setExtMaxLdapTs(String extMaxLdapTs) {
-        this.extMaxLdapTs = extMaxLdapTs;
+        this.extMaxModificationDateLdapTs = extMaxLdapTs;
     }
 
     public String getLdapTimestamp() {
@@ -143,19 +143,19 @@ public class GalSyncToken {
     }
 
     public String getIntLdapTs() {
-        return intLdapTs;
+        return intLdapCreateDateTs;
     }
 
     public void setIntLdapTs(String intLdapTs) {
-       this.intLdapTs = intLdapTs;
+       this.intLdapCreateDateTs = intLdapTs;
     }
 
     public String getExtLdapTs() {
-       return extLdapTs;
+       return extLdapCreateDateTs;
     }
 
     public void setExtLdapTs(String extLdapTs) {
-       this.extLdapTs = extLdapTs;
+       this.extLdapCreateDateTs = extLdapTs;
     }
 
     public int getIntLdapMatchCount() {

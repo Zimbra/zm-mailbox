@@ -706,7 +706,6 @@ public class GalSearchControl {
         if (limit == 0 && GalOp.sync != mParams.getOp() && ldapLimit == null) {
             limit = domain.getGalMaxResults();
         }
-        mParams.setLimit(limit);
 
         // Return the GAL definition last modified time so that clients can use it to decide if fullsync is required.
         if (mParams.getOp() == GalOp.sync) {

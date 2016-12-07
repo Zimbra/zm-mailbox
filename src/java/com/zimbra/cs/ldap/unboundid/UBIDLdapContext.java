@@ -526,26 +526,21 @@ public class UBIDLdapContext extends ZLdapContext {
         int pageSize = searchOptions.getResultPageSize();
         int offset = 0;
         boolean pagination = false;
-        String prevLeCreateDate = null;
+        String prevLastReturnedItemCreateDate = null;
         if (searchGalResult != null) {
             offset = searchGalResult.getLdapMatchCount();
-            prevLeCreateDate = searchGalResult.getLdapTimeStamp();
+            prevLastReturnedItemCreateDate = searchGalResult.getLdapTimeStamp();
             pagination = searchGalResult.getHadMore();
         }
 
         int limit = maxResults;
-        if (!pagination) {
+        if (GalOp.sync == searchOptions.getGalOp() && !pagination) {
            limit = 0;
         }
         if (limit == 0) {
             limit = Integer.MAX_VALUE;
         }
-        if (GalOp.sync == searchOptions.getGalOp()) {
-            //sync operation should use zero size limit in searchRequestfor ldapSearch so that
-            // we get all the results in ldapSearch and then we can use offset to
-            //to decide the entry from where we need to start sync
-            maxResults = 0;
-        }
+
         int pageCount = 0;
         int pageOffset = 0;
         int currentPage = 0;
@@ -616,7 +611,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 String leCreateDate = null;
                 if (currentPage >= pageCount) {
                     leCreateDate = getLastEntryCreationDate(limit+pageOffset, entries);
-                    if (prevLeCreateDate != null && !prevLeCreateDate.equals(leCreateDate)) {
+                    if (prevLastReturnedItemCreateDate != null && !prevLastReturnedItemCreateDate.equals(leCreateDate)) {
                         count = 0;
                     }
                     for (index = pageOffset; index < entries.size() && limit > 0; index++) {
@@ -634,7 +629,7 @@ public class UBIDLdapContext extends ZLdapContext {
                             count++;
                         }
                     }
-                    prevLeCreateDate = leCreateDate;
+                    prevLastReturnedItemCreateDate = leCreateDate;
                     pageOffset = 0;
                 }
 
