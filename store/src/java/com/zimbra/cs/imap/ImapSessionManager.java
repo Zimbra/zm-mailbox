@@ -297,7 +297,7 @@ final class ImapSessionManager {
             int recentCutoff = imapStore.getImapRECENTCutoff(folder);
 
             if (i4list == null) {
-                List<ImapListener> listners = imapStore.getListeners();
+                List<ImapListener> listners = imapStore.getListeners(folder.getFolderIdInOwnerMailbox());
                 // first option is to duplicate an existing registered session
                 //   (could try to just activate an inactive session, but this logic is simpler for now)
                 i4list = duplicateExistingSession(folderId, listners);
@@ -583,8 +583,8 @@ final class ImapSessionManager {
         if (mbox != null) {
             mbox.lock(true);
             try {
-                for (ImapListener i4listener : session.getImapMboxStore().getListeners()) {
-                    if (i4listener != session && i4listener.getFolderId() == session.getFolderId()) {
+                for (ImapListener i4listener : session.getImapMboxStore().getListeners(session.getFolderId())) {
+                    if (i4listener != session) {
                         ZimbraLog.imap.trace("more recent listener exists for folder.  Detaching %s", session);
                         session.detach();
                         recordAccess(i4listener);
