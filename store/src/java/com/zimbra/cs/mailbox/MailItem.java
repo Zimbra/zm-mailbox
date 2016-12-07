@@ -3286,7 +3286,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         // also delete any conversations whose messages have all been removed
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
             for (Integer convId : info.cascadeIds) {
-                mbox.markItemDeleted(Type.CONVERSATION, convId);
+                mbox.markItemDeleted(Type.CONVERSATION, convId, -1 /* folderId - TODO, can we do better? */);
                 mbox.uncacheItem(convId);
             }
             try {
