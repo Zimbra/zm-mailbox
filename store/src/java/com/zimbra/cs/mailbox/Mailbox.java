@@ -240,8 +240,8 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 import com.zimbra.cs.session.AllAccountsRedoCommitCallback;
-import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingLocalModifications;
+import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -1572,7 +1572,7 @@ public class Mailbox implements MailboxStore {
             ZimbraLog.mailbox.warn("could not snapshot to-be-deleted item", e);
         }
         if (itemSnapshot == null) {
-            markItemDeleted(item.getType(), item.getId());
+            markItemDeleted(item.getType(), item.getId(), item.getFolderId());
         } else {
             currentChange().dirty.recordDeleted(itemSnapshot);
         }
@@ -1582,8 +1582,8 @@ public class Mailbox implements MailboxStore {
      *
      * @param type item type
      * @param itemId  The id of the item being deleted. */
-    void markItemDeleted(MailItem.Type type, int itemId) {
-        currentChange().dirty.recordDeleted(mData.accountId, itemId, type);
+    void markItemDeleted(MailItem.Type type, int itemId, int folderId) {
+        currentChange().dirty.recordDeleted(mData.accountId, itemId, folderId, type);
     }
 
     /** Adds the items to the current change's list of items deleted during the transaction.
