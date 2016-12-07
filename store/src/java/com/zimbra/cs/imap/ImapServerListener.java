@@ -17,7 +17,10 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Future;
@@ -34,6 +37,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetResponse;
@@ -46,7 +50,7 @@ import com.zimbra.soap.type.WaitSetAddSpec;
 public class ImapServerListener {
     private final String server;
     private volatile String wsID = null;
-    private final ConcurrentMap<String, ImapRemoteSession> accountToSessionMap = new ConcurrentHashMap<String, ImapRemoteSession>();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<Integer, List<ImapRemoteSession>>> sessionMap = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, List<ImapRemoteSession>>>();
     private final ConcurrentMap<String, Integer> lastSequence = new ConcurrentHashMap<String, Integer>();
     private final SoapProvisioning soapProv = new SoapProvisioning();
     private Future<HttpResponse> pendingRequest;
@@ -74,26 +78,77 @@ public class ImapServerListener {
     }
 
     public void addListener(ImapRemoteSession listener) throws ServiceException {
-        accountToSessionMap.put(listener.getTargetAccountId(), listener);
+        String accountId = listener.getTargetAccountId();
+        if(!sessionMap.containsKey(accountId)) {
+            sessionMap.put(listener.getTargetAccountId(), new ConcurrentHashMap<Integer, List<ImapRemoteSession>>());
+        }
+        Integer folderId = listener.getFolderId();
+        ConcurrentHashMap<Integer, List<ImapRemoteSession>> folderSessions = sessionMap.get(accountId);
+        List<ImapRemoteSession> sessions = folderSessions.get(folderId);
+        if(sessions == null) {
+            sessions = Collections.synchronizedList(new ArrayList<ImapRemoteSession>());
+            folderSessions.put(folderId, sessions);
+        }
+        if(!sessions.contains(listener)) {
+            sessions.add(listener);
+        }
         if(wsID == null) {
             //create a waitset
             initWaitSet(listener.getTargetAccountId());
         } else {
             //add to existing waitset
+            //TODO: when AdminWaitSet supports folders, register folder interest
         }
     }
 
     public void removeListener(ImapRemoteSession listener) throws ServiceException {
-        accountToSessionMap.remove(listener.getTargetAccountId());
-        if(accountToSessionMap.isEmpty()) {
-            deleteWaitSet();
-        } else {
-            
+        String accountId = listener.getTargetAccountId();
+        ConcurrentHashMap<Integer, List<ImapRemoteSession>> foldersToSessions = sessionMap.get(accountId);
+        if(foldersToSessions != null) {
+            Integer folderId = listener.getFolderId();
+            List<ImapRemoteSession> sessions = foldersToSessions.get(folderId);
+            if(sessions != null) {
+                sessions.remove(listener);
+                //cleanup to save memory at cost of reducing speed of adding/removing sessions
+                if(sessions.isEmpty()) {
+                    //if no more sessions are registered for this folder remove the empty List from the map
+                    foldersToSessions.remove(folderId);
+                    if(foldersToSessions.isEmpty()) {
+                        //if no more sessions registered for this account remove the empty map
+                        sessionMap.remove(accountId);
+                        if(sessionMap.isEmpty()) {
+                            deleteWaitSet();
+                        }
+                    } else {
+                        //no more sessions registered for this folder, but other sessions are registered for other folders of this account
+                        if(wsID != null) {
+                            //TODO: remove folder interest from AdminWaitSet
+                        }
+                    }
+                }
+            }
         }
     }
 
-    public boolean isListeningOn(String accountId) {
-        return accountToSessionMap.containsKey(accountId);
+    public boolean isListeningOn(String accountId, Integer folderId) {
+        ConcurrentHashMap<Integer, List<ImapRemoteSession>> folderSessions = sessionMap.get(accountId);
+        if(folderSessions != null) {
+            List<ImapRemoteSession> sessions = folderSessions.get(folderId);
+            return sessions != null && !sessions.isEmpty();
+        } else {
+            return false;
+        }
+    }
+
+    public List<ImapRemoteSession> getListeners(String accountId, int folderId) throws ServiceException {
+        ConcurrentHashMap<Integer, List<ImapRemoteSession>> folderSessions = sessionMap.get(accountId);
+        if(folderSessions != null) {
+            List<ImapRemoteSession> sessions = folderSessions.get(folderId);
+            if(sessions != null) {
+                return sessions;
+            }
+        }
+        return Collections.emptyList();
     }
 
     private void initWaitSet(String accountId) throws ServiceException {
@@ -176,8 +231,13 @@ public class ImapServerListener {
                         Iterator<Id> iter = wsResp.getSignalledAccounts().iterator();
                         while(iter.hasNext()) {
                             Id accId = iter.next();
-                            if(accountToSessionMap.containsKey(accId.getId())) {
-                                accountToSessionMap.get(accId.getId()).signalAccountChange();
+                            ConcurrentHashMap<Integer, List<ImapRemoteSession>> folderSessions = sessionMap.get(accId.getId());
+                            if(folderSessions != null) {
+                                //TODO: retrieve sessions for the folder when AdminWaitSet has folder support
+                                List<ImapRemoteSession> listeners = folderSessions.get(Mailbox.ID_FOLDER_INBOX);
+                                for(ImapRemoteSession l : listeners) {
+                                    l.signalAccountChange();
+                                }
                             }
                         }
                     }
