@@ -21,6 +21,7 @@
 package com.zimbra.cs.session;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -31,7 +32,9 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 
 
@@ -161,9 +164,7 @@ public abstract class PendingModifications<T> {
      * Set of all the MailItem types that are included in this structure
      */
     public Set<MailItem.Type> changedTypes = EnumSet.noneOf(MailItem.Type.class);
-
-    /** Only use addChangedFolderId(int folderId)/ addChangedFolderIds(Set<Integer> folderIds) to add to this */
-    public Set<Integer> changedFolders = Sets.newHashSet();
+    private final Set<Integer> changedFolders = Sets.newHashSet();
 
     public LinkedHashMap<ModificationKey, T> created;
     public Map<ModificationKey, Change> modified;
@@ -219,11 +220,11 @@ public abstract class PendingModifications<T> {
     }
 
     public void recordDeleted(String acctId, TypedIdList idlist) {
-        /* TODO - we need to know the affected folders here */
         changedTypes.addAll(idlist.types());
         for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> entry : idlist) {
             MailItem.Type type = entry.getKey();
             for (TypedIdList.ItemInfo iinfo : entry.getValue()) {
+                addChangedFolderId(iinfo.getFolderId());
                 delete(new ModificationKey(acctId, iinfo.getId()), type, null);
             }
         }
@@ -272,15 +273,29 @@ public abstract class PendingModifications<T> {
     abstract PendingModifications<T> add(PendingModifications<T> other);
     abstract boolean trackingFolderIds();
 
+    public Set<Integer> getChangedFolders() {
+        return Collections.unmodifiableSet(changedFolders);
+    }
+
     void addChangedFolderId(int folderId) {
-        if ((folderId != -1) && trackingFolderIds()) {
-            changedFolders.add(folderId);
+        if (!trackingFolderIds()) {
+            return;
         }
+        if (folderId == Mailbox.ID_AUTO_INCREMENT) {
+            // Not expecting this
+            ZimbraLog.misc.trace("ChangedFolderId unset (i.e. -1) %s", ZimbraLog.getStackTrace(15));
+            return;
+        }
+        changedFolders.add(folderId);
     }
 
     void addChangedFolderIds(Set<Integer> folderIds) {
         if (trackingFolderIds()) {
             changedFolders.addAll(folderIds);
+            changedFolders.remove(Mailbox.ID_AUTO_INCREMENT); /* just in case it is in the list of folderIds */
+            if (ZimbraLog.misc.isTraceEnabled() && folderIds.contains(Mailbox.ID_AUTO_INCREMENT)) {
+                ZimbraLog.misc.trace("ChangedFolderId -1 in '%s' %s", folderIds, ZimbraLog.getStackTrace(15));
+            }
         }
     }
 
