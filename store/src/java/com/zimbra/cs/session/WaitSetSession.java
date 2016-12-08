@@ -111,7 +111,7 @@ public class WaitSetSession extends Session {
             }
             return;
         }
-        if ((this.folderInterest != null) && Sets.intersection(folderInterest, pns.changedFolders).isEmpty()) {
+        if ((this.folderInterest != null) && Sets.intersection(folderInterest, pns.getChangedFolders()).isEmpty()) {
             if (trace) {
                 ZimbraLog.session.trace("Not signaling waitset; changes not in folders waitset is interested in");
             }
