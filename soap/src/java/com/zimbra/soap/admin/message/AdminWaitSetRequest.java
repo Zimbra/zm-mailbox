@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -31,6 +27,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
@@ -106,6 +105,7 @@ public class AdminWaitSetRequest {
      * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
      * <tr> <td> <b>all</b> </td> <td> all types (equiv to "f,m,c,a,t,d") </td> </tr>
      * </table>
+     * <p>This is used if <b>types</b> isn't specified for an account</p>
      */
     @XmlAttribute(name=MailConstants.A_DEFTYPES /* defTypes */, required=false)
     private String defaultInterests;
@@ -122,21 +122,21 @@ public class AdminWaitSetRequest {
      */
     @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD /* add */, required=false)
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
-    private List<WaitSetAddSpec> addAccounts = Lists.newArrayList();
+    private final List<WaitSetAddSpec> addAccounts = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Waitsets to update
      */
     @XmlElementWrapper(name=MailConstants.E_WAITSET_UPDATE /* update */, required=false)
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
-    private List<WaitSetAddSpec> updateAccounts = Lists.newArrayList();
+    private final List<WaitSetAddSpec> updateAccounts = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Waitsets to remove
      */
     @XmlElementWrapper(name=MailConstants.E_WAITSET_REMOVE /* remove */, required=false)
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
-    private List<Id> removeAccounts = Lists.newArrayList();
+    private final List<Id> removeAccounts = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
