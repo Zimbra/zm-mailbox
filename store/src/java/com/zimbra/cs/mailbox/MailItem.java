@@ -3347,7 +3347,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         Integer id = Integer.valueOf(mId);
         PendingDelete info = new PendingDelete();
         info.size   = getTotalSize();
-        info.itemIds.add(getType(), id, mData.uuid);
+        info.itemIds.add(getType(), id, getFolderId(), mData.uuid);
 
         if (!inDumpster()) {
             if (mData.unreadCount != 0 && mMailbox.getFlagById(Flag.ID_UNREAD).canTag(this)) {

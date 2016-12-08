@@ -69,7 +69,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     @Override
     PendingModifications<MailItem> add(PendingModifications<MailItem> other) {
         changedTypes.addAll(other.changedTypes);
-        addChangedFolderIds(other.changedFolders);
+        addChangedFolderIds(other.getChangedFolders());
 
         if (other.deleted != null) {
             for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : other.deleted
@@ -264,7 +264,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(bos);
         oos.writeObject(changedTypes);
-        oos.writeObject(changedFolders);
+        oos.writeObject(getChangedFolders());
         oos.writeObject(metaCreated);
         oos.writeObject(metaModified);
         oos.writeObject(metaDeleted);
@@ -336,7 +336,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         PendingLocalModifications pms = new PendingLocalModifications();
         try (ObjectInputStream ois = new ObjectInputStream(bis)) {
             pms.changedTypes = (Set<Type>) ois.readObject();
-            pms.changedFolders = (Set<Integer>) ois.readObject();
+            pms.addChangedFolderIds((Set<Integer>) ois.readObject());
 
             LinkedHashMap<ModificationKeyMeta, String> metaCreated = (LinkedHashMap<ModificationKeyMeta, String>) ois
                     .readObject();
