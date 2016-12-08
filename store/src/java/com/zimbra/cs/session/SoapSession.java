@@ -226,7 +226,7 @@ public class SoapSession extends Session {
             OperationContext octxt = new OperationContext(getAuthenticatedAccountId());
             PendingLocalModifications filtered = new PendingLocalModifications();
             filtered.changedTypes = pms.changedTypes;
-            filtered.changedFolders = pms.changedFolders;  // Not 100% sure this is best but it is conservative
+            filtered.addChangedFolderIds(pms.getChangedFolders());  // Not 100% sure this is best but it is conservative
             if (pms.deleted != null && !pms.deleted.isEmpty()) {
                 filtered.recordDeleted(pms.deleted);
             }
