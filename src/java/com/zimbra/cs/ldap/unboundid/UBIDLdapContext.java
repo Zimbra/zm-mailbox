@@ -526,14 +526,15 @@ public class UBIDLdapContext extends ZLdapContext {
         int pageSize = searchOptions.getResultPageSize();
         int offset = 0;
         boolean pagination = false;
+        int limit = 0;
         String prevLastReturnedItemCreateDate = null;
         if (searchGalResult != null) {
             offset = searchGalResult.getLdapMatchCount();
             prevLastReturnedItemCreateDate = searchGalResult.getLdapTimeStamp();
             pagination = searchGalResult.getHadMore();
+            limit = searchGalResult.getLimit();
         }
 
-        int limit = maxResults;
         if (GalOp.sync == searchOptions.getGalOp() && !pagination) {
            limit = 0;
         }
@@ -595,11 +596,12 @@ public class UBIDLdapContext extends ZLdapContext {
                                 } else {
                                     visitor.visit(dn, ubidAttrs);
                                 }
-                                newToken = ubidAttrs.getAttrString("whenCreated");
+                                newToken = ubidAttrs.getAttrString("whenCreated") != null ? ubidAttrs.getAttrString("whenCreated") : ubidAttrs.getAttrString("createTimeStamp");
                             }
                             if (searchGalResult != null) { 
                                 searchGalResult.setLdapTimeStamp(newToken);
                                 searchGalResult.setLdapMatchCount(1);
+                                searchGalResult.setHadMore(true);
                             }
                         }
                     }
@@ -608,6 +610,11 @@ public class UBIDLdapContext extends ZLdapContext {
                 }
 
                 List<SearchResultEntry> entries = result.getSearchEntries();
+                boolean hasMore = false;
+                int resultSize = entries.size();
+                if (resultSize > limit) {
+                    hasMore = true;
+                }
                 String leCreateDate = null;
                 if (currentPage >= pageCount) {
                     leCreateDate = getLastEntryCreationDate(limit+pageOffset, entries);
@@ -624,7 +631,7 @@ public class UBIDLdapContext extends ZLdapContext {
                             visitor.visit(dn, ubidAttrs);
                         }
                         limit--;
-                        newToken = ubidAttrs.getAttrString("whenCreated");
+                        newToken = ubidAttrs.getAttrString("whenCreated") != null ? ubidAttrs.getAttrString("whenCreated") : ubidAttrs.getAttrString("createTimeStamp");
                         if (newToken != null && newToken.equals(leCreateDate)) {
                             count++;
                         }
@@ -641,7 +648,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 }
 
                 if (searchGalResult != null) {
-                    if(limit == 0 && ((cookie != null) && (cookie.getValueLength() > 0))) {
+                    if(limit == 0 && (((cookie != null) && (cookie.getValueLength() > 0)) || hasMore)) {
                         searchGalResult.setHadMore(true);
                         searchGalResult.setLdapTimeStamp(newToken);
                         searchGalResult.setLdapMatchCount(count);
@@ -670,7 +677,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 entry = entries.get(size-1);
             }
             UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
-            leCreateDate = ubidAttrs.getAttrString("whenCreated");
+            leCreateDate = ubidAttrs.getAttrString("whenCreated") != null ? ubidAttrs.getAttrString("whenCreated") : ubidAttrs.getAttrString("createTimeStamp");
         }
         return leCreateDate;
      }
