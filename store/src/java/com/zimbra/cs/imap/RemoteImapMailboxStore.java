@@ -174,7 +174,8 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
             ImapServerListener listener = ImapServerListenerPool.getInstance().get(zMailbox);
             return listener.getListeners(zMailbox.getAccountId(), folderId);
         } catch (ServiceException e) {
-            ZimbraLog.imap.info("Problem getting listeners from ImapServerListener", e);
+            ZimbraLog.imap.debug("Problem getting listeners for account %s from ImapServerListener (folderId=%s)",
+                    zMailbox.getAccountId(), folderId, e);
             return Collections.emptyList();
         }
 
