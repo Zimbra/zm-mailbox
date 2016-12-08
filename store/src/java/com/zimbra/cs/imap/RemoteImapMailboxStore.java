@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -168,8 +169,15 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public List<ImapListener> getListeners() {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+    public List<ImapListener> getListeners(int folderId) {
+        try {
+            ImapServerListener listener = ImapServerListenerPool.getInstance().get(zMailbox);
+            return listener.getListeners(zMailbox.getAccountId(), folderId);
+        } catch (ServiceException e) {
+            ZimbraLog.imap.info("Problem getting listeners from ImapServerListener", e);
+            return Collections.emptyList();
+        }
+
     }
 
     @Override
