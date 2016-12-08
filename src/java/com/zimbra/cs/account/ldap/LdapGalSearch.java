@@ -369,6 +369,11 @@ public class LdapGalSearch {
                     ", attrs=" + returnAttrs);
         }
 
+        if (GalOp.sync == op) {
+           result.setLimit(maxResults);
+           maxResults = SearchLdapOptions.SIZE_UNLIMITED;
+        }
+
         SearhcGalVisitor visitor = new SearhcGalVisitor(zlc, galType, base, rules, result);
 
         SearchLdapOptions searchOpts = new SearchLdapOptions(base,

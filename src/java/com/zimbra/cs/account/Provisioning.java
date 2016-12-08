@@ -2032,6 +2032,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
          }
 
          private int ldapMatchCount = 0;
+         private int limit = 0;
+
+        public int getLimit() {
+            return limit;
+        }
+
+        public void setLimit(int limit) {
+            this.limit = limit;
+        }
 
         /*
          * for auto-complete and search only
