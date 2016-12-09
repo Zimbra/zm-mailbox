@@ -37,12 +37,16 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
 
     @Override
     public int getIdInMailbox() throws ServiceException {
+        return getIdInMailbox(this.getId());
+    }
+
+    public int getIdInMailbox(String id) throws ServiceException {
         String acctId = null;
         try {
             acctId = mMailbox.getAccountId();
         } catch (ServiceException e) {
         }
-        ItemIdentifier itemId = new ItemIdentifier(this.getId(), acctId);
+        ItemIdentifier itemId = new ItemIdentifier(id, acctId);
         return itemId.id;
     }
 
@@ -85,6 +89,7 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
         return mTagIds;
     }
 
+    public abstract int getFolderIdInMailbox() throws ServiceException;
     public abstract boolean hasAttachment();
     public abstract boolean isFlagged();
     @Override
