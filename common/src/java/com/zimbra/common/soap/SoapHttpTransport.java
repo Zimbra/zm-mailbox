@@ -364,8 +364,7 @@ public class SoapHttpTransport extends SoapTransport {
 
     @Override
     public Future<HttpResponse> invokeAsync(Element document, boolean raw, boolean noSession, String requestedAccountId,
-            String changeToken, String tokenType, FutureCallback<HttpResponse> cb) throws IOException,
-            ServiceException {
+            String changeToken, String tokenType, FutureCallback<HttpResponse> cb) throws IOException {
         HttpPost post = new HttpPost(getUriWithPath(document));
         // Set user agent if it's specified.
         String agentName = getUserAgentName();

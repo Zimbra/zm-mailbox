@@ -373,13 +373,13 @@ public abstract class SoapTransport {
     }
 
     public abstract Future<HttpResponse> invokeAsync(Element document, boolean raw, boolean noSession, String requestedAccountId,
-            String changeToken, String tokenType, FutureCallback<HttpResponse> cb) throws IOException, ServiceException;
+            String changeToken, String tokenType, FutureCallback<HttpResponse> cb) throws IOException;
 
-    public final Future<HttpResponse> invokeAsync(Element document, FutureCallback<HttpResponse> cb) throws IOException, ServiceException {
+    public final Future<HttpResponse> invokeAsync(Element document, FutureCallback<HttpResponse> cb) throws IOException {
         return invokeAsync(document, false, false, null, null, null, cb);
     }
 
-    public final Future<HttpResponse> invokeWithoutSessionAsync(Element document, FutureCallback<HttpResponse> cb) throws IOException, ServiceException {
+    public final Future<HttpResponse> invokeWithoutSessionAsync(Element document, FutureCallback<HttpResponse> cb) throws IOException {
         return invokeAsync(document, false, true, null, null, null, cb);
     }
     
