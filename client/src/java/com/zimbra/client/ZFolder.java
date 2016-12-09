@@ -947,4 +947,9 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     public void updateFolder(String name, String parentId, Color newColor, String rgbColor, String flags, List<ZGrant> acl) throws ServiceException {
         mMailbox.updateFolder(mId, name, parentId, newColor, rgbColor, flags, acl);
     }
+
+    public int getFlagBitmask() {
+        // Also see comments in ZBaseItem::getFlagBitmask
+        throw new UnsupportedOperationException("ZFolder method not supported yet");
+    }
 }
