@@ -82,16 +82,11 @@ public class ImapServerListener {
 
     public void addListener(ImapRemoteSession listener) throws ServiceException {
         String accountId = listener.getTargetAccountId();
-        if(!sessionMap.containsKey(accountId)) {
-            sessionMap.put(listener.getTargetAccountId(), new ConcurrentHashMap<Integer, List<ImapRemoteSession>>());
-        }
+        sessionMap.putIfAbsent(accountId, new ConcurrentHashMap<Integer, List<ImapRemoteSession>>());
         Integer folderId = listener.getFolderId();
         ConcurrentHashMap<Integer, List<ImapRemoteSession>> folderSessions = sessionMap.get(accountId);
+        folderSessions.putIfAbsent(folderId, Collections.synchronizedList(new ArrayList<ImapRemoteSession>()));
         List<ImapRemoteSession> sessions = folderSessions.get(folderId);
-        if(sessions == null) {
-            sessions = Collections.synchronizedList(new ArrayList<ImapRemoteSession>());
-            folderSessions.put(folderId, sessions);
-        }
         if(!sessions.contains(listener)) {
             sessions.add(listener);
         }
@@ -163,16 +158,7 @@ public class ImapServerListener {
                 req.addAccount(add);
                 checkAuth();
                 AdminCreateWaitSetResponse resp;
-                try {
-                    resp = soapProv.invokeJaxb(req, server);
-                } catch (ServiceException ex) {
-                    if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode())) {
-                        soapProv.soapZimbraAdminAuthenticate();
-                        resp = soapProv.invokeJaxb(req, server);
-                    } else {
-                        throw ex;
-                    }
-                }
+                resp = soapProv.invokeJaxbAsAdminWithRetry(req, server);
                 if(resp == null) {
                     throw ServiceException.FAILURE("Received null response from AdminCreateWaitSetRequest", null);
                 }
@@ -186,16 +172,7 @@ public class ImapServerListener {
             add.setId(accountId);
             waitSetReq.addAddAccount(add);
             cancelPendingRequest();
-            try {
-                pendingRequest = soapProv.invokeJaxbAsync(waitSetReq, server, cb);
-            } catch (ServiceException ex) {
-                if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode())) {
-                    soapProv.soapZimbraAdminAuthenticate();
-                    pendingRequest = soapProv.invokeJaxbAsync(waitSetReq, server, cb);
-                } else {
-                    throw ex;
-                }
-            }
+            pendingRequest = soapProv.invokeJaxbAsync(waitSetReq, server, cb);
         }
     }
 
@@ -206,16 +183,7 @@ public class ImapServerListener {
             checkAuth();
             try {
                 synchronized(soapProv) {
-                    soapProv.invokeJaxb(req);
-                }
-            } catch (ServiceException ex) {
-                if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode())) {
-                    synchronized(soapProv) {
-                        soapProv.soapZimbraAdminAuthenticate();
-                        soapProv.invokeJaxb(req);
-                    }
-                } else {
-                   throw ex;
+                    soapProv.invokeJaxbAsAdminWithRetry(req);
                 }
             } finally {
                 if(lastSequence.containsKey(wsID)) {
@@ -232,22 +200,12 @@ public class ImapServerListener {
             //send asynchronous WaitSetRequest
             AdminWaitSetRequest waitSetReq = new AdminWaitSetRequest(wsID, Integer.toString(lastSequence.get(wsID)));
             try {
+                checkAuth();
                 synchronized(soapProv) {
                     pendingRequest = soapProv.invokeJaxbAsync(waitSetReq, server, cb);
                 }
             } catch (ServiceException ex) {
-                if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode())) {
-                    synchronized(soapProv) {
-                        try {
-                            soapProv.soapZimbraAdminAuthenticate();
-                            pendingRequest = soapProv.invokeJaxbAsync(waitSetReq, server, cb);
-                        } catch (ServiceException e2) {
-                            ZimbraLog.imap.error("Failed to send WaitSetRequest. ", ex);
-                        }
-                    }
-                } else {
-                    ZimbraLog.imap.error("Failed to send WaitSetRequest. ", ex);    
-                }
+                ZimbraLog.imap.error("Failed to send WaitSetRequest. ", ex);
             }
         } else {
             ZimbraLog.imap.error("Cannot continue to poll waitset, because waitset ID is not known");
