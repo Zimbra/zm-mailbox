@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import java.io.UnsupportedEncodingException;
+
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -24,6 +26,7 @@ import java.util.List;
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
@@ -39,6 +42,7 @@ import org.apache.jsieve.mail.MailAdapter;
 
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 public class AddHeader extends AbstractCommand {
@@ -92,8 +96,13 @@ public class AddHeader extends AbstractCommand {
         }
 
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
-        headerName = Variables.replaceAllVariables(mailAdapter, headerName);
-        headerValue = Variables.replaceAllVariables(mailAdapter, headerValue);
+        headerName = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), headerName);
+        headerValue = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), headerValue);
+        try {
+            headerValue = MimeUtility.fold(headerName.length() + 2, MimeUtility.encodeText(headerValue));
+        } catch (UnsupportedEncodingException uee) {
+            throw new OperationException("addheader: Error occured while encoding header value.", uee);
+        }
 
         validateArguments(arguments, context);
 
@@ -135,12 +144,6 @@ public class AddHeader extends AbstractCommand {
         if (headerName != null) {
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(headerName, CharsetUtil.US_ASCII))) {
                 throw new SyntaxException("AddHeader:Header name must be printable ASCII only.");
-            }
-        }
-
-        if (headerValue != null) {
-            if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(headerValue, CharsetUtil.US_ASCII))) {
-                throw new SyntaxException("AddHeader:Header value must be printable ASCII only.");
             }
         }
     }

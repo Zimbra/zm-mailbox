@@ -539,13 +539,6 @@ public class EditHeaderExtension {
                 throw new SyntaxException("key must be printable ASCII only.");
             }
         }
-        if (this.valueList != null && !this.valueList.isEmpty()) {
-            for (String value : this.valueList) {
-                if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(value, CharsetUtil.US_ASCII))) {
-                    throw new SyntaxException("Value list must be printable ASCII only.");
-                }
-            }
-        }
         // relation comparator must be valid
         if (this.relationalComparator != null) {
             if (!(this.relationalComparator.equals(MatchRelationalOperators.GT_OP)
