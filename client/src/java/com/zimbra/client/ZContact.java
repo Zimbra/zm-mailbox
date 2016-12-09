@@ -217,6 +217,11 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         return mFolderId;
     }
 
+    @Override
+    public int getFolderIdInMailbox() throws ServiceException {
+        return getIdInMailbox(getFolderId());
+    }
+
     public ZFolder getFolder() throws ServiceException {
         return mMailbox.getFolderById(mFolderId);
     }
