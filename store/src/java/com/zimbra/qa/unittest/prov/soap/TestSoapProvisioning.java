@@ -16,16 +16,19 @@
  */
 package com.zimbra.qa.unittest.prov.soap;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Map;
 
-import org.junit.*;
-
-import static org.junit.Assert.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
