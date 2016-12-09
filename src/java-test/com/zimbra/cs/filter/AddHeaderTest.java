@@ -241,4 +241,94 @@ public class AddHeaderTest {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
+
+    /*
+     * Adding a new header with non-ascii value
+     */
+    @Test
+    public void testAddHeaderNonAscii() {
+        try {
+           String filterScript = "require [\"editheader\"];\n"
+                    + "if header :contains \"Subject\" \"example\" {\n"
+                    + " addheader \"my-new-header\" \"追加ヘッダ値\";\n"
+                    + "}";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            int index = 0;
+            String newHeader = "";
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                index++;
+                if ("my-new-header".equals(temp.getName())) {
+                    newHeader = temp.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals(3, index);
+            Assert.assertEquals("=?UTF-8?B?6L+95Yqg44OY44OD44OA5YCk?=", newHeader);
+
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Adding a new header whose value is assigned by non-ASCII Variables
+     */
+    @Test
+    public void testAddHeaderNonAsciiVariable() {
+        String sampleBaseMsg = "Subject: =?utf-8?B?5pel5pys6Kqe44Gu5Lu25ZCN44CC5pel5pys6Kqe?=\n"
+                + " =?utf-8?B?44Gu5Lu25ZCN44CC5pel5pys6Kqe44Gu5Lu25ZCN44CC?=\n"
+                + "from: test2@zimbra.com\n"
+                + "to: test@zimbra.com\n";
+
+        String filterScript = "require [\"editheader\"];\n"
+                + "if header :matches \"Subject\" \"*\" {\n"
+                + " addheader \"my-new-header\" \"${1}\";\n"
+                + "}";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            int index = 0;
+            String newHeader = "";
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                index++;
+                if ("my-new-header".equals(temp.getName())) {
+                    newHeader = temp.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals(1, index);
+            Assert.assertEquals("=?UTF-8?B?5pel5pys6Kqe44Gu5Lu25ZCN44CC5pel5pys6Kqe?=\r\n =?UTF-8?B?44Gu5Lu25ZCN44CC5pel5pys6Kqe44Gu5Lu25ZCN44CC?=", newHeader);
+
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
 }

@@ -54,6 +54,7 @@ public class DeleteHeaderTest {
             + "X-Test-Header: test1\n"
             + "X-Test-Header: test2\n"
             + "X-Test-Header: test3\n"
+            + "X-Test-Header-non-ascii: =?utf-8?B?5pel5pys6Kqe44Gu5Lu25ZCN?=\n"
             + "X-Numeric-Header: 2\n"
             + "X-Numeric-Header: 3\n"
             + "X-Numeric-Header: 4\n"
@@ -610,6 +611,78 @@ public class DeleteHeaderTest {
             Assert.assertTrue(firstAdded);
             Assert.assertTrue(secondAdded);
             Assert.assertEquals(matchCount, 4);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Delete header using matches match-type whose key is non-ASCII
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testDeleteHeaderUsingMatchesNonASCII() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + "deleteheader :comparator \"i;ascii-casemap\" :is  \"X-Test-Header-non-ascii\" \"日本語の件名\";\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test-Header-non-ascii".equals(header.getName())) {
+                    matchFound = true;
+                    break;
+                }
+            }
+            Assert.assertFalse(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Delete header using matches wild-card
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testDeleteHeaderUsingMatchesWildcardNonASCII() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + "deleteheader :matches \"X-Test-Header-non-ascii\" \"*\";\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test-Header-non-ascii".equals(header.getName())) {
+                    matchFound = true;
+                    break;
+                }
+            }
+            Assert.assertFalse(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }

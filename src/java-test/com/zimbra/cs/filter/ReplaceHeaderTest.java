@@ -114,6 +114,16 @@ public class ReplaceHeaderTest {
             + "from: test2@zimbra.com\n"
             + "Subject: example\n"
             + "to: test@zimbra.com\n";
+    private static String sampleBaseMsg6 = "Subject: =?utf-8?B?44GT44KM44Gv6KSH5pWw6KGM44Gr5rih44KL?=\n"
+            + "\t=?utf-8?B?5Lu25ZCN44Gn44GZ44CC5Lu25ZCN44Gv44Kt?=\n"
+            + "\t=?utf-8?B?44Oj44Op44Kv44K/44O844K744OD44OI44GM?=\n"
+            + "\t=?utf-8?B?44Om44O844OG44Kj44O844Ko44OV44Ko44Kk?=\n"
+            + "\t=?utf-8?B?44OI44Gn44CB44OZ44O844K55YWt5Y2B5Zub?=\n"
+            + "\t=?utf-8?B?44Gn44Ko44Oz44Kz44O844OJ44GV44KM44G+?=\n"
+            + "\t=?utf-8?B?44GZ44CC6KGM44GM6ZW344GE44Gu44Gn44CB?=\n"
+            + "\t=?utf-8?B?5oqY44KK5puy44GS44KJ44KM44G+44GZ44CC?=\n"
+            + "from: test2@zimbra.com\n"
+            + "to: test@zimbra.com\n";
 
     @BeforeClass
     public static void init() throws Exception {
@@ -666,6 +676,86 @@ public class ReplaceHeaderTest {
                     + " =?UTF-8?B?44KM44G+44GZ44CC6KGM44GM6ZW344GE44Gu44Gn?=\r\n"
                     + " =?UTF-8?B?44CB5oqY44KK5puy44GS44KJ44KM44G+44GZ44CC?=";
             Assert.assertEquals(matchValue, headerValue);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace the subject with non-ASCII strings
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderNonAscii() {
+        try {
+           String filterScript = "require [\"editheader\"];\n"
+                    + "replaceheader :newvalue \"[追加]${1}\" :matches \"Subject\" \"*\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String newSubject = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header temp = enumeration.nextElement();
+                if ("Subject".equals(temp.getName())) {
+                    newSubject = temp.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals("=?UTF-8?Q?[=E8=BF=BD=E5=8A=A0]example?=", newSubject);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace the variable Subject with non-ASCII strings
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderNonAsciiVariables() {
+        try {
+           String filterScript = "require [\"editheader\"];\n"
+                    + "replaceheader :newvalue \"[追加]${1}\" :matches \"Subject\" \"これは複数行に渡る*\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg6.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String newSubject = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header temp = enumeration.nextElement();
+                if ("Subject".equals(temp.getName())) {
+                    newSubject = temp.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals("=?UTF-8?B?W+i/veWKoF3ku7blkI3jgafjgZnjgILku7blkI3jga/jgq3jg6Pjg6njgq8=?=\r\n"
+                    + " =?UTF-8?B?44K/44O844K744OD44OI44GM44Om44O8?=\r\n"
+                    + " =?UTF-8?B?44OG44Kj44O844Ko44OV44Ko44Kk44OI44Gn?=\r\n"
+                    + " =?UTF-8?B?44CB44OZ44O844K55YWt5Y2B5Zub44Gn?=\r\n"
+                    + " =?UTF-8?B?44Ko44Oz44Kz44O844OJ44GV44KM44G+44GZ?=\r\n"
+                    + " =?UTF-8?B?44CC6KGM44GM6ZW344GE44Gu44Gn44CB?=\r\n"
+                    + " =?UTF-8?B?5oqY44KK5puy44GS44KJ44KM44G+44GZ44CC?=", newSubject);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }

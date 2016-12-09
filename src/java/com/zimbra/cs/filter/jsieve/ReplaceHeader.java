@@ -168,9 +168,6 @@ public class ReplaceHeader extends AbstractCommand {
         }
         if (ehe.getNewValue() != null) {
             ZimbraLog.filter.debug("replaceheader: new header vlaue in sieve script = %s", ehe.getNewValue());
-            if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(ehe.getNewValue(), CharsetUtil.US_ASCII))) {
-                throw new SyntaxException("replaceheader: newvalue must be printable ASCII only in replaceheader.");
-            }
         }
         ehe.commonValidation();
     }
