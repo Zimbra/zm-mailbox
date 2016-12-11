@@ -44,7 +44,7 @@ import com.zimbra.soap.admin.message.AdminCreateWaitSetResponse;
 import com.zimbra.soap.admin.message.AdminDestroyWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetResponse;
-import com.zimbra.soap.type.Id;
+import com.zimbra.soap.type.AccountIdAndFolderIds;
 import com.zimbra.soap.type.WaitSetAddSpec;
 
 public class ImapServerListener {
@@ -224,6 +224,7 @@ public class ImapServerListener {
     }
 
     private final FutureCallback<HttpResponse> cb = new FutureCallback<HttpResponse>() {
+        @Override
         public void completed(final HttpResponse response) {
             int respCode = response.getStatusLine().getStatusCode();
             if(respCode == 200) {
@@ -235,10 +236,10 @@ public class ImapServerListener {
                     AdminWaitSetResponse wsResp = (AdminWaitSetResponse) JaxbUtil.elementToJaxb(doc);
                     lastSequence.put(wsResp.getWaitSetId(), Integer.parseInt(wsResp.getSeqNo()));
                     if(wsResp.getSignalledAccounts().size() > 0) {
-                        Iterator<Id> iter = wsResp.getSignalledAccounts().iterator();
+                        Iterator<AccountIdAndFolderIds> iter = wsResp.getSignalledAccounts().iterator();
                         while(iter.hasNext()) {
-                            Id accId = iter.next();
-                            ConcurrentHashMap<Integer, List<ImapRemoteSession>> folderSessions = sessionMap.get(accId.getId());
+                            AccountIdAndFolderIds accInfo = iter.next();
+                            ConcurrentHashMap<Integer, List<ImapRemoteSession>> folderSessions = sessionMap.get(accInfo.getId());
                             if(folderSessions != null) {
                                 //TODO: retrieve sessions for the folder when AdminWaitSet has folder support
                                 List<ImapRemoteSession> listeners = folderSessions.get(Mailbox.ID_FOLDER_INBOX);
@@ -257,10 +258,12 @@ public class ImapServerListener {
             continueWaitSet();
         }
 
+        @Override
         public void failed(final Exception ex) {
             ZimbraLog.imap.error("WaitSetRequest failed ", ex);
         }
 
+        @Override
         public void cancelled() {
             ZimbraLog.imap.info("WaitSetRequest was cancelled");
         }
