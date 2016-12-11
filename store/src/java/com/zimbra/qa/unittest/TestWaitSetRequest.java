@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.xml.bind.Marshaller;
 
-import junit.framework.TestCase;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -50,16 +48,18 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.session.WaitSetMgr;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetResponse;
 import com.zimbra.soap.admin.message.AdminWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetResponse;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.message.CreateWaitSetRequest;
 import com.zimbra.soap.mail.message.CreateWaitSetResponse;
 import com.zimbra.soap.mail.message.WaitSetRequest;
 import com.zimbra.soap.mail.message.WaitSetResponse;
 import com.zimbra.soap.type.WaitSetAddSpec;
+
+import junit.framework.TestCase;
 
 public class TestWaitSetRequest extends TestCase {
 
@@ -156,7 +156,7 @@ public class TestWaitSetRequest extends TestCase {
         Document doc = dr.getDocument();
         WaitSetResponse wsResp = (WaitSetResponse) sendReq(envelope(authToken, doc.getRootElement().asXML(), "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
         Assert.assertEquals("0", wsResp.getSeqNo());
-        
+
         String subject = NAME_PREFIX + " test wait set request 1";
         TestUtil.addMessageLmtp(subject, user1Name, "user999@example.com");
         try { Thread.sleep(500); } catch (Exception e) {}
@@ -165,7 +165,7 @@ public class TestWaitSetRequest extends TestCase {
     }
 
     private CreateWaitSetResponse createWaitSet(String accountId, String authToken) throws Exception {
-        CreateWaitSetRequest req = new CreateWaitSetRequest("all");
+        CreateWaitSetRequest req = new CreateWaitSetRequest("all", (Boolean) null);
         WaitSetAddSpec add = new WaitSetAddSpec();
         add.setId(accountId);
         req.addAccount(add);
@@ -257,7 +257,7 @@ public class TestWaitSetRequest extends TestCase {
         Assert.assertTrue("callback was not triggered.", cbCalled);
         Assert.assertTrue(failureMessage, success);
     }
-    
+
     @Test
     public void testBlockingAdminAddAccount() throws Exception {
         ZimbraLog.test.info("Starting testBlockingAdminAddAccount");
@@ -283,7 +283,7 @@ public class TestWaitSetRequest extends TestCase {
         String subject = NAME_PREFIX + " test wait set request 1";
         ZMailbox mbox2 = TestUtil.getZMailbox(user2Name);
         TestUtil.addMessage(mbox1, subject); //this event will notify waitset
-        TestUtil.addMessage(mbox2, subject); //this event will NOT notify waitset 
+        TestUtil.addMessage(mbox2, subject); //this event will NOT notify waitset
         try {
             doneSignal.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -378,12 +378,13 @@ public class TestWaitSetRequest extends TestCase {
         waitSetId = resp.getWaitSetId();
         int seq = resp.getSequence();
         Assert.assertNotNull(waitSetId);
-        
+
         WaitSetRequest waitSetReq = new com.zimbra.soap.mail.message.WaitSetRequest(waitSetId, Integer.toString(seq));
         waitSetReq.setBlock(true);
 
         final CountDownLatch doneSignal = new CountDownLatch(1);
         mbox.getTransport().invokeAsync(JaxbUtil.jaxbToElement(waitSetReq), new FutureCallback<HttpResponse>() {
+            @Override
             public void completed(final HttpResponse response) {
                 cbCalled = true;
                 int respCode = response.getStatusLine().getStatusCode();
@@ -400,7 +401,7 @@ public class TestWaitSetRequest extends TestCase {
                         WaitSetResponse wsResp = (WaitSetResponse) JaxbUtil.elementToJaxb(doc);
                         success = (Integer.parseInt(wsResp.getSeqNo()) > 0);
                         if(!success) {
-                            failureMessage = "wrong squence number. Sequence #" + wsResp.getSeqNo(); 
+                            failureMessage = "wrong squence number. Sequence #" + wsResp.getSeqNo();
                         }
                         if(success) {
                             success = (wsResp.getSignalledAccounts().size() == 1);
@@ -422,6 +423,7 @@ public class TestWaitSetRequest extends TestCase {
                 doneSignal.countDown();
             }
 
+            @Override
             public void failed(final Exception ex) {
                 ZimbraLog.test.error("request :: failed ", ex);
                 success = false;
@@ -429,6 +431,7 @@ public class TestWaitSetRequest extends TestCase {
                 doneSignal.countDown();
             }
 
+            @Override
             public void cancelled() {
                 ZimbraLog.test.info("request :: cancelled");
                 success = false;
@@ -450,6 +453,7 @@ public class TestWaitSetRequest extends TestCase {
 
     private void waitForAccounts(List<String> accountIds, CountDownLatch doneSignal, Object req, String caller) throws Exception {
         soapProv.invokeJaxbAsync(req,  new FutureCallback<HttpResponse>() {
+            @Override
             public void completed(final HttpResponse response) {
                 ZimbraLog.test.info("waitForAccounts %s :: completed", caller);
                 cbCalled = true;
@@ -498,6 +502,7 @@ public class TestWaitSetRequest extends TestCase {
                 doneSignal.countDown();
             }
 
+            @Override
             public void failed(final Exception ex) {
                 ZimbraLog.test.error("waitForAccounts :: failed ", ex);
                 success = false;
@@ -505,6 +510,7 @@ public class TestWaitSetRequest extends TestCase {
                 doneSignal.countDown();
             }
 
+            @Override
             public void cancelled() {
                 ZimbraLog.test.info("waitForAccounts :: cancelled");
                 success = false;
