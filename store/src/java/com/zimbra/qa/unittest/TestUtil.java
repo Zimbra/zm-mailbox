@@ -904,6 +904,7 @@ public class TestUtil extends Assert {
                 }
                 if (null == id) {
                     ZimbraLog.test.error("GetAccountResponse for '%s' did not contain the zimbraId", username);
+                    return;
                 }
                 prov.deleteAccount(id);
             }
