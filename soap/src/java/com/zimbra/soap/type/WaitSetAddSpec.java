@@ -79,13 +79,16 @@ public class WaitSetAddSpec {
     }
 
     public void setName(String name) { this.name = name; }
-    public void setId(String id) { this.id = id; }
-    public void setToken(String token) { this.token = token; }
-    public void setInterests(String interests) { this.interests = interests; }
-
     public String getName() { return name; }
+
+    public void setId(String id) { this.id = id; }
     public String getId() { return id; }
+
+    public void setToken(String token) { this.token = token; }
     public String getToken() { return token; }
+
+    public void setInterests(String interests) { this.interests = interests; }
+    public String getInterests() { return interests; }
 
     /**
      * @zm-api-field-tag waitset-folder-interests
@@ -99,7 +102,6 @@ public class WaitSetAddSpec {
         return COMMA_JOINER.join(folderInterests);
     }
 
-    public String getInterests() { return interests; }
     @XmlTransient
     public List<Integer> getFolderInterestsAsList() { return folderInterests; }
 
