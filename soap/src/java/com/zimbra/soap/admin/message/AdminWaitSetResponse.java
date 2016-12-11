@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -31,23 +27,27 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.Id;
+import com.zimbra.soap.base.WaitSetResp;
+import com.zimbra.soap.type.AccountIdAndFolderIds;
 import com.zimbra.soap.type.IdAndType;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ADMIN_WAIT_SET_RESPONSE)
 @XmlType(propOrder = {"signalledAccounts", "errors"})
-public class AdminWaitSetResponse {
+public class AdminWaitSetResponse implements WaitSetResp {
 
     /**
      * @zm-api-field-tag waitset-id
      * @zm-api-field-description WaitSet ID
      */
     @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
-    private final String waitSetId;
+    private String waitSetId;
 
     /**
      * @zm-api-field-description <b>1(true)</b> if canceled
@@ -63,22 +63,23 @@ public class AdminWaitSetResponse {
     private String seqNo;
 
     /**
-     * @zm-api-field-description Signalled accounts
+     * @zm-api-field-tag signaled-accounts
+     * @zm-api-field-description Information on signaled accounts.
+     * <br />If folder IDs are included then changes only affect those folders.
      */
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
-    private List<Id> signalledAccounts = Lists.newArrayList();
+    private final List<AccountIdAndFolderIds> signalledAccounts = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Error information
      */
     @XmlElement(name=MailConstants.E_ERROR /* error */, required=false)
-    private List<IdAndType> errors = Lists.newArrayList();
+    private final List<IdAndType> errors = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
-    private AdminWaitSetResponse() {
+    public AdminWaitSetResponse() {
         this((String) null);
     }
 
@@ -86,20 +87,27 @@ public class AdminWaitSetResponse {
         this.waitSetId = waitSetId;
     }
 
+    @Override
+    public void setWaitSetId(String waitSetId) { this.waitSetId = waitSetId; }
+    @Override
     public void setCanceled(Boolean canceled) { this.canceled = ZmBoolean.fromBool(canceled); }
+    @Override
     public void setSeqNo(String seqNo) { this.seqNo = seqNo; }
-    public void setSignalledAccounts(Iterable <Id> signalledAccounts) {
+    @Override
+    public void setSignalledAccounts(Iterable <AccountIdAndFolderIds> signalledAccounts) {
         this.signalledAccounts.clear();
         if (signalledAccounts != null) {
             Iterables.addAll(this.signalledAccounts,signalledAccounts);
         }
     }
 
-    public AdminWaitSetResponse addSignalledAccount(Id signalledAccount) {
+    @Override
+    public AdminWaitSetResponse addSignalledAccount(AccountIdAndFolderIds signalledAccount) {
         this.signalledAccounts.add(signalledAccount);
         return this;
     }
 
+    @Override
     public void setErrors(Iterable <IdAndType> errors) {
         this.errors.clear();
         if (errors != null) {
@@ -107,17 +115,23 @@ public class AdminWaitSetResponse {
         }
     }
 
+    @Override
     public AdminWaitSetResponse addError(IdAndType error) {
         this.errors.add(error);
         return this;
     }
 
+    @Override
     public String getWaitSetId() { return waitSetId; }
+    @Override
     public Boolean getCanceled() { return ZmBoolean.toBool(canceled); }
+    @Override
     public String getSeqNo() { return seqNo; }
-    public List<Id> getSignalledAccounts() {
+    @Override
+    public List<AccountIdAndFolderIds> getSignalledAccounts() {
         return Collections.unmodifiableList(signalledAccounts);
     }
+    @Override
     public List<IdAndType> getErrors() {
         return Collections.unmodifiableList(errors);
     }
