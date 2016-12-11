@@ -27,10 +27,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.CreateWaitSetReq;
 import com.zimbra.soap.type.WaitSetAddSpec;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -46,7 +48,7 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ADMIN_CREATE_WAIT_SET_REQUEST)
-public class AdminCreateWaitSetRequest {
+public class AdminCreateWaitSetRequest implements CreateWaitSetReq {
 
     /**
      * @zm-api-field-tag default-interests
@@ -86,8 +88,8 @@ public class AdminCreateWaitSetRequest {
     /**
      * @zm-api-field-description Waitsets to add
      */
-    @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD /* add */)
-    @XmlElement(name=MailConstants.E_A, required=false)
+    @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD /* add */, required=false)
+    @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private final List<WaitSetAddSpec> accounts = Lists.newArrayList();
 
     /**
@@ -98,8 +100,7 @@ public class AdminCreateWaitSetRequest {
         this((String) null, (Boolean) null);
     }
 
-    public AdminCreateWaitSetRequest(String defaultInterests,
-                    Boolean allAccounts) {
+    public AdminCreateWaitSetRequest(String defaultInterests, Boolean allAccounts) {
         this.defaultInterests = defaultInterests;
         this.allAccounts = ZmBoolean.fromBool(allAccounts);
     }
@@ -117,8 +118,20 @@ public class AdminCreateWaitSetRequest {
     }
 
     public String getDefaultInterests() { return defaultInterests; }
-    public Boolean getAllAccounts() { return ZmBoolean.toBool(allAccounts); }
+    public Boolean getAllAccounts() { return ZmBoolean.toBool(allAccounts, false); }
     public List<WaitSetAddSpec> getAccounts() {
         return Collections.unmodifiableList(accounts);
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("defaultInterests", defaultInterests)
+            .add("allAccounts", allAccounts)
+            .add("accounts", accounts);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }
