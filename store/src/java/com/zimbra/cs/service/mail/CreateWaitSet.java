@@ -24,7 +24,6 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -35,6 +34,10 @@ import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.base.CreateWaitSetReq;
+import com.zimbra.soap.base.CreateWaitSetResp;
+import com.zimbra.soap.mail.message.CreateWaitSetRequest;
+import com.zimbra.soap.mail.message.CreateWaitSetResponse;
 
 /**
  *
@@ -59,25 +62,27 @@ public class CreateWaitSet extends MailDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Element response = zsc.createElement(MailConstants.CREATE_WAIT_SET_RESPONSE);
-        return staticHandle(this, request, context, response);
+        CreateWaitSetRequest req = zsc.elementToJaxb(request);
+        CreateWaitSetResponse resp = new CreateWaitSetResponse();
+        staticHandle(this, req, context, resp);
+        return zsc.jaxbToElement(resp);  /* MUST use zsc variant NOT JaxbUtil */
     }
 
-    static public Element staticHandle(DocumentHandler handler, Element request, Map<String, Object> context, Element response) throws ServiceException {
+    static public void staticHandle(DocumentHandler handler, CreateWaitSetReq request, Map<String, Object> context,
+            CreateWaitSetResp response) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        String defInterestStr = request.getAttribute(MailConstants.A_DEFTYPES);
+        String defInterestStr = request.getDefaultInterests();
         Set<MailItem.Type> defaultInterests = WaitSetRequest.parseInterestStr(defInterestStr,
                 EnumSet.noneOf(MailItem.Type.class));
         boolean adminAllowed = zsc.getAuthToken().isAdmin();
 
-        boolean allAccts = request.getAttributeBool(MailConstants.A_ALL_ACCOUNTS, false);
+        boolean allAccts = request.getAllAccounts();
         if (allAccts) {
             WaitSetMgr.checkRightForAllAccounts(zsc);
         }
 
-        List<WaitSetAccount> add = WaitSetRequest.parseAddUpdateAccounts(zsc, 
-            request.getOptionalElement(MailConstants.E_WAITSET_ADD), defaultInterests);
+        List<WaitSetAccount> add = WaitSetRequest.parseAddUpdateAccounts(zsc, request.getAccounts(), defaultInterests);
 
         // workaround for 27480: load the mailboxes NOW, before we grab the waitset lock
         List<Mailbox> referencedMailboxes = new ArrayList<Mailbox>();
@@ -92,17 +97,14 @@ public class CreateWaitSet extends MailDocumentHandler {
         }
 
 
-        Pair<String, List<WaitSetError>> result = WaitSetMgr.create(zsc.getRequestedAccountId(), adminAllowed, defaultInterests, allAccts, add);
+        Pair<String, List<WaitSetError>> result = WaitSetMgr.create(zsc.getRequestedAccountId(), adminAllowed,
+                defaultInterests, allAccts, add);
         String wsId = result.getFirst();
         List<WaitSetError> errors = result.getSecond();
 
-        response.addAttribute(MailConstants.A_WAITSET_ID, wsId);
-        response.addAttribute(MailConstants.A_DEFTYPES, WaitSetRequest.interestToStr(defaultInterests));
-        response.addAttribute(MailConstants.A_SEQ, 0);
-
-        WaitSetRequest.encodeErrors(response, errors);
-
-        return response;
+        response.setWaitSetId(wsId);
+        response.setDefaultInterests(WaitSetRequest.interestToStr(defaultInterests));
+        response.setSequence(0);
+        response.setErrors(WaitSetRequest.encodeErrors(errors));
     }
-
 }
