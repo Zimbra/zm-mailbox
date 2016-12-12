@@ -143,13 +143,6 @@ public class ImapSession extends ImapListener {
         mFolder.doEncodeState(parent.addNonUniqueElement("imap"));
     }
 
-    // XXX: need to handle the abrupt disconnect case, the LOGOUT case, the timeout case, and the too-many-sessions disconnect case
-    @Override
-    public Session unregister() {
-        MANAGER.closeFolder(this, true);
-        return detach();
-    }
-
     @Override
     protected void notifyPendingCreates(@SuppressWarnings("rawtypes") PendingModifications pnsIn,
             int changeId, AddedItems added) {
