@@ -16,8 +16,6 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.IOException;
-import java.util.Map;
 import java.util.TreeMap;
 
 import com.google.common.base.Objects;
@@ -152,55 +150,7 @@ public class ImapSession extends ImapListener {
         return detach();
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
-    public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
-        PendingLocalModifications pns = (PendingLocalModifications) pnsIn;
-        if (!pns.hasNotifications()) {
-            return;
-        }
-
-        ImapHandler i4handler = handler;
-        try {
-            synchronized (this) {
-                AddedItems added = new AddedItems();
-                if (pns.deleted != null) {
-                    for (Map.Entry<ModificationKey, Change> entry : pns.deleted.entrySet()) {
-                        handleDelete(changeId, entry.getKey().getItemId(), entry.getValue());
-                    }
-                }
-                notifyPendingCreates(pnsIn, changeId, added);
-                if (pns.modified != null) {
-                    for (Change chg : pns.modified.values()) {
-                        handleModify(changeId, chg, added);
-                    }
-                }
-
-                // add new messages to the currently selected mailbox
-                if (!added.isEmpty()) {
-                    mFolder.handleAddedMessages(changeId, added);
-                }
-
-                mFolder.finishNotification(changeId);
-            }
-
-            if (i4handler != null && i4handler.isIdle()) {
-                i4handler.sendNotifications(true, true);
-            }
-        } catch (IOException e) {
-            // ImapHandler.dropConnection clears our mHandler and calls SessionCache.clearSession,
-            //   which calls Session.doCleanup, which calls Mailbox.removeListener
-            if (ZimbraLog.imap.isDebugEnabled()) { // with stack trace
-                ZimbraLog.imap.debug("Failed to notify, closing %s", this, e);
-            } else { // without stack trace
-                ZimbraLog.imap.info("Failed to notify (%s), closing %s", e.toString(), this);
-            }
-            if (i4handler != null) {
-                i4handler.close();
-            }
-        }
-    }
-
     protected void notifyPendingCreates(@SuppressWarnings("rawtypes") PendingModifications pnsIn,
             int changeId, AddedItems added) {
         PendingLocalModifications pns = (PendingLocalModifications) pnsIn;
@@ -219,7 +169,8 @@ public class ImapSession extends ImapListener {
         }
     }
 
-    private void handleModify(int changeId, Change chg, AddedItems added) {
+    @Override
+    protected void handleModify(int changeId, Change chg, AddedItems added) {
         if (chg.what instanceof Tag && (chg.why & Change.NAME) != 0) {
             mFolder.handleTagRename(changeId, (Tag) chg.what, chg);
         } else if (chg.what instanceof Folder && ((Folder) chg.what).getId() == mFolderId) {
