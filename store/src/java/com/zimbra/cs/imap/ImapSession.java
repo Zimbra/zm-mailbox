@@ -26,6 +26,8 @@ import java.util.TreeMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.zimbra.client.ZBaseItem;
+import com.zimbra.client.ZTag;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
@@ -585,6 +587,11 @@ public class ImapSession extends ImapListener {
         }
 
         @Override
+        public void handleTagRename(int changeId, ZTag tag, Change chg) {
+            ZimbraLog.imap.warn("Unexpected call to handleTagRename %s", ZimbraLog.getStackTrace(20));
+        }
+
+        @Override
         public void handleItemDelete(int changeId, int itemId, Change chg) {
             queueDelete(changeId, itemId, chg);
         }
@@ -592,6 +599,11 @@ public class ImapSession extends ImapListener {
         @Override
         public void handleItemCreate(int changeId, MailItem item, AddedItems added) {
             queueCreate(changeId, item);
+        }
+
+        @Override
+        public void handleItemCreate(int changeId, ZBaseItem item, AddedItems added) {
+            ZimbraLog.imap.warn("Unexpected call to handleItemCreate %s", ZimbraLog.getStackTrace(20));
         }
 
         @Override
