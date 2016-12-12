@@ -282,26 +282,6 @@ public class ImapSession extends ImapListener {
     }
 
     @Override
-    public void updateAccessTime() {
-        super.updateAccessTime();
-        Mailbox mbox = this.getMailboxOrNull();
-        if (mbox == null) {
-            return;
-        }
-        mbox.lock.lock();
-        try {
-            synchronized (this) {
-                PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
-                if (paged != null) { // if the data's already paged in, we can short-circuit
-                    MANAGER.updateAccessTime(paged.getCacheKey());
-                }
-            }
-        } finally {
-            mbox.lock.release();
-        }
-    }
-
-    @Override
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         helper.add("path", mPath).add("folderId", mFolderId);
