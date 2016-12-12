@@ -93,20 +93,19 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    protected void inactivate() {
-        mFolder.endSelect();
-        // removes this session from the global SessionCache, *not* from ImapSessionManager
-        removeFromSessionCache();
-        handler = null;
-        /* Above is some of the things that happen in ImapSession, but NOT all.
-         * TODO: Check what else needs doing.
-         */
-        throw new UnsupportedOperationException("ImapRemoteSession method not FULLY supported yet");
-    }
-
-    @Override
     protected PagedFolderData createPagedFolderData(boolean active, ImapFolder folder) throws ServiceException {
         return new PagedRemoteFolderData(serialize(active), folder);
     }
+
+    /**
+     * TODO - Determine what is required to update the folder's high-water change
+     * id as described in the <code>ImapSession</code> implementation of this method.
+     * @see com.zimbra.cs.imap.ImapSession#snapshotRECENT()
+     */
+    @Override
+    protected void snapshotRECENT() {
+        throw new UnsupportedOperationException("snapshotRECENT is not implemented yet");
+    }
+
 
 }
