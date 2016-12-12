@@ -106,12 +106,6 @@ public class ImapSession extends ImapListener {
     }
 
     @Override
-    protected boolean requiresReload() {
-        ImapFolderData fdata = mFolder;
-        return fdata instanceof ImapFolder ? false : ((PagedFolderData) fdata).notificationsFull();
-    }
-
-    @Override
     protected void inactivate() {
         if (!isInteractive()) {
             return;
