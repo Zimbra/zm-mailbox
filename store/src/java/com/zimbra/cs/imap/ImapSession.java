@@ -169,11 +169,7 @@ public class ImapSession extends ImapListener {
                         handleDelete(changeId, entry.getKey().getItemId(), entry.getValue());
                     }
                 }
-                if (pns.created != null) {
-                    for (MailItem item : pns.created.values()) {
-                        handleCreate(changeId, item, added);
-                    }
-                }
+                notifyPendingCreates(pnsIn, changeId, added);
                 if (pns.modified != null) {
                     for (Change chg : pns.modified.values()) {
                         handleModify(changeId, chg, added);
@@ -201,6 +197,16 @@ public class ImapSession extends ImapListener {
             }
             if (i4handler != null) {
                 i4handler.close();
+            }
+        }
+    }
+
+    protected void notifyPendingCreates(@SuppressWarnings("rawtypes") PendingModifications pnsIn,
+            int changeId, AddedItems added) {
+        PendingLocalModifications pns = (PendingLocalModifications) pnsIn;
+        if (pns.created != null) {
+            for (MailItem item : pns.created.values()) {
+                handleCreate(changeId, item, added);
             }
         }
     }
