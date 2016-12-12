@@ -67,15 +67,6 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    protected void cleanup() {
-        ImapHandler i4handler = handler;
-        if (i4handler != null) {
-            ZimbraLog.imap.debug("dropping connection because Session is closing %s", this);
-            i4handler.close();
-        }
-    }
-
-    @Override
     protected ImapListener detach() {
         throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
