@@ -82,13 +82,6 @@ public class ImapRemoteSession extends ImapListener {
         return true;
     }
 
-    @Override
-    public void updateAccessTime() {
-        /** Assuming we are using active and inactive session caches, similar to those in ImapSessionManager,
-         *  should update the access time in those */
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
     public void signalAccountChange() {
         //this should gather information about what has actually changed using ZMailbox::noOp and then call notifyPendingChanges
         ZimbraLog.imap.warn("Unexpected call to signalAccountChange %s", ZimbraLog.getStackTrace(20));
