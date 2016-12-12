@@ -105,26 +105,11 @@ public class ImapSession extends ImapListener {
         return mFolder instanceof ImapFolder ? ((ImapFolder) mFolder).getSize() : 0;
     }
 
-    @Override
-    protected void inactivate() {
-        if (!isInteractive()) {
-            return;
-        }
-
-        if (isWritable()) {
-            snapshotRECENT();
-        }
-
-        mFolder.endSelect();
-        // removes this session from the global SessionCache, *not* from ImapSessionManager
-        removeFromSessionCache();
-        handler = null;
-    }
-
     /** If the folder is selected READ-WRITE, updates its high-water RECENT
      *  change ID so that subsequent IMAP sessions do not see the loaded
      *  messages as \Recent. */
-    private void snapshotRECENT() {
+    @Override
+    protected void snapshotRECENT() {
         try {
             Mailbox mbox = (Mailbox) mailbox;
             if (mbox != null && isWritable()) {
