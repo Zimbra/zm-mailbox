@@ -173,79 +173,6 @@ public class ImapSession extends ImapListener {
         return detach();
     }
 
-    /**
-     * Serializes this {@link ImapSession} to the session manager's current {@link ImapSessionManager.FolderSerializer}
-     * if it's not already serialized there.
-     *
-     * @param mem true to use memcached if available, otherwise false
-     * @return the cachekey under which we serialized the folder, or {@code null} if the folder was already serialized
-     */
-    private String serialize(boolean active) throws ServiceException {
-        // if the data's already paged out, we can short-circuit
-        ImapFolder i4folder = mFolder instanceof ImapFolder ? (ImapFolder) mFolder : null;
-        if (i4folder == null) {
-            return null;
-        }
-
-        if (!isRegistered()) {
-            throw ServiceException.FAILURE("cannot serialize unregistered session", null);
-        }
-
-        // if it's a disconnected session, no need to track expunges
-        if (!isInteractive()) {
-            i4folder.collapseExpunged(false);
-        }
-
-        String cachekey = MANAGER.cacheKey(this, active);
-        MANAGER.serialize(cachekey, i4folder);
-        return cachekey;
-    }
-
-    /**
-     * Unload this session data into cache.
-     *
-     * @param active true to use active session cache, otherwise use inactive session cache
-     */
-    @Override
-    protected void unload(boolean active) throws ServiceException {
-        Mailbox mbox = (Mailbox) mailbox;
-        if (mbox == null) {
-            return;
-        }
-        // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
-        // Need to lock in the same order here, otherwise can result in deadlock.
-        mbox.lock.lock(); // serialize() locks Mailbox deep inside of it
-        try {
-            synchronized (this) {
-                if (mFolder instanceof ImapFolder) { // if the data's already paged out, we can short-circuit
-                    mFolder = new PagedLocalFolderData(serialize(active), (ImapFolder) mFolder);
-                } else if (mFolder instanceof PagedFolderData) {
-                    PagedFolderData paged = (PagedFolderData) mFolder;
-                    if (paged.getCacheKey() == null || !paged.getCacheKey().equals(MANAGER.cacheKey(this, active))) {
-                        //currently cached to wrong cache need to move it so it doesn't get expired or LRU'd
-                        ZimbraLog.imap.trace("relocating cached item to %s already unloaded but cache key mismatched %s",
-                                (active ? "active" : "inactive"), this);
-                        ImapFolder folder = null;
-                        try {
-                            folder = reload();
-                            if (folder != null) {
-                                mFolder = new PagedLocalFolderData(serialize(active), folder);
-                            } else {
-                                ZimbraLog.imap.debug(
-                                        "folder not found while reloading for relocate. probably already evicted. %s",
-                                        this);
-                            }
-                        } catch (ImapSessionClosedException e) {
-                            throw ServiceException.FAILURE("Session closed while relocating paged item", e);
-                        }
-                    }
-                }
-            }
-        } finally {
-            mbox.lock.release();
-        }
-    }
-
     @Override
     protected ImapFolder reload() throws ImapSessionClosedException {
         Mailbox mbox = (Mailbox) mailbox;
@@ -446,4 +373,10 @@ public class ImapSession extends ImapListener {
         }
         return helper;
     }
+
+    @Override
+    protected PagedFolderData createPagedFolderData(boolean active, ImapFolder folder) throws ServiceException {
+        return new PagedLocalFolderData(serialize(active), folder);
+    }
 }
+
