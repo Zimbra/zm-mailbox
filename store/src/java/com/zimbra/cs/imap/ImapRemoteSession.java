@@ -112,11 +112,6 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    protected ImapFolder reload() throws ImapSessionClosedException {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
     protected boolean requiresReload() {
         throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
     }
