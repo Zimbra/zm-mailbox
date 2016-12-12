@@ -19,11 +19,12 @@ package com.zimbra.cs.imap;
 import java.util.TreeMap;
 
 import com.zimbra.client.ZBaseItem;
+import com.zimbra.client.ZContact;
+import com.zimbra.client.ZMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.session.PendingModifications;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingRemoteModifications;
 
@@ -68,6 +69,15 @@ public class ImapRemoteSession extends ImapListener {
         }
     }
 
+    private void handleCreate(int changeId, ZBaseItem item, AddedItems added) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    protected void handleModify(int changeId, Change chg, AddedItems added) {
+        // TODO Auto-generated method stub
+    }
+
     protected ImapRemoteSession(ImapMailboxStore imapStore, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(imapStore, i4folder, handler);
     }
@@ -82,14 +92,20 @@ public class ImapRemoteSession extends ImapListener {
         return true;
     }
 
+    @Override
+    protected void notifyPendingCreates(@SuppressWarnings("rawtypes") PendingModifications pnsIn,
+            int changeId, AddedItems added) {
+        PendingRemoteModifications pns = (PendingRemoteModifications) pnsIn;
+        if (pns.created != null) {
+            for (ZBaseItem item : pns.created.values()) {
+                handleCreate(changeId, item, added);
+            }
+        }
+    }
+
     public void signalAccountChange() {
         //this should gather information about what has actually changed using ZMailbox::noOp and then call notifyPendingChanges
         ZimbraLog.imap.warn("Unexpected call to signalAccountChange %s", ZimbraLog.getStackTrace(20));
-    }
-
-    @Override
-    public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
-        ZimbraLog.imap.warn("Unexpected call to notifyPendingChanges %s", ZimbraLog.getStackTrace(20));
     }
 
     @Override
