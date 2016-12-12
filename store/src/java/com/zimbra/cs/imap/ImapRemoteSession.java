@@ -38,14 +38,6 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    public ImapFolder getImapFolder() throws ImapSessionClosedException {
-        // ImapSession does:
-        //     MANAGER.recordAccess(this);
-        //     return reload();
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
     public void closeFolder(boolean isUnregistering) {
         // ImapSession does:
         //     ImapSessionManager.getInstance().closeFolder(this, false);
