@@ -100,11 +100,6 @@ public class ImapSession extends ImapListener {
         }
     }
 
-    @Override
-    protected boolean isSerialized() {
-        return mFolder instanceof PagedFolderData;
-    }
-
     synchronized int getFootprint() {
         // FIXME: consider saved search results, in-memory data for paged sessions
         return mFolder instanceof ImapFolder ? ((ImapFolder) mFolder).getSize() : 0;
