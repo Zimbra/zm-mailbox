@@ -17,6 +17,9 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,7 +29,6 @@ import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.imap.ImapSession.AddedItems;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.common.util.ZimbraLog;
@@ -35,6 +37,31 @@ import com.zimbra.cs.session.PendingModifications.Change;
 
 public abstract class ImapListener extends Session {
     protected static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
+
+    static class AddedItems {
+        List<ImapMessage> numbered, unnumbered;
+
+        boolean isEmpty() {
+            return numbered == null && unnumbered == null;
+        }
+
+        void add(MailItem item) {
+            if (item.getImapUid() > 0) {
+                (numbered == null ? numbered = new ArrayList<ImapMessage>() : numbered).add(new ImapMessage(item));
+            } else {
+                (unnumbered == null ? unnumbered = new ArrayList<ImapMessage>() : unnumbered).add(new ImapMessage(item));
+            }
+        }
+
+        void sort() {
+            if (numbered != null) {
+                Collections.sort(numbered);
+            }
+            if (unnumbered != null) {
+                Collections.sort(unnumbered);
+            }
+        }
+    }
 
     interface ImapFolderData {
         int getId();
