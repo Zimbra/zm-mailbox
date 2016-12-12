@@ -571,6 +571,13 @@ public abstract class ImapListener extends Session {
         }
     }
 
+    // XXX: need to handle the abrupt disconnect case, the LOGOUT case, the timeout case, and the too-many-sessions disconnect case
+    @Override
+    public Session unregister() {
+        MANAGER.closeFolder(this, true);
+        return detach();
+    }
+
     protected boolean requiresReload() {
         ImapFolderData fdata = mFolder;
         return fdata instanceof ImapFolder ? false : ((PagedFolderData) fdata).notificationsFull();
