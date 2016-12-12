@@ -669,9 +669,11 @@ public class UBIDLdapContext extends ZLdapContext {
     private String getLastEntryCreationDate(int limit, List<SearchResultEntry> entries) throws LdapException {
         String leCreateDate = null;
         int size = entries.size();
+        ZimbraLog.gal.debug("inside getLastEntryCreationDate()");
+        ZimbraLog.gal.debug("Liimit = %d, Size = %d", limit, size);
         SearchResultEntry entry = null;
         if (size != 0) {
-            if (limit <= size && limit != 0) {
+            if (limit <= size && limit > 0) {
                 entry = entries.get(limit-1);
             } else {
                 entry = entries.get(size-1);
