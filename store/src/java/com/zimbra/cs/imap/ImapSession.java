@@ -185,15 +185,6 @@ public class ImapSession extends ImapListener {
         }
     }
 
-    @Override
-    protected void cleanup() {
-        ImapHandler i4handler = handler;
-        if (i4handler != null) {
-            ZimbraLog.imap.debug("dropping connection because Session is closing %s", this);
-            i4handler.close();
-        }
-    }
-
     /**
      * Serializes this {@link ImapSession} to the session manager's current {@link ImapSessionManager.FolderSerializer}
      * if it's not already serialized there.
