@@ -139,11 +139,6 @@ public class ImapSession extends ImapListener {
     }
 
     @Override
-    public void doEncodeState(Element parent) {
-        mFolder.doEncodeState(parent.addNonUniqueElement("imap"));
-    }
-
-    @Override
     protected void notifyPendingCreates(@SuppressWarnings("rawtypes") PendingModifications pnsIn,
             int changeId, AddedItems added) {
         PendingLocalModifications pns = (PendingLocalModifications) pnsIn;

@@ -526,6 +526,11 @@ public abstract class ImapListener extends Session {
         }
     }
 
+    @Override
+    public void doEncodeState(Element parent) {
+        mFolder.doEncodeState(parent.addNonUniqueElement("imap"));
+    }
+
     protected abstract PagedFolderData createPagedFolderData(boolean active, ImapFolder folder) throws ServiceException;
 
     /**
