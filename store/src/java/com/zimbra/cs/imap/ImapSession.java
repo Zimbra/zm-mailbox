@@ -178,11 +178,6 @@ public class ImapSession extends ImapListener {
     }
 
     @Override
-    public void closeFolder(boolean isUnregistering) {
-        ImapSessionManager.getInstance().closeFolder(this, false);
-    }
-
-    @Override
     public ImapListener detach() {
         Mailbox mbox = (Mailbox) mailbox;
         if (mbox != null) { // locking order is always Mailbox then Session
