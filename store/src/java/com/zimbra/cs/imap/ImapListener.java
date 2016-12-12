@@ -56,7 +56,11 @@ public abstract class ImapListener extends Session {
         return reload();
     }
 
-    public abstract void closeFolder(boolean isUnregistering);
+    public void closeFolder(boolean isUnregistering) {
+        MANAGER.closeFolder(this, false);
+    }
+
+
 
     public boolean hasNotifications() {
         return mFolder.hasNotifications();
