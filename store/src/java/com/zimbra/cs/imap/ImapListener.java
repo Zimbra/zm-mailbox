@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
@@ -41,7 +40,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.PendingLocalModifications;
+import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 
 public abstract class ImapListener extends Session {
@@ -100,11 +99,12 @@ public abstract class ImapListener extends Session {
     }
 
 
-    protected class PagedFolderData implements ImapFolderData {
+    protected abstract class PagedFolderData implements ImapFolderData {
         private final String cacheKey;
         private final int originalSize;
         private PagedSessionData pagedSessionData; // guarded by PagedFolderData.this
-        private Map<Integer, PendingLocalModifications> queuedChanges;
+        @SuppressWarnings("rawtypes")
+        protected Map<Integer, PendingModifications> queuedChanges;
 
         PagedFolderData(String cachekey, ImapFolder i4folder) {
             cacheKey = cachekey;
@@ -136,7 +136,7 @@ public abstract class ImapListener extends Session {
             if (queuedChanges == null || queuedChanges.isEmpty()) {
                 return false;
             }
-            for (PendingLocalModifications pms : queuedChanges.values()) {
+            for (@SuppressWarnings("rawtypes") PendingModifications pms : queuedChanges.values()) {
                 if (pms.deleted != null && !pms.deleted.isEmpty()) {
                     return true;
                 }
@@ -161,7 +161,7 @@ public abstract class ImapListener extends Session {
             }
 
             int count = 0;
-            for (PendingLocalModifications pms : queuedChanges.values()) {
+            for (@SuppressWarnings("rawtypes") PendingModifications pms : queuedChanges.values()) {
                 count += pms.getScaledNotificationCount();
             }
             return count > RESERIALIZATION_THRESHOLD;
@@ -195,31 +195,24 @@ public abstract class ImapListener extends Session {
             }
         }
 
-        private PendingLocalModifications getQueuedNotifications(int changeId) {
-            if (queuedChanges == null) {
-                queuedChanges = new TreeMap<Integer, PendingLocalModifications>();
-            }
-            PendingLocalModifications pns = queuedChanges.get(changeId);
-            if (pns == null) {
-                queuedChanges.put(changeId, pns = new PendingLocalModifications());
-            }
-            return pns;
-        }
+        @SuppressWarnings("rawtypes")
+        protected abstract PendingModifications getQueuedNotifications(int changeId);
 
         private synchronized void queueDelete(int changeId, int itemId, Change chg) {
             getQueuedNotifications(changeId).recordDeleted(
                     getTargetAccountId(), itemId, chg.getFolderId(), (MailItem.Type) chg.what);
         }
 
-        private synchronized void queueCreate(int changeId, MailItem item) {
-            getQueuedNotifications(changeId).recordCreated(item);
-        }
+        // NOTE: synchronize implementations
+        protected abstract void queueCreate(int changeId, MailItem item);
 
-        private synchronized void queueModify(int changeId, Change chg) {
-            getQueuedNotifications(changeId).recordModified(
-                    (MailItem) chg.what, chg.why, (MailItem) chg.preModifyObj);
-        }
+        // NOTE: synchronize implementations
+        protected abstract void queueCreate(int changeId, ZBaseItem item);
 
+        // NOTE: synchronize implementations
+        protected abstract void queueModify(int changeId, Change chg);
+
+        @SuppressWarnings("rawtypes")
         synchronized void replay() {
             // it's an error if we're replaying changes back into this same queuer...
             assert mFolder != this;
@@ -230,8 +223,8 @@ public abstract class ImapListener extends Session {
 
             resetRenumber();
 
-            for (Iterator<Map.Entry<Integer, PendingLocalModifications>> it = queuedChanges.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<Integer, PendingLocalModifications> entry = it.next();
+            for (Iterator<Map.Entry<Integer, PendingModifications>> it = queuedChanges.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<Integer, PendingModifications> entry = it.next();
                 notifyPendingChanges(entry.getValue(), entry.getKey(), null);
                 it.remove();
             }
@@ -249,7 +242,7 @@ public abstract class ImapListener extends Session {
 
         @Override
         public void handleTagRename(int changeId, ZTag tag, Change chg) {
-            ZimbraLog.imap.warn("Unexpected call to handleTagRename %s", ZimbraLog.getStackTrace(20));
+            queueModify(changeId, chg);
         }
 
         @Override
@@ -264,7 +257,7 @@ public abstract class ImapListener extends Session {
 
         @Override
         public void handleItemCreate(int changeId, ZBaseItem item, AddedItems added) {
-            ZimbraLog.imap.warn("Unexpected call to handleItemCreate %s", ZimbraLog.getStackTrace(20));
+            queueCreate(changeId, item);
         }
 
         @Override
