@@ -105,11 +105,6 @@ public class ImapSession extends ImapListener {
     }
 
     @Override
-    protected int getEstimatedSize() {
-        return mFolder.getSize();
-    }
-
-    @Override
     protected boolean requiresReload() {
         ImapFolderData fdata = mFolder;
         return fdata instanceof ImapFolder ? false : ((PagedFolderData) fdata).notificationsFull();
