@@ -516,5 +516,8 @@ public abstract class ImapListener extends Session {
     }
 
     protected abstract void inactivate();
-    protected abstract boolean isSerialized();
+
+    protected boolean isSerialized() {
+        return mFolder instanceof PagedFolderData;
+    }
 }
