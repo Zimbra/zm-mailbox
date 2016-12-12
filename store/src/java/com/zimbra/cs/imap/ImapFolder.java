@@ -56,7 +56,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 /**
  * @since Apr 30, 2005
  */
-public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializable {
+public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Serializable {
     // Update serialVersionUID when changing any instance members. Otherwise serialization won't work correctly.
     private static final long serialVersionUID = 3845968507901145794L;
     static final byte SELECT_READONLY  = 0x01;

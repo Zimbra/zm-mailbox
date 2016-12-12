@@ -51,25 +51,6 @@ import com.zimbra.cs.session.Session;
 
 public class ImapSession extends ImapListener {
 
-    interface ImapFolderData {
-        int getId();
-        int getSize();
-        boolean isWritable();
-        boolean hasExpunges();
-        boolean hasNotifications();
-        void doEncodeState(Element imap);
-        void endSelect();
-
-        void handleTagDelete(int changeId, int tagId, Change chg);
-        void handleTagRename(int changeId, Tag tag, Change chg);
-        void handleItemDelete(int changeId, int itemId, Change chg);
-        void handleItemCreate(int changeId, MailItem item, AddedItems added);
-        void handleFolderRename(int changeId, FolderStore folder, Change chg);
-        void handleItemUpdate(int changeId, Change chg, AddedItems added);
-        void handleAddedMessages(int changeId, AddedItems added);
-        void finishNotification(int changeId) throws IOException;
-    }
-
     ImapSession(ImapMailboxStore imapStore, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(imapStore, i4folder, handler);
     }
