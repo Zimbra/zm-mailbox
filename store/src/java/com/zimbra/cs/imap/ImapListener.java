@@ -545,7 +545,10 @@ public abstract class ImapListener extends Session {
         }
     }
 
-    protected abstract boolean requiresReload();
+    protected boolean requiresReload() {
+        ImapFolderData fdata = mFolder;
+        return fdata instanceof ImapFolder ? false : ((PagedFolderData) fdata).notificationsFull();
+    }
 
     protected boolean hasExpunges() {
         return mFolder.hasExpunges();
