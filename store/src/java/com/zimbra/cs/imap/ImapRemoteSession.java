@@ -16,12 +16,57 @@
  */
 package com.zimbra.cs.imap;
 
+import java.util.TreeMap;
+
+import com.zimbra.client.ZBaseItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingRemoteModifications;
 
 public class ImapRemoteSession extends ImapListener {
+
+    protected class PagedRemoteFolderData extends ImapListener.PagedFolderData {
+
+        PagedRemoteFolderData(String cachekey, ImapFolder i4folder) {
+            super(cachekey, i4folder);
+        }
+
+        @SuppressWarnings("rawtypes")
+        @Override
+        protected PendingModifications getQueuedNotifications(int changeId) {
+            if (queuedChanges == null) {
+                queuedChanges = new TreeMap<Integer, PendingModifications>();
+            }
+            PendingModifications pns = queuedChanges.get(changeId);
+            if (pns == null) {
+                queuedChanges.put(changeId, pns = new PendingRemoteModifications());
+            }
+            return pns;
+        }
+
+        private PendingRemoteModifications getQueuedRemoteNotifications(int changeId) {
+            return (PendingRemoteModifications) getQueuedNotifications(changeId);
+        }
+
+        @Override
+        protected synchronized void queueCreate(int changeId, MailItem item) {
+            ZimbraLog.imap.warn("Unexpected call to queueCreate %s", ZimbraLog.getStackTrace(20));
+        }
+
+        @Override
+        protected synchronized void queueCreate(int changeId, ZBaseItem item) {
+            getQueuedRemoteNotifications(changeId).recordCreated(item);
+        }
+
+        @Override
+        protected synchronized void queueModify(int changeId, Change chg) {
+            getQueuedRemoteNotifications(changeId).recordModified((ZBaseItem) chg.what, chg.why, (ZBaseItem) chg.preModifyObj);
+        }
+    }
 
     protected ImapRemoteSession(ImapMailboxStore imapStore, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(imapStore, i4folder, handler);
