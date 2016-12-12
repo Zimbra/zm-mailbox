@@ -167,24 +167,6 @@ public class ImapSession extends ImapListener {
         return detach();
     }
 
-    @Override
-    public ImapListener detach() {
-        Mailbox mbox = (Mailbox) mailbox;
-        if (mbox != null) { // locking order is always Mailbox then Session
-            mbox.lock.lock();
-        }
-        try {
-            synchronized (this) {
-                MANAGER.uncacheSession(this);
-                return isRegistered() ? (ImapSession)super.unregister() : this;
-            }
-        } finally {
-            if (mbox != null) {
-                mbox.lock.release();
-            }
-        }
-    }
-
     /**
      * Serializes this {@link ImapSession} to the session manager's current {@link ImapSessionManager.FolderSerializer}
      * if it's not already serialized there.
