@@ -457,6 +457,27 @@ public abstract class ImapListener extends Session {
         renumberCount.clear();
     }
 
+    void handleDelete(int changeId, int id, Change chg) {
+        MailItem.Type type = (MailItem.Type) chg.what;
+        if (id <= 0) {
+            return;
+        } else if (type == MailItem.Type.TAG) {
+            mFolder.handleTagDelete(changeId, id, chg);
+        } else if (id == mFolderId) {
+            // Once the folder's gone, there's no point in keeping an IMAP Session listening on it around.
+            detach();
+            // notify client that mailbox is deselected due to delete?
+            // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
+            //                mailbox, but disconnect all other clients who have the
+            //                mailbox accessed by sending a untagged BYE response."
+            if (handler != null) {
+                handler.close();
+            }
+        } else if (ImapMessage.SUPPORTED_TYPES.contains(type)) {
+            mFolder.handleItemDelete(changeId, id, chg);
+        }
+    }
+
     ImapFolder handleRenumberError(String key) {
         resetRenumber();
         ZimbraLog.imap.warn("could not replay due to too many renumbers  key=%s %s", key, this);
