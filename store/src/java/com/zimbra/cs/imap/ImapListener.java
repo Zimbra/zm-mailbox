@@ -24,6 +24,7 @@ import com.zimbra.cs.imap.ImapSession.ImapFolderData;
 import com.zimbra.cs.session.Session;
 
 public abstract class ImapListener extends Session {
+    protected static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
 
     final ImapPath mPath;
     final int      mFolderId;

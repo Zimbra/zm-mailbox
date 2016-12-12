@@ -50,7 +50,6 @@ import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.session.Session;
 
 public class ImapSession extends ImapListener {
-    private static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
 
     interface ImapFolderData {
         int getId();
