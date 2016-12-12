@@ -75,12 +75,6 @@ public class ImapSession extends ImapListener {
     }
 
     @Override
-    public ImapFolder getImapFolder() throws ImapSessionClosedException {
-        MANAGER.recordAccess(this);
-        return reload();
-    }
-
-    @Override
     public boolean hasNotifications() {
         return mFolder.hasNotifications();
     }
