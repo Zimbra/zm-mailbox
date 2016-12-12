@@ -18,8 +18,10 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.TreeMap;
 
 import com.google.common.base.Objects;
+import com.zimbra.client.ZBaseItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
@@ -39,6 +41,45 @@ import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.session.Session;
 
 public class ImapSession extends ImapListener {
+
+    protected class PagedLocalFolderData extends ImapListener.PagedFolderData {
+
+        PagedLocalFolderData(String cachekey, ImapFolder i4folder) {
+            super(cachekey, i4folder);
+        }
+
+        @SuppressWarnings("rawtypes")
+        @Override
+        protected PendingModifications getQueuedNotifications(int changeId) {
+            if (queuedChanges == null) {
+                queuedChanges = new TreeMap<Integer, PendingModifications>();
+            }
+            PendingModifications pns = queuedChanges.get(changeId);
+            if (pns == null) {
+                queuedChanges.put(changeId, pns = new PendingLocalModifications());
+            }
+            return pns;
+        }
+
+        private PendingLocalModifications getQueuedLocalNotifications(int changeId) {
+            return (PendingLocalModifications) getQueuedNotifications(changeId);
+        }
+
+        @Override
+        protected synchronized void queueCreate(int changeId, MailItem item) {
+          getQueuedLocalNotifications(changeId).recordCreated(item);
+        }
+
+        @Override
+        protected synchronized void queueCreate(int changeId, ZBaseItem item) {
+          ZimbraLog.imap.warn("Unexpected call to queueCreate %s", ZimbraLog.getStackTrace(20));
+        }
+
+        @Override
+        protected synchronized void queueModify(int changeId, Change chg) {
+            getQueuedLocalNotifications(changeId).recordModified((MailItem) chg.what, chg.why, (MailItem) chg.preModifyObj);
+        }
+    }
 
     ImapSession(ImapMailboxStore imapStore, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(imapStore, i4folder, handler);
@@ -182,7 +223,7 @@ public class ImapSession extends ImapListener {
         try {
             synchronized (this) {
                 if (mFolder instanceof ImapFolder) { // if the data's already paged out, we can short-circuit
-                    mFolder = new PagedFolderData(serialize(active), (ImapFolder) mFolder);
+                    mFolder = new PagedLocalFolderData(serialize(active), (ImapFolder) mFolder);
                 } else if (mFolder instanceof PagedFolderData) {
                     PagedFolderData paged = (PagedFolderData) mFolder;
                     if (paged.getCacheKey() == null || !paged.getCacheKey().equals(MANAGER.cacheKey(this, active))) {
@@ -193,7 +234,7 @@ public class ImapSession extends ImapListener {
                         try {
                             folder = reload();
                             if (folder != null) {
-                                mFolder = new PagedFolderData(serialize(active), folder);
+                                mFolder = new PagedLocalFolderData(serialize(active), folder);
                             } else {
                                 ZimbraLog.imap.debug(
                                         "folder not found while reloading for relocate. probably already evicted. %s",
