@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.imap.ImapSession.ImapFolderData;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.Session;
 
 public abstract class ImapListener extends Session {
@@ -142,8 +143,16 @@ public abstract class ImapListener extends Session {
     }
 
     protected abstract ImapFolder reload() throws ImapSessionClosedException;
+
     @Override
-    protected abstract void cleanup();
+    protected void cleanup() {
+        ImapHandler i4handler = handler;
+        if (i4handler != null) {
+            ZimbraLog.imap.debug("dropping connection because Session is closing %s", this);
+            i4handler.close();
+        }
+    }
+
     protected abstract void inactivate();
     protected abstract boolean isSerialized();
 }
