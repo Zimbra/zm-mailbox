@@ -16,17 +16,43 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.imap.ImapSession.ImapFolderData;
+import com.zimbra.common.soap.Element;
+import com.zimbra.cs.imap.ImapSession.AddedItems;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.PendingModifications.Change;
 
 public abstract class ImapListener extends Session {
     protected static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
+
+    interface ImapFolderData {
+        int getId();
+        int getSize();
+        boolean isWritable();
+        boolean hasExpunges();
+        boolean hasNotifications();
+        void doEncodeState(Element imap);
+        void endSelect();
+
+        void handleTagDelete(int changeId, int tagId, Change chg);
+        void handleTagRename(int changeId, Tag tag, Change chg);
+        void handleItemDelete(int changeId, int itemId, Change chg);
+        void handleItemCreate(int changeId, MailItem item, AddedItems added);
+        void handleFolderRename(int changeId, FolderStore folder, Change chg);
+        void handleItemUpdate(int changeId, Change chg, AddedItems added);
+        void handleAddedMessages(int changeId, AddedItems added);
+        void finishNotification(int changeId) throws IOException;
+    }
+
 
     final ImapPath mPath;
     final int      mFolderId;
