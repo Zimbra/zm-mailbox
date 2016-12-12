@@ -79,11 +79,6 @@ public class ImapSession extends ImapListener {
         return mFolder.hasNotifications();
     }
 
-    @Override
-    protected boolean hasExpunges() {
-        return mFolder.hasExpunges();
-    }
-
     /** Returns whether a given SELECT option is active for this folder. */
     boolean isExtensionActivated(ImapExtension ext) {
         switch (ext) {

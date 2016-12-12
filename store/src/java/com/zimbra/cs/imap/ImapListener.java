@@ -132,7 +132,10 @@ public abstract class ImapListener extends Session {
     protected abstract ImapListener detach();
     protected abstract void unload(boolean active) throws ServiceException;
     protected abstract boolean requiresReload();
-    protected abstract boolean hasExpunges();
+
+    protected boolean hasExpunges() {
+        return mFolder.hasExpunges();
+    }
 
     protected int getEstimatedSize() {
         return mFolder.getSize();

@@ -55,11 +55,6 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    public boolean hasExpunges() {
-        return mFolder.hasExpunges();
-    }
-
-    @Override
     protected void inactivate() {
         mFolder.endSelect();
         // removes this session from the global SessionCache, *not* from ImapSessionManager
