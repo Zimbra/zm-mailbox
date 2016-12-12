@@ -55,11 +55,6 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    protected int getEstimatedSize() {
-        return mFolder.getSize();
-    }
-
-    @Override
     public boolean hasExpunges() {
         return mFolder.hasExpunges();
     }
