@@ -67,11 +67,6 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    protected ImapListener detach() {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
     protected boolean isSerialized() {
         /* ImapSession does:
          *     return mFolder instanceof PagedFolderData;
