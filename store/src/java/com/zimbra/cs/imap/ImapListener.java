@@ -615,7 +615,22 @@ public abstract class ImapListener extends Session {
         }
     }
 
-    protected abstract void inactivate();
+    protected void inactivate() {
+        if (!isInteractive()) {
+            return;
+        }
+
+        if (isWritable()) {
+            snapshotRECENT();
+        }
+
+        mFolder.endSelect();
+        // removes this session from the global SessionCache, *not* from ImapSessionManager
+        removeFromSessionCache();
+        handler = null;
+    }
+
+    protected abstract void snapshotRECENT();
 
     protected boolean isSerialized() {
         return mFolder instanceof PagedFolderData;
