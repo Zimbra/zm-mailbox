@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.zimbra.client.ZBaseItem;
+import com.zimbra.client.ZTag;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
@@ -45,8 +47,10 @@ public abstract class ImapListener extends Session {
 
         void handleTagDelete(int changeId, int tagId, Change chg);
         void handleTagRename(int changeId, Tag tag, Change chg);
+        void handleTagRename(int changeId, ZTag tag, Change chg);
         void handleItemDelete(int changeId, int itemId, Change chg);
         void handleItemCreate(int changeId, MailItem item, AddedItems added);
+        void handleItemCreate(int changeId, ZBaseItem item, AddedItems added);
         void handleFolderRename(int changeId, FolderStore folder, Change chg);
         void handleItemUpdate(int changeId, Change chg, AddedItems added);
         void handleAddedMessages(int changeId, AddedItems added);
