@@ -38,13 +38,6 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    public void closeFolder(boolean isUnregistering) {
-        // ImapSession does:
-        //     ImapSessionManager.getInstance().closeFolder(this, false);
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
     public void updateAccessTime() {
         /** Assuming we are using active and inactive session caches, similar to those in ImapSessionManager,
          *  should update the access time in those */
