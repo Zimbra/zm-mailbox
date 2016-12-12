@@ -19,6 +19,7 @@ package com.zimbra.cs.imap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.imap.ImapSession.ImapFolderData;
 import com.zimbra.common.util.ZimbraLog;
@@ -130,7 +131,23 @@ public abstract class ImapListener extends Session {
         return count > 5;
     }
 
-    protected abstract ImapListener detach();
+    public ImapListener detach() {
+        MailboxStore mbox = this.getMailbox();
+        if (mbox != null) { // locking order is always Mailbox then Session
+            mbox.lock(true);
+        }
+        try {
+            synchronized (this) {
+                MANAGER.uncacheSession(this);
+                return isRegistered() ? (ImapSession)super.unregister() : this;
+            }
+        } finally {
+            if (mbox != null) {
+                mbox.unlock();
+            }
+        }
+    }
+
     protected abstract void unload(boolean active) throws ServiceException;
     protected abstract boolean requiresReload();
 
