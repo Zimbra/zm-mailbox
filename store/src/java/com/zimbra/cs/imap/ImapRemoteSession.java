@@ -105,11 +105,6 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    protected boolean requiresReload() {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
     protected PagedFolderData createPagedFolderData(boolean active, ImapFolder folder) throws ServiceException {
         return new PagedRemoteFolderData(serialize(active), folder);
     }
