@@ -33,6 +33,7 @@ import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.imap.ImapFolder.DirtyMessage;
+import com.zimbra.cs.imap.ImapListener.AddedItems;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -40,8 +41,10 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
 public abstract class ImapListener extends Session {
     protected static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
@@ -478,6 +481,8 @@ public abstract class ImapListener extends Session {
         }
     }
 
+    protected abstract void handleModify(int changeId, Change chg, AddedItems added);
+
     ImapFolder handleRenumberError(String key) {
         resetRenumber();
         ZimbraLog.imap.warn("could not replay due to too many renumbers  key=%s %s", key, this);
@@ -578,6 +583,58 @@ public abstract class ImapListener extends Session {
     protected int getEstimatedSize() {
         return mFolder.getSize();
     }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
+        PendingLocalModifications pns = (PendingLocalModifications) pnsIn;
+        if (!pns.hasNotifications()) {
+            return;
+        }
+
+        ImapHandler i4handler = handler;
+        try {
+            synchronized (this) {
+                AddedItems added = new AddedItems();
+                if (pns.deleted != null) {
+                    for (Map.Entry<ModificationKey, Change> entry : pns.deleted.entrySet()) {
+                        handleDelete(changeId, entry.getKey().getItemId(), entry.getValue());
+                    }
+                }
+                notifyPendingCreates(pnsIn, changeId, added);
+                if (pns.modified != null) {
+                    for (Change chg : pns.modified.values()) {
+                        handleModify(changeId, chg, added);
+                    }
+                }
+
+                // add new messages to the currently selected mailbox
+                if (!added.isEmpty()) {
+                    mFolder.handleAddedMessages(changeId, added);
+                }
+
+                mFolder.finishNotification(changeId);
+            }
+
+            if (i4handler != null && i4handler.isIdle()) {
+                i4handler.sendNotifications(true, true);
+            }
+        } catch (IOException e) {
+            // ImapHandler.dropConnection clears our mHandler and calls SessionCache.clearSession,
+            //   which calls Session.doCleanup, which calls Mailbox.removeListener
+            if (ZimbraLog.imap.isDebugEnabled()) { // with stack trace
+                ZimbraLog.imap.debug("Failed to notify, closing %s", this, e);
+            } else { // without stack trace
+                ZimbraLog.imap.info("Failed to notify (%s), closing %s", e.toString(), this);
+            }
+            if (i4handler != null) {
+                i4handler.close();
+            }
+        }
+    }
+
+    protected abstract void notifyPendingCreates(@SuppressWarnings("rawtypes") PendingModifications pns,
+            int changeId, AddedItems added);
 
     protected ImapFolder reload() throws ImapSessionClosedException {
         if (mailbox == null) {
