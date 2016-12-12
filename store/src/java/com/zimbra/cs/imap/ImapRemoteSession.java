@@ -20,9 +20,12 @@ import java.util.TreeMap;
 
 import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZContact;
+import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -70,12 +73,47 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     private void handleCreate(int changeId, ZBaseItem item, AddedItems added) {
-        // TODO Auto-generated method stub
+        try {
+            if (item == null || item.getIdInMailbox() <= 0) {
+                return;
+            } else if (item.getFolderIdInMailbox() == mFolderId && (item instanceof ZMessage || item instanceof ZContact)) {
+                mFolder.handleItemCreate(changeId, item, added);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("Error retrieving ID of item or folder", e);
+        }
     }
 
+    /**
+     *
+     * @see com.zimbra.cs.imap.ImapSession#handleModify()
+     */
     @Override
     protected void handleModify(int changeId, Change chg, AddedItems added) {
-        // TODO Auto-generated method stub
+        if (chg.what instanceof ZTag && (chg.why & Change.NAME) != 0) {
+            mFolder.handleTagRename(changeId, (ZTag) chg.what, chg);
+        } else if (chg.what instanceof ZFolder && ((ZFolder) chg.what).getFolderIdInOwnerMailbox() == mFolderId) {
+            ZFolder folder = (ZFolder) chg.what;
+            if ((chg.why & Change.FLAGS) != 0 && (folder.getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
+                if (handler != null) {
+                    handler.close();
+                }
+            } else
+            if ((chg.why & (Change.FOLDER | Change.NAME)) != 0) {
+                mFolder.handleFolderRename(changeId, folder, chg);
+            }
+        } else if (chg.what instanceof ZMessage || chg.what instanceof ZContact) {
+            ZBaseItem item = (ZBaseItem) chg.what;
+            try {
+                boolean inFolder = mIsVirtual || item.getIdInMailbox() == mFolderId;
+                if (!inFolder && (chg.why & Change.FOLDER) == 0) {
+                    return;
+                }
+                mFolder.handleItemUpdate(changeId, chg, added);
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("Error retrieving ID of message or contact", e);
+            }
+        }
     }
 
     protected ImapRemoteSession(ImapMailboxStore imapStore, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
