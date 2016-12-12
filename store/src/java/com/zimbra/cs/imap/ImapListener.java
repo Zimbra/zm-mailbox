@@ -646,4 +646,22 @@ public abstract class ImapListener extends Session {
         return cachekey;
     }
 
+    @Override
+    public void updateAccessTime() {
+        super.updateAccessTime();
+        if (mailbox == null) {
+            return;
+        }
+        mailbox.lock(true);
+        try {
+            synchronized (this) {
+                PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
+                if (paged != null) { // if the data's already paged in, we can short-circuit
+                    MANAGER.updateAccessTime(paged.getCacheKey());
+                }
+            }
+        } finally {
+            mailbox.unlock();
+        }
+    }
 }
