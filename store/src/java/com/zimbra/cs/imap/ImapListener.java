@@ -457,6 +457,13 @@ public abstract class ImapListener extends Session {
         renumberCount.clear();
     }
 
+    ImapFolder handleRenumberError(String key) {
+        resetRenumber();
+        ZimbraLog.imap.warn("could not replay due to too many renumbers  key=%s %s", key, this);
+        MANAGER.safeRemoveCache(key);
+        return null;
+    }
+
     boolean hasFailedRenumber() {
         //check if any id has been repeatedly renumbered
         for (Integer count : renumberCount.values()) {
@@ -548,7 +555,53 @@ public abstract class ImapListener extends Session {
         return mFolder.getSize();
     }
 
-    protected abstract ImapFolder reload() throws ImapSessionClosedException;
+    protected ImapFolder reload() throws ImapSessionClosedException {
+        if (mailbox == null) {
+            throw new ImapSessionClosedException();
+        }
+        // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
+        // Need to lock in the same order here, otherwise can result in deadlock.
+        mailbox.lock(true); // PagedFolderData.replay() locks Mailbox deep inside of it.
+        try {
+            synchronized (this) {
+                // if the data's already paged in, we can short-circuit
+                if (mFolder instanceof PagedFolderData) {
+                    PagedFolderData paged = (PagedFolderData) mFolder;
+                    ImapFolder i4folder = MANAGER.deserialize(paged.getCacheKey());
+                    if (i4folder == null) { // cache miss
+                        if (ImapSessionManager.isActiveKey(paged.getCacheKey())) {
+                            ZimbraLog.imap.debug("cache miss in active cache with key %s. %s",paged.getCacheKey(), this);
+                        }
+                        return null;
+                    }
+                    try {
+                        paged.restore(i4folder);
+                    } catch (ServiceException e) {
+                        ZimbraLog.imap.warn("Failed to restore folder %s for session %s", paged.getCacheKey(), this, e);
+                        return null;
+                    }
+                    // need to switch target before replay (yes, this is inelegant)
+                    mFolder = i4folder;
+                    // replay all queued events into the restored folder
+                    try {
+                        paged.replay(); //catch some error and return null so we drop cache and reload from db
+                        if (hasFailedRenumber()) {
+                            return handleRenumberError(paged.getCacheKey());
+                        }
+                    } catch (ImapRenumberException e) {
+                        return handleRenumberError(paged.getCacheKey());
+                    }
+                    // if it's a disconnected session, no need to track expunges
+                    if (!isInteractive()) {
+                        i4folder.collapseExpunged(false);
+                    }
+                }
+                return (ImapFolder) mFolder;
+            }
+        } finally {
+            mailbox.unlock();
+        }
+    }
 
     @Override
     protected void cleanup() {
