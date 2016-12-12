@@ -34,6 +34,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.zimbra.client.ZBaseItem;
+import com.zimbra.client.ZTag;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
@@ -45,6 +47,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
+import com.zimbra.cs.imap.ImapSession.AddedItems;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -1109,6 +1112,11 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     }
 
     @Override
+    public void handleTagRename(int changeId, ZTag tag, Change chg) {
+        throw new UnsupportedOperationException("TODO - Implement handleTagRename(int, ZTag, Change)");
+    }
+
+    @Override
     public void handleItemDelete(int changeId, int itemId, Change chg) {
         ImapMessage i4msg = getById(itemId);
         if (i4msg != null) {
@@ -1130,6 +1138,11 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
             added.add(item);
         }
         ZimbraLog.imap.debug("  ** created (ntfn): %d", msgId);
+    }
+
+    @Override
+    public void handleItemCreate(int changeId, ZBaseItem item, AddedItems added) {
+        throw new UnsupportedOperationException("TODO - Implement handleItemCreate(ZBaseItem, AddedItems)");
     }
 
     @Override
