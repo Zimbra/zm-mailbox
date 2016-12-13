@@ -77,7 +77,7 @@ public class TestWaitSet extends TestCase {
         {
             Account user1Acct = TestUtil.getAccount(USER_1_NAME);
             List<WaitSetAccount> add = new ArrayList<WaitSetAccount>();
-            add.add(new WaitSetAccount(user1Acct.getId(), null, TypeEnum.m.getTypes()));
+            add.add(new WaitSetAccount(user1Acct.getId(), null, TypeEnum.m.getTypes(), null));
 
             Pair<String, List<WaitSetError>> result =
                 WaitSetMgr.create(FAKE_ACCOUNT_ID, true, TypeEnum.m.getTypes(), false, add);
@@ -116,7 +116,7 @@ public class TestWaitSet extends TestCase {
                 // create a new account, shouldn't trigger waitset
                 Account user2Acct = TestUtil.getAccount(USER_2_NAME);
                 List<WaitSetAccount> add2 = new ArrayList<WaitSetAccount>();
-                add2.add(new WaitSetAccount(user2Acct.getId(), null, TypeEnum.m.getTypes()));
+                add2.add(new WaitSetAccount(user2Acct.getId(), null, TypeEnum.m.getTypes(), null));
                 errors = ws.doWait(cb, curSeqNo, add2, null);
                 // wait shouldn't find anything yet
                 assertEquals(0, errors.size());

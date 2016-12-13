@@ -33,10 +33,11 @@ import com.zimbra.cs.service.util.SyncToken;
  */
 public class WaitSetAccount {
 
-    public WaitSetAccount(String id, SyncToken sync, Set<MailItem.Type> interest) {
+    public WaitSetAccount(String id, SyncToken sync, Set<MailItem.Type> interest, Set<Integer> folderInterests) {
         this.setAccountId(id);
         this.lastKnownSyncToken = sync;
         this.interests = interest;
+        this.folderInterests = folderInterests;
     }
 
     public WaitSetSession getSession() {
@@ -67,13 +68,13 @@ public class WaitSetAccount {
         //
         // See bug 31666 for more info
         //
-        WaitSetSession session = new WaitSetSession(ws, accountId, interests, lastKnownSyncToken);
+        WaitSetSession session = new WaitSetSession(ws, accountId, interests, folderInterests, lastKnownSyncToken);
         mbox.lock.lock();
         try {
             session.register();
             sessionId = session.getSessionId();
             // must force update here so that initial sync token is checked against current mbox state
-            session.update(interests, lastKnownSyncToken);
+            session.update(interests, folderInterests, lastKnownSyncToken);
         } catch (MailServiceException e) {
             sessionId = null;
             if (e.getCode().equals(MailServiceException.MAINTENANCE)) {
@@ -142,12 +143,21 @@ public class WaitSetAccount {
         this.interests = interests;
     }
 
+    void setFolderInterests(Set<Integer> fInterests) {
+        this.folderInterests = fInterests;
+    }
+
     public Set<MailItem.Type> getInterests() {
         return interests;
     }
 
+    public Set<Integer> getFolderInterests() {
+        return folderInterests;
+    }
+
     private String accountId;
     private Set<MailItem.Type> interests;
+    private Set<Integer> folderInterests;
     private SyncToken lastKnownSyncToken;
     private String sessionId;
 }
