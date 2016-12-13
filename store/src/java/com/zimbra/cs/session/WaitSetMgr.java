@@ -108,7 +108,7 @@ public class WaitSetMgr {
             errors = new ArrayList<WaitSetError>();
         } else {
             SomeAccountsWaitSet sws = new SomeAccountsWaitSet(ownerAccountId, id, defaultInterest);
-            errors = sws.addAccounts(add);
+            errors = sws.addAccountErrors(add);
             MailboxManager.getInstance().addListener(sws);
             ws = sws;
         }
