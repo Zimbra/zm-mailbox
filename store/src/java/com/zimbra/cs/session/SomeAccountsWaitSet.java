@@ -81,10 +81,10 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         List<WaitSetError> errors = new LinkedList<WaitSetError>();
 
         if (addAccounts != null) {
-            errors.addAll(addAccounts(addAccounts));
+            errors.addAll(addAccountErrors(addAccounts));
         }
         if (updateAccounts != null) {
-            errors.addAll(updateAccounts(updateAccounts));
+            errors.addAll(updateAccountErrors(updateAccounts));
         }
         // figure out if there is already data here
         mCb = cb;
@@ -155,7 +155,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         return Long.toString(mCurrentSeqNo);
     }
 
-    private synchronized List<WaitSetError> updateAccounts(List<WaitSetAccount> updates) {
+    private synchronized List<WaitSetError> updateAccountErrors(List<WaitSetAccount> updates) {
         List<WaitSetError> errors = new ArrayList<WaitSetError>();
 
         for (WaitSetAccount update : updates) {
@@ -165,7 +165,8 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
                 existing.setLastKnownSyncToken(update.getLastKnownSyncToken());
                 WaitSetSession session = existing.getSession();
                 if (session != null) {
-                    session.update(existing.getInterests(), existing.getLastKnownSyncToken());
+                    session.update(existing.getInterests(), existing.getFolderInterests(),
+                            existing.getLastKnownSyncToken());
                     // update it!
                 }
             } else {
@@ -175,7 +176,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         return errors;
     }
 
-    synchronized List<WaitSetError> addAccounts(List<WaitSetAccount> wsas) {
+    synchronized List<WaitSetError> addAccountErrors(List<WaitSetAccount> wsas) {
         List<WaitSetError> errors = new ArrayList<WaitSetError>();
 
         for (WaitSetAccount wsa : wsas) {
