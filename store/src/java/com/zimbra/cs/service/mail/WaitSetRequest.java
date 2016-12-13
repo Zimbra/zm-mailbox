@@ -327,7 +327,8 @@ public class WaitSetRequest extends MailDocumentHandler {
                 String tokenStr = accountDetail.getToken();
                 SyncToken token = tokenStr != null ? new SyncToken(tokenStr) : null;
                 Set<MailItem.Type> interests = parseInterestStr(accountDetail.getInterests(), defaultInterest);
-                toRet.add(new WaitSetAccount(id, token, interests));
+                Set<Integer> folderInterests = accountDetail.getFolderInterestsAsSet();
+                toRet.add(new WaitSetAccount(id, token, interests, folderInterests));
             }
         }
         return toRet;
