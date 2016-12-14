@@ -1496,7 +1496,6 @@ public abstract class ImapHandler {
                 }
                 return true;
             }
-            // set imap_proxy_to_localhost = true to test IMAP proxy
             FolderDetails selectdata = setSelectedFolder(path, params);
             i4folder = selectdata.listener.getImapFolder();
             initial  = selectdata.initialFolderValues;
