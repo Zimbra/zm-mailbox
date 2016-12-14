@@ -65,7 +65,7 @@ public class GetCalendarItem extends CalendarRequest {
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        GetCalendarItemRequestBase req = JaxbUtil.elementToJaxb(request);
+        GetCalendarItemRequestBase req = zsc.elementToJaxb(request);
 
         boolean sync = req.getSync() == null ? false : req.getSync();
         boolean includeContent = req.getIncludeContent() == null ? false : req.getIncludeContent();
