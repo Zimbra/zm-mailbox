@@ -1484,6 +1484,18 @@ public abstract class ImapHandler {
         boolean writable;
         List<String> permflags = Collections.emptyList();
         try {
+            // use proxy only when we are selecting a shared folder
+            ImapMailboxStore imapStore = path.getOwnerImapMailboxStore();
+            boolean isSharedFolder = !path.belongsTo(credentials.getAccountId());
+            if (isSharedFolder && imapStore instanceof RemoteImapMailboxStore) {
+                ImapProxy proxy = new ImapProxy(this, path);
+                if (proxy.select(tag, params, qri)) {
+                    imapProxy = proxy;
+                } else {
+                    proxy.dropConnection();
+                }
+                return true;
+            }
             // set imap_proxy_to_localhost = true to test IMAP proxy
             FolderDetails selectdata = setSelectedFolder(path, params);
             i4folder = selectdata.listener.getImapFolder();
