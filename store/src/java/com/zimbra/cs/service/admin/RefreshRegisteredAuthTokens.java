@@ -54,7 +54,7 @@ public class RefreshRegisteredAuthTokens extends AdminDocumentHandler {
             return JaxbUtil.jaxbToElement( new RefreshRegisteredAuthTokensResponse());
         }
 
-        RefreshRegisteredAuthTokensRequest req = JaxbUtil.elementToJaxb(request);
+        RefreshRegisteredAuthTokensRequest req = zsc.elementToJaxb(request);
         List<String> tokens = req.getTokens();
         if(tokens != null && !tokens.isEmpty()) {
             for(String token : tokens) {

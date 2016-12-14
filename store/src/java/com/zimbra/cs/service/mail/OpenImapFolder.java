@@ -27,7 +27,7 @@ public class OpenImapFolder extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
-        OpenImapFolderRequest req = JaxbUtil.elementToJaxb(request);
+        OpenImapFolderRequest req = zsc.elementToJaxb(request);
         OpenImapFolderResponse resp = new OpenImapFolderResponse();
         ItemId folderId = new ItemId(req.getFolderId(), zsc);
         int limit = req.getLimit();
