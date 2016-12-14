@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.smime;
 
+import java.util.List;
+
 import javax.mail.internet.MimeMessage;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
@@ -46,6 +48,5 @@ public abstract class SmimeHandler {
         MimeMessage mm, SoapProtocol mResponseProtocol);
 
     public abstract void encodeCertificate(Account account, Element elem, String certData,
-        SoapProtocol mResponseProtocol);
-
+            SoapProtocol mResponseProtocol, List<String> emailAddresses);
 }
