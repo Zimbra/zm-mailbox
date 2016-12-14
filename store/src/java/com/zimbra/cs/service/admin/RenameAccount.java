@@ -69,7 +69,7 @@ public class RenameAccount extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        RenameAccountRequest req = JaxbUtil.elementToJaxb(request);
+        RenameAccountRequest req = zsc.elementToJaxb(request);
         String id = req.getId();
         String newName = req.getNewName();
 
