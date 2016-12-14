@@ -418,6 +418,33 @@ public class TestZClient extends TestCase {
         }
     }
 
+    @Test
+    public void testGetIdsOfModifiedItemsInFolder() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Folder folder = mbox.createFolder(null, "testGetIdsOfModifiedItemsInFolder", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
+        int folderId = folder.getId();
+        int lastChange = mbox.getLastChangeID();
+        List<Integer> modifiedIds = zmbox.getIdsOfModifiedItemsInFolder(null, lastChange, folderId);
+        assertNotNull("getIdsOfModifiedItemsInFolder should return null", modifiedIds);
+        assertTrue("getIdsOfModifiedItemsInFolder should return an empty list given the last change number", modifiedIds.isEmpty());
+        List<Integer> expected = new LinkedList<Integer>();
+        for (int i = 1; i <= 10; i++) {
+            Message msg = TestUtil.addMessage(mbox, folderId, String.format("testGetIdsOfModifiedItemsInFolder message %s", i), System.currentTimeMillis());
+            expected.add(msg.getId());
+        }
+        modifiedIds = zmbox.getIdsOfModifiedItemsInFolder(null, lastChange, folderId);
+        assertEquals(String.format("should return the same number of IDs as the number of added messages. Added %d messages, but returned %d IDs", expected.size(), modifiedIds.size()), expected.size(), modifiedIds.size());
+        for(Integer mId : expected) {
+            assertTrue(modifiedIds.contains(mId));
+        }
+        lastChange = mbox.getLastChangeID();
+        Message msg = TestUtil.addMessage(mbox, folderId, "testGetIdsOfModifiedItemsInFolder last message", System.currentTimeMillis());
+        modifiedIds = zmbox.getIdsOfModifiedItemsInFolder(null, lastChange, folderId);
+        assertEquals(1, modifiedIds.size());
+        assertEquals(Integer.valueOf(msg.getId()), modifiedIds.get(0));
+    }
+
     @Override
     public void tearDown()
     throws Exception {
