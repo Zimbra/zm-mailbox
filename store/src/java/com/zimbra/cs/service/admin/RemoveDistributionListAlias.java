@@ -69,7 +69,7 @@ public class RemoveDistributionListAlias extends DistributionListDocumentHandler
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        RemoveDistributionListAliasRequest req = JaxbUtil.elementToJaxb(request);
+        RemoveDistributionListAliasRequest req = zsc.elementToJaxb(request);
 
         String id = req.getId();
         String alias = req.getAlias();
