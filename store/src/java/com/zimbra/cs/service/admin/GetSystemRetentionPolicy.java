@@ -42,7 +42,7 @@ public class GetSystemRetentionPolicy extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
-        GetSystemRetentionPolicyRequest req = JaxbUtil.elementToJaxb(request); 
+        GetSystemRetentionPolicyRequest req = zsc.elementToJaxb(request); 
         Provisioning prov = Provisioning.getInstance();
         // assume default retention policy to be set in globalConfig (for backward compatibility)
         Entry entry = prov.getConfig();

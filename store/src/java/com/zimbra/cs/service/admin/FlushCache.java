@@ -69,7 +69,7 @@ public class FlushCache extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        FlushCacheRequest req = JaxbUtil.elementToJaxb(request);
+        FlushCacheRequest req = zsc.elementToJaxb(request);
         doFlushCache(this, context, req);
         return zsc.jaxbToElement(new FlushCacheResponse());
     }

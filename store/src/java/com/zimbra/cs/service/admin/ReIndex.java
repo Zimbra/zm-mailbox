@@ -86,7 +86,7 @@ public final class ReIndex extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        ReIndexRequest req = JaxbUtil.elementToJaxb(request);
+        ReIndexRequest req = zsc.elementToJaxb(request);
 
         String action = req.getAction();
 
