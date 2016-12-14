@@ -847,9 +847,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     }
 
     public void clearValues() {
-        matchedValues.clear();
-        variables.clear();
+        clearMatchedValues();
+        clearVariables();
     }
+
+    public void clearMatchedValues() { matchedValues.clear(); }
+    public void clearVariables() { variables.clear(); }
 
     public VARIABLEFEATURETYPE getVariablesExtAvailable() { return variablesExtAvailable; }
     public void setVariablesExtAvailable(VARIABLEFEATURETYPE type) { this.variablesExtAvailable = type; }

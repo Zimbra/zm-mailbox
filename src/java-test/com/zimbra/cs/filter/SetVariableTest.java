@@ -20,10 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import javax.mail.Header;
 
 import com.google.common.collect.Maps;
 
@@ -47,6 +50,7 @@ import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -181,7 +185,7 @@ public class SetVariableTest {
         testCases.put("&%${}!", "&%${}!");
         testCases.put("${doh!}", "${doh!}");
         testCases.put("${fo\\o}",   "bar");   /* ${foo}   */
-        testCases.put("${fo\\\\o}", "");      /* ${fo\\o} */
+        testCases.put("${fo\\\\o}", "${fo\\o}"); /* ${fo\o} */
         testCases.put("\\${foo}",   "bar");   /* ${foo}   */
         testCases.put("\\\\${foo}", "\\bar"); /* \\${foo} */
 
@@ -200,7 +204,7 @@ public class SetVariableTest {
 
         testCases.put("${a.b}", "おしらせ");
         testCases.put("${c_d}", "C");
-        testCases.put("${1}", "One");
+        testCases.put("${1}", "${1}");       // Invalid variable name
         testCases.put("${23}", "${23}");     // Not defined
         testCases.put("${123}", "${123}");   // Invalid variable name
         testCases.put("${a.b} ${COMpANY} ${c_d}hao!", "おしらせ ACME Chao!");
@@ -210,7 +214,7 @@ public class SetVariableTest {
         testCases.put("${uppercase}", "upper case");
 
         for (Map.Entry<String, String> entry : testCases.entrySet()) {
-            String result = Variables.leastGreedyReplace(variables, entry.getKey());
+            String result = FilterUtil.leastGreedyReplace(variables, entry.getKey());
             Assert.assertEquals(entry.getValue(), result);
         }
     }
@@ -913,6 +917,206 @@ public class SetVariableTest {
         } catch (Exception e) {
             fail("No exception should be thrown");
         }
+    }
 
+    /*
+     * Verify that any unassigned Matched Variables should replaced by the "".
+     */
+    @Test
+    public void testSetMatchVarOutOfRange() {
+        try {
+            filterScript = "require [\"variables\", \"editheader\"];\n"
+                    + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C-*baa*123*\" { \r\n"
+                    + "  addheader \"X-New-Header1\" \"${0}\";\r\n"
+                    + "  addheader \"X-New-Header1\" \"${1}\";\r\n"
+                    + "  addheader \"X-New-Header1\" \"${2}\";\r\n"
+                    + "  addheader \"X-New-Header1\" \"${3}\";\r\n"
+                    + "  addheader \"X-New-Header1\" \"${4}\";\r\n"
+                    + "  addheader \"X-New-Header1\" \"${5}\";\r\n"
+                    + "  addheader \"X-New-Header1\" \"${6}\";\r\n"
+                    + "  addheader \"X-New-Header1\" \"${7}\";\r\n"
+                    + "  addheader \"X-New-Header1\" \"${8}\";\r\n"
+                    + "  addheader \"X-New-Header1\" \"${9}\";\r\n"
+                    + "}\n"
+                    + "if envelope :matches :comparator \"i;ascii-casemap\" [\"From\"] \"*yo*@*COM\" { \r\n"
+                    + "  addheader \"X-New-Header2\" \"${0}\";\r\n"
+                    + "  addheader \"X-New-Header2\" \"${1}\";\r\n"
+                    + "  addheader \"X-New-Header2\" \"${2}\";\r\n"
+                    + "  addheader \"X-New-Header2\" \"${3}\";\r\n"
+                    + "  addheader \"X-New-Header2\" \"${4}\";\r\n"
+                    + "  addheader \"X-New-Header2\" \"${5}\";\r\n"
+                    + "  addheader \"X-New-Header2\" \"${6}\";\r\n"
+                    + "  addheader \"X-New-Header2\" \"${7}\";\r\n"
+                    + "  addheader \"X-New-Header2\" \"${8}\";\r\n"
+                    + "  addheader \"X-New-Header2\" \"${9}\";\r\n"
+                    + "}\n"
+                    + "if address :matches :comparator \"i;ascii-casemap\" [\"To\"] \"*t@zimbra.com\" { \r\n"
+                    + "  addheader \"X-New-Header3\" \"${0}\";\r\n"
+                    + "  addheader \"X-New-Header3\" \"${1}\";\r\n"
+                    + "  addheader \"X-New-Header3\" \"${2}\";\r\n"
+                    + "  addheader \"X-New-Header3\" \"${3}\";\r\n"
+                    + "  addheader \"X-New-Header3\" \"${4}\";\r\n"
+                    + "  addheader \"X-New-Header3\" \"${5}\";\r\n"
+                    + "  addheader \"X-New-Header3\" \"${6}\";\r\n"
+                    + "  addheader \"X-New-Header3\" \"${7}\";\r\n"
+                    + "  addheader \"X-New-Header3\" \"${8}\";\r\n"
+                    + "  addheader \"X-New-Header\" \"${9}\";\r\n"
+                    + "}\n"
+                    ;
+            String raw = "To: test@zimbra.com\n"
+                    + "From: coyote@ACME.Example.COM\n"
+                    + "Subject: test C-51 abc sample foo bar hoge piyo 123 456 789 sieve test\n"
+                    + "\n"
+                    + "Hello world.";
+            String expectedHeaderValue1[] = {
+                    "test C-51 abc sample foo bar hoge piyo 123 456 789 sieve test",
+                    "test",
+                    "51 abc sample foo",
+                    "hoge piyo",
+                    "456 789 sieve test"
+            };
+            String expectedHeaderValue2[] = {
+                    "coyote@ACME.Example.COM",
+                    "co",
+                    "te",
+                    "ACME.Example."
+            };
+            String expectedHeaderValue3[] = {
+                    "test@zimbra.com",
+                    "tes"
+            };
+
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Map<String, Object> attrs = Maps.newHashMap();
+            attrs = Maps.newHashMap();
+            attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "TRUE");
+            Provisioning.getInstance().getServer(account).modify(attrs);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            LmtpEnvelope env = new LmtpEnvelope();
+            LmtpAddress sender = new LmtpAddress("<coyote@ACME.Example.COM>", new String[] { "BODY", "SIZE" }, null);
+            LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+            env.setSender(sender);
+            env.addLocalRecipient(recipient);
+
+            RuleManager.clearCachedRules(account);
+
+            account.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox, new ParsedMessage(raw.getBytes(), false),
+                    0, account.getName(), env, new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox.getMessageById(null, itemId);
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                check("X-New-Header1", temp, expectedHeaderValue1);
+                check("X-New-Header2", temp, expectedHeaderValue2);
+                check("X-New-Header3", temp, expectedHeaderValue3);
+            }
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    private void check(String headerName, Header temp, String[] expectedHeaderValue) {
+        if (headerName.equalsIgnoreCase(temp.getName())) {
+            boolean match = false;
+            String value = temp.getValue();
+            if (value == null || value.length() == 0) {
+                match = true;
+            } else {
+                for (int i = 0; i < expectedHeaderValue.length; i++) {
+                    if (expectedHeaderValue[i].equalsIgnoreCase(value)) {
+                        match = true;
+                        break;
+                    }
+                }
+            }
+            if (!match) Assert.assertEquals("hoge", value);
+            Assert.assertTrue(match);
+        }
+    }
+
+    /*
+     * Verify that the Matched Variabes keeps strings from the most
+     * recently evaluated successful match of type ":matches".
+     * In this test script, "the most recently evaluated successful" value
+     * for the replaceheader command is the value of "Subject".  And if
+     * the value of the Subject is empty, the ${1} should be replaced by
+     * the empty string.
+     */
+    @Test
+    public void testSetMatchVarEmptyMatch() {
+        try {
+            filterScript = "require [\"variables\", \"editheader\"];\n"
+                    /* Replaceheader */
+                    + "if header :matches \"Date\" \"*\" { \r\n"
+                    + "  set \"dateheader\" \"${1}\";\r\n"
+                    + "}\r\n"
+                    + "if exists \"Subject\" {\r\n"
+                    + "  replaceheader :newvalue \"[Replace Subject]${1}\" :matches \"Subject\" \"*\";\r\n"
+                    + "}\n"
+                    /* Test header */
+                    + "if header :matches \"Date\" \"*\" { \r\n"
+                    + "  set \"dateheader\" \"${1}\";\r\n"
+                    + "}\r\n"
+                    + "if header :matches :comparator \"i;ascii-casemap\" [\"X-Header\"] \"*\" {\r\n"
+                    + "  tag \"tag1${1}\";\n"
+                    + "}\n"
+                    /* Test envelope */
+                    + "if address :matches :comparator \"i;ascii-casemap\" [\"To\"] \"*t@zimbra.com\" { \r\n"
+                    + "  set \"toheader\" \"${1}\";\r\n"
+                    + "}\r\n"
+                    + "if envelope :matches :comparator \"i;ascii-casemap\" [\"From\"] \"*\" {\r\n"
+                    + "  tag \"tag1${1}\";\n"
+                    + "}\n"
+                    /* Test string */
+                    + "if header :matches \"Date\" \"*\" { \r\n"
+                    + "  set \"dateheader\" \"${1}\";\r\n"
+                    + "}\r\n"
+                    + "if string :matches :comparator \"i;ascii-casemap\" [\"X-String\"] \"*\" {\r\n"
+                    + "  tag \"tag2${1}\";\n"
+                    + "}\n"
+                    ;
+            String raw = "From: \n"
+                    + "To: coyote@ACME.Example.COM\n"
+                    + "Date: Thu, 08 Dec 2016 07:10:48 +0900\n"
+                    + "Subject: \n"
+                    + "X-String: \n"
+                    + "X-Header: \n"
+                    + "\n"
+                    + "Hello world.";
+
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Map<String, Object> attrs = Maps.newHashMap();
+            attrs = Maps.newHashMap();
+            attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "TRUE");
+            Provisioning.getInstance().getServer(account).modify(attrs);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            RuleManager.clearCachedRules(account);
+            account.setMailSieveScript(filterScript);
+
+            LmtpEnvelope env = new LmtpEnvelope();
+            LmtpAddress sender = new LmtpAddress("<>", new String[] { "BODY", "SIZE" }, null);
+            LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+            env.setSender(sender);
+            env.addLocalRecipient(recipient);
+
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox, new ParsedMessage(raw.getBytes(), false),
+                    0, account.getName(), env, new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            String value = "";
+            int totalNewHeader = 0;
+            Message msg = mbox.getMessageById(null, itemId);
+            Assert.assertEquals("[Replace Subject]", msg.getSubject());
+            String[] tags = msg.getTags();
+            Assert.assertEquals(2, tags.length);
+            Assert.assertEquals("tag1", tags[0]);
+            Assert.assertEquals("tag2", tags[1]);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
     }
 }

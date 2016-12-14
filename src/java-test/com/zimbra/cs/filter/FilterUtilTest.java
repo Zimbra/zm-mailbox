@@ -180,23 +180,6 @@ public class FilterUtilTest {
     }
     
     @Test
-    public void testGetListOfVariables() {
-    	List<String> varNames = FilterUtil.getListOfVars("${var}");
-    	Assert.assertEquals("${var}", varNames.get(0));
-    	
-    	varNames = FilterUtil.getListOfVars("${test${var}");
-     	Assert.assertEquals("${var}", varNames.get(0));
-     	
-     	varNames = FilterUtil.getListOfVars("${${company}}");
-     	Assert.assertEquals("${company}", varNames.get(0));
-     	
-     	varNames = FilterUtil.getListOfVars("You've got a mail. ${a.b} ${combination} ${c_d}hao!");
-     	Assert.assertEquals("${a.b}", varNames.get(0));
-     	Assert.assertEquals("${combination}", varNames.get(1));
-     	Assert.assertEquals("${c_d}", varNames.get(2));
-    }
-    
-    @Test
     public void testToJavaRegex() {
     	String regex = FilterUtil.sieveToJavaRegex("coyote@**.com");
     	Assert.assertEquals("coyote@(.*)?(.*)?\\.com", regex);

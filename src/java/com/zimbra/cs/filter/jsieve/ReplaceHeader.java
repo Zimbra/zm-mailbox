@@ -64,9 +64,6 @@ public class ReplaceHeader extends AbstractCommand {
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
         // replace sieve variables
         ehe.replaceVariablesInValueList(mailAdapter);
-        if (ehe.getNewValue() != null) {
-            ehe.setNewValue(FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), ehe.getNewValue()));
-        }
         MimeMessage mm = mailAdapter.getMimeMessage();
         Enumeration<Header> headers;
         try {

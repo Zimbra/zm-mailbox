@@ -21,12 +21,14 @@ import static org.junit.Assert.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -296,8 +298,10 @@ public class EnvelopeTest {
         try {
             Account account = Provisioning.getInstance().getAccount(
                     MockProvisioning.DEFAULT_ACCOUNT_ID);
-            Server server = Provisioning.getInstance().getServer(account);
-            server.setSieveFeatureVariablesEnabled(true);
+            Map<String, Object> attrs = Maps.newHashMap();
+            attrs = Maps.newHashMap();
+            attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "TRUE");
+            Provisioning.getInstance().getServer(account).modify(attrs);
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);

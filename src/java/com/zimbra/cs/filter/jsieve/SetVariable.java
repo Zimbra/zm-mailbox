@@ -86,7 +86,7 @@ public class SetVariable extends AbstractCommand {
             } else {
                 String argument = ((StringListArgument) a).getList().get(0);
                 if (index == 0) {
-                    key = argument;
+                    key = FilterUtil.handleQuotedAndEncodedVar(argument);
                 } else {
                     if (argument.contains("${")) {
                         value = FilterUtil.replaceVariables(existingVars, matchedValues, argument);
