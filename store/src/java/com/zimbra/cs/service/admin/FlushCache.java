@@ -214,6 +214,7 @@ public class FlushCache extends AdminDocumentHandler {
 
     private static void flushCacheOnAllServers(ZimbraSoapContext zsc, FlushCacheRequest req) throws ServiceException {
         req.getCache().setAllServers(false);  // make sure we don't go round in loops
+        Element request = zsc.jaxbToElement(req);
 
         Provisioning prov = Provisioning.getInstance();
         String localServerId = prov.getLocalServer().getId();
@@ -223,7 +224,6 @@ public class FlushCache extends AdminDocumentHandler {
                 continue;
             }
 
-            Element request = JaxbUtil.jaxbToElement(req);
             ZimbraLog.misc.debug("Flushing cache on server: %s", server.getName());
             String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
             SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
