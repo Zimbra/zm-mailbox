@@ -70,7 +70,7 @@ public class DeleteSystemRetentionPolicy extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("Could not find policy with id " + id, null);
         }
         DeleteSystemRetentionPolicyResponse res = new DeleteSystemRetentionPolicyResponse();
-        return JaxbUtil.jaxbToElement(res, zsc.getResponseProtocol().getFactory());
+        return zsc.jaxbToElement(res);
     }
 
     @Override
