@@ -58,7 +58,7 @@ public class RenameDistributionList extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        RenameDistributionListRequest req = JaxbUtil.elementToJaxb(request);
+        RenameDistributionListRequest req = zsc.elementToJaxb(request);
         String id = req.getId();
         String newName = req.getNewName();
         Group group = prov.getGroup(DistributionListBy.id, id);
