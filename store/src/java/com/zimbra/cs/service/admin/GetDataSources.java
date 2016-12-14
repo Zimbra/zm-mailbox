@@ -66,7 +66,7 @@ public class GetDataSources extends AdminDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        GetDataSourcesRequest req = JaxbUtil.elementToJaxb(request);
+        GetDataSourcesRequest req = zsc.elementToJaxb(request);
         String id = req.getId();
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         defendAgainstAccountOrCalendarResourceHarvesting(account, AccountBy.id, id, zsc,

@@ -58,7 +58,7 @@ public class GetShareInfo extends ShareInfoHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         OperationContext octxt = getOperationContext(zsc, context);
         Provisioning prov = Provisioning.getInstance();
-        GetShareInfoRequest req = JaxbUtil.elementToJaxb(request);
+        GetShareInfoRequest req = zsc.elementToJaxb(request);
         GranteeChooser granteeChooser = req.getGrantee();
 
         byte granteeType = com.zimbra.cs.service.account.GetShareInfo.getGranteeType(

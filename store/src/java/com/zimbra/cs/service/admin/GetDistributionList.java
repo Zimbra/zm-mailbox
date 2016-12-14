@@ -78,7 +78,7 @@ public class GetDistributionList extends DistributionListDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        GetDistributionListRequest req = JaxbUtil.elementToJaxb(request);
+        GetDistributionListRequest req = zsc.elementToJaxb(request);
 
         int limit = (req.getLimit() == null) ? 0 : req.getLimit();
         if (limit < 0) {
