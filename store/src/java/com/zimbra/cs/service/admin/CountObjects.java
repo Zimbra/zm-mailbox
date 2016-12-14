@@ -49,7 +49,7 @@ public class CountObjects extends AdminDocumentHandler {
     throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        CountObjectsRequest req = JaxbUtil.elementToJaxb(request);
+        CountObjectsRequest req = zsc.elementToJaxb(request);
         CountObjectsType countObjectsType = req.getType();
 
         if (countObjectsType == null) {

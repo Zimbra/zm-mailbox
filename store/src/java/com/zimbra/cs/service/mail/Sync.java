@@ -65,7 +65,7 @@ public class Sync extends MailDocumentHandler {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        SyncRequest syncRequest = JaxbUtil.elementToJaxb(request);
+        SyncRequest syncRequest = zsc.elementToJaxb(request);
         String token = syncRequest.getToken();
 
         Element response = zsc.createElement(MailConstants.SYNC_RESPONSE);
