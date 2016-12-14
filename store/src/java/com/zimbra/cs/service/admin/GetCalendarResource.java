@@ -65,7 +65,7 @@ public class GetCalendarResource extends AdminDocumentHandler {
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        GetCalendarResourceRequest req = JaxbUtil.elementToJaxb(request);
+        GetCalendarResourceRequest req = zsc.elementToJaxb(request);
         boolean applyCos = !Boolean.FALSE.equals(req.getApplyCos());
         CalendarResourceBy calresBy = req.getCalResource().getBy().toKeyCalendarResourceBy();
         String value = req.getCalResource().getKey();

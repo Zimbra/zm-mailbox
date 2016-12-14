@@ -47,7 +47,7 @@ public class LockoutMailbox extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = super.getZimbraSoapContext(context);
-        LockoutMailboxRequest req = JaxbUtil.elementToJaxb(request);
+        LockoutMailboxRequest req = zsc.elementToJaxb(request);
         AccountNameSelector acctSel = req.getAccount();
         if (acctSel == null) {
             throw ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_ACCOUNT), null);

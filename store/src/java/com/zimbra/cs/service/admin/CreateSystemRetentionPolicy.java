@@ -44,7 +44,7 @@ public class CreateSystemRetentionPolicy extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
-        CreateSystemRetentionPolicyRequest req = JaxbUtil.elementToJaxb(request);
+        CreateSystemRetentionPolicyRequest req = zsc.elementToJaxb(request);
         
         Provisioning prov = Provisioning.getInstance();
         

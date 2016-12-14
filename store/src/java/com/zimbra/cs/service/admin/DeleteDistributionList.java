@@ -64,7 +64,7 @@ public class DeleteDistributionList extends DistributionListDocumentHandler {
             throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        DeleteDistributionListRequest req = JaxbUtil.elementToJaxb(request);
+        DeleteDistributionListRequest req = zsc.elementToJaxb(request);
 
         Group group = getGroupFromContext(context);
         String id = req.getId();

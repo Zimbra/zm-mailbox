@@ -64,7 +64,7 @@ public class AddDistributionListAlias extends DistributionListDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        AddDistributionListAliasRequest req = JaxbUtil.elementToJaxb(request);
+        AddDistributionListAliasRequest req = zsc.elementToJaxb(request);
 
         String alias = req.getAlias();
 
