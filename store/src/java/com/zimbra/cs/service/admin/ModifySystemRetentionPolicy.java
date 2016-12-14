@@ -76,7 +76,7 @@ public class ModifySystemRetentionPolicy extends AdminDocumentHandler {
         String lifetime = SystemUtil.coalesce(p.getLifetime(), current.getLifetime());
         Policy latest = mgr.modifySystemPolicy(entry, id, name, lifetime);
         ModifySystemRetentionPolicyResponse res = new ModifySystemRetentionPolicyResponse(latest);
-        return JaxbUtil.jaxbToElement(res, zsc.getResponseProtocol().getFactory());
+        return zsc.jaxbToElement(res);
     }
 
     @Override
