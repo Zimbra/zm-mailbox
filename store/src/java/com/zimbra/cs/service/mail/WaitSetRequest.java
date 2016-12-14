@@ -328,6 +328,8 @@ public class WaitSetRequest extends MailDocumentHandler {
                 SyncToken token = tokenStr != null ? new SyncToken(tokenStr) : null;
                 Set<MailItem.Type> interests = parseInterestStr(accountDetail.getInterests(), defaultInterest);
                 Set<Integer> folderInterests = accountDetail.getFolderInterestsAsSet();
+                ZimbraLog.session.debug("Creating WaitSetAccount with id=%s tok=%s interests=%s folderInterests=%s",
+                        id, token, interests, folderInterests);
                 toRet.add(new WaitSetAccount(id, token, interests, folderInterests));
             }
         }
