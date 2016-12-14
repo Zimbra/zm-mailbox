@@ -203,8 +203,12 @@ public class TestUtil extends Assert {
     }
 
     public static String getSoapUrl() {
+        return getSoapUrl(null);
+    }
+
+    public static String getSoapUrl(Server server) {
         try {
-            return getBaseUrl() + AccountConstants.USER_SERVICE_URI;
+            return getBaseUrl(server) + AccountConstants.USER_SERVICE_URI;
         } catch (ServiceException e) {
             ZimbraLog.test.error("Unable to determine SOAP URL", e);
         }
@@ -212,17 +216,25 @@ public class TestUtil extends Assert {
     }
 
     public static String getBaseUrl() throws ServiceException {
+        return getBaseUrl(null);
+    }
+
+    public static String getBaseUrl(Server server) throws ServiceException {
         String scheme;
-        String hostname = Provisioning.getInstance().getLocalServer().getServiceHostname();
-        int port;
-        port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailPort, 0);
-        if (port > 0) {
-            scheme = "http";
-        } else {
-            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-            scheme = "https";
+        Provisioning prov = Provisioning.getInstance();
+        if(server == null) {
+            server = prov.getLocalServer();
         }
-        return scheme + "://localhost:" + port;
+        String hostname = server.getServiceHostname();
+        int port;
+        port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+        if (port > 0) {
+            scheme = "https";
+        } else {
+            port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);    
+            scheme = "http";
+        }
+        return scheme + "://" + hostname + ":" + port;
     }
 
     public static String getAdminSoapUrl() {
@@ -702,7 +714,7 @@ public class TestUtil extends Assert {
         options.setAccount(getAddress(username));
         options.setAccountBy(Key.AccountBy.name);
         options.setPassword(DEFAULT_PASSWORD);
-        options.setUri(TestUtil.getSoapUrl());
+        options.setUri(TestUtil.getSoapUrl(TestUtil.getAccount(username).getServer()));
         if (twoFactorCode != null) {
             options.setTwoFactorCode(twoFactorCode);
         }
@@ -728,7 +740,9 @@ public class TestUtil extends Assert {
      * Creates an account for the given username, with password set to {@link #DEFAULT_PASSWORD}.
      */
     public static Account createAccount(String username) throws ServiceException {
-        return createAccount(username, null);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraMailHost, Provisioning.getInstance().getLocalServer().getServiceHostname());
+        return createAccount(username, attrs);
     }
 
     /**
