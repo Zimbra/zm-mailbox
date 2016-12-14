@@ -49,7 +49,7 @@ public class AutoProvAccount extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        AutoProvAccountRequest req = JaxbUtil.elementToJaxb(request);
+        AutoProvAccountRequest req = zsc.elementToJaxb(request);
         DomainBy domainBy = req.getDomain().getBy().toKeyDomainBy();
         String domainKey = req.getDomain().getKey();
         Domain domain = prov.get(domainBy, domainKey);
