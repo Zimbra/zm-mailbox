@@ -31,10 +31,10 @@ public class GetSystemRetentionPolicy extends MailDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        
+
         GetSystemRetentionPolicyResponse res = new GetSystemRetentionPolicyResponse(
             RetentionPolicyManager.getInstance().getSystemRetentionPolicy(getRequestedAccount(zsc)));
-        return JaxbUtil.jaxbToElement(res, zsc.getResponseProtocol().getFactory());
+        return zsc.jaxbToElement(res);
     }
 
 }
