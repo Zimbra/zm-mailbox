@@ -71,7 +71,7 @@ public class SetPassword extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        SetPasswordRequest req = JaxbUtil.elementToJaxb(request);
+        SetPasswordRequest req = zsc.elementToJaxb(request);
         String id = req.getId();
         String newPassword = req.getNewPassword();
 

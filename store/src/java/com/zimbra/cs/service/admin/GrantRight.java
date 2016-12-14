@@ -46,7 +46,7 @@ public class GrantRight extends RightDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        GrantRightRequest grReq = JaxbUtil.elementToJaxb(request);
+        GrantRightRequest grReq = zsc.elementToJaxb(request);
         RightModifierInfo modifierInfo = grReq.getRight();
         if (modifierInfo == null) {
             throw ServiceException.INVALID_REQUEST("No information specified on what right to assign", null);
