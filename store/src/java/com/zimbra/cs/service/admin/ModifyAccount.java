@@ -81,7 +81,7 @@ public class ModifyAccount extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        ModifyAccountRequest req = JaxbUtil.elementToJaxb(request);
+        ModifyAccountRequest req = zsc.elementToJaxb(request);
         AuthToken authToken = zsc.getAuthToken();
         String id = req.getId();
         if (null == id) {

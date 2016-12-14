@@ -67,7 +67,7 @@ public class AddAccountAlias extends AdminDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        AddAccountAliasRequest req = JaxbUtil.elementToJaxb(request);
+        AddAccountAliasRequest req = zsc.elementToJaxb(request);
 
         String id = req.getId();
         String alias = req.getAlias();
