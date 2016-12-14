@@ -50,7 +50,7 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
         checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
         // Parse request.
-        ExportAndDeleteItemsRequest req = JaxbUtil.elementToJaxb(requst);
+        ExportAndDeleteItemsRequest req = zsc.elementToJaxb(requst);
         ExportAndDeleteMailboxSpec mailbox = req.getMailbox();
         if (mailbox == null) {
             throw ServiceException.INVALID_REQUEST("empty mbox id", null);

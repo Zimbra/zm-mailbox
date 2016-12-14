@@ -36,7 +36,7 @@ public final class DeleteVolume extends AdminDocumentHandler {
     @Override
     public Element handle(Element req, Map<String, Object> ctx) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
-        return zsc.jaxbToElement(handle((DeleteVolumeRequest) JaxbUtil.elementToJaxb(req), ctx));
+        return zsc.jaxbToElement(handle((DeleteVolumeRequest) zsc.elementToJaxb(req), ctx));
     }
 
     private DeleteVolumeResponse handle(DeleteVolumeRequest req, Map<String, Object> ctx) throws ServiceException {
