@@ -27,6 +27,8 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.zimbra.common.soap.MailConstants;
 
@@ -34,6 +36,7 @@ import com.zimbra.common.soap.MailConstants;
 public class WaitSetAddSpec {
 
     private static Joiner COMMA_JOINER = Joiner.on(",");
+    private static Splitter COMMA_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
 
     /**
      * @zm-api-field-tag account-name
@@ -100,6 +103,13 @@ public class WaitSetAddSpec {
             return null;
         }
         return COMMA_JOINER.join(folderInterests);
+    }
+
+    public void setFolderInterests(String fInterests) {
+        this.folderInterests.clear();
+        for (String fi : COMMA_SPLITTER.split(Strings.nullToEmpty(fInterests))) {
+            folderInterests.add(Integer.parseInt(fi));
+        }
     }
 
     @XmlTransient
