@@ -371,6 +371,7 @@ public class HeaderTest extends Header {
                     String regex = FilterUtil.sieveToJavaRegex(keyStr);
                     Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(sourceStr);
                     if (matcher.find() && matcher.groupCount() > 0) {
+                        mailAdapter.clearMatchedValues();
                         int grpCount = matcher.groupCount();
                         for (int i = 0; i<=grpCount; ++i) {
                             String matchGrp =  matcher.group(i);

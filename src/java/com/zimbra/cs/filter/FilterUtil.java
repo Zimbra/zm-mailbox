@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
@@ -65,6 +66,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.Variables;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
@@ -808,78 +810,99 @@ public final class FilterUtil {
         return tags.toArray(new String[tags.size()]);
     }
 
-    public static String replaceVariables(Map<String, String> variables, List<String> matchedValues, String varName) {
-        if (varName.indexOf("${") == -1) {
-            return varName;
-        }
-        ZimbraLog.filter.debug("Variable: %s " , varName);
-        ZimbraLog.filter.debug("Variable available: %s : %s", variables ,  matchedValues);
-        String varValue = varName;
-        List<String> varNames = getListOfVars(varName);
-		for (String var : varNames) {
-			String name = var.substring(2, var.indexOf("}"));
-			name = handleQuotedAndEncodedVar(name);
-			ZimbraLog.filter.debug("Sieve: variable expression is %s and variable name is: %s", var, name);
-			if (name.length() == 0) {
-				varValue = varName;
-			} else if (name.length() == 1 && Character.isDigit(name.charAt(0))) {
-				for (int i = 0; i < matchedValues.size(); ++i) {
-					String pattern = "${" + i + "}";
-					if (varName.contains(pattern)) {
-						varValue = varValue.replace(pattern, matchedValues.get(i));
-					}
-				}
-			} else {
-				if (isValidSieveVariableName(name)) {
-					if (variables.containsKey(name)) {
-						varValue = varValue.replace(var, variables.get(name));
-					} else {
-						varValue = varValue.replace(var, "");
-					}
-				}
-			}
-		}
-        varValue = handleQuotedAndEncodedVar(varValue);
-        ZimbraLog.filter.debug("Sieve: variable value is: %s", varValue);
-        return varValue;
-    }
-    
-    
     /**
-     * @param varName
-     * @return
+     * Look-up the variable table to get the set value.
+     * If the 'sourceStr' contains a variable-ref (formatted with ${variable-name}), this method looks up the
+     * variable table with its variable-name and replaces the variable with the text value assigned by
+     * the 'set' command.
+     * According to the RFC 5229 Section 4., "Variable names are case insensitive."
+     *
+     * @param variables a list of variable name/value
+     * @param matchedVariables a list of Matched Variables
+     * @param sourceStr text string that may contain "variable-ref" (RFC 5229 Section 3.)
+     * @return Replaced text string
      */
-    public static List<String> getListOfVars(String varName) {
-        Stack<Character> stack = new Stack<Character>();
-        List<String> varNames =  new ArrayList<String>();
-        StringBuilder sb = new StringBuilder();
+    public static String replaceVariables(Map<String, String> variables, List<String> matchedVariables, String sourceStr) {
+        if (sourceStr.indexOf("${") == -1) {
+            return sourceStr;
+        }
+        ZimbraLog.filter.debug("Variable: %s " , sourceStr);
+        ZimbraLog.filter.debug("Variable available: %s : %s", variables ,  matchedVariables);
+        String resultStr = sourceStr;
 
-        char [] chars = varName.toCharArray();
-        char previous = 0;
-        boolean save = false;
-        for (int i = 0; i < chars.length; i++) {
-            char current = chars[i];
-            if (current == '{' && previous == '$') {
-                sb = new StringBuilder();
-                stack.push(current);
-                save = true;
-                continue;
-            } else if (current == '}') {
-                char last = stack.peek();
-                if (current == '}' && last == '{') {
-                    stack.pop();
-                    String var = sb.toString();
-                    sb = new StringBuilder();
-                    save = false;
-                    varNames.add("${" + var + "}");
+        // (1) Resolve the Matched Variables (numeric variables; "${N}" (N=0,1,...9)
+        int i = 0;
+        for (; i < matchedVariables.size() && i < 10; i++) {
+            String keyName = "(?i)" + "\\$\\{" + String.valueOf(i) + "\\}";
+            resultStr = resultStr.replaceAll(keyName, Matcher.quoteReplacement(matchedVariables.get(i)));
+        }
+        // (2) Replace the empty string to Matched Variables whose index is out of range
+        for (; i < 10; i++) {
+            String keyName = "(?i)" + "\\$\\{" + String.valueOf(i) + "\\}";
+            resultStr = resultStr.replaceAll(keyName, Matcher.quoteReplacement(""));
+        }
+
+        // (3) Resolve the named variables ("${xxx}")
+        resultStr = leastGreedyReplace(variables, resultStr);
+        ZimbraLog.filter.debug("Sieve: variable value is: %s", resultStr);
+        return resultStr;
+    }
+
+    /**
+     * Replaces all ${variable name} variables within the 'sourceStr' into the defined text value.
+     *
+     * The variable name matches as short as possible (non-greedy matching).  Unknown variables are replaced
+     * by the empty string (RFC 5229 Section 3.)
+     *
+     * @param variables map table of the variable name and value
+     * @param sourceStr text string that may contain one or more than one "variable-ref"
+     * @return Replaced text string
+     */
+    public static String leastGreedyReplace(Map<String, String> variables, String sourceStr) {
+        if (variables == null || sourceStr == null || sourceStr.length() == 0) {
+            return sourceStr;
+        }
+        sourceStr = FilterUtil.handleQuotedAndEncodedVar(sourceStr);
+        StringBuilder resultStr = new StringBuilder();
+        int start1 = 0;
+        int end = -1;
+        while (start1 < sourceStr.length()) {
+            int start2 = sourceStr.indexOf("${", start1);
+            if (start2 >= 0) {
+                resultStr.append(sourceStr.substring(start1, start2));
+                end = sourceStr.indexOf("}", start2 + 2);
+                if (end > 0) {
+                    int start3 = sourceStr.indexOf("${", start2 + 2);
+                    if (start3 > start2 && start3 < end) {
+                        start1 = start3;
+                        resultStr.append(sourceStr.substring(start2, start3));
+                    } else {
+                        // a variable name found
+                        String key = sourceStr.substring(start2 + 2, end).toLowerCase();
+                        if (key.matches("[\\p{Alpha}]+[._\\w]*")) {
+                            // the variable name is valid
+                            String value = variables.get(key);
+                            if (value != null) {
+                                resultStr.append(value);
+                            }
+                        } else {
+                            // the variable name contains some invalid characters
+                            resultStr.append(sourceStr.substring(start2, end + 1));
+                        }
+                        start1 = end + 1;
+                    }
+                } else {
+                    // no corresponding }
+                    resultStr.append(sourceStr.substring(start2, sourceStr.length()));
+                    break;
                 }
-            }
-            previous = chars[i];
-            if (save) {
-                sb.append(current);
+            } else {
+                // no more ${
+                resultStr.append(sourceStr.substring(end + 1, sourceStr.length()));
+                break;
             }
         }
-        return varNames;
+        return resultStr.toString();
     }
 
     /**
@@ -908,15 +931,6 @@ public final class FilterUtil {
 		
 		return processedStr;
 	}
-
-	public static boolean  isValidSieveVariableName(String varName) {
-    	
-    	Pattern pattern = Pattern.compile("[\\p{Alpha}$_.]*|[\\d]*",  Pattern.CASE_INSENSITIVE);
-        if (pattern.matcher(varName).matches()) {
-           return true;
-        }
-        return false;
-    }
 
     /**
      * Converts a Sieve pattern in a java regex pattern
