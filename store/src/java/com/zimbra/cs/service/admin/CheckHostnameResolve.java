@@ -43,16 +43,14 @@ public class CheckHostnameResolve extends AdminDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        CheckHostnameResolveRequest req = JaxbUtil.elementToJaxb(request);
+        CheckHostnameResolveRequest req = zsc.elementToJaxb(request);
         String host = req.getHostname().toLowerCase();
 
         Provisioning.Result r = Check.checkHostnameResolve(host);
 
-        return zsc.jaxbToElement(
-            CheckHostnameResolveResponse.fromCodeMessage(
-                    r.getCode(), r.getMessage()));
+        return zsc.jaxbToElement(CheckHostnameResolveResponse.fromCodeMessage(r.getCode(), r.getMessage()));
     }
-    
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         notes.add(AdminRightCheckPoint.Notes.ALLOW_ALL_ADMINS);

@@ -68,7 +68,7 @@ public class GetMailbox extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        GetMailboxRequest req = JaxbUtil.elementToJaxb(request);
+        GetMailboxRequest req = zsc.elementToJaxb(request);
         String accountId = req.getMbox().getId();
 
         Account account = Provisioning.getInstance().get(AccountBy.id, accountId, zsc.getAuthToken());

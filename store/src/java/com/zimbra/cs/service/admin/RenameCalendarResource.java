@@ -63,7 +63,7 @@ public class RenameCalendarResource extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        RenameCalendarResourceRequest req = JaxbUtil.elementToJaxb(request);
+        RenameCalendarResourceRequest req = zsc.elementToJaxb(request);
 
         String id = req.getId();
         String newName = req.getNewName();
