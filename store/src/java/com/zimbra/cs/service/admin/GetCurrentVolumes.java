@@ -37,7 +37,7 @@ public final class GetCurrentVolumes extends AdminDocumentHandler {
     @Override
     public Element handle(Element req, Map<String, Object> ctx) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
-        return zsc.jaxbToElement(handle((GetCurrentVolumesRequest) JaxbUtil.elementToJaxb(req), ctx));
+        return zsc.jaxbToElement(handle((GetCurrentVolumesRequest) zsc.elementToJaxb(req), ctx));
     }
 
     private GetCurrentVolumesResponse handle(@SuppressWarnings("unused") GetCurrentVolumesRequest req,

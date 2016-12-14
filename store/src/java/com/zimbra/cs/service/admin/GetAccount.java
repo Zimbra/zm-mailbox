@@ -68,7 +68,7 @@ public class GetAccount extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        GetAccountRequest req = JaxbUtil.elementToJaxb(request);
+        GetAccountRequest req = zsc.elementToJaxb(request);
 
         AccountSelector acctSel = req.getAccount();
         if (acctSel == null) {

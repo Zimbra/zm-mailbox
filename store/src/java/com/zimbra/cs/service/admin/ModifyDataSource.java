@@ -64,7 +64,7 @@ public class ModifyDataSource extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        ModifyDataSourceRequest req = JaxbUtil.elementToJaxb(request);
+        ModifyDataSourceRequest req = zsc.elementToJaxb(request);
         String id = req.getId();
         if (null == id) {
             throw ServiceException.INVALID_REQUEST("missing required attribute: " + AdminConstants.E_ID, null);

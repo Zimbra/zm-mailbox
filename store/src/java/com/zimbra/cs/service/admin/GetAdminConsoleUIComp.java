@@ -58,7 +58,7 @@ public class GetAdminConsoleUIComp extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        GetAdminConsoleUICompRequest req = JaxbUtil.elementToJaxb(request);
+        GetAdminConsoleUICompRequest req = zsc.elementToJaxb(request);
         AccountSelector accountSel = req.getAccount();
         DistributionListSelector dlSel = req.getDl();
 

@@ -25,7 +25,7 @@ public class SaveIMAPSubscriptions extends AccountDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
         }
 
-        SaveIMAPSubscriptionsRequest req = JaxbUtil.elementToJaxb(request);
+        SaveIMAPSubscriptionsRequest req = zsc.elementToJaxb(request);
         if(req != null) {
             MetadataList slist = new MetadataList();
             Set<String> subs = req.getSubscriptions();
