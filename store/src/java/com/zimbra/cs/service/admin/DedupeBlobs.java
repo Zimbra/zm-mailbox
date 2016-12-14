@@ -120,7 +120,7 @@ public final class DedupeBlobs extends AdminDocumentHandler {
         Pair<Integer, Long> pair = deduper.getCountAndSize();
         resp.setTotalCount(pair.getFirst());
         resp.setTotalSize(pair.getSecond());
-        return JaxbUtil.jaxbToElement(resp);
+        return zsc.jaxbToElement(resp);
     }
 
     @Override
