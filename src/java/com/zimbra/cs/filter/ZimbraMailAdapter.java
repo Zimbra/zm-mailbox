@@ -48,6 +48,7 @@ import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
 import org.apache.jsieve.mail.optional.EnvelopeAccessors;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.zimbra.common.mime.InternetAddress;
@@ -484,6 +485,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private Message explicitKeep()
     throws ServiceException {
         String folderPath = handler.getDefaultFolderPath();
+        folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
         if (ZimbraLog.filter.isDebugEnabled()) {
             ZimbraLog.filter.debug(
                     appendFlagTagActionsInfo(
@@ -509,6 +511,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
      */
     private void fileInto(String folderPath)
     throws ServiceException {
+        folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
         if (ZimbraLog.filter.isDebugEnabled()) {
             ZimbraLog.filter.debug(
                     appendFlagTagActionsInfo("fileinto " + folderPath, getFlagActions(), getTagActions()));
