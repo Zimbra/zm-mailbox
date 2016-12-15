@@ -79,6 +79,7 @@ public class MimeConstants {
     public static final String CT_APPLEFILE = "application/applefile";
     public static final String CT_APPLICATION_ZIP = "application/zip";
     public static final String CT_SMIME_TYPE_ENVELOPED_DATA = "enveloped-data";
+    public static final String CT_SMIME_TYPE_SIGNED_DATA = "signed-data";
 
     // encodings
     public static final String ET_7BIT = "7bit";
@@ -100,6 +101,11 @@ public class MimeConstants {
     public static final String P_CHARSET_WINDOWS_31J = "Windows-31J";
     public static final String P_CHARSET_SHIFT_JIS = "shift_jis";
     public static final String P_CHARSET_DEFAULT = P_CHARSET_ASCII;
+
+    //smime
+    public static final String ERR_LOAD_CERTIFICATE_FAILED = "LOAD_CERTIFICATE_FAILED";
+    public static final String ERR_LOAD_PRIVATE_KEY_FAILED = "LOAD_PRIVATE_KEY_FAILED";
+    public static final String ERR_DECRYPTION_FAILED = "DECRYPTION_FAILED";
 
     public static final ImmutableSet<String> ZIMBRA_DOC_CT_SET = ImmutableSet.of(
             CT_APPLICATION_ZIMBRA_DOC, CT_APPLICATION_ZIMBRA_SLIDES, CT_APPLICATION_ZIMBRA_SPREADSHEET
