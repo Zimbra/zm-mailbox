@@ -214,24 +214,24 @@ public class MessageCache {
                             }
                         }
                     }
-                    MimeMessage mm = cnode.message;
+                    MimeMessage mimeToExpand = cnode.message;
                     if (decryptedMimeMessage != null) {
-                        mm = decryptedMimeMessage;
+                        mimeToExpand = decryptedMimeMessage;
                     }
                     MimeMessage decodedMimeMessage = null;
-                    if ((mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME)
-                        && mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))
-                        || (mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME_OLD)
-                            && mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))) {
+                    if ((mimeToExpand.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME)
+                        && mimeToExpand.getContentType().contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))
+                        || (mimeToExpand.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME_OLD)
+                            && mimeToExpand.getContentType().contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))) {
                         if (SmimeHandler.getHandler() != null) {
                             ZimbraLog.mailbox.debug(
                                 "The message is PKCS7 signed. Forwarding it to SmimeHandler for decoding.");
                             decodedMimeMessage = SmimeHandler.getHandler()
-                                .decodePKCS7Message(item.getAccount(), mm);
+                                .decodePKCS7Message(item.getAccount(), mimeToExpand);
                         }
                     }
                     ExpandMimeMessage expander = new ExpandMimeMessage(
-                        decodedMimeMessage != null ? decodedMimeMessage : mm);
+                        decodedMimeMessage != null ? decodedMimeMessage : mimeToExpand);
                     expander.expand();
                     cnode.expanded = expander.getExpanded();
                     if (cnode.expanded != cnode.message) {
