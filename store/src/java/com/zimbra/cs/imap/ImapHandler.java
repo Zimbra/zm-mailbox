@@ -1486,8 +1486,11 @@ public abstract class ImapHandler {
         try {
             // use proxy only when we are selecting a shared folder
             ImapMailboxStore imapStore = path.getOwnerImapMailboxStore();
-            boolean isSharedFolder = !path.belongsTo(credentials.getAccountId());
-            if (isSharedFolder && imapStore instanceof RemoteImapMailboxStore) {
+            if (path.useReferent() && imapStore instanceof RemoteImapMailboxStore) {
+                // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox
+                //         before attempting the new selection.  Consequently, if a mailbox is selected
+                //         and a SELECT command that fails is attempted, no mailbox is selected."
+                unsetSelectedFolder(true);
                 ImapProxy proxy = new ImapProxy(this, path);
                 if (proxy.select(tag, params, qri)) {
                     imapProxy = proxy;
