@@ -127,7 +127,9 @@ public class WaitSetAddSpec {
 
     public WaitSetAddSpec setFolderInterests(Collection<Integer> folderIds) {
         this.folderInterests.clear();
-        this.folderInterests.addAll(folderIds);
+        if (folderIds != null) {
+            this.folderInterests.addAll(folderIds);
+        }
         return this;
     }
 
