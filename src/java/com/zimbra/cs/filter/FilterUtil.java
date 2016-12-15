@@ -75,6 +75,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -221,6 +222,9 @@ public final class FilterUtil {
                 if (msg == null) {
                     return null;
                 } else {
+                    for (String tagName : tags) {
+                        Tag tag = mbox.createTag(octxt, tagName, (byte) 0);
+                    }
                     return new ItemId(msg);
                 }
             } catch (IOException e) {
