@@ -18,6 +18,7 @@ package com.zimbra.cs.session;
 
 import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -45,6 +46,7 @@ public class WaitSetSession extends Session {
         this.interest = interest;
         this.folderInterest = folderInterests;
         mSyncToken = lastKnownSyncToken;
+        ZimbraLog.session.trace("Created %s", this);
     }
 
     @Override
@@ -80,6 +82,7 @@ public class WaitSetSession extends Session {
             else
                 mWs.signalDataReady(this);
         }
+        ZimbraLog.session.trace("Updated %s", this);
     }
 
     @Override
@@ -94,10 +97,8 @@ public class WaitSetSession extends Session {
     public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
         boolean trace = ZimbraLog.session.isTraceEnabled();
         if (trace) {
-            ZimbraLog.session.trace("Notifying WaitSetSession: change id=%s, highest change id=%s, sync token=%s" +
-                    " folderInterests=%s changedFolders=%s interests='%s' changesTypes='%s'",
-                    changeId, mHighestChangeId, mSyncToken,
-                    folderInterest, pns.getChangedFolders(), interest, pns.changedTypes);
+            ZimbraLog.session.trace("Notifying WaitSetSession %s: change id=%s, changedFolders=%s changesTypes='%s'",
+                    this, changeId, pns.getChangedFolders(), pns.changedTypes);
         }
         if (changeId > mHighestChangeId) {
             mHighestChangeId = changeId;
@@ -134,4 +135,17 @@ public class WaitSetSession extends Session {
             ZimbraLog.session.trace("WaitSetSession.notifyPendingChanges done");
         }
     }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("syncToken", mSyncToken)
+                .add("highestChangeId", mHighestChangeId)
+                .add("interests", interest)
+                .add("folderInterests", folderInterest)
+                .add("mWs", mWs)
+                .add("hashCode()", hashCode())
+                .toString();
+    }
+
 }
