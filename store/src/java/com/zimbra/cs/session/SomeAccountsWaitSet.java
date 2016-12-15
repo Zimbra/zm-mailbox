@@ -162,15 +162,16 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         for (WaitSetAccount update : updates) {
             WaitSetAccount existing = mSessions.get(update.getAccountId());
             if (existing != null) {
+                ZimbraLog.session.trace("SomeAccountsWaitSet updating %s with details from %s", existing, update);
                 existing.setInterests(update.getInterests());
                 existing.setLastKnownSyncToken(update.getLastKnownSyncToken());
                 WaitSetSession session = existing.getSession();
                 if (session != null) {
-                    session.update(existing.getInterests(), existing.getFolderInterests(),
-                            existing.getLastKnownSyncToken());
+                    session.update(update.getInterests(), update.getFolderInterests(), update.getLastKnownSyncToken());
                     // update it!
                 }
             } else {
+                ZimbraLog.session.trace("SomeAccountsWaitSet no pre-existing session when updating %s", update);
                 errors.add(new WaitSetError(update.getAccountId(), WaitSetError.Type.NOT_IN_SET_DURING_UPDATE));
             }
         }
