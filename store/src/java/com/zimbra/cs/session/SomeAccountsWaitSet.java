@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.MailItem;
@@ -33,6 +31,9 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxManager.FetchMode;
 import com.zimbra.cs.service.mail.WaitSetRequest;
+import com.zimbra.soap.admin.type.SessionForWaitSet;
+import com.zimbra.soap.admin.type.WaitSetInfo;
+import com.zimbra.soap.admin.type.WaitSetSessionInfo;
 
 /**
  * SomeAccountsWaitSet: an implementation of IWaitSet that works by listening over one or more Accounts
@@ -289,56 +290,55 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
     }
 
     @Override
-    public synchronized void handleQuery(Element response) {
-        super.handleQuery(response);
-
-        response.addAttribute("cbSeqNo", mCbSeqNo);
-        response.addAttribute("currentSeqNo", mCurrentSeqNo);
+    public synchronized WaitSetInfo handleQuery() {
+        WaitSetInfo info = super.handleQuery();
+        info.setCbSeqNo(Long.toString(mCbSeqNo));
+        info.setCurrentSeqNo(Long.toString(mCurrentSeqNo));
 
         for (Map.Entry<String, WaitSetAccount> entry : mSessions.entrySet()) {
-            Element sessionElt = response.addElement("session");
+            String acct = entry.getKey();
             WaitSetAccount wsa = entry.getValue();
+            assert(wsa.getAccountId().equals(acct));
+            SessionForWaitSet sess = new SessionForWaitSet(acct, WaitSetRequest.expandInterestStr(wsa.getInterests()));
 
-            assert(wsa.getAccountId().equals(entry.getKey()));
             if (!wsa.getAccountId().equals(entry.getKey())) {
-                sessionElt.addAttribute("acctIdError", wsa.getAccountId());
+                sess.setAcctIdError(wsa.getAccountId());
             }
 
-            sessionElt.addAttribute(MailConstants.A_ACCOUNT, entry.getKey());
-            sessionElt.addAttribute(MailConstants.A_TYPES,
-                                    WaitSetRequest.expandInterestStr(wsa.getInterests()));
             if (wsa.getLastKnownSyncToken() != null) {
-                sessionElt.addAttribute(MailConstants.A_TOKEN, wsa.getLastKnownSyncToken().toString());
+                sess.setToken(wsa.getLastKnownSyncToken().toString());
             }
 
             if (wsa.getLastKnownSyncToken() != null) {
                 try {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(wsa.getAccountId(), FetchMode.ONLY_IF_CACHED);
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(
+                            wsa.getAccountId(), FetchMode.ONLY_IF_CACHED);
                     if (mbox != null) {
                         int mboxLastChange = mbox.getLastChangeID();
-                        sessionElt.addAttribute("mboxSyncToken", mboxLastChange);
-                        sessionElt.addAttribute("mboxSyncTokenDiff", mboxLastChange-wsa.getLastKnownSyncToken().getChangeId());
+                        sess.setMboxSyncToken(mboxLastChange);
+                        sess.setMboxSyncTokenDiff(mboxLastChange-wsa.getLastKnownSyncToken().getChangeId());
                     }
                 } catch (Exception e) {
-                    ZimbraLog.session.warn("Caught exception from MailboxManager in SomeAccountsWaitSet.handleQuery() for accountId"+
+                    ZimbraLog.session.warn(
+                        "Caught exception from MailboxManager in SomeAccountsWaitSet.handleQuery() for accountId %s",
                                            wsa.getAccountId(), e);
                 }
             }
 
             WaitSetSession wss = wsa.getSession();
             if (wss != null) {
-                Element wssElt = sessionElt.addElement("WaitSetSession");
-                wssElt.addAttribute("interestMask", WaitSetRequest.interestToStr(wss.interest));
-                wssElt.addAttribute("highestChangeId", wss.mHighestChangeId);
-                wssElt.addAttribute("lastAccessTime", wss.getLastAccessTime());
-                wssElt.addAttribute("creationTime", wss.getCreationTime());
-                wssElt.addAttribute("sessionId", wss.getSessionId());
+                WaitSetSessionInfo waitSetSession = new WaitSetSessionInfo(WaitSetRequest.interestToStr(wss.interest),
+                        wss.mHighestChangeId, wss.getLastAccessTime(), wss.getCreationTime(), wss.getSessionId());
 
+                waitSetSession.setFolderInterests(wss.folderInterest);
                 if (wss.mSyncToken != null) {
-                    wssElt.addAttribute(MailConstants.A_TOKEN, wss.mSyncToken.toString());
+                    waitSetSession.setToken(wss.mSyncToken.toString());
                 }
+                sess.setWaitSetSession(waitSetSession);
             }
+            info.addSession(sess);
         }
+        return info;
     }
 
     private long mCbSeqNo = 0; // seqno passed in by the current waiting callback
