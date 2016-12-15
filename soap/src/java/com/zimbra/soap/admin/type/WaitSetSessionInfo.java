@@ -17,15 +17,25 @@
 
 package com.zimbra.soap.admin.type;
 
+import java.util.Collection;
+import java.util.Set;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
 
-import com.zimbra.common.soap.AdminConstants;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class WaitSetSessionInfo {
+
+    private static Joiner COMMA_JOINER = Joiner.on(",");
+    private static Splitter COMMA_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
 
     /**
      * @zm-api-field-tag bitmask
@@ -69,6 +79,8 @@ public class WaitSetSessionInfo {
     @XmlAttribute(name=MailConstants.A_TOKEN, required=false)
     private String token;
 
+    private final Set<Integer> folderInterests = Sets.newHashSet();
+
     /**
      * no-argument constructor wanted by JAXB
      */
@@ -93,4 +105,42 @@ public class WaitSetSessionInfo {
     public long getCreationTime() { return creationTime; }
     public String getSessionId() { return sessionId; }
     public String getToken() { return token; }
+
+    /**
+     * @zm-api-field-tag waitset-folder-interests
+     * @zm-api-field-description Comma separated list of IDs for folders.
+     */
+    @XmlAttribute(name=MailConstants.A_FOLDER_INTERESTS /* folderInterests */, required=false)
+    public String getFolderInterests() {
+        if (folderInterests.isEmpty()) {
+            return null;
+        }
+        return COMMA_JOINER.join(folderInterests);
+    }
+
+    public void setFolderInterests(String fInterests) {
+        this.folderInterests.clear();
+        for (String fi : COMMA_SPLITTER.split(Strings.nullToEmpty(fInterests))) {
+            folderInterests.add(Integer.parseInt(fi));
+        }
+    }
+
+    @XmlTransient
+    public Set<Integer> getFolderInterestsAsSet() { return folderInterests; }
+
+    public void setFolderInterests(Integer... folderIds) {
+        this.folderInterests.clear();
+        if (folderIds != null) {
+            for (Integer folderId : folderIds) {
+                this.folderInterests.add(folderId);
+            }
+        }
+    }
+
+    public void setFolderInterests(Collection<Integer> folderIds) {
+        this.folderInterests.clear();
+        if (folderIds != null) {
+            this.folderInterests.addAll(folderIds);
+        }
+    }
 }
