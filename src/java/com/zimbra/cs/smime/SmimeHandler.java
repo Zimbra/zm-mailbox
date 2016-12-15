@@ -15,6 +15,8 @@
 package com.zimbra.cs.smime;
 
 import javax.mail.internet.MimeMessage;
+
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
@@ -35,10 +37,10 @@ public abstract class SmimeHandler {
     public abstract boolean verifyMessageSignature(Account account, Element m, MimeMessage mm,
         SoapProtocol mResponseProtocol);
 
-    public abstract String decryptMessage(Mailbox mailbox, MimeMessage mime, int itemId);
+    public abstract MimeMessage decryptMessage(Mailbox mailbox, MimeMessage mime, int itemId) throws ServiceException;
 
     public abstract void updateCryptoFlags(Account account, Element m,
-        MimeMessage originalMimeMessage, MimeMessage decryptedMimeMessage, String errMsg);
+        MimeMessage originalMimeMessage, MimeMessage decryptedMimeMessage);
 
     public abstract MimeMessage decodePKCS7Message(Account account, MimeMessage pkcs7MimeMessage);
 
