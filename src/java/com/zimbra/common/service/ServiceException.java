@@ -61,6 +61,12 @@ public class ServiceException extends Exception {
     // generic "not found" error for objects other than mail items
     public static final String NOT_FOUND = "service.NOT_FOUND";
 
+    //smime
+    public static final String LOAD_CERTIFICATE_FAILED = "smime.LOAD_CERTIFICATE_FAILED";
+    public static final String LOAD_PRIVATE_KEY_FAILED = "smime.LOAD_PRIVATE_KEY_FAILED";
+    public static final String DECRYPTION_FAILED = "smime.DECRYPTION_FAILED";
+    public static final String OPERATION_DENIED = "smime.OPERATION_DENIED";
+
     protected String mCode;
     private List<Argument> mArgs;
     private String mId;
@@ -416,5 +422,9 @@ public class ServiceException extends Exception {
 
     public static ServiceException NOT_FOUND(String msg, Throwable cause) {
         return new ServiceException("not found" + msg != null ? msg : "", NOT_FOUND, RECEIVERS_FAULT, cause);
+    }
+
+    public static ServiceException OPERATION_DENIED(String message) {
+        return new ServiceException("operation denied: "+message, OPERATION_DENIED, SENDERS_FAULT);
     }
 }
