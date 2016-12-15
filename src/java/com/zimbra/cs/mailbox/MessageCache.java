@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ExpandMimeMessage;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.smime.SmimeHandler;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.MailboxBlob;
@@ -183,23 +184,54 @@ public class MessageCache {
             if (expand && cnode.expanded == null) {
                 sLog.debug("Expanding MimeMessage for item %d.", item.getId());
                 cacheHit = false;
+                String decryptionError = null;
                 try {
+                    MimeMessage decryptedMimeMessage = null;
+                    if (item instanceof Message) {
+                        // if the mime is encrypted; decrypt it first
+                        if (cnode.message != null && cnode.message.getContentType()
+                            .contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)) {
+                            if (SmimeHandler.getHandler() != null) {
+                                sLog.debug(
+                                    "The message %d is encrypted. Forwarding it to SmimeHandler for decryption.",
+                                    item.getId());
+                                try {
+                                    decryptedMimeMessage = SmimeHandler.getHandler().decryptMessage(
+                                        ((Message) item).getMailbox(), cnode.message, item.getId());
+                                } catch (ServiceException e) {
+                                    switch (e.getCode()) {
+                                    case ServiceException.LOAD_CERTIFICATE_FAILED:
+                                        decryptionError = MimeConstants.ERR_LOAD_CERTIFICATE_FAILED;
+                                        break;
+                                    case ServiceException.LOAD_PRIVATE_KEY_FAILED:
+                                        decryptionError = MimeConstants.ERR_LOAD_PRIVATE_KEY_FAILED;
+                                        break;
+                                    case ServiceException.DECRYPTION_FAILED:
+                                        decryptionError = MimeConstants.ERR_DECRYPTION_FAILED;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    MimeMessage mm = cnode.message;
+                    if (decryptedMimeMessage != null) {
+                        mm = decryptedMimeMessage;
+                    }
                     MimeMessage decodedMimeMessage = null;
-                    if (!cnode.message.getContentType()
-                        .contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)
-                        && (cnode.message.getContentType()
-                            .contains(MimeConstants.CT_APPLICATION_SMIME)
-                            || cnode.message.getContentType()
-                                .contains(MimeConstants.CT_APPLICATION_SMIME_OLD))) {
+                    if ((mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME)
+                        && mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))
+                        || (mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME_OLD)
+                            && mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))) {
                         if (SmimeHandler.getHandler() != null) {
                             ZimbraLog.mailbox.debug(
                                 "The message is PKCS7 signed. Forwarding it to SmimeHandler for decoding.");
                             decodedMimeMessage = SmimeHandler.getHandler()
-                                .decodePKCS7Message(item.getAccount(), cnode.message);
+                                .decodePKCS7Message(item.getAccount(), mm);
                         }
                     }
                     ExpandMimeMessage expander = new ExpandMimeMessage(
-                        decodedMimeMessage != null ? decodedMimeMessage : cnode.message);
+                        decodedMimeMessage != null ? decodedMimeMessage : mm);
                     expander.expand();
                     cnode.expanded = expander.getExpanded();
                     if (cnode.expanded != cnode.message) {
@@ -210,6 +242,12 @@ public class MessageCache {
                     // if the conversion bombs for any reason, revert to the original
                     sLog.warn("MIME converter failed for message %d.  Reverting to original.", item.getId(), e);
                     cnode.expanded = cnode.message;
+                }
+                if (decryptionError != null) {
+                    if (cnode.expanded instanceof Mime.FixedMimeMessage) {
+                        ((Mime.FixedMimeMessage) cnode.expanded)
+                            .setDecryptionError(decryptionError);
+                    }
                 }
             }
 
