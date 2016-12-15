@@ -17,9 +17,6 @@
 
 package com.zimbra.soap.admin.type;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -30,10 +27,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.IdAndType;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
+import com.zimbra.soap.type.IdAndType;
 
 // soap-waitset.txt implies a lot of these attributes are directly unser QueryWaitSetResponse.  They aren't.
 @XmlAccessorType(XmlAccessType.NONE)
@@ -87,7 +86,7 @@ public class WaitSetInfo {
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_ERRORS /* errors */, required=false)
     @XmlElement(name=MailConstants.E_ERROR /* error */, required=false)
-    private List<IdAndType> errors = Lists.newArrayList();
+    private final List<IdAndType> errors = Lists.newArrayList();
 
     /**
      * @zm-api-field-tag ready-comm-sep-acct-ids
@@ -123,13 +122,13 @@ public class WaitSetInfo {
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name="buffered", required=false)
     @XmlElement(name="commit", required=false)
-    private List<BufferedCommitInfo> bufferedCommits = Lists.newArrayList();
+    private final List<BufferedCommitInfo> bufferedCommits = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Session information
      */
     @XmlElement(name="session", required=false)
-    private List<SessionForWaitSet> sessions = Lists.newArrayList();
+    private final List<SessionForWaitSet> sessions = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -139,7 +138,7 @@ public class WaitSetInfo {
         this((String) null, (String) null, (String) null, -1L);
     }
 
-    public WaitSetInfo(String waitSetId, String owner,
+    private WaitSetInfo(String waitSetId, String owner,
                         String defaultInterests, long lastAccessDate) {
         this.waitSetId = waitSetId;
         this.owner = owner;
@@ -147,6 +146,11 @@ public class WaitSetInfo {
         this.lastAccessDate = lastAccessDate;
     }
 
+    public static WaitSetInfo createForWaitSetIdOwnerInterestsLastAccessDate(String waitSetId, String owner,
+                        String defaultInterests, long lastAccessDate) {
+        return new WaitSetInfo(waitSetId, owner, defaultInterests, lastAccessDate);
+
+    }
     public void setSessions(Iterable <SessionForWaitSet> sessions) {
         this.sessions.clear();
         if (sessions != null) {
