@@ -38,6 +38,7 @@ public class WaitSetAccount {
         this.lastKnownSyncToken = sync;
         this.interests = interest;
         this.folderInterests = folderInterests;
+        ZimbraLog.session.debug("Created %s", toString());
     }
 
     public WaitSetSession getSession() {
@@ -114,7 +115,14 @@ public class WaitSetAccount {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("account", accountId).toString();
+        return Objects.toStringHelper(this)
+                .add("account", accountId)
+                .add("sessionId", sessionId)
+                .add("lastKnownSyncToken", lastKnownSyncToken)
+                .add("interests", interests)
+                .add("folderInterests", folderInterests)
+                .add("hashCode()", hashCode())
+                .toString();
     }
 
     private Mailbox getMailboxIfLoaded() throws ServiceException {
