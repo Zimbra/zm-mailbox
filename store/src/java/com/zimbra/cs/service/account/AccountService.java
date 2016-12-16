@@ -29,8 +29,9 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.service.mail.GetModifiedItemsIDs;
+import com.zimbra.cs.service.mail.BeginTrackingImap;
 import com.zimbra.cs.service.mail.GetLastItemIdInMailbox;
+import com.zimbra.cs.service.mail.GetModifiedItemsIDs;
 import com.zimbra.cs.service.mail.OpenImapFolder;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
@@ -118,6 +119,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.OPEN_IMAP_FOLDER_REQUEST, new OpenImapFolder());
         dispatcher.registerHandler(AccountConstants.GET_MODIFIED_ITEMS_IDS_REQUEST, new GetModifiedItemsIDs());
         dispatcher.registerHandler(AccountConstants.GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST, new GetLastItemIdInMailbox());
+        dispatcher.registerHandler(AccountConstants.BEGIN_TRACKING_IMAP_REQUEST, new BeginTrackingImap());
     }
 
     /**
