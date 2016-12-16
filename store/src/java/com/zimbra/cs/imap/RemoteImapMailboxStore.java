@@ -92,7 +92,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public void beginTrackingImap() throws ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        zMailbox.beginTrackingImap();
     }
 
     @Override
