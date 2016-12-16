@@ -840,7 +840,7 @@ public final class ToXML {
                     if (Contact.isUrlField(name)) {
                         v = DefangFilter.sanitize(v, true);
                     } else if (Contact.isSMIMECertField(name)) {
-                        encodeCertificate(octxt, elem, name, value);
+                        encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses());
                         continue;
                     }
                     elem.addKeyValuePair(name, v);
@@ -865,18 +865,18 @@ public final class ToXML {
             if (Contact.isUrlField(name)) {
                 value = DefangFilter.sanitize(value, true);
             } else if (Contact.isSMIMECertField(name)) {
-                encodeCertificate(octxt, elem, name, value);
+                encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses());
                 return;
             }
             elem.addKeyValuePair(name, value);
         }
     }
 
-    private static void encodeCertificate(OperationContext octxt, Element elem, String name, String value) {
+    private static void encodeCertificate(OperationContext octxt, Element elem, String name, String value, List<String> emailAddresses) {
         Account account = octxt.getAuthenticatedUser();
         elem.addKeyValuePair(name, value);
         if (SmimeHandler.getHandler() != null) {
-            SmimeHandler.getHandler().encodeCertificate(account, elem, value, octxt.getmResponseProtocol());
+            SmimeHandler.getHandler().encodeCertificate(account, elem, value, octxt.getmResponseProtocol(), emailAddresses);
         }
     }
 
