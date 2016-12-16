@@ -135,6 +135,7 @@ import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
+import com.zimbra.soap.account.message.BeginTrackingImapRequest;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.account.message.ChangePasswordResponse;
 import com.zimbra.soap.account.message.DisableTwoFactorAuthRequest;
@@ -6106,6 +6107,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             req.setCursor(new ImapCursorInfo(params.getCursorId()));
         }
         return invokeJaxb(req);
+    }
+
+    public void beginTrackingImap() throws ServiceException {
+        invokeJaxb(new BeginTrackingImapRequest());
     }
 
     /**
