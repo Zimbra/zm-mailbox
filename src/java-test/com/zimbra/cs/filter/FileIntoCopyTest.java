@@ -24,11 +24,17 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryOptions;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -36,6 +42,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.qa.unittest.TestUtil;
 
 public class FileIntoCopyTest {
 
@@ -342,6 +349,107 @@ public class FileIntoCopyTest {
                 .get(0);
             msg = mbox.getMessageById(null, item);
             Assert.assertEquals("Hello World", msg.getFragment());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    /*
+     * Only one copy of message should be delivered in INBOX
+     */
+    @Test
+    public void testKeepAndFileInto() {
+        doKeepAndFileInto("keep; fileinto \"Inbox\";");
+        doKeepAndFileInto("keep; fileinto \"/Inbox\";");
+        doKeepAndFileInto("keep; fileinto \"Inbox/\";");
+        doKeepAndFileInto("keep; fileinto \"/Inbox/\";");
+        doKeepAndFileInto("keep; fileinto \"inbox\";");
+        doKeepAndFileInto("fileinto \"Inbox\"; keep;");
+        doKeepAndFileInto("fileinto :copy \"Inbox\"; keep;");
+
+        doKeepAndFileIntoOutgoing("keep; fileinto \"Sent\";");
+        doKeepAndFileIntoOutgoing("keep; fileinto \"/Sent\";");
+        doKeepAndFileIntoOutgoing("keep; fileinto \"Sent/\";");
+        doKeepAndFileIntoOutgoing("keep; fileinto \"/Sent/\";");
+        doKeepAndFileIntoOutgoing("keep; fileinto \"sent\";");
+        doKeepAndFileIntoOutgoing("fileinto \"Sent\"; keep;");
+        doKeepAndFileIntoOutgoing("fileinto :copy \"Sent\"; keep;");
+    }
+
+    private void doKeepAndFileInto(String filterScript) {
+        doKeepAndFileIntoIncoming(filterScript);
+        doKeepAndFileIntoExisting(filterScript);
+    }
+
+    private void doKeepAndFileIntoIncoming(String filterScript) {
+        String body = "doKeepAndFileIntoIncoming" + filterScript.hashCode();
+        String sampleMsg = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n"
+                + "\n" + body;
+        try {
+            // Incoming
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            account.setMailSieveScript(filterScript);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(sampleMsg.getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            List<Integer> searchedIds = TestUtil.search(mbox, "in:inbox " + body, MailItem.Type.MESSAGE);
+            Assert.assertEquals(1, searchedIds.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    private void doKeepAndFileIntoExisting(String filterScript) {
+        String body = "doKeepAndFileIntoExisting" + filterScript.hashCode();
+        String sampleMsg = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n"
+                + "\n" + body;
+        try {
+            // Existing
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            List<Integer> items = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                    .getIds(MailItem.Type.MESSAGE);
+            OperationContext octx = new OperationContext(mbox);
+            Message msg = mbox.addMessage(octx,
+                    new ParsedMessage(sampleMsg.getBytes(), false),
+                    new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_PRIORITY),
+                    new DeliveryContext());
+            boolean filtered = RuleManager.applyRulesToExistingMessage(new OperationContext(mbox), mbox, msg.getId(),
+                    RuleManager.parse(filterScript));
+            Assert.assertEquals(false, filtered);
+            List<Integer> searchedIds = TestUtil.search(mbox, "in:inbox " + body, MailItem.Type.MESSAGE);
+            Assert.assertEquals(1, searchedIds.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    private void doKeepAndFileIntoOutgoing(String filterScript) {
+        String body = "doKeepAndFileIntoIncoming" + filterScript.hashCode();
+        String sampleMsg = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n"
+                + "\n" + body;
+        try {
+            // Outgoing
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            account.setMailOutgoingSieveScript(filterScript);
+
+            List<ItemId> ids = RuleManager.applyRulesToOutgoingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false),
+                    5, /* sent folder */
+                    true, 0, null, Mailbox.ID_AUTO_INCREMENT);
+            List<Integer> searchedIds = TestUtil.search(mbox, "in:sent " + body, MailItem.Type.MESSAGE);
+            Assert.assertEquals(1, searchedIds.size());
         } catch (Exception e) {
             e.printStackTrace();
             fail("No exception should be thrown");

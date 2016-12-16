@@ -464,13 +464,14 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     public Message doDefaultFiling()
     throws ServiceException {
         String folderPath = handler.getDefaultFolderPath();
+        folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
         Message msg = null;
-        if (filedIntoPaths.contains(folderPath)) {
+        if (filedIntoPaths.contains(folderPath.toLowerCase())) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
             msg = handler.implicitKeep(getFlagActions(), getTags());
             if (msg != null) {
-                filedIntoPaths.add(folderPath);
+                filedIntoPaths.add(folderPath.toLowerCase());
                 addedMessageIds.add(new ItemId(msg));
             }
         }
@@ -492,12 +493,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                             "Explicit keep - fileinto " + folderPath, getFlagActions(), getTagActions()));
         }
         Message msg = null;
-        if (filedIntoPaths.contains(folderPath)) {
+        if (filedIntoPaths.contains(folderPath.toLowerCase())) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
             msg = handler.explicitKeep(getFlagActions(), getTags());
             if (msg != null) {
-                filedIntoPaths.add(folderPath);
+                filedIntoPaths.add(folderPath.toLowerCase());
                 addedMessageIds.add(new ItemId(msg));
             }
         }
@@ -516,12 +517,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             ZimbraLog.filter.debug(
                     appendFlagTagActionsInfo("fileinto " + folderPath, getFlagActions(), getTagActions()));
         }
-        if (filedIntoPaths.contains(folderPath)) {
+        if (filedIntoPaths.contains(folderPath.toLowerCase())) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
             ItemId id = handler.fileInto(folderPath, getFlagActions(), getTags());
             if (id != null) {
-                filedIntoPaths.add(folderPath);
+                filedIntoPaths.add(folderPath.toLowerCase());
                 addedMessageIds.add(id);
             }
         }
