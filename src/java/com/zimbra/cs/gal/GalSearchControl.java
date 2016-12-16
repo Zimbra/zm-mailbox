@@ -668,7 +668,7 @@ public class GalSearchControl {
                 callback.handleElement(iter.next());
             String newTokenStr = resp.getAttribute(MailConstants.A_TOKEN, null);
             if (newTokenStr != null) {
-                GalSyncToken newToken = new GalSyncToken(newTokenStr);;
+                GalSyncToken newToken = new GalSyncToken(newTokenStr);
                 ZimbraLog.gal.debug("computing new sync token for proxied account "+galSyncAcct.getId()+": "+newToken);
                 callback.setNewToken(newToken);
             }
