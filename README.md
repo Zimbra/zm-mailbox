@@ -17,7 +17,7 @@
 
 ## Artifacts
 
-- `zimbra-milter.jar`
+- `zm-milter-<version>.jar`
 
 ## Build Pre-requisite
 
