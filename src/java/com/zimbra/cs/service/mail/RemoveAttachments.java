@@ -75,11 +75,7 @@ public class RemoveAttachments extends MailDocumentHandler {
         try {
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is = StoreManager.getInstance().getContent(msg.getBlob().getLocalBlob()));
             // do not allow removing attachments of encrypted/pkcs7-signed messages
-            if (mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)
-                || (mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME)
-                    && mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))
-                || (mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME_OLD)
-                    && mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))) {
+            if (Mime.isEncrypted(mm.getContentType()) || Mime.isPKCS7Signed(mm.getContentType())) {
                 throw ServiceException.OPERATION_DENIED("not allowed to remove attachments of encrypted/pkcs7-signed message");
 
             }
