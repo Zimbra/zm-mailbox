@@ -189,8 +189,8 @@ public class MessageCache {
                     MimeMessage decryptedMimeMessage = null;
                     if (item instanceof Message) {
                         // if the mime is encrypted; decrypt it first
-                        if (cnode.message != null && cnode.message.getContentType()
-                            .contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)) {
+                        if (cnode.message != null
+                            && Mime.isEncrypted(cnode.message.getContentType())) {
                             if (SmimeHandler.getHandler() != null) {
                                 sLog.debug(
                                     "The message %d is encrypted. Forwarding it to SmimeHandler for decryption.",
@@ -219,10 +219,7 @@ public class MessageCache {
                         mimeToExpand = decryptedMimeMessage;
                     }
                     MimeMessage decodedMimeMessage = null;
-                    if ((mimeToExpand.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME)
-                        && mimeToExpand.getContentType().contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))
-                        || (mimeToExpand.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME_OLD)
-                            && mimeToExpand.getContentType().contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))) {
+                    if (Mime.isPKCS7Signed(mimeToExpand.getContentType())) {
                         if (SmimeHandler.getHandler() != null) {
                             ZimbraLog.mailbox.debug(
                                 "The message is PKCS7 signed. Forwarding it to SmimeHandler for decoding.");
