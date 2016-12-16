@@ -123,6 +123,8 @@ public class Mime {
     public static class FixedMimeMessage extends ZMimeMessage {
         private boolean isPKCS7Signed = false;
         private List<CertificateInfo> signerCerts = null;
+        private String decryptionError = null;
+
         public FixedMimeMessage(Session session) {
             super(session);
         }
@@ -140,6 +142,7 @@ public class Mime {
             if(source instanceof FixedMimeMessage) {
                 this.isPKCS7Signed = ((FixedMimeMessage)source).isPKCS7Signed;
                 this.signerCerts = ((FixedMimeMessage)source).signerCerts;
+                this.decryptionError = ((FixedMimeMessage)source).decryptionError;
             }
             if (acct != null) {
                 setProperty("mail.mime.charset", acct.getPrefMailDefaultCharset());
@@ -150,15 +153,24 @@ public class Mime {
             return isPKCS7Signed;
         }
 
-        public List<CertificateInfo> getSignerCerts() {
-            return signerCerts;
-        }
         public void setPKCS7Signed(boolean isPKCS7Signed) {
             this.isPKCS7Signed = isPKCS7Signed;
         }
 
+        public List<CertificateInfo> getSignerCerts() {
+            return signerCerts;
+        }
+
         public void setSignerCerts(List<CertificateInfo> signerCerts) {
             this.signerCerts = signerCerts;
+        }
+
+        public String getDecryptionError() {
+            return decryptionError;
+        }
+
+        public void setDecryptionError(String decryptionError) {
+            this.decryptionError = decryptionError;
         }
 
         /**
@@ -1579,5 +1591,28 @@ public class Mime {
         }
 
         return refs;
+    }
+
+    public static boolean isMultipartSigned(String contentType) throws MessagingException {
+        if (contentType.contains(MimeConstants.CT_MULTIPART_SIGNED))
+            return true;
+        else
+            return false;
+    }
+
+    public static boolean isPKCS7Signed(String contentType) throws MessagingException {
+        if ((contentType.contains(MimeConstants.CT_APPLICATION_SMIME)
+            || (contentType.contains(MimeConstants.CT_APPLICATION_SMIME_OLD)))
+            && contentType.contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))
+            return true;
+        else
+            return false;
+    }
+
+    public static boolean isEncrypted(String contentType) throws MessagingException {
+        if (contentType.contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA))
+            return true;
+        else
+            return false;
     }
 }

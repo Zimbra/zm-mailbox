@@ -1417,17 +1417,8 @@ public final class ToXML {
             }
 
             MimeMessage mm = null;
-            String decryptionStatus = null;
             try {
                 mm = msg.getMimeMessage();
-                // if the mime is encrypted
-                if (mm != null
-                    && mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)) {
-                    ZimbraLog.mailbox.debug("The message is encrypted. Forwarding it to SmimeHandler for decryption.");
-                    if (SmimeHandler.getHandler() != null) {
-                        decryptionStatus = SmimeHandler.getHandler().decryptMessage(msg.getMailbox(), mm, msg.getId());
-                    }
-                }
             } catch (MailServiceException e) {
                 if (encodeMissingBlobs && MailServiceException.NO_SUCH_BLOB.equals(e.getCode())) {
                     ZimbraLog.mailbox.error("Unable to get blob while encoding message", e);
@@ -1573,20 +1564,21 @@ public final class ToXML {
             // update crypto flags - isSigned/isEncrypted
             if (SmimeHandler.getHandler() != null) {
                 MimeMessage originalMimeMessage = msg.getMimeMessage(false);
-                SmimeHandler.getHandler().updateCryptoFlags(msg.getAccount(), m, originalMimeMessage, mm, decryptionStatus);
+                SmimeHandler.getHandler().updateCryptoFlags(msg.getAccount(), m, originalMimeMessage, mm);
             }
 
-            // if the mime is not encrypted and it is signed
-            if (!mm.getContentType().contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA)
-                && (mm.getContentType().contains(MimeConstants.CT_MULTIPART_SIGNED)
-                    || mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME)
-                    || mm.getContentType().contains(MimeConstants.CT_APPLICATION_SMIME_OLD))) {
-                ZimbraLog.mailbox.debug("The message is signed. Forwarding it to SmimeHandler for signature verification.");
+            // if the mime it is signed
+            if (Mime.isMultipartSigned(mm.getContentType())
+                || Mime.isPKCS7Signed(mm.getContentType())) {
+                ZimbraLog.mailbox.debug(
+                    "The message is signed. Forwarding it to SmimeHandler for signature verification.");
                 if (SmimeHandler.getHandler() != null) {
                     SmimeHandler.getHandler().verifyMessageSignature(msg.getMailbox().getAccount(), m,
                         mm, octxt.getmResponseProtocol());
                 }
             } else {
+                // if the original mime message was PKCS7-signed and it was
+                // decoded and stored in cache as plain mime
                 if ((mm instanceof Mime.FixedMimeMessage)
                     && ((Mime.FixedMimeMessage) mm).isPKCS7Signed()) {
                     if (SmimeHandler.getHandler() != null) {
