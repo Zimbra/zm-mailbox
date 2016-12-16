@@ -100,9 +100,11 @@ public class TestWaitSetRequest extends TestCase {
     private void cleanUp() throws Exception {
         if(acc1 != null) {
             acc1.deleteAccount();
+            acc1 = null;
         }
         if(acc2 != null) {
             acc2.deleteAccount();
+            acc2 = null;
         }
         cbCalled = false;
         lastKnownSeq = "0";
