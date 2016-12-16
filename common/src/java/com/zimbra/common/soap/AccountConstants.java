@@ -179,6 +179,8 @@ public class AccountConstants {
     public static final String E_GET_MODIFIED_ITEMS_IDS_RESPONSE = "GetModifiedItemsIDsResponse";
     public static final String E_GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST = "GetLastItemIdInMailboxRequest";
     public static final String E_GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE = "GetLastItemIdInMailboxResponse";
+    public static final String E_BEGIN_TRACKING_IMAP_REQUEST = "BeginTrackingImapRequest";
+    public static final String E_BEGIN_TRACKING_IMAP_RESPONSE = "BeginTrackingImapResponse";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -333,6 +335,8 @@ public class AccountConstants {
     public static final QName GET_MODIFIED_ITEMS_IDS_RESPONSE = QName.get(E_GET_MODIFIED_ITEMS_IDS_RESPONSE, NAMESPACE);
     public static final QName GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST = QName.get(E_GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST, NAMESPACE);
     public static final QName GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE = QName.get(E_GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE, NAMESPACE);
+    public static final QName BEGIN_TRACKING_IMAP_REQUEST = QName.get(E_BEGIN_TRACKING_IMAP_REQUEST, NAMESPACE);
+    public static final QName BEGIN_TRACKING_IMAP_RESPONSE = QName.get(E_BEGIN_TRACKING_IMAP_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
