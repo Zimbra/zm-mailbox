@@ -97,7 +97,7 @@ public class WaitSetSession extends Session {
     public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
         boolean trace = ZimbraLog.session.isTraceEnabled();
         if (trace) {
-            ZimbraLog.session.trace("Notifying WaitSetSession %s: change id=%s, changedFolders=%s changesTypes='%s'",
+            ZimbraLog.session.trace("Notifying WaitSetSession %s: change id=%s changedFolders=%s changesTypes='%s'",
                     this, changeId, pns.getChangedFolders(), pns.changedTypes);
         }
         if (changeId > mHighestChangeId) {
