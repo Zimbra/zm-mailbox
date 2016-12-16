@@ -35,7 +35,6 @@ import com.zimbra.client.ZFeatures;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGetInfoResult;
 import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMailbox.OpenImapFolderParams;
 import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
@@ -64,7 +63,6 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.account.message.ImapMessageInfo;
-import com.zimbra.soap.account.message.OpenImapFolderResponse;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 
 public class TestZClient extends TestCase {
@@ -454,6 +452,16 @@ public class TestZClient extends TestCase {
         modifiedIds = zmbox.getIdsOfModifiedItemsInFolder(null, lastChange, folderId);
         assertEquals(1, modifiedIds.size());
         assertEquals(Integer.valueOf(msg.getId()), modifiedIds.get(0));
+    }
+
+    @Test
+    public void testBeginTrackingImap() throws ServiceException {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        try {
+            zmbox.beginTrackingImap();
+        } catch (ServiceException e) {
+            fail("beginTrackingImap should succeed");
+        }
     }
 
     @Override
