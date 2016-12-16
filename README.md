@@ -24,6 +24,6 @@
 - create .zcs-deps folder in home directory
 - copy following jars in the .zcs-deps folder:
      - `ant-contrib-1.0b1.jar`
-     - `zimbracommon.jar`
-     - `zimbraclient.jar`
-     - `zimbrastore.jar`
+     - `zm-common.jar`
+     - `zm-client.jar`
+     - `zm-store.jar`

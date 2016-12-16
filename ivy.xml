@@ -2,16 +2,16 @@
 <ivy-module version="2.0"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
- <info organisation="com.zimbra" module="zm-milter" status="release">
+ <info organisation="zimbra" module="zm-milter" status="release">
  </info>
  <dependencies>
   <dependency org="org.apache.mina" name="mina-core" rev="2.0.4"/>
   <dependency org="dom4j" name="dom4j" rev="1.5.2" />
   <dependency org="com.google.guava" name="guava" rev="13.0.1" />
-  <dependency org="zimbracommon" name="zimbracommon" rev="1.0" />
-  <dependency org="zimbraclient" name="zimbraclient" rev="1.0"/> 
-  <dependency org="zimbrastore" name="zimbrastore" rev="1.0"/> 
   <dependency org="log4j" name="log4j" rev="1.2.16" />
   <dependency org="junit" name="junit" rev="4.8.2" />
+  <dependency org="zimbra" name="zm-common" rev="latest.integration" />
+  <dependency org="zimbra" name="zm-client" rev="latest.integration" />
+  <dependency org="zimbra" name="zm-store" rev="latest.integration" />
  </dependencies>
 </ivy-module>
