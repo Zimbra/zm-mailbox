@@ -176,7 +176,7 @@ public class AccountConstants {
     public static final String E_OPEN_IMAP_FOLDER_REQUEST = "OpenImapFolderRequest";
     public static final String E_OPEN_IMAP_FOLDER_RESPONSE = "OpenImapFolderResponse";
     public static final String E_GET_MODIFIED_ITEMS_IDS_REQUEST = "GetModifiedItemsIDsRequest";
-    public static final String E_GET_MODIFIED_ITEMS_IDS_RESPONSE = "GetModifiedItemsIDsResponset";
+    public static final String E_GET_MODIFIED_ITEMS_IDS_RESPONSE = "GetModifiedItemsIDsResponse";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
