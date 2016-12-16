@@ -32,6 +32,11 @@ public class GetModifiedItemsIDsRequest {
         folderId = null;
     }
 
+    /**
+     * 
+     * @param folderId
+     * @param modSeq
+     */
     public GetModifiedItemsIDsRequest(Integer folderId, Integer modSeq) {
         this.folderId = folderId;
         this.modSeq = modSeq;
