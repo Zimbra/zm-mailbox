@@ -94,9 +94,6 @@ public class SmimeConstants {
     public static final String PRIVATE_KEY_FORMAT = "keyFormat";
     public static final String PRIVATE_KEY_INFO = "privateKeyInfo";
     public static final String PUBLIC_CERT_INFO = "pubCertInfo";
-    public static final String MIME_TYPE_MULTIPART_SIGNED = "multipart/signed";
-    public static final String MIME_TYPE_APPLICATION_PKCS7MIME = "application/pkcs7-mime";
-    public static final String MIME_TYPE_APPLICATION_XPKCS7MIME = "application/x-pkcs7-mime";
     public static final String SMIME_CONTENT_TRANSFER_ENCODING_BASE64 = "base64";
     public static final String MIME_CONTENT_HEADER_PREFIX = "Content-";
 
@@ -106,7 +103,4 @@ public class SmimeConstants {
     public static final String CMS_CLIENT_CERTIFICATE_EXPIRED_ERROR_MESSAGE = "client certificate expired";
     public static final String CMS_CLIENT_CERTIFICATE_NOT_YET_VALID_ERROR_MESSAGE = "client certificate not yet valid";
 
-    public static final String ERR_LOAD_CERTIFICATE_FAILED = "LOAD_CERTIFICATE_FAILED";
-    public static final String ERR_LOAD_PRIVATE_KEY_FAILED = "LOAD_PRIVATE_KEY_FAILED";
-    public static final String ERR_DECRYPTION_FAILED = "DECRYPTION_FAILED";
 }
