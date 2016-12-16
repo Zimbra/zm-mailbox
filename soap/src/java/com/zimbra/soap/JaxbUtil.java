@@ -1071,7 +1071,9 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.GetModifiedItemsIDsRequest.class,
             com.zimbra.soap.account.message.GetModifiedItemsIDsResponse.class,
             com.zimbra.soap.account.message.GetLastItemIdInMailboxRequest.class,
-            com.zimbra.soap.account.message.GetLastItemIdInMailboxResponse.class
+            com.zimbra.soap.account.message.GetLastItemIdInMailboxResponse.class,
+            com.zimbra.soap.account.message.BeginTrackingImapRequest.class,
+            com.zimbra.soap.account.message.BeginTrackingImapResponse.class
         };
 
         try {
