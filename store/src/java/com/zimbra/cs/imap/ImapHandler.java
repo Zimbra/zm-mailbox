@@ -1454,9 +1454,7 @@ public abstract class ImapHandler {
         }
 
         setCredentials(new ImapCredentials(account, hack));
-        if (credentials.isLocal()) {
-            credentials.getImapMailboxStore().beginTrackingImap();
-        }
+        credentials.getImapMailboxStore().beginTrackingImap();
         ZimbraLog.addAccountNameToContext(credentials.getUsername());
         ZimbraLog.imap.info("user %s authenticated, mechanism=%s%s",
                 credentials.getUsername(), mechanism == null ? "LOGIN" : mechanism, startedTLS ? " [TLS]" : "");
