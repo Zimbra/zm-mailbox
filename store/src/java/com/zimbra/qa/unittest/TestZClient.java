@@ -120,6 +120,17 @@ public class TestZClient extends TestCase {
         }
     }
 
+    public void testGetLastItemIdInMailbox() throws Exception {
+        int numMessages = 10;
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        int lItemIdZMbox0 = zmbox.getLastItemIdInMailbox();
+        for (int i=1; i<=numMessages; ++i) {
+            TestUtil.addMessage(zmbox, String.format("test message %d", i));
+        }
+        int lItemIdZMbox1 = zmbox.getLastItemIdInMailbox();
+        assertEquals(lItemIdZMbox0 + numMessages, lItemIdZMbox1);
+    }
+
     /**
      * Confirms that the {@code List} of signatures returned by {@link ZMailbox#getSignatures}
      * is modifiable (see bug 51842).
