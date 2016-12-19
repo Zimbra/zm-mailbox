@@ -149,6 +149,8 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetModifiedItemsIDsRequest;
 import com.zimbra.soap.account.message.GetModifiedItemsIDsResponse;
+import com.zimbra.soap.account.message.GetLastItemIdInMailboxRequest;
+import com.zimbra.soap.account.message.GetLastItemIdInMailboxResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.message.ImapCursorInfo;
@@ -1253,6 +1255,17 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     public ZFeatures getFeatures(boolean refresh) throws ServiceException {
         return getAccountInfo(refresh).getFeatures();
+    }
+
+    /**
+     * @return the last ID assigned to an item successfully created in the mailbox
+     * @throws ServiceException
+     */
+    public int getLastItemIdInMailbox() throws ServiceException {
+        GetLastItemIdInMailboxRequest req = new GetLastItemIdInMailboxRequest();
+        GetLastItemIdInMailboxResponse resp = invokeJaxb(req);
+        return resp.getId();
+
     }
 
     public ZLicenses getLicenses() throws ServiceException {
