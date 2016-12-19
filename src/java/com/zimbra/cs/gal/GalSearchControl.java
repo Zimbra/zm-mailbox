@@ -434,7 +434,7 @@ public class GalSearchControl {
                 throw new GalAccountNotConfiguredException();
         } else {
             try {
-                if (!proxyGalAccountSearch(galAcct))
+                if (!proxyGalAccountSearch(galAcct, false))
                     throw new GalAccountNotConfiguredException();
             } catch (IOException e) {
                 ZimbraLog.gal.warn("remote search on GalSync account failed for " + galAcct.getName(), e);
@@ -453,7 +453,7 @@ public class GalSearchControl {
             doLocalGalAccountSync(galAcct);
         } else {
             try {
-                if (!proxyGalAccountSearch(galAcct))
+                if (!proxyGalAccountSearch(galAcct, true))
                     throw new GalAccountNotConfiguredException();
             } catch (IOException e) {
                 ZimbraLog.gal.warn("remote sync on GalSync account failed for " + galAcct.getName(), e);
@@ -618,7 +618,7 @@ public class GalSearchControl {
         callback.setHasMoreResult(hasMore);
     }
 
-    private boolean proxyGalAccountSearch(Account galSyncAcct) throws IOException, ServiceException {
+    private boolean proxyGalAccountSearch(Account galSyncAcct, boolean sync) throws IOException, ServiceException {
         try {
             Provisioning prov = Provisioning.getInstance();
             String serverUrl = URLUtil.getAdminURL(prov.getServerByName(galSyncAcct.getMailHost()));
@@ -647,6 +647,11 @@ public class GalSearchControl {
             req.addAttribute(AccountConstants.A_GAL_ACCOUNT_ID, galSyncAcct.getId());
             req.addAttribute(AccountConstants.A_GAL_ACCOUNT_PROXIED, true);
 
+            if (sync && mParams.getGalSyncToken() != null) {
+               req.addAttribute(MailConstants.A_TOKEN, mParams.getGalSyncToken().toString());
+               ZimbraLog.gal.debug("setting token for proxied request %s", mParams.getGalSyncToken().toString());
+            }
+
             Element resp = transport.invokeWithoutSession(req.detach());
             GalSearchResultCallback callback = mParams.getResultCallback();
 
@@ -669,7 +674,7 @@ public class GalSearchControl {
             }
             boolean hasMore =  resp.getAttributeBool(MailConstants.A_QUERY_MORE, false);
             callback.setHasMoreResult(hasMore);
-            if (hasMore) {
+            if (hasMore && !sync) {
                 callback.setSortBy(resp.getAttribute(MailConstants.A_SORTBY));
                 callback.setQueryOffset((int)resp.getAttributeLong(MailConstants.A_QUERY_OFFSET));
             }

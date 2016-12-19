@@ -612,7 +612,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 List<SearchResultEntry> entries = result.getSearchEntries();
                 boolean hasMore = false;
                 int resultSize = entries.size();
-                if (resultSize > limit) {
+                if (resultSize > (limit + pageOffset)) {
                     hasMore = true;
                 }
                 String leCreateDate = null;
