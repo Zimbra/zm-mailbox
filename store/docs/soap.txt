@@ -4619,3 +4619,12 @@ set to the item ID of the last message in the previous result set.
     </folder>
     [<cursor id="{prev-id}"]
 </OpenImapFolderResponse>
+
+-----------------------------
+BeginTrackingImapRequest:
+Signals to the server to being tracking IMAP for the mailbox associated with the account.
+If IMAP tracking is already enabled, does nothing.
+
+<BeginTrackingImapRequest/>
+
+<BeginTrackingImapResponse/>
