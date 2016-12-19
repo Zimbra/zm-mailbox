@@ -297,12 +297,11 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         info.setCurrentSeqNo(Long.toString(mCurrentSeqNo));
 
         for (Map.Entry<String, WaitSetAccount> entry : mSessions.entrySet()) {
-            String acct = entry.getKey();
+            String acctId = entry.getKey();
             WaitSetAccount wsa = entry.getValue();
-            assert(wsa.getAccountId().equals(acct));
-            SessionForWaitSet sess = new SessionForWaitSet(acct, WaitSetRequest.expandInterestStr(wsa.getInterests()));
+            SessionForWaitSet sess = new SessionForWaitSet(acctId, WaitSetRequest.expandInterestStr(wsa.getInterests()));
 
-            if (!wsa.getAccountId().equals(entry.getKey())) {
+            if (!wsa.getAccountId().equals(acctId)) {
                 sess.setAcctIdError(wsa.getAccountId());
             }
 
@@ -312,8 +311,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
 
             if (wsa.getLastKnownSyncToken() != null) {
                 try {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(
-                            wsa.getAccountId(), FetchMode.ONLY_IF_CACHED);
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acctId, FetchMode.ONLY_IF_CACHED);
                     if (mbox != null) {
                         int mboxLastChange = mbox.getLastChangeID();
                         sess.setMboxSyncToken(mboxLastChange);
@@ -322,7 +320,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
                 } catch (Exception e) {
                     ZimbraLog.session.warn(
                         "Caught exception from MailboxManager in SomeAccountsWaitSet.handleQuery() for accountId %s",
-                                           wsa.getAccountId(), e);
+                                           acctId, e);
                 }
             }
 
