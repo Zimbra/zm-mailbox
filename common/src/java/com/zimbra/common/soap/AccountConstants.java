@@ -177,6 +177,8 @@ public class AccountConstants {
     public static final String E_OPEN_IMAP_FOLDER_RESPONSE = "OpenImapFolderResponse";
     public static final String E_GET_MODIFIED_ITEMS_IDS_REQUEST = "GetModifiedItemsIDsRequest";
     public static final String E_GET_MODIFIED_ITEMS_IDS_RESPONSE = "GetModifiedItemsIDsResponse";
+    public static final String E_GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST = "GetLastItemIdInMailboxRequest";
+    public static final String E_GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE = "GetLastItemIdInMailboxResponse";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -329,6 +331,8 @@ public class AccountConstants {
     public static final QName OPEN_IMAP_FOLDER_RESPONSE = QName.get(E_OPEN_IMAP_FOLDER_RESPONSE, NAMESPACE);
     public static final QName GET_MODIFIED_ITEMS_IDS_REQUEST = QName.get(E_GET_MODIFIED_ITEMS_IDS_REQUEST, NAMESPACE);
     public static final QName GET_MODIFIED_ITEMS_IDS_RESPONSE = QName.get(E_GET_MODIFIED_ITEMS_IDS_RESPONSE, NAMESPACE);
+    public static final QName GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST = QName.get(E_GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST, NAMESPACE);
+    public static final QName GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE = QName.get(E_GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
