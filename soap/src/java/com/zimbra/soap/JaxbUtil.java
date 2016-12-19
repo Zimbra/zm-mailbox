@@ -1069,7 +1069,9 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.OpenImapFolderRequest.class,
             com.zimbra.soap.account.message.OpenImapFolderResponse.class,
             com.zimbra.soap.account.message.GetModifiedItemsIDsRequest.class,
-            com.zimbra.soap.account.message.GetModifiedItemsIDsResponse.class
+            com.zimbra.soap.account.message.GetModifiedItemsIDsResponse.class,
+            com.zimbra.soap.account.message.GetLastItemIdInMailboxRequest.class,
+            com.zimbra.soap.account.message.GetLastItemIdInMailboxResponse.class
         };
 
         try {
