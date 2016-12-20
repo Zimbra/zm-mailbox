@@ -13,9 +13,9 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlRootElement(name=AccountConstants.E_OPEN_IMAP_FOLDER_RESPONSE)
-public class OpenImapFolderResponse {
+public class OpenIMAPFolderResponse {
 
-    public OpenImapFolderResponse() {}
+    public OpenIMAPFolderResponse() {}
 
     /**
      * @zm-api-field-description list of ImapMessageInfo elements
