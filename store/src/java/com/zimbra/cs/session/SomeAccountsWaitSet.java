@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
@@ -249,7 +250,9 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         HashMap<String, WaitSetAccount> toRet = mSessions;
         mSessions = new HashMap<String, WaitSetAccount>();
         mCurrentSignalledSessions.clear();
+        currentKnownChangedFolderIds.clear();
         mSentSignalledSessions.clear();
+        sentKnownChangedFolderIds.clear();
         mCurrentSeqNo = Long.MAX_VALUE;
         return toRet;
    }
@@ -269,21 +272,31 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
     synchronized void unsignalDataReady(WaitSetSession session) {
         if (mSessions.containsKey(session.getAuthenticatedAccountId())) { // ...false if waitset is shutting down...
             mCurrentSignalledSessions.remove(session.getAuthenticatedAccountId());
+            currentKnownChangedFolderIds.remove(session.getAuthenticatedAccountId());
         }
     }
 
     /**
      * Called by the WaitSetSession when there is data to be signalled by this session
-     *
      * @param session
      */
     synchronized void signalDataReady(WaitSetSession session) {
+        signalDataReady(session, Sets.newHashSetWithExpectedSize(0));
+    }
+
+    /**
+     * Called by the WaitSetSession when there is data to be signalled by this session
+     * @param session
+     */
+    synchronized void signalDataReady(WaitSetSession session, Set<Integer> knownChangedFolders) {
         boolean trace = ZimbraLog.session.isTraceEnabled();
         if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 1");
-        if (mSessions.containsKey(session.getAuthenticatedAccountId())) { // ...false if waitset is shutting down...
+        String authAcctId = session.getAuthenticatedAccountId();
+        if (mSessions.containsKey(authAcctId)) { // ...false if waitset is shutting down...
             if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 2");
-            if (mCurrentSignalledSessions.add(session.getAuthenticatedAccountId())) {
+            if (mCurrentSignalledSessions.add(authAcctId)) {
                 if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 3");
+                addChangeFolderIds(currentKnownChangedFolderIds, authAcctId, knownChangedFolders);
                 trySendData();
             }
         }
@@ -330,6 +343,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
                         wss.mHighestChangeId, wss.getLastAccessTime(), wss.getCreationTime(), wss.getSessionId());
 
                 waitSetSession.setFolderInterests(wss.folderInterest);
+                waitSetSession.setChangedFolders(currentKnownChangedFolderIds.get(acctId));
                 if (wss.mSyncToken != null) {
                     waitSetSession.setToken(wss.mSyncToken.toString());
                 }
