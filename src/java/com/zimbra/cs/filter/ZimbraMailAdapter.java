@@ -797,7 +797,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     }
 
     public void addVariable(String key, String value) {
-        this.variables.put(key, value);
+        this.variables.put(key.toLowerCase(), value);
     }
 
     public List<String> getMatchedValues() {
