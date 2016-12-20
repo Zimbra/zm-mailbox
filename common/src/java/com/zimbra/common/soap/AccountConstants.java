@@ -173,8 +173,8 @@ public class AccountConstants {
     public static final String E_SAVE_IMAP_SUBSCRIPTIONS_RESPONSE = "SaveIMAPSubscriptionsResponse";
     public static final String E_RESET_RECENT_MESSAGE_COUNT_REQUEST = "ResetRecentMessageCountRequest";
     public static final String E_RESET_RECENT_MESSAGE_COUNT_RESPONSE = "ResetRecentMessageCountResponse";
-    public static final String E_OPEN_IMAP_FOLDER_REQUEST = "OpenImapFolderRequest";
-    public static final String E_OPEN_IMAP_FOLDER_RESPONSE = "OpenImapFolderResponse";
+    public static final String E_OPEN_IMAP_FOLDER_REQUEST = "OpenIMAPFolderRequest";
+    public static final String E_OPEN_IMAP_FOLDER_RESPONSE = "OpenIMAPFolderResponse";
     public static final String E_GET_MODIFIED_ITEMS_IDS_REQUEST = "GetModifiedItemsIDsRequest";
     public static final String E_GET_MODIFIED_ITEMS_IDS_RESPONSE = "GetModifiedItemsIDsResponse";
     public static final String E_GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST = "GetLastItemIdInMailboxRequest";
