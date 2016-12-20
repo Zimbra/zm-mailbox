@@ -464,11 +464,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     public enum KeepType {IMPLICIT_KEEP, EXPLICIT_KEEP};
     public Message keep(KeepType type) throws ServiceException {
         String folderPath = handler.getDefaultFolderPath();
-        folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
+        folderPath = CharMatcher.is('/').trimFrom(folderPath).toLowerCase(); // trim leading and trailing '/'
         Message msg = null;
         ZimbraLog.filter.debug(type == KeepType.EXPLICIT_KEEP ? "Explicit - fileinto " : "Implicit - fileinto " +
             appendFlagTagActionsInfo(folderPath, getFlagActions(), getTagActions()));
-        if (filedIntoPaths.contains(folderPath.toLowerCase())) {
+        if (filedIntoPaths.contains(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
             if (type == KeepType.EXPLICIT_KEEP) {
@@ -477,7 +477,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 msg = handler.implicitKeep(getFlagActions(), getTags());
             }
             if (msg != null) {
-                filedIntoPaths.add(folderPath.toLowerCase());
+                filedIntoPaths.add(folderPath);
                 addedMessageIds.add(new ItemId(msg));
             }
         }
@@ -491,17 +491,17 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
      */
     private void fileInto(String folderPath)
     throws ServiceException {
-        folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
+        folderPath = CharMatcher.is('/').trimFrom(folderPath).toLowerCase(); // trim leading and trailing '/'
         if (ZimbraLog.filter.isDebugEnabled()) {
             ZimbraLog.filter.debug(
                     appendFlagTagActionsInfo("fileinto " + folderPath, getFlagActions(), getTagActions()));
         }
-        if (filedIntoPaths.contains(folderPath.toLowerCase())) {
+        if (filedIntoPaths.contains(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
             ItemId id = handler.fileInto(folderPath, getFlagActions(), getTags());
             if (id != null) {
-                filedIntoPaths.add(folderPath.toLowerCase());
+                filedIntoPaths.add(folderPath);
                 addedMessageIds.add(id);
             }
         }
