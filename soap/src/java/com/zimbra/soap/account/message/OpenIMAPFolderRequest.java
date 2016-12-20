@@ -8,10 +8,10 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlRootElement(name=AccountConstants.E_OPEN_IMAP_FOLDER_REQUEST)
-public class OpenImapFolderRequest {
-    public OpenImapFolderRequest() {};
+public class OpenIMAPFolderRequest {
+    public OpenIMAPFolderRequest() {};
 
-    public OpenImapFolderRequest(String folderId) {
+    public OpenIMAPFolderRequest(String folderId) {
         setFolderId(folderId);
     }
 
