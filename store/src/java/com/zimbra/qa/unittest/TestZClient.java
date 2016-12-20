@@ -457,11 +457,13 @@ public class TestZClient extends TestCase {
     @Test
     public void testBeginTrackingImap() throws ServiceException {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try {
             zmbox.beginTrackingImap();
         } catch (ServiceException e) {
             fail("beginTrackingImap should succeed");
         }
+        assertTrue(mbox.isTrackingImap());
     }
 
     @Override
