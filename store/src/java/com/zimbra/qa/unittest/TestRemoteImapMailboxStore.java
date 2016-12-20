@@ -146,10 +146,12 @@ public class TestRemoteImapMailboxStore extends TestCase {
     @Test
     public void testBeginTrackingImap() throws Exception {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try {
             zmbox.beginTrackingImap();
         } catch (ServiceException e) {
             fail("beginTrackingImap should succeed");
         }
+        assertTrue(mbox.isTrackingImap());
     }
 }
