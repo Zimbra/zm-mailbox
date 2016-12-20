@@ -243,11 +243,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 if (getReplyNotifyRejectActions().isEmpty()) {
                     // if only flag/tag actions are present, we keep the message even if discard
                     // action is present
-                    explicitKeep();
+                    keep(KeepType.EXPLICIT_KEEP);
                 } else if (!discardActionPresent) {
                     // else if reply/notify/reject/ereject actions are present and there's no discard, do sort
                     // of implicit keep
-                    explicitKeep();
+                    keep(KeepType.EXPLICIT_KEEP);
                 }
             } else {
                 ListIterator<Action> li = deliveryActions.listIterator(deliveryActions.size());
@@ -257,13 +257,13 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     if (lastDeliveryAction instanceof ActionFileInto) {
                         ActionFileInto lastFileIntoAction = (ActionFileInto) lastDeliveryAction;
                         if (lastFileIntoAction.isCopy() && !discardActionPresent) {
-                            explicitKeep();
+                            keep(KeepType.EXPLICIT_KEEP);
                         }
                         break;
                     } else if (lastDeliveryAction instanceof ActionRedirect) {
                         ActionRedirect lastRedirectAction = (ActionRedirect) lastDeliveryAction;
                         if (lastRedirectAction.isCopy() && !discardActionPresent) {
-                            explicitKeep();
+                            keep(KeepType.EXPLICIT_KEEP);
                         }
                         break;
                     }
@@ -274,13 +274,13 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 if (action instanceof ActionKeep) {
                     if (context == null) {
                         ZimbraLog.filter.warn("SieveContext has unexpectedly not been set");
-                        doDefaultFiling();
+                        keep(KeepType.IMPLICIT_KEEP);
                     } else if (context.getCommandStateManager().isImplicitKeep()) {
                         // implicit keep: this means that none of the user's rules have been matched
                         // we need to check system spam filter to see if the mail is spam
-                        doDefaultFiling();
+                        keep(KeepType.IMPLICIT_KEEP);
                     } else {
-                        explicitKeep();
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
@@ -292,14 +292,14 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                         if (!allowFilterToMountpoint && isMountpoint(mailbox, folderPath)) {
                             ZimbraLog.filter.info("Filing to mountpoint \"%s\" is not allowed.  Filing to the default folder instead.",
                                                   folderPath);
-                            explicitKeep();
+                            keep(KeepType.EXPLICIT_KEEP);
                         } else {
                             fileInto(folderPath);
                         }
                     } catch (ServiceException e) {
                         ZimbraLog.filter.info("Unable to file message to %s.  Filing to %s instead.",
                                               folderPath, handler.getDefaultFolderPath(), e);
-                        explicitKeep();
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 } else if (action instanceof ActionRedirect) {
                     // redirect mail to another address
@@ -314,7 +314,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to redirect to %s.  Filing message to %s.",
                                               addr, handler.getDefaultFolderPath(), e);
-                        explicitKeep();
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 } else if (action instanceof ActionReply) {
                     // reply to mail
@@ -328,7 +328,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                         handler.reply(replyStrg);
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to reply.", e);
-                        explicitKeep();
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 } else if (action instanceof ActionNotify) {
                     ActionNotify notify = (ActionNotify) action;
@@ -350,7 +350,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     	}
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to notify.", e);
-                        explicitKeep();
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 } else if (action instanceof ActionReject) {
                     ActionReject reject = (ActionReject) action;
@@ -368,7 +368,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 	                        handler.discard();
 	                    } catch (Exception e) {
 	                        ZimbraLog.filter.info("Unable to reject.", e);
-	                        explicitKeep();
+	                        keep(KeepType.EXPLICIT_KEEP);
 	                    }
                     }
                 } else if (action instanceof ActionEreject) {
@@ -395,7 +395,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                                              notifyMailto.getMailtoParams());
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to notify (mailto).", e);
-                        explicitKeep();
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 }
             }
@@ -457,46 +457,25 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     }
 
     /**
-     * Files the message into the inbox or spam folder.  Keeps track
-     * of the folder path, to make sure we don't file to the same
+     * Files the message into the inbox or sent or spam  folder.
+     * Keeps track of the folder path, to make sure we don't file to the same
      * folder twice.
      */
-    public Message doDefaultFiling()
-    throws ServiceException {
+    public enum KeepType {IMPLICIT_KEEP, EXPLICIT_KEEP};
+    public Message keep(KeepType type) throws ServiceException {
         String folderPath = handler.getDefaultFolderPath();
         folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
         Message msg = null;
+        ZimbraLog.filter.debug(type == KeepType.EXPLICIT_KEEP ? "Explicit - fileinto " : "Implicit - fileinto " +
+            appendFlagTagActionsInfo(folderPath, getFlagActions(), getTagActions()));
         if (filedIntoPaths.contains(folderPath.toLowerCase())) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
-            msg = handler.implicitKeep(getFlagActions(), getTags());
-            if (msg != null) {
-                filedIntoPaths.add(folderPath.toLowerCase());
-                addedMessageIds.add(new ItemId(msg));
+            if (type == KeepType.EXPLICIT_KEEP) {
+                msg = handler.explicitKeep(getFlagActions(), getTags());
+            } else {
+                msg = handler.implicitKeep(getFlagActions(), getTags());
             }
-        }
-        return msg;
-    }
-
-    /**
-     * Files the message into the inbox folder.  Keeps track
-     * of the folder path, to make sure we don't file to the same
-     * folder twice.
-     */
-    private Message explicitKeep()
-    throws ServiceException {
-        String folderPath = handler.getDefaultFolderPath();
-        folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
-        if (ZimbraLog.filter.isDebugEnabled()) {
-            ZimbraLog.filter.debug(
-                    appendFlagTagActionsInfo(
-                            "Explicit keep - fileinto " + folderPath, getFlagActions(), getTagActions()));
-        }
-        Message msg = null;
-        if (filedIntoPaths.contains(folderPath.toLowerCase())) {
-            ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
-        } else {
-            msg = handler.explicitKeep(getFlagActions(), getTags());
             if (msg != null) {
                 filedIntoPaths.add(folderPath.toLowerCase());
                 addedMessageIds.add(new ItemId(msg));
