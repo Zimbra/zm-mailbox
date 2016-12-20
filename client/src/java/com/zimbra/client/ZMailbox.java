@@ -135,7 +135,7 @@ import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
-import com.zimbra.soap.account.message.BeginTrackingImapRequest;
+import com.zimbra.soap.account.message.BeginTrackingIMAPRequest;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.account.message.ChangePasswordResponse;
 import com.zimbra.soap.account.message.DisableTwoFactorAuthRequest;
@@ -157,8 +157,8 @@ import com.zimbra.soap.account.message.ImapCursorInfo;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
-import com.zimbra.soap.account.message.OpenImapFolderRequest;
-import com.zimbra.soap.account.message.OpenImapFolderResponse;
+import com.zimbra.soap.account.message.OpenIMAPFolderRequest;
+import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.account.message.ResetRecentMessageCountRequest;
 import com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.type.AuthToken;
@@ -6099,8 +6099,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     @VisibleForTesting
-    public OpenImapFolderResponse fetchImapFolderChunk(OpenImapFolderParams params) throws ServiceException {
-        OpenImapFolderRequest req = new OpenImapFolderRequest();
+    public OpenIMAPFolderResponse fetchImapFolderChunk(OpenIMAPFolderParams params) throws ServiceException {
+        OpenIMAPFolderRequest req = new OpenIMAPFolderRequest();
         req.setFolderId(String.valueOf(params.getFolderId()));
         req.setLimit(params.getLimit());
         if (params.getCursorId() != null) {
@@ -6110,7 +6110,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public void beginTrackingImap() throws ServiceException {
-        invokeJaxb(new BeginTrackingImapRequest());
+        invokeJaxb(new BeginTrackingIMAPRequest());
     }
 
     /**
@@ -6122,9 +6122,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public List<ImapMessageInfo> openImapFolder(int folderId, int chunkSize) throws ServiceException {
         List<ImapMessageInfo> msgs = new ArrayList<ImapMessageInfo>();
         String cursorId = null;
-        OpenImapFolderResponse folderInfo = null;
+        OpenIMAPFolderResponse folderInfo = null;
         do {
-            OpenImapFolderParams params = new OpenImapFolderParams(folderId);
+            OpenIMAPFolderParams params = new OpenIMAPFolderParams(folderId);
             params.setLimit(chunkSize);
             if (cursorId != null) {
                 params.setCursorId(cursorId);
@@ -6147,14 +6147,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return msgs;
     }
 
-    public static class OpenImapFolderParams {
+    public static class OpenIMAPFolderParams {
 
         private static final int DEFAULT_LIMIT = 1000;
         private int folderId;
         private int limit;
         private String cursorId;
 
-        public OpenImapFolderParams(int folderId) {
+        public OpenIMAPFolderParams(int folderId) {
             this.folderId = folderId;
             this.limit = DEFAULT_LIMIT;
             this.cursorId = null;
