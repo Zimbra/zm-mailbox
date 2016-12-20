@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.mail.WaitSetRequest;
@@ -71,7 +73,7 @@ public abstract class WaitSetBase implements IWaitSet {
     protected synchronized void cancelExistingCB() {
         if (mCb != null) {
             // cancel the existing waiter
-            mCb.dataReady(this, "", true, null, null);
+            mCb.dataReadySetCanceled(this, "");
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
         }
@@ -103,6 +105,7 @@ public abstract class WaitSetBase implements IWaitSet {
 
         if (cbIsCurrent) {
             mSentSignalledSessions.clear();
+            sentKnownChangedFolderIds.clear();
             mSentErrors.clear();
         }
 
@@ -130,32 +133,33 @@ public abstract class WaitSetBase implements IWaitSet {
                 HashSet<String> temp = mCurrentSignalledSessions;
                 mCurrentSignalledSessions = mSentSignalledSessions;
                 mSentSignalledSessions = temp;
+                Map<String /*accountId*/, Set<Integer /* folderId */>> tempFids = currentKnownChangedFolderIds;
+                currentKnownChangedFolderIds = sentKnownChangedFolderIds;
+                sentKnownChangedFolderIds = tempFids;
             } else {
                 if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 3b");
                 assert(!cbIsCurrent);
                 mSentSignalledSessions.addAll(mCurrentSignalledSessions);
                 mCurrentSignalledSessions.clear();
+                sentKnownChangedFolderIds.putAll(currentKnownChangedFolderIds);
+                currentKnownChangedFolderIds.clear();;
             }
 
             // error list
             mSentErrors.addAll(mCurrentErrors);
             mCurrentErrors.clear();
 
-            // at this point, mSentSignalled is everything we're supposed to send...lets
-            // make an array of the account IDs and signal them up!
             assert(mSentSignalledSessions.size() > 0  || mSentErrors.size() > 0);
-            String[] toRet = new String[mSentSignalledSessions.size()];
-            int i = 0;
-            for (String accountId : mSentSignalledSessions) {
-                toRet[i++] = accountId;
+            if (trace) {
+                ZimbraLog.session.trace("WaitSetBase.trySendData 4");
             }
-
-            if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 4");
-            mCb.dataReady(this, toNextSeqNo(), false, mSentErrors, toRet);
+            mCb.dataReady(this, toNextSeqNo(), false, mSentErrors, mSentSignalledSessions, sentKnownChangedFolderIds);
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
         }
-        if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData done");
+        if (trace) {
+            ZimbraLog.session.trace("WaitSetBase.trySendData done");
+        }
     }
 
     @Override
@@ -187,6 +191,15 @@ public abstract class WaitSetBase implements IWaitSet {
         trySendData();
     }
 
+    protected synchronized void addChangeFolderIds(Map<String, Set<Integer>> folderIdsMap,
+            String acctId, Set<Integer> changedFolderIds) {
+        Set<Integer> fids = folderIdsMap.get(acctId);
+        if (fids == null) {
+            fids = Sets.newHashSet();
+            folderIdsMap.put(acctId, fids);
+        }
+        fids.addAll(changedFolderIds);
+    }
 
     protected final String mWaitSetId;
     protected final String mOwnerAccountId;
@@ -201,10 +214,11 @@ public abstract class WaitSetBase implements IWaitSet {
     protected List<WaitSetError> mCurrentErrors = new ArrayList<WaitSetError>();
     protected List<WaitSetError> mSentErrors = new ArrayList<WaitSetError>();
 
-
     /** this is the signalled set data that is new (has never been sent) */
-    protected HashSet<String /*accountId*/> mCurrentSignalledSessions = new HashSet<String>();
+    protected HashSet<String /*accountId*/> mCurrentSignalledSessions = Sets.newHashSet();
+    protected Map<String /*accountId*/, Set<Integer /* folderId */>> currentKnownChangedFolderIds = Maps.newHashMap();
 
     /** this is the signalled set data that we've already sent, it just hasn't been acked yet */
-    protected HashSet<String /*accountId*/> mSentSignalledSessions = new HashSet<String>();
+    protected HashSet<String /*accountId*/> mSentSignalledSessions = Sets.newHashSet();
+    protected Map<String /*accountId*/, Set<Integer /* folderId */>> sentKnownChangedFolderIds = Maps.newHashMap();
 }
