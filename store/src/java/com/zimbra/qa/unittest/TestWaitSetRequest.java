@@ -59,10 +59,14 @@ import com.zimbra.soap.admin.message.AdminWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetResponse;
 import com.zimbra.soap.admin.message.QueryWaitSetRequest;
 import com.zimbra.soap.admin.message.QueryWaitSetResponse;
+import com.zimbra.soap.admin.type.SessionForWaitSet;
+import com.zimbra.soap.admin.type.WaitSetInfo;
+import com.zimbra.soap.admin.type.WaitSetSessionInfo;
 import com.zimbra.soap.mail.message.CreateWaitSetRequest;
 import com.zimbra.soap.mail.message.CreateWaitSetResponse;
 import com.zimbra.soap.mail.message.WaitSetRequest;
 import com.zimbra.soap.mail.message.WaitSetResponse;
+import com.zimbra.soap.type.AccountIdAndFolderIds;
 import com.zimbra.soap.type.WaitSetAddSpec;
 
 import junit.framework.TestCase;
@@ -189,6 +193,7 @@ public class TestWaitSetRequest extends TestCase {
         String user1Name = "testFISyncWaitSetRequest_user1";
         acc1 = TestUtil.createAccount(user1Name);
         ZMailbox mbox = TestUtil.getZMailbox(user1Name);
+        String acctId = mbox.getAccountId();
         String authToken = mbox.getAuthToken().getValue();
         String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
         ZFolder myFolder = TestUtil.createFolder(mbox, "funFolder");
@@ -196,7 +201,7 @@ public class TestWaitSetRequest extends TestCase {
         folderInterest.add(myFolder.getFolderIdInOwnerMailbox());
 
         /* initially only interested in funFolder */
-        CreateWaitSetResponse resp = createWaitSet(mbox.getAccountInfo(false).getId(), authToken, folderInterest);
+        CreateWaitSetResponse resp = createWaitSet(acctId, authToken, folderInterest);
         Assert.assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
         int seq = resp.getSequence();
@@ -216,25 +221,73 @@ public class TestWaitSetRequest extends TestCase {
         QueryWaitSetResponse qwsResp;
         QueryWaitSetRequest qwsReq = new QueryWaitSetRequest(waitSetId);
         qwsResp = (QueryWaitSetResponse) sendReq(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl());
+        validateQueryWaitSetResponse(qwsResp, acctId, folderInterest, null);
 
         /* interested in funFolder AND inbox */
         folderInterest.add(Integer.valueOf(Mailbox.ID_FOLDER_INBOX));
-        waitSet.addUpdateAccount(createWaitSetAddSpec(mbox.getAccountId(), authToken, folderInterest));
+        waitSet.addUpdateAccount(createWaitSetAddSpec(acctId, authToken, folderInterest));
         wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet),
                 "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
         Assert.assertTrue(wsResp.getSeqNo().equals("0"));
         Assert.assertEquals("Number of signalled accounts", 0, wsResp.getSignalledAccounts().size());
 
         qwsResp = (QueryWaitSetResponse) sendReq(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl());
+        validateQueryWaitSetResponse(qwsResp, acctId, folderInterest, null);
 
         subject = NAME_PREFIX + " test wait set request 2";
         TestUtil.addMessageLmtp(subject, user1Name, "user999@example.com");
         TestUtil.waitForMessages(mbox, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
+
+        qwsResp = (QueryWaitSetResponse) sendReq(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl());
+        Set <Integer> expectedChanged = Sets.newHashSetWithExpectedSize(3);
+        expectedChanged.add(Mailbox.ID_FOLDER_INBOX);
+        expectedChanged.add(Mailbox.ID_FOLDER_CONVERSATIONS);
+        expectedChanged.add(Mailbox.ID_FOLDER_USER_ROOT);
+        validateQueryWaitSetResponse(qwsResp, acctId, folderInterest, null);
+
         waitSet = new com.zimbra.soap.mail.message.WaitSetRequest(waitSetId, Integer.toString(seq));
         wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet),
                 "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
         Assert.assertFalse(wsResp.getSeqNo().equals("0"));
         Assert.assertEquals("Number of signalled accounts", 1, wsResp.getSignalledAccounts().size());
+        AccountIdAndFolderIds acctInfo = wsResp.getSignalledAccounts().get(0);
+        Assert.assertEquals("Signaled account id", mbox.getAccountId(), acctInfo.getId());
+        ZimbraLog.test.info("Folder interests as string", acctInfo.getFolderIds());
+        List<Integer> foldInt = acctInfo.getFolderIdsAsList();
+        ZimbraLog.test.info("Folder interests as list", foldInt);
+        Assert.assertTrue(String.format("%s should know inbox %s changed", foldInt, Mailbox.ID_FOLDER_INBOX),
+                foldInt.contains(Mailbox.ID_FOLDER_INBOX));
+        Assert.assertFalse(String.format("%s should not claim folder with ID=%s changed",
+                foldInt, myFolder.getFolderIdInOwnerMailbox()),
+                foldInt.contains(myFolder.getFolderIdInOwnerMailbox()));
+    }
+
+    private void validateQueryWaitSetResponse(QueryWaitSetResponse qwsResp, String acctId,
+            Set<Integer>folderInterests, Set<Integer> expectedChangedFolders) {
+        Assert.assertEquals("Number of Waitsets in response", 1, qwsResp.getWaitsets().size());
+        WaitSetInfo wsInfo = qwsResp.getWaitsets().get(0);
+        Assert.assertEquals("waitSet owner", acctId, wsInfo.getOwner());
+        Assert.assertEquals("Number of sessions in WaitSetResponse/waitSet", 1, wsInfo.getSessions().size());
+        SessionForWaitSet session = wsInfo.getSessions().get(0);
+        Assert.assertEquals("WaitSetResponse/waitSet/session@account", acctId, session.getAccount());
+        WaitSetSessionInfo sessInfo = session.getWaitSetSession();
+        if (!folderInterests.isEmpty()) {
+            Set<Integer> respFolderInt = sessInfo.getFolderInterestsAsSet();
+            for (Integer folderInterest : folderInterests) {
+                Assert.assertTrue(String.format("Query reported folderInterests=%s should contain %s",
+                        respFolderInt, folderInterest), respFolderInt.contains(folderInterest));
+            }
+        }
+        if ((null != expectedChangedFolders) && !expectedChangedFolders.isEmpty()) {
+            Set<Integer> respChangedFolders = sessInfo.getChangedFoldersAsSet();
+            for (Integer changedFldr : expectedChangedFolders) {
+                Assert.assertTrue(String.format("Query reported respChangedFolders=%s should contain %s",
+                        respChangedFolders, changedFldr), respChangedFolders.contains(changedFldr));
+            }
+            String signalledAccts = wsInfo.getSignalledAccounts().getAccounts();
+            Assert.assertTrue(String.format("ready accts '%s' contains '%s'", signalledAccts, acctId),
+                    signalledAccts.contains(acctId));
+        }
     }
 
     private CreateWaitSetResponse createWaitSet(String accountId, String authToken) throws Exception {
