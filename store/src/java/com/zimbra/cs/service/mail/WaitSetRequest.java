@@ -36,17 +36,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.admin.AdminServiceException;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.servlet.continuation.ResumeContinuationListener;
-import com.zimbra.cs.session.IWaitSet;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetCallback;
 import com.zimbra.cs.session.WaitSetError;
@@ -186,11 +183,11 @@ public class WaitSetRequest extends MailDocumentHandler {
         String lastKnownSeqNo = req.getLastKnownSeqNo();
         boolean block = req.getBlock();
 
-        Callback cb = (Callback)servletRequest.getAttribute(VARS_ATTR_NAME);
+        WaitSetCallback cb = (WaitSetCallback)servletRequest.getAttribute(VARS_ATTR_NAME);
 
         if (cb == null) { // Initial
             Continuation continuation = ContinuationSupport.getContinuation(servletRequest);
-            cb = new Callback();
+            cb = new WaitSetCallback();
             cb.continuationResume = new ResumeContinuationListener(continuation);
             servletRequest.setAttribute(VARS_ATTR_NAME, cb);
 
@@ -220,25 +217,8 @@ public class WaitSetRequest extends MailDocumentHandler {
 
             ///////////////////
             // workaround for 27480: load the mailboxes NOW, before we grab the waitset lock
-            List<Mailbox> referencedMailboxes = Lists.newArrayList();
-            for (WaitSetAccount acct : add) {
-                try {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getAccountId(),
-                            MailboxManager.FetchMode.AUTOCREATE);
-                    referencedMailboxes.add(mbox);
-                } catch (ServiceException e) {
-                    ZimbraLog.session.debug("Caught exception preloading mailbox for waitset", e);
-                }
-            }
-            for (WaitSetAccount acct : update) {
-                try {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(
-                            acct.getAccountId(), MailboxManager.FetchMode.AUTOCREATE);
-                    referencedMailboxes.add(mbox);
-                } catch (ServiceException e) {
-                    ZimbraLog.session.debug("Caught exception preloading mailbox for waitset", e);
-                }
-            }
+            preloadMailboxes(add);
+            preloadMailboxes(update);
             // END workaround for 27480
             ///////////////////
 
@@ -249,6 +229,7 @@ public class WaitSetRequest extends MailDocumentHandler {
             cb.errors.addAll(cb.ws.removeAccounts(remove));
             synchronized(cb.ws) { // bug 28190: always grab the WS lock before the CB lock.
                 synchronized(cb) {
+                    // note that doWait for AllAccountsWaitSet ignores 'add' and 'update'
                     cb.errors.addAll(cb.ws.doWait(cb, lastKnownSeqNo, add, update));
                     // after this point, the ws has a pointer to the cb and so we *MUST NOT* lock
                     // the ws until we release the cb lock!
@@ -286,9 +267,10 @@ public class WaitSetRequest extends MailDocumentHandler {
             resp.setCanceled(true);
         } else if (cb.completed) {
             resp.setSeqNo(cb.seqNo);
-
-            for (String s : cb.signalledAccounts) {
-                resp.addSignalledAccount(new AccountIdAndFolderIds(s));
+            for (String signalledAcct : cb.signalledAccounts) {
+                AccountIdAndFolderIds info = new AccountIdAndFolderIds(signalledAcct);
+                info.setFolderIds(cb.changedFolderIds.get(signalledAcct));
+                resp.addSignalledAccount(info);
             }
         } else {
             // timed out....they should try again
@@ -296,6 +278,17 @@ public class WaitSetRequest extends MailDocumentHandler {
         }
 
         resp.setErrors(encodeErrors(cb.errors));
+    }
+
+    private static void preloadMailboxes(List<WaitSetAccount> accts) {
+        for (WaitSetAccount acct : accts) {
+            try {
+                MailboxManager.getInstance().getMailboxByAccountId(acct.getAccountId(),
+                        MailboxManager.FetchMode.AUTOCREATE);
+            } catch (ServiceException e) {
+                ZimbraLog.session.debug("Caught exception preloading mailbox for %s", acct, e);
+            }
+        }
     }
 
     /**
@@ -344,43 +337,6 @@ public class WaitSetRequest extends MailDocumentHandler {
             }
         }
         return remove;
-    }
-
-    public static class Callback implements WaitSetCallback {
-        @Override
-        public void dataReady(IWaitSet ws, String seqNo, boolean canceled, List<WaitSetError> inErrors, String[] signalledAccounts) {
-            boolean trace = ZimbraLog.session.isTraceEnabled();
-            if (trace) {
-                String accts = signalledAccounts != null ? "[" + StringUtil.join(", ", signalledAccounts) + "]" : "<null>";
-                ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady: ws=" + ws.getWaitSetId() + ", seq=" + seqNo +
-                        (canceled ? ", CANCEL" : "") + ", accounts=" + accts);
-            }
-            synchronized(this) {
-                ZimbraLog.session.debug("WaitSet: Called WaitSetCallback.dataReady()!");
-                if (inErrors != null && inErrors.size() > 0)
-                    errors.addAll(inErrors);
-                this.waitSet = ws;
-                this.canceled = canceled;
-                this.signalledAccounts = signalledAccounts;
-                this.seqNo = seqNo;
-                this.completed = true;
-                if (continuationResume != null) {
-                    if (trace) ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady 1");
-                    continuationResume.resumeIfSuspended();
-                    if (trace) ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady 2");
-                }
-            }
-            if (trace) ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady done");
-        }
-
-        public boolean completed = false;
-        public boolean canceled;
-        public String[] signalledAccounts;
-        public IWaitSet waitSet;
-        public String seqNo;
-        public IWaitSet ws;
-        public List<WaitSetError> errors = new ArrayList<WaitSetError>();
-        public ResumeContinuationListener continuationResume;
     }
 
     public static enum TypeEnum {
