@@ -158,7 +158,7 @@ public class ImapRemoteSession extends ImapListener {
      */
     @Override
     protected void snapshotRECENT() {
-        throw new UnsupportedOperationException("snapshotRECENT is not implemented yet");
+        return;
     }
 
 
