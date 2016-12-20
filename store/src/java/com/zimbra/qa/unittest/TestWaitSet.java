@@ -27,6 +27,7 @@ import com.zimbra.cs.service.mail.WaitSetRequest;
 import com.zimbra.cs.service.mail.WaitSetRequest.TypeEnum;
 import com.zimbra.cs.session.IWaitSet;
 import com.zimbra.cs.session.WaitSetAccount;
+import com.zimbra.cs.session.WaitSetCallback;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
 
@@ -90,7 +91,7 @@ public class TestWaitSet extends TestCase {
             assertEquals(0, errors.size());
 
             { // waitset shouldn't signal until message added to a mailbox
-                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
+                WaitSetCallback cb = new WaitSetCallback();
 
                 // wait shouldn't find anything yet
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
@@ -109,7 +110,7 @@ public class TestWaitSet extends TestCase {
             }
 
             { // waitset should pick up added user
-                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
+                WaitSetCallback cb = new WaitSetCallback();
 
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
 
@@ -148,7 +149,7 @@ public class TestWaitSet extends TestCase {
         try {
 
             { // waitset shouldn't signal until message added to a mailbox
-                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
+                WaitSetCallback cb = new WaitSetCallback();
 
                 // wait shouldn't find anything yet
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
@@ -167,7 +168,7 @@ public class TestWaitSet extends TestCase {
             }
 
             { // waitset should remain signalled until sequence number is increased
-                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
+                WaitSetCallback cb = new WaitSetCallback();
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
                 errors = ws.doWait(cb, "0", null, null);
                 try { Thread.sleep(500); } catch (Exception e) {}
@@ -177,7 +178,7 @@ public class TestWaitSet extends TestCase {
             }
 
             { // waitset shouldn't signal until a document is added
-                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
+                WaitSetCallback cb = new WaitSetCallback();
                 // wait shouldn't find anything yet
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
                 errors = ws.doWait(cb, curSeqNo, null, null);
@@ -194,7 +195,7 @@ public class TestWaitSet extends TestCase {
             }
 
             { // part 2: waitset for "all" should pick up new account added
-                WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
+                WaitSetCallback cb = new WaitSetCallback();
 
                 // wait shouldn't find anything yet
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
