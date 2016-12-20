@@ -77,6 +77,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -477,6 +478,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 msg = handler.implicitKeep(getFlagActions(), getTags());
             }
             if (msg != null) {
+                setTagsVisible(getTags());
                 filedIntoPaths.add(folderPath);
                 addedMessageIds.add(new ItemId(msg));
             }
@@ -515,8 +517,23 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         } else {
             ItemId id = handler.fileInto(folderPath, getFlagActions(), getTags());
             if (id != null) {
+                setTagsVisible(getTags());
                 filedIntoPaths.add(folderPath);
                 addedMessageIds.add(id);
+            }
+        }
+    }
+
+    private void setTagsVisible(String[] tags) {
+        for (String tagName : tags) {
+            try {
+                Tag tag;
+                tag = mailbox.getTagByName(null, tagName);
+                if (tag == null || !tag.isListed()) {
+                    mailbox.createTag(null, tagName, (byte) 0);
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.filter.info("Failed to set tag visible.  \"" + tagName + "\" stays invisible on the tag list");
             }
         }
     }

@@ -222,9 +222,6 @@ public final class FilterUtil {
                 if (msg == null) {
                     return null;
                 } else {
-                    for (String tagName : tags) {
-                        Tag tag = mbox.createTag(octxt, tagName, (byte) 0);
-                    }
                     return new ItemId(msg);
                 }
             } catch (IOException e) {
