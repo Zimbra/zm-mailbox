@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.ZimbraMailAdapter.KeepType;
 import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
@@ -532,7 +533,7 @@ public final class RuleManager {
         }
         if (addedMessageIds == null) {
             // Filter rules were not processed.  File to the default folder.
-            Message msg = mailAdapter.doDefaultFiling();
+            Message msg = mailAdapter.keep(KeepType.IMPLICIT_KEEP);
             addedMessageIds = new ArrayList<ItemId>(1);
             addedMessageIds.add(new ItemId(msg));
         }
@@ -565,7 +566,7 @@ public final class RuleManager {
         }
         if (addedMessageIds == null) {
             // Filter rules were not processed.  File to the default folder.
-            Message msg = mailAdapter.doDefaultFiling();
+            Message msg = mailAdapter.keep(KeepType.IMPLICIT_KEEP);
             addedMessageIds = new ArrayList<ItemId>(1);
             addedMessageIds.add(new ItemId(msg));
         }
