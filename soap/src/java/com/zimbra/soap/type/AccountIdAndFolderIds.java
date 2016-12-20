@@ -26,6 +26,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 
@@ -33,6 +35,7 @@ import com.zimbra.common.soap.AdminConstants;
 public class AccountIdAndFolderIds {
 
     private static Joiner COMMA_JOINER = Joiner.on(",");
+    private static Splitter COMMA_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
 
     /**
      * @zm-api-field-tag account-id
@@ -66,7 +69,7 @@ public class AccountIdAndFolderIds {
      * @zm-api-field-description Comma separated list of IDs for folders.
      */
     @XmlAttribute(name=AdminConstants.A_FOLDER_IDS /* folderIds */, required=false)
-    public String getFolderInterests() {
+    public String getFolderIds() {
         if (folderIds.isEmpty()) {
             return null;
         }
@@ -74,9 +77,16 @@ public class AccountIdAndFolderIds {
     }
 
     @XmlTransient
-    public List<Integer> getFolderInterestsAsList() { return folderIds; }
+    public List<Integer> getFolderIdsAsList() { return folderIds; }
 
-    public AccountIdAndFolderIds setFolderInterests(Integer... folderIds) {
+    public void setFolderIds(String fInterests) {
+        this.folderIds.clear();
+        for (String fi : COMMA_SPLITTER.split(Strings.nullToEmpty(fInterests))) {
+            folderIds.add(Integer.parseInt(fi));
+        }
+    }
+
+    public AccountIdAndFolderIds setFolderIds(Integer... folderIds) {
         this.folderIds.clear();
         if (folderIds != null) {
             for (Integer folderId : folderIds) {
@@ -86,9 +96,11 @@ public class AccountIdAndFolderIds {
         return this;
     }
 
-    public AccountIdAndFolderIds setFolderInterests(Collection<Integer> folderIds) {
+    public AccountIdAndFolderIds setFolderIds(Collection<Integer> folderIds) {
         this.folderIds.clear();
-        this.folderIds.addAll(folderIds);
+        if (folderIds != null) {
+            this.folderIds.addAll(folderIds);
+        }
         return this;
     }
 }
