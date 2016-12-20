@@ -7,7 +7,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.account.AccountDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.message.BeginTrackingImapResponse;
+import com.zimbra.soap.account.message.BeginTrackingIMAPResponse;
 
 public class BeginTrackingImap extends AccountDocumentHandler {
 
@@ -17,7 +17,7 @@ public class BeginTrackingImap extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         mbox.beginTrackingImap();
-        return zsc.jaxbToElement(new BeginTrackingImapResponse());
+        return zsc.jaxbToElement(new BeginTrackingIMAPResponse());
     }
 
 }

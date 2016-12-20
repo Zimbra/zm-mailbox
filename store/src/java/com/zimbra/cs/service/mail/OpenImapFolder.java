@@ -12,12 +12,11 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.account.AccountDocumentHandler;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.ImapCursorInfo;
 import com.zimbra.soap.account.message.ImapMessageInfo;
-import com.zimbra.soap.account.message.OpenImapFolderRequest;
-import com.zimbra.soap.account.message.OpenImapFolderResponse;
+import com.zimbra.soap.account.message.OpenIMAPFolderRequest;
+import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
 
 public class OpenImapFolder extends AccountDocumentHandler {
 
@@ -27,8 +26,8 @@ public class OpenImapFolder extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
-        OpenImapFolderRequest req = zsc.elementToJaxb(request);
-        OpenImapFolderResponse resp = new OpenImapFolderResponse();
+        OpenIMAPFolderRequest req = zsc.elementToJaxb(request);
+        OpenIMAPFolderResponse resp = new OpenIMAPFolderResponse();
         ItemId folderId = new ItemId(req.getFolderId(), zsc);
         int limit = req.getLimit();
         ImapCursorInfo cursor = req.getCursor();
