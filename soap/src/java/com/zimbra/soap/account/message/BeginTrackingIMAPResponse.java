@@ -5,6 +5,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 
 @XmlRootElement(name=AccountConstants.E_BEGIN_TRACKING_IMAP_RESPONSE)
-public class BeginTrackingImapResponse {
-    public BeginTrackingImapResponse() {};
+public class BeginTrackingIMAPResponse {
+    public BeginTrackingIMAPResponse() {};
 }
