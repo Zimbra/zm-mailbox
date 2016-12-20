@@ -196,6 +196,7 @@ public class SetVariableTest {
         variables.put("c_d", "C");
         variables.put("1", "One");
         variables.put("23", "twenty three");
+        variables.put("uppercase", "upper case");
 
         testCases.put("${a.b}", "おしらせ");
         testCases.put("${c_d}", "C");
@@ -203,6 +204,10 @@ public class SetVariableTest {
         testCases.put("${23}", "${23}");     // Not defined
         testCases.put("${123}", "${123}");   // Invalid variable name
         testCases.put("${a.b} ${COMpANY} ${c_d}hao!", "おしらせ ACME Chao!");
+        testCases.put("${a.b} ${def} ${c_d}hao!", "おしらせ  Chao!"); // 1st valid variable, 2nd undefined, 3rd valid variable
+        testCases.put("${upperCase}", "upper case");
+        testCases.put("${UPPERCASE}", "upper case");
+        testCases.put("${uppercase}", "upper case");
 
         for (Map.Entry<String, String> entry : testCases.entrySet()) {
             String result = Variables.leastGreedyReplace(variables, entry.getKey());

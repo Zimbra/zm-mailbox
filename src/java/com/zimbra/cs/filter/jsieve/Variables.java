@@ -101,15 +101,12 @@ public class Variables extends AbstractActionCommand {
                             String value = variables.get(key);
                             if (value != null) {
                                 resultStr.append(value);
-                                start1 = end + 1;
-                            } else {
-                                start1 = start2 + 2;
                             }
                         } else {
                             // the variable name contains some invalid characters
                             resultStr.append(sourceStr.substring(start2, end + 1));
-                            start1 = end + 1;
                         }
+                        start1 = end + 1;
                     }
                 } else {
                     // no corresponding }
