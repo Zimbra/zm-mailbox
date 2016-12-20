@@ -179,8 +179,8 @@ public class AccountConstants {
     public static final String E_GET_MODIFIED_ITEMS_IDS_RESPONSE = "GetModifiedItemsIDsResponse";
     public static final String E_GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST = "GetLastItemIdInMailboxRequest";
     public static final String E_GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE = "GetLastItemIdInMailboxResponse";
-    public static final String E_BEGIN_TRACKING_IMAP_REQUEST = "BeginTrackingImapRequest";
-    public static final String E_BEGIN_TRACKING_IMAP_RESPONSE = "BeginTrackingImapResponse";
+    public static final String E_BEGIN_TRACKING_IMAP_REQUEST = "BeginTrackingIMAPRequest";
+    public static final String E_BEGIN_TRACKING_IMAP_RESPONSE = "BeginTrackingIMAPResponse";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
