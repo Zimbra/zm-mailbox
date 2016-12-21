@@ -19,6 +19,7 @@ package com.zimbra.cs.filter;
 import static org.junit.Assert.fail;
 
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,6 +43,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
+import com.zimbra.cs.service.util.ItemId;
 
 public class ReplaceHeaderTest {
 
@@ -124,6 +126,30 @@ public class ReplaceHeaderTest {
             + "\t=?utf-8?B?5oqY44KK5puy44GS44KJ44KM44G+44GZ44CC?=\n"
             + "from: test2@zimbra.com\n"
             + "to: test@zimbra.com\n";
+    private static String[] sampleBaseMsg7 = {
+              "Received: from domain1.zimbra.com (LHLO zcs-ubuntu.local) (192.168.44.131)\r\n"
+            + " by zcs-ubuntu.local with LMTP; Wed, 7 Dec 2016 15:10:58 +0900 (JST)",
+              "Received: from zcs-ubuntu.local (localhost [127.0.0.1])\r\n"
+            + " by zcs-ubuntu.local (Postf ix) with ESMTPS id 3D4EA2C2648\r\n"
+            + " for <user1@domain1.zimbra.com>; Wed,  7 Dec 2016 15:10:58 +0900 (JST)",
+              "Received: from zcs-ubuntu.local (localhost [127.0.0.1])\r\n"
+            + " by zcs-ubuntu.local (Postfix) with ESMTPS id 328882C26FC\r\n"
+            + " for <user1@domain1.zimbra.com>; Wed,  7 Dec 2016 15:10:58 +0900 (JST)",
+              "Received: from zcs-ubuntu.local (localhost [127.0.0.1])\r\n"
+            + " by zcs-ubuntu.local (Postfix) with ESMTPS id 2822F2C2648\r\n"
+            + " for <user1@domain1.zimbra.com>; Wed,  7 Dec 2016 15:10:58 +0900 (JST)",
+              "Message-ID: <46941357.16.1482318459470.JavaMail.zimbra@dev07>",
+              "MIME-Version: 1.0",
+              "Content-Transfer-Encoding: 7bit",
+              "X-Dummy-Header: ABC",
+              "X-Dummy-Header: 123",
+              "X-Dummy-Header: abc",
+              "X-Dummy-Header: \"\"",
+              "X-Dummy-Header: this is sample",
+              "X-Dummy-Header: ",
+              "X-Dummy-Header: test",
+              "X-Dummy-Header: ''",
+              "X-Dummy-Header: a1b2c3"};
 
     @BeforeClass
     public static void init() throws Exception {
@@ -756,6 +782,90 @@ public class ReplaceHeaderTest {
                     + " =?UTF-8?B?44Ko44Oz44Kz44O844OJ44GV44KM44G+44GZ?=\r\n"
                     + " =?UTF-8?B?44CC6KGM44GM6ZW344GE44Gu44Gn44CB?=\r\n"
                     + " =?UTF-8?B?5oqY44KK5puy44GS44KJ44KM44G+44GZ44CC?=", newSubject);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace the headers with "X-Dummy-Header: ABC"
+     * Verify that the order of the header fields does not change.
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderSameHeaderNameMultipleHeaderValues1() {
+        StringBuffer triggeringMsg = new StringBuffer();
+        for (String line : sampleBaseMsg7) {
+            triggeringMsg.append(line).append("\r\n");
+        }
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + "replaceheader :newname \"X-New-Header\" :newvalue \"new value\" "
+                    + ":comparator \"i;ascii-casemap\" :is \"X-Dummy-Header\" \"ABC\";";
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(triggeringMsg.toString().getBytes(), false), 0,
+                    account.getName(), null, new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            int index = 0;
+            for (Enumeration<Header> e = msg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                String header = temp.getName();
+                String value = header + ": " + temp.getValue();
+                if ("X-New-Header".equals(header)) {
+                    Assert.assertEquals("X-New-Header: new value", value);
+                } else {
+                    Assert.assertEquals(sampleBaseMsg7[index], value);
+                }
+                index++;
+            }
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace the "X-Dummy-Header" headers with an empty header value.
+     * Verify that the order of the header fields does not change.
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderSameHeaderNameMultipleHeaderValues2() {
+        StringBuffer triggeringMsg = new StringBuffer();
+        for (String line : sampleBaseMsg7) {
+            triggeringMsg.append(line).append("\r\n");
+        }
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + "replaceheader :newname \"X-New-Header\" :newvalue \"new value\" "
+                    + ":comparator \"i;ascii-casemap\" :is \"X-Dummy-Header\" \"\";";
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(triggeringMsg.toString().getBytes(), false), 0,
+                    account.getName(), null, new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            int index = 0;
+            for (Enumeration<Header> e = msg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                String header = temp.getName();
+                String value = header + ": " + temp.getValue();
+                if ("X-New-Header".equals(header)) {
+                    Assert.assertEquals("X-New-Header: new value", value);
+                } else {
+                    Assert.assertEquals(sampleBaseMsg7[index], value);
+                }
+                index++;
+            }
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }

@@ -127,7 +127,7 @@ public class ReplaceHeader extends AbstractCommand {
                 mm.removeHeader(header.getName());
             }
             for (Header header : newHeaderList) {
-                mm.addHeader(header.getName(), header.getValue());
+                mm.addHeaderLine(header.getName() + ": " + header.getValue());
             }
             mm.saveChanges();
             mailAdapter.updateIncomingBlob();
