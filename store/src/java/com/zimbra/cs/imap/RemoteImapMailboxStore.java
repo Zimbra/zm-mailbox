@@ -192,8 +192,14 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public int getImapRECENTCutoff(FolderStore folder) {
-        /* See notes on getImapRECENT */
-        return 0;
+        boolean isWritable = false;
+        for (ImapListener imapListener: getListeners(folder.getFolderIdInOwnerMailbox())) {
+            if (imapListener.isWritable()) {
+                isWritable = true;
+                break;
+            }
+        }
+        return ((ZFolder) folder).getImapRECENTCutoff(isWritable);
     }
 
     /**
