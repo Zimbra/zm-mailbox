@@ -723,8 +723,9 @@ public final class ParseMimeMessage {
         ctxt.incrementSize("attached message", msg.getSize());
 
         MimeBodyPart mbp = new ZMimeBodyPart();
-        if (attachMessageFromCache && (Mime.isEncrypted(msg.getMimeMessage(false).getContentType())
-            || Mime.isPKCS7Signed(msg.getMimeMessage(false).getContentType()))) {
+        if (attachMessageFromCache && mbox.getAccount().isFeatureSMIMEEnabled()
+            && (Mime.isEncrypted(msg.getMimeMessage(false).getContentType())
+                || Mime.isPKCS7Signed(msg.getMimeMessage(false).getContentType()))) {
             MimeMessage cachedMimeMessage = msg.getMimeMessage(true);
             mbp.setContent(cachedMimeMessage, MimeConstants.CT_MESSAGE_RFC822);
         } else {
