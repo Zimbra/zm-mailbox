@@ -213,7 +213,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
          * the recency test just as much as another IMAP client?  So, could consider all listeners
          * here AND on the mailbox??  Thinking that just remote listeners may not cut it)
          */
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        return 0;
     }
 
     public int store(String folderId, Blob content, Date date, int msgFlags)
