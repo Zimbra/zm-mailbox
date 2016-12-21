@@ -11,6 +11,7 @@ import java.sql.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.mail.MessagingException;
 import javax.security.auth.login.LoginException;
 
 import junit.framework.Assert;
@@ -24,6 +25,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -40,12 +42,15 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.Body;
+import com.zimbra.cs.mailclient.imap.BodyStructure;
+import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.Literal;
+import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.AuthProvider;
@@ -362,5 +367,43 @@ public class TestRemoteImap {
         ImapConnection connection = new ImapConnection(config);
         connection.connect();
         return connection;
+    }
+
+    @Test
+    public void testListFolderContents() throws IOException, ServiceException, MessagingException {
+        Assume.assumeTrue(servers.size() > 1);
+        String folderName = "TestRemoteImap-testOpenFolder";
+        String subject = "TestRemoteImap-testMessage";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName);
+        TestUtil.addMessage(zmbox, subject, folder.getId(), null);
+        connection = connect(imapServer);
+        connection.login(PASS);
+        MailboxInfo info = connection.select(folderName);
+        assertEquals(1L, info.getRecent());
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
+        assertEquals(1, mdMap.size());
+        MessageData md = mdMap.values().iterator().next();
+        assertNotNull(md);
+        Envelope env = md.getEnvelope();
+        assertNotNull(env);
+        assertNotNull(env.getSubject());
+        assertEquals(subject, env.getSubject());
+        assertNotNull(md.getInternalDate());
+        BodyStructure bs = md.getBodyStructure();
+        assertNotNull(bs);
+        if (bs.isMultipart()) {
+            BodyStructure[] parts = bs.getParts();
+            for (BodyStructure part : parts) {
+                assertNotNull(part.getType());
+                assertNotNull(part.getSubtype());
+            }
+        } else {
+            assertNotNull(bs.getType());
+            assertNotNull(bs.getSubtype());
+        }
+        Body[] body = md.getBodySections();
+        assertNotNull(body);
+        assertEquals(1, body.length);
     }
 }
