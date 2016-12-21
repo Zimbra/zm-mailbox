@@ -97,6 +97,8 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     private final ZMailbox mMailbox;
     private RetentionPolicy mRetentionPolicy = new RetentionPolicy();
     private boolean mActiveSyncDisabled;
+    private int mImapRECENTCutoff;
+
 
     @Override
     public int compareTo(Object obj) {
@@ -691,6 +693,18 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     @Override
     public int getImapMessageCount() {
         return mImapMessageCount;
+    }
+
+    public int getImapRECENTCutoff(boolean inWritableSession) {
+        try {
+            if (inWritableSession || mImapRECENTCutoff == 0) {
+                mImapRECENTCutoff = mMailbox.getLastItemIdInMailbox();
+            }
+        }
+        catch (ServiceException e) {
+            ZimbraLog.imap.warn("Error retrieving last item ID in mailbox", e);
+        }
+        return mImapRECENTCutoff;
     }
 
     /**
