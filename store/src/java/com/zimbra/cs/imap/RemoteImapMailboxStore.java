@@ -193,7 +193,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     @Override
     public int getImapRECENTCutoff(FolderStore folder) {
         /* See notes on getImapRECENT */
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        return 0;
     }
 
     /**
