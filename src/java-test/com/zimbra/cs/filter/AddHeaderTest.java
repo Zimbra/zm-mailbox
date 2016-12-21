@@ -19,6 +19,7 @@ package com.zimbra.cs.filter;
 import static org.junit.Assert.fail;
 
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,6 +43,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
+import com.zimbra.cs.service.util.ItemId;
 
 public class AddHeaderTest {
 
@@ -54,6 +56,31 @@ public class AddHeaderTest {
             + "from: test2@zimbra.com\n"
             + "Subject: example\n"
             + "to: test@zimbra.com\n";
+    private static String[] sampleBaseMsg2 = {
+            "Return-Path: user1@domain1.zimbra.com",
+            "Received: from domain1.zimbra.com (LHLO zcs-ubuntu.local) (192.168.44.131)\r\n"
+          + " by zcs-ubuntu.local with LMTP; Wed, 7 Dec 2016 15:10:58 +0900 (JST)",
+            "Received: from zcs-ubuntu.local (localhost [127.0.0.1])\r\n"
+          + " by zcs-ubuntu.local (Postf ix) with ESMTPS id 3D4EA2C2648\r\n"
+          + " for <user1@domain1.zimbra.com>; Wed,  7 Dec 2016 15:10:58 +0900 (JST)",
+            "Received: from zcs-ubuntu.local (localhost [127.0.0.1])\r\n"
+          + " by zcs-ubuntu.local (Postfix) with ESMTPS id 328882C26FC\r\n"
+          + " for <user1@domain1.zimbra.com>; Wed,  7 Dec 2016 15:10:58 +0900 (JST)",
+            "Received: from zcs-ubuntu.local (localhost [127.0.0.1])\r\n"
+          + " by zcs-ubuntu.local (Postfix) with ESMTPS id 2822F2C2648\r\n"
+          + " for <user1@domain1.zimbra.com>; Wed,  7 Dec 2016 15:10:58 +0900 (JST)",
+            "X-Dummy-Header: ABC",
+            "X-Dummy-Header: 123",
+            "X-Dummy-Header: abc",
+            "X-Dummy-Header: \"\"",
+            "X-Dummy-Header: this is sample",
+            "X-Dummy-Header: ",
+            "X-Dummy-Header: test",
+            "X-Dummy-Header: ''",
+            "X-Dummy-Header: a1b2c3",
+            "Message-ID: <46941357.16.1482318459470.JavaMail.zimbra@dev07>",
+            "MIME-Version: 1.0",
+            "Content-Transfer-Encoding: 7bit"};
 
     @BeforeClass
     public static void init() throws Exception {
@@ -115,7 +142,8 @@ public class AddHeaderTest {
                     break;
                 }
             }
-            Assert.assertEquals(3, index);
+            // the header field is inserted at the beginning of the existing message header.
+            Assert.assertEquals(1, index);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
@@ -276,7 +304,8 @@ public class AddHeaderTest {
                     break;
                 }
             }
-            Assert.assertEquals(3, index);
+            // the header field is inserted at the beginning of the existing message header.
+            Assert.assertEquals(1, index);
             Assert.assertEquals("=?UTF-8?B?6L+95Yqg44OY44OD44OA5YCk?=", newHeader);
 
         } catch (Exception e) {
@@ -327,6 +356,48 @@ public class AddHeaderTest {
             Assert.assertEquals(1, index);
             Assert.assertEquals("=?UTF-8?B?5pel5pys6Kqe44Gu5Lu25ZCN44CC5pel5pys6Kqe?=\r\n =?UTF-8?B?44Gu5Lu25ZCN44CC5pel5pys6Kqe44Gu5Lu25ZCN44CC?=", newHeader);
 
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Add the headers with "X-Dummy-Header: new value"
+     * Verify that the order of the header fields does not change.
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testAddHeaderSameHeaderNameMultipleHeaderValues1() {
+        StringBuffer triggeringMsg = new StringBuffer();
+        for (String line : sampleBaseMsg2) {
+            triggeringMsg.append(line).append("\r\n");
+        }
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + "addheader \"X-Dummy-Header\" \"new value\"; ";
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(triggeringMsg.toString().getBytes(), false), 0,
+                    account.getName(), null, new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Enumeration e = msg.getMimeMessage().getAllHeaderLines();
+            Assert.assertTrue(e.hasMoreElements());
+
+            // The 1st and 2nd line of the headers
+            Assert.assertEquals("Return-Path: user1@domain1.zimbra.com", (String) e.nextElement());
+            Assert.assertEquals("X-Dummy-Header: new value", (String) e.nextElement());
+
+            // The rest of the headers
+            int index = 1;
+            while (e.hasMoreElements() && index < sampleBaseMsg2.length) {
+                String value = (String) e.nextElement();
+                Assert.assertEquals(sampleBaseMsg2[index++], value);
+            }
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }

@@ -111,18 +111,31 @@ public class AddHeader extends AbstractCommand {
         if (headerName != null && headerValue != null) {
             try {
                 if (last) {
-                    mm.addHeader(headerName,headerValue);
+                    mm.addHeaderLine(headerName + ": " + headerValue);
                 } else {
                     List<Header> headerList = new ArrayList<Header>();
+                    Enumeration<Header> e = mm.getAllHeaders();
+                    // If the first line of the header is "Return-Path",
+                    // keep it at the first line.
+                    if (e.hasMoreElements()) {
+                        Header temp = e.nextElement();
+                        if ("Return-Path".equalsIgnoreCase(temp.getName())) {
+                            mm.removeHeader(temp.getName());
+                            headerList.add(temp);
+                        } else {
+                            // reset the iterator (push back the first item of the headers list)
+                            e = mm.getAllHeaders();
+                        }
+                    }
                     headerList.add(new Header(headerName,headerValue));
-                    for (Enumeration<Header> e = mm.getAllHeaders(); e.hasMoreElements();) {
+                    while (e.hasMoreElements()) {
                         Header temp = e.nextElement();
                         mm.removeHeader(temp.getName());
                         headerList.add(temp);
                     }
 
                     for (Header header : headerList) {
-                        mm.addHeader(header.getName(), header.getValue());
+                        mm.addHeaderLine(header.getName() + ": " + header.getValue());
                     }
                 }
 
