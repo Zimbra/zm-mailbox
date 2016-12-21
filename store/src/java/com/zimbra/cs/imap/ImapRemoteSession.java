@@ -118,6 +118,7 @@ public class ImapRemoteSession extends ImapListener {
 
     protected ImapRemoteSession(ImapMailboxStore imapStore, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(imapStore, i4folder, handler);
+        mailbox = imapStore.getMailboxStore();
     }
 
     @Override
