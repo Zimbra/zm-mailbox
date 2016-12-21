@@ -727,7 +727,6 @@ public final class ParseMimeMessage {
             || Mime.isPKCS7Signed(msg.getMimeMessage(false).getContentType()))) {
             MimeMessage cachedMimeMessage = msg.getMimeMessage(true);
             mbp.setContent(cachedMimeMessage, MimeConstants.CT_MESSAGE_RFC822);
-
         } else {
             mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(msg.getBlob())));
             mbp.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
