@@ -116,9 +116,6 @@ public class GetMsg extends MailDocumentHandler {
                 ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize,
                         wantHTML, neuter, headers, false, needGroupInfo, LC.mime_encode_missing_blob.booleanValue(), wantContent);
             }
-            if (GetMsgResponseProcessor.getProcessor() != null) {
-                GetMsgResponseProcessor.getProcessor().process(mbox, response, msg.getMimeMessage(), zsc);
-            }
         }
         return response;
     }
