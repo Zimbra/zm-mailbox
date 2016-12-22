@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
@@ -29,6 +30,7 @@ import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.InputStreamWithSize;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -44,9 +46,11 @@ public abstract class ImapMailboxStore {
 
     public static ImapMailboxStore get(MailboxStore mbox) throws ServiceException {
         if (mbox instanceof Mailbox) {
+            ZimbraLog.imap.debug("Using local MailboxStore for %s", mbox.getAccountId());
             return new LocalImapMailboxStore((Mailbox) mbox);
         }
         if (mbox instanceof ZMailbox) {
+            ZimbraLog.imap.debug("Using remote MailboxStore for %s", mbox.getAccountId());
             return new RemoteImapMailboxStore((ZMailbox) mbox);
         }
         return null;
