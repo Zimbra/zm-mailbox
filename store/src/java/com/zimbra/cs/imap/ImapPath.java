@@ -23,6 +23,7 @@ import com.google.common.base.Strings;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
@@ -260,17 +261,20 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     boolean onLocalServer() throws ServiceException {
+        if(LC.imap_always_use_remote_store.booleanValue()) {
+            return false;
+        }
         Account acct = getOwnerAccount();
         return acct != null && Provisioning.onLocalServer(acct);
     }
 
     MailboxStore getOwnerMailbox() throws ServiceException {
-        getOwnerImapMailboxStore(false);
+        getOwnerImapMailboxStore(LC.imap_always_use_remote_store.booleanValue());
         return (null == imapMboxStore) ? null : imapMboxStore.getMailboxStore();
     }
 
     ImapMailboxStore getOwnerImapMailboxStore() throws ServiceException {
-        return getOwnerImapMailboxStore(false);
+        return getOwnerImapMailboxStore(LC.imap_always_use_remote_store.booleanValue());
     }
 
     /**
@@ -455,7 +459,7 @@ public class ImapPath implements Comparable<ImapPath> {
         String owner = mCredentials != null && mCredentials.getAccountId().equalsIgnoreCase(target.getId()) ? null
                 : target.getName();
         ImapMailboxStore imapMailboxStore = null;
-        if (Provisioning.onLocalServer(target)) {
+        if (Provisioning.onLocalServer(target) && !LC.imap_always_use_remote_store.booleanValue()) {
             try {
                 MailboxStore mbox = MailboxManager.getInstance().getMailboxByAccount(target);
                 imapMailboxStore = ImapMailboxStore.get(mbox, target.getId());
