@@ -30,6 +30,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.InputStreamWithSize;
@@ -183,11 +184,11 @@ class ImapPartSpecifier {
         InputStreamWithSize contents;
         if (obj instanceof MimeMessage) {
             contents = getContent((MimeMessage) obj);
-        } else if (obj instanceof MailItem) {
+        } else if (obj instanceof ZimbraMailItem) {
             if (!isEntireMessage()) {
                 throw ServiceException.FAILURE("called writeMessage on non-toplevel part", null);
             }
-            contents = ImapMessage.getContent((MailItem) obj);
+            contents = ImapMessage.getContent((ZimbraMailItem) obj);
         } else {
             throw ServiceException.FAILURE("called write() with unexpected argument: "
                     + (obj == null ? "null" : obj.getClass().getSimpleName()), null);
