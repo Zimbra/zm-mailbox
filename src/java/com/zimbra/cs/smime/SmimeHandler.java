@@ -23,6 +23,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 
 public abstract class SmimeHandler {
 
@@ -41,7 +42,7 @@ public abstract class SmimeHandler {
 
     public abstract MimeMessage decryptMessage(Mailbox mailbox, MimeMessage mime, int itemId) throws ServiceException;
 
-    public abstract void updateCryptoFlags(Account account, Element m,
+    public abstract void updateCryptoFlags(Message msg, Element m,
         MimeMessage originalMimeMessage, MimeMessage decryptedMimeMessage);
 
     public abstract MimeMessage decodePKCS7Message(Account account, MimeMessage pkcs7MimeMessage);
