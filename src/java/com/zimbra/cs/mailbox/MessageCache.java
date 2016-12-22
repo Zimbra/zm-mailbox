@@ -190,13 +190,15 @@ public class MessageCache {
                     MimeMessage decryptedMimeMessage = null;
                     if (item instanceof Message) {
                         // if the mime is encrypted; decrypt it first
-                        isEncrypted = Mime.isEncrypted(cnode.message.getContentType());
-                        if ((cnode.message != null && isEncrypted) && (cnode.expanded == null
-                            || !cnode.smimeAccessInfo.containsKey(mboxId))) {
+                        if (cnode.message != null) {
+                            isEncrypted = Mime.isEncrypted(cnode.message.getContentType());
+                        }
+                        if (isEncrypted && (cnode.expanded == null || !cnode.smimeAccessInfo.containsKey(mboxId))) {
                             cacheHit = false;
                             decryptedMimeMessage = doDecryption(item, cnode, mboxId);
                         }
                     }
+                    //expand if the message has not yet been expanded or if the message is decrypted successfully
                     if (cnode.expanded == null || (decryptedMimeMessage != null && cnode.expanded != decryptedMimeMessage)) {
                         cacheHit = false;
                         expandMessage(item, cnode, decryptedMimeMessage);
@@ -286,6 +288,9 @@ public class MessageCache {
                     break;
                 }
             } finally {
+                if (decryptedMimeMessage == null) {
+                    decryptionError = MimeConstants.ERR_DECRYPTION_FAILED;
+                }
                 cnode.smimeAccessInfo.put(mboxId, decryptionError);
             }
         }
