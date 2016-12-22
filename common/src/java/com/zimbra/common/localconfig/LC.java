@@ -1305,6 +1305,10 @@ public final class LC {
     @Supported
     public static final KnownKey smime_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
 
+    //Remote IMAP
+    @Reloadable
+    public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
