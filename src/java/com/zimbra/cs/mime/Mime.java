@@ -1593,14 +1593,14 @@ public class Mime {
         return refs;
     }
 
-    public static boolean isMultipartSigned(String contentType) throws MessagingException {
+    public static boolean isMultipartSigned(String contentType) {
         if (contentType.contains(MimeConstants.CT_MULTIPART_SIGNED))
             return true;
         else
             return false;
     }
 
-    public static boolean isPKCS7Signed(String contentType) throws MessagingException {
+    public static boolean isPKCS7Signed(String contentType) {
         if ((contentType.contains(MimeConstants.CT_APPLICATION_SMIME)
             || (contentType.contains(MimeConstants.CT_APPLICATION_SMIME_OLD)))
             && contentType.contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))
@@ -1609,7 +1609,7 @@ public class Mime {
             return false;
     }
 
-    public static boolean isEncrypted(String contentType) throws MessagingException {
+    public static boolean isEncrypted(String contentType) {
         if (contentType.contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA))
             return true;
         else
