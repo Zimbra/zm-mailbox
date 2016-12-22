@@ -32,8 +32,10 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -83,6 +85,14 @@ public class ReplaceHeaderTest {
             + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
             + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
             + "X-Test-Header: =?utf-8?B?W1NQQU1d5pel5pys6Kqe44Gu5Lu25ZCN?=\n"
+            + "X-Test-Header: ABC\n"
+            + "X-Test-Header: 123\n"
+            + "X-Test-Header: abc\n"
+            + "X-Test-Header: \"\"\n"
+            + "X-Test-Header: XYZ\n"
+            + "X-Test-Header: \n"
+            + "X-Test-Header: xyz\n"
+            + "X-Test-Header: ''\n"
             + "X-Spam-Score: 85\n"
             + "from: test2@zimbra.com\n"
             + "Subject: example\n"
@@ -162,7 +172,9 @@ public class ReplaceHeaderTest {
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        prov.createAccount("test@zimbra.com", "secret", attrs);
+        Account acct = prov.createAccount("test@zimbra.com", "secret", attrs);
+        Server server = Provisioning.getInstance().getServer(acct);
+        server.setSieveFeatureVariablesEnabled(true);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
@@ -598,7 +610,16 @@ public class ReplaceHeaderTest {
     public void testReplaceHeaderForEncodedHeaderValue() {
         try {
             String filterScript = "require [\"editheader\", \"variables\"];\n"
-                    +"        replaceheader :newvalue \"[test]${1}\" :matches \"X-Test-Header\" \"*\";";
+                    + "replaceheader :newvalue \"[test]${1}\" :matches \"X-Test-Header\" \"*\";"
+                    + "tag \"tag1-${1}\";"
+                    + "tag \"tag2-${2}\";"
+                    + "tag \"tag3-${3}\";"
+                    + "tag \"tag4-${4}\";"
+                    + "tag \"tag5-${5}\";"
+                    + "tag \"tag6-${6}\";"
+                    + "tag \"tag7-${7}\";"
+                    + "tag \"tag8-${8}\";"
+                    + "tag \"tag9-${9}\";";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
@@ -623,6 +644,28 @@ public class ReplaceHeaderTest {
             String matchValue = "=?UTF-8?Q?[test][SP?=\r\n"
                     + " =?UTF-8?Q?AM]=E6=97=A5=E6=9C=AC=E8=AA=9E=E3=81=AE=E4=BB=B6=E5=90=8D?=";
             Assert.assertEquals(matchValue, headerValue);
+
+            String expectedTags[] = {
+                    "tag1-[SPAM]日本語の件名",
+                    "tag2-ABC",
+                    "tag3-123",
+                    "tag4-abc",
+                    "tag5-\"\"",
+                    "tag6-XYZ",
+                    "tag7-",
+                    "tag8-xyz",
+                    "tag9-\'\'"};
+            String resultTags[] = message.getTags();
+            for (String resultTag : resultTags) {
+                String expectedTag = null;
+                for (String testTag : expectedTags) {
+                    if (testTag.equalsIgnoreCase(resultTag)) {
+                        expectedTag = testTag;
+                        break;
+                    }
+                }
+                Assert.assertEquals(expectedTag, resultTag);
+            }
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
