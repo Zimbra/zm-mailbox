@@ -18,6 +18,7 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -35,7 +36,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ExpandMimeMessage;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.smime.SmimeHandler;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.MailboxBlob;
@@ -50,6 +50,7 @@ public class MessageCache {
         CacheNode()  { }
         MimeMessage message;
         MimeMessage expanded;
+        Map<Integer, String> smimeAccessInfo = new HashMap<Integer, String>();
         long size = 0;
     }
 
@@ -153,6 +154,8 @@ public class MessageCache {
         boolean cacheHit = true;
         boolean newNode = false;
         InputStream in = null;
+        int mboxId = item.getMailboxId();
+        boolean isEncrypted = false;
 
         synchronized (sCache) {
             cnode = sCache.get(digest);
@@ -181,70 +184,26 @@ public class MessageCache {
                 }
             }
 
-            if (expand && cnode.expanded == null) {
+            if (expand) {
                 sLog.debug("Expanding MimeMessage for item %d.", item.getId());
                 cacheHit = false;
-                String decryptionError = null;
                 try {
                     MimeMessage decryptedMimeMessage = null;
                     if (item instanceof Message) {
                         // if the mime is encrypted; decrypt it first
-                        if (cnode.message != null
-                            && Mime.isEncrypted(cnode.message.getContentType())) {
-                            if (SmimeHandler.getHandler() != null) {
-                                sLog.debug(
-                                    "The message %d is encrypted. Forwarding it to SmimeHandler for decryption.",
-                                    item.getId());
-                                try {
-                                    decryptedMimeMessage = SmimeHandler.getHandler().decryptMessage(
-                                        ((Message) item).getMailbox(), cnode.message, item.getId());
-                                } catch (ServiceException e) {
-                                    switch (e.getCode()) {
-                                    case ServiceException.LOAD_CERTIFICATE_FAILED:
-                                        decryptionError = MimeConstants.ERR_LOAD_CERTIFICATE_FAILED;
-                                        break;
-                                    case ServiceException.LOAD_PRIVATE_KEY_FAILED:
-                                        decryptionError = MimeConstants.ERR_LOAD_PRIVATE_KEY_FAILED;
-                                        break;
-                                    case ServiceException.DECRYPTION_FAILED:
-                                        decryptionError = MimeConstants.ERR_DECRYPTION_FAILED;
-                                        break;
-                                    }
-                                }
-                            }
+                        isEncrypted = Mime.isEncrypted(cnode.message.getContentType());
+                        if ((cnode.message != null && isEncrypted) && (cnode.expanded == null
+                            || !cnode.smimeAccessInfo.containsKey(mboxId) || cnode.smimeAccessInfo.get(mboxId) != null)) {
+                            decryptedMimeMessage = doDecryption(item, cnode, mboxId);
                         }
                     }
-                    MimeMessage mimeToExpand = cnode.message;
-                    if (decryptedMimeMessage != null) {
-                        mimeToExpand = decryptedMimeMessage;
-                    }
-                    MimeMessage decodedMimeMessage = null;
-                    if (Mime.isPKCS7Signed(mimeToExpand.getContentType())) {
-                        if (SmimeHandler.getHandler() != null) {
-                            ZimbraLog.mailbox.debug(
-                                "The message is PKCS7 signed. Forwarding it to SmimeHandler for decoding.");
-                            decodedMimeMessage = SmimeHandler.getHandler()
-                                .decodePKCS7Message(item.getAccount(), mimeToExpand);
-                        }
-                    }
-                    ExpandMimeMessage expander = new ExpandMimeMessage(
-                        decodedMimeMessage != null ? decodedMimeMessage : mimeToExpand);
-                    expander.expand();
-                    cnode.expanded = expander.getExpanded();
-                    if (cnode.expanded != cnode.message) {
-                        sDataSize += cnode.size;
-                        cnode.size *= 2;
+                    if (cnode.expanded == null || (decryptedMimeMessage != null && cnode.expanded != decryptedMimeMessage)) {
+                        expandMessage(item, cnode, decryptedMimeMessage);
                     }
                 } catch (Exception e) {
                     // if the conversion bombs for any reason, revert to the original
                     sLog.warn("MIME converter failed for message %d.  Reverting to original.", item.getId(), e);
                     cnode.expanded = cnode.message;
-                }
-                if (decryptionError != null) {
-                    if (cnode.expanded instanceof Mime.FixedMimeMessage) {
-                        ((Mime.FixedMimeMessage) cnode.expanded)
-                            .setDecryptionError(decryptionError);
-                    }
                 }
             }
 
@@ -268,10 +227,68 @@ public class MessageCache {
         }
 
         if (expand) {
+            if (isEncrypted && (!cnode.smimeAccessInfo.containsKey(mboxId)
+                || cnode.smimeAccessInfo.get(mboxId) != null)) {
+                return cnode.message;
+            }
             return cnode.expanded;
         } else {
             return cnode.message;
         }
+    }
+
+    private static void expandMessage(MailItem item, CacheNode cnode, MimeMessage decryptedMimeMessage)
+        throws MessagingException, ServiceException {
+        MimeMessage mimeToExpand = cnode.message;
+        if (decryptedMimeMessage != null) {
+            mimeToExpand = decryptedMimeMessage;
+        }
+        MimeMessage decodedMimeMessage = null;
+        if (Mime.isPKCS7Signed(mimeToExpand.getContentType())) {
+            if (SmimeHandler.getHandler() != null) {
+                ZimbraLog.mailbox
+                    .debug("The message is PKCS7 signed. Forwarding it to SmimeHandler for decoding.");
+                decodedMimeMessage = SmimeHandler.getHandler().decodePKCS7Message(item.getAccount(),
+                    mimeToExpand);
+            }
+        }
+        ExpandMimeMessage expander = new ExpandMimeMessage(
+            decodedMimeMessage != null ? decodedMimeMessage : mimeToExpand);
+        expander.expand();
+        cnode.expanded = expander.getExpanded();
+        if (cnode.expanded != cnode.message) {
+            sDataSize += cnode.size;
+            cnode.size *= 2;
+        }
+    }
+
+    private static MimeMessage doDecryption(MailItem item, CacheNode cnode, int mboxId) {
+        MimeMessage decryptedMimeMessage = null;
+        if (SmimeHandler.getHandler() != null) {
+            sLog.debug(
+                "The message %d is encrypted. Forwarding it to SmimeHandler for decryption.",
+                item.getId());
+            String decryptionError = null;
+            try {
+                decryptedMimeMessage = SmimeHandler.getHandler().decryptMessage(
+                    ((Message) item).getMailbox(), cnode.message, item.getId());
+            } catch (ServiceException e) {
+                switch (e.getCode()) {
+                case ServiceException.LOAD_CERTIFICATE_FAILED:
+                    decryptionError = MimeConstants.ERR_LOAD_CERTIFICATE_FAILED;
+                    break;
+                case ServiceException.LOAD_PRIVATE_KEY_FAILED:
+                    decryptionError = MimeConstants.ERR_LOAD_PRIVATE_KEY_FAILED;
+                    break;
+                case ServiceException.DECRYPTION_FAILED:
+                    decryptionError = MimeConstants.ERR_DECRYPTION_FAILED;
+                    break;
+                }
+            } finally {
+                cnode.smimeAccessInfo.put(mboxId, decryptionError);
+            }
+        }
+        return decryptedMimeMessage;
     }
 
     /** For remote stores, we allow JavaMail to stream message content to
@@ -322,5 +339,38 @@ public class MessageCache {
                 }
             }
         }
+    }
+
+    public static void removeDecryptedMessages(int mboxId) {
+        sLog.debug("Start removing decrypted messages for mboxId=%d", mboxId);
+        synchronized (sCache) {
+            Iterator<Map.Entry<String, CacheNode>> it = sCache.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, CacheNode> entry = it.next();
+                CacheNode cacheNode = entry.getValue();
+                try {
+                    if (Mime.isEncrypted(cacheNode.message.getContentType())
+                        && cacheNode.smimeAccessInfo.containsKey(mboxId)) {
+                        cacheNode.smimeAccessInfo.remove(mboxId);
+                    }
+                } catch (MessagingException e) {
+                    sLog.warn("MessagingException while checking content type for cache node with digest = %s",
+                        entry.getKey(), e);
+                }
+            }
+        }
+        sLog.debug("Removed decrypted messages for mboxId=%d", mboxId);
+    }
+
+    public static String getDecryptionError(int id, String digest) {
+        if (digest != null) {
+            synchronized (sCache) {
+                CacheNode node = sCache.get(digest);
+                if (node != null) {
+                    return node.smimeAccessInfo.get(id);
+                }
+            }
+        }
+        return null;
     }
 }
