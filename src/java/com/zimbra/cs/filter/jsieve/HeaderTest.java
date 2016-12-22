@@ -340,6 +340,8 @@ public class HeaderTest extends Header {
         
         List<String> varValues = new ArrayList<String>();
 
+        String firstMatchedInputSubsequence = null;
+
         for (Object headerName : headerNames) {
             String hn = (String) headerName;
             List<String> values = null;
@@ -370,19 +372,29 @@ public class HeaderTest extends Header {
                     }
                     String regex = FilterUtil.sieveToJavaRegex(keyStr);
                     Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(sourceStr);
-                    if (matcher.find() && matcher.groupCount() > 0) {
+                    int grpCount = matcher.groupCount();
+                    if (matcher.find() && grpCount > 0) {
                         mailAdapter.clearMatchedValues();
-                        int grpCount = matcher.groupCount();
-                        for (int i = 0; i<=grpCount; ++i) {
+                        if (firstMatchedInputSubsequence == null) {
+                            // The varValues holds the substring from the source value
+                            // that the corresponding wildcard expands to. Although RFC 5229 says that
+                            // "Index 0 contains the matched part of the source value", it does not
+                            // define the value of index 0 when the matching operation performs to
+                            // the multiple header fields, or multiple values of a single header field.
+                            // In such cases, ZCS will put the first matched part of the source value.
+                            firstMatchedInputSubsequence = matcher.group();
+                        }
+                        for (int i = 1; i<=grpCount; ++i) {
                             String matchGrp =  matcher.group(i);
-                            if (!StringUtils.isEmpty(matchGrp.trim())) {
-                                varValues.add(matchGrp);
-                                ZimbraLog.filter.debug("The matched variable are: %s", matchGrp );
-                            }
+                            varValues.add(matchGrp);
+                            ZimbraLog.filter.debug("The matched variable are: %s", matchGrp );
                         }
                     }
-                } 
-            }    
+                }
+            }
+        }
+        if (firstMatchedInputSubsequence != null) {
+            varValues.add(0, firstMatchedInputSubsequence);
         }
         ZimbraLog.filter.debug("The matched variables are: %s", varValues );
         mailAdapter.setMatchedValues(varValues);

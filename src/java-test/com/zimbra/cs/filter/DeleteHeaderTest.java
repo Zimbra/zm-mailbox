@@ -58,6 +58,15 @@ public class DeleteHeaderTest {
             + "X-Numeric-Header: 2\n"
             + "X-Numeric-Header: 3\n"
             + "X-Numeric-Header: 4\n"
+            + "X-Dummy-Header: ABC\n"
+            + "X-Dummy-Header: 123\n"
+            + "X-Dummy-Header: abc\n"
+            + "X-Dummy-Header: \"\"\n"
+            + "X-Dummy-Header: xyz\n"
+            + "X-Dummy-Header: \n"
+            + "X-Dummy-Header: test\n"
+            + "X-Dummy-Header: ''\n"
+            + "X-Dummy-Header: a1b2c3\n"
             + "from: test2@zimbra.com\n"
             + "Subject: example\n"
             + "to: test@zimbra.com\n";
@@ -683,6 +692,55 @@ public class DeleteHeaderTest {
                 }
             }
             Assert.assertFalse(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Verify the Match Variables assigned by deleteheader's wild-card match
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testMatchVariables() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + "deleteheader :matches \"X-Dummy-Header\" \"*\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+
+            String expectedTags[] = {
+                    "tag1-ABC",
+                    "tag2-123",
+                    "tag3-abc",
+                    "tag4-\"\"",
+                    "tag5-xyz",
+                    "tag6-",
+                    "tag7-tes",
+                    "tag8-\'\'",
+                    "tag9-a1b2c3"};
+            String resultTags[] = message.getTags();
+            for (String resultTag : resultTags) {
+                String expectedTag = null;
+                for (String testTag : expectedTags) {
+                    if (testTag.equalsIgnoreCase(resultTag)) {
+                        expectedTag = testTag;
+                        break;
+                    }
+                }
+                Assert.assertEquals(expectedTag, resultTag);
+            }
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
