@@ -695,6 +695,14 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         return mImapMessageCount;
     }
 
+    /**
+     *
+     * @return number of recent items in folder (unseen)
+     */
+    public int getImapRECENT() throws ServiceException {
+        return mMailbox.getImapRECENT(mId);
+    }
+
     public int getImapRECENTCutoff(boolean inWritableSession) {
         try {
             if (inWritableSession || mImapRECENTCutoff == 0) {
