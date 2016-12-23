@@ -175,6 +175,8 @@ import com.zimbra.soap.mail.message.GetFolderRequest;
 import com.zimbra.soap.mail.message.GetFolderResponse;
 import com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse;
+import com.zimbra.soap.mail.message.GetIMAPRecentRequest;
+import com.zimbra.soap.mail.message.GetIMAPRecentResponse;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsResponse;
 import com.zimbra.soap.mail.message.ItemActionRequest;
@@ -6168,4 +6170,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         public void setCursorId(String id) { this.cursorId =id; }
         public String getCursorId() { return cursorId; }
     }
+
+	public int getImapRECENT(String folderId) throws ServiceException {
+	    GetIMAPRecentResponse resp = invokeJaxb(new GetIMAPRecentRequest(folderId));
+	    return resp.getNum();
+	}
+
 }
