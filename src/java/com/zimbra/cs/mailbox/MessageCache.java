@@ -288,7 +288,7 @@ public class MessageCache {
                     break;
                 }
             } finally {
-                if (decryptedMimeMessage == null) {
+                if (decryptionError == null && decryptedMimeMessage == null) {
                     decryptionError = MimeConstants.ERR_DECRYPTION_FAILED;
                 }
                 cnode.smimeAccessInfo.put(mboxId, decryptionError);
