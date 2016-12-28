@@ -15659,6 +15659,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraStatThreadNamePrefix = "zimbraStatThreadNamePrefix";
 
     /**
+     * the supported smime certificate file extension
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2099)
+    public static final String A_zimbraSupportedSmimeCertificateExtensions = "zimbraSupportedSmimeCertificateExtensions";
+
+    /**
      * The maximum batch size for each ZimbraSync transaction. Default value
      * of 0 means to follow client requested size. If set to any positive
      * integer, the value will be the maximum number of items to sync even if
