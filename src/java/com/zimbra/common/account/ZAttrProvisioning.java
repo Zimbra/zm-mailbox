@@ -15661,7 +15661,7 @@ public class ZAttrProvisioning {
     /**
      * the supported smime certificate file extension
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2099)
     public static final String A_zimbraSupportedSmimeCertificateExtensions = "zimbraSupportedSmimeCertificateExtensions";
