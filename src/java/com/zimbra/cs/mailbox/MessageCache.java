@@ -275,6 +275,9 @@ public class MessageCache {
             try {
                 decryptedMimeMessage = SmimeHandler.getHandler().decryptMessage(
                     ((Message) item).getMailbox(), cnode.message, item.getId());
+                if (decryptedMimeMessage == null) {
+                    decryptionError = MimeConstants.ERR_DECRYPTION_FAILED;
+                }
             } catch (ServiceException e) {
                 switch (e.getCode()) {
                 case ServiceException.LOAD_CERTIFICATE_FAILED:
@@ -288,9 +291,6 @@ public class MessageCache {
                     break;
                 }
             } finally {
-                if (decryptionError == null && decryptedMimeMessage == null) {
-                    decryptionError = MimeConstants.ERR_DECRYPTION_FAILED;
-                }
                 cnode.smimeAccessInfo.put(mboxId, decryptionError);
             }
         }
