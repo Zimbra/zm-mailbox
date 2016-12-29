@@ -63792,6 +63792,274 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * The supported smime public certificate file extensions
+     *
+     * @return zimbraSmimePublicCertificateExtensions, or empty array if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2100)
+    public String[] getSmimePublicCertificateExtensions() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraSmimePublicCertificateExtensions); return value.length > 0 ? value : new String[] {"cer","crt","der","spc","p7b","p7r","sst","sto","pem"};
+    }
+
+    /**
+     * The supported smime public certificate file extensions
+     *
+     * @param zimbraSmimePublicCertificateExtensions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2100)
+    public void setSmimePublicCertificateExtensions(String[] zimbraSmimePublicCertificateExtensions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimePublicCertificateExtensions, zimbraSmimePublicCertificateExtensions);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The supported smime public certificate file extensions
+     *
+     * @param zimbraSmimePublicCertificateExtensions new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2100)
+    public Map<String,Object> setSmimePublicCertificateExtensions(String[] zimbraSmimePublicCertificateExtensions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimePublicCertificateExtensions, zimbraSmimePublicCertificateExtensions);
+        return attrs;
+    }
+
+    /**
+     * The supported smime public certificate file extensions
+     *
+     * @param zimbraSmimePublicCertificateExtensions new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2100)
+    public void addSmimePublicCertificateExtensions(String zimbraSmimePublicCertificateExtensions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSmimePublicCertificateExtensions, zimbraSmimePublicCertificateExtensions);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The supported smime public certificate file extensions
+     *
+     * @param zimbraSmimePublicCertificateExtensions new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2100)
+    public Map<String,Object> addSmimePublicCertificateExtensions(String zimbraSmimePublicCertificateExtensions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSmimePublicCertificateExtensions, zimbraSmimePublicCertificateExtensions);
+        return attrs;
+    }
+
+    /**
+     * The supported smime public certificate file extensions
+     *
+     * @param zimbraSmimePublicCertificateExtensions existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2100)
+    public void removeSmimePublicCertificateExtensions(String zimbraSmimePublicCertificateExtensions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSmimePublicCertificateExtensions, zimbraSmimePublicCertificateExtensions);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The supported smime public certificate file extensions
+     *
+     * @param zimbraSmimePublicCertificateExtensions existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2100)
+    public Map<String,Object> removeSmimePublicCertificateExtensions(String zimbraSmimePublicCertificateExtensions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSmimePublicCertificateExtensions, zimbraSmimePublicCertificateExtensions);
+        return attrs;
+    }
+
+    /**
+     * The supported smime public certificate file extensions
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2100)
+    public void unsetSmimePublicCertificateExtensions() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimePublicCertificateExtensions, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The supported smime public certificate file extensions
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2100)
+    public Map<String,Object> unsetSmimePublicCertificateExtensions(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimePublicCertificateExtensions, "");
+        return attrs;
+    }
+
+    /**
+     * The supported smime user certificate file extensions
+     *
+     * @return zimbraSmimeUserCertificateExtensions, or empty array if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2099)
+    public String[] getSmimeUserCertificateExtensions() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraSmimeUserCertificateExtensions); return value.length > 0 ? value : new String[] {"p12","pfx"};
+    }
+
+    /**
+     * The supported smime user certificate file extensions
+     *
+     * @param zimbraSmimeUserCertificateExtensions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2099)
+    public void setSmimeUserCertificateExtensions(String[] zimbraSmimeUserCertificateExtensions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimeUserCertificateExtensions, zimbraSmimeUserCertificateExtensions);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The supported smime user certificate file extensions
+     *
+     * @param zimbraSmimeUserCertificateExtensions new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2099)
+    public Map<String,Object> setSmimeUserCertificateExtensions(String[] zimbraSmimeUserCertificateExtensions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimeUserCertificateExtensions, zimbraSmimeUserCertificateExtensions);
+        return attrs;
+    }
+
+    /**
+     * The supported smime user certificate file extensions
+     *
+     * @param zimbraSmimeUserCertificateExtensions new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2099)
+    public void addSmimeUserCertificateExtensions(String zimbraSmimeUserCertificateExtensions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSmimeUserCertificateExtensions, zimbraSmimeUserCertificateExtensions);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The supported smime user certificate file extensions
+     *
+     * @param zimbraSmimeUserCertificateExtensions new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2099)
+    public Map<String,Object> addSmimeUserCertificateExtensions(String zimbraSmimeUserCertificateExtensions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSmimeUserCertificateExtensions, zimbraSmimeUserCertificateExtensions);
+        return attrs;
+    }
+
+    /**
+     * The supported smime user certificate file extensions
+     *
+     * @param zimbraSmimeUserCertificateExtensions existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2099)
+    public void removeSmimeUserCertificateExtensions(String zimbraSmimeUserCertificateExtensions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSmimeUserCertificateExtensions, zimbraSmimeUserCertificateExtensions);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The supported smime user certificate file extensions
+     *
+     * @param zimbraSmimeUserCertificateExtensions existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2099)
+    public Map<String,Object> removeSmimeUserCertificateExtensions(String zimbraSmimeUserCertificateExtensions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSmimeUserCertificateExtensions, zimbraSmimeUserCertificateExtensions);
+        return attrs;
+    }
+
+    /**
+     * The supported smime user certificate file extensions
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2099)
+    public void unsetSmimeUserCertificateExtensions() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimeUserCertificateExtensions, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The supported smime user certificate file extensions
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2099)
+    public Map<String,Object> unsetSmimeUserCertificateExtensions(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimeUserCertificateExtensions, "");
+        return attrs;
+    }
+
+    /**
      * the SMTP server to connect to when sending mail
      *
      * @return zimbraSmtpHostname, or empty array if unset
