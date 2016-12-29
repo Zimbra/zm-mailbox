@@ -241,8 +241,10 @@ public class ImapServerListener {
                                 List<Integer> signaledFolders = accInfo.getFolderIdsAsList();
                                 for(Integer f : signaledFolders) {
                                     List<ImapRemoteSession> listeners = foldersToSessions.get(f);
-                                    for(ImapRemoteSession l : listeners) {
-                                        l.signalAccountChange();
+                                    if(listeners != null) {
+                                        for(ImapRemoteSession l : listeners) {
+                                            l.signalAccountChange();
+                                        }
                                     }
                                 }
                             }
