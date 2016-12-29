@@ -9245,7 +9245,6 @@ TODO: delete them permanently from here
   <desc>Whether the RFC compliant 'notify' is used.  If TRUE, ZCS parses the 'notify' action parameters based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS treats the 'notify' action parameters with Zimbra specific format</desc>
 </attr>
 
-<<<<<<< HEAD
 <attr id="2096" name="zimbraSieveFeatureVariablesEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable the Sieve "Variables" extension defined in RFC 5229 in the user-defined sieve rule.</desc>
