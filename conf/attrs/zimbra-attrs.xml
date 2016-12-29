@@ -9245,4 +9245,23 @@ TODO: delete them permanently from here
   <desc>Whether the RFC compliant 'notify' is used.  If TRUE, ZCS parses the 'notify' action parameters based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS treats the 'notify' action parameters with Zimbra specific format</desc>
 </attr>
 
+<attr id="2099" name="zimbraSmimeUserCertificateExtensions" type="string" cardinality="multi" optionalIn="globalConfig" since="8.8.0">
+  <globalConfigValue>p12</globalConfigValue>
+  <globalConfigValue>pfx</globalConfigValue>
+  <desc>The supported smime user certificate file extensions</desc>
+</attr>
+
+<attr id="2100" name="zimbraSmimePublicCertificateExtensions" type="string" cardinality="multi" optionalIn="globalConfig" since="8.8.0">
+  <globalConfigValue>cer</globalConfigValue>
+  <globalConfigValue>crt</globalConfigValue>
+  <globalConfigValue>der</globalConfigValue>
+  <globalConfigValue>spc</globalConfigValue>
+  <globalConfigValue>p7b</globalConfigValue>
+  <globalConfigValue>p7r</globalConfigValue>
+  <globalConfigValue>sst</globalConfigValue>
+  <globalConfigValue>sto</globalConfigValue>
+  <globalConfigValue>pem</globalConfigValue>
+  <desc>The supported smime public certificate file extensions</desc>
+</attr>
+
 </attrs>
