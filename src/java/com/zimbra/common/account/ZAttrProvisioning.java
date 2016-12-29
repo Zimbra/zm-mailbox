@@ -15290,6 +15290,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSMIMELdapURL = "zimbraSMIMELdapURL";
 
     /**
+     * The supported smime public certificate file extensions
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2100)
+    public static final String A_zimbraSmimePublicCertificateExtensions = "zimbraSmimePublicCertificateExtensions";
+
+    /**
+     * The supported smime user certificate file extensions
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2099)
+    public static final String A_zimbraSmimeUserCertificateExtensions = "zimbraSmimeUserCertificateExtensions";
+
+    /**
      * Whether to enable smtp debug trace
      *
      * @since ZCS 6.0.0_BETA1
