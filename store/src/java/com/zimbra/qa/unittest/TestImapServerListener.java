@@ -16,6 +16,7 @@ import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -153,7 +154,6 @@ public class TestImapServerListener {
         remoteListener.removeListener(session);
     }
 
-    //TODO: this test will be failing until AdminWaitSet supports folder subscription
     @Test
     public void testNotifyNewFolder() throws Exception {
         Assume.assumeNotNull(remoteServer);
