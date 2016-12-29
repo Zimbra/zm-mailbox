@@ -9260,13 +9260,13 @@ TODO: delete them permanently from here
   <desc>Whether to enable the Sieve "Variables" extension defined in RFC 5229 in the admin-defined sieve rules.</desc>
 </attr>
 
-<attr id="2099" name="zimbraSmimeUserCertificateExtensions" type="string" cardinality="multi" optionalIn="globalConfig" since="8.8.0">
+<attr id="2099" name="zimbraSmimeUserCertificateExtensions" type="string" cardinality="multi" optionalIn="globalConfig" flags="accountInfo" since="8.8.0">
   <globalConfigValue>p12</globalConfigValue>
   <globalConfigValue>pfx</globalConfigValue>
   <desc>The supported smime user certificate file extensions</desc>
 </attr>
 
-<attr id="2100" name="zimbraSmimePublicCertificateExtensions" type="string" cardinality="multi" optionalIn="globalConfig" since="8.8.0">
+<attr id="2100" name="zimbraSmimePublicCertificateExtensions" type="string" cardinality="multi" optionalIn="globalConfig" flags="accountInfo" since="8.8.0">
   <globalConfigValue>cer</globalConfigValue>
   <globalConfigValue>crt</globalConfigValue>
   <globalConfigValue>der</globalConfigValue>
