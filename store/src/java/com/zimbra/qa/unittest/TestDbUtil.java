@@ -21,11 +21,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Map;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.Db;
@@ -51,6 +54,8 @@ public class TestDbUtil {
 
     @Before
     public void setUp() throws Exception {
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
         TestUtil.createAccount(USER_NAME);
         mbox = TestUtil.getMailbox(USER_NAME);
     }
