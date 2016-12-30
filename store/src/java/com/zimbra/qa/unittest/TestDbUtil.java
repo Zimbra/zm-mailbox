@@ -56,7 +56,7 @@ public class TestDbUtil {
     public void setUp() throws Exception {
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(USER_NAME, attrs);
         mbox = TestUtil.getMailbox(USER_NAME);
     }
 

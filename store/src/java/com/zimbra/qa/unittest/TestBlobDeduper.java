@@ -18,16 +18,21 @@ package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import junit.framework.Assert;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -43,10 +48,17 @@ import com.zimbra.znative.IO;
 
 public final class TestBlobDeduper {
 
+    private static final Provisioning prov = Provisioning.getInstance();
     private static String TEST_NAME = "TestBlobDeduper";
     private static String USER_NAME = TEST_NAME + "-user1";
     private Mailbox mbox;
     private Account account;
+    private static Server localServer = null;
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        localServer = prov.getLocalServer();
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -55,7 +67,9 @@ public final class TestBlobDeduper {
             return;
         }
         cleanUp();
-        account = TestUtil.createAccount(USER_NAME);
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
+        account = TestUtil.createAccount(USER_NAME, attrs);
         mbox = MailboxManager.getInstance().getMailboxByAccount(account);
     }
 
