@@ -329,4 +329,12 @@
     <exec executable="/opt/zimbra/libexec/zmldapschema"/>
     <antcall target="start-zimbra"/>
   </target>
+  <target name="create-version-sql" depends="build-init, compile" description="Creates version-init.sql">
+    <java classname="com.zimbra.cs.db.MySQL" fork="true" classpathref="class.path" failonerror="true">
+      <classpath>
+        <pathelement location="${build.dir}/classes" />
+      </classpath>
+       <arg line="-o ${dist.dir}"/>
+    </java>
+  </target>
 </project>
