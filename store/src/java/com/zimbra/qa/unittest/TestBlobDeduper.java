@@ -19,6 +19,11 @@ package com.zimbra.qa.unittest;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
+
 import junit.framework.Assert;
 
 import org.junit.After;
