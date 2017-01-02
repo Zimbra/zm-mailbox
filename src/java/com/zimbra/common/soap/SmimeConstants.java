@@ -112,15 +112,15 @@ public class SmimeConstants {
     public static final String ERROR_MESSAGE_CANT_PARSE_CERTIFICATE = "Can't parse certificate";
     public static final String ERROR_MESSAGE_CERTIFICATE_REVOKED = "Certificate has been revoked";
 
-    public static final String ERRORCODE_SIGNER_DIGEST_MISMATCH = "SignerDigestMismatch";
-    public static final String ERRORCODE_VERIFIER_NOT_VALID_AT_SIGNING_TIME = "VerifierNotValidAtSigningTime";
-    public static final String ERRORCODE_CERTIFICATE_EXPIRED = "CertificateExpired";
-    public static final String ERRORCODE_CERTIFICATE_NOT_YET_VALID = "CertificateNotYetValid";
-    public static final String ERRORCODE_CERTIFICATE_REVOKED = "CertificateRevoked";
-    public static final String ERRORCODE_CERTIFICATE_NOT_TRUSTED = "CertificateNotTrusted";
-    public static final String ERRORCODE_CERTIFICATE_EMAIL_ADDRESS_NOT_MATCHING = "CertificateEmailAddressNotMatching";
-    public static final String ERRORCODE_CERTIFICATE_VALIDATION_FAILED = "CertificateValidationFailed";
-    public static final String ERRORCODE_INVALID_SIGNATURE = "InvalidSignature";
-    public static final String ERRORCODE_SIGNATURE_VALIDATION_FAILED = "SignatureValidationFailed";
+    public static final String ERRORCODE_SIGNER_DIGEST_MISMATCH = "SIGNER_DIGEST_MISMATCH";
+    public static final String ERRORCODE_VERIFIER_NOT_VALID_AT_SIGNING_TIME = "VERIFIER_NOT_VALID_AT_SIGNING_TIME";
+    public static final String ERRORCODE_CERTIFICATE_EXPIRED = "CERTIFICATE_EXPIRED";
+    public static final String ERRORCODE_CERTIFICATE_NOT_YET_VALID = "CERTIFICATE_NOT_YET_VALID";
+    public static final String ERRORCODE_CERTIFICATE_REVOKED = "CERTIFICATE_REVOKED";
+    public static final String ERRORCODE_CERTIFICATE_NOT_TRUSTED = "CERTIFICATE_NOT_TRUSTED";
+    public static final String ERRORCODE_CERTIFICATE_EMAIL_ADDRESS_NOT_MATCHING = "CERTIFICATE_EMAIL_ADDRESS_NOT_MATCHING";
+    public static final String ERRORCODE_CERTIFICATE_VALIDATION_FAILED = "CERTIFICATE_VALIDATION_FAILED";
+    public static final String ERRORCODE_INVALID_SIGNATURE = "INVALID_SIGNATURE";
+    public static final String ERRORCODE_SIGNATURE_VALIDATION_FAILED = "SIGNATURE_VALIDATION_FAILED";
 
 }
