@@ -286,6 +286,9 @@ public class MessageCache {
                 case ServiceException.LOAD_PRIVATE_KEY_FAILED:
                     decryptionError = MimeConstants.ERR_LOAD_PRIVATE_KEY_FAILED;
                     break;
+                case ServiceException.USER_CERT_MISMATCH:
+                    decryptionError = MimeConstants.ERR_USER_CERT_MISMATCH;
+                    break;
                 case ServiceException.DECRYPTION_FAILED:
                     decryptionError = MimeConstants.ERR_DECRYPTION_FAILED;
                     break;
