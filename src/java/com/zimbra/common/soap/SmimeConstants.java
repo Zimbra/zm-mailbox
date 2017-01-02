@@ -97,10 +97,30 @@ public class SmimeConstants {
     public static final String SMIME_CONTENT_TRANSFER_ENCODING_BASE64 = "base64";
     public static final String MIME_CONTENT_HEADER_PREFIX = "Content-";
 
-    public static final String CMS_VERIFIER_NOT_VALID_AT_SIGNINGTIME_ERROR_MESSAGE = "verifier not valid at signingTime";
-    public static final String CMS_SIGNER_DIGEST_MISMATCH_ERROR_MESSAGE = "message-digest attribute value does not match calculated value";
-    public static final String CMS_EMAILADDRESS_NOMATCH_ERROR_MESSAGE = "Email address doesn't match";
-    public static final String CMS_CLIENT_CERTIFICATE_EXPIRED_ERROR_MESSAGE = "client certificate expired";
-    public static final String CMS_CLIENT_CERTIFICATE_NOT_YET_VALID_ERROR_MESSAGE = "client certificate not yet valid";
+    public static final String ERROR_MESSAGE_VERIFIER_NOT_VALID_AT_SIGNINGTIME = "verifier not valid at signingTime";
+    public static final String ERROR_MESSAGE_SIGNER_DIGEST_MISMATCH = "message-digest attribute value does not match calculated value";
+    public static final String ERROR_MESSAGE_EMAILADDRESS_NOMATCH = "Email address doesn't match";
+    public static final String ERROR_MESSAGE_CERTIFICATE_EXPIRED = "client certificate expired";
+    public static final String ERROR_MESSAGE_CERTIFICATE_NOT_TRUSTED = "Path does not chain with any of the trust anchors";
+    public static final String ERROR_MESSAGE_CERTIFICATE_NOT_YET_VALID = "client certificate not yet valid";
+    public static final String ERROR_MESSAGE_CANT_GENERATE_CERT_PATH = "can't generate certpath for client certificate";
+    public static final String ERROR_MESSAGE_KEYSTORE_EXCEPTION = "received KeyStoreException while loading KeyStore";
+    public static final String ERROR_MESSAGE_NO_SUCH_ALGORITHM_EXCEPTION = "received NoSuchAlgorithmException while obtaining instance of certpath validator";
+    public static final String ERROR_MESSAGE_KEYSTORE_CANT_BE_FOUND = "mailboxd keystore can't be found";
+    public static final String ERROR_MESSAGE_IO_EXCEPTION = "received IOException";
+    public static final String ERROR_MESSAGE_INVALID_ALGORITHM_PARAMETER = "received InvalidAlgorithmParameter while obtaining instance of certpath validator";
+    public static final String ERROR_MESSAGE_CANT_PARSE_CERTIFICATE = "Can't parse certificate";
+    public static final String ERROR_MESSAGE_CERTIFICATE_REVOKED = "Certificate has been revoked";
+
+    public static final String ERRORCODE_SIGNER_DIGEST_MISMATCH = "SignerDigestMismatch";
+    public static final String ERRORCODE_VERIFIER_NOT_VALID_AT_SIGNING_TIME = "VerifierNotValidAtSigningTime";
+    public static final String ERRORCODE_CERTIFICATE_EXPIRED = "CertificateExpired";
+    public static final String ERRORCODE_CERTIFICATE_NOT_YET_VALID = "CertificateNotYetValid";
+    public static final String ERRORCODE_CERTIFICATE_REVOKED = "CertificateRevoked";
+    public static final String ERRORCODE_CERTIFICATE_NOT_TRUSTED = "CertificateNotTrusted";
+    public static final String ERRORCODE_CERTIFICATE_EMAIL_ADDRESS_NOT_MATCHING = "CertificateEmailAddressNotMatching";
+    public static final String ERRORCODE_CERTIFICATE_VALIDATION_FAILED = "CertificateValidationFailed";
+    public static final String ERRORCODE_INVALID_SIGNATURE = "InvalidSignature";
+    public static final String ERRORCODE_SIGNATURE_VALIDATION_FAILED = "SignatureValidationFailed";
 
 }
