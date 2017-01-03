@@ -44,7 +44,7 @@ public final class GetFilterRules extends AdminDocumentHandler {
         AccountSelector acctSel = request.getAccount();
         if (acctSel == null) {
             ServiceException se = ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_ACCOUNT), null);
-            ZimbraLog.filter.debug(se);
+            ZimbraLog.filter.debug("AccountSelector not found", se);
             throw se;
         }
         String accountSelectorKey = acctSel.getKey();
