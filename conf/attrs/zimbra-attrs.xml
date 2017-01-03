@@ -9279,4 +9279,9 @@ TODO: delete them permanently from here
   <desc>The supported smime public certificate file extensions</desc>
 </attr>
 
+<attr id="2101" name="zimbraSmimeOCSPEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>enable OCSP support for SMIME.</desc>
+</attr>
+
 </attrs>
