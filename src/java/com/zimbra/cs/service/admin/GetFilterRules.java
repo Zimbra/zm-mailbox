@@ -22,9 +22,9 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -43,17 +43,15 @@ public final class GetFilterRules extends AdminDocumentHandler {
 
         AccountSelector acctSel = request.getAccount();
         if (acctSel == null) {
-            throw ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_ACCOUNT), null);
+            ServiceException se = ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_ACCOUNT), null);
+            ZimbraLog.filter.debug(se);
+            throw se;
         }
         String accountSelectorKey = acctSel.getKey();
         AccountBy by = acctSel.getBy().toKeyAccountBy();
 
         Account account = prov.get(by, accountSelectorKey, zsc.getAuthToken());
-        defendAgainstAccountHarvesting(account, by, accountSelectorKey, zsc, Admin.R_getAccountInfo);
-
-        if (!canAccessAccount(zsc, account)) {
-            throw ServiceException.PERM_DENIED("cannot access account");
-        }
+        verifyAccountHarvestingAndPerms(account, by, accountSelectorKey, zsc);
 
         GetFilterRulesResponse resp = new GetFilterRulesResponse();
         resp.addFilterRule(RuleManager.getIncomingRulesAsXML(account));
