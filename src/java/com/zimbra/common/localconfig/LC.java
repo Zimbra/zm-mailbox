@@ -1307,9 +1307,6 @@ public final class LC {
     @Supported
     public static final KnownKey smime_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
 
-    @Supported
-    public static final KnownKey smime_cert_ocsp_enabled = KnownKey.newKey(false);
-
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
