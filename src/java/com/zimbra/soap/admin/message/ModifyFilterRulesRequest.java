@@ -29,6 +29,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.type.AccountSelector;
 
@@ -49,6 +50,7 @@ public final class ModifyFilterRulesRequest {
     /**
      * @zm-api-field-description Filter rules
      */
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_FILTER_RULES /* filterRules */, required=true)
     @XmlElement(name=AdminConstants.E_FILTER_RULE /* filterRule */, required=false)
     private List<FilterRule> filterRules = Lists.newArrayList();
