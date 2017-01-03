@@ -947,4 +947,12 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         notes.add(AdminRightCheckPoint.Notes.TODO);
     }
 
+    public void verifyAccountHarvestingAndPerms(Account account, AccountBy by, String accountSelectorKey, ZimbraSoapContext zsc) throws ServiceException {
+        defendAgainstAccountHarvesting(account, by, accountSelectorKey, zsc, Admin.R_getAccountInfo);
+        if (!canModifyOptions(zsc, account)) {
+            ServiceException se = ServiceException.PERM_DENIED("cannot modify options");
+            ZimbraLog.filter.debug(se);
+            throw se;
+        }
+    }
 }
