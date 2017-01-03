@@ -60,7 +60,7 @@ public final class GetFilterRulesResponse {
         rules.add(rule);
     }
 
-    public void addFilterRule(Collection<FilterRule> list) {
+    public void addFilterRules(Collection<FilterRule> list) {
         rules.addAll(list);
     }
 
