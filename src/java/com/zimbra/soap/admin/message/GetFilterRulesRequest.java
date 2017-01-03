@@ -25,7 +25,7 @@ import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @zm-api-command-auth-required true
- * @zm-api-command-admin-auth-required false
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Get filter rules
  */
 @XmlRootElement(name=AdminConstants.E_GET_FILTER_RULES_REQUEST)
