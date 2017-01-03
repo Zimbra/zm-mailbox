@@ -15290,6 +15290,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSMIMELdapURL = "zimbraSMIMELdapURL";
 
     /**
+     * enable OCSP support for SMIME.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2101)
+    public static final String A_zimbraSmimeOCSPEnabled = "zimbraSmimeOCSPEnabled";
+
+    /**
      * The supported smime public certificate file extensions
      *
      * @since ZCS 8.8.0
