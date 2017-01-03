@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2017 Zimbra, Inc.
  * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -57,4 +57,11 @@ public class GetFilterRulesRequest {
         this.account = accountSelector;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("GetFilterRulesRequest for account ").append(this.account.getKey())
+            .append(" by ").append(this.account.getBy());
+        return sb.toString();
+    }
 }
