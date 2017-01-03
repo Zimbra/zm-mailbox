@@ -45692,6 +45692,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * enable OCSP support for SMIME.
+     *
+     * @return zimbraSmimeOCSPEnabled, or true if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2101)
+    public boolean isSmimeOCSPEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSmimeOCSPEnabled, true);
+    }
+
+    /**
+     * enable OCSP support for SMIME.
+     *
+     * @param zimbraSmimeOCSPEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2101)
+    public void setSmimeOCSPEnabled(boolean zimbraSmimeOCSPEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimeOCSPEnabled, zimbraSmimeOCSPEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable OCSP support for SMIME.
+     *
+     * @param zimbraSmimeOCSPEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2101)
+    public Map<String,Object> setSmimeOCSPEnabled(boolean zimbraSmimeOCSPEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimeOCSPEnabled, zimbraSmimeOCSPEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable OCSP support for SMIME.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2101)
+    public void unsetSmimeOCSPEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimeOCSPEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable OCSP support for SMIME.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2101)
+    public Map<String,Object> unsetSmimeOCSPEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmimeOCSPEnabled, "");
+        return attrs;
+    }
+
+    /**
      * the SMTP server to connect to when sending mail
      *
      * @return zimbraSmtpHostname, or empty array if unset
