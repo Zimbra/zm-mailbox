@@ -17,11 +17,6 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -30,13 +25,16 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @zm-api-command-auth-required true
- * @zm-api-command-admin-auth-required false
+ * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Modify Filter rules
  */
 @XmlAccessorType(XmlAccessType.NONE)
