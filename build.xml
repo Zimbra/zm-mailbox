@@ -174,10 +174,31 @@
     <antcall target="stop-webserver"/>
     <delete>
       <fileset dir="${common.jars.dir}" includes="zm-store*.jar,zimbrastore*.jar"/>
-      <fileset dir="${service.webapp.dir}/WEB-INF/lib/" includes="zm-store*.jar,zimbrastore*.jar"/>
-      <fileset dir="${zimbra.webapp.dir}/WEB-INF/lib/" includes="zm-store*.jar,zimbrastore*.jar"/>
-      <fileset dir="${zimbra-admin.webapp.dir}/WEB-INF/lib/" includes="zm-store*.jar,zimbrastore*.jar"/>
     </delete>
+	<if>
+      <available file="${zimbra.webapp.dir}" type="dir" property="zimbra.webapp.installed"/>
+      <then>
+        <delete verbose="true">
+          <fileset dir="${zimbra.webapp.dir}/WEB-INF/lib/" includes="zm-store*.jar,zimbrastore*.jar"/>
+        </delete>
+      </then>
+    </if>
+	<if>
+	  <available file="${jetty.webapps.dir}/zimbraAdmin/" type="dir" property="zimbraadmin.webapp.installed"/>
+	  <then>
+	    <delete verbose="true">
+	      <fileset dir="${zimbra-admin.webapp.dir}/WEB-INF/lib/" includes="zm-store*.jar,zimbrastore*.jar"/>
+	    </delete>
+	  </then>
+	</if>
+    <if>
+      <available file="${service.webapp.dir}" type="dir" property="service.webapp.installed"/>
+      <then>
+        <delete verbose="true">
+          <fileset dir="${service.webapp.dir}/WEB-INF/lib/" includes="zm-store*.jar,zimbrastore*.jar"/>
+        </delete>
+      </then>
+    </if>
   </target>
   <target name="deploy" depends="jar,set-dev-version,undeploy">
     <copy file="${build.dir}/${jar.file}" tofile="${common.jars.dir}/zimbrastore.jar"/>
