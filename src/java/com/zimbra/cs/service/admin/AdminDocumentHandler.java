@@ -58,6 +58,7 @@ import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @since Oct 4, 2004
@@ -947,12 +948,24 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         notes.add(AdminRightCheckPoint.Notes.TODO);
     }
 
-    public void verifyAccountHarvestingAndPerms(Account account, AccountBy by, String accountSelectorKey, ZimbraSoapContext zsc) throws ServiceException {
+    public Account verifyAccountHarvestingAndPerms(AccountSelector acctSel, ZimbraSoapContext zsc) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+
+        if (acctSel == null) {
+            ServiceException se = ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_ACCOUNT), null);
+            ZimbraLog.filter.debug("AccountSelector not found", se);
+            throw se;
+        }
+        String accountSelectorKey = acctSel.getKey();
+        AccountBy by = acctSel.getBy().toKeyAccountBy();
+        Account account = prov.get(by, accountSelectorKey, zsc.getAuthToken());
+
         defendAgainstAccountHarvesting(account, by, accountSelectorKey, zsc, Admin.R_getAccountInfo);
         if (!canModifyOptions(zsc, account)) {
             ServiceException se = ServiceException.PERM_DENIED("cannot modify options");
-            ZimbraLog.filter.debug("Do not have permission to modify options on account %s", se.getMessage());
+            ZimbraLog.filter.debug("Do not have permission to modify options on account %s", account.getName(), se);
             throw se;
         }
+        return account;
     }
 }
