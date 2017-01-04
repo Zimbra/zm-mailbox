@@ -23,6 +23,7 @@ import java.util.Map;
 import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -56,28 +57,6 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
 
     }
 
-    public static final class ModificationKey extends PendingModifications.ModificationKey {
-
-        /*
-         * TODO - Looks like we will be having to deal with ServiceExceptions in
-         * numerous places in PendingRemoteModifications. See if there is a
-         * cleaner way to handle them.
-         */
-        public ModificationKey(ZBaseItem item) {
-            super("", 0);
-            String actId = null;
-            int idInMbox = 0;
-            try {
-                actId = item.getMailbox().getAccountId();
-                idInMbox = item.getIdInMailbox();
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("error retrieving account id or id in mailbox", e);
-            }
-            setAccountId(actId);
-            setItemId(Integer.valueOf(idInMbox));
-        }
-    }
-
     @Override
     PendingModifications<ZBaseItem> add(PendingModifications<ZBaseItem> other) {
         if (other.deleted != null) {
@@ -88,7 +67,7 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         }
 
         if (other.created != null) {
-            for (ZBaseItem item : other.created.values()) {
+            for (ZimbraMailItem item : other.created.values()) {
                 recordCreated(item);
             }
         }
@@ -106,19 +85,19 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         return this;
     }
 
-    public static MailItem.Type getItemType(ZBaseItem item) {
+    public static MailItem.Type getItemType(ZimbraMailItem item) {
         return MailItem.Type.fromCommon(item.getMailItemType());
     }
 
     @Override
-    protected void delete(PendingModifications.ModificationKey key, Type type, ZBaseItem itemSnapshot) {
+    protected void delete(PendingModifications.ModificationKey key, Type type, ZimbraMailItem itemSnapshot) {
         delete(key, new Change(type, Change.NONE, itemSnapshot));
     }
 
     @Override
-    public void recordCreated(ZBaseItem item) {
+    public void recordCreated(ZimbraMailItem item) {
         if (created == null) {
-            created = new LinkedHashMap<PendingModifications.ModificationKey, ZBaseItem>();
+            created = new LinkedHashMap<PendingModifications.ModificationKey, ZimbraMailItem>();
         }
         changedTypes.add(getItemType(item));
         /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
@@ -127,7 +106,7 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     }
 
     @Override
-    public void recordDeleted(ZBaseItem itemSnapshot) {
+    public void recordDeleted(ZimbraMailItem itemSnapshot) {
         MailItem.Type type = getItemType(itemSnapshot);
         changedTypes.add(type);
         /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
@@ -152,14 +131,14 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     }
 
     @Override
-    public void recordModified(ZBaseItem item, int reason) {
+    public void recordModified(ZimbraMailItem item, int reason) {
         changedTypes.add(getItemType(item));
         /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
         recordModified(new ModificationKey(item), item, reason, null, true);
     }
 
     @Override
-    public void recordModified(ZBaseItem item, int reason, ZBaseItem preModifyItem) {
+    public void recordModified(ZimbraMailItem item, int reason, ZimbraMailItem preModifyItem) {
         changedTypes.add(getItemType(item));
         /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
         recordModified(new ModificationKey(item), item, reason, preModifyItem, false);
