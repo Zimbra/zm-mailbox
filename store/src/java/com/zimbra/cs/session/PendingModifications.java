@@ -31,6 +31,8 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -41,7 +43,7 @@ import com.zimbra.cs.mailbox.util.TypedIdList;
 /**
  * @param <T> - MailItem (local mailbox) | ZBaseItem (remote mailbox)
 */
-public abstract class PendingModifications<T> {
+public abstract class PendingModifications<T extends ZimbraMailItem> {
     public static abstract class Change {
         public static final int NONE             = 0x00000000;
         public static final int UNREAD           = 0x00000001;
@@ -138,6 +140,21 @@ public abstract class PendingModifications<T> {
             super(accountId, itemId);
         }
 
+        public ModificationKey(ZimbraMailItem item) {
+            this("", 0);
+            String acctId = null;
+            int idInMbox = 0;
+            try {
+                acctId = item.getAccountId();
+                idInMbox = item.getIdInMailbox();
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("error retrieving account id or id in mailbox", e);
+            }
+            setAccountId(acctId);
+            setItemId(Integer.valueOf(idInMbox));
+
+        }
+
         public ModificationKey(ModificationKey mkey) {
             super(mkey.getAccountId(), mkey.getItemId());
         }
@@ -166,7 +183,7 @@ public abstract class PendingModifications<T> {
     public Set<MailItem.Type> changedTypes = EnumSet.noneOf(MailItem.Type.class);
     private final Set<Integer> changedFolders = Sets.newHashSet();
 
-    public LinkedHashMap<ModificationKey, T> created;
+    public LinkedHashMap<ModificationKey, ZimbraMailItem> created;
     public Map<ModificationKey, Change> modified;
     public Map<ModificationKey, Change> deleted;
 
@@ -208,7 +225,7 @@ public abstract class PendingModifications<T> {
         return false;
     }
 
-    public abstract void recordCreated(T item);
+    public abstract void recordCreated(ZimbraMailItem item);
 
     public void recordDeleted(String acctId, int id, int parentFolderId, MailItem.Type type) {
         if (type != MailItem.Type.UNKNOWN) {
@@ -230,7 +247,7 @@ public abstract class PendingModifications<T> {
         }
     }
 
-    public abstract void recordDeleted(T itemSnapshot);
+    public abstract void recordDeleted(ZimbraMailItem itemSnapshot);
 
     public void recordDeleted(Map<ModificationKey, Change> deletes) {
         if (deletes != null && !deletes.isEmpty()) {
@@ -242,7 +259,7 @@ public abstract class PendingModifications<T> {
         }
     }
 
-    protected abstract void delete(ModificationKey key, MailItem.Type type, T itemSnapshot);
+    protected abstract void delete(ModificationKey key, MailItem.Type type, ZimbraMailItem itemSnapshot);
 
     protected void delete(ModificationKey key, Change chg) {
         if (created != null && created.remove(key) != null)
@@ -266,9 +283,9 @@ public abstract class PendingModifications<T> {
 
     public abstract void recordModified(MailboxStore mbox, int reason);
 
-    public abstract void recordModified(T item, int reason);
+    public abstract void recordModified(ZimbraMailItem item, int reason);
 
-    public abstract void recordModified(T item, int reason, T preModifyItem);
+    public abstract void recordModified(ZimbraMailItem item, int reason, ZimbraMailItem preModifyItem);
 
     abstract PendingModifications<T> add(PendingModifications<T> other);
     abstract boolean trackingFolderIds();
