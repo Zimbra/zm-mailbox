@@ -77,8 +77,7 @@ public class TestSpellCheck {
     @Before
     public void setUp() throws Exception {
         Map<String, Object> attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        account = TestUtil.createAccount(USER_NAME, attrs);
+        account = TestUtil.createAccount(USER_NAME);
         originalDomainIgnoreWords = prov.getDomain(account).getPrefSpellIgnoreWord();
         originalCosIgnoreWords = prov.getCOS(account).getPrefSpellIgnoreWord();
 
