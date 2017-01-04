@@ -604,6 +604,7 @@ public class TestWaitSetRequest extends TestCase {
                         SoapProtocol proto = SoapProtocol.determineProtocol(envelope);
                         Element doc = proto.getBodyElement(envelope);
                         AdminWaitSetResponse wsResp = (AdminWaitSetResponse) JaxbUtil.elementToJaxb(doc);
+                        ZimbraLog.test.info(new String(doc.toUTF8(), "UTF-8"));
                         for(int i=0; i < wsResp.getSignalledAccounts().size(); i++) {
                             ZimbraLog.test.info("signalled account " + wsResp.getSignalledAccounts().get(i).getId());
                         }
