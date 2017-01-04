@@ -281,14 +281,14 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
      * @param session
      */
     synchronized void signalDataReady(WaitSetSession session) {
-        signalDataReady(session, Sets.newHashSetWithExpectedSize(0));
+        signalDataReady(session, null);
     }
 
     /**
      * Called by the WaitSetSession when there is data to be signalled by this session
      * @param session
      */
-    synchronized void signalDataReady(WaitSetSession session, Set<Integer> knownChangedFolders) {
+    synchronized void signalDataReady(WaitSetSession session, PendingModifications pms) {
         boolean trace = ZimbraLog.session.isTraceEnabled();
         if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 1");
         String authAcctId = session.getAuthenticatedAccountId();
@@ -296,7 +296,8 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
             if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 2");
             if (mCurrentSignalledSessions.add(authAcctId)) {
                 if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 3");
-                addChangeFolderIds(currentKnownChangedFolderIds, authAcctId, knownChangedFolders);
+                addChangeFolderIds(currentKnownChangedFolderIds, authAcctId, pms == null ? Sets.newHashSetWithExpectedSize(0) : pms.getChangedFolders());
+                addMods(currentPendingModifications, authAcctId, pms);
                 trySendData();
             }
         }
