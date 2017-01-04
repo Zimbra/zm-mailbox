@@ -17,10 +17,8 @@
 package com.zimbra.cs.session;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -29,6 +27,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Folder;
@@ -60,12 +59,6 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         }
     }
 
-    public static final class ModificationKey extends PendingModifications.ModificationKey {
-        public ModificationKey(MailItem item) {
-            super(item.getMailbox().getAccountId(), item.getId());
-        }
-    }
-
     @Override
     PendingModifications<MailItem> add(PendingModifications<MailItem> other) {
         changedTypes.addAll(other.changedTypes);
@@ -79,7 +72,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         }
 
         if (other.created != null) {
-            for (MailItem item : other.created.values()) {
+            for (ZimbraMailItem item : other.created.values()) {
                 recordCreated(item);
             }
         }
@@ -98,26 +91,33 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     }
 
     @Override
-    protected void delete(PendingModifications.ModificationKey key, Type type, MailItem itemSnapshot) {
+    protected void delete(PendingModifications.ModificationKey key, Type type, ZimbraMailItem itemSnapshot) {
         delete(key, new Change(type, Change.NONE, itemSnapshot));
     }
 
     @Override
-    public void recordCreated(MailItem item) {
+    public void recordCreated(ZimbraMailItem item) {
         if (created == null) {
-            created = new LinkedHashMap<PendingModifications.ModificationKey, MailItem>();
+            created = new LinkedHashMap<PendingModifications.ModificationKey, ZimbraMailItem>();
         }
-        changedTypes.add(item.getType());
-        addChangedFolderId(item.getFolderId());
+        changedTypes.add(MailItem.Type.fromCommon(item.getMailItemType()));
+        try {
+            addChangedFolderId(item.getFolderIdInMailbox());
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("error getting folder ID for modified item");
+        }
         created.put(new ModificationKey(item), item);
-
     }
 
     @Override
-    public void recordDeleted(MailItem itemSnapshot) {
-        MailItem.Type type = itemSnapshot.getType();
+    public void recordDeleted(ZimbraMailItem itemSnapshot) {
+        MailItem.Type type = MailItem.Type.fromCommon(itemSnapshot.getMailItemType());
         changedTypes.add(type);
-        addChangedFolderId(itemSnapshot.getFolderId());
+        try {
+            addChangedFolderId(itemSnapshot.getFolderIdInMailbox());
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("error getting folder ID for modified item");
+        }
         delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
     }
 
@@ -136,16 +136,26 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     }
 
     @Override
-    public void recordModified(MailItem item, int reason) {
-        changedTypes.add(item.getType());
-        addChangedFolderId(item.getFolderId());
+    public void recordModified(ZimbraMailItem item, int reason) {
+        MailItem.Type type = MailItem.Type.fromCommon(item.getMailItemType());
+        changedTypes.add(type);
+        try {
+            addChangedFolderId(item.getFolderIdInMailbox());
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("error getting folder ID for modified item");
+        }
         recordModified(new ModificationKey(item), item, reason, null, true);
     }
 
     @Override
-    public void recordModified(MailItem item, int reason, MailItem preModifyItem) {
-        changedTypes.add(item.getType());
-        addChangedFolderId(item.getFolderId());
+    public void recordModified(ZimbraMailItem item, int reason, ZimbraMailItem preModifyItem) {
+        MailItem.Type type = MailItem.Type.fromCommon(item.getMailItemType());
+        changedTypes.add(type);
+        try {
+            addChangedFolderId(item.getFolderIdInMailbox());
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("error getting folder ID for modified item");
+        }
         recordModified(new ModificationKey(item), item, reason, preModifyItem, false);
     }
 
@@ -240,39 +250,6 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         return ret;
     }
 
-    public byte[] getSerializedBytes() throws IOException {
-        // assemble temporary created, modified, deleted with Metadata
-        LinkedHashMap<ModificationKeyMeta, String> metaCreated = null;
-        Map<ModificationKeyMeta, ChangeMeta> metaModified = null;
-        Map<ModificationKeyMeta, ChangeMeta> metaDeleted = null;
-
-        if (created != null) {
-            metaCreated = new LinkedHashMap<ModificationKeyMeta, String>();
-            Iterator<Entry<PendingModifications.ModificationKey, MailItem>> iter = created.entrySet().iterator();
-            while (iter.hasNext()) {
-                Entry<PendingModifications.ModificationKey, MailItem> entry = iter.next();
-                ModificationKeyMeta keyMeta = new ModificationKeyMeta(entry.getKey().getAccountId(),
-                        entry.getKey().getItemId());
-                MailItem item = entry.getValue();
-                Metadata meta = item.serializeUnderlyingData();
-                metaCreated.put(keyMeta, meta.toString());
-            }
-        }
-        metaModified = getSerializable(modified);
-        metaDeleted = getSerializable(deleted);
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(bos);
-        oos.writeObject(changedTypes);
-        oos.writeObject(getChangedFolders());
-        oos.writeObject(metaCreated);
-        oos.writeObject(metaModified);
-        oos.writeObject(metaDeleted);
-        oos.flush();
-        oos.close();
-        return bos.toByteArray();
-    }
-
     private static Map<PendingModifications.ModificationKey, PendingModifications.Change> getOriginal(Mailbox mbox,
             Map<ModificationKeyMeta, ChangeMeta> map) throws ServiceException {
         if (map == null) {
@@ -341,7 +318,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             LinkedHashMap<ModificationKeyMeta, String> metaCreated = (LinkedHashMap<ModificationKeyMeta, String>) ois
                     .readObject();
             if (metaCreated != null) {
-                pms.created = new LinkedHashMap<PendingModifications.ModificationKey, MailItem>();
+                pms.created = new LinkedHashMap<PendingModifications.ModificationKey, ZimbraMailItem>();
                 Iterator<Entry<ModificationKeyMeta, String>> iter = metaCreated.entrySet().iterator();
                 while (iter.hasNext()) {
                     Entry<ModificationKeyMeta, String> entry = iter.next();

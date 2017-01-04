@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimerTask;
 
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareLocator;
@@ -41,7 +42,7 @@ public class ShareStartStopListener extends MailboxListener {
     public void notify(ChangeNotification notification) {
         if (notification.mods.created != null) {
             // A new folder with non-empty ACL means start of sharing.
-            for (MailItem created : notification.mods.created.values()) {
+            for (ZimbraMailItem created : notification.mods.created.values()) {
                 if (created instanceof Folder) {
                     Folder folder = (Folder) created;
                     if (folder.getACL() != null) {
