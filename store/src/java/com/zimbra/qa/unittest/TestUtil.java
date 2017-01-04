@@ -198,8 +198,12 @@ public class TestUtil extends Assert {
     }
 
     public static String getSoapUrl() {
+        return getSoapUrl(null);
+    }
+
+    public static String getSoapUrl(Server server) {
         try {
-            return getBaseUrl() + AccountConstants.USER_SERVICE_URI;
+            return getBaseUrl(server) + AccountConstants.USER_SERVICE_URI;
         } catch (ServiceException e) {
             ZimbraLog.test.error("Unable to determine SOAP URL", e);
         }
@@ -207,27 +211,38 @@ public class TestUtil extends Assert {
     }
 
     public static String getBaseUrl() throws ServiceException {
+        return getBaseUrl(null);
+    }
+
+    public static String getBaseUrl(Server server) throws ServiceException {
         String scheme;
-        int port;
-        port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailPort, 0);
-        if (port > 0) {
-            scheme = "http";
-        } else {
-            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-            scheme = "https";
+        Provisioning prov = Provisioning.getInstance();
+        if(server == null) {
+            server = prov.getLocalServer();
         }
-        return scheme + "://localhost:" + port;
+        String hostname = server.getServiceHostname();
+        int port;
+        port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+        if (port > 0) {
+            scheme = "https";
+        } else {
+            port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            scheme = "http";
+        }
+        return scheme + "://" + hostname + ":" + port;
     }
 
     public static String getAdminSoapUrl() {
         int port;
+        String hostname = "localhost";
         try {
             port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+            hostname = Provisioning.getInstance().getLocalServer().getServiceHostname();
         } catch (ServiceException e) {
             ZimbraLog.test.error("Unable to get admin SOAP port", e);
             port = LC.zimbra_admin_service_port.intValue();
         }
-        return "https://localhost:" + port + AdminConstants.ADMIN_SERVICE_URI;
+        return "https://" + hostname + ":" + port + AdminConstants.ADMIN_SERVICE_URI;
     }
 
     public static LmcSession getSoapSession(String userName) throws ServiceException, LmcSoapClientException,
