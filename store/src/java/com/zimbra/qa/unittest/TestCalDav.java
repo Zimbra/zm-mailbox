@@ -1937,21 +1937,11 @@ public class TestCalDav {
             File tzFile = new File(tzFilePath);
             WellKnownTimeZones.loadFromFile(tzFile);
         }
-        Map<String, Object> attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        user1 = TestUtil.createAccount(USER_NAME, attrs);
-        attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        dav1 = TestUtil.createAccount(DAV1, attrs);
-        attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        dav2 = TestUtil.createAccount(DAV2, attrs);
-        attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        dav3 = TestUtil.createAccount(DAV3, attrs);
-        attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        dav4 = TestUtil.createAccount(DAV4, attrs);
+        user1 = TestUtil.createAccount(USER_NAME);
+        dav1 = TestUtil.createAccount(DAV1);
+        dav2 = TestUtil.createAccount(DAV2);
+        dav3 = TestUtil.createAccount(DAV3);
+        dav4 = TestUtil.createAccount(DAV4);
     }
 
     @After

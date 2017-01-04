@@ -53,17 +53,10 @@ import com.zimbra.znative.IO;
 
 public final class TestBlobDeduper {
 
-    private static final Provisioning prov = Provisioning.getInstance();
     private static String TEST_NAME = "TestBlobDeduper";
     private static String USER_NAME = TEST_NAME + "-user1";
     private Mailbox mbox;
     private Account account;
-    private static Server localServer = null;
-
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        localServer = prov.getLocalServer();
-    }
 
     @Before
     public void setUp() throws Exception {
@@ -72,9 +65,7 @@ public final class TestBlobDeduper {
             return;
         }
         cleanUp();
-        Map<String, Object> attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        account = TestUtil.createAccount(USER_NAME, attrs);
+        account = TestUtil.createAccount(USER_NAME);
         mbox = MailboxManager.getInstance().getMailboxByAccount(account);
     }
 
