@@ -951,7 +951,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         defendAgainstAccountHarvesting(account, by, accountSelectorKey, zsc, Admin.R_getAccountInfo);
         if (!canModifyOptions(zsc, account)) {
             ServiceException se = ServiceException.PERM_DENIED("cannot modify options");
-            ZimbraLog.filter.debug("Do not have permission to modify", se);
+            ZimbraLog.filter.debug("Do not have permission to modify options on account %s", se.getMessage());
             throw se;
         }
     }
