@@ -2774,24 +2774,26 @@ public class Mailbox implements MailboxStore {
         }
 
         if (pms.created != null && !pms.created.isEmpty()) {
-            for (MailItem item : pms.created.values()) {
+            for (ZimbraMailItem item : pms.created.values()) {
                 if (item instanceof Folder && folders != null) {
-                    Folder folder = folders.get(item.getId());
-                    if (folder == null) {
-                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
-                        folder = (Folder) item;
+                    Folder folder = (Folder) item;
+                    Folder snapshotted = folders.get(folder.getId());
+                    if (snapshotted == null) {
+                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", folder.getId());
+                        snapshotted = folder;
                     }
-                    snapshot.recordCreated(folder);
+                    snapshot.recordCreated(snapshotted);
                 } else if (item instanceof Tag) {
                     if (((Tag) item).isListed()) {
-                        snapshot.recordCreated(snapshotItem(item));
+                        snapshot.recordCreated(snapshotItem((Tag) item));
                     }
-                } else {
+                } else if (item instanceof MailItem){
+                    MailItem mi = (MailItem) item;
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (cache != null && cache.contains(item)) {
-                        item = snapshotItem(item);
+                    if (cache != null && cache.contains(mi)) {
+                        mi = snapshotItem(mi);
                     }
-                    snapshot.recordCreated(item);
+                    snapshot.recordCreated(mi);
                 }
             }
         }
@@ -9663,16 +9665,17 @@ public class Mailbox implements MailboxStore {
         if (currentChange().dirty != null && currentChange().dirty.hasNotifications()) {
             assert(currentChange().writeChange);
             if (currentChange().dirty.created != null) {
-                for (MailItem item : currentChange().dirty.created.values()) {
+                for (ZimbraMailItem item : currentChange().dirty.created.values()) {
                     if (item instanceof Folder) {
                         foldersTagsDirty = true;
                         if (item.getSize() != 0) {
                             ((Folder) item).saveFolderCounts(false);
                         }
                     } else if (item instanceof Tag) {
+                        Tag tag = (Tag) item;
                         foldersTagsDirty = true;
-                        if (item.isUnread()) {
-                            ((Tag) item).saveTagCounts();
+                        if (tag.isUnread()) {
+                            tag.saveTagCounts();
                         }
                     }
                 }
@@ -9717,8 +9720,11 @@ public class Mailbox implements MailboxStore {
         if (DebugConfig.checkMailboxCacheConsistency && currentChange().dirty != null
                         && currentChange().dirty.hasNotifications()) {
             if (currentChange().dirty.created != null) {
-                for (MailItem item : currentChange().dirty.created.values()) {
-                    DbMailItem.consistencyCheck(item, item.mData, item.encodeMetadata().toString());
+                for (ZimbraMailItem item : currentChange().dirty.created.values()) {
+                    if (item instanceof MailItem) {
+                        MailItem mi = (MailItem) item;
+                        DbMailItem.consistencyCheck(mi, mi.mData, mi.encodeMetadata().toString());
+                    }
                 }
             }
             if (currentChange().dirty.modified != null) {
