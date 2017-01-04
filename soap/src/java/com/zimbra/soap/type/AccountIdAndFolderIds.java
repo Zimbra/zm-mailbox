@@ -23,6 +23,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.google.common.base.Joiner;
@@ -30,6 +31,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class AccountIdAndFolderIds {
@@ -44,6 +46,14 @@ public class AccountIdAndFolderIds {
     @XmlAttribute(name=AdminConstants.A_ID, required=false)
     private final String id;
 
+    /**
+     * @zm-api-field-tag mod
+     * @zm-api-field-description serialized pending modifications
+     * TODO: instead of a string this should be a structure that contains enough data to instantiate PendingRemoteModifications 
+     */
+    @XmlElement(name=MailConstants.A_MODIFIER /* mod */, required=false)
+    private final String mods;
+
     private final List <Integer> folderIds = Lists.newArrayList();
 
     /**
@@ -54,12 +64,21 @@ public class AccountIdAndFolderIds {
         this((String) null);
     }
 
-    public AccountIdAndFolderIds(String id) {
+    public AccountIdAndFolderIds(String id, String mods) {
         this.id = id;
+        this.mods = mods;
+    }
+
+    public AccountIdAndFolderIds(Integer id, String mods) {
+        this(id.toString(), mods);
+    }
+
+    public AccountIdAndFolderIds(String id) {
+        this(id, (String)null);
     }
 
     public AccountIdAndFolderIds(Integer id) {
-        this(id.toString());
+        this(id.toString(), (String)null);
     }
 
     public String getId() { return id; }
