@@ -106,6 +106,7 @@ public abstract class WaitSetBase implements IWaitSet {
         if (cbIsCurrent) {
             mSentSignalledSessions.clear();
             sentKnownChangedFolderIds.clear();
+            sentPendingModifications.clear();
             mSentErrors.clear();
         }
 
@@ -126,16 +127,19 @@ public abstract class WaitSetBase implements IWaitSet {
         //
         if ((mCurrentSignalledSessions.size() > 0 || mCurrentErrors.size() > 0) ||
                         (!cbIsCurrent && (mSentSignalledSessions.size() > 0 || mSentErrors.size() > 0))) {
-            // if sent empty, then just swap sent,current instead of copying
+            // if sent is empty, then just swap sent,current instead of copying
             if (mSentSignalledSessions.size() == 0) {
                 if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 3a");
-                // SWAP mSent,mCurrent!
+                // SWAP sent <->current
                 HashSet<String> temp = mCurrentSignalledSessions;
                 mCurrentSignalledSessions = mSentSignalledSessions;
                 mSentSignalledSessions = temp;
                 Map<String /*accountId*/, Set<Integer /* folderId */>> tempFids = currentKnownChangedFolderIds;
                 currentKnownChangedFolderIds = sentKnownChangedFolderIds;
                 sentKnownChangedFolderIds = tempFids;
+                Map<String, PendingModifications> tempNotifications = currentPendingModifications;
+                currentPendingModifications = sentPendingModifications;
+                sentPendingModifications = tempNotifications;
             } else {
                 if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 3b");
                 assert(!cbIsCurrent);
@@ -143,6 +147,8 @@ public abstract class WaitSetBase implements IWaitSet {
                 mCurrentSignalledSessions.clear();
                 sentKnownChangedFolderIds.putAll(currentKnownChangedFolderIds);
                 currentKnownChangedFolderIds.clear();;
+                sentPendingModifications.putAll(currentPendingModifications);
+                currentPendingModifications.clear();
             }
 
             // error list
@@ -153,7 +159,7 @@ public abstract class WaitSetBase implements IWaitSet {
             if (trace) {
                 ZimbraLog.session.trace("WaitSetBase.trySendData 4");
             }
-            mCb.dataReady(this, toNextSeqNo(), false, mSentErrors, mSentSignalledSessions, sentKnownChangedFolderIds);
+            mCb.dataReady(this, toNextSeqNo(), false, mSentErrors, mSentSignalledSessions, sentKnownChangedFolderIds, sentPendingModifications);
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
         }
@@ -201,6 +207,9 @@ public abstract class WaitSetBase implements IWaitSet {
         fids.addAll(changedFolderIds);
     }
 
+    protected synchronized void addMods(Map<String, PendingModifications> mods, String acctId, PendingModifications mod) {
+        mods.put(acctId, mod);
+    }
     protected final String mWaitSetId;
     protected final String mOwnerAccountId;
     protected final Set<MailItem.Type> defaultInterest;
@@ -217,8 +226,10 @@ public abstract class WaitSetBase implements IWaitSet {
     /** this is the signalled set data that is new (has never been sent) */
     protected HashSet<String /*accountId*/> mCurrentSignalledSessions = Sets.newHashSet();
     protected Map<String /*accountId*/, Set<Integer /* folderId */>> currentKnownChangedFolderIds = Maps.newHashMap();
+    protected Map<String /*accountId*/, PendingModifications> currentPendingModifications = Maps.newHashMap();
 
     /** this is the signalled set data that we've already sent, it just hasn't been acked yet */
     protected HashSet<String /*accountId*/> mSentSignalledSessions = Sets.newHashSet();
     protected Map<String /*accountId*/, Set<Integer /* folderId */>> sentKnownChangedFolderIds = Maps.newHashMap();
+    protected Map<String /*accountId*/, PendingModifications> sentPendingModifications = Maps.newHashMap();
 }
