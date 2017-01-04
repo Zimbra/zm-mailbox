@@ -219,5 +219,9 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.GET_SHARE_NOTIFICATIONS_REQUEST, new GetShareNotifications());
 
         dispatcher.registerHandler(MailConstants.GET_SYSTEM_RETENTION_POLICY_REQUEST, new GetSystemRetentionPolicy());
+
+        // IMAP
+        dispatcher.registerHandler(MailConstants.GET_IMAP_RECENT_REQUEST, new GetIMAPRecent());
+
     }
 }
