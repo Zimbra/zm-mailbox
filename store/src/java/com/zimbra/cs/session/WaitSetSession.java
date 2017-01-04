@@ -130,7 +130,7 @@ public class WaitSetSession extends Session {
         if (trace) {
             ZimbraLog.session.trace("Signaling waitset");
         }
-        mWs.signalDataReady(this, pns.getChangedFolders());
+        mWs.signalDataReady(this, pns);
         if (trace) {
             ZimbraLog.session.trace("WaitSetSession.notifyPendingChanges done");
         }
