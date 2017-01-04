@@ -72,9 +72,6 @@ public class TestUnread {
     private int mTag3Id;
     private int mConvId;
 
-    private static final Provisioning prov = Provisioning.getInstance();
-    private static Server localServer = null;
-
     private Message getMessage1() throws Exception { return mMbox.getMessageById(null, mMessage1Id); }
     private Message getMessage2() throws Exception { return mMbox.getMessageById(null, mMessage2Id); }
     private Message getMessage3() throws Exception { return mMbox.getMessageById(null, mMessage3Id); }
@@ -85,10 +82,6 @@ public class TestUnread {
     private Tag getTag2() throws Exception { return mMbox.getTagById(null, mTag2Id); }
     private Tag getTag3() throws Exception { return mMbox.getTagById(null, mTag3Id); }
 
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        localServer = prov.getLocalServer();
-    }
     /**
      * Sets up the following data set:
      * <ul>
@@ -103,10 +96,7 @@ public class TestUnread {
         // Clean up data, in case a previous test didn't exit cleanly
         cleanup();
 
-        Map<String, Object> attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-
-        mAccount = TestUtil.createAccount(USER_NAME, attrs);
+        mAccount = TestUtil.createAccount(USER_NAME);
         mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
 
         Message msg = TestUtil.addMessage(mMbox, TEST_NAME);

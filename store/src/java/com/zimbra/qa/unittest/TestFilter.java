@@ -133,12 +133,8 @@ public final class TestFilter {
     public void setUp() throws Exception {
         cleanUp();
 
-        Map<String, Object> attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        user1 = TestUtil.createAccount(USER_NAME, attrs);
-        attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        TestUtil.createAccount(REMOTE_USER_NAME, attrs);
+        user1 = TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         mMbox = TestUtil.getZMailbox(USER_NAME);
         mTag1 = mMbox.createTag(TAG1_NAME, null);
         mTag2 = mMbox.createTag(TAG2_NAME, null);
@@ -1345,16 +1341,15 @@ public final class TestFilter {
         // Check zimbraMailRedirectSetEnvelopeSender=FALSE.
         int port = 6025;
         DummySmtpServer smtp = startSmtpServer(port);
-        Server server = Provisioning.getInstance().getLocalServer();
-        server.setSmtpPort(port);
-        server.setMailRedirectSetEnvelopeSender(false);
+        localServer.setSmtpPort(port);
+        localServer.setMailRedirectSetEnvelopeSender(false);
 
         TestUtil.addMessageLmtp(subject, USER_NAME, from);
         assertEquals(from, smtp.getMailFrom());
 
         // Check zimbraMailRedirectSetEnvelopeSender=TRUE.
         smtp = startSmtpServer(port);
-        server.setMailRedirectSetEnvelopeSender(true);
+        localServer.setMailRedirectSetEnvelopeSender(true);
         subject = NAME_PREFIX + " testRedirect 2";
         TestUtil.addMessageLmtp(subject, USER_NAME, from);
         String userAddress = Strings.nullToEmpty(
