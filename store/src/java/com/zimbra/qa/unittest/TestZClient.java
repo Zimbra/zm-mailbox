@@ -468,6 +468,26 @@ public class TestZClient extends TestCase {
         assertTrue(mbox.isTrackingImap());
     }
 
+    @Test
+    public void testImapRecentRequest() throws ServiceException {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+
+        Folder folder = mbox.createFolder(null, "testImapRecent", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
+        int folderId = folder.getId();
+
+        try {
+            Message msg = TestUtil.addMessage(mbox, folderId, "testImapRecent message", System.currentTimeMillis());
+            int recent = zmbox.getImapRECENT(Integer.toString(folderId));
+            assertEquals(1, recent);
+        } catch (ServiceException e) {
+            fail("getIMAPRecent should not fail");
+        }
+        catch (Exception e) {
+            fail("getIMAPRecent should not fail");
+        }
+    }
+
     @Override
     public void tearDown()
     throws Exception {
