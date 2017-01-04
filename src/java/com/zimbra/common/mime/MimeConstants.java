@@ -105,6 +105,7 @@ public class MimeConstants {
     //smime
     public static final String ERR_LOAD_CERTIFICATE_FAILED = "LOAD_CERTIFICATE_FAILED";
     public static final String ERR_LOAD_PRIVATE_KEY_FAILED = "LOAD_PRIVATE_KEY_FAILED";
+    public static final String ERR_USER_CERT_MISMATCH = "USER_CERT_MISMATCH";
     public static final String ERR_DECRYPTION_FAILED = "DECRYPTION_FAILED";
 
     public static final ImmutableSet<String> ZIMBRA_DOC_CT_SET = ImmutableSet.of(

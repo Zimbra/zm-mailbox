@@ -64,6 +64,7 @@ public class ServiceException extends Exception {
     //smime
     public static final String LOAD_CERTIFICATE_FAILED = "smime.LOAD_CERTIFICATE_FAILED";
     public static final String LOAD_PRIVATE_KEY_FAILED = "smime.LOAD_PRIVATE_KEY_FAILED";
+    public static final String USER_CERT_MISMATCH = "smime.USER_CERT_MISMATCH";
     public static final String DECRYPTION_FAILED = "smime.DECRYPTION_FAILED";
     public static final String OPERATION_DENIED = "smime.OPERATION_DENIED";
 

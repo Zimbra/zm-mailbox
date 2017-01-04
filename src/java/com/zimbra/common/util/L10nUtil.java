@@ -272,26 +272,6 @@ public class L10nUtil {
         errorTitle,
         zipFile,
 
-        // smime error message
-        errCodeSignerInformationNotVerified,
-        errDetailSignerInformationNotVerified,
-
-        errCodeSignerDigestMismatch,
-        errDetailSignerDigestMismatch,
-
-        errCodeVerifierCertificateNotValid,
-        errDetailVerifierNotValidAtSigningTime,
-        errDetailClientCertificateExpired,
-        errDetailClientCertificateNotYetValid,
-        errDetailEmailAddressDoesNotMatch,
-        errDetailSignerCertificateValidationFailed,
-
-        errCodeInvalidCMSSignature,
-        errDetailInvalidCMSSignature,
-
-        errCodeCMSSignatureValidationFailed,
-        errDetailCMSSignatureValidationFailed
-
         // add other messages in the future...
     }
 
