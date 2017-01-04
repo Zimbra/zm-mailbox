@@ -21,6 +21,7 @@ import java.util.TreeMap;
 import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.service.ServiceException;
@@ -153,14 +154,19 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     /**
-     * TODO - Determine what is required to update the folder's high-water change
-     * id as described in the <code>ImapSession</code> implementation of this method.
+     * Conditionally update the folder's high-water RECENT change ID.
      * @see com.zimbra.cs.imap.ImapSession#snapshotRECENT()
      */
     @Override
     protected void snapshotRECENT() {
-        return;
+        try {
+            ZMailbox mbox = (ZMailbox) mailbox;
+            if (mbox != null && isWritable()) {
+                mbox.recordImapSession(mFolderId);
+            }
+        } catch(ServiceException e) {
+            ZimbraLog.session.warn("exception recording unloaded session's RECENT limit %s", this, e);
+        }
     }
-
 
 }
