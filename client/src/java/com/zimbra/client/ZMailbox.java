@@ -183,6 +183,8 @@ import com.zimbra.soap.mail.message.ItemActionRequest;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
 import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
+import com.zimbra.soap.mail.message.RecordIMAPSessionRequest;
+import com.zimbra.soap.mail.message.RecordIMAPSessionResponse;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
@@ -2250,6 +2252,17 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             actionEl.addAttribute(MailConstants.A_FLAGS, flags);
         }
         return doAction(actionEl);
+    }
+
+    public void recordImapSession(int folderId) throws ServiceException {
+        RecordIMAPSessionRequest req = new RecordIMAPSessionRequest(folderId);
+        RecordIMAPSessionResponse resp = invokeJaxb(req);
+        String folderUuid = resp.getFolderUuid();
+        int lastItemId = resp.getLastItemId();
+        ZFolder folder = this.getFolderByUuid(folderUuid);
+        if (folder != null) {
+            folder.updateImapRECENTCutoff(lastItemId);
+        }
     }
 
     /**
