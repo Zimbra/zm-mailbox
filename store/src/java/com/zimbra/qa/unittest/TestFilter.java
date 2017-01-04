@@ -133,12 +133,8 @@ public final class TestFilter {
     public void setUp() throws Exception {
         cleanUp();
 
-        Map<String, Object> attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        user1 = TestUtil.createAccount(USER_NAME, attrs);
-        attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        TestUtil.createAccount(REMOTE_USER_NAME, attrs);
+        user1 = TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         mMbox = TestUtil.getZMailbox(USER_NAME);
         mTag1 = mMbox.createTag(TAG1_NAME, null);
         mTag2 = mMbox.createTag(TAG2_NAME, null);
