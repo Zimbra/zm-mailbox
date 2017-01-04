@@ -271,6 +271,9 @@ public final class MailConstants {
 
     public static final String E_GET_SYSTEM_RETENTION_POLICY_REQUEST = "GetSystemRetentionPolicyRequest";
     public static final String E_GET_SYSTEM_RETENTION_POLICY_RESPONSE = "GetSystemRetentionPolicyResponse";
+    public static final String E_RECORD_IMAP_SESSION_REQUEST = "RecordIMAPSessionRequest";
+    public static final String E_RECORD_IMAP_SESSION_RESPONSE = "RecordIMAPSessionResponse";
+
 
     public static final String E_GET_IMAP_RECENT_REQUEST = "GetIMAPRecentRequest";
     public static final String E_GET_IMAP_RECENT_RESPONSE = "GetIMAPRecentResponse";
@@ -550,6 +553,8 @@ public final class MailConstants {
     // IMAP
     public static final QName GET_IMAP_RECENT_REQUEST = QName.get(E_GET_IMAP_RECENT_REQUEST, NAMESPACE);
     public static final QName GET_IMAP_RECENT_RESPONSE = QName.get(E_GET_IMAP_RECENT_RESPONSE, NAMESPACE);
+    public static final QName RECORD_IMAP_SESSION_REQUEST = QName.get(E_RECORD_IMAP_SESSION_REQUEST, NAMESPACE);
+    public static final QName RECORD_IMAP_SESSION_RESPONSE = QName.get(E_RECORD_IMAP_SESSION_RESPONSE, NAMESPACE);
 
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
