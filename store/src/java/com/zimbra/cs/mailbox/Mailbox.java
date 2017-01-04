@@ -128,9 +128,6 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.iochannel.MailboxNotification;
-import com.zimbra.cs.iochannel.MessageChannel;
-import com.zimbra.cs.iochannel.MessageChannelException;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
@@ -9833,35 +9830,6 @@ public class Mailbox implements MailboxStore {
                     session.notifyPendingChanges(notification.mods, notification.lastChangeId, source);
                 } catch (RuntimeException e) {
                     ZimbraLog.mailbox.error("ignoring error during notification", e);
-                }
-            }
-
-            // send to the message channel
-            DbConnection conn = null;
-            try {
-                if (Zimbra.isAlwaysOn()) {
-                    conn = DbPool.getConnection();
-                    List<String> serverids = DbSession.get(conn, getId());
-                    for (String serverid : serverids) {
-                        Server server = Provisioning.getInstance().getServerById(serverid);
-                        if (server.isLocalServer()) {
-                            continue;
-                        }
-                        MailboxNotification ntfn = MailboxNotification.create(getAccountId(), mData.lastChangeId, dirty.getSerializedBytes());
-                        MessageChannel.getInstance().sendMessage(server, ntfn);
-                    }
-                }
-            } catch (ServiceException e) {
-                ZimbraLog.session.warn("unable to get target server", e);
-            } catch (MessageChannelException e) {
-                ZimbraLog.session.warn("unable to create MailboxNotification", e);
-                return;
-            } catch (IOException e) {
-                ZimbraLog.session.warn("unable to create MailboxNotification", e);
-                return;
-            } finally {
-                if (conn != null) {
-                    conn.closeQuietly();
                 }
             }
             MailboxListener.notifyListeners(notification);
