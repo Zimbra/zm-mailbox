@@ -31,6 +31,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -195,7 +196,7 @@ public class SoapSession extends Session {
         private boolean folderRecalcRequired(PendingLocalModifications pms) {
             boolean recalc = false;
             if (pms.created != null && !pms.created.isEmpty()) {
-                for (MailItem item : pms.created.values()) {
+                for (ZimbraMailItem item : pms.created.values()) {
                     if (item instanceof Folder)
                         return true;
                 }
@@ -231,13 +232,13 @@ public class SoapSession extends Session {
                 filtered.recordDeleted(pms.deleted);
             }
             if (pms.created != null && !pms.created.isEmpty()) {
-                for (MailItem item : pms.created.values()) {
+                for (ZimbraMailItem item : pms.created.values()) {
                     if (item instanceof Conversation ||
-                            visible.contains(item instanceof Folder ? item.getId() : item.getFolderId())) {
+                            visible.contains(item instanceof Folder ? item.getIdInMailbox() : item.getFolderIdInMailbox())) {
                         filtered.recordCreated(item);
                     } else if (item instanceof Comment) {
                         try {
-                            this.getMailboxOrNull().getItemById(octxt, item.getParentId(), MailItem.Type.UNKNOWN);
+                            this.getMailboxOrNull().getItemById(octxt, ((Comment) item).getParentId(), MailItem.Type.UNKNOWN);
                             filtered.recordCreated(item);
                         } catch (ServiceException e) {
                             // no permission.  ignore the item.
@@ -868,10 +869,11 @@ public class SoapSession extends Session {
         } else {
             // keep track of "recent" message count: all present before the session started, plus all received during the session
             if (pms.created != null) {
-                for (MailItem item : pms.created.values()) {
+                for (ZimbraMailItem item : pms.created.values()) {
                     if (item instanceof Message) {
+                        Message msg = (Message) item;
                         boolean isReceived = true;
-                        if (item.getFolderId() == Mailbox.ID_FOLDER_SPAM || item.getFolderId() == Mailbox.ID_FOLDER_TRASH) {
+                        if (msg.getFolderId() == Mailbox.ID_FOLDER_SPAM || msg.getFolderId() == Mailbox.ID_FOLDER_TRASH) {
                             isReceived = false;
                         } else if ((item.getFlagBitmask() & Mailbox.NON_DELIVERY_FLAGS) != 0) {
                             isReceived = false;
@@ -1453,20 +1455,23 @@ public class SoapSession extends Session {
         if (hasLocalCreates || hasRemoteCreates) {
             Element eCreated = eNotify.addUniqueElement(ZimbraNamespace.E_CREATED);
             if (hasLocalCreates) {
-                for (MailItem item : pms.created.values()) {
-                    ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, item.getMailbox(), false);
-                    try {
-                        Element elem = ToXML.encodeItem(eCreated, ifmt, octxt, item, ToXML.NOTIFY_FIELDS);
-                        // special-case notifications for new mountpoints in the authenticated user's mailbox
-                        if (item instanceof Mountpoint && mbox == item.getMailbox()) {
-                            Map<ItemId, Pair<Boolean, Element>> mountpoints = new HashMap<ItemId, Pair<Boolean, Element>>(2);
-                            expandLocalMountpoint(octxt, (Mountpoint) item, eCreated.getFactory(), mountpoints);
-                            expandRemoteMountpoints(octxt, zsc, mountpoints);
-                            transferMountpointContents(elem, octxt, mountpoints);
+                for (ZimbraMailItem item : pms.created.values()) {
+                    if (item instanceof MailItem) {
+                        MailItem mi = (MailItem) item;
+                        ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, mi.getMailbox(), false);
+                        try {
+                            Element elem = ToXML.encodeItem(eCreated, ifmt, octxt, mi, ToXML.NOTIFY_FIELDS);
+                            // special-case notifications for new mountpoints in the authenticated user's mailbox
+                            if (item instanceof Mountpoint && mbox == mi.getMailbox()) {
+                                Map<ItemId, Pair<Boolean, Element>> mountpoints = new HashMap<ItemId, Pair<Boolean, Element>>(2);
+                                expandLocalMountpoint(octxt, (Mountpoint) mi, eCreated.getFactory(), mountpoints);
+                                expandRemoteMountpoints(octxt, zsc, mountpoints);
+                                transferMountpointContents(elem, octxt, mountpoints);
+                            }
+                        } catch (ServiceException e) {
+                            ZimbraLog.session.warn("error encoding item " + mi.getId(), e);
+                            return;
                         }
-                    } catch (ServiceException e) {
-                        ZimbraLog.session.warn("error encoding item " + item.getId(), e);
-                        return;
                     }
                 }
                 // sanity-check the returned element

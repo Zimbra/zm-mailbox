@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -76,9 +77,10 @@ public final class MailboxListenerTest {
 
             Assert.assertNotNull(notification.mods.created);
             boolean newDocFound = false;
-            for (MailItem item : notification.mods.created.values()) {
+            for (ZimbraMailItem item : notification.mods.created.values()) {
                 if (item instanceof Document) {
-                    if ("test".equals(item.getName()))
+                    Document doc = (Document) item;
+                    if ("test".equals(doc.getName()))
                         newDocFound = true;
                 }
             }
