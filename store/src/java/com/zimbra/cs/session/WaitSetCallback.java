@@ -34,6 +34,7 @@ public class WaitSetCallback {
     public boolean canceled;
     public Set<String> signalledAccounts;
     public Map<String /*accountId*/, Set<Integer /* folderId */>> changedFolderIds;
+    public Map<String /*accountId*/, PendingModifications> pendingModifications;
     public IWaitSet waitSet;
     public String seqNo;
     public IWaitSet ws;
@@ -41,7 +42,7 @@ public class WaitSetCallback {
     public ResumeContinuationListener continuationResume;
 
     public void dataReady(IWaitSet wset, String seqNum, boolean setCanceled, List<WaitSetError> inErrors,
-            Set<String> signalledAccts, Map<String /*accountId*/, Set<Integer /* folderId */>> changedFolders) {
+            Set<String> signalledAccts, Map<String /*accountId*/, Set<Integer /* folderId */>> changedFolders, Map<String /*accountId*/, PendingModifications> pms) {
         boolean trace = ZimbraLog.session.isTraceEnabled();
         synchronized(this) {
             if (inErrors != null && inErrors.size() > 0) {
@@ -59,6 +60,10 @@ public class WaitSetCallback {
                     this.changedFolderIds.put(entry.getKey(), Sets.newCopyOnWriteArraySet(entry.getValue()));
                 }
             }
+            this.pendingModifications = Maps.newHashMapWithExpectedSize(pms.size());
+            for(Entry<String, PendingModifications> entry : pms.entrySet()) {
+                this.pendingModifications.put(entry.getKey(), entry.getValue());
+            }
             this.seqNo = seqNum;
             this.completed = true;
             ZimbraLog.session.debug("dataReady called. %s", this);
@@ -74,7 +79,7 @@ public class WaitSetCallback {
         }
     }
     public void dataReadySetCanceled(IWaitSet wset, String seqNum) {
-        dataReady(wset, seqNum, true, null, null, null);
+        dataReady(wset, seqNum, true, null, null, null, null);
     }
 
     @Override
