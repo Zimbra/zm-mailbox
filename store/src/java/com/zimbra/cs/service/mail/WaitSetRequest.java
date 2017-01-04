@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -44,6 +45,8 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.admin.AdminServiceException;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.servlet.continuation.ResumeContinuationListener;
+import com.zimbra.cs.session.PendingLocalModifications;
+import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetCallback;
 import com.zimbra.cs.session.WaitSetError;
@@ -268,9 +271,12 @@ public class WaitSetRequest extends MailDocumentHandler {
             resp.setSeqNo(cb.seqNo);
             for (String signalledAcct : cb.signalledAccounts) {
                 //TODO: update this with classes introduced for zms-286
-                /* AccountIdAndFolderIds info = new AccountIdAndFolderIds(signalledAcct);
+                /**
+                 * TODO: instead of calling toString, this code should encode the minumum info required for instantiating PendingRemoteModifications on the listener host
+                 */
+                AccountIdAndFolderIds info = new AccountIdAndFolderIds(signalledAcct, cb.pendingModifications.get(signalledAcct).toString());
                 info.setFolderIds(cb.changedFolderIds.get(signalledAcct));
-                resp.addSignalledAccount(info); */
+                resp.addSignalledAccount(info); 
             }
         } else {
             // timed out....they should try again
