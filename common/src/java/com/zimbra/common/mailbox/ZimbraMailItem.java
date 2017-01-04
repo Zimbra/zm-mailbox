@@ -50,4 +50,8 @@ public interface ZimbraMailItem {
     /** Returns the "external" flag bitmask, which includes {@link Flag#BITMASK_UNREAD} when the item is unread. */
     public int getFlagBitmask();
     public String[] getTags();
+    /** String representation of the item's folder ID */
+    public int getFolderIdInMailbox() throws ServiceException;
+    /** ID of the account containing this item */
+    public String getAccountId() throws ServiceException;
 }
