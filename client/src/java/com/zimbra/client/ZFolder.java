@@ -966,6 +966,12 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
 
     public void rename(String newPath) throws ServiceException { mMailbox.renameFolder(mId, newPath); }
 
+    public void updateImapRECENTCutoff(int lastItemId) {
+        if (mImapRECENTCutoff < lastItemId) {
+            mImapRECENTCutoff = lastItemId;
+        }
+    }
+
     public void updateFolder(String name, String parentId, Color newColor, String rgbColor, String flags, List<ZGrant> acl) throws ServiceException {
         mMailbox.updateFolder(mId, name, parentId, newColor, rgbColor, flags, acl);
     }
