@@ -1793,7 +1793,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraAdminSieveFeatureVariablesEnabled, or true if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2098)
     public boolean isAdminSieveFeatureVariablesEnabled() {
@@ -1807,7 +1807,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraAdminSieveFeatureVariablesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2098)
     public void setAdminSieveFeatureVariablesEnabled(boolean zimbraAdminSieveFeatureVariablesEnabled) throws com.zimbra.common.service.ServiceException {
@@ -1824,7 +1824,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2098)
     public Map<String,Object> setAdminSieveFeatureVariablesEnabled(boolean zimbraAdminSieveFeatureVariablesEnabled, Map<String,Object> attrs) {
@@ -1839,7 +1839,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2098)
     public void unsetAdminSieveFeatureVariablesEnabled() throws com.zimbra.common.service.ServiceException {
@@ -1855,7 +1855,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2098)
     public Map<String,Object> unsetAdminSieveFeatureVariablesEnabled(Map<String,Object> attrs) {
@@ -17489,7 +17489,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraGalSyncSizeLimit, or 30000 if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2097)
     public int getGalSyncSizeLimit() {
@@ -17503,7 +17503,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraGalSyncSizeLimit new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2097)
     public void setGalSyncSizeLimit(int zimbraGalSyncSizeLimit) throws com.zimbra.common.service.ServiceException {
@@ -17520,7 +17520,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2097)
     public Map<String,Object> setGalSyncSizeLimit(int zimbraGalSyncSizeLimit, Map<String,Object> attrs) {
@@ -17535,7 +17535,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2097)
     public void unsetGalSyncSizeLimit() throws com.zimbra.common.service.ServiceException {
@@ -17551,7 +17551,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2097)
     public Map<String,Object> unsetGalSyncSizeLimit(Map<String,Object> attrs) {
@@ -26995,7 +26995,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraMailSieveNotifyActionRFCCompliant, or false if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2095)
     public boolean isMailSieveNotifyActionRFCCompliant() {
@@ -27011,7 +27011,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMailSieveNotifyActionRFCCompliant new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2095)
     public void setMailSieveNotifyActionRFCCompliant(boolean zimbraMailSieveNotifyActionRFCCompliant) throws com.zimbra.common.service.ServiceException {
@@ -27030,7 +27030,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2095)
     public Map<String,Object> setMailSieveNotifyActionRFCCompliant(boolean zimbraMailSieveNotifyActionRFCCompliant, Map<String,Object> attrs) {
@@ -27047,7 +27047,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2095)
     public void unsetMailSieveNotifyActionRFCCompliant() throws com.zimbra.common.service.ServiceException {
@@ -27065,7 +27065,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2095)
     public Map<String,Object> unsetMailSieveNotifyActionRFCCompliant(Map<String,Object> attrs) {
@@ -63067,7 +63067,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraSieveFeatureVariablesEnabled, or false if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2096)
     public boolean isSieveFeatureVariablesEnabled() {
@@ -63081,7 +63081,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSieveFeatureVariablesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2096)
     public void setSieveFeatureVariablesEnabled(boolean zimbraSieveFeatureVariablesEnabled) throws com.zimbra.common.service.ServiceException {
@@ -63098,7 +63098,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2096)
     public Map<String,Object> setSieveFeatureVariablesEnabled(boolean zimbraSieveFeatureVariablesEnabled, Map<String,Object> attrs) {
@@ -63113,7 +63113,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2096)
     public void unsetSieveFeatureVariablesEnabled() throws com.zimbra.common.service.ServiceException {
@@ -63129,7 +63129,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2096)
     public Map<String,Object> unsetSieveFeatureVariablesEnabled(Map<String,Object> attrs) {
@@ -63144,7 +63144,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraSieveRejectEnabled, or true if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2094)
     public boolean isSieveRejectEnabled() {
@@ -63158,7 +63158,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSieveRejectEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2094)
     public void setSieveRejectEnabled(boolean zimbraSieveRejectEnabled) throws com.zimbra.common.service.ServiceException {
@@ -63175,7 +63175,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2094)
     public Map<String,Object> setSieveRejectEnabled(boolean zimbraSieveRejectEnabled, Map<String,Object> attrs) {
@@ -63190,7 +63190,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2094)
     public void unsetSieveRejectEnabled() throws com.zimbra.common.service.ServiceException {
@@ -63206,7 +63206,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2094)
     public Map<String,Object> unsetSieveRejectEnabled(Map<String,Object> attrs) {
