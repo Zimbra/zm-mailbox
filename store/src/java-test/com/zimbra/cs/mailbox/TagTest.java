@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -591,7 +592,7 @@ public class TagTest {
             // new implicit tags should not be included in notifications
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD).setTags(new String[] { tag2 });
             mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt, null);
-            for (MailItem item : ml.pms.created.values()) {
+            for (ZimbraMailItem item : ml.pms.created.values()) {
                 Assert.assertFalse("implicit tags should not be notified", item instanceof Tag);
             }
 
