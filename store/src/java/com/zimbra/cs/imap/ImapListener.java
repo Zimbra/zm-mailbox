@@ -25,11 +25,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
-import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
@@ -61,11 +61,18 @@ public abstract class ImapListener extends Session {
             return numbered == null && unnumbered == null;
         }
 
-        void add(MailItem item) {
+        void add(ZimbraMailItem item) {
+            ImapMessage i4item;
+            try {
+                i4item = new ImapMessage(item);
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("unable to instantiate ImapMessage", e);
+                return;
+            }
             if (item.getImapUid() > 0) {
-                (numbered == null ? numbered = new ArrayList<ImapMessage>() : numbered).add(new ImapMessage(item));
+                (numbered == null ? numbered = new ArrayList<ImapMessage>() : numbered).add(i4item);
             } else {
-                (unnumbered == null ? unnumbered = new ArrayList<ImapMessage>() : unnumbered).add(new ImapMessage(item));
+                (unnumbered == null ? unnumbered = new ArrayList<ImapMessage>() : unnumbered).add(i4item);
             }
         }
 
@@ -92,8 +99,7 @@ public abstract class ImapListener extends Session {
         void handleTagRename(int changeId, Tag tag, Change chg);
         void handleTagRename(int changeId, ZTag tag, Change chg);
         void handleItemDelete(int changeId, int itemId, Change chg);
-        void handleItemCreate(int changeId, MailItem item, AddedItems added);
-        void handleItemCreate(int changeId, ZBaseItem item, AddedItems added);
+        void handleItemCreate(int changeId, ZimbraMailItem item, AddedItems added);
         void handleFolderRename(int changeId, FolderStore folder, Change chg);
         void handleItemUpdate(int changeId, Change chg, AddedItems added);
         void handleAddedMessages(int changeId, AddedItems added);
@@ -206,10 +212,7 @@ public abstract class ImapListener extends Session {
         }
 
         // NOTE: synchronize implementations
-        protected abstract void queueCreate(int changeId, MailItem item);
-
-        // NOTE: synchronize implementations
-        protected abstract void queueCreate(int changeId, ZBaseItem item);
+        protected abstract void queueCreate(int changeId, ZimbraMailItem item);
 
         // NOTE: synchronize implementations
         protected abstract void queueModify(int changeId, Change chg);
@@ -253,12 +256,7 @@ public abstract class ImapListener extends Session {
         }
 
         @Override
-        public void handleItemCreate(int changeId, MailItem item, AddedItems added) {
-            queueCreate(changeId, item);
-        }
-
-        @Override
-        public void handleItemCreate(int changeId, ZBaseItem item, AddedItems added) {
+        public void handleItemCreate(int changeId, ZimbraMailItem item, AddedItems added) {
             queueCreate(changeId, item);
         }
 

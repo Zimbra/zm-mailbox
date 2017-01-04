@@ -24,10 +24,10 @@ import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZTag;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingRemoteModifications;
@@ -58,12 +58,7 @@ public class ImapRemoteSession extends ImapListener {
         }
 
         @Override
-        protected synchronized void queueCreate(int changeId, MailItem item) {
-            ZimbraLog.imap.warn("Unexpected call to queueCreate %s", ZimbraLog.getStackTrace(20));
-        }
-
-        @Override
-        protected synchronized void queueCreate(int changeId, ZBaseItem item) {
+        protected synchronized void queueCreate(int changeId, ZimbraMailItem item) {
             getQueuedRemoteNotifications(changeId).recordCreated(item);
         }
 
@@ -73,7 +68,7 @@ public class ImapRemoteSession extends ImapListener {
         }
     }
 
-    private void handleCreate(int changeId, ZBaseItem item, AddedItems added) {
+    private void handleCreate(int changeId, ZimbraMailItem item, AddedItems added) {
         try {
             if (item == null || item.getIdInMailbox() <= 0) {
                 return;
@@ -137,7 +132,7 @@ public class ImapRemoteSession extends ImapListener {
             int changeId, AddedItems added) {
         PendingRemoteModifications pns = (PendingRemoteModifications) pnsIn;
         if (pns.created != null) {
-            for (ZBaseItem item : pns.created.values()) {
+            for (ZimbraMailItem item : pns.created.values()) {
                 handleCreate(changeId, item, added);
             }
         }
