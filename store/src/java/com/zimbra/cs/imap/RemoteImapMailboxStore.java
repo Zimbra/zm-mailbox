@@ -219,7 +219,13 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
          * the recency test just as much as another IMAP client?  So, could consider all listeners
          * here AND on the mailbox??  Thinking that just remote listeners may not cut it)
          */
-        return 0;
+        for (ImapListener imapListener: getListeners(folder.getFolderIdInOwnerMailbox())) {
+            if (imapListener.isWritable())
+            {
+                return 0;
+            }
+        }
+        return ((ZFolder) folder).getImapRECENT();
     }
 
     public int store(String folderId, Blob content, Date date, int msgFlags)
