@@ -56,6 +56,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.base.WaitSetReq;
 import com.zimbra.soap.base.WaitSetResp;
 import com.zimbra.soap.mail.message.WaitSetResponse;
+import com.zimbra.soap.mail.type.ItemSpec;
 import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.IdAndType;
 import com.zimbra.soap.type.WaitSetAddSpec;
@@ -274,7 +275,38 @@ public class WaitSetRequest extends MailDocumentHandler {
                 /**
                  * TODO: instead of calling toString, this code should encode the minumum info required for instantiating PendingRemoteModifications on the listener host
                  */
-                AccountIdAndFolderIds info = new AccountIdAndFolderIds(signalledAcct, cb.pendingModifications.get(signalledAcct).toString());
+                PendingAccountModifications accountSOAPMods = new PendingAccountModifications();
+                PendingModifications accountMods = cb.pendingModifications.get(signalledAcct); 
+                for(Object mod : accountMods.created.entrySet()) {
+                    if(mod instanceof MailItem) {
+                        ItemSpec item = new ItemSpec();
+                        item.setFolder(Integer.toString(((MailItem)mod).getFolderId()));
+                        item.setId(Integer.toString(((MailItem)mod).getId()));
+                        item.setName(((MailItem)mod).getName());
+                        accountSOAPMods.addCreatedItem(item);
+                    }
+                }
+
+                for(Object mod : accountMods.modified.entrySet()) {
+                    if(mod instanceof MailItem) {
+                        ItemSpec item = new ItemSpec();
+                        item.setFolder(Integer.toString(((MailItem)mod).getFolderId()));
+                        item.setId(Integer.toString(((MailItem)mod).getId()));
+                        item.setName(((MailItem)mod).getName());
+                        accountSOAPMods.addModifiedItem(item);
+                    }
+                }
+
+                for(Object mod : accountMods.deleted.entrySet()) {
+                    if(mod instanceof MailItem) {
+                        ItemSpec item = new ItemSpec();
+                        item.setFolder(Integer.toString(((MailItem)mod).getFolderId()));
+                        item.setId(Integer.toString(((MailItem)mod).getId()));
+                        item.setName(((MailItem)mod).getName());
+                        accountSOAPMods.addDeletedItem(item);
+                    }
+                }
+                AccountIdAndFolderIds info = new AccountIdAndFolderIds(signalledAcct, accountSOAPMods);
                 info.setFolderIds(cb.changedFolderIds.get(signalledAcct));
                 resp.addSignalledAccount(info); 
             }

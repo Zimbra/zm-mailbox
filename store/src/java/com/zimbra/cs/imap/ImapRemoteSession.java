@@ -103,11 +103,6 @@ public class ImapRemoteSession extends ImapListener {
         }
     }
 
-    public void signalAccountChange() {
-        //this should gather information about what has actually changed using ZMailbox::noOp and then call notifyPendingChanges
-        ZimbraLog.imap.warn("Unexpected call to signalAccountChange %s", ZimbraLog.getStackTrace(20));
-    }
-
     @Override
     protected PagedFolderData createPagedFolderData(boolean active, ImapFolder folder) throws ServiceException {
         return new PagedRemoteFolderData(serialize(active), folder);
