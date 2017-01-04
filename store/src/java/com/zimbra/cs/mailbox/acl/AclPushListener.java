@@ -16,14 +16,15 @@
  */
 package com.zimbra.cs.mailbox.acl;
 
+import java.util.Collections;
+import java.util.Set;
+
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.Zimbra;
-
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * Listens to folder changes and schedules immediate run of {@link AclPushTask} in a separate thread if required.
@@ -41,7 +42,7 @@ public class AclPushListener extends MailboxListener {
     public void notify(ChangeNotification notification) {
         boolean runAclPushTask = false;
         if (notification.mods.created != null) {
-            for (MailItem created : notification.mods.created.values()) {
+            for (ZimbraMailItem created : notification.mods.created.values()) {
                 if (created instanceof Folder) {
                     Folder folder = (Folder) created;
                     if (folder.getACL() != null) {
