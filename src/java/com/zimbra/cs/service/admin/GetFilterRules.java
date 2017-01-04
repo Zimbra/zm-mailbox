@@ -18,13 +18,9 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -37,21 +33,10 @@ public final class GetFilterRules extends AdminDocumentHandler {
     @Override
     public Element handle(Element req, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Provisioning prov = Provisioning.getInstance();
-
         GetFilterRulesRequest request = JaxbUtil.elementToJaxb(req);
 
         AccountSelector acctSel = request.getAccount();
-        if (acctSel == null) {
-            ServiceException se = ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_ACCOUNT), null);
-            ZimbraLog.filter.debug("AccountSelector not found", se);
-            throw se;
-        }
-        String accountSelectorKey = acctSel.getKey();
-        AccountBy by = acctSel.getBy().toKeyAccountBy();
-
-        Account account = prov.get(by, accountSelectorKey, zsc.getAuthToken());
-        verifyAccountHarvestingAndPerms(account, by, accountSelectorKey, zsc);
+        Account account = verifyAccountHarvestingAndPerms(acctSel, zsc);
 
         GetFilterRulesResponse resp = new GetFilterRulesResponse();
         resp.addFilterRule(RuleManager.getIncomingRulesAsXML(account));
