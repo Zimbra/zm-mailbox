@@ -199,57 +199,6 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         return null;
     }
 
-    private Map<PendingModifications.ModificationKeyMeta, ChangeMeta> getSerializable(
-            Map<PendingModifications.ModificationKey, PendingModifications.Change> map) {
-        if (map == null) {
-            return null;
-        }
-        Map<ModificationKeyMeta, ChangeMeta> ret = new LinkedHashMap<ModificationKeyMeta, ChangeMeta>();
-        Iterator<Entry<PendingModifications.ModificationKey, PendingModifications.Change>> iter = map.entrySet()
-                .iterator();
-        while (iter.hasNext()) {
-            Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry = iter.next();
-            PendingModifications.Change change = entry.getValue();
-            ChangeMeta.ObjectType whatType;
-            String metaWhat;
-            ChangeMeta.ObjectType metaPreModifyObjType = null;
-            String metaPreModifyObj = null;
-            if (change.what instanceof MailItem) {
-                whatType = ChangeMeta.ObjectType.MAILITEM;
-                metaWhat = ((MailItem) change.what).serializeUnderlyingData().toString();
-            } else if (change.what instanceof MailItem.Type) {
-                whatType = ChangeMeta.ObjectType.MAILITEMTYPE;
-                metaWhat = ((MailItem.Type) change.what).name();
-            } else if (change.what instanceof Mailbox) {
-                whatType = ChangeMeta.ObjectType.MAILBOX;
-                // do not serialize mailbox. let the other server load the
-                // mailbox again.
-                metaWhat = null;
-            } else {
-                ZimbraLog.session.warn("Unexpected mailbox change: %s", change.what);
-                continue;
-            }
-
-            if (change.preModifyObj instanceof MailItem) {
-                metaPreModifyObjType = ChangeMeta.ObjectType.MAILITEM;
-                metaPreModifyObj = ((MailItem) change.preModifyObj).serializeUnderlyingData().toString();
-            } else if (change.preModifyObj instanceof MailItem.Type) {
-                metaPreModifyObjType = ChangeMeta.ObjectType.MAILITEMTYPE;
-                metaPreModifyObj = ((MailItem.Type) change.preModifyObj).name();
-            } else if (change.preModifyObj instanceof Mailbox) {
-                metaPreModifyObjType = ChangeMeta.ObjectType.MAILBOX;
-                metaPreModifyObj = null;
-            }
-
-            ModificationKeyMeta keyMeta = new ModificationKeyMeta(entry.getKey().getAccountId(),
-                    entry.getKey().getItemId());
-            ChangeMeta changeMeta = new ChangeMeta(whatType, metaWhat, change.why, metaPreModifyObjType,
-                    metaPreModifyObj);
-            ret.put(keyMeta, changeMeta);
-        }
-        return ret;
-    }
-
     private static Map<PendingModifications.ModificationKey, PendingModifications.Change> getOriginal(Mailbox mbox,
             Map<ModificationKeyMeta, ChangeMeta> map) throws ServiceException {
         if (map == null) {
