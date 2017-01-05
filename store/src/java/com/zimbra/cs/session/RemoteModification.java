@@ -6,8 +6,11 @@ import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.soap.mail.type.ItemSpec;
 
 public class RemoteModification {
+    private MailItem.Type type;
 
 
     public enum ModificationType {
@@ -15,6 +18,9 @@ public class RemoteModification {
     }
 
     public static class ModifiedItem implements ZimbraMailItem {
+        public ModifiedItem(ItemSpec itemSpec) {
+
+        }
         public MailboxStore mbox;
         public int flags;
         public int id;
