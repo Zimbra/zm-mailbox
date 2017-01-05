@@ -24,8 +24,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -157,26 +155,8 @@ public class ImapSession extends ImapListener {
     protected void handleModify(int changeId, Change chg, AddedItems added) {
         if (chg.what instanceof Tag && (chg.why & Change.NAME) != 0) {
             mFolder.handleTagRename(changeId, (Tag) chg.what, chg);
-        } else if (chg.what instanceof Folder && ((Folder) chg.what).getId() == mFolderId) {
-            Folder folder = (Folder) chg.what;
-            if ((chg.why & Change.FLAGS) != 0 && (folder.getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
-                // notify client that mailbox is deselected due to \Noselect?
-                // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
-                //                mailbox, but disconnect all other clients who have the
-                //                mailbox accessed by sending a untagged BYE response."
-                if (handler != null) {
-                    handler.close();
-                }
-            } else if ((chg.why & (Change.FOLDER | Change.NAME)) != 0) {
-                mFolder.handleFolderRename(changeId, folder, chg);
-            }
-        } else if (chg.what instanceof Message || chg.what instanceof Contact) {
-            MailItem item = (MailItem) chg.what;
-            boolean inFolder = mIsVirtual || item.getFolderId() == mFolderId;
-            if (!inFolder && (chg.why & Change.FOLDER) == 0) {
-                return;
-            }
-            mFolder.handleItemUpdate(changeId, chg, added);
+        } else {
+            handleModifyCommon(changeId, chg, added);
         }
     }
 

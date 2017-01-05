@@ -36,6 +36,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.SearchFolderStore;
@@ -532,6 +533,11 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         if (sdata != null) {
             sdata.tagsAreDirty = dirty;
         }
+    }
+
+    ImapFlag cacheTag(ZTag tag) {
+        setTagsDirty(true);
+        return tags.cache(new ImapFlag(tag));
     }
 
     ImapFlag cacheTag(Tag ltag) {
@@ -1112,7 +1118,13 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     @Override
     public void handleTagRename(int changeId, ZTag tag, Change chg) {
-        throw new UnsupportedOperationException("TODO - Implement handleTagRename(int, ZTag, Change)");
+        try {
+            ItemIdentifier iid = new ItemIdentifier(tag.getId(), mailboxStore.getAccountId());
+            dirtyTag(tags.uncache(iid.id), changeId, tag.getName());
+            cacheTag(tag);
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("unable to handle tag rename for changeId %s", changeId, e);
+        }
     }
 
     @Override
