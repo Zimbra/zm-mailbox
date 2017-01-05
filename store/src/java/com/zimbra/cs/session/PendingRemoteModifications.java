@@ -91,11 +91,18 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     @Override
     public void recordDeleted(ZimbraMailItem itemSnapshot) {
         MailItem.Type type = getItemType(itemSnapshot);
-        changedTypes.add(type);
-        /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
-        delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
+        try {
+            recordDeleted(type, itemSnapshot.getAccountId(), itemSnapshot.getIdInMailbox());
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("unable to record deleted message", e);
+        }
     }
 
+    public void recordDeleted(MailItem.Type type, String accountId, int itemId) {
+        changedTypes.add(type);
+        /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
+        delete(new ModificationKey(accountId, itemId), type, null);
+    }
     @Override
     public void recordModified(PendingModifications.ModificationKey mkey, PendingModifications.Change chg) {
         recordModified(mkey, chg.what, chg.why, chg.preModifyObj, false);
