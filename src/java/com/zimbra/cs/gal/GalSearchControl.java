@@ -727,14 +727,14 @@ public class GalSearchControl {
         }
 
         // Return the GAL definition last modified time so that clients can use it to decide if fullsync is required.
-        if (mParams.getOp() == GalOp.sync) {
+        if ((mParams.getOp() == GalOp.sync) && (mParams.getResultCallback() != null)) {
             String galLastModified = domain.getGalDefinitionLastModifiedTimeAsString();
             if (galLastModified != null) {
                 mParams.getResultCallback().setGalDefinitionLastModified(galLastModified);
             }
         }
 
-        ZimbraLog.gal.info("Using limit %d for SyncGalRequest", limit);
+        ZimbraLog.gal.info("Using limit %d for ldapSearch", limit);
         mParams.setLimit(limit);
 
         if (galMode == GalMode.both) {
@@ -764,12 +764,14 @@ public class GalSearchControl {
         }
 
         String resultToken = null;
-        if (mParams.getOp() == GalOp.sync) {
-            resultToken = getLdapSearchResultToken(mParams.getResult(), "");
-        }
-
-        boolean intLdapHasMore = mParams.getResult().getHadMore();
+        boolean intLdapHasMore = false;
         boolean extLdapHasMore = false;
+        if (mParams.getResult() != null) {
+            intLdapHasMore = mParams.getResult().getHadMore();
+            if (mParams.getOp() == GalOp.sync) {
+                resultToken = getLdapSearchResultToken(mParams.getResult(), "");
+            }
+        }
 
         if (galMode == GalMode.both) {
             // do the second query
@@ -787,16 +789,20 @@ public class GalSearchControl {
                 throw ServiceException.FAILURE("ldap search failed", e);
             }
 
-            if (mParams.getOp() == GalOp.sync) {
-                resultToken = getLdapSearchResultToken(mParams.getResult(), resultToken);
+            if (mParams.getResult() != null) {
+                extLdapHasMore = mParams.getResult().getHadMore();
+                if (mParams.getOp() == GalOp.sync) {
+                    resultToken = getLdapSearchResultToken(mParams.getResult(), resultToken);
+                }
             }
-             extLdapHasMore = mParams.getResult().getHadMore();
         }
 
-        if (mParams.getOp() == GalOp.sync) {
-            mParams.getResultCallback().setNewToken(resultToken);
+        if (mParams.getResultCallback() != null) {
+            if (mParams.getOp() == GalOp.sync) {
+                mParams.getResultCallback().setNewToken(resultToken);
+            }
+            mParams.getResultCallback().setHasMoreResult(intLdapHasMore || extLdapHasMore);
         }
-        mParams.getResultCallback().setHasMoreResult(intLdapHasMore || extLdapHasMore);
     }
 
 
