@@ -39,7 +39,7 @@ public final class GetFilterRules extends AdminDocumentHandler {
         Account account = verifyAccountHarvestingAndPerms(acctSel, zsc);
 
         GetFilterRulesResponse resp = new GetFilterRulesResponse();
-        resp.addFilterRule(RuleManager.getIncomingRulesAsXML(account));
+        resp.addFilterRules(RuleManager.getIncomingRulesAsXML(account));
         return zsc.jaxbToElement(resp);
     }
 
