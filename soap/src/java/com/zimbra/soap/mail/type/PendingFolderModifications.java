@@ -24,21 +24,21 @@ public class PendingFolderModifications {
      * @zm-api-field-description list of created items
      */
     @XmlElement(name=MailConstants.E_CREATED /* created */, required=false)
-    private final List<ItemSpec> created = Lists.newArrayList();
+    private final List<CreateItemNotification> created = Lists.newArrayList();
 
     /**
      * @zm-api-field-tag deleted
      * @zm-api-field-description list of deleted items
      */
     @XmlElement(name=MailConstants.E_DELETED /* deleted */, required=false)
-    private final List<ItemSpec> deleted = Lists.newArrayList();
+    private final List<DeleteItemNotification> deleted = Lists.newArrayList();
 
     /**
      * @zm-api-field-tag modified
      * @zm-api-field-description list of modified items
      */
     @XmlElement(name=MailConstants.E_MODIFIED /* modified */, required=false)
-    private final List<ItemSpec> modified = Lists.newArrayList();
+    private final List<ModifyNotification> modified = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -52,27 +52,27 @@ public class PendingFolderModifications {
         this.folderId = folderId;
     }
 
-    public void addCreatedItem(ItemSpec item) {
+    public void addCreatedItem(CreateItemNotification item) {
         created.add(item);
     }
 
-    public void addDeletedItem(ItemSpec item) {
+    public void addDeletedItem(DeleteItemNotification item) {
         deleted.add(item);
     }
 
-    public void addModifiedItem(ItemSpec item) {
+    public void addModifiedItem(ModifyNotification item) {
         modified.add(item);
     }
 
-    public List<ItemSpec> getCreated() {
+    public List<CreateItemNotification> getCreated() {
         return created;
     }
 
-    public List<ItemSpec> getDeleted() {
+    public List<DeleteItemNotification> getDeleted() {
         return deleted;
     }
 
-    public List<ItemSpec> getModified() {
+    public List<ModifyNotification> getModified() {
         return modified;
     }
 
