@@ -746,11 +746,16 @@ public class GalSearchControl {
             // do zimbra gal search
             type = GalType.zimbra;
         }
+
         mParams.createSearchConfig(type);
-        mParams.setLdapTimeStamp(mParams.getGalSyncToken().getIntLdapTs());
-        mParams.setLdapMatchCount(mParams.getGalSyncToken().getIntLdapMatchCount());
-        mParams.setLdapHasMore(mParams.getGalSyncToken().intLdapHasMore());
-        mParams.setMaxLdapTimeStamp(mParams.getGalSyncToken().getIntMaxLdapTs());
+
+        GalSyncToken galSyncToken = mParams.getGalSyncToken();
+        if (galSyncToken != null) {
+            mParams.setLdapTimeStamp(galSyncToken.getIntLdapTs());
+            mParams.setLdapMatchCount(galSyncToken.getIntLdapMatchCount());
+            mParams.setLdapHasMore(galSyncToken.intLdapHasMore());
+            mParams.setMaxLdapTimeStamp(galSyncToken.getIntMaxLdapTs());
+        }
 
         try {
             prov.searchGal(mParams);
@@ -758,24 +763,36 @@ public class GalSearchControl {
             throw ServiceException.FAILURE("ldap search failed", e);
         }
 
-        String resultToken = getLdapSearchResultToken(mParams.getResult(), "");
+        String resultToken = null;
+        if (mParams.getOp() == GalOp.sync) {
+            resultToken = getLdapSearchResultToken(mParams.getResult(), "");
+        }
+
         boolean intLdapHasMore = mParams.getResult().getHadMore();
+        boolean extLdapHasMore = false;
 
         if (galMode == GalMode.both) {
             // do the second query
             mParams.createSearchConfig(GalType.ldap);
-            mParams.setLdapTimeStamp(mParams.getGalSyncToken().getExtLdapTs());
-            mParams.setLdapMatchCount(mParams.getGalSyncToken().getExtLdapMatchCount());
-            mParams.setLdapHasMore(mParams.getGalSyncToken().extLdapHasMore());
-            mParams.setMaxLdapTimeStamp(mParams.getGalSyncToken().getExtMaxLdapTs());
+            if (galSyncToken != null) { 
+                mParams.setLdapTimeStamp(galSyncToken.getExtLdapTs());
+                mParams.setLdapMatchCount(galSyncToken.getExtLdapMatchCount());
+                mParams.setLdapHasMore(galSyncToken.extLdapHasMore());
+                mParams.setMaxLdapTimeStamp(galSyncToken.getExtMaxLdapTs());
+            }
+
             try {
                 prov.searchGal(mParams);
             } catch (Exception e) {
                 throw ServiceException.FAILURE("ldap search failed", e);
             }
-            resultToken = getLdapSearchResultToken(mParams.getResult(), resultToken);
+
+            if (mParams.getOp() == GalOp.sync) {
+                resultToken = getLdapSearchResultToken(mParams.getResult(), resultToken);
+            }
+             extLdapHasMore = mParams.getResult().getHadMore();
         }
-        boolean extLdapHasMore = mParams.getResult().getHadMore();
+
         if (mParams.getOp() == GalOp.sync) {
             mParams.getResultCallback().setNewToken(resultToken);
         }

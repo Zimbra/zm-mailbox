@@ -229,10 +229,13 @@ public class LdapGalSearch {
             String fetchEntryByDn = params.getSearchEntryByDn();
             if (fetchEntryByDn == null) {
                 SearchGalResult sgr = params.getResult();
-                sgr.setLdapTimeStamp(params.getLdapTimeStamp());
-                sgr.setLdapMatchCount(params.getLdapMatchCount());
-                sgr.setHadMore(params.ldapHasMore());
-                sgr.setMaxLdapTimeStamp(params.getMaxLdapTimeStamp());
+                if (sgr != null) {
+                    sgr.setLdapTimeStamp(params.getLdapTimeStamp());
+                    sgr.setLdapMatchCount(params.getLdapMatchCount());
+                    sgr.setHadMore(params.ldapHasMore());
+                    sgr.setMaxLdapTimeStamp(params.getMaxLdapTimeStamp());
+                }
+
                 searchGal(zlc,
                           galType,
                           cfg.getPageSize(),
@@ -346,10 +349,12 @@ public class LdapGalSearch {
                                  SearchGalResult result,
                                  GalOp op) throws ServiceException {
         String tk = token != null && !token.equals("")? token : LdapConstants.EARLIEST_SYNC_TOKEN;
-        result.setToken(tk);
-        String maxLdapTs = result.getMaxLdapTimeStamp();
-        if (!StringUtils.isEmpty(maxLdapTs)) {
-           result.setToken(maxLdapTs);
+        if (result != null) {
+            result.setToken(tk);
+            String maxLdapTs = result.getMaxLdapTimeStamp();
+            if (!StringUtils.isEmpty(maxLdapTs)) {
+               result.setToken(maxLdapTs);
+            }
         }
 
         String reqAttrs[] = rules.getLdapAttrs();
@@ -370,7 +375,9 @@ public class LdapGalSearch {
         }
 
         if (GalOp.sync == op) {
+          if (result != null) {
            result.setLimit(maxResults);
+          }
            maxResults = SearchLdapOptions.SIZE_UNLIMITED;
         }
 
@@ -387,11 +394,13 @@ public class LdapGalSearch {
         try {
             zlc.searchPaged(searchOpts);
         } catch (LdapSizeLimitExceededException sle) {
-            result.setHadMore(true);
+            if (result != null) {
+               result.setHadMore(true);
+            }
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to search gal", e);
         } finally {
-            if (!result.getHadMore()) {
+            if (result != null && !result.getHadMore()) {
                 //full sync completed
                 boolean gotNewToken = true;
                 String newToken = result.getToken();
