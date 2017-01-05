@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.zimbra.client.ZBaseItem;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
@@ -124,7 +126,19 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
             return sb.toString();
         }
 
-        protected abstract void toStringInit(StringBuilder sb);
+        protected void toStringInit(StringBuilder sb) {
+            if (what instanceof ZBaseItem) {
+                ZBaseItem item = (ZBaseItem) what;
+                int idInMbox = 0;
+                try {
+                    idInMbox = item.getIdInMailbox();
+                } catch (ServiceException e) {
+                }
+                sb.append(getItemType(item)).append(' ').append(idInMbox).append(":");
+            } else if (what instanceof ZMailbox) {
+                sb.append("mailbox:");
+            }
+        }
 
         /** @return ID of folder ID or -1 if not known/appropriate */
         public int getFolderId() {
@@ -322,6 +336,10 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         modified = null;
         changedTypes.clear();
         changedFolders.clear();
+    }
+
+    public static MailItem.Type getItemType(ZimbraMailItem item) {
+        return MailItem.Type.fromCommon(item.getMailItemType());
     }
 
     public static final class ModificationKeyMeta implements Serializable {

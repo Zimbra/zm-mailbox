@@ -42,22 +42,6 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         Change(Object thing, int reason, Object preModifyObj) {
             super(thing, reason, preModifyObj);
         }
-
-        @Override
-        protected void toStringInit(StringBuilder sb) {
-            if (what instanceof ZBaseItem) {
-                ZBaseItem item = (ZBaseItem) what;
-                int idInMbox = 0;
-                try {
-                    idInMbox = item.getIdInMailbox();
-                } catch (ServiceException e) {
-                }
-                sb.append(getItemType(item)).append(' ').append(idInMbox).append(":");
-            } else if (what instanceof ZMailbox) {
-                sb.append("mailbox:");
-            }
-        }
-
     }
 
     @Override
@@ -77,8 +61,8 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
 
         if (other.modified != null) {
             for (PendingModifications.Change chg : other.modified.values()) {
-                if (chg.what instanceof ZBaseItem) {
-                    recordModified((ZBaseItem) chg.what, chg.why, (ZBaseItem) chg.preModifyObj);
+                if (chg.what instanceof ZimbraMailItem) {
+                    recordModified((ZimbraMailItem) chg.what, chg.why, (ZimbraMailItem) chg.preModifyObj);
                 } else if (chg.what instanceof ZMailbox) {
                     recordModified((ZMailbox) chg.what, chg.why);
                 }
@@ -86,10 +70,6 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         }
 
         return this;
-    }
-
-    public static MailItem.Type getItemType(ZimbraMailItem item) {
-        return MailItem.Type.fromCommon(item.getMailItemType());
     }
 
     @Override
@@ -151,8 +131,8 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
             boolean snapshotItem) {
         PendingModifications.Change chg = null;
         if (created != null && created.containsKey(key)) {
-            if (item instanceof ZBaseItem) {
-                recordCreated((ZBaseItem) item);
+            if (item instanceof ZimbraMailItem) {
+                recordCreated((ZimbraMailItem) item);
             }
             return;
         } else if (deleted != null && deleted.containsKey(key)) {
