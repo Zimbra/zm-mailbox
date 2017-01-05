@@ -310,6 +310,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetFreeBusyResponse.class,
             com.zimbra.soap.mail.message.GetICalRequest.class,
             com.zimbra.soap.mail.message.GetICalResponse.class,
+            com.zimbra.soap.mail.message.GetIMAPRecentRequest.class,
+            com.zimbra.soap.mail.message.GetIMAPRecentResponse.class,
             com.zimbra.soap.mail.message.GetImportStatusRequest.class,
             com.zimbra.soap.mail.message.GetImportStatusResponse.class,
             com.zimbra.soap.mail.message.GetItemRequest.class,
