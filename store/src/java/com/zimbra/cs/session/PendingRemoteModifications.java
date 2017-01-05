@@ -28,6 +28,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.session.RemoteModification.ModifiedItem;
+import com.zimbra.soap.mail.type.ItemSpec;
+import com.zimbra.soap.mail.type.PendingAccountModifications;
 
 public final class PendingRemoteModifications extends PendingModifications<ZBaseItem> {
 
@@ -182,5 +185,20 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     private static Object snapshotItemIgnoreEx(Object item) {
         // TODO - Do we need to be able to snapshot ZBaseItems?
         return null;
+    }
+
+    public static PendingRemoteModifications fromSOAP(PendingAccountModifications mods) {
+
+        PendingRemoteModifications prms = new PendingRemoteModifications();
+        for (ItemSpec createSpec: mods.getCreated()) {
+            prms.recordCreated(new ModifiedItem(createSpec));
+        }
+        for (ItemSpec modSpec: mods.getModified()) {
+            //call recordModified with data from PendingAccountModifications
+        }
+        for (ItemSpec delSpec: mods.getDeleted()) {
+          //call recordDeleted with data from PendingAccountModifications
+        }
+        return prms;
     }
 }
