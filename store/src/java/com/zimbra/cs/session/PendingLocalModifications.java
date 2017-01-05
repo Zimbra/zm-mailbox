@@ -52,7 +52,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             if (what instanceof MailItem) {
                 MailItem item = (MailItem) what;
                 sb.append(item.getType()).append(' ').append(item.getId()).append(":");
-            } else if (what instanceof Mailbox) {
+            } else if (what instanceof MailboxStore) {
                 sb.append("mailbox:");
             }
 
@@ -79,8 +79,8 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
 
         if (other.modified != null) {
             for (PendingModifications.Change chg : other.modified.values()) {
-                if (chg.what instanceof MailItem) {
-                    recordModified((MailItem) chg.what, chg.why, (MailItem) chg.preModifyObj);
+                if (chg.what instanceof ZimbraMailItem) {
+                    recordModified((ZimbraMailItem) chg.what, chg.why, (ZimbraMailItem) chg.preModifyObj);
                 } else if (chg.what instanceof Mailbox) {
                     recordModified((Mailbox) chg.what, chg.why);
                 }
@@ -163,8 +163,8 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             boolean snapshotItem) {
         PendingModifications.Change chg = null;
         if (created != null && created.containsKey(key)) {
-            if (item instanceof MailItem) {
-                recordCreated((MailItem) item);
+            if (item instanceof ZimbraMailItem) {
+                recordCreated((ZimbraMailItem) item);
             }
             return;
         } else if (deleted != null && deleted.containsKey(key)) {
