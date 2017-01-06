@@ -19,6 +19,7 @@ package com.zimbra.qa.unittest;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -68,6 +69,8 @@ import com.zimbra.soap.mail.message.CreateWaitSetRequest;
 import com.zimbra.soap.mail.message.CreateWaitSetResponse;
 import com.zimbra.soap.mail.message.WaitSetRequest;
 import com.zimbra.soap.mail.message.WaitSetResponse;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.WaitSetAddSpec;
 
 public class TestWaitSetRequest extends TestCase {
@@ -185,6 +188,10 @@ public class TestWaitSetRequest extends TestCase {
         wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getSoapUrl() + "WaitSetRequest");
         Assert.assertFalse(wsResp.getSeqNo().equals("0"));
+        List<AccountWithModifications> accounts =  wsResp.getSignalledAccounts();
+        Assert.assertEquals("should have signaled 1 account", 1, accounts.size());
+        Assert.assertEquals(String.format("Shold have signaled account %s", acc1.getId()), acc1.getId(), accounts.get(0).getId());
+        Assert.assertNull("Should not return folder notifications unless 'expand' is set to 'true'", accounts.get(0).getPendingFolderModifications());
     }
 
     @Test
@@ -238,29 +245,22 @@ public class TestWaitSetRequest extends TestCase {
         TestUtil.waitForMessages(mbox, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
 
         qwsResp = (QueryWaitSetResponse) sendReq(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl());
-        Set <Integer> expectedChanged = Sets.newHashSetWithExpectedSize(3);
-        expectedChanged.add(Mailbox.ID_FOLDER_INBOX);
-        expectedChanged.add(Mailbox.ID_FOLDER_CONVERSATIONS);
-        expectedChanged.add(Mailbox.ID_FOLDER_USER_ROOT);
         validateQueryWaitSetResponse(qwsResp, acctId, folderInterest, null);
 
         waitSet = new com.zimbra.soap.mail.message.WaitSetRequest(waitSetId, Integer.toString(seq));
+        waitSet.setExpand(true);
         wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet),
                 "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
         Assert.assertFalse(wsResp.getSeqNo().equals("0"));
         Assert.assertEquals("Number of signalled accounts", 1, wsResp.getSignalledAccounts().size());
-        //TODO: udpate this with classes introduced with zms-286
-        /* AccountIdAndFolderIds acctInfo = wsResp.getSignalledAccounts().get(0);
+        AccountWithModifications acctInfo = wsResp.getSignalledAccounts().get(0);
         Assert.assertEquals("Signaled account id", mbox.getAccountId(), acctInfo.getId());
-        ZimbraLog.test.info("Folder interests as string", acctInfo.getFolderIds());
-        List<Integer> foldInt = acctInfo.getFolderIdsAsList();
-        ZimbraLog.test.info("Folder interests as list", foldInt);
-        Assert.assertTrue(String.format("%s should know inbox %s changed", foldInt, Mailbox.ID_FOLDER_INBOX),
-                foldInt.contains(Mailbox.ID_FOLDER_INBOX));
-        Assert.assertFalse(String.format("%s should not claim folder with ID=%s changed",
-                foldInt, myFolder.getFolderIdInOwnerMailbox()),
-                foldInt.contains(myFolder.getFolderIdInOwnerMailbox()));
-        */
+        Collection<PendingFolderModifications> mods = acctInfo.getPendingFolderModifications();
+        Assert.assertNotNull("'mod' field should not be null", mods);
+        Assert.assertEquals("Should have 1 folder object with modifications", 1, mods.size());
+        Integer foldInt = mods.iterator().next().getFolderId();
+        Assert.assertEquals(String.format("Folder ID should be %d (Inbox). Getting %d instead", Mailbox.ID_FOLDER_INBOX, foldInt),
+                foldInt.intValue(), Mailbox.ID_FOLDER_INBOX);
     }
 
     private void validateQueryWaitSetResponse(QueryWaitSetResponse qwsResp, String acctId,
