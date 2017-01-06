@@ -481,12 +481,12 @@ public abstract class ImapListener extends Session {
             mFolder.handleTagRename(changeId, (ZimbraTag) chg.what, chg);
         } else {
             boolean isFolder = (chg.what instanceof FolderStore);
-            //is it sufficient to just check for ZimbraMailItem?
             boolean isMsgOrContact = (chg.what instanceof Message || chg.what instanceof ZMessage
                     || chg.what instanceof Contact || chg.what instanceof ZContact);
             try {
-                if (isFolder && ((ZimbraMailItem) chg.what).getIdInMailbox() == mFolderId) {
+                if (isFolder && ((FolderStore) chg.what).getFolderIdInOwnerMailbox() == mFolderId) {
                     FolderStore folder = (FolderStore) chg.what;
+                    //here we assume that the FolderStore object also implements ZimbraMailItem
                     if ((chg.why & Change.FLAGS) != 0 && (((ZimbraMailItem) folder).getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
                         // notify client that mailbox is deselected due to \Noselect?
                         // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
