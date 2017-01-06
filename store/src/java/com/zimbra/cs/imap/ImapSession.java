@@ -28,7 +28,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -148,15 +147,6 @@ public class ImapSession extends ImapListener {
             return;
         } else if (item.getFolderIdInMailbox() == mFolderId && (item instanceof Message || item instanceof Contact)) {
             mFolder.handleItemCreate(changeId, item, added);
-        }
-    }
-
-    @Override
-    protected void handleModify(int changeId, Change chg, AddedItems added) {
-        if (chg.what instanceof Tag && (chg.why & Change.NAME) != 0) {
-            mFolder.handleTagRename(changeId, (Tag) chg.what, chg);
-        } else {
-            handleModifyCommon(changeId, chg, added);
         }
     }
 
