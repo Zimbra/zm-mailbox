@@ -34,9 +34,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.zimbra.client.ZTag;
 import com.zimbra.common.mailbox.FolderStore;
-import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.SearchFolderStore;
@@ -54,7 +52,6 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
@@ -1106,20 +1103,9 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     }
 
     @Override
-    public void handleTagRename(int changeId, Tag tag, Change chg) {
-        dirtyTag(tags.uncache(tag.getId()), changeId, tag.getName());
+    public void handleTagRename(int changeId, ZimbraTag tag, Change chg) {
+        dirtyTag(tags.uncache(tag.getTagId()), changeId, tag.getTagName());
         cacheTag(tag);
-    }
-
-    @Override
-    public void handleTagRename(int changeId, ZTag tag, Change chg) {
-        try {
-            ItemIdentifier iid = new ItemIdentifier(tag.getId(), mailboxStore.getAccountId());
-            dirtyTag(tags.uncache(iid.id), changeId, tag.getName());
-            cacheTag(tag);
-        } catch (ServiceException e) {
-            ZimbraLog.imap.warn("unable to handle tag rename for changeId %s", changeId, e);
-        }
     }
 
     @Override

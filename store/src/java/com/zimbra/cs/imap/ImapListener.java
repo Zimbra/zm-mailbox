@@ -27,11 +27,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.google.common.base.Function;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMessage;
-import com.zimbra.client.ZTag;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
@@ -43,7 +43,6 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -101,8 +100,7 @@ public abstract class ImapListener extends Session {
         void endSelect();
 
         void handleTagDelete(int changeId, int tagId, Change chg);
-        void handleTagRename(int changeId, Tag tag, Change chg);
-        void handleTagRename(int changeId, ZTag tag, Change chg);
+        void handleTagRename(int changeId, ZimbraTag tag, Change chg);
         void handleItemDelete(int changeId, int itemId, Change chg);
         void handleItemCreate(int changeId, ZimbraMailItem item, AddedItems added);
         void handleFolderRename(int changeId, FolderStore folder, Change chg);
@@ -246,12 +244,7 @@ public abstract class ImapListener extends Session {
         }
 
         @Override
-        public void handleTagRename(int changeId, Tag tag, Change chg) {
-            queueModify(changeId, chg);
-        }
-
-        @Override
-        public void handleTagRename(int changeId, ZTag tag, Change chg) {
+        public void handleTagRename(int changeId, ZimbraTag tag, Change chg) {
             queueModify(changeId, chg);
         }
 
@@ -483,41 +476,43 @@ public abstract class ImapListener extends Session {
         }
     }
 
-    protected abstract void handleModify(int changeId, Change chg, AddedItems added);
-
-    protected void handleModifyCommon(int changeId, Change chg, AddedItems added) {
-        boolean isFolder = (chg.what instanceof FolderStore);
-        //is it sufficient to just check for ZimbraMailItem?
-        boolean isMsgOrContact = (chg.what instanceof Message || chg.what instanceof ZMessage
-                || chg.what instanceof Contact || chg.what instanceof ZContact);
-        try {
-            if (isFolder && ((ZimbraMailItem) chg.what).getIdInMailbox() == mFolderId) {
-                FolderStore folder = (FolderStore) chg.what;
-                if ((chg.why & Change.FLAGS) != 0 && (((ZimbraMailItem) folder).getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
-                    // notify client that mailbox is deselected due to \Noselect?
-                    // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
-                    //                mailbox, but disconnect all other clients who have the
-                    //                mailbox accessed by sending a untagged BYE response."
-                    if (handler != null) {
-                        handler.close();
+    protected void handleModify(int changeId, Change chg, AddedItems added) {
+        if (chg.what instanceof ZimbraTag && (chg.why & Change.NAME) != 0) {
+            mFolder.handleTagRename(changeId, (ZimbraTag) chg.what, chg);
+        } else {
+            boolean isFolder = (chg.what instanceof FolderStore);
+            //is it sufficient to just check for ZimbraMailItem?
+            boolean isMsgOrContact = (chg.what instanceof Message || chg.what instanceof ZMessage
+                    || chg.what instanceof Contact || chg.what instanceof ZContact);
+            try {
+                if (isFolder && ((ZimbraMailItem) chg.what).getIdInMailbox() == mFolderId) {
+                    FolderStore folder = (FolderStore) chg.what;
+                    if ((chg.why & Change.FLAGS) != 0 && (((ZimbraMailItem) folder).getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
+                        // notify client that mailbox is deselected due to \Noselect?
+                        // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
+                        //                mailbox, but disconnect all other clients who have the
+                        //                mailbox accessed by sending a untagged BYE response."
+                        if (handler != null) {
+                            handler.close();
+                        }
+                    } else if ((chg.why & (Change.FOLDER | Change.NAME)) != 0) {
+                        mFolder.handleFolderRename(changeId, folder, chg);
                     }
-                } else if ((chg.why & (Change.FOLDER | Change.NAME)) != 0) {
-                    mFolder.handleFolderRename(changeId, folder, chg);
+                } else if (isMsgOrContact) {
+                    ZimbraMailItem item = (ZimbraMailItem) chg.what;
+                    boolean inFolder = mIsVirtual || item.getFolderIdInMailbox() == mFolderId;
+                    if (!inFolder && (chg.why & Change.FOLDER) == 0) {
+                        return;
+                    }
+                    mFolder.handleItemUpdate(changeId, chg, added);
                 }
-            } else if (isMsgOrContact) {
-                ZimbraMailItem item = (ZimbraMailItem) chg.what;
-                boolean inFolder = mIsVirtual || item.getFolderIdInMailbox() == mFolderId;
-                if (!inFolder && (chg.why & Change.FOLDER) == 0) {
-                    return;
-                }
-                mFolder.handleItemUpdate(changeId, chg, added);
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("error handling modified items for changeId %s", changeId, e);
+                return;
             }
-        } catch (ServiceException e) {
-            ZimbraLog.imap.warn("error handling modified items for changeId %s", changeId, e);
-            return;
         }
-
     }
+
     ImapFolder handleRenumberError(String key) {
         resetRenumber();
         ZimbraLog.imap.warn("could not replay due to too many renumbers  key=%s %s", key, this);
