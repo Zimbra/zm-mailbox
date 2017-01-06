@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -29,8 +25,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.AttributeName;
+import com.zimbra.soap.type.MsgContent;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -72,10 +72,22 @@ public class MsgSpec {
     /**
      * @zm-api-field-tag max-inlined-length
      * @zm-api-field-description Use <b>{max-inlined-length}</b> to limit the length of the text inlined into body
-     * <b>&lt;content></b> when raw is set.  (default is unset, meaning no limit.)
+     * <b>&lt;content></b>.
+     * <br/>Only applicable when <b>raw</b> is unset.  <b>Ignored</b> when <b>raw</b> is set.
+     * <br/>(Default is unset, meaning no limit)
      */
     @XmlAttribute(name=MailConstants.A_MAX_INLINED_LENGTH /* max */, required=false)
     private Integer maxInlinedLength;
+
+    /**
+     * @zm-api-field-tag use-content-url
+     * @zm-api-field-description If set, never inline raw <b>&lt;content></b> for messages, specify by <b>"url"</b> instead.
+     * <br/>Only applicable when <b>raw</b> is set.  <b>Ignored</b> when <b>raw</b> is unset.
+     * <br/>(Default is unset - meaning inline content unless it is too big, in which case the <b>"url"</b> method
+     * will be used)
+     */
+    @XmlAttribute(name=MailConstants.A_USE_CONTENT_URL/* useContentUrl */, required=false)
+    private ZmBoolean useContentUrl;
 
     /**
      * @zm-api-field-tag want-defanged-html
@@ -110,11 +122,23 @@ public class MsgSpec {
     private ZmBoolean needCanExpand;
 
     /**
+     * @zm-api-field-tag want-content
+     * @zm-api-field-description wantContent = <b>"full"</b> to get the complete message along with the quoted content
+     * <br/> wantContent = <b>"original"</b> to get the message without quoted content
+     * <br/> wantContent = <b>"both"</b> to get complete message as well as the message without quoted content
+     * <br/> By default wantContent = <b>"full"</b>
+     * <br/>Only applicable when <b>raw</b> is unset.
+     * <p>Note: Quoted text identification is a best effort. It is not supported by any RFCs</p>
+     */
+    @XmlAttribute(name=MailConstants.A_WANT_CONTENT  /* wantContent */ , required=false)
+    private MsgContent wantContent;
+
+    /**
      * @zm-api-field-description if <b>&lt;header></b>s are requested, any matching headers are inlined into the
      * response (not available when raw is set)
      */
     @XmlElement(name=MailConstants.A_HEADER /* header */, required=false)
-    private List<AttributeName> headers = Lists.newArrayList();
+    private final List<AttributeName> headers = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -134,9 +158,11 @@ public class MsgSpec {
     public void setMaxInlinedLength(Integer maxInlinedLength) {
         this.maxInlinedLength = maxInlinedLength;
     }
+    public void setUseContentUrl(Boolean useUrl) { this.useContentUrl = ZmBoolean.fromBool(useUrl); }
     public void setWantHtml(Boolean wantHtml) { this.wantHtml = ZmBoolean.fromBool(wantHtml); }
     public void setNeuter(Boolean neuter) { this.neuter = ZmBoolean.fromBool(neuter); }
     public void setRecurIdZ(String recurIdZ) { this.recurIdZ = recurIdZ; }
+    public void setWantContent(MsgContent msgContent) { this.wantContent = msgContent; }
     public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = ZmBoolean.fromBool(needCanExpand); }
     public void setHeaders(Iterable <AttributeName> headers) {
         this.headers.clear();
@@ -154,10 +180,12 @@ public class MsgSpec {
     public Boolean getRaw() { return ZmBoolean.toBool(raw); }
     public Boolean getMarkRead() { return ZmBoolean.toBool(markRead); }
     public Integer getMaxInlinedLength() { return maxInlinedLength; }
+    public Boolean getUseContentUrl() { return ZmBoolean.toBool(useContentUrl); }
     public Boolean getWantHtml() { return ZmBoolean.toBool(wantHtml); }
     public Boolean getNeuter() { return ZmBoolean.toBool(neuter); }
     public String getRecurIdZ() { return recurIdZ; }
     public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
+    public MsgContent getWantContent() { return wantContent; }
     public List<AttributeName> getHeaders() {
         return Collections.unmodifiableList(headers);
     }
@@ -169,10 +197,12 @@ public class MsgSpec {
             .add("raw", raw)
             .add("markRead", markRead)
             .add("maxInlinedLength", maxInlinedLength)
+            .add("useContentUrl", useContentUrl)
             .add("wantHtml", wantHtml)
             .add("neuter", neuter)
             .add("recurIdZ", recurIdZ)
             .add("needCanExpand", needCanExpand)
+            .add("wantContent", wantContent)
             .add("headers", headers);
     }
 
