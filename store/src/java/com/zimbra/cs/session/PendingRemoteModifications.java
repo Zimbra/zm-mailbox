@@ -28,8 +28,18 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
+<<<<<<< bcb2f4689d53e51a12856193c1de06a0230aae5e
 import com.zimbra.soap.mail.type.ItemSpec;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
+=======
+import com.zimbra.soap.mail.type.CreateItemNotification;
+import com.zimbra.soap.mail.type.DeleteNotification;
+import com.zimbra.soap.mail.type.ModifyNotification;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
+import com.zimbra.soap.mail.type.ModifyNotification.RenameFolderNotification;
+import com.zimbra.soap.mail.type.PendingAccountModifications;
+>>>>>>> more work on PendingRemoteModifications::fromSOAP
 
 public final class PendingRemoteModifications extends PendingModifications<ZBaseItem> {
 
@@ -173,17 +183,33 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         return null;
     }
 
-    public static PendingRemoteModifications fromSOAP(PendingFolderModifications mods) {
+    public static PendingRemoteModifications fromSOAP(PendingFolderModifications mods, String acctId) {
 
         PendingRemoteModifications prms = new PendingRemoteModifications();
-        for (ItemSpec createSpec: mods.getCreated()) {
-            prms.recordCreated(new ModifiedItem(createSpec));
+        for (CreateItemNotification createSpec: mods.getCreated()) {
+            prms.recordCreated(new ModificationItem(createSpec.getMessageInfo(), acctId));
         }
-        for (ItemSpec modSpec: mods.getModified()) {
-            //call recordModified with data from PendingAccountModifications
+        for (ModifyNotification modSpec: mods.getModified()) {
+            int change = modSpec.getChangeBitmask();
+            if (modSpec instanceof ModifyItemNotification) {
+                ModifyItemNotification modifyItem = (ModifyItemNotification) modSpec;
+                ModificationItem item = new ModificationItem(modifyItem.getMessageInfo(), acctId);
+                prms.recordModified(item, change);
+            } else if (modSpec instanceof ModifyTagNotification) {
+                ModifyTagNotification modifyTag = (ModifyTagNotification) modSpec;
+                // instantiate ZTag
+            } else if (modSpec instanceof RenameFolderNotification) {
+                RenameFolderNotification renameFolder = (RenameFolderNotification) modSpec;
+                int id = renameFolder.getFolderId();
+                String path = renameFolder.getPath();
+                // instantiate folder info
+
+            }
         }
-        for (ItemSpec delSpec: mods.getDeleted()) {
-          //call recordDeleted with data from PendingAccountModifications
+        for (DeleteNotification delSpec: mods.getDeleted()) {
+          int id = delSpec.getId();
+          MailItem.Type type = MailItem.Type.of(delSpec.getType());
+          prms.recordDeleted(type, acctId, id);
         }
         return prms;
     }
