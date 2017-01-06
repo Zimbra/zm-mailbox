@@ -25,6 +25,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.StringUtil;
@@ -38,7 +39,7 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
 /**
  * @since Jul 12, 2004
  */
-public class Tag extends MailItem {
+public class Tag extends MailItem implements ZimbraTag {
     public static class NormalizedTags {
         private static final String[] NO_TAGS = new String[0];
 
@@ -110,7 +111,7 @@ public class Tag extends MailItem {
     Tag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
     }
-    
+
     Tag(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
         if (mData.type != Type.TAG.toByte() && mData.type != Type.FLAG.toByte()) {
@@ -413,5 +414,15 @@ public class Tag extends MailItem {
         Objects.ToStringHelper helper = Objects.toStringHelper(this);
         appendCommonMembers(helper);
         return helper.toString();
+    }
+
+    @Override
+    public int getTagId() {
+        return getId();
+    }
+
+    @Override
+    public String getTagName() {
+        return getName();
     }
 }
