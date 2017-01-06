@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -46,8 +46,8 @@ public class CalItemReminderService extends MailboxListener {
     public void notify(ChangeNotification notification) {
         Account account = notification.mailboxAccount;
         if (notification.mods.created != null) {
-            for (Map.Entry<ModificationKey, ZimbraMailItem> entry : notification.mods.created.entrySet()) {
-                ZimbraMailItem item = entry.getValue();
+            for (Map.Entry<ModificationKey, BaseItemInfo> entry : notification.mods.created.entrySet()) {
+                BaseItemInfo item = entry.getValue();
                 if (item instanceof CalendarItem) {
                     CalendarItem calItem = (CalendarItem) item;
                     ZimbraLog.scheduler.debug("Handling creation of calendar item (id=%s,mailboxId=%s)",
