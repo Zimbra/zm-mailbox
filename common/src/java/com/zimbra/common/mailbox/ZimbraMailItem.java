@@ -21,7 +21,7 @@ import java.io.InputStream;
 
 import com.zimbra.common.service.ServiceException;
 
-public interface ZimbraMailItem {
+public interface ZimbraMailItem extends BaseItemInfo {
     /** Returns the date the item's content was last modified as number of milliseconds since 1970-01-01 00:00:00 UTC.
      *  For immutable objects (e.g. received messages), this will be the same as the date the item was created. */
     public long getDate();
@@ -29,29 +29,5 @@ public interface ZimbraMailItem {
      *  that have a blob, this is the size in bytes of the raw blob. */
     public long getSize();
     public int getModifiedSequence();
-    public MailItemType getMailItemType();
-    /** @return item's ID.  IDs are unique within a Mailbox and are assigned in increasing
-     * (though not necessarily gap-free) order. */
-    public int getIdInMailbox() throws ServiceException;
-    /** Returns an {@link InputStream} of the raw, uncompressed content of the message.  This is the message body as
-     * received via SMTP; no postprocessing has been performed to make opaque attachments (e.g. TNEF) visible.
-     *
-     * @return The data stream, or <tt>null</tt> if the item has no blob
-     * @throws ServiceException when the message file does not exist.
-     * @see #getMimeMessage()
-     * @see #getContent() */
     public InputStream getContentStream() throws ServiceException;
-    /**
-     * @return the UID the item is referenced by in the IMAP server.  Returns <tt>0</tt> for items that require
-     * renumbering because of moves.
-     * The "IMAP UID" will be the same as the item ID unless the item has been moved after the mailbox owner's first
-     * IMAP session. */
-    public int getImapUid();
-    /** Returns the "external" flag bitmask, which includes {@link Flag#BITMASK_UNREAD} when the item is unread. */
-    public int getFlagBitmask();
-    public String[] getTags();
-    /** String representation of the item's folder ID */
-    public int getFolderIdInMailbox() throws ServiceException;
-    /** ID of the account containing this item */
-    public String getAccountId() throws ServiceException;
 }
