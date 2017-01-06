@@ -20,7 +20,7 @@ import java.util.Date;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
-import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -55,7 +55,7 @@ public class ShareExpirationListener extends MailboxListener {
             return;
         }
         if (notification.mods.created != null) {
-            for (ZimbraMailItem created : notification.mods.created.values()) {
+            for (BaseItemInfo created : notification.mods.created.values()) {
                 if (created instanceof Folder || created instanceof Document) {
                     MailItem mi = (MailItem) created;
                     if (mi.getACL() != null) {

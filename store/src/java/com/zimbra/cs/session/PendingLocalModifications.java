@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
@@ -61,7 +62,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         }
 
         if (other.created != null) {
-            for (ZimbraMailItem item : other.created.values()) {
+            for (BaseItemInfo item : other.created.values()) {
                 recordCreated(item);
             }
         }
@@ -85,9 +86,9 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     }
 
     @Override
-    public void recordCreated(ZimbraMailItem item) {
+    public void recordCreated(BaseItemInfo item) {
         if (created == null) {
-            created = new LinkedHashMap<PendingModifications.ModificationKey, ZimbraMailItem>();
+            created = new LinkedHashMap<PendingModifications.ModificationKey, BaseItemInfo>();
         }
         changedTypes.add(MailItem.Type.fromCommon(item.getMailItemType()));
         try {
@@ -125,7 +126,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     }
 
     @Override
-    public void recordModified(ZimbraMailItem item, int reason) {
+    public void recordModified(BaseItemInfo item, int reason) {
         MailItem.Type type = MailItem.Type.fromCommon(item.getMailItemType());
         changedTypes.add(type);
         try {
@@ -137,7 +138,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     }
 
     @Override
-    public void recordModified(ZimbraMailItem item, int reason, ZimbraMailItem preModifyItem) {
+    public void recordModified(BaseItemInfo item, int reason, ZimbraMailItem preModifyItem) {
         MailItem.Type type = MailItem.Type.fromCommon(item.getMailItemType());
         changedTypes.add(type);
         try {
@@ -256,7 +257,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             LinkedHashMap<ModificationKeyMeta, String> metaCreated = (LinkedHashMap<ModificationKeyMeta, String>) ois
                     .readObject();
             if (metaCreated != null) {
-                pms.created = new LinkedHashMap<PendingModifications.ModificationKey, ZimbraMailItem>();
+                pms.created = new LinkedHashMap<PendingModifications.ModificationKey, BaseItemInfo>();
                 Iterator<Entry<ModificationKeyMeta, String>> iter = metaCreated.entrySet().iterator();
                 while (iter.hasNext()) {
                     Entry<ModificationKeyMeta, String> entry = iter.next();
