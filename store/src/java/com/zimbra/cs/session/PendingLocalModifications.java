@@ -46,17 +46,6 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         Change(Object thing, int reason, Object preModifyObj) {
             super(thing, reason, preModifyObj);
         }
-
-        @Override
-        protected void toStringInit(StringBuilder sb) {
-            if (what instanceof MailItem) {
-                MailItem item = (MailItem) what;
-                sb.append(item.getType()).append(' ').append(item.getId()).append(":");
-            } else if (what instanceof MailboxStore) {
-                sb.append("mailbox:");
-            }
-
-        }
     }
 
     @Override
