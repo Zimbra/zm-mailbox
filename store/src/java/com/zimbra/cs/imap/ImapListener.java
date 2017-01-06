@@ -28,9 +28,10 @@ import com.google.common.base.Function;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMessage;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.BaseFolderInfo;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
-import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -65,7 +66,7 @@ public abstract class ImapListener extends Session {
             return numbered == null && unnumbered == null;
         }
 
-        void add(ZimbraMailItem item) {
+        void add(BaseItemInfo item) {
             ImapMessage i4item;
             try {
                 i4item = new ImapMessage(item);
@@ -102,8 +103,8 @@ public abstract class ImapListener extends Session {
         void handleTagDelete(int changeId, int tagId, Change chg);
         void handleTagRename(int changeId, ZimbraTag tag, Change chg);
         void handleItemDelete(int changeId, int itemId, Change chg);
-        void handleItemCreate(int changeId, ZimbraMailItem item, AddedItems added);
-        void handleFolderRename(int changeId, FolderStore folder, Change chg);
+        void handleItemCreate(int changeId, BaseItemInfo item, AddedItems added);
+        void handleFolderRename(int changeId, BaseFolderInfo folder, Change chg);
         void handleItemUpdate(int changeId, Change chg, AddedItems added);
         void handleAddedMessages(int changeId, AddedItems added);
         void finishNotification(int changeId) throws IOException;
@@ -215,7 +216,7 @@ public abstract class ImapListener extends Session {
         }
 
         // NOTE: synchronize implementations
-        protected abstract void queueCreate(int changeId, ZimbraMailItem item);
+        protected abstract void queueCreate(int changeId, BaseItemInfo item);
 
         // NOTE: synchronize implementations
         protected abstract void queueModify(int changeId, Change chg);
@@ -254,12 +255,12 @@ public abstract class ImapListener extends Session {
         }
 
         @Override
-        public void handleItemCreate(int changeId, ZimbraMailItem item, AddedItems added) {
+        public void handleItemCreate(int changeId, BaseItemInfo item, AddedItems added) {
             queueCreate(changeId, item);
         }
 
         @Override
-        public void handleFolderRename(int changeId, FolderStore folder, Change chg) {
+        public void handleFolderRename(int changeId, BaseFolderInfo folder, Change chg) {
             queueModify(changeId, chg);
         }
 
@@ -480,14 +481,14 @@ public abstract class ImapListener extends Session {
         if (chg.what instanceof ZimbraTag && (chg.why & Change.NAME) != 0) {
             mFolder.handleTagRename(changeId, (ZimbraTag) chg.what, chg);
         } else {
-            boolean isFolder = (chg.what instanceof FolderStore);
+            boolean isFolder = (chg.what instanceof BaseFolderInfo);
             boolean isMsgOrContact = (chg.what instanceof Message || chg.what instanceof ZMessage
                     || chg.what instanceof Contact || chg.what instanceof ZContact);
             try {
-                if (isFolder && ((FolderStore) chg.what).getFolderIdInOwnerMailbox() == mFolderId) {
+                if (isFolder && ((BaseFolderInfo) chg.what).getFolderIdInOwnerMailbox() == mFolderId) {
                     FolderStore folder = (FolderStore) chg.what;
-                    //here we assume that the FolderStore object also implements ZimbraMailItem
-                    if ((chg.why & Change.FLAGS) != 0 && (((ZimbraMailItem) folder).getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
+                    //here we assume that the FolderStore object also implements BaseItemInfo
+                    if ((chg.why & Change.FLAGS) != 0 && (((BaseItemInfo) folder).getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
                         // notify client that mailbox is deselected due to \Noselect?
                         // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
                         //                mailbox, but disconnect all other clients who have the
@@ -499,7 +500,7 @@ public abstract class ImapListener extends Session {
                         mFolder.handleFolderRename(changeId, folder, chg);
                     }
                 } else if (isMsgOrContact) {
-                    ZimbraMailItem item = (ZimbraMailItem) chg.what;
+                    BaseItemInfo item = (BaseItemInfo) chg.what;
                     boolean inFolder = mIsVirtual || item.getFolderIdInMailbox() == mFolderId;
                     if (!inFolder && (chg.why & Change.FOLDER) == 0) {
                         return;
