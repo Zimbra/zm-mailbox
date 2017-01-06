@@ -199,34 +199,20 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
             int change = modSpec.getChangeBitmask();
             if (modSpec instanceof ModifyItemNotification) {
                 ModifyItemNotification modifyItem = (ModifyItemNotification) modSpec;
-                ModificationItem item = new ModificationItem(modifyItem.getMessageInfo(), acctId);
-                prms.recordModified(item, change);
+                ModificationItem itemUpdate = new ModificationItem(modifyItem.getMessageInfo(), acctId);
+                prms.recordModified(itemUpdate, change);
             } else if (modSpec instanceof ModifyTagNotification) {
                 ModifyTagNotification modifyTag = (ModifyTagNotification) modSpec;
                 int tagId = modifyTag.getId();
                 String tagName = modifyTag.getName();
-
-                ZimbraTag ztag = new ZimbraTag() {
-
-                    @Override
-                    public int getTagId() {
-                        return tagId;
-                    }
-
-                    @Override
-                    public String getTagName() {
-                        return tagName;
-                    }
-                };
-
-                prms.recordModified(ztag, acctId, change);
-
+                ModificationItem tagRename = new ModificationItem(tagId, tagName);
+                prms.recordModified(tagRename, acctId, change);
             } else if (modSpec instanceof RenameFolderNotification) {
                 RenameFolderNotification renameFolder = (RenameFolderNotification) modSpec;
                 int folderId = renameFolder.getFolderId();
                 String newPath = renameFolder.getPath();
-                ModificationItem folder = new ModificationItem(folderId, newPath, acctId);
-                prms.recordModified(folder, change);
+                ModificationItem folderRename = new ModificationItem(folderId, newPath, acctId);
+                prms.recordModified(folderRename, change);
             }
         }
         for (DeleteItemNotification delSpec: mods.getDeleted()) {
