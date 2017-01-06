@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mailbox.ZimbraTag;
@@ -64,7 +65,7 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         }
 
         if (other.created != null) {
-            for (ZimbraMailItem item : other.created.values()) {
+            for (BaseItemInfo item : other.created.values()) {
                 recordCreated(item);
             }
         }
@@ -88,9 +89,9 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     }
 
     @Override
-    public void recordCreated(ZimbraMailItem item) {
+    public void recordCreated(BaseItemInfo item) {
         if (created == null) {
-            created = new LinkedHashMap<PendingModifications.ModificationKey, ZimbraMailItem>();
+            created = new LinkedHashMap<PendingModifications.ModificationKey, BaseItemInfo>();
         }
         changedTypes.add(getItemType(item));
         /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
@@ -131,14 +132,14 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     }
 
     @Override
-    public void recordModified(ZimbraMailItem item, int reason) {
+    public void recordModified(BaseItemInfo item, int reason) {
         changedTypes.add(getItemType(item));
         /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
         recordModified(new ModificationKey(item), item, reason, null, true);
     }
 
     @Override
-    public void recordModified(ZimbraMailItem item, int reason, ZimbraMailItem preModifyItem) {
+    public void recordModified(BaseItemInfo item, int reason, ZimbraMailItem preModifyItem) {
         changedTypes.add(getItemType(item));
         /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
         recordModified(new ModificationKey(item), item, reason, preModifyItem, false);
@@ -193,25 +194,25 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
 
         PendingRemoteModifications prms = new PendingRemoteModifications();
         for (CreateItemNotification createSpec: mods.getCreated()) {
-            prms.recordCreated(new ModificationItem(createSpec.getMessageInfo(), acctId));
+            prms.recordCreated(ModificationItem.itemUpdate(createSpec.getMessageInfo(), acctId));
         }
         for (ModifyNotification modSpec: mods.getModified()) {
             int change = modSpec.getChangeBitmask();
             if (modSpec instanceof ModifyItemNotification) {
                 ModifyItemNotification modifyItem = (ModifyItemNotification) modSpec;
-                ModificationItem itemUpdate = new ModificationItem(modifyItem.getMessageInfo(), acctId);
+                BaseItemInfo itemUpdate = ModificationItem.itemUpdate(modifyItem.getMessageInfo(), acctId);
                 prms.recordModified(itemUpdate, change);
             } else if (modSpec instanceof ModifyTagNotification) {
                 ModifyTagNotification modifyTag = (ModifyTagNotification) modSpec;
                 int tagId = modifyTag.getId();
                 String tagName = modifyTag.getName();
-                ModificationItem tagRename = new ModificationItem(tagId, tagName);
+                ZimbraTag tagRename = ModificationItem.tagRename(tagId, tagName);
                 prms.recordModified(tagRename, acctId, change);
             } else if (modSpec instanceof RenameFolderNotification) {
                 RenameFolderNotification renameFolder = (RenameFolderNotification) modSpec;
                 int folderId = renameFolder.getFolderId();
                 String newPath = renameFolder.getPath();
-                ModificationItem folderRename = new ModificationItem(folderId, newPath, acctId);
+                ModificationItem folderRename = ModificationItem.folderRename(folderId, newPath, acctId);
                 prms.recordModified(folderRename, change);
             }
         }

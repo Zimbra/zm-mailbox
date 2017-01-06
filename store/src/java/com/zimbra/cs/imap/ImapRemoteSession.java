@@ -22,7 +22,7 @@ import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
-import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.PendingModifications;
@@ -55,7 +55,7 @@ public class ImapRemoteSession extends ImapListener {
         }
 
         @Override
-        protected synchronized void queueCreate(int changeId, ZimbraMailItem item) {
+        protected synchronized void queueCreate(int changeId, BaseItemInfo item) {
             getQueuedRemoteNotifications(changeId).recordCreated(item);
         }
 
@@ -65,7 +65,7 @@ public class ImapRemoteSession extends ImapListener {
         }
     }
 
-    private void handleCreate(int changeId, ZimbraMailItem item, AddedItems added) {
+    private void handleCreate(int changeId, BaseItemInfo item, AddedItems added) {
         try {
             if (item == null || item.getIdInMailbox() <= 0) {
                 return;
@@ -97,7 +97,7 @@ public class ImapRemoteSession extends ImapListener {
             int changeId, AddedItems added) {
         PendingRemoteModifications pns = (PendingRemoteModifications) pnsIn;
         if (pns.created != null) {
-            for (ZimbraMailItem item : pns.created.values()) {
+            for (BaseItemInfo item : pns.created.values()) {
                 handleCreate(changeId, item, added);
             }
         }

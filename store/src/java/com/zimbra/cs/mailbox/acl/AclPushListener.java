@@ -19,7 +19,7 @@ package com.zimbra.cs.mailbox.acl;
 import java.util.Collections;
 import java.util.Set;
 
-import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxListener;
@@ -42,7 +42,7 @@ public class AclPushListener extends MailboxListener {
     public void notify(ChangeNotification notification) {
         boolean runAclPushTask = false;
         if (notification.mods.created != null) {
-            for (ZimbraMailItem created : notification.mods.created.values()) {
+            for (BaseItemInfo created : notification.mods.created.values()) {
                 if (created instanceof Folder) {
                     Folder folder = (Folder) created;
                     if (folder.getACL() != null) {
