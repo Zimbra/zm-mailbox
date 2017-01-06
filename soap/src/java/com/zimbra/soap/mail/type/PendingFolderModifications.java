@@ -4,13 +4,21 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class PendingAccountModifications {
+public class PendingFolderModifications {
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description ID of signaled folder
+     */
+    @XmlAttribute(name=MailConstants.A_ID, required=true)
+    private final Integer folderId;
+
     /**
      * @zm-api-field-tag created
      * @zm-api-field-description list of created items
@@ -32,10 +40,18 @@ public class PendingAccountModifications {
     @XmlElement(name=MailConstants.E_MODIFIED /* modified */, required=false)
     private final List<ItemSpec> modified = Lists.newArrayList();
 
-    public PendingAccountModifications() {
-        
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    public PendingFolderModifications() {
+        this((Integer)null);
     }
-    
+
+    public PendingFolderModifications(Integer folderId) {
+        this.folderId = folderId;
+    }
+
     public void addCreatedItem(ItemSpec item) {
         created.add(item);
     }
@@ -58,5 +74,9 @@ public class PendingAccountModifications {
 
     public List<ItemSpec> getModified() {
         return modified;
+    }
+
+    public Integer getFolderId() {
+        return folderId;
     }
 }

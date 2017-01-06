@@ -32,7 +32,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.WaitSetResp;
-import com.zimbra.soap.type.AccountIdAndFolderIds;
+import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.IdAndType;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -67,7 +67,7 @@ public class WaitSetResponse implements WaitSetResp {
      * <br />If folder IDs are included then changes only affect those folders.
      */
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
-    private final List<AccountIdAndFolderIds> signalledAccounts = Lists.newArrayList();
+    private final List<AccountWithModifications> signalledAccounts = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Error information
@@ -93,7 +93,7 @@ public class WaitSetResponse implements WaitSetResp {
     @Override
     public void setSeqNo(String seqNo) { this.seqNo = seqNo; }
     @Override
-    public void setSignalledAccounts(Iterable <AccountIdAndFolderIds> signalledAccounts) {
+    public void setSignalledAccounts(Iterable <AccountWithModifications> signalledAccounts) {
         this.signalledAccounts.clear();
         if (signalledAccounts != null) {
             Iterables.addAll(this.signalledAccounts,signalledAccounts);
@@ -101,7 +101,7 @@ public class WaitSetResponse implements WaitSetResp {
     }
 
     @Override
-    public WaitSetResponse addSignalledAccount(AccountIdAndFolderIds signalledAccount) {
+    public WaitSetResponse addSignalledAccount(AccountWithModifications signalledAccount) {
         this.signalledAccounts.add(signalledAccount);
         return this;
     }
@@ -127,7 +127,7 @@ public class WaitSetResponse implements WaitSetResp {
     @Override
     public String getSeqNo() { return seqNo; }
     @Override
-    public List<AccountIdAndFolderIds> getSignalledAccounts() {
+    public List<AccountWithModifications> getSignalledAccounts() {
         return Collections.unmodifiableList(signalledAccounts);
     }
     @Override
