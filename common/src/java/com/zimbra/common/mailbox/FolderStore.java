@@ -18,12 +18,7 @@ package com.zimbra.common.mailbox;
 
 import java.util.List;
 
-public interface FolderStore {
-    /** Returns the folder's absolute path.  Paths are UNIX-style with <code>'/'</code> as the path delimiter.
-     * Paths are relative to *  the user root folder, which has the path <code>"/"</code>.  So the Inbox's path is
-     *  <code>"/Inbox"</code>, etc.
-     */
-    public String getPath();
+public interface FolderStore extends BaseFolderInfo {
     /** Returns the folder's name.  Note that this is the folder's name (e.g. <code>"foo"</code>),
      * not its absolute pathname (e.g. <code>"/baz/bar/foo"</code>) for which, @see #getPath()
      */
@@ -31,7 +26,6 @@ public interface FolderStore {
     public String getName();
     public ItemIdentifier getFolderItemIdentifier();
     public String getFolderIdAsString();
-    public int getFolderIdInOwnerMailbox();
     public boolean isHidden();
     public boolean isDeletable();
     public boolean hasSubfolders();
