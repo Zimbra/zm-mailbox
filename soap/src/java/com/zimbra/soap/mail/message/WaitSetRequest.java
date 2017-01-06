@@ -118,6 +118,13 @@ public class WaitSetRequest implements WaitSetReq {
     private Long timeout;
 
     /**
+     * @zm-api-field-tag expand
+     * @zm-api-field-description boolean flag. If true, WaitSetResponse will include details of Pending Modifications.
+     */
+    @XmlAttribute(name=MailConstants.A_EXPAND /* expand */, required=false)
+    private ZmBoolean expand;
+
+    /**
      * @zm-api-field-description Waitsets to add
      */
     @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD /* add */, required=false)
@@ -151,6 +158,8 @@ public class WaitSetRequest implements WaitSetReq {
         this.lastKnownSeqNo = lastKnownSeqNo;
     }
 
+    @Override
+    public void setExpand(Boolean expand) {this.expand = ZmBoolean.fromBool(expand); }
     @Override
     public void setBlock(Boolean block) { this.block = ZmBoolean.fromBool(block); }
     @Override
@@ -202,6 +211,8 @@ public class WaitSetRequest implements WaitSetReq {
     }
 
     @Override
+    public boolean getExpand() { return ZmBoolean.toBool(expand, false); }
+    @Override
     public String getWaitSetId() { return waitSetId; }
     @Override
     public String getLastKnownSeqNo() { return lastKnownSeqNo; }
@@ -229,6 +240,7 @@ public class WaitSetRequest implements WaitSetReq {
             .add("waitSetId", waitSetId)
             .add("lastKnownSeqNo", lastKnownSeqNo)
             .add("block", block)
+            .add("expand", expand)
             .add("defaultInterests", defaultInterests)
             .add("timeout", timeout)
             .add("addAccounts", addAccounts)
