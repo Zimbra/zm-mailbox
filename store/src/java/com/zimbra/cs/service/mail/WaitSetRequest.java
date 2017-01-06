@@ -16,9 +16,9 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +31,7 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -45,7 +46,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.admin.AdminServiceException;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.servlet.continuation.ResumeContinuationListener;
-import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetCallback;
@@ -57,6 +57,8 @@ import com.zimbra.soap.base.WaitSetReq;
 import com.zimbra.soap.base.WaitSetResp;
 import com.zimbra.soap.mail.message.WaitSetResponse;
 import com.zimbra.soap.mail.type.ItemSpec;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.IdAndType;
 import com.zimbra.soap.type.WaitSetAddSpec;
@@ -185,6 +187,7 @@ public class WaitSetRequest extends MailDocumentHandler {
         String waitSetId = req.getWaitSetId();
         String lastKnownSeqNo = req.getLastKnownSeqNo();
         boolean block = req.getBlock();
+        boolean expand = req.getExpand();
 
         WaitSetCallback cb = (WaitSetCallback)servletRequest.getAttribute(VARS_ATTR_NAME);
 
@@ -271,44 +274,42 @@ public class WaitSetRequest extends MailDocumentHandler {
         } else if (cb.completed) {
             resp.setSeqNo(cb.seqNo);
             for (String signalledAcct : cb.signalledAccounts) {
-                //TODO: update this with classes introduced for zms-286
-                /**
-                 * TODO: instead of calling toString, this code should encode the minumum info required for instantiating PendingRemoteModifications on the listener host
-                 */
-                PendingAccountModifications accountSOAPMods = new PendingAccountModifications();
-                PendingModifications accountMods = cb.pendingModifications.get(signalledAcct); 
-                for(Object mod : accountMods.created.entrySet()) {
-                    if(mod instanceof MailItem) {
-                        ItemSpec item = new ItemSpec();
-                        item.setFolder(Integer.toString(((MailItem)mod).getFolderId()));
-                        item.setId(Integer.toString(((MailItem)mod).getId()));
-                        item.setName(((MailItem)mod).getName());
-                        accountSOAPMods.addCreatedItem(item);
+                AccountWithModifications info = new AccountWithModifications(signalledAcct);
+                if(expand) {
+                    /**
+                     * TODO: instead of calling toString, this code should encode the minumum info required for instantiating PendingRemoteModifications on the listener host
+                     */
+                    HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
+                    PendingModifications accountMods = cb.pendingModifications.get(signalledAcct);
+                    if(accountMods.created != null) {
+                        for(Object mod : accountMods.created.values()) {
+                            if(mod instanceof MailItem) {
+                                Integer folderId = ((MailItem)mod).getFolderId();
+                                getFolderMods(folderId, folderMap).addCreatedItem(getItemSpec((MailItem)mod, Integer.toString(folderId)));
+                            }
+                        }
                     }
-                }
-
-                for(Object mod : accountMods.modified.entrySet()) {
-                    if(mod instanceof MailItem) {
-                        ItemSpec item = new ItemSpec();
-                        item.setFolder(Integer.toString(((MailItem)mod).getFolderId()));
-                        item.setId(Integer.toString(((MailItem)mod).getId()));
-                        item.setName(((MailItem)mod).getName());
-                        accountSOAPMods.addModifiedItem(item);
+    
+                    if(accountMods.modified != null) {
+                        for(Object mod : accountMods.modified.values()) {
+                            if(mod instanceof MailItem) {
+                                Integer folderId = ((MailItem)mod).getFolderId();
+                                getFolderMods(folderId, folderMap).addModifiedItem(getItemSpec((MailItem)mod, Integer.toString(folderId)));
+                            }
+                        }
                     }
-                }
-
-                for(Object mod : accountMods.deleted.entrySet()) {
-                    if(mod instanceof MailItem) {
-                        ItemSpec item = new ItemSpec();
-                        item.setFolder(Integer.toString(((MailItem)mod).getFolderId()));
-                        item.setId(Integer.toString(((MailItem)mod).getId()));
-                        item.setName(((MailItem)mod).getName());
-                        accountSOAPMods.addDeletedItem(item);
+    
+                    if(accountMods.deleted != null) {
+                        for(Object mod : accountMods.deleted.values()) {
+                            if(mod instanceof MailItem) {
+                                Integer folderId = ((MailItem)mod).getFolderId();
+                                getFolderMods(folderId, folderMap).addDeletedItem(getItemSpec((MailItem)mod, Integer.toString(folderId)));;
+                            }
+                        }
                     }
+                    info.setPendingFolderModifications(folderMap.values());
                 }
-                AccountIdAndFolderIds info = new AccountIdAndFolderIds(signalledAcct, accountSOAPMods);
-                info.setFolderIds(cb.changedFolderIds.get(signalledAcct));
-                resp.addSignalledAccount(info); 
+                resp.addSignalledAccount(info);
             }
         } else {
             // timed out....they should try again
@@ -316,6 +317,23 @@ public class WaitSetRequest extends MailDocumentHandler {
         }
 
         resp.setErrors(encodeErrors(cb.errors));
+    }
+
+    private static ItemSpec getItemSpec(MailItem mod, String folderId) {
+        ItemSpec item = new ItemSpec();
+        item.setFolder(folderId);
+        item.setId(Integer.toString(mod.getId()));
+        item.setName(mod.getName());
+        return item;
+    }
+
+    private static PendingFolderModifications getFolderMods(Integer folderId, HashMap<Integer, PendingFolderModifications> folderMap) {
+        PendingFolderModifications folderMods = folderMap.get(folderId);
+        if(folderMods == null) {
+            folderMods = new PendingFolderModifications(folderId);
+            folderMap.put(folderId, folderMods);    
+        }
+        return folderMods;
     }
 
     private static void preloadMailboxes(List<WaitSetAccount> accts) {
