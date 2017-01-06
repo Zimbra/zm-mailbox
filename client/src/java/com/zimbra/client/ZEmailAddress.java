@@ -30,6 +30,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.EmailInfoInterface;
 
 public class ZEmailAddress implements ToZJSONObject {
 
@@ -41,16 +42,23 @@ public class ZEmailAddress implements ToZJSONObject {
     public static final String EMAIL_TYPE_REPLY_TO = "r";
 
 
-    private String address;
-    private String display;
-    private String personal;
-    private String type;
+    private final String address;
+    private final String display;
+    private final String personal;
+    private final String type;
 
     public ZEmailAddress(String address, String display, String personal, String type) {
         this.address = address;
         this.display = display;
         this.personal = personal;
         this.type = type;
+    }
+
+    public ZEmailAddress(EmailInfoInterface emailInfo) {
+        address = emailInfo.getAddress();
+        display = emailInfo.getDisplay();
+        personal = emailInfo.getPersonal();
+        type = emailInfo.getAddressType() != null ? emailInfo.getAddressType() : "";
     }
 
     public ZEmailAddress(Element e) {
