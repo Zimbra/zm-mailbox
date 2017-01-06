@@ -9,11 +9,12 @@ import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 
-public class ModificationItem implements ZimbraMailItem, FolderStore {
+public class ModificationItem implements ZimbraMailItem, FolderStore, ZimbraTag {
 
     private String acctId;
     private int id;
@@ -25,6 +26,15 @@ public class ModificationItem implements ZimbraMailItem, FolderStore {
 
     //for folder rename
     private String path;
+
+    //for tag rename
+    private int tagId;
+    private String tagName;
+
+    public ModificationItem(int tagId, String tagName) {
+        this.tagId = tagId;
+        this.tagName = tagName;
+    }
 
     public ModificationItem(int id, String path, String acctId) {
         this.id = id;
@@ -87,8 +97,17 @@ public class ModificationItem implements ZimbraMailItem, FolderStore {
         return id;
     }
 
+    @Override
+    public int getTagId() {
+        return tagId;
+    }
+    @Override
+    public String getTagName() {
+        return tagName;
+    }
+
     /**TODO: The following interface methods aren't used by the PendingModifications system.
-     * May be worthwhile factor the above methods to a super interface to avoid this.
+     * We should factor out the above methods to separate interfaces to avoid this.
      */
     @Override
     public int getModifiedSequence() {
@@ -113,146 +132,125 @@ public class ModificationItem implements ZimbraMailItem, FolderStore {
 
     @Override
     public List<ACLGrant> getACLGrants() {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     @Override
     public String getFolderIdAsString() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public ItemIdentifier getFolderItemIdentifier() {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     @Override
     public int getImapMODSEQ() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
 
     @Override
     public int getImapMessageCount() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
 
     @Override
     public int getImapUIDNEXT() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
 
     @Override
     public int getImapUnreadCount() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
 
     @Override
     public MailboxStore getMailboxStore() {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     @Override
     public int getUIDValidity() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
 
     @Override
     public boolean hasSubfolders() {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
     @Override
     public boolean inTrash() {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
     @Override
     public boolean isChatsFolder() {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
     @Override
     public boolean isContactsFolder() {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
     @Override
     public boolean isDeletable() {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
     @Override
     public boolean isHidden() {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
     @Override
     public boolean isIMAPSubscribed() {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
     @Override
     public boolean isInboxFolder() {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
     @Override
     public boolean isSearchFolder() {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
     @Override
     public boolean isSyncFolder() {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
     @Override
     public boolean isVisibleInImap(boolean bool) {
-        // TODO Auto-generated method stub
         return false;
     }
 }
