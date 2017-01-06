@@ -377,7 +377,7 @@ public class MailSearchParams implements SearchParameters {
      * @zm-api-field-tag want-content
      * @zm-api-field-description used by clients if they want mail content with/without quoted text
      */
-    @XmlAttribute(name=MailConstants.A_WANT_CONTENT  /*content*/ , required=false)
+    @XmlAttribute(name=MailConstants.A_WANT_CONTENT  /* wantContent */ , required=false)
     private MsgContent wantContent;
 
     public MailSearchParams() {
