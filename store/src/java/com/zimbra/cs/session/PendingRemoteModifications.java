@@ -28,9 +28,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.session.RemoteModification.ModifiedItem;
 import com.zimbra.soap.mail.type.ItemSpec;
-import com.zimbra.soap.mail.type.PendingAccountModifications;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
 
 public final class PendingRemoteModifications extends PendingModifications<ZBaseItem> {
 
@@ -174,7 +173,7 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         return null;
     }
 
-    public static PendingRemoteModifications fromSOAP(PendingAccountModifications mods) {
+    public static PendingRemoteModifications fromSOAP(PendingFolderModifications mods) {
 
         PendingRemoteModifications prms = new PendingRemoteModifications();
         for (ItemSpec createSpec: mods.getCreated()) {
