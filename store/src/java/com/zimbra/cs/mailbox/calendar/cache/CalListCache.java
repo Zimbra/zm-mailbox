@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.MemcachedMap;
@@ -120,8 +120,8 @@ public class CalListCache {
     void notifyCommittedChanges(PendingLocalModifications mods, int changeId) {
         ChangeMap changeMap = new ChangeMap(1);
         if (mods.created != null) {
-            for (Map.Entry<ModificationKey, ZimbraMailItem> entry : mods.created.entrySet()) {
-                ZimbraMailItem item = entry.getValue();
+            for (Map.Entry<ModificationKey, BaseItemInfo> entry : mods.created.entrySet()) {
+                BaseItemInfo item = entry.getValue();
                 if (item instanceof Folder) {
                     Folder folder = (Folder) item;
                     MailItem.Type viewType = folder.getDefaultView();

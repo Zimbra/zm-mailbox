@@ -71,6 +71,7 @@ import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderConstants;
@@ -2771,7 +2772,7 @@ public class Mailbox implements MailboxStore {
         }
 
         if (pms.created != null && !pms.created.isEmpty()) {
-            for (ZimbraMailItem item : pms.created.values()) {
+            for (BaseItemInfo item : pms.created.values()) {
                 if (item instanceof Folder && folders != null) {
                     Folder folder = (Folder) item;
                     Folder snapshotted = folders.get(folder.getId());
@@ -9662,11 +9663,12 @@ public class Mailbox implements MailboxStore {
         if (currentChange().dirty != null && currentChange().dirty.hasNotifications()) {
             assert(currentChange().writeChange);
             if (currentChange().dirty.created != null) {
-                for (ZimbraMailItem item : currentChange().dirty.created.values()) {
+                for (BaseItemInfo item : currentChange().dirty.created.values()) {
                     if (item instanceof Folder) {
+                        Folder folder = (Folder) item;
                         foldersTagsDirty = true;
-                        if (item.getSize() != 0) {
-                            ((Folder) item).saveFolderCounts(false);
+                        if (folder.getSize() != 0) {
+                            folder.saveFolderCounts(false);
                         }
                     } else if (item instanceof Tag) {
                         Tag tag = (Tag) item;
@@ -9717,7 +9719,7 @@ public class Mailbox implements MailboxStore {
         if (DebugConfig.checkMailboxCacheConsistency && currentChange().dirty != null
                         && currentChange().dirty.hasNotifications()) {
             if (currentChange().dirty.created != null) {
-                for (ZimbraMailItem item : currentChange().dirty.created.values()) {
+                for (BaseItemInfo item : currentChange().dirty.created.values()) {
                     if (item instanceof MailItem) {
                         MailItem mi = (MailItem) item;
                         DbMailItem.consistencyCheck(mi, mi.mData, mi.encodeMetadata().toString());

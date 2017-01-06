@@ -30,7 +30,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.MemcachedMap;
@@ -230,8 +230,8 @@ public class CtagInfoCache {
         int inboxFolder = Mailbox.ID_FOLDER_INBOX;
         Set<CalendarKey> keysToInvalidate = new HashSet<CalendarKey>();
         if (mods.created != null) {
-            for (Map.Entry<ModificationKey, ZimbraMailItem> entry : mods.created.entrySet()) {
-                ZimbraMailItem item = entry.getValue();
+            for (Map.Entry<ModificationKey, BaseItemInfo> entry : mods.created.entrySet()) {
+                BaseItemInfo item = entry.getValue();
                 if (item instanceof Message) {
                     Message msg = (Message) item;
                     if (msg.hasCalendarItemInfos() && msg.getFolderId() == inboxFolder) {

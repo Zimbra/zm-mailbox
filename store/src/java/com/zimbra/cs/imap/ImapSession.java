@@ -19,7 +19,7 @@ package com.zimbra.cs.imap;
 import java.util.TreeMap;
 
 import com.google.common.base.Objects;
-import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
@@ -58,7 +58,7 @@ public class ImapSession extends ImapListener {
         }
 
         @Override
-        protected synchronized void queueCreate(int changeId, ZimbraMailItem item) {
+        protected synchronized void queueCreate(int changeId, BaseItemInfo item) {
           getQueuedLocalNotifications(changeId).recordCreated(item);
         }
 
@@ -132,7 +132,7 @@ public class ImapSession extends ImapListener {
             int changeId, AddedItems added) {
         PendingLocalModifications pns = (PendingLocalModifications) pnsIn;
         if (pns.created != null) {
-            for (ZimbraMailItem item : pns.created.values()) {
+            for (BaseItemInfo item : pns.created.values()) {
                 try {
                     handleCreate(changeId, item, added);
                 } catch (ServiceException e) {
@@ -142,7 +142,7 @@ public class ImapSession extends ImapListener {
         }
     }
 
-    private void handleCreate(int changeId, ZimbraMailItem item, AddedItems added) throws ServiceException {
+    private void handleCreate(int changeId, BaseItemInfo item, AddedItems added) throws ServiceException {
         if (item == null || item.getIdInMailbox() <= 0) {
             return;
         } else if (item.getFolderIdInMailbox() == mFolderId && (item instanceof Message || item instanceof Contact)) {
