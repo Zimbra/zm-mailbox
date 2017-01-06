@@ -22,7 +22,6 @@ import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
-import com.zimbra.client.ZTag;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -75,19 +74,6 @@ public class ImapRemoteSession extends ImapListener {
             }
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("Error retrieving ID of item or folder", e);
-        }
-    }
-
-    /**
-     *
-     * @see com.zimbra.cs.imap.ImapSession#handleModify()
-     */
-    @Override
-    protected void handleModify(int changeId, Change chg, AddedItems added) {
-        if (chg.what instanceof ZTag && (chg.why & Change.NAME) != 0) {
-            mFolder.handleTagRename(changeId, (ZTag) chg.what, chg);
-        } else {
-            handleModifyCommon(changeId, chg, added);
         }
     }
 
