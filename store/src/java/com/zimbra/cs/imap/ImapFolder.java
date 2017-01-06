@@ -34,11 +34,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.zimbra.common.mailbox.BaseFolderInfo;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.SearchFolderStore;
-import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -295,7 +296,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return path;
     }
 
-    void updatePath(FolderStore folder) {
+    void updatePath(BaseFolderInfo folder) {
         path = new ImapPath(null, folder.getPath(), path.getCredentials());
     }
 
@@ -1118,7 +1119,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     }
 
     @Override
-    public void handleItemCreate(int changeId, ZimbraMailItem item, ImapSession.AddedItems added) {
+    public void handleItemCreate(int changeId, BaseItemInfo item, ImapSession.AddedItems added) {
         int msgId;
         try {
             msgId = item.getIdInMailbox();
@@ -1139,7 +1140,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     }
 
     @Override
-    public void handleFolderRename(int changeId, FolderStore folder, Change chg) {
+    public void handleFolderRename(int changeId, BaseFolderInfo folder, Change chg) {
         updatePath(folder);
         // FIXME: can we change the folder's UIDVALIDITY?
         //        if not, how do we persist it for the session?
@@ -1149,7 +1150,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     @Override
     public void handleItemUpdate(int changeId, Change chg, ImapSession.AddedItems added) {
-        ZimbraMailItem item = (ZimbraMailItem) chg.what;
+        BaseItemInfo item = (BaseItemInfo) chg.what;
         int itemId;
         int fId;
         try {
