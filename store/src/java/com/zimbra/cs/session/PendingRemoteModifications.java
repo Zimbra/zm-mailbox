@@ -24,6 +24,7 @@ import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -33,7 +34,7 @@ import com.zimbra.soap.mail.type.ItemSpec;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
 =======
 import com.zimbra.soap.mail.type.CreateItemNotification;
-import com.zimbra.soap.mail.type.DeleteNotification;
+import com.zimbra.soap.mail.type.DeleteItemNotification;
 import com.zimbra.soap.mail.type.ModifyNotification;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
@@ -143,6 +144,11 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         recordModified(new ModificationKey(item), item, reason, preModifyItem, false);
     }
 
+    public void recordModified(ZimbraTag tag, String acctId, int reason) {
+        ModificationKey key = new ModificationKey(acctId, tag.getTagId());
+        recordModified(key, tag, reason, null, false);
+    }
+
     private void recordModified(PendingModifications.ModificationKey key, Object item, int reason, Object preModifyObj,
             boolean snapshotItem) {
         PendingModifications.Change chg = null;
@@ -197,16 +203,33 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
                 prms.recordModified(item, change);
             } else if (modSpec instanceof ModifyTagNotification) {
                 ModifyTagNotification modifyTag = (ModifyTagNotification) modSpec;
-                // instantiate ZTag
+                int tagId = modifyTag.getId();
+                String tagName = modifyTag.getName();
+
+                ZimbraTag ztag = new ZimbraTag() {
+
+                    @Override
+                    public int getTagId() {
+                        return tagId;
+                    }
+
+                    @Override
+                    public String getTagName() {
+                        return tagName;
+                    }
+                };
+
+                prms.recordModified(ztag, acctId, change);
+
             } else if (modSpec instanceof RenameFolderNotification) {
                 RenameFolderNotification renameFolder = (RenameFolderNotification) modSpec;
-                int id = renameFolder.getFolderId();
-                String path = renameFolder.getPath();
-                // instantiate folder info
-
+                int folderId = renameFolder.getFolderId();
+                String newPath = renameFolder.getPath();
+                ModificationItem folder = new ModificationItem(folderId, newPath, acctId);
+                prms.recordModified(folder, change);
             }
         }
-        for (DeleteNotification delSpec: mods.getDeleted()) {
+        for (DeleteItemNotification delSpec: mods.getDeleted()) {
           int id = delSpec.getId();
           MailItem.Type type = MailItem.Type.of(delSpec.getType());
           prms.recordDeleted(type, acctId, id);
