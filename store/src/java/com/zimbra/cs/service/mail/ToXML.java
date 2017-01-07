@@ -1349,13 +1349,15 @@ public final class ToXML {
      * @throws ServiceException */
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
-            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo, boolean encodeMissingBlobs, MsgContent wantContent)
+            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
+            boolean encodeMissingBlobs, MsgContent wantContent)
     throws ServiceException {
         Mailbox mbox = msg.getMailbox();
         int changeId = msg.getSavedSequence();
         while (true) {
             try {
-                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, false, encodeMissingBlobs, wantContent);
+                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
+                        serializeType, wantExpandGroupInfo, false /* bestEffort */, encodeMissingBlobs, wantContent);
             } catch (ServiceException e) {
                 // problem writing the message structure to the response
                 //   (this case generally means that the blob backing the MimeMessage disappeared halfway through)
@@ -1375,7 +1377,8 @@ public final class ToXML {
                 // we're kinda screwed here -- we weren't able to write the message structure and it's not clear what went wrong.
                 //   best we can do now is send back what we got and apologize.
                 ZimbraLog.soap.warn("could not serialize full message structure in response", e);
-                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, true, wantContent);
+                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
+                        serializeType, wantExpandGroupInfo, true, wantContent);
             }
         }
     }
@@ -1954,12 +1957,21 @@ public final class ToXML {
     /**
      * Encodes a Message object into <m> element with standard MIME content.
      */
-    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part, boolean serializeType)
+    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
+            Message msg, String part, boolean serializeType)
     throws ServiceException {
         return encodeMessageAsMIME(parent, ifmt, octxt, msg, part, false, serializeType);
     }
 
-    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part, boolean mustInline, boolean serializeType)
+    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
+            Message msg, String part, boolean mustInline, boolean serializeType)
+    throws ServiceException {
+         return encodeMessageAsMIME(parent, ifmt, octxt,
+                 msg, part, mustInline, false /* mustNotInline */, serializeType);
+    }
+
+    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
+            Message msg, String part, boolean mustInline, boolean mustNotInline, boolean serializeType)
     throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().isEmpty());
 
@@ -1968,7 +1980,7 @@ public final class ToXML {
             m = encodeMessageCommon(parent, ifmt, octxt, msg, NOTIFY_FIELDS, serializeType);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
         } else {
-            m = parent.addElement(MailConstants.E_MSG);
+            m = parent.addNonUniqueElement(MailConstants.E_MSG);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
             m.addAttribute(MailConstants.A_PART, part);
         }
@@ -1978,7 +1990,7 @@ public final class ToXML {
         if (!wholeMessage) {
             content.addAttribute(MailConstants.A_URL,
                     CONTENT_SERVLET_URI + ifmt.formatItemId(msg) + PART_PARAM_STRING + part);
-        } else if (!mustInline && size > MAX_INLINE_MSG_SIZE) {
+        } else if (mustNotInline || (!mustInline && size > MAX_INLINE_MSG_SIZE)) {
             content.addAttribute(MailConstants.A_URL, CONTENT_SERVLET_URI + ifmt.formatItemId(msg));
         } else {
             try {
