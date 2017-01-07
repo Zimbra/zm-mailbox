@@ -73,6 +73,7 @@ public class GetMsg extends MailDocumentHandler {
         wantContent = wantContent == null ? MsgContent.full : wantContent;
 
         boolean raw = eMsg.getAttributeBool(MailConstants.A_RAW, false);
+        boolean alwaysUseContentUrl = eMsg.getAttributeBool(MailConstants.A_USE_CONTENT_URL, false);
         boolean read = eMsg.getAttributeBool(MailConstants.A_MARK_READ, false);
         int maxSize = (int) eMsg.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, 0);
 
@@ -111,10 +112,12 @@ public class GetMsg extends MailDocumentHandler {
         } else {
             Message msg = getMsg(octxt, mbox, iid, read);
             if (raw) {
-                ToXML.encodeMessageAsMIME(response, ifmt, octxt, msg, part, false);
+                ToXML.encodeMessageAsMIME(response, ifmt, octxt, msg, part,
+                        false /* mustInline */, alwaysUseContentUrl /* mustNotInline */, false /* serializeType */);
             } else {
-                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize,
-                        wantHTML, neuter, headers, false, needGroupInfo, LC.mime_encode_missing_blob.booleanValue(), wantContent);
+                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
+                        false /* serializeType */, needGroupInfo,
+                        LC.mime_encode_missing_blob.booleanValue(), wantContent);
             }
         }
         return response;
