@@ -473,7 +473,8 @@ public class SendInviteReply extends CalendarRequest {
     throws ServiceException {
         ItemIdFormatter ifmt = new ItemIdFormatter();
         Element addInvite = Element.create(SoapProtocol.SoapJS, MailConstants.ADD_APPOINTMENT_INVITE_REQUEST);
-        ToXML.encodeMessageAsMIME(addInvite, ifmt, octxt, msg, null, true, false);
+        ToXML.encodeMessageAsMIME(addInvite, ifmt, octxt, msg, null /* part */,
+                true /* mustInline */, false /* mustNotInline */, false /* serializeType */);
         Element response = zmbx.invoke(addInvite);
         int calItemId = (int) response.getAttributeLong(MailConstants.A_CAL_ID, 0);
         int invId = (int) response.getAttributeLong(MailConstants.A_CAL_INV_ID, 0);
