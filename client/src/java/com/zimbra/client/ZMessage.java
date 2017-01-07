@@ -92,10 +92,10 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
 
         //request headers
         mReqHdrs = new HashMap<String,String>();
-        Element attrsEl = e.getOptionalElement("_attrs");
-        if(attrsEl != null) {
-            for (Element.Attribute eHdr : attrsEl.listAttributes()) {
-                mReqHdrs.put(eHdr.getKey(),eHdr.getValue());
+        List<Element.KeyValuePair> hdrs = e.listKeyValuePairs(MailConstants.A_HEADER, MailConstants.A_ATTRIBUTE_NAME);
+        if (hdrs != null) {
+            for (Element.KeyValuePair hdr : hdrs) {
+                mReqHdrs.put(hdr.getKey(), hdr.getValue());
             }
         }
 
