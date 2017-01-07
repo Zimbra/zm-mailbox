@@ -2582,8 +2582,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 msgEl.addAttribute(MailConstants.A_WANT_HTML, params.isWantHtml());
                 msgEl.addAttribute(MailConstants.A_NEUTER, params.isNeuterImages());
                 msgEl.addAttribute(MailConstants.A_RAW, params.isRawContent());
-                if (params.getMax() != null) {
-                    msgEl.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, params.getMax());
+                Integer max = params.getMax();
+                if (max != null) {
+                    msgEl.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, max);
+                    if (params.isRawContent() && (max == 0)) {
+                        msgEl.addAttribute(MailConstants.A_USE_CONTENT_URL, true);
+                    }
                 }
                 //header request bug:33054
                 String reqHdrs = params.getReqHeaders();
@@ -2609,21 +2613,31 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
-    public ZMessage getMessageById(String id) throws ServiceException {
+    public ZMessage getMessageById(String id, boolean raw, Integer max) throws ServiceException {
         ZGetMessageParams params = new ZGetMessageParams();
         params.setId(id);
+        params.setRawContent(raw);
+        params.setMax(max);
         return getMessage(params);
     }
 
-    public ZMessage getMessageById(ItemIdentifier itemId) throws ServiceException {
+    public ZMessage getMessageById(String id) throws ServiceException {
+        return getMessageById(id, false, null);
+    }
+
+    public ZMessage getMessageById(ItemIdentifier itemId, boolean raw, Integer max) throws ServiceException {
         try {
-        return getMessageById(itemId.toString());
+            return getMessageById(itemId.toString(), raw, max);
         } catch (SoapFaultException sfe) {
             if (sfe.getMessage().startsWith("no such message")) {
                 throw ZClientException.NO_SUCH_CONTACT(itemId.id, sfe);
             }
             throw sfe;
         }
+    }
+
+    public ZMessage getMessageById(ItemIdentifier itemId) throws ServiceException {
+        return getMessageById(itemId, false, null);
     }
 
     /**
