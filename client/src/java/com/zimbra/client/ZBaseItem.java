@@ -99,8 +99,6 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
     public abstract long getSize();
     @Override
     public abstract MailItemType getMailItemType();
-    /** @return item's ID.  IDs are unique within a Mailbox and are assigned in increasing
-     * (though not necessarily gap-free) order. */
     /** Returns an {@link InputStream} of the raw, uncompressed content of the message.  This is the message body as
      * received via SMTP; no postprocessing has been performed to make opaque attachments (e.g. TNEF) visible.
      *
@@ -117,6 +115,8 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
      * IMAP session. */
     @Override
     public abstract int getImapUid();
+    /** @return item's ID.  IDs are unique within a Mailbox and are assigned in increasing
+     * (though not necessarily gap-free) order. */
     @Override
     public abstract String getId();
 
