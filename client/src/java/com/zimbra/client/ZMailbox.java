@@ -147,10 +147,10 @@ import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
-import com.zimbra.soap.account.message.GetModifiedItemsIDsRequest;
-import com.zimbra.soap.account.message.GetModifiedItemsIDsResponse;
 import com.zimbra.soap.account.message.GetLastItemIdInMailboxRequest;
 import com.zimbra.soap.account.message.GetLastItemIdInMailboxResponse;
+import com.zimbra.soap.account.message.GetModifiedItemsIDsRequest;
+import com.zimbra.soap.account.message.GetModifiedItemsIDsResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.message.ImapCursorInfo;
@@ -173,10 +173,10 @@ import com.zimbra.soap.mail.message.GetFilterRulesRequest;
 import com.zimbra.soap.mail.message.GetFilterRulesResponse;
 import com.zimbra.soap.mail.message.GetFolderRequest;
 import com.zimbra.soap.mail.message.GetFolderResponse;
-import com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest;
-import com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse;
 import com.zimbra.soap.mail.message.GetIMAPRecentRequest;
 import com.zimbra.soap.mail.message.GetIMAPRecentResponse;
+import com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest;
+import com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsResponse;
 import com.zimbra.soap.mail.message.ItemActionRequest;
@@ -6165,7 +6165,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public static class OpenIMAPFolderParams {
 
         private static final int DEFAULT_LIMIT = 1000;
-        private int folderId;
+        private final int folderId;
         private int limit;
         private String cursorId;
 
