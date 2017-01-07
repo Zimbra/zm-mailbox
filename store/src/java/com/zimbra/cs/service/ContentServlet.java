@@ -35,6 +35,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -72,7 +73,7 @@ import com.zimbra.cs.util.AccountUtil;
 public class ContentServlet extends ZimbraServlet {
     private static final long serialVersionUID = 6466028729668217319L;
 
-    public static final String SERVLET_PATH = "/service/content";
+    public static final String SERVLET_PATH = AccountConstants.CONTENT_SERVLET_PATH; /* "/service/content" */
 
     public static final String PREFIX_GET = "/get";
     protected static final String PREFIX_PROXY = "/proxy";
