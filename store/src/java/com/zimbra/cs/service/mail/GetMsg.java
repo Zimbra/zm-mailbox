@@ -39,6 +39,9 @@ import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.GetMsgRequest;
+import com.zimbra.soap.mail.type.MsgSpec;
+import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.MsgContent;
 
 /**
@@ -66,27 +69,27 @@ public class GetMsg extends MailDocumentHandler {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        Element eMsg = request.getElement(MailConstants.E_MSG);
-        ItemId iid = new ItemId(eMsg.getAttribute(MailConstants.A_ID), zsc);
-        String part = eMsg.getAttribute(MailConstants.A_PART, null);
-        MsgContent wantContent = MsgContent.fromString(eMsg.getAttribute(MailConstants.A_WANT_CONTENT, null));
+        GetMsgRequest req = zsc.elementToJaxb(request);
+        MsgSpec msgSpec = req.getMsg();
+        ItemId iid = new ItemId(msgSpec.getId(), zsc);
+        String part = msgSpec.getPart();
+        MsgContent wantContent = msgSpec.getWantContent();
         wantContent = wantContent == null ? MsgContent.full : wantContent;
 
-        boolean raw = eMsg.getAttributeBool(MailConstants.A_RAW, false);
-        boolean alwaysUseContentUrl = eMsg.getAttributeBool(MailConstants.A_USE_CONTENT_URL, false);
-        boolean read = eMsg.getAttributeBool(MailConstants.A_MARK_READ, false);
-        int maxSize = (int) eMsg.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, 0);
-
-        boolean wantHTML = eMsg.getAttributeBool(MailConstants.A_WANT_HTML, false);
-        boolean neuter = eMsg.getAttributeBool(MailConstants.A_NEUTER, true);
+        boolean raw = msgSpec.getRaw() != null ? msgSpec.getRaw() : false;
+        boolean alwaysUseContentUrl = msgSpec.getUseContentUrl() != null ? msgSpec.getUseContentUrl() : false;
+        boolean read = msgSpec.getMarkRead() != null ? msgSpec.getMarkRead() : false;
+        int maxSize = msgSpec.getMaxInlinedLength() != null ? msgSpec.getMaxInlinedLength() : 0;
+        boolean wantHTML = msgSpec.getWantHtml() != null ? msgSpec.getWantHtml() : false;
+        boolean neuter = msgSpec.getNeuter() != null ? msgSpec.getNeuter() : true;
 
         Set<String> headers = null;
-        for (Element eHdr : eMsg.listElements(MailConstants.A_HEADER)) {
+        for (AttributeName hdr : msgSpec.getHeaders()) {
             if (headers == null)  headers = new HashSet<String>();
-            headers.add(eHdr.getAttribute(MailConstants.A_ATTRIBUTE_NAME));
+            headers.add(hdr.getName());
         }
 
-        boolean needGroupInfo = eMsg.getAttributeBool(MailConstants.A_NEED_EXP, false);
+        boolean needGroupInfo = msgSpec.getNeedCanExpand() != null ? msgSpec.getNeedCanExpand() : false;
 
         Element response = zsc.createElement(MailConstants.GET_MSG_RESPONSE);
         if (iid.hasSubpart()) {
@@ -95,7 +98,7 @@ public class GetMsg extends MailDocumentHandler {
             if (raw) {
                 throw ServiceException.INVALID_REQUEST("Cannot request RAW formatted subpart message", null);
             } else {
-                String recurIdZ = eMsg.getAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, null);
+                String recurIdZ = msgSpec.getRecurIdZ();
                 if (recurIdZ == null) {
                     // If not specified, try to get it from the Invite.
                     int invId = iid.getSubpartId();
