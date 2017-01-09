@@ -146,7 +146,7 @@ public final class AllAccountsWaitSet extends WaitSetBase {
                 mBufferedCommits.add(new Pair<String/*acctId*/, String/*commitId*/>(accountId, commitIdStr));
             } else {
                 mNextSeqNo = commitIdStr;
-                mCurrentSignalledSessions.add(accountId);
+                mCurrentSignalledAccounts.add(accountId);
                 trySendData();
             }
         }
@@ -183,7 +183,7 @@ public final class AllAccountsWaitSet extends WaitSetBase {
                 if (mbox != null) {
                     String accountId = mbox.getAccountId();
                     synchronized(this) {
-                        mCurrentSignalledSessions.add(accountId);
+                        mCurrentSignalledAccounts.add(accountId);
                     }
                 }
             } catch (ServiceException e) {
@@ -200,7 +200,7 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         //
         synchronized(this) {
             for (Pair<String/*acctid*/,String/*commitId*/> p : mBufferedCommits) {
-                mCurrentSignalledSessions.add(p.getFirst());
+                mCurrentSignalledAccounts.add(p.getFirst());
                 mNextSeqNo = p.getSecond();
             }
 
