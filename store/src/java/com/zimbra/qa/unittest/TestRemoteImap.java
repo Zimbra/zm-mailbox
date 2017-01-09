@@ -26,6 +26,7 @@ import org.junit.Test;
 import com.google.common.collect.Maps;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -376,34 +377,28 @@ public class TestRemoteImap {
         String subject = "TestRemoteImap-testMessage";
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
         ZFolder folder = TestUtil.createFolder(zmbox, folderName);
-        TestUtil.addMessage(zmbox, subject, folder.getId(), null);
+        String msgId = TestUtil.addMessage(zmbox, subject, folder.getId(), null);
+        ZMessage msg = zmbox.getMessageById(msgId);
         connection = connect(imapServer);
         connection.login(PASS);
         MailboxInfo info = connection.select(folderName);
-        assertEquals(1L, info.getRecent());
-        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE INTERNALDATE BODY BODY[TEXT])");
         assertEquals(1, mdMap.size());
         MessageData md = mdMap.values().iterator().next();
         assertNotNull(md);
         Envelope env = md.getEnvelope();
         assertNotNull(env);
-        assertNotNull(env.getSubject());
-        assertEquals(subject, env.getSubject());
-        assertNotNull(md.getInternalDate());
+        assertEquals(msg.getSubject(), env.getSubject());
+        assertEquals(msg.getDate(), md.getInternalDate().getTime());
         BodyStructure bs = md.getBodyStructure();
         assertNotNull(bs);
-        if (bs.isMultipart()) {
-            BodyStructure[] parts = bs.getParts();
-            for (BodyStructure part : parts) {
-                assertNotNull(part.getType());
-                assertNotNull(part.getSubtype());
-            }
-        } else {
-            assertNotNull(bs.getType());
-            assertNotNull(bs.getSubtype());
-        }
-        Body[] body = md.getBodySections();
+        assertEquals("TEXT", bs.getType());
+        assertEquals("PLAIN", bs.getSubtype());
+        assertNotNull(md.getBodySections());
+        assertEquals(1, md.getBodySections().length);
+        Body body = md.getBodySections()[0];
         assertNotNull(body);
-        assertEquals(1, body.length);
+        Literal imapData = (Literal) body.getData();
+        assertEquals(MessageBuilder.DEFAULT_MESSAGE_BODY, imapData.toString());
     }
 }
