@@ -35,6 +35,16 @@ public final class TypedIdList implements Iterable<Map.Entry<MailItem.Type, List
         int modSequence;
         String prev_folders;
 
+        public ItemInfo(int id, String uuid) {
+            this.id = id;
+            this.uuid = uuid;
+        }
+
+        public ItemInfo(int id, String uuid, int modSequence) {
+            this(id, uuid);
+            this.modSequence = modSequence;
+        }
+
         public ItemInfo(int id, int folderId, String uuid) {
             this(id, folderId, uuid, (Integer) null);
         }
