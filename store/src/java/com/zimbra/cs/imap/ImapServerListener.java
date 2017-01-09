@@ -242,7 +242,7 @@ public class ImapServerListener {
                                 Collection<PendingFolderModifications> mods = accInfo.getPendingFolderModifications();
                                 if(mods != null && !mods.isEmpty()) {
                                     for(PendingFolderModifications folderMods : mods) {
-                                        PendingRemoteModifications remoteMods = PendingRemoteModifications.fromSOAP(folderMods);
+                                        PendingRemoteModifications remoteMods = PendingRemoteModifications.fromSOAP(folderMods, accInfo.getId());
                                         Integer folderId = folderMods.getFolderId();
                                         List<ImapRemoteSession> listeners = foldersToSessions.get(folderId);
                                         if(listeners != null) {
