@@ -32,6 +32,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -51,6 +52,7 @@ import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetCallback;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
+import com.zimbra.cs.session.WaitSetSession;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.base.WaitSetReq;
@@ -273,43 +275,60 @@ public class WaitSetRequest extends MailDocumentHandler {
             resp.setCanceled(true);
         } else if (cb.completed) {
             resp.setSeqNo(cb.seqNo);
-            for (String signalledAcct : cb.signalledAccounts) {
-                AccountWithModifications info = new AccountWithModifications(signalledAcct);
-                if(expand) {
-                    /**
-                     * TODO: instead of calling toString, this code should encode the minumum info required for instantiating PendingRemoteModifications on the listener host
-                     */
-                    HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
-                    PendingModifications accountMods = cb.pendingModifications.get(signalledAcct);
-                    if(accountMods.created != null) {
-                        for(Object mod : accountMods.created.values()) {
-                            if(mod instanceof MailItem) {
-                                Integer folderId = ((MailItem)mod).getFolderId();
-                                getFolderMods(folderId, folderMap).addCreatedItem(getItemSpec((MailItem)mod, Integer.toString(folderId)));
-                            }
-                        }
-                    }
-    
-                    if(accountMods.modified != null) {
-                        for(Object mod : accountMods.modified.values()) {
-                            if(mod instanceof MailItem) {
-                                Integer folderId = ((MailItem)mod).getFolderId();
-                                getFolderMods(folderId, folderMap).addModifiedItem(getItemSpec((MailItem)mod, Integer.toString(folderId)));
-                            }
-                        }
-                    }
-    
-                    if(accountMods.deleted != null) {
-                        for(Object mod : accountMods.deleted.values()) {
-                            if(mod instanceof MailItem) {
-                                Integer folderId = ((MailItem)mod).getFolderId();
-                                getFolderMods(folderId, folderMap).addDeletedItem(getItemSpec((MailItem)mod, Integer.toString(folderId)));;
-                            }
-                        }
-                    }
-                    info.setPendingFolderModifications(folderMap.values());
+            for (String signalledAccount : cb.signalledAccounts) {
+                AccountWithModifications info = new AccountWithModifications(signalledAccount);
+                WaitSetSession signalledSession = cb.signalledSessions.get(signalledAccount);
+                Set<Integer> folderInterests = null;
+                if(signalledSession != null) {
+                    folderInterests = signalledSession.getFolderInterest(); 
                 }
-                resp.addSignalledAccount(info);
+                HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
+                PendingModifications accountMods = cb.pendingModifications.get(signalledAccount);
+                if(accountMods!= null && accountMods.created != null) {
+                    for(Object mod : accountMods.created.values()) {
+                        if(mod instanceof MailItem) {
+                            Integer folderId = ((MailItem)mod).getFolderId();
+                            if(folderInterests != null && !folderInterests.contains(folderId)) {
+                                continue;
+                            }
+                            getFolderMods(folderId, folderMap).addCreatedItem(getItemSpec((MailItem)mod, Integer.toString(folderId)));
+                        }
+                    }
+                }
+
+                if(accountMods!= null && accountMods.modified != null) {
+                    for(Object mod : accountMods.modified.values()) {
+                        if(mod instanceof MailItem) {
+                            Integer folderId = ((MailItem)mod).getFolderId();
+                            if(folderInterests != null && !folderInterests.contains(folderId)) {
+                                continue;
+                            }
+                            getFolderMods(folderId, folderMap).addModifiedItem(getItemSpec((MailItem)mod, Integer.toString(folderId)));
+                        }
+                    }
+                }
+
+                if(accountMods!= null && accountMods.deleted != null) {
+                    for(Object mod : accountMods.deleted.values()) {
+                        if(mod instanceof MailItem) {
+                            Integer folderId = ((MailItem)mod).getFolderId();
+                            if(folderInterests != null && !folderInterests.contains(folderId)) {
+                                continue;
+                            }
+                            getFolderMods(folderId, folderMap).addDeletedItem(getItemSpec((MailItem)mod, Integer.toString(folderId)));;
+                        }
+                    }
+                }
+                if(folderInterests!= null && !folderInterests.isEmpty() && !folderMap.isEmpty()) {
+                    //interested only in specific folders
+                    if(expand) {
+                        info.setPendingFolderModifications(folderMap.values());
+                    }
+                    resp.addSignalledAccount(info);
+                } else if(folderInterests == null || folderInterests.isEmpty()) {
+                    //interested in any folder
+                    resp.addSignalledAccount(info);
+                }
             }
         } else {
             // timed out....they should try again
