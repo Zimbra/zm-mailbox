@@ -509,6 +509,7 @@ public class TestZClient extends TestCase {
         catch (Exception e) {
             fail("getIMAPRecent should not fail");
         }
+    }
 
     @Test
     public void testGetMessageNotRaw() throws Exception {
