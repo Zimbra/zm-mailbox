@@ -37,14 +37,15 @@ import java.util.zip.CRC32;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BEncoding;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.BEncoding.BEncodingException;
+import com.zimbra.common.util.ZimbraLog;
 
 import net.spy.memcached.BinaryConnectionFactory;
 import net.spy.memcached.CachedData;
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.DefaultConnectionFactory;
+import net.spy.memcached.DefaultHashAlgorithm;
 import net.spy.memcached.HashAlgorithm;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.transcoders.Transcoder;
@@ -120,9 +121,9 @@ public class ZimbraMemcachedClient {
         Properties props = System.getProperties();
         props.put("net.spy.log.LoggerImpl", "net.spy.memcached.compat.log.Log4JLogger");
 
-        HashAlgorithm hashAlgo = HashAlgorithm.KETAMA_HASH;
+        HashAlgorithm hashAlgo = DefaultHashAlgorithm.KETAMA_HASH;
         if (hashAlgorithm != null && hashAlgorithm.length() > 0) {
-            HashAlgorithm ha = HashAlgorithm.valueOf(hashAlgorithm);
+            HashAlgorithm ha = DefaultHashAlgorithm.valueOf(hashAlgorithm);
             if (ha != null)
                 hashAlgo = ha;
         }
