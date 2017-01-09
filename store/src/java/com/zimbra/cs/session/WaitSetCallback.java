@@ -62,9 +62,11 @@ public class WaitSetCallback {
             
             this.signalledAccounts = (signalledAccounts == null) ? Sets.newHashSetWithExpectedSize(0)
                     : Sets.newCopyOnWriteArraySet(signalledAccounts);
-            this.pendingModifications = Maps.newHashMapWithExpectedSize(pms.size());
-            for(Entry<String, PendingModifications> entry : pms.entrySet()) {
-                this.pendingModifications.put(entry.getKey(), entry.getValue());
+            if(pms != null) {
+                this.pendingModifications = Maps.newHashMapWithExpectedSize(pms.size());
+                this.pendingModifications.putAll(pms);
+            } else {
+                this.pendingModifications = Maps.newHashMapWithExpectedSize(0);
             }
             this.seqNo = seqNum;
             this.completed = true;
