@@ -247,8 +247,8 @@ public class ImapServerListener {
                                     for(PendingFolderModifications folderMods : mods) {
                                         PendingRemoteModifications remoteMods = new PendingRemoteModifications();
                                         //TODO: fill in the contents of PendingRemoteModifications from PendingAccountModifications
-                                        Integer fodlerId = folderMods.getFolderId();
-                                        List<ImapRemoteSession> listeners = foldersToSessions.get(fodlerId);
+                                        Integer folderId = folderMods.getFolderId();
+                                        List<ImapRemoteSession> listeners = foldersToSessions.get(folderId);
                                         if(listeners != null) {
                                             for(ImapRemoteSession l : listeners) {
                                                 l.notifyPendingChanges(remoteMods, modSeq, null);
