@@ -16,11 +16,13 @@ import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -146,7 +148,10 @@ public class TestImapServerListener {
         ImapFolder i4folder = new ImapFolder(path, params, handler);
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(session);
-        TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotify - trigger message", Integer.toString(Mailbox.ID_FOLDER_INBOX));
+        Thread.sleep(5000);
+        String subject = "TestImapServerListener - testNotify - trigger message";
+        TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
+        TestUtil.waitForMessages(mboxStore, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
         Thread.sleep(5000);
         assertTrue("Expected session to be triggered", session.wasTriggered());
         remoteListener.removeListener(session);
@@ -157,7 +162,7 @@ public class TestImapServerListener {
         Assume.assumeNotNull(remoteServer);
         Assume.assumeNotNull(remoteAccount);
         ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
-        ZFolder folder = TestUtil.createFolder(mboxStore, "/TestImapServerListener-testNotifyNewFolder");
+        ZFolder folder = TestUtil.createFolder(mboxStore, "/TestImapServerListenerTestNotifyNewFolder");
         ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
         RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
         ImapCredentials creds = new ImapCredentials(remoteAccount);
@@ -165,9 +170,14 @@ public class TestImapServerListener {
         byte params = 0;
         ImapHandler handler = new MockImapHandler().setCredentials(creds);
         ImapFolder i4folder = new ImapFolder(path, params, handler);
-        MockImapListener session =new MockImapListener(imapStore, i4folder, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(session);
-        TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotifyNewFolder", folder.getId());
+        Thread.sleep(5000);
+        String subject = "TestImapServerListener - testNotifyNewFolder";
+        TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
+        ZMessage msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox subject:\"%s\"", subject));
+        mboxStore.moveMessage(msg.getId(), folder.getId());
+        TestUtil.waitForMessage(mboxStore, String.format("in:%s subject:\"%s\"", folder.getName(), subject));
         Thread.sleep(5000);
         assertTrue("Expected session to be triggered", session.wasTriggered());
         remoteListener.removeListener(session);
@@ -411,10 +421,6 @@ public class TestImapServerListener {
         MockImapListener(ImapMailboxStore store, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
             super(store, i4folder, handler);
             // TODO Auto-generated constructor stub
-        }
-
-        public void signalAccountChange() {
-            triggered = true;
         }
 
         public boolean wasTriggered() {
