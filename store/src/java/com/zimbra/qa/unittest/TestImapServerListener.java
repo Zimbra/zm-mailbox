@@ -43,6 +43,8 @@ import com.zimbra.cs.imap.RemoteImapMailboxStore;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
+import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.QueryWaitSetRequest;
 import com.zimbra.soap.admin.message.QueryWaitSetResponse;
@@ -142,7 +144,7 @@ public class TestImapServerListener {
         byte params = 0;
         ImapHandler handler = new MockImapHandler().setCredentials(creds);
         ImapFolder i4folder = new ImapFolder(path, params, handler);
-        MockImapListener session =new MockImapListener(imapStore, i4folder, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(session);
         TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotify - trigger message", Integer.toString(Mailbox.ID_FOLDER_INBOX));
         Thread.sleep(5000);
@@ -421,6 +423,10 @@ public class TestImapServerListener {
 
         public void resetTrigger() {
             triggered = false;
+        }
+
+        public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
+            triggered = true;
         }
     }
 }
