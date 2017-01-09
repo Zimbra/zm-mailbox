@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.session;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,8 +33,8 @@ public class WaitSetCallback {
 
     public boolean completed = false;
     public boolean canceled;
+    public HashMap<String /* accountId */, WaitSetSession> signalledSessions;
     public Set<String> signalledAccounts;
-    public Map<String /*accountId*/, Set<Integer /* folderId */>> changedFolderIds;
     public Map<String /*accountId*/, PendingModifications> pendingModifications;
     public IWaitSet waitSet;
     public String seqNo;
@@ -42,7 +43,7 @@ public class WaitSetCallback {
     public ResumeContinuationListener continuationResume;
 
     public void dataReady(IWaitSet wset, String seqNum, boolean setCanceled, List<WaitSetError> inErrors,
-            Set<String> signalledAccts, Map<String /*accountId*/, Set<Integer /* folderId */>> changedFolders, Map<String /*accountId*/, PendingModifications> pms) {
+            Set<WaitSetSession> signalledSessions, Set<String> signalledAccounts, Map<String /*accountId*/, PendingModifications> pms) {
         boolean trace = ZimbraLog.session.isTraceEnabled();
         synchronized(this) {
             if (inErrors != null && inErrors.size() > 0) {
@@ -50,16 +51,17 @@ public class WaitSetCallback {
             }
             this.waitSet = wset;
             this.canceled = setCanceled;
-            this.signalledAccounts = (signalledAccts == null) ? Sets.newHashSetWithExpectedSize(0)
-                                                              : Sets.newCopyOnWriteArraySet(signalledAccts);
-            if (changedFolders == null) {
-                this.changedFolderIds = Maps.newHashMapWithExpectedSize(0);
+            if(signalledSessions == null) {
+                this.signalledSessions =  Maps.newHashMapWithExpectedSize(0);   
             } else {
-                this.changedFolderIds = Maps.newHashMapWithExpectedSize(changedFolders.size());
-                for (Entry<String, Set<Integer>> entry : changedFolders.entrySet()) {
-                    this.changedFolderIds.put(entry.getKey(), Sets.newCopyOnWriteArraySet(entry.getValue()));
+                this.signalledSessions = Maps.newHashMapWithExpectedSize(signalledSessions.size());
+                for(WaitSetSession s : signalledSessions) {
+                    this.signalledSessions.put(s.getTargetAccountId(), s);
                 }
             }
+            
+            this.signalledAccounts = (signalledAccounts == null) ? Sets.newHashSetWithExpectedSize(0)
+                    : Sets.newCopyOnWriteArraySet(signalledAccounts);
             this.pendingModifications = Maps.newHashMapWithExpectedSize(pms.size());
             for(Entry<String, PendingModifications> entry : pms.entrySet()) {
                 this.pendingModifications.put(entry.getKey(), entry.getValue());
