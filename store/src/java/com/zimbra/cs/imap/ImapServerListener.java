@@ -47,6 +47,7 @@ import com.zimbra.soap.admin.message.AdminDestroyWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetResponse;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.WaitSetAddSpec;
 
 public class ImapServerListener {
@@ -232,11 +233,12 @@ public class ImapServerListener {
                     SoapProtocol proto = SoapProtocol.determineProtocol(envelope);
                     Element doc = proto.getBodyElement(envelope);
                     AdminWaitSetResponse wsResp = (AdminWaitSetResponse) JaxbUtil.elementToJaxb(doc);
-                    lastSequence.put(wsResp.getWaitSetId(), Integer.parseInt(wsResp.getSeqNo()));
+                    int modSeq = Integer.parseInt(wsResp.getSeqNo());
+                    lastSequence.put(wsResp.getWaitSetId(), modSeq);
                     if(wsResp.getSignalledAccounts().size() > 0) {
-                        Iterator<AccountIdAndFolderIds> iter = wsResp.getSignalledAccounts().iterator();
+                        Iterator<AccountWithModifications> iter = wsResp.getSignalledAccounts().iterator();
                         while(iter.hasNext()) {
-                            AccountIdAndFolderIds accInfo = iter.next();
+                            AccountWithModifications accInfo = iter.next();
                             ConcurrentHashMap<Integer, List<ImapRemoteSession>> foldersToSessions = sessionMap.get(accInfo.getId());
                             if(foldersToSessions != null && !foldersToSessions.isEmpty()) {
                                 Collection<PendingFolderModifications> mods = accInfo.getPendingFolderModifications();
