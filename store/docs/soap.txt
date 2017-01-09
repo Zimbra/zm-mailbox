@@ -2011,8 +2011,8 @@ needExp="1" to return group info (isGroup and exp flags) on <e> elements in the 
 ------------
 
 <GetMsgRequest>
-  <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [html="1"] [neuter="0"] [part="{part}"]
-     [ridZ="YYYYMMDD[ThhmmssZ]"] [needExp="1|0"] [wantContent="full|original|both"]>
+  <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [useContentUrl="1|0"] [html="1"] [neuter="0"]
+     [part="{part}"] [ridZ="YYYYMMDD[ThhmmssZ]"] [needExp="1|0"] [wantContent="full|original|both"]>
     *(<header n="{header-name}/>)
   </m>
 </GetMsgRequest>
@@ -2027,6 +2027,9 @@ raw="1" to return the raw message content rather than a parsed mime structure;
     (default is "0".  if message too big or not ASCII, a content servlet URL is returned)
 max="{max-inlined-length}" to limit the length of the text inlined into body <content> when raw="0"
     (default is "0", meaning no limit.)
+useContentUrl="0|1".  If set, never inline raw <content> for messages, specify by "url" instead.
+     Only applicable when raw is set.  Ignored when raw is unset.
+     (Default is unset - meaning inline content unless it is too big, in which case the "url" method will be used)
 html="1" to return defanged HTML content by default.
     (default is 0.)
 neuter="1" to "neuter" <IMG> tags returned in HTML content; this involves switching
