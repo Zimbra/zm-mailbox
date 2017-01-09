@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,7 +40,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.session.PendingRemoteModifications;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetRequest;
@@ -49,12 +49,13 @@ import com.zimbra.soap.admin.message.AdminWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetResponse;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.type.AccountWithModifications;
+import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.WaitSetAddSpec;
 
 public class ImapServerListener {
     private final String server;
     private volatile String wsID = null;
-    private final ConcurrentHashMap<String, ConcurrentHashMap<Integer, List<ImapRemoteSession>>> sessionMap = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, List<ImapRemoteSession>>>();
+    private final ConcurrentHashMap<String /* account ID */, ConcurrentHashMap<Integer /* folder ID */, List<ImapRemoteSession>>> sessionMap = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, List<ImapRemoteSession>>>();
     private final ConcurrentMap<String, Integer> lastSequence = new ConcurrentHashMap<String, Integer>();
     private final SoapProvisioning soapProv = new SoapProvisioning();
     private Future<HttpResponse> pendingRequest;
@@ -86,6 +87,7 @@ public class ImapServerListener {
 
     public void addListener(ImapRemoteSession listener) throws ServiceException {
         String accountId = listener.getTargetAccountId();
+        boolean alreadyListening = sessionMap.containsKey(accountId);
         sessionMap.putIfAbsent(accountId, new ConcurrentHashMap<Integer, List<ImapRemoteSession>>());
         Integer folderId = listener.getFolderId();
         ConcurrentHashMap<Integer, List<ImapRemoteSession>> foldersToSessions = sessionMap.get(accountId);
@@ -94,7 +96,7 @@ public class ImapServerListener {
         if(!sessions.contains(listener)) {
             sessions.add(listener);
         }
-        initWaitSet(listener.getTargetAccountId(), foldersToSessions.keySet());
+        initWaitSet(listener.getTargetAccountId(), alreadyListening);
     }
 
     public void removeListener(ImapRemoteSession listener) throws ServiceException {
@@ -115,12 +117,10 @@ public class ImapServerListener {
                         if(sessionMap.isEmpty()) {
                             deleteWaitSet();
                         }
-                    } else {
-                        //no more sessions registered for this folder, but other sessions are registered for other folders of this account
-                        if(wsID != null) {
-                            initWaitSet(listener.getTargetAccountId(), foldersToSessions.keySet());
-                        }
-                    }
+                    } 
+                }
+                if(wsID != null) {
+                    initWaitSet(listener.getTargetAccountId(), true);
                 }
             }
         }
@@ -147,14 +147,10 @@ public class ImapServerListener {
         return Collections.emptyList();
     }
 
-    private void initWaitSet(String accountId, KeySetView<Integer, List<ImapRemoteSession>> keySetView) throws ServiceException {
+    private void initWaitSet(String accountId, boolean alreadyListening) throws ServiceException {
         synchronized(soapProv) {
-            if(wsID == null) {
+            if(wsID == null && this.sessionMap.containsKey(accountId)) {
                 AdminCreateWaitSetRequest req = new AdminCreateWaitSetRequest("all", false);
-                WaitSetAddSpec add = new WaitSetAddSpec();
-                add.setId(accountId);
-                add.setFolderInterests(keySetView);
-                req.addAccount(add);
                 checkAuth();
                 AdminCreateWaitSetResponse resp;
                 resp = soapProv.invokeJaxbAsAdminWithRetry(req, server);
@@ -163,15 +159,30 @@ public class ImapServerListener {
                 }
                 wsID = resp.getWaitSetId();
                 lastSequence.put(wsID, resp.getSequence());
+            } else {
+                cancelPendingRequest();
             }
             ZimbraLog.imap.debug("Current waitset ID is %s", wsID);
             //send asynchronous WaitSetRequest
             AdminWaitSetRequest waitSetReq = new AdminWaitSetRequest(wsID, Integer.toString(lastSequence.get(wsID)));
-            WaitSetAddSpec update = new WaitSetAddSpec();
-            update.setId(accountId);
-            update.setFolderInterests(keySetView);
-            waitSetReq.addUpdateAccount(update);
-            cancelPendingRequest();
+            waitSetReq.setBlock(true);
+            waitSetReq.setExpand(true);
+            if(!this.sessionMap.containsKey(accountId) || this.sessionMap.get(accountId).isEmpty()) {
+                waitSetReq.addRemoveAccount(new Id(accountId));
+            } else {
+                WaitSetAddSpec updateOrAdd = new WaitSetAddSpec();
+                updateOrAdd.setId(accountId);
+                Enumeration<Integer> folderIDs = this.sessionMap.get(accountId).keys();
+                while(folderIDs.hasMoreElements()) {
+                    updateOrAdd.addFolderInterest(folderIDs.nextElement());    
+                }
+                if(alreadyListening) {
+                    waitSetReq.addUpdateAccount(updateOrAdd);
+                } else {
+                    waitSetReq.addAddAccount(updateOrAdd);
+                }    
+            }
+
             pendingRequest = soapProv.invokeJaxbAsync(waitSetReq, server, cb);
         }
     }
@@ -199,6 +210,8 @@ public class ImapServerListener {
         if(wsID != null) {
             //send asynchronous WaitSetRequest
             AdminWaitSetRequest waitSetReq = new AdminWaitSetRequest(wsID, Integer.toString(lastSequence.get(wsID)));
+            waitSetReq.setBlock(true);
+            waitSetReq.setExpand(true);
             try {
                 checkAuth();
                 synchronized(soapProv) {
