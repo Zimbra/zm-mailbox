@@ -136,6 +136,10 @@ public class WaitSetSession extends Session {
         }
     }
 
+    public Set<Integer> getFolderInterest() {
+        return folderInterest;
+    }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
@@ -147,5 +151,4 @@ public class WaitSetSession extends Session {
                 .add("hashCode()", hashCode())
                 .toString();
     }
-
 }
