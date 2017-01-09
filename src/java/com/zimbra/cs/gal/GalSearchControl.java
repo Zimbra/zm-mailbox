@@ -545,8 +545,10 @@ public class GalSearchControl {
             throw ServiceException.FAILURE("no gal datasource with sync token found", null);
         }
 
+        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, mParams.getLimit());
+
         List<Integer> deleted = null;
-        if (changeId > 0) {
+        if (callback.getResponse() != null && !callback.getResponse().getAttributeBool(MailConstants.A_QUERY_MORE) && changeId > 0) {
             try {
                 deleted = mbox.getTombstones(changeId).getAllIds();
             } catch (MailServiceException e) {
@@ -557,8 +559,6 @@ public class GalSearchControl {
                 }
             }
         }
-
-        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, mParams.getLimit());
 
         if (deleted != null) {
             for (int itemId : deleted) {
