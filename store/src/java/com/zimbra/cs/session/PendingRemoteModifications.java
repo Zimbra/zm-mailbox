@@ -30,18 +30,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
-<<<<<<< bcb2f4689d53e51a12856193c1de06a0230aae5e
-import com.zimbra.soap.mail.type.ItemSpec;
-import com.zimbra.soap.mail.type.PendingFolderModifications;
-=======
 import com.zimbra.soap.mail.type.CreateItemNotification;
 import com.zimbra.soap.mail.type.DeleteItemNotification;
 import com.zimbra.soap.mail.type.ModifyNotification;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
 import com.zimbra.soap.mail.type.ModifyNotification.RenameFolderNotification;
-import com.zimbra.soap.mail.type.PendingAccountModifications;
->>>>>>> more work on PendingRemoteModifications::fromSOAP
+import com.zimbra.soap.mail.type.PendingFolderModifications;
 
 public final class PendingRemoteModifications extends PendingModifications<ZBaseItem> {
 
