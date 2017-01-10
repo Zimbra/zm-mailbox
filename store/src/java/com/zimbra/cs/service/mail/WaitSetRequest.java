@@ -239,7 +239,9 @@ public class WaitSetRequest extends MailDocumentHandler {
 
             // Force the client to wait briefly before processing -- this will stop 'bad' clients from polling
             // the server in a very fast loop (they should be using the 'block' mode)
-            try { Thread.sleep(INITIAL_SLEEP_TIME_MILLIS); } catch (InterruptedException ex) {}
+            if(!block && adminAllowed) {
+                try { Thread.sleep(INITIAL_SLEEP_TIME_MILLIS); } catch (InterruptedException ex) {}
+            }
 
             cb.errors.addAll(cb.ws.removeAccounts(remove));
             synchronized(cb.ws) { // bug 28190: always grab the WS lock before the CB lock.
