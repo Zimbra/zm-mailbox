@@ -157,6 +157,7 @@ public class TestImapServerListener {
         remoteListener.removeListener(session);
     }
 
+    //TODO: this is failing until WaitSetResponse can process modifications
     @Test
     public void testNotifyNewFolder() throws Exception {
         Assume.assumeNotNull(remoteServer);
@@ -183,7 +184,32 @@ public class TestImapServerListener {
         remoteListener.removeListener(session);
     }
 
-    //TODO: this test will be failing until AdminWaitSet supports folder subscription
+    //TODO: this is failing until WaitSetResponse can process deletes 
+    @Test
+    public void testNotifyDeleteItemFromInbox() throws Exception {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+        ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotify - init message", Integer.toString(Mailbox.ID_FOLDER_INBOX));
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+        ImapPath path = new ImapPath("INBOX", creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
+        String subject = "TestImapServerListener - testNotify - trigger message";
+        TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
+        ZMessage msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox subject:\"%s\"", subject));
+        remoteListener.addListener(session);
+        Thread.sleep(5000);
+        mboxStore.deleteMessage(msg.getId());
+        Thread.sleep(5000);
+        assertTrue("Expected session to be triggered", session.wasTriggered());
+        remoteListener.removeListener(session);
+    }
+
     @Test
     public void testNotifyWrongFolder() throws Exception {
         Assume.assumeNotNull(remoteServer);
@@ -320,7 +346,7 @@ public class TestImapServerListener {
         assertEquals(remoteListener.getWSId(), wsInfo.getWaitSetId());
         List<SessionForWaitSet> sessions = wsInfo.getSessions();
         assertNotNull(sessions);
-        assertEquals(1, sessions.size());
+        assertEquals("expected to find 1 session after adding a listener for INBOX", 1, sessions.size());
         SessionForWaitSet s = sessions.get(0);
         Set<Integer> folders = s.getWaitSetSession().getFolderInterestsAsSet();
         assertNotNull("folder interests cannot be NULL", folders);
@@ -345,7 +371,7 @@ public class TestImapServerListener {
         assertEquals(remoteListener.getWSId(), wsInfo.getWaitSetId());
         sessions = wsInfo.getSessions();
         assertNotNull(sessions);
-        assertEquals(1, sessions.size());
+        assertEquals("expected to find 1 session after adding a listener for DRAFTS", 1, sessions.size());
         s = sessions.get(0);
         folders = s.getWaitSetSession().getFolderInterestsAsSet();
         assertNotNull("folder interests cannot be NULL", folders);
@@ -366,7 +392,7 @@ public class TestImapServerListener {
         assertEquals(remoteListener.getWSId(), wsInfo.getWaitSetId());
         sessions = wsInfo.getSessions();
         assertNotNull(sessions);
-        assertEquals(1, sessions.size());
+        assertEquals("expected to find 1 session after removing listener for inbox", 1, sessions.size());
         s = sessions.get(0);
         folders = s.getWaitSetSession().getFolderInterestsAsSet();
         assertNotNull("folder interests cannot be NULL", folders);
