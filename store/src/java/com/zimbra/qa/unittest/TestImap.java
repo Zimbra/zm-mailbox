@@ -26,6 +26,9 @@ import java.sql.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
@@ -52,7 +55,11 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.imap.ImapCredentials;
+import com.zimbra.cs.imap.ImapHandler;
+import com.zimbra.cs.imap.ImapPath;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.AppendMessage;
 import com.zimbra.cs.mailclient.imap.AppendResult;
@@ -914,7 +921,51 @@ public class TestImap {
         Assert.assertFalse(connection.exists(folderName));
         connection.create(folderName);
         Assert.assertTrue(connection.exists(folderName));
-        
+
+    }
+
+    @Test
+    public void testIdleNotification() throws Exception {
+        ImapConnection connection2 = connect();
+
+        connection.select("INBOX");
+
+        Flags flags = Flags.fromSpec("afs");
+        Date date = new Date(System.currentTimeMillis());
+        Literal msg = message(100000);
+        final AtomicLong exists = new AtomicLong(-1);
+        final AtomicLong recent = new AtomicLong(-1);
+        final CountDownLatch doneSignal = new CountDownLatch(1);
+
+        connection.idle(new ResponseHandler() {
+            @Override
+            public void handleResponse(ImapResponse res) {
+                if (res.getCCode() == CAtom.EXISTS) {
+                    exists.set(res.getNumber());
+                }
+                if (res.getCCode() == CAtom.RECENT) {
+                    recent.set(1);
+                }
+            }
+        });
+        Assert.assertTrue("Connection is not idling when it should be", connection.isIdling());
+
+        try {
+	        AppendResult res = connection2.append("INBOX", flags, date, msg);
+	        Assert.assertNotNull(res);
+
+	        try {
+	            doneSignal.await(5, TimeUnit.SECONDS);
+	        } catch (Exception e) {
+	            Assert.fail("Wait interrupted. ");
+	        }
+
+	        Assert.assertEquals("Connection was not notified of new items", 1, recent.get());
+	        Assert.assertEquals("Connection was not notified of existing items", 1, exists.get());
+
+        } finally {
+            msg.dispose();
+        }
     }
 
     private String url(String mbox, AppendResult res) {
