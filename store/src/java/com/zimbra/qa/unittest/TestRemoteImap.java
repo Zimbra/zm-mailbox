@@ -455,4 +455,17 @@ public class TestRemoteImap {
             msg.dispose();
         }
     }
+
+    public void testMultipleSelect() throws Exception {
+        Assume.assumeTrue(servers.size() > 1);
+        String folderName = "TestRemoteImap-testSelectFolder";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        TestUtil.createFolder(zmbox, folderName);
+        connection = connect(imapServer);
+        connection.login(PASS);
+        for (int i=0; i<3; i++) {
+            MailboxInfo info = connection.select(folderName);
+            assertNotNull(info);
+        }
+    }
 }
