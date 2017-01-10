@@ -11,8 +11,11 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -148,11 +151,15 @@ public class TestImapServerListener {
         ImapFolder i4folder = new ImapFolder(path, params, handler);
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(session);
-        Thread.sleep(5000);
+        session.doneSignal = new CountDownLatch(1);
         String subject = "TestImapServerListener - testNotify - trigger message";
         TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
         TestUtil.waitForMessages(mboxStore, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
-        Thread.sleep(5000);
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 1), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
         assertTrue("Expected session to be triggered", session.wasTriggered());
         remoteListener.removeListener(session);
     }
@@ -173,13 +180,17 @@ public class TestImapServerListener {
         ImapFolder i4folder = new ImapFolder(path, params, handler);
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(session);
-        Thread.sleep(5000);
+        session.doneSignal = new CountDownLatch(1);
         String subject = "TestImapServerListener - testNotifyNewFolder";
         TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
         ZMessage msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox subject:\"%s\"", subject));
         mboxStore.moveMessage(msg.getId(), folder.getId());
         TestUtil.waitForMessage(mboxStore, String.format("in:%s subject:\"%s\"", folder.getName(), subject));
-        Thread.sleep(5000);
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 1), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
         assertTrue("Expected session to be triggered", session.wasTriggered());
         remoteListener.removeListener(session);
     }
@@ -203,9 +214,13 @@ public class TestImapServerListener {
         TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
         ZMessage msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox subject:\"%s\"", subject));
         remoteListener.addListener(session);
-        Thread.sleep(5000);
+        session.doneSignal = new CountDownLatch(1);
         mboxStore.deleteMessage(msg.getId());
-        Thread.sleep(5000);
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 1), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
         assertTrue("Expected session to be triggered", session.wasTriggered());
         remoteListener.removeListener(session);
     }
@@ -224,9 +239,14 @@ public class TestImapServerListener {
         ImapHandler handler = new MockImapHandler().setCredentials(creds);
         ImapFolder i4folder = new ImapFolder(path, params, handler);
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
+        session.doneSignal = new CountDownLatch(1);
         remoteListener.addListener(session);
         TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotifyWrongFolder", folder.getId());
-        Thread.sleep(5000);
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 1), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
         assertFalse("Expected session to not be triggered", session.wasTriggered());
         remoteListener.removeListener(session);
     }
@@ -444,6 +464,7 @@ public class TestImapServerListener {
     
     class MockImapListener extends ImapRemoteSession {
         private boolean triggered = false;
+        public CountDownLatch doneSignal;
         MockImapListener(ImapMailboxStore store, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
             super(store, i4folder, handler);
             // TODO Auto-generated constructor stub
@@ -459,6 +480,7 @@ public class TestImapServerListener {
 
         public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
             triggered = true;
+            doneSignal.countDown();
         }
     }
 }
