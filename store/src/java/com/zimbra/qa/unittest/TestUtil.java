@@ -17,6 +17,10 @@
 
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -151,19 +155,25 @@ import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.qa.unittest.prov.soap.SoapTest;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.admin.message.GetAccountRequest;
 import com.zimbra.soap.admin.message.GetAccountResponse;
 import com.zimbra.soap.admin.message.GrantRightRequest;
 import com.zimbra.soap.admin.message.GrantRightResponse;
+import com.zimbra.soap.admin.message.QueryWaitSetRequest;
+import com.zimbra.soap.admin.message.QueryWaitSetResponse;
 import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
 import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
+import com.zimbra.soap.admin.type.SessionForWaitSet;
+import com.zimbra.soap.admin.type.WaitSetInfo;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.admin.type.RightModifierInfo;
+import com.zimbra.soap.admin.type.WaitSetSessionInfo;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.TargetBy;
 import com.zimbra.soap.type.TargetType;
@@ -674,6 +684,48 @@ public class TestUtil extends Assert {
         return msgs.get(0);
     }
 
+    public static QueryWaitSetResponse waitForSessions(int numExpectedSessions, int numExpectedFolderInterests, int timeout_millis, String wsID, Server server) throws Exception {
+        QueryWaitSetResponse resp = null;
+        while (timeout_millis > 0) {
+            QueryWaitSetRequest req = new QueryWaitSetRequest(wsID);
+            SoapTransport transport = getAdminSoapTransport(server);
+            resp = JaxbUtil.elementToJaxb(transport.invoke(JaxbUtil.jaxbToElement(req)));
+            List<WaitSetInfo> wsInfoList = resp.getWaitsets();
+            assertFalse("Expecting to find a waitset", wsInfoList.isEmpty());
+            assertEquals("Expecting to find only one waitset", 1, wsInfoList.size());
+            WaitSetInfo wsInfo = wsInfoList.get(0);
+            assertEquals("Found wrong waitset", wsID, wsInfo.getWaitSetId());
+            List<SessionForWaitSet> sessions = wsInfo.getSessions();
+            if(sessions != null && numExpectedSessions > 0) {
+                if(sessions.size() == numExpectedSessions) {
+                    int foundFolderInterests = 0;
+                    for(SessionForWaitSet s : sessions) {
+                        WaitSetSessionInfo sessionInfo = s.getWaitSetSession();
+                        if(sessionInfo != null) {
+                            foundFolderInterests +=s.getWaitSetSession().getFolderInterestsAsSet().size();
+                        }
+                    }
+                    if(foundFolderInterests == numExpectedFolderInterests) {
+                        return resp;
+                    }
+                }
+            } else if((sessions == null || sessions.isEmpty()) && numExpectedSessions == 0) {
+                return resp;
+            }
+            try {
+                if (timeout_millis > 100) {
+                    Thread.sleep(100);
+                    timeout_millis = timeout_millis - 100;
+                } else {
+                    Thread.sleep(timeout_millis);
+                    timeout_millis = 0;
+                }
+            } catch (InterruptedException e) {
+                ZimbraLog.test.debug("sleep got interrupted", e);
+            }
+        }
+        return resp;
+    }
     /**
      * Returns a folder with the given path, or <code>null</code> if the folder doesn't exist.
      */
