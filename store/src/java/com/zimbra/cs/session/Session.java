@@ -174,9 +174,9 @@ public abstract class Session {
                 assert(mbox.lock.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
                 if (isMailboxListener()) {
                     mbox.removeListener(this);
-                    mailbox = null;
                 }
-            } else {
+                mailbox = null;
+            } else if (isMailboxListener()) {
                 throw new UnsupportedOperationException(String.format(
                         "Session unregister only supports Mailbox currently can't handle %s",
                                 mboxStore.getClass().getName()));
