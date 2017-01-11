@@ -67,6 +67,7 @@ public class ServiceException extends Exception {
     public static final String USER_CERT_MISMATCH = "smime.USER_CERT_MISMATCH";
     public static final String DECRYPTION_FAILED = "smime.DECRYPTION_FAILED";
     public static final String OPERATION_DENIED = "smime.OPERATION_DENIED";
+    public static final String FEATURE_SMIME_DISABLED = "smime.FEATURE_SMIME_DISABLED";
 
     protected String mCode;
     private List<Argument> mArgs;
