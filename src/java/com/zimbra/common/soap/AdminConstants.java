@@ -1193,6 +1193,7 @@ public final class AdminConstants {
     public static final String A_NUM_EXECUTED = "numExecuted";
     public static final String A_NUM_SUCCEEDED= "numSucceeded";
     public static final String A_NUM_FAILED = "numFailed";
+    public static final String A_NUM_SKIPPED = "numSkipped";
     public static final String A_NUM_REMAINING = "numRemaining";
     public static final String A_DURATION = "duration";
 
