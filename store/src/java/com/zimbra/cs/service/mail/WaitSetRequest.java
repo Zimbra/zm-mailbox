@@ -239,7 +239,7 @@ public class WaitSetRequest extends MailDocumentHandler {
 
             // Force the client to wait briefly before processing -- this will stop 'bad' clients from polling
             // the server in a very fast loop (they should be using the 'block' mode)
-            if(!block && adminAllowed) {
+            if(!block && !adminAllowed) {
                 try { Thread.sleep(INITIAL_SLEEP_TIME_MILLIS); } catch (InterruptedException ex) {}
             }
 
