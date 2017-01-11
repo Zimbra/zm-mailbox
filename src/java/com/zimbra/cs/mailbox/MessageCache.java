@@ -252,10 +252,10 @@ public class MessageCache {
         if (cnode.smimeAccessInfo.containsKey(mailbox.getId())) {
             try {
                 String errorCode = cnode.smimeAccessInfo.get(mailbox.getId());
-                if (mailbox.getAccount().isFeatureSMIMEEnabled()
-                    && MimeConstants.ERR_FEATURE_SMIME_DISABLED.equals(errorCode)) {
+                boolean isSmimeFeatureEnabled = mailbox.getAccount().isFeatureSMIMEEnabled();
+                if (isSmimeFeatureEnabled && MimeConstants.ERR_FEATURE_SMIME_DISABLED.equals(errorCode)) {
                     return true;
-                } else if (!mailbox.getAccount().isFeatureSMIMEEnabled() && errorCode == null) {
+                } else if (!isSmimeFeatureEnabled && errorCode == null) {
                     return true;
                 }
             } catch (ServiceException e) {
