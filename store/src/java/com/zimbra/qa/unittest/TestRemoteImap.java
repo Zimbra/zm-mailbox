@@ -410,9 +410,10 @@ public class TestRemoteImap {
 
     @Test
     public void testIdleNotification() throws Exception {
-        ImapConnection connection2 = connect(imapServer);
+        ImapConnection connection1 = connect(imapServer);
+        connection1.select("INBOX");
 
-        connection.select("INBOX");
+        ImapConnection connection2 = connect(imapServer);
 
         Flags flags = Flags.fromSpec("afs");
         Date date = new Date(System.currentTimeMillis());
@@ -424,7 +425,7 @@ public class TestRemoteImap {
         final AtomicLong recent = new AtomicLong(-1);
         final CountDownLatch doneSignal = new CountDownLatch(1);
 
-        connection.idle(new ResponseHandler() {
+        connection1.idle(new ResponseHandler() {
             @Override
             public void handleResponse(ImapResponse res) {
                 if (res.getCCode() == CAtom.EXISTS) {
@@ -435,7 +436,7 @@ public class TestRemoteImap {
                 }
             }
         });
-        Assert.assertTrue("Connection is not idling when it should be", connection.isIdling());
+        Assert.assertTrue("Connection is not idling when it should be", connection1.isIdling());
 
         try {
 	        AppendResult res = connection2.append("INBOX", flags, date, msg);
