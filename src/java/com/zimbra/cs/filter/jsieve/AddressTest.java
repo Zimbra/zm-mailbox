@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter.jsieve;
 
 import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
+import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.ALL_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.DOMAIN_TAG;
@@ -93,7 +94,7 @@ public class AddressTest extends Address {
         } else {
             return match(mail,
                          (params.getAddressPart() == null ? ALL_TAG : params.getAddressPart()),
-                         (params.getComparator() == null ? ASCII_NUMERIC_COMPARATOR : params.getComparator()),
+                         (params.getComparator() == null ? ASCII_CASEMAP_COMPARATOR : params.getComparator()),
                          (params.getMatchType() == null ? IS_TAG : params.getMatchType()),
                          params.getHeaderNames(),
                          params.getKeys(), context);
