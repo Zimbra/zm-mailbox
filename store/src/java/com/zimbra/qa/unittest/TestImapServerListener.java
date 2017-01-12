@@ -113,6 +113,7 @@ public class TestImapServerListener {
 
     @After
     public void tearDown() throws Exception {
+        cleanup();
         if(localServer != null) {
             localServer.setReverseProxyUpstreamImapServers(imapServersForLocalHost);
         }
