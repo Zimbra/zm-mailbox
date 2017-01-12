@@ -789,7 +789,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             List<LmtpAddress> recipients = envelope.getRecipients();
             try {
                 String myaddress = mailbox.getAccount().getMail();
-                if (!myaddress.isEmpty()) {
+                if (null != myaddress && !myaddress.isEmpty()) {
                     for (LmtpAddress recipient: recipients) {
                         if (myaddress.toUpperCase().startsWith(recipient.getEmailAddress().toUpperCase())) {
                             result.add(recipient.getEmailAddress());

@@ -399,4 +399,45 @@ public class EnvelopeTest {
             fail("No exception should be thrown");
         }
     }
+
+    @Test
+    public void testCompareEmptyStringWithAsciiNumeric() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :comparator \"i;ascii-numeric\" :all :is \"from\" \"\" {\n"
+                + "  tag \"testCompareEmptyStringWithAsciiNumeric envelope\";"
+                + "}"
+                + "if header :comparator \"i;ascii-numeric\" :is \"from\" \"\" {\n"
+                + "  tag \"testCompareEmptyStringWithAsciiNumeric header\";"
+                + "}";
+
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+
+            String[] tags = msg.getTags();
+            Assert.assertTrue(tags != null);
+            Assert.assertEquals(2, tags.length);
+            Assert.assertEquals("testCompareEmptyStringWithAsciiNumeric envelope", tags[0]);
+            Assert.assertEquals("testCompareEmptyStringWithAsciiNumeric header", tags[1]);
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
 }
