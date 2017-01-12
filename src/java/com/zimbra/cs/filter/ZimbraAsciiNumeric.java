@@ -72,6 +72,22 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
     }
 
     /**
+     * This is a modified version of org.apache.jsieve.comparators.AsciiNumeric.isPositiveInfinity(String)
+     * It accepts an empty string as well.
+     * @param value not null
+     * @return true when the value should represent positive infinity,
+     * false otherwise
+     */
+    private boolean isPositiveInfinity(final String value) {
+        if (null != value && value.isEmpty()) {
+            return true;
+        }
+        final char initialCharacter = value.charAt(0);
+        final boolean result = !isDigit(initialCharacter);
+        return result;
+    }
+
+    /**
      * Is the given character an ASCII digit?
      * @param character character to be tested
      * @return true when the given character is an ASCII digit,
@@ -107,5 +123,29 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
             return (count.compareTo(filterValue) != 0);
         }
         return false;
+    }
+
+    /**
+     * @see org.apache.jsieve.comparators.AsciiNumeric#equals(String, String)
+     */
+    @Override
+    public boolean equals(String string1, String string2) {
+        final boolean result;
+        if (isPositiveInfinity(string1)) {
+            if (isPositiveInfinity(string2)) {
+                result = true;
+            } else {
+                result = false;
+            }
+        } else {
+            if (isPositiveInfinity(string2)) {
+                result = false;
+            } else {
+                final BigInteger integer1 = toInteger(string1);
+                final BigInteger integer2 = toInteger(string2);
+                result = integer1.equals(integer2);
+            }
+        }
+        return result;
     }
 }
