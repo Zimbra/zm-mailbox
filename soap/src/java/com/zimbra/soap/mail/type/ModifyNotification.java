@@ -9,7 +9,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public abstract class ModifyNotification {
+public class ModifyNotification {
 
     /**
      * @zm-api-field-description bitmask of modification change
