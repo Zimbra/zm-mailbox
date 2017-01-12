@@ -64,6 +64,7 @@ import com.zimbra.soap.base.WaitSetReq;
 import com.zimbra.soap.base.WaitSetResp;
 import com.zimbra.soap.mail.message.WaitSetResponse;
 import com.zimbra.soap.mail.type.CreateItemNotification;
+import com.zimbra.soap.mail.type.DeleteItemNotification;
 import com.zimbra.soap.mail.type.ItemSpec;
 import com.zimbra.soap.mail.type.ModifyNotification;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
@@ -305,14 +306,15 @@ public class WaitSetRequest extends MailDocumentHandler {
                     }
                 }
 
-                //TODO: process item modifications
-                /*if(accountMods!= null && accountMods.modified != null) {
+                //TODO: process tag modifications
+                //TODO: process folder renames
+                if(accountMods!= null && accountMods.modified != null) {
                     for(Object mod : accountMods.modified.values()) {
                         if(mod instanceof Change) {
-                            Integer folderId = ((Change)mod).getFolderId();    
                             Object what = ((Change) mod).what;
                             if(what != null && what instanceof BaseItemInfo) {
                                 BaseItemInfo itemInfo = (BaseItemInfo)what;
+                                Integer folderId = itemInfo.getFolderIdInMailbox();
                                 if(folderInterests != null && !folderInterests.contains(folderId)) {
                                     continue;
                                 }
@@ -320,20 +322,22 @@ public class WaitSetRequest extends MailDocumentHandler {
                             }
                         }
                     }
-                }*/
+                }
 
-                //TODO: process deletes
-                /*if(accountMods!= null && accountMods.deleted != null) {
+                if(accountMods!= null && accountMods.deleted != null) {
                     for(Object mod : accountMods.deleted.values()) {
-                        if(mod instanceof MailItem) {
-                            Integer folderId = ((MailItem)mod).getFolderId();
-                            if(folderInterests != null && !folderInterests.contains(folderId)) {
-                                continue;
+                        if(mod instanceof Change) {
+                            Object what = ((Change) mod).what;
+                            if(what != null && what instanceof MailItem.Type) {
+                                Integer folderId = ((Change) mod).getFolderId();
+                                if(folderInterests != null && !folderInterests.contains(folderId)) {
+                                    continue;
+                                }
+                                getFolderMods(folderId, folderMap).addDeletedItem(getDeletedItemSOAP(folderId, what.toString()));
                             }
-                            //getFolderMods(folderId, folderMap).addDeletedItem(getDeletedItemSOAP((MailItem)mod, Integer.toString(folderId)));;
                         }
                     }
-                }*/
+                }
                 if(folderInterests!= null && !folderInterests.isEmpty() && !folderMap.isEmpty()) {
                     //interested only in specific folders
                     if(expand) {
@@ -365,11 +369,9 @@ public class WaitSetRequest extends MailDocumentHandler {
         return new ModifyNotification.ModifyItemNotification(messageInfo, reason);
     }
 
-    /*private static ModifyNotification getDeletedItemSOAP(int itemId) throws ServiceException {
-        String tags = mod.getTags() == null ? null : Joiner.on(",").join(mod.getTags());
-        ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
-        return new ModifyNotification.DeleteItemNotification(itemId);
-    }*/
+    private static DeleteItemNotification getDeletedItemSOAP(int itemId, String type) throws ServiceException {
+        return new DeleteItemNotification(itemId, type);
+    }
     
     private static ItemSpec getItemSpec(MailItem mod, String folderId) {
         ItemSpec item = new ItemSpec();
