@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,8 +40,10 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.client.ZFolder;
@@ -649,6 +652,17 @@ public final class FilterUtil {
 
         // Subject
         // RFC 5436 2.7. (6th item of the 'guidelines')
+        if (StringUtil.isNullOrEmpty(message)) {
+            List<String> subjectList = mailtoParams.get("subject");
+            if (subjectList != null && subjectList.size() > 0) {
+                message = subjectList.get(0);
+            } else {
+                String[] subjects = Mime.getHeaders(mimeMessage, "Subject");
+                if (subjects.length > 0) {
+                    message = subjects[0];
+                }
+            }
+        }
         notification.setSubject(message, getCharset(account, message));
 
         // Body
@@ -670,6 +684,7 @@ public final class FilterUtil {
                   "cc".equalsIgnoreCase(headerName) ||
                   "bcc".equalsIgnoreCase(headerName) ||
                   "from".equalsIgnoreCase(headerName) ||
+                  "subject".equalsIgnoreCase(headerName) ||
                   "auto-submitted".equalsIgnoreCase(headerName) ||
                   "x-zimbra-forwarded".equalsIgnoreCase(headerName) ||
                   "body".equalsIgnoreCase(headerName))) {
