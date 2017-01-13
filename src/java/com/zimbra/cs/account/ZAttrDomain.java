@@ -13101,7 +13101,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraGalSyncSizeLimit, or 30000 if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.2
      */
     @ZAttr(id=2097)
     public int getGalSyncSizeLimit() {
@@ -13115,7 +13115,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraGalSyncSizeLimit new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.2
      */
     @ZAttr(id=2097)
     public void setGalSyncSizeLimit(int zimbraGalSyncSizeLimit) throws com.zimbra.common.service.ServiceException {
@@ -13132,7 +13132,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.2
      */
     @ZAttr(id=2097)
     public Map<String,Object> setGalSyncSizeLimit(int zimbraGalSyncSizeLimit, Map<String,Object> attrs) {
@@ -13147,7 +13147,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.2
      */
     @ZAttr(id=2097)
     public void unsetGalSyncSizeLimit() throws com.zimbra.common.service.ServiceException {
@@ -13163,7 +13163,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.2
      */
     @ZAttr(id=2097)
     public Map<String,Object> unsetGalSyncSizeLimit(Map<String,Object> attrs) {
