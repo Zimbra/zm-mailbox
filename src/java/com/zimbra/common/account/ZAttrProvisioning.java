@@ -7320,7 +7320,7 @@ public class ZAttrProvisioning {
      * Page size control for SyncGalRequest. By default not more than 30000
      * entries will be returned for every SyncGalRequest
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.2
      */
     @ZAttr(id=2097)
     public static final String A_zimbraGalSyncSizeLimit = "zimbraGalSyncSizeLimit";
