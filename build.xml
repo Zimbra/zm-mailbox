@@ -1,4 +1,4 @@
-<project name="Zimbra Store Configuration" default="conf-dist">
+<project name="zm-store-conf" default="conf-dist">
 	<import file="../zm-zcs/ant-global.xml" />
 	<property name="dist.conf.dir" value="build/conf" />
 	<property name="conf.dir" value="conf" />
