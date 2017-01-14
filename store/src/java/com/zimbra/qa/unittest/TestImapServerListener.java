@@ -355,8 +355,7 @@ public class TestImapServerListener {
         remoteListener.removeListener(session);
     }
 
-    //TODO: this is failing until WaitSetResponse can process deletes 
-    @Ignore
+    @Ignore ("this is failing until WaitSetResponse can process deletes")
     public void testNotifyDeleteItemFromInbox() throws Exception {
         Assume.assumeNotNull(remoteServer);
         Assume.assumeNotNull(remoteAccount);
