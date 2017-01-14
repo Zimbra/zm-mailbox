@@ -26,6 +26,8 @@ import com.google.common.collect.Maps;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZTag;
+import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -165,7 +167,6 @@ public class TestImapServerListener {
         remoteListener.removeListener(session);
     }
 
-    //TODO: this is failing until WaitSetResponse can process modifications
     @Test
     public void testNotifyNewFolder() throws Exception {
         Assume.assumeNotNull(remoteServer);
@@ -196,8 +197,166 @@ public class TestImapServerListener {
         remoteListener.removeListener(session);
     }
 
-    //TODO: this is failing until WaitSetResponse can process deletes 
     @Test
+    public void testNotifyReadUnread() throws Exception {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+        ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+        ImapPath path = new ImapPath("INBOX", creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
+        remoteListener.addListener(session);
+        session.doneSignal = new CountDownLatch(1);
+        String subject = "TestImapServerListener - testNotifyReadUnread";
+        TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
+        ZMessage msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox subject:\"%s\"", subject));
+        assertTrue("New message should have UNREAD flag", msg.isUnread());
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        assertTrue("Expected session to be triggered after delivering the test message", session.wasTriggered());
+
+        //mark read
+        session.doneSignal = new CountDownLatch(1);
+        mboxStore.markMessageRead(msg.getId(), true);
+        msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox is:read subject:\"%s\"", subject));
+        assertFalse("New message should NOT have UNREAD flag", msg.isUnread());
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        assertTrue("Expected session to be triggered after marking test message READ", session.wasTriggered());
+
+        //mark unread
+        session.doneSignal = new CountDownLatch(1);
+        mboxStore.markMessageRead(msg.getId(), false);
+        msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox is:unread subject:\"%s\"", subject));
+        assertTrue("New message should have UNREAD flag", msg.isUnread());
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        assertTrue("Expected session to be triggered after marking test message UREAD", session.wasTriggered());
+        remoteListener.removeListener(session);
+    }
+
+    @Test
+    public void testNotifyTagUntag() throws Exception {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+        ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+        ImapPath path = new ImapPath("INBOX", creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
+        remoteListener.addListener(session);
+        session.doneSignal = new CountDownLatch(1);
+        String subject = "TestImapServerListener - testNotifyTagUntag";
+        TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
+        ZMessage msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox subject:\"%s\"", subject));
+        assertTrue("New message should have UNREAD flag", msg.isUnread());
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        assertTrue("Expected session to be triggered after delivering the test message", session.wasTriggered());
+        ZTag tag = mboxStore.createTag("testNotifyTagUntag", Color.blue);
+
+        //tag
+        session.doneSignal = new CountDownLatch(1);
+        mboxStore.tagMessage(msg.getId(), tag.getId(), true);
+        msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox tag:testNotifyTagUntag subject:\"%s\"", subject));
+        assertTrue("Test message should have testNotifyTagUntag tag after tagging", msg.getTagIds().contains(tag.getId()));
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        assertTrue("Expected session to be triggered after tagging test message", session.wasTriggered());
+
+        //untag
+        session.doneSignal = new CountDownLatch(1);
+        mboxStore.tagMessage(msg.getId(), tag.getId(), false);
+        msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox -tag:testNotifyTagUntag subject:\"%s\"", subject));
+        assertFalse("Test message should NOT have testNotifyTagUntag tag after untagging", msg.getTagIds().contains(tag.getId()));
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        assertTrue("Expected session to be triggered after untagging test message", session.wasTriggered());
+        remoteListener.removeListener(session);
+    }
+
+    @Test
+    public void testNotifyRenameTag() throws Exception {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+        ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+        ImapPath path = new ImapPath("INBOX", creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
+        remoteListener.addListener(session);
+        session.doneSignal = new CountDownLatch(1);
+        String subject = "TestImapServerListener - testNotifyRenameTag";
+        TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
+        ZMessage msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox subject:\"%s\"", subject));
+        assertTrue("New message should have UNREAD flag", msg.isUnread());
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        assertTrue("Expected session to be triggered after delivering the test message", session.wasTriggered());
+        ZTag tag = mboxStore.createTag("testNotifyTag", Color.blue);
+
+        //tag
+        session.doneSignal = new CountDownLatch(1);
+        mboxStore.tagMessage(msg.getId(), tag.getId(), true);
+        msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox tag:testNotifyTag subject:\"%s\"", subject));
+        assertTrue("Test message should have testNotifyTag tag after tagging", msg.getTagIds().contains(tag.getId()));
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        assertTrue("Expected session to be triggered after tagging test message", session.wasTriggered());
+
+        //rename tag
+        session.doneSignal = new CountDownLatch(1);
+        mboxStore.renameTag(tag.getId(), "testNotifyRenamedTag");
+        msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox tag:testNotifyRenamedTag subject:\"%s\"", subject));
+        assertTrue("Test message should have testNotifyRenamedTag tag after renaming the tag", msg.getTagIds().contains(tag.getId()));
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        assertTrue("Expected session to be triggered after renaming the tag", session.wasTriggered());
+        remoteListener.removeListener(session);
+    }
+
+    //TODO: this is failing until WaitSetResponse can process deletes 
+    @Ignore
     public void testNotifyDeleteItemFromInbox() throws Exception {
         Assume.assumeNotNull(remoteServer);
         Assume.assumeNotNull(remoteAccount);
