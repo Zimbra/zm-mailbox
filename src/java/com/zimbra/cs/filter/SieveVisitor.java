@@ -70,6 +70,11 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
+    protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
+            Sieve.NumericComparison comparison, boolean isCount, String value) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
     protected void visitMimeHeaderTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
             Sieve.StringComparison comparison, boolean caseSensitive, String value) throws ServiceException {
     }
@@ -77,6 +82,12 @@ public abstract class SieveVisitor {
     @SuppressWarnings("unused")
     protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
             Sieve.AddressPart part, Sieve.StringComparison comparison, boolean caseSensitive, String value)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
+            Sieve.AddressPart part, Sieve.NumericComparison comparison, boolean isCount, String value)
             throws ServiceException {
     }
 
@@ -293,11 +304,14 @@ public abstract class SieveVisitor {
                 accept(node, props);
                 visitRule(node, VisitPhase.end, props);
             } else if ("header".equalsIgnoreCase(nodeName) || "mime_header".equalsIgnoreCase(nodeName)) {
-                Sieve.StringComparison comparison = Sieve.StringComparison.is;
                 boolean caseSensitive = false;
                 List<String> headers;
                 String value;
-
+                Sieve.NumericComparison numericComparison = null;
+                boolean isCount = false;
+                boolean numericComparator = false;
+                Sieve.StringComparison comparison = null;
+                Sieve.Comparator comparator = null;
                 int headersArgIndex = 0;
                 // There can be up to two tag arguments
                 SieveNode firstTagArgNode, secondTagArgNode;
@@ -305,14 +319,31 @@ public abstract class SieveVisitor {
                 if (firstTagArgNode.getValue() instanceof TagArgument) {
                     String argStr = stripLeadingColon(firstTagArgNode.getValue().toString());
                     try {
-                        // assume that the first tag arg is match-type arg
-                        comparison = Sieve.StringComparison.valueOf(argStr);
-                        headersArgIndex ++;
-                        secondTagArgNode = (SieveNode) getNode(node, 0 , 1);
-                        if (secondTagArgNode.getValue() instanceof TagArgument) {
-                            caseSensitive = Sieve.Comparator.ioctet == Sieve.Comparator.fromString(getValue(node, 0, 2, 0, 0));
+                         if ("count".equals(argStr) || "value".equals(argStr)) {
+                            if ("count".equals(argStr)) {
+                                isCount = true;
+                            }
+                            numericComparison = Sieve.NumericComparison.valueOf(getValue(node, 0, 1, 0, 0));
                             headersArgIndex += 2;
+                            secondTagArgNode = (SieveNode) getNode(node, 0 , 2);
+                            if (secondTagArgNode.getValue() instanceof TagArgument) {
+                               comparator = Sieve.Comparator.fromString(getValue(node, 0, 3, 0, 0));
+                               if (Sieve.Comparator.iasciinumeric.equals(comparator)) {
+                                   numericComparator = true;
+                               }
+                               headersArgIndex += 2;
+                            }
+                         } else {
+                            // assume that the first tag arg is match-type arg
+                            comparison = Sieve.StringComparison.valueOf(argStr);
+                            headersArgIndex ++;
+                            secondTagArgNode = (SieveNode) getNode(node, 0 , 1);
+                            if (secondTagArgNode.getValue() instanceof TagArgument) {
+                                caseSensitive = Sieve.Comparator.ioctet == Sieve.Comparator.fromString(getValue(node, 0, 2, 0, 0));
+                                headersArgIndex += 2;
+                            }
                         }
+
                     } catch (IllegalArgumentException e) {
                         // so the first tag arg is not match-type arg, it must be :comparator arg then
                         caseSensitive = Sieve.Comparator.ioctet == Sieve.Comparator.fromString(getValue(node, 0, 1, 0, 0));
@@ -328,11 +359,18 @@ public abstract class SieveVisitor {
 
                 headers = getMultiValue(node, 0, headersArgIndex, 0);
                 value = getValue(node, 0, headersArgIndex + 1, 0, 0);
+                validateComparator(value, isCount, numericComparator, comparator);
 
                 if ("header".equalsIgnoreCase(nodeName)) {
-                    visitHeaderTest(node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
-                    accept(node, props);
-                    visitHeaderTest(node, VisitPhase.end, props, headers, comparison, caseSensitive, value);
+                    if (numericComparison != null) {
+                        visitHeaderTest(node, VisitPhase.begin, props, headers, numericComparison, isCount, value);
+                        accept(node, props);
+                        visitHeaderTest(node, VisitPhase.end, props, headers, numericComparison, isCount, value);
+                    } else {
+                        visitHeaderTest(node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
+                        accept(node, props);
+                        visitHeaderTest(node, VisitPhase.end, props, headers, comparison, caseSensitive, value);
+                    }
                 } else {
                     visitMimeHeaderTest(node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
                     accept(node, props);
@@ -346,13 +384,34 @@ public abstract class SieveVisitor {
                 String value;
 
                 int nextArgIndex = 0;
+                //---
+                boolean isCount = false;
+                boolean numericComparator = false;
+                Sieve.NumericComparison numericComparison = null;
+                Sieve.Comparator comparator = null;
+                SieveNode firstTagArgNode;
+                firstTagArgNode = (SieveNode) getNode(node, 0, 0);
+                if (firstTagArgNode.getValue() instanceof TagArgument) {
+                     String firstArgStr = firstTagArgNode.getValue().toString();
+                     if (":count".equals(firstArgStr) || ":value".equals(firstArgStr)) {
+                        if (":count".equals(firstArgStr)) {
+                             isCount = true;
+                        }
+                        numericComparison = Sieve.NumericComparison.valueOf(getValue(node, 0, 1, 0, 0));
+                        nextArgIndex += 2;
+                     }
+                }
+                //---
                 SieveNode argNode = (SieveNode) getNode(node, 0, nextArgIndex);
                 // There can be up to three tag arguments
                 for (int i = 0; i < 3 && argNode.getValue() instanceof TagArgument; i ++) {
                     TagArgument tagArg = (TagArgument) argNode.getValue();
                     if (tagArg.isComparator()) {
-                        caseSensitive =
-                                Sieve.Comparator.ioctet == Sieve.Comparator.fromString(getValue(node, 0, nextArgIndex + 1, 0, 0));
+                        comparator = Sieve.Comparator.fromString(getValue(node, 0, nextArgIndex + 1, 0, 0));
+                        caseSensitive = Sieve.Comparator.ioctet == comparator;
+                        if (Sieve.Comparator.iasciinumeric.equals(comparator)) {
+                            numericComparator = true;
+                        }
                         nextArgIndex += 2;
                     } else {
                         String argStr = stripLeadingColon(argNode.getValue().toString());
@@ -370,10 +429,17 @@ public abstract class SieveVisitor {
 
                 headers = getMultiValue(node, 0, nextArgIndex, 0);
                 value = getValue(node, 0, nextArgIndex + 1, 0, 0);
+                validateComparator(value, isCount, numericComparator, comparator);
+                if (numericComparison != null) { 
+                    visitAddressTest(node, VisitPhase.begin, props, headers, part, numericComparison, isCount, value);
+                    accept(node, props);
+                    visitAddressTest(node, VisitPhase.end, props, headers, part, numericComparison, isCount, value);
+                } else {
+                    visitAddressTest(node, VisitPhase.begin, props, headers, part, comparison, caseSensitive, value);
+                    accept(node, props);
+                    visitAddressTest(node, VisitPhase.end, props, headers, part, comparison, caseSensitive, value);
+                }
 
-                visitAddressTest(node, VisitPhase.begin, props, headers, part, comparison, caseSensitive, value);
-                accept(node, props);
-                visitAddressTest(node, VisitPhase.end, props, headers, part, comparison, caseSensitive, value);
             } else if ("exists".equalsIgnoreCase(nodeName)) {
                 String header = getValue(node, 0, 0, 0, 0);
 
@@ -770,6 +836,23 @@ public abstract class SieveVisitor {
             // If the first parameter is tag (:xxx), the children object of
             // the (current) node is null
             return getNode(node, 0, 0).jjtGetNumChildren() == 0 ? true : false;
+        }
+    }
+
+    private void validateComparator(String value, boolean isCount, boolean numericComparator, Sieve.Comparator comparator) throws ServiceException {
+        boolean numeric = true;
+        try {
+            Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            if (isCount) {
+                throw ServiceException.PARSE_ERROR("Invalid Value: " + value, e);
+            } else {
+                numeric = false;
+            }
+        }
+
+        if ((numeric && !numericComparator) || (!numeric && numericComparator)) {
+            throw ServiceException.PARSE_ERROR("Invalid Comparator: " + comparator.toString(), null);
         }
     }
 }
