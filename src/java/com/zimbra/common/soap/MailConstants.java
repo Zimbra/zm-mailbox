@@ -627,6 +627,8 @@ public final class MailConstants {
 
     public static final String A_ADDRESS_PART = "part";
     public static final String A_STRING_COMPARISON = "stringComparison";
+    public static final String A_NUMERIC_COMPARISON = "numericComparison";
+    public static final String A_COUNT_COMPARISON = "countComparison";
     public static final String A_CASE_SENSITIVE = "caseSensitive";
     public static final String A_NUMBER_COMPARISON = "numberComparison";
     public static final String A_DATE_COMPARISON = "dateComparison";
