@@ -384,7 +384,6 @@ public abstract class SieveVisitor {
                 String value;
 
                 int nextArgIndex = 0;
-                //---
                 boolean isCount = false;
                 boolean numericComparator = false;
                 Sieve.NumericComparison numericComparison = null;
@@ -401,7 +400,6 @@ public abstract class SieveVisitor {
                         nextArgIndex += 2;
                      }
                 }
-                //---
                 SieveNode argNode = (SieveNode) getNode(node, 0, nextArgIndex);
                 // There can be up to three tag arguments
                 for (int i = 0; i < 3 && argNode.getValue() instanceof TagArgument; i ++) {
