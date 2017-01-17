@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -327,11 +329,26 @@ public final class SoapToSieve {
 
     private static String toSieve(FilterTest.HeaderTest test) throws ServiceException {
         String header = getSieveHeaderList(test.getHeaders());
-        Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
-        if (Strings.isNullOrEmpty(test.getValue())) {
+        String val = test.getValue();
+        if (Strings.isNullOrEmpty(val)) {
             throw ServiceException.INVALID_REQUEST("missing required attribute: value" , null);
         }
-        return toSieve("header", header, comp, test.isCaseSensitive(), test.getValue());
+
+        if (StringUtils.isNotEmpty(test.getStringComparison())) {
+            Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
+            return toSieve("header", header, comp, test.isCaseSensitive(), test.getValue());
+        }
+
+        if (StringUtils.isNotEmpty(test.getValueComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
+            return toSieve("header", header, comp, test.getValue(), false, null);
+        }
+
+        if (StringUtils.isNotEmpty(test.getCountComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
+            return toSieve("header", header, comp, test.getValue(), true, null);
+        }
+        return null;
     }
 
     private static String toSieve(FilterTest.MimeHeaderTest test) throws ServiceException {
@@ -348,19 +365,61 @@ public final class SoapToSieve {
         return String.format(format, name, comp, header, FilterUtil.escape(value));
     }
 
+    private static String toSieve(String name, String header, Sieve.ValueComparison comp, String value, boolean isCount, Sieve.AddressPart part) throws ServiceException {
+        String countOrVal = isCount ? ":count" : ":value";
+        boolean numeric = true;
+        try {
+            Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            if (isCount) {
+                throw ServiceException.INVALID_REQUEST("Invalid Value: " + value, e);
+            } else {
+                numeric = false;
+            }
+        }
+        //for :count, iasciinumeric comparator will be used always.
+        //for :value, iasciinumeric comparator will be used if value is numeric else
+        //iasciicasemap will be used.
+        Sieve.Comparator comparator= Sieve.Comparator.iasciinumeric;
+        if (!numeric) {
+            comparator= Sieve.Comparator.iasciicasemap;
+        }
+        if (part == null) {
+            String format = "%s " + countOrVal + " \"%s\" :comparator \"" + comparator + "\" %s \"%s\"";
+            return String.format(format, name, comp, header, FilterUtil.escape(value));
+        } else {
+            String format = "%s " + countOrVal + " \"%s\" :%s :comparator \"" + comparator + "\" %s \"%s\"";
+            return String.format(format, name, comp, part, header, FilterUtil.escape(value));
+        }
+
+    }
+
     private static String toSieve(FilterTest.AddressTest test) throws ServiceException {
         String header = getSieveHeaderList(test.getHeader());
         Sieve.AddressPart part = Sieve.AddressPart.fromString(test.getPart());
         if (part == null) {
             part = Sieve.AddressPart.all;
         }
-        Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
-        String value = test.getValue();
-        checkValue(comp, value);
-        String valueStr = null == value ? "" : FilterUtil.escape(value);
-        return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comp,
-                test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
-                        header, valueStr);
+        if (StringUtils.isNotEmpty(test.getStringComparison())) {
+            Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
+            String value = test.getValue();
+            checkValue(comp, value);
+            String valueStr = null == value ? "" : FilterUtil.escape(value);
+            return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comp,
+                    test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
+                            header, valueStr);
+        }
+
+        if (StringUtils.isNotEmpty(test.getValueComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
+            return toSieve("address", header, comp, test.getValue(), false, part);
+        }
+
+        if (StringUtils.isNotEmpty(test.getCountComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
+            return toSieve("address", header, comp, test.getValue(), true, part);
+        }
+        return null;
     }
 
     private static void checkValue(Sieve.StringComparison comparison, String value) throws ServiceException {
