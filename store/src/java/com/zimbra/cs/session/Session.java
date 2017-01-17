@@ -175,12 +175,12 @@ public abstract class Session {
                 if (isMailboxListener()) {
                     mbox.removeListener(this);
                 }
-                mailbox = null;
             } else if (isMailboxListener()) {
                 throw new UnsupportedOperationException(String.format(
                         "Session unregister only supports Mailbox currently can't handle %s",
                                 mboxStore.getClass().getName()));
             }
+            mailbox = null;
         }
 
         removeFromSessionCache();
