@@ -155,18 +155,18 @@ public final class Sieve {
         }
     }
 
-    public enum NumericComparison {
+    public enum ValueComparison {
         gt, ge, lt, le, eq, ne;
 
-        public static NumericComparison fromString(String value) throws ServiceException {
+        public static ValueComparison fromString(String value) throws ServiceException {
             if (value == null) {
                 return null;
             }
             try {
-                return NumericComparison.valueOf(value.toLowerCase());
+                return ValueComparison.valueOf(value.toLowerCase());
             } catch (IllegalArgumentException e) {
                 throw ServiceException.PARSE_ERROR(
-                    "Invalid value: "+ value +", valid values: " + Arrays.asList(NumericComparison.values()), e);
+                    "Invalid value: "+ value +", valid values: " + Arrays.asList(ValueComparison.values()), e);
             }
         }
     }
