@@ -414,7 +414,11 @@ public class LdapGalSearch {
                         // DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT
                         // Whenever we've got a new token, it will be returned in the
                         // normalized format.
-                        result.setToken(LdapDateUtil.toGeneralizedTime(new Date(ts)));
+                        String deltaToken = LdapDateUtil.toGeneralizedTime(new Date(ts));
+                        result.setToken(deltaToken);
+                        if (GalOp.sync == op) {
+                            result.setLdapTimeStamp(deltaToken);
+                        }
                     }
                     /*
                      * in the rare case when an LDAP implementation does not conform to generalized time and
