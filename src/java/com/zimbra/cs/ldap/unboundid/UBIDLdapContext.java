@@ -647,7 +647,7 @@ public class UBIDLdapContext extends ZLdapContext {
                     }
                 }
 
-                if (searchGalResult != null) {
+                if (searchGalResult != null && (GalOp.sync == searchOptions.getGalOp())) {
                     if(limit == 0 && (((cookie != null) && (cookie.getValueLength() > 0)) || hasMore)) {
                         searchGalResult.setHadMore(true);
                         searchGalResult.setLdapTimeStamp(newToken);
