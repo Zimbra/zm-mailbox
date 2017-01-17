@@ -97,7 +97,8 @@ public final class Sieve {
 
     public enum Comparator {
         ioctet("i;octet"),
-        iasciicasemap("i;ascii-casemap");
+        iasciicasemap("i;ascii-casemap"),
+        iasciinumeric("i;ascii-numeric");
 
         private String value;
 
@@ -150,6 +151,22 @@ public final class Sieve {
             } catch (IllegalArgumentException e) {
                 throw ServiceException.PARSE_ERROR(
                     "Invalid value: "+ value +", valid values: " + Arrays.asList(StringComparison.values()), e);
+            }
+        }
+    }
+
+    public enum ValueComparison {
+        gt, ge, lt, le, eq, ne;
+
+        public static ValueComparison fromString(String value) throws ServiceException {
+            if (value == null) {
+                return null;
+            }
+            try {
+                return ValueComparison.valueOf(value.toLowerCase());
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.PARSE_ERROR(
+                    "Invalid value: "+ value +", valid values: " + Arrays.asList(ValueComparison.values()), e);
             }
         }
     }
