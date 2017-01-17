@@ -207,14 +207,14 @@ public final class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props,
-            List<String> headers, Sieve.NumericComparison comparison, boolean isCount, String value) {
+            List<String> headers, Sieve.ValueComparison comparison, boolean isCount, String value) {
         if (phase == VisitPhase.begin) {
             FilterTest.HeaderTest test = addTest(new FilterTest.HeaderTest(), props);
             test.setHeaders(Joiner.on(',').join(headers));
             if (isCount) {
                test.setCountComparison(comparison.toString());
             } else {
-               test.setNumericComparison(comparison.toString());
+               test.setValueComparison(comparison.toString());
             }
             test.setValue(value);
         }
@@ -236,7 +236,7 @@ public final class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
-            Sieve.AddressPart part, Sieve.NumericComparison comparison, boolean isCount, String value) {
+            Sieve.AddressPart part, Sieve.ValueComparison comparison, boolean isCount, String value) {
         if (phase == VisitPhase.begin) {
             FilterTest.AddressTest test = addTest(new FilterTest.AddressTest(), props);
             test.setHeader(Joiner.on(',').join(headers));
@@ -244,7 +244,7 @@ public final class SieveToSoap extends SieveVisitor {
             if (isCount) {
                 test.setCountComparison(comparison.toString());
              } else {
-                test.setNumericComparison(comparison.toString());
+                test.setValueComparison(comparison.toString());
              }
             test.setValue(value);
         }

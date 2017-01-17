@@ -71,7 +71,7 @@ public abstract class SieveVisitor {
 
     @SuppressWarnings("unused")
     protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
-            Sieve.NumericComparison comparison, boolean isCount, String value) throws ServiceException {
+            Sieve.ValueComparison comparison, boolean isCount, String value) throws ServiceException {
     }
 
     @SuppressWarnings("unused")
@@ -87,7 +87,7 @@ public abstract class SieveVisitor {
 
     @SuppressWarnings("unused")
     protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
-            Sieve.AddressPart part, Sieve.NumericComparison comparison, boolean isCount, String value)
+            Sieve.AddressPart part, Sieve.ValueComparison comparison, boolean isCount, String value)
             throws ServiceException {
     }
 
@@ -307,9 +307,9 @@ public abstract class SieveVisitor {
                 boolean caseSensitive = false;
                 List<String> headers;
                 String value;
-                Sieve.NumericComparison numericComparison = null;
+                Sieve.ValueComparison valueComparison = null;
                 boolean isCount = false;
-                boolean numericComparator = false;
+                boolean valueComparator = false;
                 Sieve.StringComparison comparison = null;
                 Sieve.Comparator comparator = null;
                 int headersArgIndex = 0;
@@ -323,13 +323,13 @@ public abstract class SieveVisitor {
                             if ("count".equals(argStr)) {
                                 isCount = true;
                             }
-                            numericComparison = Sieve.NumericComparison.valueOf(getValue(node, 0, 1, 0, 0));
+                            valueComparison = Sieve.ValueComparison.valueOf(getValue(node, 0, 1, 0, 0));
                             headersArgIndex += 2;
                             secondTagArgNode = (SieveNode) getNode(node, 0 , 2);
                             if (secondTagArgNode.getValue() instanceof TagArgument) {
                                comparator = Sieve.Comparator.fromString(getValue(node, 0, 3, 0, 0));
                                if (Sieve.Comparator.iasciinumeric.equals(comparator)) {
-                                   numericComparator = true;
+                                   valueComparator = true;
                                }
                                headersArgIndex += 2;
                             }
@@ -359,13 +359,13 @@ public abstract class SieveVisitor {
 
                 headers = getMultiValue(node, 0, headersArgIndex, 0);
                 value = getValue(node, 0, headersArgIndex + 1, 0, 0);
-                validateComparator(value, isCount, numericComparator, comparator);
+                validateComparator(value, isCount, valueComparator, comparator);
 
                 if ("header".equalsIgnoreCase(nodeName)) {
-                    if (numericComparison != null) {
-                        visitHeaderTest(node, VisitPhase.begin, props, headers, numericComparison, isCount, value);
+                    if (valueComparison != null) {
+                        visitHeaderTest(node, VisitPhase.begin, props, headers, valueComparison, isCount, value);
                         accept(node, props);
-                        visitHeaderTest(node, VisitPhase.end, props, headers, numericComparison, isCount, value);
+                        visitHeaderTest(node, VisitPhase.end, props, headers, valueComparison, isCount, value);
                     } else {
                         visitHeaderTest(node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
                         accept(node, props);
@@ -385,8 +385,8 @@ public abstract class SieveVisitor {
 
                 int nextArgIndex = 0;
                 boolean isCount = false;
-                boolean numericComparator = false;
-                Sieve.NumericComparison numericComparison = null;
+                boolean valueComparator = false;
+                Sieve.ValueComparison valueComparison = null;
                 Sieve.Comparator comparator = null;
                 SieveNode firstTagArgNode;
                 firstTagArgNode = (SieveNode) getNode(node, 0, 0);
@@ -396,7 +396,7 @@ public abstract class SieveVisitor {
                         if (":count".equals(firstArgStr)) {
                              isCount = true;
                         }
-                        numericComparison = Sieve.NumericComparison.valueOf(getValue(node, 0, 1, 0, 0));
+                        valueComparison = Sieve.ValueComparison.valueOf(getValue(node, 0, 1, 0, 0));
                         nextArgIndex += 2;
                      }
                 }
@@ -408,7 +408,7 @@ public abstract class SieveVisitor {
                         comparator = Sieve.Comparator.fromString(getValue(node, 0, nextArgIndex + 1, 0, 0));
                         caseSensitive = Sieve.Comparator.ioctet == comparator;
                         if (Sieve.Comparator.iasciinumeric.equals(comparator)) {
-                            numericComparator = true;
+                            valueComparator = true;
                         }
                         nextArgIndex += 2;
                     } else {
@@ -427,11 +427,11 @@ public abstract class SieveVisitor {
 
                 headers = getMultiValue(node, 0, nextArgIndex, 0);
                 value = getValue(node, 0, nextArgIndex + 1, 0, 0);
-                validateComparator(value, isCount, numericComparator, comparator);
-                if (numericComparison != null) { 
-                    visitAddressTest(node, VisitPhase.begin, props, headers, part, numericComparison, isCount, value);
+                validateComparator(value, isCount, valueComparator, comparator);
+                if (valueComparison != null) { 
+                    visitAddressTest(node, VisitPhase.begin, props, headers, part, valueComparison, isCount, value);
                     accept(node, props);
-                    visitAddressTest(node, VisitPhase.end, props, headers, part, numericComparison, isCount, value);
+                    visitAddressTest(node, VisitPhase.end, props, headers, part, valueComparison, isCount, value);
                 } else {
                     visitAddressTest(node, VisitPhase.begin, props, headers, part, comparison, caseSensitive, value);
                     accept(node, props);

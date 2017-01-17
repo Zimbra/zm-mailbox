@@ -339,13 +339,13 @@ public final class SoapToSieve {
             return toSieve("header", header, comp, test.isCaseSensitive(), test.getValue());
         }
 
-        if (StringUtils.isNotEmpty(test.getNumericComparison())) {
-            Sieve.NumericComparison comp = Sieve.NumericComparison.fromString(test.getNumericComparison());
+        if (StringUtils.isNotEmpty(test.getValueComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
             return toSieve("header", header, comp, test.getValue(), false, null);
         }
 
         if (StringUtils.isNotEmpty(test.getCountComparison())) {
-            Sieve.NumericComparison comp = Sieve.NumericComparison.fromString(test.getCountComparison());
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
             return toSieve("header", header, comp, test.getValue(), true, null);
         }
         return null;
@@ -365,7 +365,7 @@ public final class SoapToSieve {
         return String.format(format, name, comp, header, FilterUtil.escape(value));
     }
 
-    private static String toSieve(String name, String header, Sieve.NumericComparison comp, String value, boolean isCount, Sieve.AddressPart part) throws ServiceException {
+    private static String toSieve(String name, String header, Sieve.ValueComparison comp, String value, boolean isCount, Sieve.AddressPart part) throws ServiceException {
         String countOrVal = isCount ? ":count" : ":value";
         boolean numeric = true;
         try {
@@ -410,13 +410,13 @@ public final class SoapToSieve {
                             header, valueStr);
         }
 
-        if (StringUtils.isNotEmpty(test.getNumericComparison())) {
-            Sieve.NumericComparison comp = Sieve.NumericComparison.fromString(test.getNumericComparison());
+        if (StringUtils.isNotEmpty(test.getValueComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
             return toSieve("address", header, comp, test.getValue(), false, part);
         }
 
         if (StringUtils.isNotEmpty(test.getCountComparison())) {
-            Sieve.NumericComparison comp = Sieve.NumericComparison.fromString(test.getCountComparison());
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
             return toSieve("address", header, comp, test.getValue(), true, part);
         }
         return null;
