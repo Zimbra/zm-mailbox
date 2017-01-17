@@ -399,40 +399,7 @@ public class LdapGalSearch {
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to search gal", e);
         } finally {
-            if (GalOp.sync == op) {
-               if (!result.getHadMore()) {
-                   //full sync completed
-                   boolean gotNewToken = true;
-                   String newToken = result.getToken();
-                   if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapConstants.EARLIEST_SYNC_TOKEN))
-                       gotNewToken = false;
-
-                   if (gotNewToken) {
-                       Date parsedToken = LdapDateUtil.parseGeneralizedTime(newToken);
-                       if (parsedToken != null) {
-                           long ts = parsedToken.getTime();
-                           ts += 1000;
-
-
-                           // Note, this will "normalize" the token to our standard format
-                           // DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT
-                           // Whenever we've got a new token, it will be returned in the
-                           // normalized format.
-                           String deltaToken = LdapDateUtil.toGeneralizedTime(new Date(ts));
-                           result.setToken(deltaToken);
-                           result.setLdapTimeStamp(deltaToken);
-                       }
-                       /*
-                        * in the rare case when an LDAP implementation does not conform to generalized time and
-                        * we cannot parser the token, just leave it alone.
-                        */
-                   } else {
-                       //no records found
-                       result.setToken(newToken);
-                       result.setLdapTimeStamp(newToken);
-                   }
-               }
-            } else {
+            if (GalOp.sync != op || ((GalOp.sync == op) && !result.getHadMore())) {
                 boolean gotNewToken = true;
                 String newToken = result.getToken();
                 if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapConstants.EARLIEST_SYNC_TOKEN))
@@ -443,10 +410,24 @@ public class LdapGalSearch {
                     if (parsedToken != null) {
                         long ts = parsedToken.getTime();
                         ts += 1000;
+                        // Note, this will "normalize" the token to our standard format
+                        // DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT
+                        // Whenever we've got a new token, it will be returned in the
+                        // normalized format.
                         result.setToken(LdapDateUtil.toGeneralizedTime(new Date(ts)));
                     }
+                    /*
+                     * in the rare case when an LDAP implementation does not conform to generalized time and
+                     * we cannot parser the token, just leave it alone.
+                     */
+                } else {
+                    //no records found
+                    if ((GalOp.sync == op) && !result.getHadMore()) {
+                        result.setToken(newToken);
+                        result.setLdapTimeStamp(newToken);
+                    }
                 }
-             }
+            }
         }
     }
 
