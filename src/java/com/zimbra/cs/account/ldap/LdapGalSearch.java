@@ -379,7 +379,6 @@ public class LdapGalSearch {
            maxResults = SearchLdapOptions.SIZE_UNLIMITED;
         }
 
-
         SearhcGalVisitor visitor = new SearhcGalVisitor(zlc, galType, base, rules, result);
 
         SearchLdapOptions searchOpts = new SearchLdapOptions(base,
