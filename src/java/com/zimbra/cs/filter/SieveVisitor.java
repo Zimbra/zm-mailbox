@@ -53,6 +53,10 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
+    protected void visitVariable(Node node, VisitPhase phase, RuleProperties props, String name, String value) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
     protected void visitIfControl(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
     }
 
@@ -648,6 +652,12 @@ public abstract class SieveVisitor {
             visitStopAction(node, VisitPhase.begin, props);
             accept(node, props);
             visitStopAction(node, VisitPhase.end, props);
+        } else if ("set".equalsIgnoreCase(nodeName)) {
+            String name = getValue(node, 0, 0, 0, 0);
+            String value = getValue(node, 0, 1, 0, 0);
+            visitVariable(node, VisitPhase.begin, props, name, value);
+            accept(node, props);
+            visitVariable(node, VisitPhase.end, props, name, value);
         } else {
             accept(node, props);
         }
