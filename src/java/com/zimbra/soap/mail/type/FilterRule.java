@@ -40,8 +40,8 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {"tests", "actions","child"})
-@JsonPropertyOrder({ "name", "active", "tests", "actions","child" })
+@XmlType(propOrder = {"filterVariables", "tests", "actions","child"})
+@JsonPropertyOrder({ "name", "active", "filterVariables", "tests", "actions","child" })
 public final class FilterRule {
 
     /**
@@ -49,14 +49,22 @@ public final class FilterRule {
      * @zm-api-field-description Rule name
      */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
-    private final String name;
+    private String name;
 
     /**
      * @zm-api-field-tag active-flag
      * @zm-api-field-description Active flag.  Set by default.
      */
     @XmlAttribute(name=MailConstants.A_ACTIVE /* active */, required=true)
-    private final ZmBoolean active;
+    private ZmBoolean active;
+
+    /**
+     * @zm-api-field-tag variables
+     * @zm-api-field-description Filter Variables
+     */
+    @ZimbraJsonArrayForWrapper
+    @XmlElement(name=MailConstants.E_FILTER_VARIABLES /* variables */, required=false)
+    private FilterVariables filterVariables;
 
     /**
      * @zm-api-field-description Filter tests
@@ -103,6 +111,7 @@ public final class FilterRule {
         this.name = name;
         this.active = ZmBoolean.fromBool(active);
         this.actions = null;
+        this.filterVariables = new FilterVariables();
     }
 
     public FilterRule(String name, FilterTests tests, boolean active) {
@@ -110,6 +119,15 @@ public final class FilterRule {
         this.tests = tests;
         this.active = ZmBoolean.fromBool(active);
         this.actions = null;
+        this.filterVariables = new FilterVariables();
+    }
+
+    public FilterRule(String name, FilterTests tests, boolean active, FilterVariables filterVariables) {
+        this.name = name;
+        this.tests = tests;
+        this.active = ZmBoolean.fromBool(active);
+        this.actions = null;
+        this.filterVariables = filterVariables;
     }
 
     public static FilterRule createForNameFilterTestsAndActiveSetting(String name, FilterTests tests, boolean active) {
@@ -145,8 +163,16 @@ public final class FilterRule {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public boolean isActive() {
         return ZmBoolean.toBool(active);
+    }
+
+    public void setActive(ZmBoolean active) {
+        this.active = active;
     }
 
     public FilterTests getFilterTests() {
@@ -178,11 +204,26 @@ public final class FilterRule {
         child = nestedRule;
     }
 
+    /**
+     * @param variables
+     */
+    public void setFilterVariables(FilterVariables filterVariables) {
+        this.filterVariables = filterVariables;
+    }
+
+    /**
+     * @return variables
+     */
+    public FilterVariables getFilterVariables() {
+        return this.filterVariables;
+    }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
             .add("name", name)
             .add("active", active)
+            .add("filterVariables", filterVariables)
             .add("tests", tests)
             .add("actions", actions)
             .add("child", child)
