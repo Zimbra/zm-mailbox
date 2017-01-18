@@ -40,6 +40,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.MimeUtility;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 
 import com.google.common.base.Joiner;
@@ -1418,7 +1419,14 @@ public final class ToXML {
 
             MimeMessage mm = null;
             try {
-                mm = msg.getMimeMessage();
+                String requestedAccountId = octxt.getmRequestedAccountId();
+                String authtokenAccountId = octxt.getmAuthTokenAccountId();
+                boolean isDecryptionNotAllowed = StringUtils.isNotEmpty(authtokenAccountId) && !authtokenAccountId.equalsIgnoreCase(requestedAccountId);
+                if (isDecryptionNotAllowed && Mime.isEncrypted(msg.getMimeMessage(false).getContentType())) {
+                    mm = msg.getMimeMessage(false);
+                } else {
+                    mm = msg.getMimeMessage();
+                }
             } catch (MailServiceException e) {
                 if (encodeMissingBlobs && MailServiceException.NO_SUCH_BLOB.equals(e.getCode())) {
                     ZimbraLog.mailbox.error("Unable to get blob while encoding message", e);
