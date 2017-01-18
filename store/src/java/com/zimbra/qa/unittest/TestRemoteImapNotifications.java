@@ -1,6 +1,7 @@
 package com.zimbra.qa.unittest;
 
 import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -100,6 +101,7 @@ public class TestRemoteImapNotifications {
         String folderName = "testNotificationsActiveFolder-folder";
         String subject1 = "testNotificationsActiveFolder-msg1";
         String subject2 = "testNotificationsActiveFolder-msg2";
+
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
         ZFolder folder = TestUtil.createFolder(zmbox, folderName);
         TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
@@ -113,6 +115,9 @@ public class TestRemoteImapNotifications {
 
         TestUtil.addMessage(zmbox, subject2, folder.getId(), null);
         waitForWaitset();
+
+        // TODO: See if sleep can be replaced with something better
+        try { Thread.sleep(3000); } catch (Exception e) {}
 
         mdMap = connection.fetch("1:*", "(FLAGS)");
         assertEquals("Size of map returned by fetch 2", 2, mdMap.size());
@@ -137,11 +142,11 @@ public class TestRemoteImapNotifications {
 
     @Test
     public void testNotificationsCachedFolder() throws IOException, ServiceException, MessagingException {
-        String folderName1 = "testNotificationsCachedFolder-folder1";
-        String folderName2 = "testNotificationsCachedFolder-folder2";
+        String folderName1 = "TestRemoteImapNotifications-folder1";
+        String folderName2 = "TestRemoteImapNotifications-folder2";
 
-        String subject1 = "testNotificationsCachedFolder-msg1";
-        String subject2 = "testNotificationsCachedFolder-msg2";
+        String subject1 = "TestRemoteImapNotifications-testMessage1";
+        String subject2 = "TestRemoteImapNotifications-testMessage2";
 
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
         ZFolder folder1 = TestUtil.createFolder(zmbox, folderName1);
@@ -159,7 +164,8 @@ public class TestRemoteImapNotifications {
 
         TestUtil.addMessage(zmbox, subject2, folder1.getId(), null);
         waitForWaitset();
-
+        // TODO: See if sleep can be replaced with something better
+        try { Thread.sleep(3000); } catch (Exception e) {}
         connection.select(folderName1);
         mdMap = connection.fetch("1:*", "(FLAGS)");
         assertEquals("Size of map returned by fetch afer reselecting cached folder", 2, mdMap.size());
