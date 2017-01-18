@@ -202,7 +202,7 @@ public class TestRemoteImapNotifications {
     }
 
     @Test
-    public void testSyntheticDeleteNotifation() throws Exception {
+    public void testSyntheticDeleteMessageNotifation() throws Exception {
         String folderName1 = "TestRemoteImapNotifications-folder";
         String subject1 = "TestRemoteImapNotifications-testMessage1";
         String subject2 = "TestRemoteImapNotifications-testMessage2";
@@ -229,33 +229,35 @@ public class TestRemoteImapNotifications {
         mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by fetch 2", 2, mdMap.size());
         MessageData md = mdMap.get(1L);
-        //this should be a NIL response
-        Envelope envelope = md.getEnvelope();
-        BodyStructure bs = md.getBodyStructure();
-        assertNull(envelope.getSubject());
-        assertEquals(0, bs.getSize());
+        checkNilResponse(md);
+        //verify that the second message is correct
         md = mdMap.get(2L);
         assertEquals(subject2, md.getEnvelope().getSubject());
+
         connection.expunge();
         mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by fetch 3", 1, mdMap.size());
     }
 
     @Test
-    public void testDeleteNotification() throws Exception {
+    public void testDeleteMessageNotification() throws Exception {
         String folderName1 = "TestRemoteImapNotifications-folder";
         String folderName2 = "TestRemoteImapNotifications-folder2";
-        String subject = "TestRemoteImapNotifications-testMessage";
+
+        String subject1 = "TestRemoteImapNotifications-testMessage1";
+        String subject2 = "TestRemoteImapNotifications-testMessage2";
+
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
         ZFolder folder = TestUtil.createFolder(zmbox, folderName1);
-        String msgId = TestUtil.addMessage(zmbox, subject, folder.getId(), null);
+        String msgId = TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
+        TestUtil.addMessage(zmbox, subject2, folder.getId(), null);
 
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName1);
         connection.select(folderName2);
 
-        TestUtil.addMessage(zmbox, subject, folder.getId(), null);
+        TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
         waitForWaitset();
 
         zmbox.deleteMessage(msgId);
@@ -567,5 +569,64 @@ public class TestRemoteImapNotifications {
         // TODO: See if sleep can be replaced with something better
         try { Thread.sleep(3 * Constants.MILLIS_PER_SECOND); } catch (Exception e) {}
 
+    }
+
+    @Test
+    public void testSyntheticDeleteTagNotification() throws Exception {
+        String folderName = "TestRemoteImapNotifications-folder";
+        String tagName = "TestRemoteImapNotifications-tag";
+        String subject = "TestRemoteImapNotifications-testMessage";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName);
+        int folderId = folder.getFolderIdInOwnerMailbox();
+        ZTag tag = zmbox.createTag(tagName, Color.blue);
+        zmbox.addMessage(folder.getId(), null, tag.getId(), 0, TestUtil.getTestMessage(subject), true);
+
+        connection = connect(imapServer);
+        connection.login(PASS);
+        MailboxInfo info = connection.select(folderName);
+
+        Flags flags = info.getPermanentFlags();
+        assertTrue(flags.contains(new Atom(tagName)));
+
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(zmbox);
+        List<ImapRemoteSession> sessions = remoteListener.getListeners(acc.getId(), folderId);
+        PendingFolderModifications folderMods = new PendingFolderModifications(folderId);
+        folderMods.addDeletedItem(new DeleteItemNotification(tag.getTagId(), MailItem.Type.TAG.toString()));
+        PendingRemoteModifications mods = PendingRemoteModifications.fromSOAP(folderMods, folderId, acc.getId());
+        for (ImapRemoteSession session: sessions) {
+            session.notifyPendingChanges(mods, 0, session);
+        }
+
+        info = connection.select(folderName);
+        flags = info.getPermanentFlags();
+        assertFalse(flags.contains(new Atom(tagName)));
+    }
+
+    @Test
+    public void testDeleteTagNotification() throws Exception {
+        String folderName = "TestRemoteImapNotifications-folder";
+        String tagName = "TestRemoteImapNotifications-tag";
+        String subject = "TestRemoteImapNotifications-testMessage";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName);
+        ZTag tag = zmbox.createTag(tagName, Color.blue);
+        zmbox.addMessage(folder.getId(), null, tag.getName(), 0, TestUtil.getTestMessage(subject), true);
+
+        connection = connect(imapServer);
+        connection.login(PASS);
+        MailboxInfo info = connection.select(folderName);
+
+        Flags flags = info.getPermanentFlags();
+        assertTrue(flags.contains(new Atom(tagName)));
+
+        zmbox.deleteTag(tag.getId());
+
+        // TODO: See if sleep can be replaced with something better
+        try { Thread.sleep(3000); } catch (Exception e) {}
+
+        info = connection.select(folderName);
+        flags = info.getPermanentFlags();
+        assertFalse(flags.contains(new Atom(tagName)));
     }
 }
