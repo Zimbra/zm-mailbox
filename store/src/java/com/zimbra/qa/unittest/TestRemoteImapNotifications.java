@@ -629,4 +629,50 @@ public class TestRemoteImapNotifications {
         flags = info.getPermanentFlags();
         assertFalse(flags.contains(new Atom(tagName)));
     }
+
+    @Test
+    public void testSyntheticDeleteFolderNotification() throws Exception {
+        String folderName = "TestRemoteImapNotifications-folder";
+        String subject = "TestRemoteImapNotifications-testMessage";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName);
+        int folderId = folder.getFolderIdInOwnerMailbox();
+        TestUtil.addMessage(zmbox, subject, folder.getId(), null);
+
+        connection = connect(imapServer);
+        connection.login(PASS);
+        connection.select(folderName);
+
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
+        assertEquals("Size of map returned by initial fetch", 1, mdMap.size());
+
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(zmbox);
+        List<ImapRemoteSession> sessions = remoteListener.getListeners(acc.getId(), folderId);
+        PendingFolderModifications folderMods = new PendingFolderModifications(folderId);
+        folderMods.addDeletedItem(new DeleteItemNotification(folderId, MailItem.Type.FOLDER.toString()));
+        PendingRemoteModifications mods = PendingRemoteModifications.fromSOAP(folderMods, folderId, acc.getId());
+        for (ImapRemoteSession session: sessions) {
+            session.notifyPendingChanges(mods, 0, session);
+        }
+        connection.select(folderName);
+    }
+
+    @Test
+    public void testDeleteFolderNotification() throws Exception {
+        String folderName = "TestRemoteImapNotifications-folder";
+        String subject = "TestRemoteImapNotifications-testMessage";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName);
+        TestUtil.addMessage(zmbox, subject, folder.getId(), null);
+
+        connection = connect(imapServer);
+        connection.login(PASS);
+        connection.select(folderName);
+
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
+        assertEquals("Size of map returned by initial fetch", 1, mdMap.size());
+
+        zmbox.deleteFolder(folder.getId());
+        connection.select(folderName);
+    }
 }
