@@ -642,6 +642,8 @@ public final class MailConstants {
     public static final String A_ORIG_HEADERS = "origHeaders";
     public static final String A_WHERE = "where";
     public static final String A_IMP = "imp";
+    public static final String E_FILTER_VARIABLES = "filterVariables";
+    public static final String E_FILTER_VARIABLE = "filterVariable";
 
     // Sieve filter: RFC compliant 'notify' action
     public static final String A_FROM = "from";
