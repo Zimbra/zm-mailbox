@@ -37,8 +37,8 @@ public class ModificationItem implements BaseItemInfo, BaseFolderInfo, ZimbraTag
         return new ModificationItem(folderId, path, acctId);
     }
 
-    public static BaseItemInfo itemUpdate(ImapMessageInfo msg, String acctId) {
-        return new ModificationItem(msg, acctId);
+    public static BaseItemInfo itemUpdate(ImapMessageInfo msg, int folderId, String acctId) {
+        return new ModificationItem(msg, folderId, acctId);
     }
 
     private ModificationItem(int tagId, String tagName) {
@@ -52,13 +52,14 @@ public class ModificationItem implements BaseItemInfo, BaseFolderInfo, ZimbraTag
         this.path = path;
         this.type = MailItemType.FOLDER;
     }
-    private ModificationItem(ImapMessageInfo msg, String acctId) {
+    private ModificationItem(ImapMessageInfo msg, int folderId, String acctId) {
         this.acctId = acctId;
         this.flags = msg.getFlags();
         this.tags = msg.getTags() == null ? null : msg.getTags().split(",");
         this.id = msg.getId();
         this.imapUid = msg.getImapUid();
         this.type = MailItem.Type.of(msg.getType()).toCommon();
+        this.folderId = folderId;
     }
 
 
