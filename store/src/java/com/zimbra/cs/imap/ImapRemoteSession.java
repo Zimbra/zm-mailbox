@@ -19,9 +19,7 @@ package com.zimbra.cs.imap;
 import java.util.TreeMap;
 
 import com.zimbra.client.ZBaseItem;
-import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMessage;
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -69,7 +67,7 @@ public class ImapRemoteSession extends ImapListener {
         try {
             if (item == null || item.getIdInMailbox() <= 0) {
                 return;
-            } else if (item.getFolderIdInMailbox() == mFolderId && (item instanceof ZMessage || item instanceof ZContact)) {
+            } else if (item.getFolderIdInMailbox() == mFolderId) {
                 mFolder.handleItemCreate(changeId, item, added);
             }
         } catch (ServiceException e) {
