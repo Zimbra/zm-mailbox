@@ -1,5 +1,6 @@
 package com.zimbra.cs.session;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.BaseFolderInfo;
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailItemType;
@@ -55,7 +56,7 @@ public class ModificationItem implements BaseItemInfo, BaseFolderInfo, ZimbraTag
     private ModificationItem(ImapMessageInfo msg, int folderId, String acctId) {
         this.acctId = acctId;
         this.flags = msg.getFlags();
-        this.tags = msg.getTags() == null ? null : msg.getTags().split(",");
+        this.tags = Strings.isNullOrEmpty(msg.getTags()) ? null : msg.getTags().split(",");
         this.id = msg.getId();
         this.imapUid = msg.getImapUid();
         this.type = MailItem.Type.of(msg.getType()).toCommon();
