@@ -629,7 +629,6 @@ public abstract class ImapListener extends Session {
     @SuppressWarnings("rawtypes")
     @Override
     public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
-        //PendingLocalModifications pns = (PendingLocalModifications) pnsIn;
         if (!pnsIn.hasNotifications()) {
             return;
         }
@@ -639,6 +638,7 @@ public abstract class ImapListener extends Session {
             synchronized (this) {
                 AddedItems added = new AddedItems();
                 if (pnsIn.deleted != null) {
+                    @SuppressWarnings("unchecked")
                     Map<ModificationKey, Change> deleted = pnsIn.deleted;
                     for (Map.Entry<ModificationKey, Change> entry : deleted.entrySet()) {
                         handleDelete(changeId, entry.getKey().getItemId(), entry.getValue());
@@ -646,6 +646,7 @@ public abstract class ImapListener extends Session {
                 }
                 notifyPendingCreates(pnsIn, changeId, added);
                 if (pnsIn.modified != null) {
+                    @SuppressWarnings("unchecked")
                     Map<ModificationKey, Change> modified = pnsIn.modified;
                     for (Change chg : modified.values()) {
                         handleModify(changeId, chg, added);
