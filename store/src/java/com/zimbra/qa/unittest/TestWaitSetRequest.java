@@ -712,7 +712,7 @@ public class TestWaitSetRequest {
             success = false;
             failureMessage = null;
             ZimbraLog.test.info("Sending followup to 2d AdminWaitSetRequest");
-            //the waitset may get return both accounts at once or be triggered for each account separately
+            //the waitset may return both accounts at once or be triggered for each account separately
             waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
             waitSetReq.setBlock(true);
             final CountDownLatch doneSignal1 = new CountDownLatch(1);
