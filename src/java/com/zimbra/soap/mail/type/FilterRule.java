@@ -63,7 +63,7 @@ public final class FilterRule {
      * @zm-api-field-description Filter Variables
      */
     @ZimbraJsonArrayForWrapper
-    @XmlElement(name=MailConstants.E_FILTER_VARIABLES /* variables */, required=false)
+    @XmlElement(name=MailConstants.E_FILTER_VARIABLES /* filterVariables */, required=false)
     private FilterVariables filterVariables;
 
     /**
@@ -111,7 +111,7 @@ public final class FilterRule {
         this.name = name;
         this.active = ZmBoolean.fromBool(active);
         this.actions = null;
-        this.filterVariables = new FilterVariables();
+        this.filterVariables = null;
     }
 
     public FilterRule(String name, FilterTests tests, boolean active) {
@@ -119,7 +119,7 @@ public final class FilterRule {
         this.tests = tests;
         this.active = ZmBoolean.fromBool(active);
         this.actions = null;
-        this.filterVariables = new FilterVariables();
+        this.filterVariables = null;
     }
 
     public FilterRule(String name, FilterTests tests, boolean active, FilterVariables filterVariables) {
