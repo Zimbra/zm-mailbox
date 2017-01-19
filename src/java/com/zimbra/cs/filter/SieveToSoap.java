@@ -98,8 +98,14 @@ public final class SieveToSoap extends SieveVisitor {
     @Override
     protected void visitVariable(Node ruleNode, VisitPhase phase, RuleProperties props, String name, String value) {
         if (phase == VisitPhase.begin) {
-            if (currentRule == null) {
+            if(currentRule == null) {
                 currentRule = new FilterRule(getCurrentRuleName(), props != null ? props.isEnabled : true);
+            }
+            if(currentRule.getFilterVariables() == null) {
+                currentRule.setFilterVariables(new FilterVariables());
+            }
+            if(currentRule.getFilterVariables().getVariables() == null) {
+                currentRule.getFilterVariables().setVariables(Lists.newArrayList());
             }
             currentRule.getFilterVariables().addFilterVariable(new FilterVariable(name, value));
         }
