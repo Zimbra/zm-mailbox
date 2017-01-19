@@ -184,6 +184,39 @@ public abstract class AuthMechanism {
         return npi;
     }
 
+    /**
+     * @param acct
+     * @param password
+     * @param authCtxt
+     * @throws ServiceException
+     * @throws AuthFailedServiceException
+     */
+    public static boolean doTwoFactorAuth(Account acct, String password, Map<String, Object> authCtxt)
+        throws ServiceException, AuthFailedServiceException {
+        TwoFactorAuth twoFactorManager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
+        AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct);
+        boolean authDone = false;
+        if (twoFactorManager.twoFactorAuthRequired() && authCtxt != null) {
+            //if two-factor auth is enabled, check non-http protocols against app-specific passwords
+            Protocol proto = (Protocol) authCtxt.get("proto");
+            switch(proto) {
+            case soap:
+            case http_basic:
+                break;
+            default:
+                if (appPasswords.isEnabled()) {
+                    appPasswords.authenticate(password);
+                    authDone = true;
+                } else {
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
+                            namePassedIn(authCtxt), "invalid password");
+                }
+            }
+        }
+
+        return authDone;
+    }
+
     /*
      * ZimbraAuth
      */
@@ -202,25 +235,10 @@ public abstract class AuthMechanism {
                 Map<String, Object> authCtxt) throws ServiceException {
 
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
-            TwoFactorAuth twoFactorManager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
-            AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct);
-            if (twoFactorManager.twoFactorAuthRequired() && authCtxt != null) {
-                //if two-factor auth is enabled, check non-http protocols against app-specific passwords
-                Protocol proto = (Protocol) authCtxt.get("proto");
-                switch(proto) {
-                case soap:
-                case http_basic:
-                    break;
-                default:
-                    if (appPasswords.isEnabled()) {
-                        appPasswords.authenticate(password);
-                        return;
-                    } else {
-                        throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
-                                namePassedIn(authCtxt), "invalid password");
-                    }
-                }
+            if (AuthMechanism.doTwoFactorAuth(acct, password, authCtxt)) {
+                return;
             }
+
             if (encodedPassword == null) {
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                         namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);
@@ -265,6 +283,10 @@ public abstract class AuthMechanism {
         @Override
         public void doAuth(LdapProv prov, Domain domain, Account acct, String password,
                 Map<String, Object> authCtxt) throws ServiceException {
+
+            if (AuthMechanism.doTwoFactorAuth(acct, password, authCtxt)) {
+                return;
+            }
             prov.externalLdapAuth(domain, authMech, acct, password, authCtxt);
         }
 

@@ -22,6 +22,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
+
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
@@ -43,6 +46,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.db.DbDataSource;
@@ -204,13 +208,29 @@ public class GalSearchControl {
             Account galAcct = mParams.getGalSyncAccount();
             GalSyncToken gst = mParams.getGalSyncToken();
             Domain domain = mParams.getDomain();
+
+            if (mParams.getOp() == GalOp.sync) {
+                int limit = mParams.getLimit();
+                int domainLimit = domain.getGalSyncSizeLimit();
+                // Use the lower value in case of non zero values of limit and domainLimit
+                if (limit != 0 && domainLimit != 0) {
+                    limit = limit > domainLimit ? domainLimit : limit;
+                } else if (limit == 0) {
+                    //if limit is zero use domainLimit
+                    limit = domainLimit;
+                }
+                mParams.setLimit(limit);
+            }
+
             // if the presented sync token is old LDAP timestamp format, we need to sync
             // against LDAP server to keep the client up to date.
             boolean useGalSyncAccount = gst.doMailboxSync() && (mParams.isIdOnly() || domain.isLdapGalSyncDisabled());
             if (useGalSyncAccount) {
+                ZimbraLog.mailbox.debug("sync against galsync account");
                 try {
                     if (galAcct == null)
                         galAcct = getGalSyncAccountForSync();
+                    ZimbraLog.mailbox.debug("start syncing galsync account %s", galAcct.getId());
                     accountSync(galAcct);
                     // account based sync was finished
                     return;
@@ -414,7 +434,7 @@ public class GalSearchControl {
                 throw new GalAccountNotConfiguredException();
         } else {
             try {
-                if (!proxyGalAccountSearch(galAcct))
+                if (!proxyGalAccountSearch(galAcct, false))
                     throw new GalAccountNotConfiguredException();
             } catch (IOException e) {
                 ZimbraLog.gal.warn("remote search on GalSync account failed for " + galAcct.getName(), e);
@@ -433,7 +453,7 @@ public class GalSearchControl {
             doLocalGalAccountSync(galAcct);
         } else {
             try {
-                if (!proxyGalAccountSearch(galAcct))
+                if (!proxyGalAccountSearch(galAcct, true))
                     throw new GalAccountNotConfiguredException();
             } catch (IOException e) {
                 ZimbraLog.gal.warn("remote sync on GalSync account failed for " + galAcct.getName(), e);
@@ -513,7 +533,7 @@ public class GalSearchControl {
             syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
 
             if (syncLocalResources) {
-                doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds,
+                doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, mParams.getLimit(),
                         Provisioning.A_zimbraAccountCalendarUserType, "RESOURCE");
                 syncLocalResources = false;
             }
@@ -525,8 +545,10 @@ public class GalSearchControl {
             throw ServiceException.FAILURE("no gal datasource with sync token found", null);
         }
 
+        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, mParams.getLimit());
+
         List<Integer> deleted = null;
-        if (changeId > 0) {
+        if (callback.getResponse() != null && !callback.getResponse().getAttributeBool(MailConstants.A_QUERY_MORE) && changeId > 0) {
             try {
                 deleted = mbox.getTombstones(changeId).getAllIds();
             } catch (MailServiceException e) {
@@ -538,32 +560,27 @@ public class GalSearchControl {
             }
         }
 
-        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds);
-
         if (deleted != null) {
             for (int itemId : deleted) {
                 callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
             }
         }
-
-        GalSyncToken newToken = new GalSyncToken(syncToken, galAcct.getId(), mbox.getLastChangeID());
-        ZimbraLog.gal.debug("computing new sync token for %s:%s", galAcct.getId(), newToken);
-        callback.setNewToken(newToken);
-        callback.setHasMoreResult(false);
     }
 
     private void doLocalGalAccountSync(GalSearchResultCallback callback, Mailbox mbox,
-            OperationContext octxt, int changeId, Set<Integer> folderIds) throws ServiceException {
-        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, null, null);
+        OperationContext octxt, int changeId, Set<Integer> folderIds, String syncToken, int limit) throws ServiceException {
+        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, limit, null, null);
     }
 
     private void doLocalGalAccountSync(GalSearchResultCallback callback, Mailbox mbox,
-            OperationContext octxt, int changeId, Set<Integer> folderIds,
+        OperationContext octxt, int changeId, Set<Integer> folderIds, String syncToken, int limit,
             String filterAttr, String filterValue) throws ServiceException {
+        ZimbraLog.gal.info("Using limit %d for gal account sync", limit);
         Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
-                MailItem.Type.CONTACT, folderIds);
+                0, MailItem.Type.CONTACT, folderIds, -1, limit);
 
         int count = 0;
+        boolean hasMore = false;
         for (int itemId : changed.getFirst()) {
             try {
                 MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
@@ -579,6 +596,12 @@ public class GalSearchControl {
                     if (count % 100 == 0) {
                         ZimbraLog.gal.trace("processing #%s", count);
                     }
+
+                    changeId = item.getModifiedSequence();
+                    if (count == limit) {
+                        hasMore = true;
+                        break;
+                    }
                 }
             } catch (MailServiceException mse) {
                 if (MailServiceException.NO_SUCH_ITEM.equals(mse.getId())) {
@@ -588,9 +611,14 @@ public class GalSearchControl {
                 }
             }
         }
+
+        GalSyncToken newToken = new GalSyncToken(syncToken, mbox.getAccountId(), changeId);
+        ZimbraLog.gal.debug("computing new sync token for %s:%s", mbox.getAccountId(), newToken);
+        callback.setNewToken(newToken);
+        callback.setHasMoreResult(hasMore);
     }
 
-    private boolean proxyGalAccountSearch(Account galSyncAcct) throws IOException, ServiceException {
+    private boolean proxyGalAccountSearch(Account galSyncAcct, boolean sync) throws IOException, ServiceException {
         try {
             Provisioning prov = Provisioning.getInstance();
             String serverUrl = URLUtil.getAdminURL(prov.getServerByName(galSyncAcct.getMailHost()));
@@ -619,6 +647,11 @@ public class GalSearchControl {
             req.addAttribute(AccountConstants.A_GAL_ACCOUNT_ID, galSyncAcct.getId());
             req.addAttribute(AccountConstants.A_GAL_ACCOUNT_PROXIED, true);
 
+            if (sync && mParams.getGalSyncToken() != null) {
+               req.addAttribute(MailConstants.A_TOKEN, mParams.getGalSyncToken().toString());
+               ZimbraLog.gal.debug("setting token for proxied request %s", mParams.getGalSyncToken().toString());
+            }
+
             Element resp = transport.invokeWithoutSession(req.detach());
             GalSearchResultCallback callback = mParams.getResultCallback();
 
@@ -641,7 +674,7 @@ public class GalSearchControl {
             }
             boolean hasMore =  resp.getAttributeBool(MailConstants.A_QUERY_MORE, false);
             callback.setHasMoreResult(hasMore);
-            if (hasMore) {
+            if (hasMore && !sync) {
                 callback.setSortBy(resp.getAttribute(MailConstants.A_SORTBY));
                 callback.setQueryOffset((int)resp.getAttributeLong(MailConstants.A_QUERY_OFFSET));
             }
@@ -692,15 +725,17 @@ public class GalSearchControl {
         if (limit == 0 && GalOp.sync != mParams.getOp() && ldapLimit == null) {
             limit = domain.getGalMaxResults();
         }
-        mParams.setLimit(limit);
 
         // Return the GAL definition last modified time so that clients can use it to decide if fullsync is required.
-        if (mParams.getOp() == GalOp.sync) {
+        if ((mParams.getOp() == GalOp.sync) && (mParams.getResultCallback() != null)) {
             String galLastModified = domain.getGalDefinitionLastModifiedTimeAsString();
             if (galLastModified != null) {
                 mParams.getResultCallback().setGalDefinitionLastModified(galLastModified);
             }
         }
+
+        ZimbraLog.gal.info("Using limit %d for ldapSearch", limit);
+        mParams.setLimit(limit);
 
         if (galMode == GalMode.both) {
             // make two gal searches for 1/2 results each
@@ -711,34 +746,63 @@ public class GalSearchControl {
             // do zimbra gal search
             type = GalType.zimbra;
         }
+
         mParams.createSearchConfig(type);
+
+        GalSyncToken galSyncToken = mParams.getGalSyncToken();
+        if (galSyncToken != null) {
+            mParams.setLdapTimeStamp(galSyncToken.getIntLdapTs());
+            mParams.setLdapMatchCount(galSyncToken.getIntLdapMatchCount());
+            mParams.setLdapHasMore(galSyncToken.intLdapHasMore());
+            mParams.setMaxLdapTimeStamp(galSyncToken.getIntMaxLdapTs());
+        }
+
         try {
             prov.searchGal(mParams);
         } catch (Exception e) {
             throw ServiceException.FAILURE("ldap search failed", e);
         }
 
-        boolean hadMore = mParams.getResult().getHadMore();
-        String newToken = mParams.getResult().getToken();
-        if (mParams.getResult().getTokenizeKey() != null)
-            hadMore = true;
+        String resultToken = null;
+        boolean intLdapHasMore = false;
+        boolean extLdapHasMore = false;
+        if (mParams.getResult() != null) {
+            intLdapHasMore = mParams.getResult().getHadMore();
+            if (mParams.getOp() == GalOp.sync) {
+                resultToken = getLdapSearchResultToken(mParams.getResult(), "");
+            }
+        }
+
         if (galMode == GalMode.both) {
             // do the second query
             mParams.createSearchConfig(GalType.ldap);
+            if (galSyncToken != null) { 
+                mParams.setLdapTimeStamp(galSyncToken.getExtLdapTs());
+                mParams.setLdapMatchCount(galSyncToken.getExtLdapMatchCount());
+                mParams.setLdapHasMore(galSyncToken.extLdapHasMore());
+                mParams.setMaxLdapTimeStamp(galSyncToken.getExtMaxLdapTs());
+            }
+
             try {
                 prov.searchGal(mParams);
             } catch (Exception e) {
                 throw ServiceException.FAILURE("ldap search failed", e);
             }
-            hadMore |= mParams.getResult().getHadMore();
-            newToken = LdapUtil.getLaterTimestamp(newToken, mParams.getResult().getToken());
-            if (mParams.getResult().getTokenizeKey() != null)
-                hadMore = true;
+
+            if (mParams.getResult() != null) {
+                extLdapHasMore = mParams.getResult().getHadMore();
+                if (mParams.getOp() == GalOp.sync) {
+                    resultToken = getLdapSearchResultToken(mParams.getResult(), resultToken);
+                }
+            }
         }
 
-        if (mParams.getOp() == GalOp.sync)
-            mParams.getResultCallback().setNewToken(newToken);
-        mParams.getResultCallback().setHasMoreResult(hadMore);
+        if (mParams.getResultCallback() != null) {
+            if (mParams.getOp() == GalOp.sync) {
+                mParams.getResultCallback().setNewToken(resultToken);
+            }
+            mParams.getResultCallback().setHasMoreResult(intLdapHasMore || extLdapHasMore);
+        }
     }
 
 
@@ -799,6 +863,19 @@ public class GalSearchControl {
         }
 
         return true;
+    }
+
+    private String getLdapSearchResultToken(SearchGalResult result, String initialString) {
+        StringBuilder buf;
+        if(StringUtils.isEmpty(initialString)) {
+           buf = new StringBuilder();
+        } else {
+           buf = new StringBuilder(initialString);
+           buf.append("_");
+        }
+        buf.append(result.getLdapTimeStamp()).append("_").append(result.getLdapMatchCount()).append("_").append(BooleanUtils.toInteger(result.getHadMore()));
+        buf.append("_").append(result.getToken());
+        return buf.toString();
     }
 
 }

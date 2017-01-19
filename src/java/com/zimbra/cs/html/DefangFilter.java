@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
@@ -193,7 +194,7 @@ public class DefangFilter extends DefaultFilter {
         acceptElement("h6", CORE_LANG+"align");
         acceptElement("hr", CORE_LANG+"align,noshade,size,width");
         acceptElement("html", LANG+"xmlns");
-        acceptElement("img", CORE_LANG+"align,alt,border,height,hspace,ismap,longdesc,src,usemap,vspace,width");
+        acceptElement("img", CORE_LANG+"align,alt,border,height,hspace,ismap,longdesc,src,usemap,vspace,width,dfsrc,data-mce-src");
         acceptElement("ins", CORE_LANG+"cite");
         acceptElement("label", CORE_LANG+"for");
         //acceptElement("link", CORE_LANG+"charset,href,hreflang,media,ntarget,rel,rev,type");
@@ -719,7 +720,7 @@ public class DefangFilter extends DefaultFilter {
         // may annoy the front end. Here, we'll check for
         // a valid url as well as just a valid filename in the
         // case that its an inline image
-        if(aName.equals("src")) {
+        if(aName.equals("src") || aName.equals("dfsrc") || aName.equals("data-mce-src")) {
             if (!(VALID_EXT_URL.matcher(value).find() ||
                 VALID_INT_IMG.matcher(value).find() ||
                 VALID_IMG_FILE.matcher(value).find())) {
@@ -731,6 +732,7 @@ public class DefangFilter extends DefaultFilter {
     }
 
     public static String sanitize(String result, boolean isAllowedScript) {
+        result = removeAnySpacesAndEncodedChars(result);
         if (!(IMG_SKIP_OWASPSANITIZE.matcher(result).find())) {
             result = sanitizer.sanitize(result);
         }
@@ -752,6 +754,33 @@ public class DefangFilter extends DefaultFilter {
         }
         return result;
     }
+
+    /**
+     * @param result
+     * @return
+     */
+    public static String removeAnySpacesAndEncodedChars(String result) {
+        String sanitizedStr = result;
+        StringBuilder sb = new StringBuilder();
+        int index = result.indexOf(":");
+
+        if (index > -1) {
+            String jsString = result.substring(0, index);
+            char [] chars = jsString.toCharArray();
+            for (int i = 0; i < chars.length; ++i) {
+                if (!Character.isSpace(chars[i])) {
+                    sb.append(chars[i]);
+                }
+            }
+        }
+        String temp = sb.toString();
+        temp = StringEscapeUtils.unescapeHtml(temp);
+        if (index != -1 && (temp.toLowerCase().contains("javascript") || temp.toLowerCase().contains("vbscript"))) {
+            sanitizedStr = temp + result.substring(index);
+        }
+        return sanitizedStr;
+    }
+
     /**
      * sanitize an attr value. For now, this means stirpping out Java Script entity tags &{...},
      * and <script> tags.

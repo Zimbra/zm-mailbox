@@ -23,6 +23,8 @@ import java.util.Date;
 
 import javax.security.auth.login.LoginException;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -35,6 +37,7 @@ import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.gal.GalSyncToken;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -225,6 +228,14 @@ public class LdapGalSearch {
 
             String fetchEntryByDn = params.getSearchEntryByDn();
             if (fetchEntryByDn == null) {
+                SearchGalResult sgr = params.getResult();
+                if (sgr != null && GalOp.sync.equals(params.getOp())) {
+                    sgr.setLdapTimeStamp(params.getLdapTimeStamp());
+                    sgr.setLdapMatchCount(params.getLdapMatchCount());
+                    sgr.setHadMore(params.ldapHasMore());
+                    sgr.setMaxLdapTimeStamp(params.getMaxLdapTimeStamp());
+                }
+
                 searchGal(zlc,
                           galType,
                           cfg.getPageSize(),
@@ -233,7 +244,8 @@ public class LdapGalSearch {
                           params.getLimit(),
                           cfg.getRules(),
                           params.getSyncToken(),
-                          params.getResult());
+                          params.getResult(),
+                          params.getOp());
             } else {
                 getGalEntryByDn(zlc, galType, fetchEntryByDn, cfg.getRules(), params.getResult());
             }
@@ -315,6 +327,18 @@ public class LdapGalSearch {
     }
 
     public static void searchGal(ZLdapContext zlc,
+        GalSearchConfig.GalType galType,
+        int pageSize,
+        String base,
+        String query,
+        int maxResults,
+        LdapGalMapRules rules,
+        String token,
+        SearchGalResult result) throws ServiceException {
+        searchGal(zlc, galType, pageSize, base, query, maxResults, rules, token, result, null);
+    }
+
+    public static void searchGal(ZLdapContext zlc,
                                  GalSearchConfig.GalType galType,
                                  int pageSize,
                                  String base,
@@ -322,10 +346,16 @@ public class LdapGalSearch {
                                  int maxResults,
                                  LdapGalMapRules rules,
                                  String token,
-                                 SearchGalResult result) throws ServiceException {
-
+                                 SearchGalResult result,
+                                 GalOp op) throws ServiceException {
         String tk = token != null && !token.equals("")? token : LdapConstants.EARLIEST_SYNC_TOKEN;
         result.setToken(tk);
+        if (GalOp.sync == op) {
+            String maxLdapTs = result.getMaxLdapTimeStamp();
+            if (!StringUtils.isEmpty(maxLdapTs)) {
+               result.setToken(maxLdapTs);
+            }
+        }
 
         String reqAttrs[] = rules.getLdapAttrs();
 
@@ -344,6 +374,11 @@ public class LdapGalSearch {
                     ", attrs=" + returnAttrs);
         }
 
+        if (GalOp.sync == op) {
+           result.setLimit(maxResults);
+           maxResults = SearchLdapOptions.SIZE_UNLIMITED;
+        }
+
         SearhcGalVisitor visitor = new SearhcGalVisitor(zlc, galType, base, rules, result);
 
         SearchLdapOptions searchOpts = new SearchLdapOptions(base,
@@ -351,35 +386,50 @@ public class LdapGalSearch {
                 reqAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
 
         searchOpts.setResultPageSize(pageSize);
+        searchOpts.setGalOp(op);
+        if (GalOp.sync == op) {
+           searchOpts.setSearchGalResult(result);
+        }
 
         try {
             zlc.searchPaged(searchOpts);
         } catch (LdapSizeLimitExceededException sle) {
-            result.setHadMore(true);
+               result.setHadMore(true);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to search gal", e);
         } finally {
-            boolean gotNewToken = true;
-            String newToken = result.getToken();
-            if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapConstants.EARLIEST_SYNC_TOKEN))
-                gotNewToken = false;
+            if (GalOp.sync != op || ((GalOp.sync == op) && !result.getHadMore())) {
+                boolean gotNewToken = true;
+                String newToken = result.getToken();
+                if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapConstants.EARLIEST_SYNC_TOKEN))
+                    gotNewToken = false;
 
-            if (gotNewToken) {
-                Date parsedToken = LdapDateUtil.parseGeneralizedTime(newToken);
-                if (parsedToken != null) {
-                    long ts = parsedToken.getTime();
-                    ts += 1000;
-
-                    // Note, this will "normalize" the token to our standard format
-                    // DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT
-                    // Whenever we've got a new token, it will be returned in the
-                    // normalized format.
-                    result.setToken(LdapDateUtil.toGeneralizedTime(new Date(ts)));
+                if (gotNewToken) {
+                    Date parsedToken = LdapDateUtil.parseGeneralizedTime(newToken);
+                    if (parsedToken != null) {
+                        long ts = parsedToken.getTime();
+                        ts += 1000;
+                        // Note, this will "normalize" the token to our standard format
+                        // DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT
+                        // Whenever we've got a new token, it will be returned in the
+                        // normalized format.
+                        String deltaToken = LdapDateUtil.toGeneralizedTime(new Date(ts));
+                        result.setToken(deltaToken);
+                        if (GalOp.sync == op) {
+                            result.setLdapTimeStamp(deltaToken);
+                        }
+                    }
+                    /*
+                     * in the rare case when an LDAP implementation does not conform to generalized time and
+                     * we cannot parser the token, just leave it alone.
+                     */
+                } else {
+                    //no records found
+                    if ((GalOp.sync == op) && !result.getHadMore()) {
+                        result.setToken(newToken);
+                        result.setLdapTimeStamp(newToken);
+                    }
                 }
-                /*
-                 * in the rare case when an LDAP implementation does not conform to generalized time and
-                 * we cannot parser the token, just leave it alone.
-                 */
             }
         }
     }

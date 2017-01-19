@@ -54,6 +54,8 @@ import com.unboundid.ldap.sdk.schema.Schema;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
@@ -520,6 +522,35 @@ public class UBIDLdapContext extends ZLdapContext {
         Set<String> binaryAttrs = searchOptions.getBinaryAttrs();
         SearchScope searchScope = ((UBIDSearchScope) searchOptions.getSearchScope()).getNative();
         SearchLdapOptions.SearchLdapVisitor visitor = searchOptions.getVisitor();
+        SearchGalResult searchGalResult = searchOptions.getSearchGalResult();
+        int pageSize = searchOptions.getResultPageSize();
+        int offset = 0;
+        boolean pagination = false;
+        int limit = 0;
+        String prevLastReturnedItemCreateDate = null;
+        if (searchGalResult != null) {
+            offset = searchGalResult.getLdapMatchCount();
+            prevLastReturnedItemCreateDate = searchGalResult.getLdapTimeStamp();
+            pagination = searchGalResult.getHadMore();
+            limit = searchGalResult.getLimit();
+        }
+
+        if (GalOp.sync == searchOptions.getGalOp() && !pagination) {
+           limit = 0;
+        }
+        if (limit == 0) {
+            limit = Integer.MAX_VALUE;
+        }
+
+        int pageCount = 0;
+        int pageOffset = 0;
+        int currentPage = 0;
+        int index = 0;
+        if (offset > 0) {
+            pageCount = offset / pageSize;
+            pageOffset = offset % pageSize;
+        }
+        String newToken = "";
 
         boolean wantPartialResult = true;  // TODO: this is the legacy behavior, we can make it a param
 
@@ -535,9 +566,9 @@ public class UBIDLdapContext extends ZLdapContext {
             searchRequest.setAttributes(searchOptions.getReturnAttrs());
 
             //Set the page size and initialize the cookie that we pass back in subsequent pages
-            int pageSize = searchOptions.getResultPageSize();
-            ASN1OctetString cookie = null;
 
+            ASN1OctetString cookie = null;
+            int count = offset;
             do {
                 List<Control> controls = Lists.newArrayListWithCapacity(2);
                 if (searchOptions.isUseControl()) {
@@ -565,6 +596,12 @@ public class UBIDLdapContext extends ZLdapContext {
                                 } else {
                                     visitor.visit(dn, ubidAttrs);
                                 }
+                                newToken = ubidAttrs.getAttrString("whenCreated") != null ? ubidAttrs.getAttrString("whenCreated") : ubidAttrs.getAttrString("createTimeStamp");
+                            }
+                            if (searchGalResult != null) { 
+                                searchGalResult.setLdapTimeStamp(newToken);
+                                searchGalResult.setLdapMatchCount(1);
+                                searchGalResult.setHadMore(true);
                             }
                         }
                     }
@@ -572,14 +609,35 @@ public class UBIDLdapContext extends ZLdapContext {
                     throw e;
                 }
 
-                for (SearchResultEntry entry : result.getSearchEntries()) {
-                    String dn = entry.getDN();
-                    UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
-                    if (visitor.wantAttrMapOnVisit()) {
-                        visitor.visit(dn, ubidAttrs.getAttrs(binaryAttrs), ubidAttrs);
-                    } else {
-                        visitor.visit(dn, ubidAttrs);
+                List<SearchResultEntry> entries = result.getSearchEntries();
+                boolean hasMore = false;
+                int resultSize = entries.size();
+                if (resultSize > (limit + pageOffset)) {
+                    hasMore = true;
+                }
+                String leCreateDate = null;
+                if (currentPage >= pageCount) {
+                    leCreateDate = getLastEntryCreationDate(limit+pageOffset, entries);
+                    if (prevLastReturnedItemCreateDate != null && !prevLastReturnedItemCreateDate.equals(leCreateDate)) {
+                        count = 0;
                     }
+                    for (index = pageOffset; index < entries.size() && limit > 0; index++) {
+                        SearchResultEntry entry = entries.get(index);
+                        String dn = entry.getDN();
+                        UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
+                        if (visitor.wantAttrMapOnVisit()) {
+                            visitor.visit(dn, ubidAttrs.getAttrs(binaryAttrs), ubidAttrs);
+                        } else {
+                            visitor.visit(dn, ubidAttrs);
+                        }
+                        limit--;
+                        newToken = ubidAttrs.getAttrString("whenCreated") != null ? ubidAttrs.getAttrString("whenCreated") : ubidAttrs.getAttrString("createTimeStamp");
+                        if (newToken != null && newToken.equals(leCreateDate)) {
+                            count++;
+                        }
+                    }
+                    prevLastReturnedItemCreateDate = leCreateDate;
+                    pageOffset = 0;
                 }
 
                 cookie = null;
@@ -588,13 +646,43 @@ public class UBIDLdapContext extends ZLdapContext {
                         cookie = ((SimplePagedResultsControl) c).getCookie();
                     }
                 }
-            } while ((cookie != null) && (cookie.getValueLength() > 0));
+
+                if (searchGalResult != null && (GalOp.sync == searchOptions.getGalOp())) {
+                    if(limit == 0 && (((cookie != null) && (cookie.getValueLength() > 0)) || hasMore)) {
+                        searchGalResult.setHadMore(true);
+                        searchGalResult.setLdapTimeStamp(newToken);
+                        searchGalResult.setLdapMatchCount(count);
+                    } else if (((cookie != null) && (cookie.getValueLength() == 0))) {
+                        searchGalResult.setHadMore(false);
+                        searchGalResult.setLdapMatchCount(0);
+                    }
+                }
+                currentPage++;
+            } while ((cookie != null) && (cookie.getValueLength() > 0) && limit > 0);
         } catch (SearchLdapOptions.StopIteratingException e) {
             // break out of the loop and close the ne
         } catch (LDAPException e) {
             throw mapToLdapException("unable to search ldap", e);
         }
     }
+
+    private String getLastEntryCreationDate(int limit, List<SearchResultEntry> entries) throws LdapException {
+        String leCreateDate = null;
+        int size = entries.size();
+        ZimbraLog.gal.debug("inside getLastEntryCreationDate()");
+        ZimbraLog.gal.debug("Liimit = %d, Size = %d", limit, size);
+        SearchResultEntry entry = null;
+        if (size != 0) {
+            if (limit <= size && limit > 0) {
+                entry = entries.get(limit-1);
+            } else {
+                entry = entries.get(size-1);
+            }
+            UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
+            leCreateDate = ubidAttrs.getAttrString("whenCreated") != null ? ubidAttrs.getAttrString("whenCreated") : ubidAttrs.getAttrString("createTimeStamp");
+        }
+        return leCreateDate;
+     }
 
     /**
      * Perform an LDAPv3 compare operation, which may be used to determine whether a specified entry contains a given

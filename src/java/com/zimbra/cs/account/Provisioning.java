@@ -2020,6 +2020,27 @@ public abstract class Provisioning extends ZAttrProvisioning {
          private String mToken;
          private boolean mHadMore; // for auto-complete only
          private final List<GalContact> mMatches;
+         private String ldapTimeStamp = "";
+         private String maxLdapTimeStamp = "";
+
+         public String getMaxLdapTimeStamp() {
+            return maxLdapTimeStamp;
+         }
+
+         public void setMaxLdapTimeStamp(String maxLdapTimeStamp) {
+           this.maxLdapTimeStamp = maxLdapTimeStamp;
+         }
+
+         private int ldapMatchCount = 0;
+         private int limit = 0;
+
+        public int getLimit() {
+            return limit;
+        }
+
+        public void setLimit(int limit) {
+            this.limit = limit;
+        }
 
         /*
          * for auto-complete and search only
@@ -2060,6 +2081,22 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         public String getTokenizeKey() {
             return mTokenizeKey;
+        }
+
+        public String getLdapTimeStamp() {
+            return ldapTimeStamp;
+        }
+
+        public void setLdapTimeStamp(String ldapTimeStamp) {
+            this.ldapTimeStamp = ldapTimeStamp;
+        }
+
+        public int getLdapMatchCount() {
+            return ldapMatchCount;
+        }
+
+        public void setLdapMatchCount(int ldapMatchCount) {
+            this.ldapMatchCount = ldapMatchCount;
         }
 
         public void setTokenizeKey(String tokenizeKey) {

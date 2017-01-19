@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 
@@ -107,6 +109,8 @@ public class SearchLdapOptions {
     private SearchLdapOptions.SearchLdapVisitor visitor;
     private boolean isUseControl = true;
     private boolean isManageDSAit = false;
+    private SearchGalResult searchGalResult;
+    private GalOp galOp;
 
     // TODO: retire this
     public SearchLdapOptions(String searchbase, String filterStr,
@@ -130,6 +134,10 @@ public class SearchLdapOptions {
         setBinaryAttrs(binaryAttrs);
         setSearchScope(searchScope);
         setVisitor(visitor);
+    }
+
+    public GalOp getGalOp() {
+        return galOp;
     }
 
     public String getSearchBase() {
@@ -161,6 +169,14 @@ public class SearchLdapOptions {
 
     public SearchLdapOptions.SearchLdapVisitor getVisitor() {
         return visitor;
+    }
+
+    public SearchGalResult getSearchGalResult() {
+        return searchGalResult;
+    }
+
+    public void setGalOp(GalOp galOp) {
+        this.galOp = galOp;
     }
 
     public void setSearchBase(String searchBase) {
@@ -209,5 +225,9 @@ public class SearchLdapOptions {
 
     public void setManageDSAit(boolean isManageDSAit) {
         this.isManageDSAit = isManageDSAit;
+    }
+
+    public void setSearchGalResult(SearchGalResult result) {
+        this.searchGalResult = result;
     }
 }

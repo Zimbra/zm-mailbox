@@ -21,9 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 
@@ -44,8 +41,8 @@ import com.zimbra.qa.unittest.server.TestPop3ImportServer;
  * @author bburtin
  *
  */
-public class ZimbraSuite extends TestSuite {
-    private static final List<Class<? extends TestCase>> sClasses = new ArrayList<Class<? extends TestCase>>();
+public class ZimbraSuite  {
+    private static final List<Class> sClasses = new ArrayList<Class>();
 
     static {
         sClasses.add(TestWaitSet.class);
@@ -140,22 +137,22 @@ public class ZimbraSuite extends TestSuite {
     /**
      * Used by extensions to add additional tests to the main test suite.
      */
-    public static void addTest(Class<? extends TestCase> clazz) {
+    public static void addTest(Class clazz) {
         sClasses.add(clazz);
     }
 
-    public static void removeTest(Class<? extends TestCase> clazz) {
+    public static void removeTest(Class clazz) {
         sClasses.remove(clazz);
     }
 
     public static TestResults runUserTests(List<String> testNames) throws ServiceException {
-        List<Class<? extends TestCase>> tests = new ArrayList<Class<? extends TestCase>>();
+        List<Class> tests = new ArrayList<Class>();
         List<Request> requests = new ArrayList<Request>();
 
         for (String testNameAndMethod : testNames) {
             List<String> testAndMethods = Lists.newArrayList(Splitter.on('#').split(testNameAndMethod));
             String testName = testAndMethods.get(0);
-            Class<? extends TestCase> testClass = null;
+            Class testClass = null;
             if (testName.indexOf('.') < 0) {
                 // short name...check the suite
                 boolean found = false;
@@ -171,10 +168,10 @@ public class ZimbraSuite extends TestSuite {
                 }
             } else {
                 try {
-                    testClass = Class.forName(testName).asSubclass(TestCase.class);
+                    testClass = Class.forName(testName);
                 } catch (ClassNotFoundException e) {
                     try {
-                        testClass = ExtensionUtil.findClass(testName).asSubclass(TestCase.class);
+                        testClass = ExtensionUtil.findClass(testName);
                     } catch (ClassNotFoundException e2) {
                         throw ServiceException.FAILURE("Error instantiating test " + testName, e2);
                     }
@@ -199,7 +196,7 @@ public class ZimbraSuite extends TestSuite {
         return runTestsInternal(sClasses, null);
     }
 
-    private static TestResults runTestsInternal(Collection<Class<? extends TestCase>> testClasses,
+    private static TestResults runTestsInternal(Collection<Class> testClasses,
             Iterable<Request> requests) {
         JUnitCore junit = new JUnitCore();
         junit.addListener(new TestLogger());
