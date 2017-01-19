@@ -80,11 +80,9 @@ public final class SoapToSieve {
                     if (!StringUtil.isNullOrEmpty(varName) && !StringUtil.isNullOrEmpty(varValue)) {
                         buffer.append("set \"").append(varName).append("\" \"").append(varValue).append("\";\n");
                     } else {
-                        ZimbraLog.filter.debug("Ignoreing problem with filterVariable : name = %s, value = %s", varName, varValue);
+                        ZimbraLog.filter.debug("Ignoring problem with filterVariable : name = %s, value = %s", varName, varValue);
                     }
                 }
-            } else {
-                ZimbraLog.filter.debug("No filterVariable found in filterVariables in rule %s", name);
             }
         } else {
             ZimbraLog.filter.debug("No filterVariables found in filterRule in rule %s", name);
