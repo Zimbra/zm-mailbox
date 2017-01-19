@@ -80,7 +80,7 @@ public final class SoapToSieve {
                     if (!StringUtil.isNullOrEmpty(varName) && !StringUtil.isNullOrEmpty(varValue)) {
                         buffer.append("set \"").append(varName).append("\" \"").append(varValue).append("\";\n");
                     } else {
-                        ZimbraLog.filter.debug("Ignoring problem with filterVariable : name = %s, value = %s", varName, varValue);
+                        ZimbraLog.filter.debug("Ignoring problem in filterVariable with name or value");
                     }
                 }
             }
