@@ -38,7 +38,7 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 @JsonPropertyOrder({ "variables" })
 public final class FilterVariables {
 
-    @XmlElement(name=MailConstants.E_FILTER_VARIABLE /* variables */, required=true)
+    @XmlElement(name=MailConstants.E_FILTER_VARIABLE /* filterVariable */, required=true)
     private List<FilterVariable> variables;
 
     /**
@@ -53,10 +53,16 @@ public final class FilterVariables {
      * @param variables the variables to set
      */
     public void setVariables(Collection<FilterVariable> variables) {
-        if(this.variables == null) {
-            this.variables = Lists.newArrayList();
+        if(variables != null) {
+            if(this.variables == null) {
+                this.variables = Lists.newArrayList();
+            }
+            for (FilterVariable filterVariable : variables) {
+                if(filterVariable != null) {
+                    this.variables.add(filterVariable);
+                }
+            }
         }
-        this.variables.addAll(variables);
     }
 
     /**
@@ -71,10 +77,12 @@ public final class FilterVariables {
     }
 
     public void addFilterVariable(FilterVariable filterVariable) {
-        if(variables == null) {
-            variables = Lists.newArrayList();
+        if(filterVariable != null) {
+            if(variables == null) {
+                variables = Lists.newArrayList();
+            }
+            variables.add(filterVariable);
         }
-        variables.add(filterVariable);
     }
 
     @Override
