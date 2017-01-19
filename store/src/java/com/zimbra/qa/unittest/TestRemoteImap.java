@@ -138,6 +138,28 @@ public class TestRemoteImap {
         sp.flushCache("all", null, true);
     }
 
+    private ImapConnection connect(Server server) throws IOException {
+        ImapConfig config = new ImapConfig(server.getServiceHostname());
+        config.setPort(server.getImapBindPort());
+        config.setAuthenticationId(USER);
+        config.getLogger().setLevel(Log.Level.trace);
+        ImapConnection connection = new ImapConnection(config);
+        connection.connect();
+        return connection;
+    }
+
+    private ImapConnection connectAsProxy(Server server) throws IOException {
+        ImapConfig config = new ImapConfig(server.getServiceHostname());
+        config.setPort(server.getImapBindPort());
+        config.setAuthenticationId(USER);
+        config.setAuthenticatorFactory(ZIMBRA_AUTH_FACTORY);
+        config.setMechanism(ZimbraAuthenticator.MECHANISM);
+        config.getLogger().setLevel(Log.Level.trace);
+        ImapConnection connection = new ImapConnection(config);
+        connection.connect();
+        return connection;
+    }
+
     @Test
     public void testAUTHENTICATEToIMAPHost() throws IOException  {
         Assume.assumeTrue(servers.size() > 1);
@@ -358,28 +380,6 @@ public class TestRemoteImap {
         Assert.assertTrue("IMAP should be authenticated after logging in", connection.isAuthenticated());
         connection.logout();
         assertFalse("IMAP connection should not be authenticated after sending LOGOUT", connection.isAuthenticated());
-    }
-
-    private ImapConnection connect(Server server) throws IOException {
-        ImapConfig config = new ImapConfig(server.getServiceHostname());
-        config.setPort(server.getImapBindPort());
-        config.setAuthenticationId(USER);
-        config.getLogger().setLevel(Log.Level.trace);
-        ImapConnection connection = new ImapConnection(config);
-        connection.connect();
-        return connection;
-    }
-
-    private ImapConnection connectAsProxy(Server server) throws IOException {
-        ImapConfig config = new ImapConfig(server.getServiceHostname());
-        config.setPort(server.getImapBindPort());
-        config.setAuthenticationId(USER);
-        config.setAuthenticatorFactory(ZIMBRA_AUTH_FACTORY);
-        config.setMechanism(ZimbraAuthenticator.MECHANISM);
-        config.getLogger().setLevel(Log.Level.trace);
-        ImapConnection connection = new ImapConnection(config);
-        connection.connect();
-        return connection;
     }
 
     @Test
