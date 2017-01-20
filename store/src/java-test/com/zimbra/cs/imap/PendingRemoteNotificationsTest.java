@@ -11,6 +11,7 @@ import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.session.ModificationItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
@@ -23,9 +24,9 @@ public class PendingRemoteNotificationsTest {
     public void testPendingRemoteNotifications() throws Exception {
         String acctId = "12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f";
         ImapMessageInfo imapMsg1 = new ImapMessageInfo(123, 123, Type.MESSAGE.toString(), 0, null);
-        BaseItemInfo msg1 = ModificationItem.itemUpdate(imapMsg1, 2, acctId);
+        BaseItemInfo msg1 = ModificationItem.itemUpdate(imapMsg1, Mailbox.ID_FOLDER_INBOX, acctId);
         ImapMessageInfo imapMsg2 = new ImapMessageInfo(456, 456, Type.MESSAGE.toString(), 0, null);
-        BaseItemInfo msg2 = ModificationItem.itemUpdate(imapMsg2, 2, acctId);
+        BaseItemInfo msg2 = ModificationItem.itemUpdate(imapMsg2, Mailbox.ID_FOLDER_INBOX, acctId);
         PendingRemoteModifications prm = new PendingRemoteModifications();
         prm.recordCreated(msg1);
         assertTrue(!prm.created.isEmpty());
@@ -51,7 +52,7 @@ public class PendingRemoteNotificationsTest {
         assertEquals(folder, folderChange.what);
 
         //modify an item
-        BaseItemInfo updateItem = ModificationItem.itemUpdate(imapMsg2, 2, acctId);
+        BaseItemInfo updateItem = ModificationItem.itemUpdate(imapMsg2, Mailbox.ID_FOLDER_INBOX, acctId);
         prm.recordModified(updateItem, Change.FLAGS);
         Change itemChange = prm.modified.get(new ModificationKey(updateItem));
         assertNotNull(itemChange);
