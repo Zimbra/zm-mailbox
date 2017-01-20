@@ -29,7 +29,10 @@ import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
+import com.zimbra.soap.mail.type.FilterVariable;
+import com.zimbra.soap.mail.type.FilterVariables;
 import com.zimbra.soap.mail.type.NestedRule;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * Converts a Sieve node tree to the SOAP representation of
@@ -67,7 +70,12 @@ public final class SieveToSoap extends SieveVisitor {
         }
 
         if (!isNestedRule()){
-            currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
+            if (currentRule == null) {
+                currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
+            } else {
+                currentRule.setName(getCurrentRuleName());
+                currentRule.setActive(ZmBoolean.fromBool(props.isEnabled));
+            }
             currentRule.setFilterTests(new FilterTests(props.condition.toString()));
             rules.add(currentRule);
             currentRuleIndex++;
@@ -84,6 +92,22 @@ public final class SieveToSoap extends SieveVisitor {
                 currentRule.setChild(nestedRule);
             }
             currentNestedRule = nestedRule;
+        }
+    }
+
+    @Override
+    protected void visitVariable(Node ruleNode, VisitPhase phase, RuleProperties props, String name, String value) {
+        if (phase == VisitPhase.begin) {
+            if(currentRule == null) {
+                currentRule = new FilterRule(getCurrentRuleName(), props != null ? props.isEnabled : true);
+            }
+            if(currentRule.getFilterVariables() == null) {
+                currentRule.setFilterVariables(new FilterVariables());
+            }
+            if(currentRule.getFilterVariables().getVariables() == null) {
+                currentRule.getFilterVariables().setVariables(Lists.newArrayList());
+            }
+            currentRule.getFilterVariables().addFilterVariable(new FilterVariable(name, value));
         }
     }
 

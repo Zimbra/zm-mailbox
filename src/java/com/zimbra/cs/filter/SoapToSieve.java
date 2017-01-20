@@ -36,6 +36,8 @@ import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
+import com.zimbra.soap.mail.type.FilterVariable;
+import com.zimbra.soap.mail.type.FilterVariables;
 import com.zimbra.soap.mail.type.NestedRule;
 
 public final class SoapToSieve {
@@ -50,7 +52,7 @@ public final class SoapToSieve {
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\"");
+            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\"");
             if (JsieveConfigMapHandler.isNotifyActionRFCCompliantAvailable()) {
                 buffer.append(", \"enotify\"");
             }
@@ -67,14 +69,33 @@ public final class SoapToSieve {
         String name = rule.getName();
         boolean active = rule.isActive();
 
+        // Rule name
+        buffer.append("# ").append(name).append('\n');
+
+        FilterVariables filterVariables = rule.getFilterVariables();
+        if (filterVariables != null) {
+            List<FilterVariable> variables = filterVariables.getVariables();
+            if (variables != null && !variables.isEmpty()) {
+                for (FilterVariable filterVariable : variables) {
+                    String varName = filterVariable.getName();
+                    String varValue = filterVariable.getValue();
+                    if (!StringUtil.isNullOrEmpty(varName) && !StringUtil.isNullOrEmpty(varValue)) {
+                        buffer.append("set \"").append(varName).append("\" \"").append(varValue).append("\";\n");
+                    } else {
+                        ZimbraLog.filter.debug("Ignoring problem in filterVariable with name or value");
+                    }
+                }
+            }
+        } else {
+            ZimbraLog.filter.debug("No filterVariables found in filterRule in rule %s", name);
+        }
+
         FilterTests tests = rule.getFilterTests();
         Sieve.Condition condition = Sieve.Condition.fromString(tests.getCondition());
         if (condition == null) {
             condition = Sieve.Condition.allof;
         }
 
-        // Rule name
-        buffer.append("# ").append(name).append('\n');
         if (active) {
             buffer.append("if ");
         } else {
