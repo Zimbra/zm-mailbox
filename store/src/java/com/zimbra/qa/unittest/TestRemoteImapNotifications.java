@@ -6,9 +6,12 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 
+import org.apache.log4j.BasicConfigurator;
 import org.dom4j.DocumentException;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.client.ZFolder;
@@ -30,19 +33,38 @@ public class TestRemoteImapNotifications {
     private static final String USER = "TestRemoteImapNotifications-user";
     private static final String PASS = "test123";
     private Account acc = null;
-    private Server imapServer = null;
+    private static Server imapServer = null;
     private ImapConnection connection;
     private static boolean mIMAPDisplayMailFoldersOnly;
     private static boolean saved_imap_always_use_remote_store;
+    private static String[] saved_imap_servers = null;
 
-    @Before
-    public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        BasicConfigurator.configure();
+
+
         saved_imap_always_use_remote_store = LC.imap_always_use_remote_store.booleanValue();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(true));
 
         imapServer = Provisioning.getInstance().getLocalServer();
         mIMAPDisplayMailFoldersOnly = imapServer.isImapDisplayMailFoldersOnly();
         imapServer.setImapDisplayMailFoldersOnly(false);
+
+
+        //preserve settings
+        saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
+        imapServer.setReverseProxyUpstreamImapServers(new String[] {});
+    }
+
+    @AfterClass
+    public static void afterClass() throws ServiceException {
+        imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
+    }
+
+
+    @Before
+    public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
         sharedCleanup();
         acc = TestUtil.createAccount(USER);
         Provisioning.getInstance().setPassword(acc, PASS);
