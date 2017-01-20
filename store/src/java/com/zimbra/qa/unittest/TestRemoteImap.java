@@ -417,9 +417,10 @@ public class TestRemoteImap {
     @Test
     public void testIdleNotification() throws Exception {
         ImapConnection connection1 = connect(imapServer);
+        connection1.login(PASS);
         connection1.select("INBOX");
-
         ImapConnection connection2 = connect(imapServer);
+        connection2.login(PASS);
 
         Flags flags = Flags.fromSpec("afs");
         Date date = new Date(System.currentTimeMillis());
@@ -427,19 +428,13 @@ public class TestRemoteImap {
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
         TestUtil.addMessage(zmbox, subject, "1", null);
         Literal msg = TestImap.message(100000);
-        final AtomicLong exists = new AtomicLong(-1);
-        final AtomicLong recent = new AtomicLong(-1);
+        final AtomicLong append = new AtomicLong(-1);
         final CountDownLatch doneSignal = new CountDownLatch(1);
 
         connection1.idle(new ResponseHandler() {
             @Override
             public void handleResponse(ImapResponse res) {
-                if (res.getCCode() == CAtom.EXISTS) {
-                    exists.set(res.getNumber());
-                }
-                if (res.getCCode() == CAtom.RECENT) {
-                    recent.set(1);
-                }
+            	append.set(res.getNumber());
             }
         });
         Assert.assertTrue("Connection is not idling when it should be", connection1.isIdling());
@@ -449,13 +444,12 @@ public class TestRemoteImap {
 	        Assert.assertNotNull(res);
 
 	        try {
-	            doneSignal.await(5, TimeUnit.SECONDS);
+	            doneSignal.await(10, TimeUnit.SECONDS);
 	        } catch (Exception e) {
 	            Assert.fail("Wait interrupted. ");
 	        }
 
-	        Assert.assertEquals("Connection was not notified of new items", 1, recent.get());
-	        Assert.assertEquals("Connection was not notified of existing items", 1, exists.get());
+	        Assert.assertEquals("Connection was not notified of existing items", 1, append.get());
 
         } finally {
             msg.dispose();
