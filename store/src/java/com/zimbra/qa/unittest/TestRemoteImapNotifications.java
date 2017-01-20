@@ -278,7 +278,7 @@ public class TestRemoteImapNotifications {
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
         ZFolder folder = TestUtil.createFolder(zmbox, folderName);
         ZTag tag = zmbox.createTag(tagName, Color.blue);
-        zmbox.addMessage(folder.getId(), null, tag.getName(), 0, TestUtil.getTestMessage(subject), true);
+        zmbox.addMessage(folder.getId(), null, tag.getId(), 0, TestUtil.getTestMessage(subject), true);
 
         connection = connect(imapServer);
         connection.login(PASS);
