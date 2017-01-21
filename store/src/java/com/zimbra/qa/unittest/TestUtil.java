@@ -714,7 +714,7 @@ public class TestUtil extends Assert {
             }
             try {
                 if (timeout_millis > 500) {
-                    Thread.sleep(1000);
+                    Thread.sleep(500);
                     timeout_millis = timeout_millis - 500;
                 } else {
                     Thread.sleep(timeout_millis);
