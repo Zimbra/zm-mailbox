@@ -357,6 +357,10 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
     private long mCbSeqNo = 0; // seqno passed in by the current waiting callback
     private long mCurrentSeqNo; // current sequence number
 
+    public long getCurrentSeqNo() {
+        return mCurrentSeqNo;
+    }
+
     /** these are the accounts we are listening to.  Stores EITHER a WaitSetSession or an AccountID  */
     private HashMap<String, WaitSetAccount> mSessions = new HashMap<String, WaitSetAccount>();
 }
