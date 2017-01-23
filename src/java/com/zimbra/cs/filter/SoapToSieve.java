@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -34,6 +36,8 @@ import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
+import com.zimbra.soap.mail.type.FilterVariable;
+import com.zimbra.soap.mail.type.FilterVariables;
 import com.zimbra.soap.mail.type.NestedRule;
 
 public final class SoapToSieve {
@@ -48,7 +52,11 @@ public final class SoapToSieve {
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\"];\n");
+            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\"");
+            if (JsieveConfigMapHandler.isNotifyActionRFCCompliantAvailable()) {
+                buffer.append(", \"enotify\"");
+            }
+            buffer.append("];\n");
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule);
@@ -61,14 +69,33 @@ public final class SoapToSieve {
         String name = rule.getName();
         boolean active = rule.isActive();
 
+        // Rule name
+        buffer.append("# ").append(name).append('\n');
+
+        FilterVariables filterVariables = rule.getFilterVariables();
+        if (filterVariables != null) {
+            List<FilterVariable> variables = filterVariables.getVariables();
+            if (variables != null && !variables.isEmpty()) {
+                for (FilterVariable filterVariable : variables) {
+                    String varName = filterVariable.getName();
+                    String varValue = filterVariable.getValue();
+                    if (!StringUtil.isNullOrEmpty(varName) && !StringUtil.isNullOrEmpty(varValue)) {
+                        buffer.append("set \"").append(varName).append("\" \"").append(varValue).append("\";\n");
+                    } else {
+                        ZimbraLog.filter.debug("Ignoring problem in filterVariable with name or value");
+                    }
+                }
+            }
+        } else {
+            ZimbraLog.filter.debug("No filterVariables found in filterRule in rule %s", name);
+        }
+
         FilterTests tests = rule.getFilterTests();
         Sieve.Condition condition = Sieve.Condition.fromString(tests.getCondition());
         if (condition == null) {
             condition = Sieve.Condition.allof;
         }
 
-        // Rule name
-        buffer.append("# ").append(name).append('\n');
         if (active) {
             buffer.append("if ");
         } else {
@@ -323,11 +350,26 @@ public final class SoapToSieve {
 
     private static String toSieve(FilterTest.HeaderTest test) throws ServiceException {
         String header = getSieveHeaderList(test.getHeaders());
-        Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
-        if (Strings.isNullOrEmpty(test.getValue())) {
+        String val = test.getValue();
+        if (Strings.isNullOrEmpty(val)) {
             throw ServiceException.INVALID_REQUEST("missing required attribute: value" , null);
         }
-        return toSieve("header", header, comp, test.isCaseSensitive(), test.getValue());
+
+        if (StringUtils.isNotEmpty(test.getStringComparison())) {
+            Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
+            return toSieve("header", header, comp, test.isCaseSensitive(), test.getValue());
+        }
+
+        if (StringUtils.isNotEmpty(test.getValueComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
+            return toSieve("header", header, comp, test.getValue(), false, null);
+        }
+
+        if (StringUtils.isNotEmpty(test.getCountComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
+            return toSieve("header", header, comp, test.getValue(), true, null);
+        }
+        return null;
     }
 
     private static String toSieve(FilterTest.MimeHeaderTest test) throws ServiceException {
@@ -344,19 +386,61 @@ public final class SoapToSieve {
         return String.format(format, name, comp, header, FilterUtil.escape(value));
     }
 
+    private static String toSieve(String name, String header, Sieve.ValueComparison comp, String value, boolean isCount, Sieve.AddressPart part) throws ServiceException {
+        String countOrVal = isCount ? ":count" : ":value";
+        boolean numeric = true;
+        try {
+            Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            if (isCount) {
+                throw ServiceException.INVALID_REQUEST("Invalid Value: " + value, e);
+            } else {
+                numeric = false;
+            }
+        }
+        //for :count, iasciinumeric comparator will be used always.
+        //for :value, iasciinumeric comparator will be used if value is numeric else
+        //iasciicasemap will be used.
+        Sieve.Comparator comparator= Sieve.Comparator.iasciinumeric;
+        if (!numeric) {
+            comparator= Sieve.Comparator.iasciicasemap;
+        }
+        if (part == null) {
+            String format = "%s " + countOrVal + " \"%s\" :comparator \"" + comparator + "\" %s \"%s\"";
+            return String.format(format, name, comp, header, FilterUtil.escape(value));
+        } else {
+            String format = "%s " + countOrVal + " \"%s\" :%s :comparator \"" + comparator + "\" %s \"%s\"";
+            return String.format(format, name, comp, part, header, FilterUtil.escape(value));
+        }
+
+    }
+
     private static String toSieve(FilterTest.AddressTest test) throws ServiceException {
         String header = getSieveHeaderList(test.getHeader());
         Sieve.AddressPart part = Sieve.AddressPart.fromString(test.getPart());
         if (part == null) {
             part = Sieve.AddressPart.all;
         }
-        Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
-        String value = test.getValue();
-        checkValue(comp, value);
-        String valueStr = null == value ? "" : FilterUtil.escape(value);
-        return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comp,
-                test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
-                        header, valueStr);
+        if (StringUtils.isNotEmpty(test.getStringComparison())) {
+            Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
+            String value = test.getValue();
+            checkValue(comp, value);
+            String valueStr = null == value ? "" : FilterUtil.escape(value);
+            return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comp,
+                    test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
+                            header, valueStr);
+        }
+
+        if (StringUtils.isNotEmpty(test.getValueComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
+            return toSieve("address", header, comp, test.getValue(), false, part);
+        }
+
+        if (StringUtils.isNotEmpty(test.getCountComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
+            return toSieve("address", header, comp, test.getValue(), true, part);
+        }
+        return null;
     }
 
     private static void checkValue(Sieve.StringComparison comparison, String value) throws ServiceException {
@@ -469,6 +553,36 @@ public final class SoapToSieve {
                     append("text:\r\n").append(getDotStuffed(bodyTemplate)).append("\r\n.\r\n").
                     append(maxBodyBytes < 0 ? "" : " " + maxBodyBytes).
                     append(origHeaders.isEmpty() ? "" : " " + getSieveMultiValue(origHeaders)).toString();
+        } else if (action instanceof FilterAction.RFCCompliantNotifyAction) {
+            FilterAction.RFCCompliantNotifyAction notify = (FilterAction.RFCCompliantNotifyAction) action;
+            String from = notify.getFrom();
+            String importance = Strings.nullToEmpty(notify.getImportance());
+            String options = Strings.nullToEmpty(notify.getOptions());
+            String message = Strings.nullToEmpty(notify.getMessage());
+            String method = Strings.nullToEmpty(notify.getMethod());
+            if (StringUtil.isNullOrEmpty(method)) {
+                throw ServiceException.INVALID_REQUEST("Missing notification mechanism", null);
+            }
+
+            StringBuilder filter = new StringBuilder("notify ");
+            if (!from.isEmpty()) {
+                filter.append(":from ").append(StringUtil.enclose(FilterUtil.escape(from), '"')).append(' ');
+            }
+            if (!importance.isEmpty()) {
+                filter.append(":importance ").append(StringUtil.enclose(importance, '"')).append(' ');
+            }
+            if (!options.isEmpty()) {
+                filter.append(":options ").append(StringUtil.enclose(options, '"')).append(' ');
+            }
+            if (!message.isEmpty()) {
+                filter.append(":message ").append(StringUtil.enclose(message, '"')).append(' ');
+            }
+            if (method.indexOf("\n") < 0) {
+                filter.append(StringUtil.enclose(method, '"'));
+            } else {
+                filter.append("text:\r\n").append(method).append("\r\n.\r\n");
+            }
+            return filter.toString();
         } else if (action instanceof FilterAction.StopAction) {
             return "stop";
         } else {
