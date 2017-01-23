@@ -23,6 +23,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import com.google.common.base.Strings;
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mime.ParsedAddress;
 
@@ -42,6 +43,9 @@ public final class TwitterTest extends AbstractTest {
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments args, SieveContext ctx) 
     		throws SieveException {
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }

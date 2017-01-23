@@ -29,7 +29,10 @@ import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
+import com.zimbra.soap.mail.type.FilterVariable;
+import com.zimbra.soap.mail.type.FilterVariables;
 import com.zimbra.soap.mail.type.NestedRule;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * Converts a Sieve node tree to the SOAP representation of
@@ -67,7 +70,12 @@ public final class SieveToSoap extends SieveVisitor {
         }
 
         if (!isNestedRule()){
-            currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
+            if (currentRule == null) {
+                currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
+            } else {
+                currentRule.setName(getCurrentRuleName());
+                currentRule.setActive(ZmBoolean.fromBool(props.isEnabled));
+            }
             currentRule.setFilterTests(new FilterTests(props.condition.toString()));
             rules.add(currentRule);
             currentRuleIndex++;
@@ -84,6 +92,22 @@ public final class SieveToSoap extends SieveVisitor {
                 currentRule.setChild(nestedRule);
             }
             currentNestedRule = nestedRule;
+        }
+    }
+
+    @Override
+    protected void visitVariable(Node ruleNode, VisitPhase phase, RuleProperties props, String name, String value) {
+        if (phase == VisitPhase.begin) {
+            if(currentRule == null) {
+                currentRule = new FilterRule(getCurrentRuleName(), props != null ? props.isEnabled : true);
+            }
+            if(currentRule.getFilterVariables() == null) {
+                currentRule.setFilterVariables(new FilterVariables());
+            }
+            if(currentRule.getFilterVariables().getVariables() == null) {
+                currentRule.getFilterVariables().setVariables(Lists.newArrayList());
+            }
+            currentRule.getFilterVariables().addFilterVariable(new FilterVariable(name, value));
         }
     }
 
@@ -206,6 +230,21 @@ public final class SieveToSoap extends SieveVisitor {
     }
 
     @Override
+    protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props,
+            List<String> headers, Sieve.ValueComparison comparison, boolean isCount, String value) {
+        if (phase == VisitPhase.begin) {
+            FilterTest.HeaderTest test = addTest(new FilterTest.HeaderTest(), props);
+            test.setHeaders(Joiner.on(',').join(headers));
+            if (isCount) {
+               test.setCountComparison(comparison.toString());
+            } else {
+               test.setValueComparison(comparison.toString());
+            }
+            test.setValue(value);
+        }
+    }
+
+    @Override
     protected void visitMimeHeaderTest(Node node, VisitPhase phase, RuleProperties props,
             List<String> headers, Sieve.StringComparison comparison, boolean caseSensitive, String value) {
         if (phase == VisitPhase.begin) {
@@ -215,6 +254,22 @@ public final class SieveToSoap extends SieveVisitor {
             if (caseSensitive) {
                 test.setCaseSensitive(true);
             }
+            test.setValue(value);
+        }
+    }
+
+    @Override
+    protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
+            Sieve.AddressPart part, Sieve.ValueComparison comparison, boolean isCount, String value) {
+        if (phase == VisitPhase.begin) {
+            FilterTest.AddressTest test = addTest(new FilterTest.AddressTest(), props);
+            test.setHeader(Joiner.on(',').join(headers));
+            test.setPart(part.toString());
+            if (isCount) {
+                test.setCountComparison(comparison.toString());
+             } else {
+                test.setValueComparison(comparison.toString());
+             }
             test.setValue(value);
         }
     }
@@ -420,7 +475,30 @@ public final class SieveToSoap extends SieveVisitor {
         }
     }
 
-     @Override
+    @Override
+    protected void visitRFCCompliantNotifyAction(Node node, VisitPhase phase, RuleProperties props,
+            String from, String importance, String options, String message, String method) {
+        if (phase == VisitPhase.begin) {
+            FilterAction.RFCCompliantNotifyAction action = addAction(new FilterAction.RFCCompliantNotifyAction());
+            if (!Strings.isNullOrEmpty(from)) {
+                action.setFrom(from);
+            }
+            if (!Strings.isNullOrEmpty(importance)) {
+                action.setImportance(importance);
+            }
+            if (!Strings.isNullOrEmpty(options)) {
+                action.setOptions(options);
+            }
+            if (!Strings.isNullOrEmpty(message)) {
+                action.setMessage(message);
+            }
+            if (!Strings.isNullOrEmpty(method)) {
+                action.setMethod(method);
+            }
+        }
+    }
+
+    @Override
     protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props) {
         if (phase == VisitPhase.begin) {
             addAction(new FilterAction.StopAction());
