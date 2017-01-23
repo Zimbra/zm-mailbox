@@ -357,5 +357,9 @@
       </classpath>
        <arg line="-o ${dist.dir}"/>
     </java>
+  <target name="init-unittest" description="Setup the SOAP test files in /opt/zimbra">
+    <copy todir="${zimbra.home.dir}/unittest" overwrite="true">
+	  <fileset dir="data/unittest" includes="**"/>
+	</copy>
   </target>
 </project>
