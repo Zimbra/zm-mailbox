@@ -17,6 +17,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.client.ZFolder;
@@ -40,7 +41,6 @@ import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MessageData;
-
 
 public class TestRemoteImapNotifications {
     private static final String USER = "TestRemoteImapNotifications-user";
@@ -181,18 +181,6 @@ public class TestRemoteImapNotifications {
         assertEquals("Size of map returned by fetch afer reselecting cached folder", 2, mdMap.size());
     }
 
-    @Test
-    public void testNotificationsEmptyCachedFolder() throws IOException, ServiceException, MessagingException {
-        String folderName1 = "testNotificationsEmptyCachedFolder-folder1";
-        String folderName2 = "testNotificationsEmptyCachedFolder-folder2";
-
-        String subject1 = "testNotificationsEmptyCachedFolder-msg2";
-
-        ZMailbox zmbox = TestUtil.getZMailbox(USER);
-        ZFolder folder1 = TestUtil.createFolder(zmbox, folderName1);
-        TestUtil.createFolder(zmbox, folderName2);
-    }
-
     private void checkNilResponse(MessageData md) {
         Envelope envelope = md.getEnvelope();
         BodyStructure bs = md.getBodyStructure();
@@ -215,7 +203,7 @@ public class TestRemoteImapNotifications {
         connection.select(folderName1);
 
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
-        assertEquals("Size of map returned by initial fetch", 1, mdMap.size());
+        assertEquals("Size of map returned by initial fetch", 2, mdMap.size());
 
         zmbox.deleteMessage(msgId);
 
@@ -270,6 +258,7 @@ public class TestRemoteImapNotifications {
 
     }
 
+    @Ignore("TODO - support for delete tag notifications")
     @Test
     public void testDeleteTagNotificationActiveFolder() throws Exception {
         String folderName = "TestRemoteImapNotifications-folder";
@@ -295,6 +284,7 @@ public class TestRemoteImapNotifications {
         assertFalse(flags.contains(new Atom(tagName)));
     }
 
+    @Ignore("TODO - support for delete tag notifications")
     @Test
     public void testDeleteTagNotificationCachedFolder() throws Exception {
         String folderName1 = "TestRemoteImapNotifications-folder";
@@ -373,5 +363,31 @@ public class TestRemoteImapNotifications {
         } catch (CommandFailedException e) {
             fail("should be able to connect after deleting a cached folder");
         }
+    }
+
+    @Test
+    public void testDeleteNotificationsActiveFolder() throws IOException, ServiceException, MessagingException {
+        String folderName = "testDeleteNotificationsActiveFolder-folder";
+        String subject1 = "testDeleteNotificationsActiveFolder-msg1";
+        String subject2 = "testDeleteNotificationsActiveFolder-msg2";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName);
+        TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
+        TestUtil.addMessage(zmbox, subject2, folder.getId(), null);
+
+        connection = connect(imapServer);
+        connection.login(PASS);
+        connection.select(folderName);
+
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
+        assertEquals("Size of map returned by fetch 1", 2, mdMap.size());
+        TestUtil.deleteMessages(zmbox, "subject: " + subject2);
+
+	waitForWaitset();
+
+        mdMap = connection.fetch("1:*", "(ENVELOPE)");
+        mdMap.entrySet().removeIf(e ->  e.getValue().getEnvelope() == null || e.getValue().getEnvelope().getSubject() == null);
+
+        assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
     }
 }
