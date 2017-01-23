@@ -49,6 +49,8 @@ import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.servlet.continuation.ResumeContinuationListener;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingModifications.ModificationKey;
+import com.zimbra.cs.session.PendingRemoteModifications;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetCallback;
 import com.zimbra.cs.session.WaitSetError;
@@ -287,9 +289,10 @@ public class WaitSetRequest extends MailDocumentHandler {
                 WaitSetSession signalledSession = cb.signalledSessions.get(signalledAccount);
                 Set<Integer> folderInterests = null;
                 if(signalledSession != null) {
-                    folderInterests = signalledSession.getFolderInterest(); 
+                    folderInterests = signalledSession.getFolderInterest();
                 }
                 HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
+                @SuppressWarnings("rawtypes")
                 PendingModifications accountMods = cb.pendingModifications.get(signalledAccount);
                 if(accountMods!= null && accountMods.created != null) {
                     for(Object mod : accountMods.created.values()) {
@@ -318,9 +321,12 @@ public class WaitSetRequest extends MailDocumentHandler {
                         }
                     }
                 }
-
                 if(accountMods!= null && accountMods.deleted != null) {
-                    for(Object mod : accountMods.deleted.values()) {
+                    @SuppressWarnings("unchecked")
+                    Map<ModificationKey, Change> deletedMap = (Map<ModificationKey, Change>) accountMods.deleted;
+                    for (Map.Entry<ModificationKey, Change> entry : deletedMap.entrySet()) {
+                        ModificationKey key = entry.getKey();
+                        Change mod = entry.getValue();
                         if(mod instanceof Change) {
                             Object what = ((Change) mod).what;
                             if(what != null && what instanceof MailItem.Type) {
@@ -328,7 +334,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                                 if(folderInterests != null && !folderInterests.contains(folderId)) {
                                     continue;
                                 }
-                                getFolderMods(folderId, folderMap).addDeletedItem(getDeletedItemSOAP(folderId, what.toString()));
+                                getFolderMods(folderId, folderMap).addDeletedItem(getDeletedItemSOAP(key.getItemId(), what.toString()));
                             }
                         }
                     }
@@ -366,12 +372,12 @@ public class WaitSetRequest extends MailDocumentHandler {
     private static DeleteItemNotification getDeletedItemSOAP(int itemId, String type) throws ServiceException {
         return new DeleteItemNotification(itemId, type);
     }
-    
+
     private static PendingFolderModifications getFolderMods(Integer folderId, HashMap<Integer, PendingFolderModifications> folderMap) {
         PendingFolderModifications folderMods = folderMap.get(folderId);
         if(folderMods == null) {
             folderMods = new PendingFolderModifications(folderId);
-            folderMap.put(folderId, folderMods);    
+            folderMap.put(folderId, folderMods);
         }
         return folderMods;
     }
