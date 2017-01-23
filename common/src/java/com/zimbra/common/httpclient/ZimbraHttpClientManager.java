@@ -43,9 +43,12 @@ public class ZimbraHttpClientManager {
             ZimbraLog.security.error("Failed to load local keystore");
         }
         if(sslcontext != null) {
-            internalAsyncClient = HttpAsyncClients.custom().setSSLContext(sslcontext).build();
+            internalAsyncClient = HttpAsyncClients.custom().setSSLContext(sslcontext)
+                    .setMaxConnTotal(LC.httpclient_internal_connmgr_max_total_connections.intValue()).build();
         } else {
-            internalAsyncClient = HttpAsyncClients.createMinimal();
+            internalAsyncClient = HttpAsyncClients.custom()
+                    .setMaxConnTotal(LC.httpclient_internal_connmgr_max_total_connections.intValue())
+                    .build();
         }
 
         internalAsyncClient.start();
