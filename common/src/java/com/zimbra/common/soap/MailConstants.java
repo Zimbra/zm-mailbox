@@ -1201,9 +1201,9 @@ public final class MailConstants {
     public static final String A_EXPAND = "expand";
     public static final String E_PENDING_FOLDER_MODIFICATIONS = "mods";
     public static final String E_CREATED = "created";
-    public static final String E_MODIFIED_MSG = "modMsg";
-    public static final String E_MODIFIED_TAG = "modTag";
-    public static final String E_MODIFIED_FOLDER = "modFolder";
+    public static final String E_MODIFIED_MSGS = "modMsgs";
+    public static final String E_MODIFIED_TAGS = "modTags";
+    public static final String E_MODIFIED_FOLDERS = "modFolders";
 
     // AutoComplete
     public static final String E_MATCH = "match";
