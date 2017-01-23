@@ -64,8 +64,8 @@ import com.zimbra.soap.base.WaitSetResp;
 import com.zimbra.soap.mail.message.WaitSetResponse;
 import com.zimbra.soap.mail.type.CreateItemNotification;
 import com.zimbra.soap.mail.type.DeleteItemNotification;
-import com.zimbra.soap.mail.type.ItemSpec;
 import com.zimbra.soap.mail.type.ModifyNotification;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.Id;
@@ -316,7 +316,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                                 if(folderInterests != null && !folderInterests.contains(folderId)) {
                                     continue;
                                 }
-                                getFolderMods(folderId, folderMap).addModifiedItem(getModifiedItemSOAP(itemInfo, ((Change) mod).why));
+                                getFolderMods(folderId, folderMap).addModifiedMsg(getModifiedItemSOAP(itemInfo, ((Change) mod).why));
                             }
                         }
                     }
@@ -363,7 +363,7 @@ public class WaitSetRequest extends MailDocumentHandler {
         return new CreateItemNotification(messageInfo);
     }
 
-    private static ModifyNotification getModifiedItemSOAP(BaseItemInfo mod, int reason) throws ServiceException {
+    private static ModifyItemNotification getModifiedItemSOAP(BaseItemInfo mod, int reason) throws ServiceException {
         String tags = mod.getTags() == null ? null : Joiner.on(",").join(mod.getTags());
         ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
         return new ModifyNotification.ModifyItemNotification(messageInfo, reason);
