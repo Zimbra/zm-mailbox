@@ -77,15 +77,6 @@ public class PendingFolderModifications {
         deleted.add(item);
     }
 
-    public void addModifiedItem(ModifyNotification item) {
-        if (item instanceof ModifyItemNotification) {
-            modifiedMsgs.add((ModifyItemNotification) item);
-        } else if (item instanceof ModifyTagNotification) {
-            modifiedTags.add((ModifyTagNotification) item);
-        } else if (item instanceof RenameFolderNotification) {
-            modifiedFolders.add((RenameFolderNotification) item);
-        }
-    }
 
     public List<CreateItemNotification> getCreated() {
         return created;
@@ -95,12 +86,24 @@ public class PendingFolderModifications {
         return deleted;
     }
 
+    public void addModifiedMsg(ModifyItemNotification item) {
+        modifiedMsgs.add(item);
+    }
+
     public List<ModifyItemNotification> getModifiedMsgs() {
         return modifiedMsgs;
     }
 
+    public void addModifiedTag(ModifyTagNotification item) {
+        modifiedTags.add(item);
+    }
+
     public List<ModifyTagNotification> getModifiedTags() {
         return modifiedTags;
+    }
+
+    public void addRenamedFolder(RenameFolderNotification item) {
+        modifiedFolders.add(item);
     }
 
     public List<RenameFolderNotification> getRenamedFolders() {
