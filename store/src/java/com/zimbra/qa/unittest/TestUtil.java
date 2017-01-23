@@ -806,7 +806,7 @@ public class TestUtil extends Assert {
         adminMbox.emptyDumpster();
     }
 
-    private static void deleteMessages(ZMailbox mbox, String query) throws ServiceException {
+    static void deleteMessages(ZMailbox mbox, String query) throws ServiceException {
         // Delete messages
         ZSearchParams params = new ZSearchParams(query);
         params.setTypes(ZSearchParams.TYPE_MESSAGE);
