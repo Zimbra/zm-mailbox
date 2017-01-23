@@ -18,7 +18,7 @@ import com.zimbra.common.service.ServiceException;
  *
  * The actual tests that are run are in {@link SharedImapTests}
  */
-public class TestLocalImapShared extends SharedImapTests {
+public class TestLocalImap extends SharedImapTests {
     private static boolean saved_imap_always_use_remote_store;
 
     @Before
