@@ -624,7 +624,51 @@ public final class RuleManager {
         } catch (UnsupportedEncodingException e) {
             throw new ParseException(e.getMessage());
         }
-        return SIEVE_FACTORY.parse(sin);
+        Node node = null;
+        try {
+            node = SIEVE_FACTORY.parse(sin);
+        } catch (TokenMgrError e) {
+            // Due to the jsieve library's bug, the tokenizer does not handle correctly
+            // most characters after the backslash. According to the RFC 5228 Section 2.4.2,
+            // "An undefined escape sequence is interpreted as if there were no backslash",
+            // but the parse() method throws the TokenMgrError exception when it encounters
+            // an undefined escape sequence (such as "\a" in a context where "a" has no
+            // special meaning). Here is the workaround to re-try parsing using the same
+            // filter string without any undefined escape sequences.
+            try {
+                sin = new ByteArrayInputStream(ignoreBackslash(script).getBytes("UTF-8"));
+            } catch (UnsupportedEncodingException uee) {
+                throw new ParseException(uee.getMessage());
+            }
+            node = SIEVE_FACTORY.parse(sin);
+        }
+        return node;
+    }
+
+    /**
+     * Eliminate the undefined escape sequences from the sieve filter script string.
+     * Only \\ (backslash backslash) and \" (backslash double-quote) are defined as
+     * a escape sequences.
+     *
+     * @param script filter string which may include some undefined escape sequences
+     * @return filter string without undefined escape sequence
+     */
+    private static String ignoreBackslash(String script) {
+        StringBuilder result = new StringBuilder();
+        boolean backslash = false;
+        for (int i = 0; i < script.length(); i++) {
+            char c = script.charAt(i);
+            if (!backslash && c == '\\') {
+                backslash = true;
+            } else if (backslash && (c == '\\' || c == '"')) {
+                result.append('\\').append(c);
+                backslash = false;
+            } else {
+                result.append(c);
+                backslash = false;
+            }
+        }
+        return result.toString();
     }
 
     /**
