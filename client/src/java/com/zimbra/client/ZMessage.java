@@ -59,6 +59,7 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
     private final Map<String, String> mReqHdrs;
     private final String mIdentityId;
     private final long mAutoSendTime;
+    private final int mModifiedSequence;
 
     public ZMessage(Element e, ZMailbox zmailbox) throws ServiceException {
         mMailbox = zmailbox;
@@ -80,7 +81,7 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         mSize = e.getAttributeLong(MailConstants.A_SIZE, -1);
         mIdentityId = e.getAttribute(MailConstants.A_IDENTITY_ID, null);
         mAutoSendTime = e.getAttributeLong(MailConstants.A_AUTO_SEND_TIME, 1);
-
+        mModifiedSequence = e.getAttributeInt(MailConstants.A_MODIFIED_SEQUENCE, 0);
         Element content = e.getOptionalElement(MailConstants.E_CONTENT);
         if (content != null) {
             mContent = content.getText();
@@ -563,5 +564,10 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
     @Override
     public int getImapUid() {
         throw new UnsupportedOperationException("ZMessage method not supported yet");
+    }
+
+    @Override
+    public int getModifiedSequence() {
+        return mModifiedSequence;
     }
 }
