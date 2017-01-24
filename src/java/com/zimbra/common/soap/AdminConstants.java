@@ -1020,7 +1020,6 @@ public final class AdminConstants {
     public static final QName GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_REQUEST = QName.get(E_GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_REQUEST, NAMESPACE);
     public static final QName GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_RESPONSE = QName.get(E_GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_RESPONSE, NAMESPACE);
 
-    // Filter rules
     public static final String E_FILTER_RULES = "filterRules";
     public static final String E_FILTER_RULE = "filterRule";
     public static final String E_GET_FILTER_RULES_REQUEST = "GetFilterRulesRequest";
@@ -1205,6 +1204,7 @@ public final class AdminConstants {
     public static final String A_NUM_EXECUTED = "numExecuted";
     public static final String A_NUM_SUCCEEDED= "numSucceeded";
     public static final String A_NUM_FAILED = "numFailed";
+    public static final String A_NUM_SKIPPED = "numSkipped";
     public static final String A_NUM_REMAINING = "numRemaining";
     public static final String A_DURATION = "duration";
 

@@ -1203,6 +1203,7 @@ public final class MailConstants {
     public static final String A_NICKNAME = "nick";
     public static final String A_COMPANY = "company";
     public static final String A_FILEAS = "fileas";
+    public static final String A_LDAP_OFFSET = "ldapOffset";
 
     // device verification for reminders
     public static final String A_VERIFICATION_CODE = "code";
