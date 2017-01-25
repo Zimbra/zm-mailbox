@@ -105,6 +105,9 @@ public class LdapEphemeralStore extends EphemeralStore {
 
         @Override
         public void shutdown() {}
+
+        @Override
+        public void test(String url) throws ServiceException {}
     }
 
     /**
