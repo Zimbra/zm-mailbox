@@ -68,11 +68,23 @@ public class AttributeMigrationUtil {
             ZimbraLog.ephemeral.setLevel(Level.debug);
         }
         boolean dryRun = cl.hasOption('r');
-        if (dryRun && cl.hasOption("n")) {
-            console.println("cannot specify --num-threads with dry-run option");
+        if (dryRun && cl.hasOption('n')) {
+            ZimbraLog.ephemeral.error("cannot specify --num-threads with --dry-run option");
             return;
         }
-        Integer numThreads = dryRun ? null : Integer.valueOf(cl.getOptionValue('c', "1")); //dryrun is synchronous
+        Integer numThreads = null;
+        if (!dryRun) { //dryrun is synchronous
+            try {
+                numThreads = Integer.valueOf(cl.getOptionValue('n', "1"));
+                if (numThreads < 1) {
+                    ZimbraLog.ephemeral.error("invalid num-threads value: '%s'", numThreads);
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                ZimbraLog.ephemeral.error("invalid num-threads value: '%s'", cl.getOptionValue('n'));
+                return;
+            }
+        }
         AttributeMigration migration = new AttributeMigration(attrsToMigrate, numThreads);
         MigrationCallback callback;
         if (!dryRun) {
