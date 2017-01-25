@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
@@ -20,6 +21,8 @@ import com.zimbra.soap.admin.type.DomainSelector;
 public class ZSoapProvisioning {
 
     private SoapHttpTransport transport;
+    private ZAuthToken authToken;
+    private String csrfToken;
 
     public ZDomain getDomainInfo(DomainBy keyType, String key)
     throws ServiceException {
@@ -87,4 +90,19 @@ public class ZSoapProvisioning {
         transport = new SoapHttpTransport(uri);
     }
 
+    public ZAuthToken getAuthToken() {
+        return authToken;
+    }
+
+    public void setAuthToken(ZAuthToken authToken) {
+       this.authToken = authToken;
+        if (transport != null)
+            transport.setAuthToken(authToken);
+    }
+
+    public void setCsrfToken(String csrfToken) {
+        this.csrfToken = csrfToken;
+        if (transport != null)
+            transport.setCsrfToken(csrfToken);
+    }
 }
