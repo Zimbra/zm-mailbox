@@ -356,9 +356,6 @@ public class HeaderTest extends Header {
             for (String sourceStr : values) {
                 for (Object key : keys) {
                     String keyStr = ((String) key);
-                    if (SetVariable.isVariablesExtAvailable(mailAdapter)) {
-                        keyStr = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), keyStr);
-                    }
                     String regex = FilterUtil.sieveToJavaRegex(keyStr);
                     Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(sourceStr);
                     int grpCount = matcher.groupCount();
