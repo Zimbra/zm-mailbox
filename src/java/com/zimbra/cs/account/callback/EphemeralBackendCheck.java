@@ -31,7 +31,7 @@ public class EphemeralBackendCheck extends AttributeCallback {
                 throw ServiceException.FAILURE(String.format("cannot set zimbraEphemeralBackendURL to %s", url), e);
             }
         } else {
-            throw ServiceException.FAILURE(String.format("no ephemeral backend specified", attrName), null);
+            throw ServiceException.FAILURE(String.format("unable to modify %s; no ephemeral backend specified", attrName), null);
         }
     }
 
