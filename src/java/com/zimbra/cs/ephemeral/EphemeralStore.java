@@ -172,10 +172,44 @@ public abstract class EphemeralStore {
         return factory;
     }
 
+    public static Factory getFactory(String backendName) {
+        String factoryClassName = factories.get(backendName);
+        if (factoryClassName == null) {
+            return null;
+        }
+        Class<? extends Factory> factoryClass = null;
+        try {
+            factoryClass = Class.forName(factoryClassName).asSubclass(Factory.class);
+        } catch (ClassNotFoundException cnfe) {
+            try {
+                factoryClass = ExtensionUtil.findClass(factoryClassName).asSubclass(Factory.class);
+            } catch (ClassNotFoundException cnfe2) {
+                return null;
+            }
+        }
+        try {
+            Factory factory = factoryClass.newInstance();
+            factory.startup();
+            return factory;
+        } catch (InstantiationException | IllegalAccessException e) {
+            ZimbraLog.ephemeral.error("unable to instantiate factory %s",factoryClassName, e);
+            return null;
+        }
+    }
+
     public static interface Factory {
 
         EphemeralStore getStore();
         void startup();
         void shutdown();
+
+        /**
+         * Validate the given URL for the EphemeralStore implementation.
+         * This method should throw an ServiceException if the backend cannot function with this URL.
+         *
+         * @param url
+         * @throws ServiceException
+         */
+        void test(String url) throws ServiceException;
     }
 }

@@ -116,5 +116,8 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         public void shutdown() {
             instance = null;
         }
+
+        @Override
+        public void test(String url) throws ServiceException {}
     }
 }
