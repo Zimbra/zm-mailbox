@@ -37,14 +37,12 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.zimbra.common.account.Key;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.jsieve.SetVariable;
-import com.zimbra.cs.filter.jsieve.Variables;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
@@ -1117,6 +1115,48 @@ public class SetVariableTest {
             Assert.assertEquals("tag2", tags[1]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /**
+     * To verify that the variable ${name} is evaluated only once.
+     *  Before fix: when the match pattern *${dollar}{sample}* was defined,
+     *   first, the ${dollar} part was replaced to the $, then it was treated
+     *   as a parameter name ${sample}, and replaced to the test_text.  As a result,
+     *   the Subject was mistakenly compared to the pattern *test text*.
+     *  After fix: the Subject is compared to the *${sample}*.
+     */
+    @Test
+    public void testDollar() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            filterScript = "require [\"variables\"];\n"
+                         + "set \"dollar\" \"$\";\n"
+                         + "set \"sample\" \"test text\";\n"
+                         + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*${dollar}{sample}*\" {\n"
+                         + "  tag \"=${1}=\";\n"
+                         + "  tag \"=${2}=\";\n"
+                         + "}\n";
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: abc${sample}xyz test text 123\n"
+                       + "\n"
+                       + "Hello World.";
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(2, msg.getTags().length);
+            Assert.assertEquals("=abc=", msg.getTags()[0]);
+            Assert.assertEquals("=xyz test text 123=", msg.getTags()[1]);
+            Assert.assertNotSame("=abctest textxyz =", msg.getTags()[0]);
+            Assert.assertNotSame("= 123", msg.getTags()[1]);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
         }
     }
 
