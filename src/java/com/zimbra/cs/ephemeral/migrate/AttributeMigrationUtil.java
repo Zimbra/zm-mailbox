@@ -72,8 +72,9 @@ public class AttributeMigrationUtil {
             ZimbraLog.ephemeral.error("cannot specify --num-threads with --dry-run option");
             return;
         }
+        //a null numThreads value causes the migration process to run synchronously
         Integer numThreads = null;
-        if (!dryRun) { //dryrun is synchronous
+        if (!dryRun) { //dry runs are always synchronous
             try {
                 numThreads = Integer.valueOf(cl.getOptionValue('n', "1"));
                 if (numThreads < 1) {

@@ -69,6 +69,7 @@ public class AttributeMigration {
         if (numThreads != null) {
             executor = newFixedThreadPool(numThreads, new ThreadFactoryBuilder().setNameFormat("MigrateEphemeralAttrs-%d").setDaemon(false).build());
         } else {
+            //passing in null for numThreads causes migration to be executed synchronously
             async = false;
         }
     }
