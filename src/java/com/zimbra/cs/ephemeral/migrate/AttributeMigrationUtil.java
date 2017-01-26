@@ -10,20 +10,19 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log.Level;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.AllAccountsSource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.DryRunMigrationCallback;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationCallback;
-import com.zimbra.cs.ephemeral.migrate.AttributeMigration.SingleAccountSource;
+import com.zimbra.cs.ephemeral.migrate.AttributeMigration.SomeAccountsSource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.ZimbraMigrationCallback;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -47,12 +46,14 @@ public class AttributeMigrationUtil {
     }
 
     static {
-        OPTIONS.addOption("a", "account", true, "Specific account to migrate. If not specified, all accounts will be migrated");
         OPTIONS.addOption("r", "dry-run", false, "Dry run: display info on what the migration would accomplish");
         OPTIONS.addOption("n", "num-threads", true, "Number of threads to use in the migration. If not set, defaults to 1");
         OPTIONS.addOption("k", "keep-old", false, "Do not delete old values in LDAP after migration");
         OPTIONS.addOption("d", "debug", false, "Enable debug logging");
         OPTIONS.addOption("h", "help", false, "Display this help message");
+        Option option = new Option("a", "account", true, "Specific account to migrate. If not specified, all accounts will be migrated");
+        option.setArgs(Option.UNLIMITED_VALUES);
+        OPTIONS.addOption(option);
     }
 
     public static void main(String[] args) throws Exception {
@@ -97,9 +98,9 @@ public class AttributeMigrationUtil {
         migration.setCallback(callback);
         EntrySource source;
         if (cl.hasOption('a')) {
-            String acctValue = cl.getOptionValue('a');
-            AccountBy acctBy = StringUtil.isUUID(acctValue) ? AccountBy.id : AccountBy.name;
-            source = new SingleAccountSource(acctBy, acctValue);
+            String[] acctValues = cl.getOptionValues('a');
+            source = new SomeAccountsSource(acctValues);
+
         } else {
             source = new AllAccountsSource();
         }

@@ -3,6 +3,7 @@ package com.zimbra.cs.ephemeral.migrate;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,11 +14,9 @@ import java.util.concurrent.ExecutorService;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -149,23 +148,27 @@ public class AttributeMigration {
         }
     }
 
-    static class SingleAccountSource implements EntrySource {
-        private AccountBy acctBy;
-        private String key;
+    static class SomeAccountsSource implements EntrySource {
+        private List<String> accounts = new ArrayList<String>();
 
-        SingleAccountSource(AccountBy acctBy, String key) {
-            this.acctBy = acctBy;
-            this.key = key;
+        public SomeAccountsSource(String[] acctValues) {
+            accounts.addAll(Arrays.asList(acctValues));
         }
 
         @Override
         public List<NamedEntry> getEntries() throws ServiceException {
             Provisioning prov = Provisioning.getInstance();
-            Account acct = prov.get(acctBy, key);
-            if (acct == null) {
-                throw AccountServiceException.NO_SUCH_ACCOUNT(key);
+            List<NamedEntry> entries = new ArrayList<NamedEntry>();
+            for (String acctValue: accounts) {
+                Account acct = prov.getAccount(acctValue);
+                if (acct == null) {
+                    ZimbraLog.ephemeral.error("no such account: %s", acctValue);
+                    continue;
+                } else {
+                    entries.add(acct);
+                }
             }
-            return Arrays.asList(acct);
+            return entries;
         }
     }
 
