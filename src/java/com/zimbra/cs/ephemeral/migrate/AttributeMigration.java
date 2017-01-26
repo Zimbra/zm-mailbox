@@ -61,6 +61,13 @@ public class AttributeMigration {
         this(attrsToMigrate, null, null, numThreads);
     }
 
+    /**
+     * @param attrsToMigrate - collection of attribute names to migrate
+     * @param source - EntrySource implementation
+     * @param callback - MigrationCallback implementation that handles generated EphemeralInputs
+     * @param numThreads - number of threads to use during migration. If null, the migration happens synchronously.
+     * @throws ServiceException
+     */
     public AttributeMigration(Collection<String> attrsToMigrate, EntrySource source,  MigrationCallback callback, Integer numThreads) throws ServiceException {
         this.attrsToMigrate = attrsToMigrate;
         initConverters();
@@ -69,7 +76,6 @@ public class AttributeMigration {
         if (numThreads != null) {
             executor = newFixedThreadPool(numThreads, new ThreadFactoryBuilder().setNameFormat("MigrateEphemeralAttrs-%d").setDaemon(false).build());
         } else {
-            //passing in null for numThreads causes migration to be executed synchronously
             async = false;
         }
     }
