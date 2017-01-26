@@ -17,6 +17,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -60,6 +61,13 @@ public class AttributeMigration {
         this(attrsToMigrate, null, null, numThreads);
     }
 
+    /**
+     * @param attrsToMigrate - collection of attribute names to migrate
+     * @param source - EntrySource implementation
+     * @param callback - MigrationCallback implementation that handles generated EphemeralInputs
+     * @param numThreads - number of threads to use during migration. If null, the migration happens synchronously.
+     * @throws ServiceException
+     */
     public AttributeMigration(Collection<String> attrsToMigrate, EntrySource source,  MigrationCallback callback, Integer numThreads) throws ServiceException {
         this.attrsToMigrate = attrsToMigrate;
         initConverters();
@@ -153,7 +161,11 @@ public class AttributeMigration {
         @Override
         public List<NamedEntry> getEntries() throws ServiceException {
             Provisioning prov = Provisioning.getInstance();
-            return Arrays.asList(prov.get(acctBy, key));
+            Account acct = prov.get(acctBy, key);
+            if (acct == null) {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(key);
+            }
+            return Arrays.asList(acct);
         }
     }
 
