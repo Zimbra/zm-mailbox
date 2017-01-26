@@ -9292,7 +9292,7 @@ TODO: delete them permanently from here
   <desc>enable OCSP support for SMIME.</desc>
 </attr>
 
-<attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.8.0">
+<attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.2">
   <desc>URL of ephemeral storage backend</desc>
   <globalConfigValue>ldap://default</globalConfigValue>
 </attr>
