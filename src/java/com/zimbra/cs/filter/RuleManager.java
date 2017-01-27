@@ -348,6 +348,11 @@ public final class RuleManager {
             requires.append(script.substring(startRequireIdx, endIdx));
             startIdx = script.indexOf("require", endIdx);
             if (startIdx >= 0) {
+                if (script.substring(endIdx, startIdx).trim().length() > 0) {
+                    // This "require" is not the action name, but the value
+                    // for other action. Stop finding the "require" action.
+                    break;
+                }
                 others.append(script.substring(endIdx, startIdx));
             }
         }
