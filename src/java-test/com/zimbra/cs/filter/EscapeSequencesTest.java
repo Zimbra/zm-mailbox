@@ -165,6 +165,65 @@ public final class EscapeSequencesTest {
     }
 
     /*
+     * pattern in filter : testSample ==> applied pattern: testSample
+     */
+    @Test
+    public void testHeaderEscape4() {
+        doTestHeaderEscapePattern("if header :comparator \"i;ascii-casemap\" :matches \"X-Header-0BackSlash\" \"testSample\" {"
+                + "tag \"list\";}");
+    }
+
+    /*
+     * pattern in filter : test\Sample ==> applied pattern: testSample
+     * (The undefined escape sequence \1 will be ignored)
+     */
+    @Test
+    public void testHeaderEscape5() {
+        doTestHeaderEscapePattern("if header :comparator \"i;ascii-casemap\" :matches \"X-Header-0BackSlash\" \"test\\Sample\" {"
+                + "tag \"list\";}");
+    }
+
+    /*
+     * pattern in filter : test\\Sample ==> applied pattern: test\Sample
+     * (The first backslash escapes the second one)
+     */
+    @Test
+    public void testHeaderEscape6() {
+        doTestHeaderEscapePattern("if header :comparator \"i;ascii-casemap\" :matches \"X-Header-1BackSlash\" \"test\\\\Sample\" {"
+                + "tag \"list\";}");
+    }
+
+    /*
+     * pattern in filter : test\\\Sample ==> applied pattern: test\Sample
+     * (The accepted escape sequence \\ and The undefined escape sequence \1 will be ignored)
+     */
+    @Test
+    public void testHeaderEscape7() {
+        doTestHeaderEscapePattern("if header :comparator \"i;ascii-casemap\" :matches \"X-Header-1BackSlash\" \"test\\\\\\Sample\" {"
+                + "tag \"list\";}");
+    }
+
+    /*
+     * pattern in filter : test\\\\Sample ==> applied pattern: test\\Sample
+     * (The accepted escape sequence \\ twice)
+     * TODO: This case should be testable after ZCS-616
+     */
+    public void testHeaderEscape8() {
+        doTestHeaderEscapePattern("if header :comparator \"i;ascii-casemap\" :matches \"X-Header-2BackSlash\" \"test\\\\\\\\Sample\" {"
+                + "tag \"list\";}");
+    }
+
+    /*
+     * pattern in filter : test\"123 ==> applied pattern: test"123
+     * (The first backslash escapes the second double-quote)
+     */
+    @Test
+    public void testHeaderEscape9() {
+        doTestHeaderEscapePattern("if header :comparator \"i;ascii-casemap\" :matches \"X-Header-DoubleQuote\" \"test\\\"Sample\" {"
+                + "tag \"list\";}");
+    }
+
+    /*
      * pattern in filter : test\\123 ==> applied pattern: test\123
      */
     @Test
@@ -245,6 +304,27 @@ public final class EscapeSequencesTest {
         doTestNotifyEscape(filterScript, "Sample\\\\Message");
     }
 
+    private String triggeringMsg =
+              "To: user123@zimbra.com\n"
+            + "From: sender@zimbra.com\n"
+            + "Subject: test\\123\n"
+            + "X-Header-0BackSlash:  testSample\n"
+            + "X-Header-1BackSlash:  test\\Sample\n"
+            + "X-Header-2BackSlash:  test\\\\Sample\n"
+            + "X-Header-DoubleQuote: test\"Sample\n";
+
+    /*
+     * MAIL FROM: <user123@zimbra.com>
+     * RCPT TO: <test1@zimbra.com>
+     * DATA
+     * To: user123@zimbra.com
+     * From: sender@zimbra.com
+     * Subject: test\123
+     * X-Header-0BackSlash:  testSample
+     * X-Header-1BaskSlash:  test\Sample
+     * X-Header-2BackSlash:  test\\Sample
+     * X-Header-DoubleQuote: test"Sample
+     */
     public void doTestHeaderEscapePattern(String filterScript) {
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<user123@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
@@ -259,7 +339,7 @@ public final class EscapeSequencesTest {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-                    new ParsedMessage("To: user123@zimbra.com\nFrom: sender@zimbra.com\nSubject: test\\123\n".getBytes(), false),
+                    new ParsedMessage(triggeringMsg.getBytes(), false),
                     0, account.getName(), env, new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
             Assert.assertEquals(1, ids.size());
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
@@ -288,7 +368,7 @@ public final class EscapeSequencesTest {
             acct1.setMailSieveScript(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1,
-                    new ParsedMessage("To: user123@zimbra.com\nFrom: sender@zimbra.com\nSubject: test\\123\n".getBytes(), false), 0,
+                    new ParsedMessage(triggeringMsg.getBytes(), false), 0,
                     acct1.getName(), env, new DeliveryContext(),
                     Mailbox.ID_FOLDER_INBOX, true);
 
@@ -323,7 +403,7 @@ public final class EscapeSequencesTest {
             account.setMailSieveScript(filterScript);
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox), mbox,
-                    new ParsedMessage("To: user123@zimbra.com\nFrom: sender@zimbra.com\nSubject: test\\123\n".getBytes(), false), 0,
+                    new ParsedMessage(triggeringMsg.getBytes(), false), 0,
                     account.getName(), env,
                     new DeliveryContext(),
                     Mailbox.ID_FOLDER_INBOX, true);
@@ -342,7 +422,7 @@ public final class EscapeSequencesTest {
             account.setMailSieveScript(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox), mbox, 
-                    new ParsedMessage("To: user123@zimbra.com\nFrom: sender@zimbra.com\nSubject: test\\123\n".getBytes(), false), 0, 
+                    new ParsedMessage(triggeringMsg.getBytes(), false), 0,
                     account.getName(), null, 
                     new DeliveryContext(),
                     Mailbox.ID_FOLDER_INBOX, true);
