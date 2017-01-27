@@ -507,5 +507,39 @@ public final class RuleManagerAdminFilterTest {
         }
         Assert.assertTrue(headerDeleted);
     }
+
+    /* Verification for the ZCS-611
+     */
+    @Test
+    public void requireText() throws Exception {
+        String adminAfter = "require [\"log\", \"fileinto\"];\n"
+                + "require \"tag\";\n"
+                + "if  header :contains [\"Subject\"] \"require abc def\" {\n"
+                + "  tag \"--require--\";"
+                + "  tag \"123require789\";\n"
+                + "}";
+
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        RuleManager.clearCachedRules(account);
+
+        account.unsetMailAdminSieveScriptBefore();
+        account.unsetMailSieveScript();
+        account.unsetMailAdminSieveScriptAfter();
+
+        account.setMailAdminSieveScriptAfter(adminAfter);
+
+        RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage("Subject: require abc def\n".getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+
+        Integer itemId = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+        Message message = mbox.getMessageById(null, itemId);
+        String[] tags = message.getTags();
+        Assert.assertTrue(tags != null);
+        Assert.assertEquals(2, tags.length);
+        Assert.assertEquals("--require--", tags[0]);
+        Assert.assertEquals("123require789", tags[1]);
+    }
 }
 
