@@ -91,7 +91,13 @@ public class AttributeMigrationUtil {
         MigrationCallback callback;
         if (!dryRun) {
             initEphemeralBackendExtension();
-            callback = new ZimbraMigrationCallback();
+            try {
+                callback = new ZimbraMigrationCallback();
+            } catch (ServiceException e) {
+                String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
+                Zimbra.halt(String.format("unable to connect to ephemeral backend at %s; migration cannot proceed", url), e);
+                return;
+            }
         } else {
             callback = new DryRunMigrationCallback();
         }
@@ -108,7 +114,13 @@ public class AttributeMigrationUtil {
         if (dryRun || cl.hasOption('k')) {
             migration.setDeleteOriginal(false);
         }
-        migration.migrateAllAccounts();
+        try {
+            migration.migrateAllAccounts();
+        } catch (ServiceException e) {
+            String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
+            Zimbra.halt(String.format("error encountered during migration to ephemeral backend at %s; migration cannot proceed", url), e);
+            return;
+        }
     }
 
     private static void initEphemeralBackendExtension() throws ServiceException {

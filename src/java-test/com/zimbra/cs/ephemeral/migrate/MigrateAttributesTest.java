@@ -2,6 +2,7 @@ package com.zimbra.cs.ephemeral.migrate;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +30,7 @@ import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationCallback;
+import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationTask;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 public class MigrateAttributesTest {
@@ -89,7 +91,7 @@ public class MigrateAttributesTest {
      * Test MigrationTask for auth tokens
      */
     @Test
-    public void testAuthTokenMigrationTask() {
+    public void testAuthTokenMigrationTask() throws ServiceException {
         List<EphemeralInput> results = new LinkedList<EphemeralInput>();
         Map<String, AttributeConverter> converters = new HashMap<String, AttributeConverter>();
         converters.put(Provisioning.A_zimbraAuthTokens, new AuthTokenConverter());
@@ -109,7 +111,7 @@ public class MigrateAttributesTest {
      * Test MigrationTask for CSRF tokens
      */
     @Test
-    public void testCsrfTokenMigrationTask() {
+    public void testCsrfTokenMigrationTask() throws ServiceException {
         List<EphemeralInput> results = new LinkedList<EphemeralInput>();
         Map<String, AttributeConverter> converters = new HashMap<String, AttributeConverter>();
         converters.put(Provisioning.A_zimbraCsrfTokenData, new CsrfTokenConverter());
@@ -129,7 +131,7 @@ public class MigrateAttributesTest {
      * Test MigrationTask for last login timestamp
      */
     @Test
-    public void testLastLogonTimestampMigrationTask() {
+    public void testLastLogonTimestampMigrationTask() throws ServiceException {
         List<EphemeralInput> results = new LinkedList<EphemeralInput>();
         Map<String, AttributeConverter> converters = new HashMap<String, AttributeConverter>();
         converters.put(Provisioning.A_zimbraLastLogonTimestamp, new StringAttributeConverter());
@@ -164,7 +166,7 @@ public class MigrateAttributesTest {
         AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
 
         //disable running in separate thread
-        //rub migration
+        //run migration
         migration.migrateAllAccounts();
         EphemeralLocation location = new LdapEntryLocation(acct);
         EphemeralResult result = destination.get(new EphemeralKey(Provisioning.A_zimbraAuthTokens, "1234"), location);
@@ -185,6 +187,40 @@ public class MigrateAttributesTest {
         assertTrue(deleted.contains(csrfToken2));
         deleted = deletedAttrs.get(Provisioning.A_zimbraLastLogonTimestamp);
         assertTrue(deleted.contains(lastLogon));
+    }
+
+    @Test
+    public void testErrorDuringMigration() throws Exception {
+        List<EphemeralInput> results = new LinkedList<EphemeralInput>();
+        EntrySource source = new DummyEntrySource(acct, acct, acct);
+        Multimap<String, Object> deletedAttrs = LinkedListMultimap.create();
+
+        List<String> attrsToMigrate = Arrays.asList(new String[] {
+                Provisioning.A_zimbraAuthTokens,
+                Provisioning.A_zimbraCsrfTokenData,
+                Provisioning.A_zimbraLastLogonTimestamp});
+
+
+        DummyMigrationCallback callback = new DummyMigrationCallback(results, deletedAttrs);
+        callback.throwErrorDuringMigration = true;
+        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
+        try {
+            migration.migrateAllAccounts();
+            fail("synchronous migration should throw an exception");
+        } catch (ServiceException e) {
+            //make sure the root exception got thrown
+            assertTrue(e.getMessage().contains("error during migration"));
+        }
+        assertEquals(0, results.size()); //make sure nothing got migrated
+        migration = new AttributeMigration(attrsToMigrate, source, callback, 3);
+
+        try {
+            migration.migrateAllAccounts();
+            fail("async migration should throw an exception");
+        } catch (ServiceException e) {
+            assertTrue(e.getMessage().contains("error during migration"));
+        }
+        assertEquals(0, results.size());
     }
 
     private void verifyAuthTokenEphemeralInput(EphemeralInput input, String token, String serverVersion, Long expiration) {
@@ -214,6 +250,7 @@ public class MigrateAttributesTest {
         private List<EphemeralInput> trackedInputs;
         private Multimap<String, Object> deletedValues;
         private EphemeralStore store = null;
+        private boolean throwErrorDuringMigration = false;
 
         // for end-to-end testing with InMemoryEphemeralStore
         DummyMigrationCallback(EphemeralStore store, Multimap<String, Object> deletedValues) {
@@ -230,11 +267,15 @@ public class MigrateAttributesTest {
         @Override
         public void setEphemeralData(EphemeralInput input,
                 EphemeralLocation location, String origKey, Object origValue) throws ServiceException {
-            if (trackedInputs != null) {
-                trackedInputs.add(input);
-            }
-            if (store != null) {
-                store.update(input, location);
+            if (throwErrorDuringMigration) {
+                throw ServiceException.FAILURE("error during migration", null);
+            } else {
+                if (trackedInputs != null) {
+                    trackedInputs.add(input);
+                }
+                if (store != null) {
+                    store.update(input, location);
+                }
             }
         }
 
@@ -247,9 +288,9 @@ public class MigrateAttributesTest {
 
     public class DummyEntrySource implements EntrySource {
         List<NamedEntry> entries;
-        public DummyEntrySource(Account acct) {
-            entries = new ArrayList<NamedEntry>(1);
-            entries.add(acct);
+        public DummyEntrySource(Account... accts) {
+            entries = new ArrayList<NamedEntry>(accts.length);
+            entries.addAll(Arrays.asList(accts));
         }
         @Override
         public List<NamedEntry> getEntries() throws ServiceException {

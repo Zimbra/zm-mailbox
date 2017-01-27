@@ -6,15 +6,21 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
@@ -27,6 +33,7 @@ import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.LdapEntryLocation;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
@@ -44,6 +51,7 @@ public class AttributeMigration {
     private boolean async = true;
     private MigrationCallback callback;
     private static ExecutorService executor = null;
+    private static ServiceException exceptionWhileMigrating = null;
 
     //map of all available converters
     private static Map<String, AttributeConverter> converterMap = new HashMap<String, AttributeConverter>();
@@ -109,24 +117,39 @@ public class AttributeMigration {
         }
     }
 
-    private void migrateAccount(Account account) {
+    private void migrateAccount(Account account) throws ServiceException {
         MigrationTask migration = new MigrationTask(account, activeConverterMap, callback, deleteOriginal);
-        if (async) {
-            executor.submit(migration);
-        } else {
-            migration.migrateAttributes();
-        }
+        migration.migrateAttributes();
+    }
+
+    private void migrateAccountAsync(Account account) throws ServiceException {
+        MigrationTask migration = new MigrationTask(account, activeConverterMap, callback, deleteOriginal);
+        executor.submit(migration);
     }
 
     public void migrateAllAccounts() throws ServiceException {
         ZimbraLog.ephemeral.info("beginning migration of attributes %s to ephemeral storage",
                 Joiner.on(", ").join(attrsToMigrate));
-        for (NamedEntry entry: source.getEntries()) {
-            Account acct = (Account) entry;
-            migrateAccount(acct);
-        }
-        if (executor != null) {
+        if (async) {
+            for (NamedEntry entry: source.getEntries()) {
+                try {
+                    migrateAccountAsync((Account) entry);
+                } catch (RejectedExecutionException e) {
+                    //executor has been shut down due to error in migration process
+                    break;
+                }
+            }
             executor.shutdown();
+            try {
+                executor.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {}
+            if (exceptionWhileMigrating != null) {
+                throw exceptionWhileMigrating;
+            }
+        } else {
+            for (NamedEntry entry: source.getEntries()) {
+                migrateAccount((Account) entry);
+            }
         }
     }
 
@@ -196,7 +219,10 @@ public class AttributeMigration {
         private LdapProvisioning prov = null;
 
         public ZimbraMigrationCallback() throws ServiceException {
-            this.store = EphemeralStore.getFactory().getStore();
+            EphemeralStore.Factory factory = EphemeralStore.getFactory();
+            String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
+            factory.test(url);
+            this.store = factory.getStore();
             this.destinationIsLdap = (store instanceof LdapEphemeralStore);
             Provisioning prov = Provisioning.getInstance();
             if (prov instanceof LdapProvisioning) {
@@ -254,6 +280,126 @@ public class AttributeMigration {
         @Override
         public void deleteOriginal(Entry entry, String attrName, Object value,
                 AttributeConverter converter) throws ServiceException {
+        }
+    }
+
+    /**
+     * Class representing the migration of attributes on a single LDAP Entry
+     *
+     * @author iraykin
+     *
+     */
+    public static class MigrationTask implements Runnable {
+
+        protected Map<String, AttributeConverter> converters;
+        protected MigrationCallback callback;
+        protected boolean deleteOriginal;
+        protected Entry entry;
+
+        public MigrationTask(Entry entry, Map<String, AttributeConverter> converters, MigrationCallback callback, boolean deleteOriginal) {
+            this.entry = entry;
+            this.converters = converters;
+            this.callback = callback;
+            this.deleteOriginal = deleteOriginal;
+        }
+
+        /**
+         * Return the ephemeral location for this migration
+         * @return
+         */
+        public EphemeralLocation getEphemeralLocation() {
+            return new LdapEntryLocation(entry);
+        }
+
+        private List<Pair<EphemeralInput, Object>> migrateMultivaluedAttr(String attr, Object obj, AttributeConverter converter) {
+            String[] values;
+            if (obj instanceof String) {
+                values = new String[] {(String) obj };
+            } else if (obj instanceof String[]) {
+                values = (String[]) obj;
+            } else {
+                ZimbraLog.ephemeral.warn("multivalued attribute converter expects String or String[], got type %s for attribute '%s'", obj.getClass().getName(), attr);
+                return Collections.emptyList();
+            }
+            List<Pair<EphemeralInput, Object>> inputs = new LinkedList<Pair<EphemeralInput, Object>>();
+            for (String v: values) {
+                EphemeralInput input = converter.convert(attr, v);
+                if (input != null) {
+                    inputs.add(new Pair<EphemeralInput, Object>(input, v));
+                }
+            }
+            return inputs;
+        }
+
+        private List<Pair<EphemeralInput, Object>> migrateAttr(String attr, AttributeConverter converter) {
+            boolean multiValued = converter.isMultivalued();
+            Object obj = multiValued ? entry.getMultiAttr(attr, false, true) : entry.getAttr(attr, false, true);
+            if (obj == null) {
+                return Collections.emptyList();
+            }
+            List<Pair<EphemeralInput, Object>> inputs = new LinkedList<Pair<EphemeralInput, Object>>();
+            if (multiValued) {
+                inputs.addAll(migrateMultivaluedAttr(attr, obj, converter));
+            } else {
+                EphemeralInput input = converter.convert(attr, obj);
+                if (input != null) {
+                    inputs.add(new Pair<EphemeralInput, Object>(input, obj));
+                }
+            }
+            return inputs;
+        }
+
+        @VisibleForTesting
+        public void migrateAttributes() throws ServiceException {
+            if (entry instanceof NamedEntry) {
+                ZimbraLog.ephemeral.debug("migrating attributes to ephemeral storage for account %s", ((NamedEntry) entry).getId());
+            }
+            List<Pair<EphemeralInput, Object>> inputs = new LinkedList<Pair<EphemeralInput, Object>>();
+
+            for (Map.Entry<String, AttributeConverter> entry: converters.entrySet()) {
+                String attrName = entry.getKey();
+                AttributeConverter converter = entry.getValue();
+                inputs.addAll(migrateAttr(attrName, converter));
+            }
+            EphemeralLocation location = getEphemeralLocation();
+            for (Pair<EphemeralInput, Object> pair: inputs) {
+                EphemeralInput input = pair.getFirst();
+                String attrName = input.getEphemeralKey().getKey();
+                Object origValue = pair.getSecond();
+                try {
+                    if (Thread.interrupted()) {
+                        //another thread encountered an error during migration
+                        return;
+                    }
+                    callback.setEphemeralData(input, location, attrName, origValue);
+                } catch (ServiceException e) {
+                    // if an exception is encountered, shut down all the migration threads and store
+                    // the error so that it can be re-raised at the end
+                    ZimbraLog.ephemeral.error("error encountered during migration; stopping migration process");
+                    if (executor != null) {
+                        exceptionWhileMigrating = e;
+                        executor.shutdownNow();
+                    }
+                    throw e;
+                }
+                if (deleteOriginal) {
+                    try {
+                        callback.deleteOriginal(entry, attrName, origValue, converters.get(attrName));
+                    } catch (ServiceException e) {
+                        ZimbraLog.ephemeral.error("error deleting original LDAP value %s of attribute %s with callback %s",
+                                origValue, attrName, callback.getClass().getName());
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void run() {
+            try {
+                migrateAttributes();
+            } catch (ServiceException e) {
+                // async migration will re-raise the exception after all threads have been shut down
+            }
         }
     }
 }
