@@ -223,6 +223,25 @@ public class MigrateAttributesTest {
         assertEquals(0, results.size());
     }
 
+    @Test
+    public void testMigrateAlreadyMigratedAccount() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        //create a new account that will not have any data to migrate
+        Account acct = prov.createAccount("user2", "test123", new HashMap<String, Object>());
+        EntrySource source = new DummyEntrySource(acct);
+        Multimap<String, Object> deletedAttrs = LinkedListMultimap.create();
+        List<EphemeralInput> results = new LinkedList<EphemeralInput>();
+        List<String> attrsToMigrate = Arrays.asList(new String[] {
+                Provisioning.A_zimbraAuthTokens,
+                Provisioning.A_zimbraCsrfTokenData,
+                Provisioning.A_zimbraLastLogonTimestamp});
+
+        DummyMigrationCallback callback = new DummyMigrationCallback(results, deletedAttrs);
+        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
+        migration.migrateAllAccounts();
+        assertTrue(results.isEmpty());
+    }
+
     private void verifyAuthTokenEphemeralInput(EphemeralInput input, String token, String serverVersion, Long expiration) {
         EphemeralKey key = input.getEphemeralKey();
         assertEquals(Provisioning.A_zimbraAuthTokens, key.getKey());
