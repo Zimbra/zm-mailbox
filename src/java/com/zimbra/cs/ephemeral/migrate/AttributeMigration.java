@@ -334,7 +334,7 @@ public class AttributeMigration {
         private List<Pair<EphemeralInput, Object>> migrateAttr(String attr, AttributeConverter converter) {
             boolean multiValued = converter.isMultivalued();
             Object obj = multiValued ? entry.getMultiAttr(attr, false, true) : entry.getAttr(attr, false, true);
-            if (obj == null) {
+            if (obj == null || (obj instanceof String[] && ((String[]) obj).length == 0)) {
                 return Collections.emptyList();
             }
             List<Pair<EphemeralInput, Object>> inputs = new LinkedList<Pair<EphemeralInput, Object>>();
