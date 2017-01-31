@@ -18,6 +18,11 @@ import com.zimbra.cs.util.Zimbra;
  */
 public abstract class EphemeralStore {
 
+    /** Use this interface to identify ZimbraExtensions that provide EphemeralStores */
+    public static interface Extension {
+        String getStoreId();
+    }
+
     private static Map<String, String> factories = new HashMap<String, String>();
     private static Factory factory;
     protected AttributeEncoder encoder;
