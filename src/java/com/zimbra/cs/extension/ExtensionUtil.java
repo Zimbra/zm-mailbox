@@ -106,7 +106,12 @@ public class ExtensionUtil {
 
     private static Map<String, ZimbraExtension> sInitializedExtensions = new LinkedHashMap<String, ZimbraExtension>();
 
-    public static synchronized void initAll() {
+    public static interface ExtensionMatcher {
+        public boolean matches(ZimbraExtension ext);
+    }
+
+    /** @param matcher - Used to filter which extensions to initialize.  Can be null */
+    public static synchronized void initAllMatching(ExtensionMatcher matcher) {
         ZimbraLog.extensions.info("Initializing extensions");
         List<ZimbraExtensionClassLoader> sClassLoadersToRemove = new ArrayList<ZimbraExtensionClassLoader>();
         for (ZimbraExtensionClassLoader zcl : sClassLoaders) {
@@ -114,39 +119,37 @@ public class ExtensionUtil {
                 try {
                     Class<?> clazz = zcl.loadClass(name);
                     ZimbraExtension ext = (ZimbraExtension) clazz.newInstance();
+                    if (matcher != null && !matcher.matches(ext)) {
+                        continue;
+                    }
                     try {
                         ext.init();
                         RedoableOp.registerClassLoader(ext.getClass().getClassLoader());
                         String extName = ext.getName();
-                        ZimbraLog.extensions.info("Initialized extension " +
-                                extName + ": " + name + "@" + zcl);
+                        ZimbraLog.extensions.info("Initialized extension %s: %s@%s", extName, name, zcl);
                         sInitializedExtensions.put(extName, ext);
                     } catch (ExtensionException e) {
-                        ZimbraLog.extensions.info(
-                                "Disabled '" + ext.getName() + "' " +
-                                e.getMessage());
+                        ZimbraLog.extensions.info("Disabled '%s' %s", ext.getName(), e.getMessage());
                         ext.destroy();
                         RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());
                         sClassLoadersToRemove.add(zcl);
                     } catch (Exception e) {
-                        ZimbraLog.extensions.warn("exception in " + name + ".init()", e);
-                        RedoableOp.deregisterClassLoader(
-                                ext.getClass().getClassLoader());
+                        ZimbraLog.extensions.warn("exception in %s.init()", name, e);
+                        RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());
                     }
-                } catch (InstantiationException e) {
-                    ZimbraLog.extensions.warn("exception occurred initializing extension " + name, e);
-                } catch (IllegalAccessException e) {
-                    ZimbraLog.extensions.warn("exception occurred initializing extension " + name, e);
-                } catch (ClassNotFoundException e) {
-                    ZimbraLog.extensions.warn("exception occurred initializing extension " + name, e);
+                } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+                    ZimbraLog.extensions.warn("exception occurred initializing extension %s", name, e);
                 }
-
             }
         }
 
         for (ZimbraExtensionClassLoader zcl : sClassLoadersToRemove) {
             sClassLoaders.remove(zcl);
         }
+    }
+
+    public static synchronized void initAll() {
+        initAllMatching((ExtensionMatcher) null);
     }
 
     public static synchronized void init(String className) {
