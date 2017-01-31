@@ -334,7 +334,7 @@ public class AttributeMigration {
         private List<Pair<EphemeralInput, Object>> migrateAttr(String attr, AttributeConverter converter) {
             boolean multiValued = converter.isMultivalued();
             Object obj = multiValued ? entry.getMultiAttr(attr, false, true) : entry.getAttr(attr, false, true);
-            if (obj == null) {
+            if (obj == null || (obj instanceof String[] && ((String[]) obj).length == 0)) {
                 return Collections.emptyList();
             }
             List<Pair<EphemeralInput, Object>> inputs = new LinkedList<Pair<EphemeralInput, Object>>();
@@ -356,10 +356,19 @@ public class AttributeMigration {
             }
             List<Pair<EphemeralInput, Object>> inputs = new LinkedList<Pair<EphemeralInput, Object>>();
 
+            boolean hasDataToMigrate = false;
             for (Map.Entry<String, AttributeConverter> entry: converters.entrySet()) {
                 String attrName = entry.getKey();
                 AttributeConverter converter = entry.getValue();
-                inputs.addAll(migrateAttr(attrName, converter));
+                List<Pair<EphemeralInput, Object>> migratedData = migrateAttr(attrName, converter);
+                if (!migratedData.isEmpty()) {
+                    hasDataToMigrate = true;
+                    inputs.addAll(migratedData);
+                }
+            }
+            if (!hasDataToMigrate) {
+                ZimbraLog.ephemeral.info("no ephemeral data to migrate for account %s", ((NamedEntry) entry).getId());
+                return;
             }
             EphemeralLocation location = getEphemeralLocation();
             for (Pair<EphemeralInput, Object> pair: inputs) {
