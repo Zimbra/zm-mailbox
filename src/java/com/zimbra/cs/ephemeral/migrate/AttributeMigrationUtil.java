@@ -2,9 +2,7 @@ package com.zimbra.cs.ephemeral.migrate;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -18,6 +16,8 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.AllAccountsSource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.DryRunMigrationCallback;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
@@ -37,13 +37,6 @@ public class AttributeMigrationUtil {
 
     private static final PrintStream console = System.out;
     private static Options OPTIONS = new Options();
-
-    private static Map<String, String> extensionMap = new HashMap<String, String>();
-
-    //This map should be updated whenever a new EphemeralStore backend extension is implemented
-    static {
-        extensionMap.put("ssdb", "com.zimbra.ssdb.SSDBEphemeralStoreExtension");
-    }
 
     static {
         OPTIONS.addOption("r", "dry-run", false, "Dry run: display info on what the migration would accomplish");
@@ -133,12 +126,22 @@ public class AttributeMigrationUtil {
                     ZimbraLog.ephemeral.info("Using LDAP ephemeral backend for attribute migration");
                     return;
                 }
-                String backendExtensionClass = extensionMap.get(backendName);
-                if (backendExtensionClass == null) {
-                    Zimbra.halt(String.format("no extension class name found for backend '%s', aborting attribute migration", backendName));
+                ExtensionUtil.initAllMatching(new EphemeralStore.EphemeralStoreMatcher(backendName));
+                Factory factory = EphemeralStore.getFactory(backendName);
+                if (factory == null) {
+                    Zimbra.halt(String.format(
+                            "no extension class name found for backend '%s', aborting attribute migration",
+                            backendName));
+                    return; // keep Eclipse happy
                 }
-                ZimbraLog.ephemeral.info("Using ephemeral backend %s (%s) for attribute migration", backendName, backendExtensionClass);
-                ExtensionUtil.init(backendExtensionClass);
+                EphemeralStore store = factory.getStore();
+                if (store == null) {
+                    Zimbra.halt(String.format("no store found for backend '%s', aborting attribute migration",
+                            backendName));
+                    return; // keep Eclipse happy
+                }
+                ZimbraLog.ephemeral.info("Using ephemeral backend %s (%s) for attribute migration", backendName,
+                        store.getClass().getName());
             }
         }
     }
