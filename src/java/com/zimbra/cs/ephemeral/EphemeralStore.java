@@ -1,13 +1,23 @@
 package com.zimbra.cs.ephemeral;
 
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ZimbraExtension;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -199,6 +209,85 @@ public abstract class EphemeralStore {
         } catch (InstantiationException | IllegalAccessException e) {
             ZimbraLog.ephemeral.error("unable to instantiate factory %s",factoryClassName, e);
             return null;
+        }
+    }
+
+    private static Options OPTIONS = new Options();
+    static {
+        OPTIONS.addOption("u", "test-url", true, "test whether can connect to this URL.  Exit non-zero if cannot.");
+        OPTIONS.addOption("d", "debug", false, "Enable debug logging");
+        OPTIONS.addOption("h", "help", false, "Display this help message");
+    }
+
+    private static void usage() {
+        HelpFormatter format = new HelpFormatter();
+        format.printHelp(new PrintWriter(System.err, true), 80,
+            "zmjava com.zimbra.cs.ephemeral.EphemeralStore [options]", null, OPTIONS, 2, 2, null);
+            System.exit(0);
+    }
+
+    public static class EphemeralStoreMatcher implements ExtensionUtil.ExtensionMatcher {
+        private final String storeId;
+        public EphemeralStoreMatcher(String storeId) {
+            this.storeId = storeId;
+        }
+        @Override
+        public boolean matches(ZimbraExtension ext) {
+            if (ext instanceof EphemeralStore.Extension) {
+                return storeId.equals(((EphemeralStore.Extension) ext).getStoreId());
+            }
+            return false;
+        }
+    }
+
+    public static boolean canConnectToURL(String url) {
+        String[] tokens = url.split(":");
+        if (tokens == null || tokens.length <= 0) {
+            ZimbraLog.ephemeral.error("'%s' is an invalid URL for %s", url, Provisioning.A_zimbraEphemeralBackendURL);
+            return false;
+        }
+        String backend = tokens[0];
+        if (backend.equalsIgnoreCase("ldap")) {
+            return true;
+        }
+        ExtensionUtil.initAllMatching(new EphemeralStoreMatcher(backend));
+        Factory theFactory = EphemeralStore.getFactory(backend);
+        if (theFactory == null) {
+            ZimbraLog.ephemeral.error("no factory found for backend for URL '%s'", url);
+            return false;
+        }
+        try {
+            theFactory.test(url);
+        } catch (ServiceException e) {
+            ZimbraLog.ephemeral.error("cannot set '%s' to '%s'", Provisioning.A_zimbraEphemeralBackendURL, url);
+            return false;
+        }
+        ZimbraLog.ephemeral.debug("Successfully connected to URL '%s'.  Valid value for '%s'",
+            url, Provisioning.A_zimbraEphemeralBackendURL);
+        return true;
+    }
+
+
+    public static void main(String[] args) throws Exception {
+        CliUtil.toolSetup();
+        CommandLineParser parser = new GnuParser();
+        CommandLine cl = parser.parse(OPTIONS, args);
+        if (cl.hasOption('h') || !cl.hasOption('u')) {
+            usage();
+            return;
+        }
+        if (cl.hasOption('d')) {
+            ZimbraLog.ephemeral.setLevel(Level.debug);
+        } else {
+            // suppress noise
+            ZimbraLog.ephemeral.setLevel(Level.error);
+            ZimbraLog.extensions.setLevel(Level.error);
+        }
+        String url = cl.getOptionValue('u');
+        if (canConnectToURL(url)) {
+            System.exit(0);
+        } else {
+            System.exit(1);
         }
     }
 
