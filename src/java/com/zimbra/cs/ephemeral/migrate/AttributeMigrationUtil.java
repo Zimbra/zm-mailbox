@@ -8,7 +8,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import com.zimbra.common.service.ServiceException;
@@ -44,9 +43,7 @@ public class AttributeMigrationUtil {
         OPTIONS.addOption("k", "keep-old", false, "Do not delete old values in LDAP after migration");
         OPTIONS.addOption("d", "debug", false, "Enable debug logging");
         OPTIONS.addOption("h", "help", false, "Display this help message");
-        Option option = new Option("a", "account", true, "Specific account to migrate. If not specified, all accounts will be migrated");
-        option.setArgs(Option.UNLIMITED_VALUES);
-        OPTIONS.addOption(option);
+        OPTIONS.addOption("a", "account", true, "Comma-separated list of accounts to migrate. If not specified, all accounts will be migrated");
     }
 
     public static void main(String[] args) throws Exception {
@@ -97,9 +94,8 @@ public class AttributeMigrationUtil {
         migration.setCallback(callback);
         EntrySource source;
         if (cl.hasOption('a')) {
-            String[] acctValues = cl.getOptionValues('a');
+            String[] acctValues = cl.getOptionValue('a').split(",");
             source = new SomeAccountsSource(acctValues);
-
         } else {
             source = new AllAccountsSource();
         }
