@@ -154,12 +154,12 @@ public class LdapEphemeralStore extends EphemeralStore {
 
         @Override
         String getAttr(String key) throws ServiceException {
-            return entry.getAttr(key);
+            return entry.getAttr(key, true, true);
         }
 
         @Override
         String[] getMultiAttr(String key) throws ServiceException {
-            return entry.getMultiAttr(key);
+            return entry.getMultiAttr(key, true, true);
         }
 
         @Override
