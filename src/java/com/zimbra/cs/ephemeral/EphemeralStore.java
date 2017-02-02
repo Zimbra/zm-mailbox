@@ -139,6 +139,13 @@ public abstract class EphemeralStore {
         setFactory(factoryClass);
     }
 
+    public static final void clearFactory() {
+        if (factory != null) {
+            factory.shutdown();
+        }
+        factory = null;
+    }
+
     @VisibleForTesting
     public static final void setFactory(Class<? extends Factory> factoryClass) {
         try {

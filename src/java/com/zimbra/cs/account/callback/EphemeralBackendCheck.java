@@ -22,6 +22,7 @@ public class EphemeralBackendCheck extends AttributeCallback {
         if (tokens != null && tokens.length > 0) {
             String backend = tokens[0];
             if (backend.equalsIgnoreCase("ldap")) {
+                EphemeralStore.clearFactory();
                 return;
             }
             Factory factory = EphemeralStore.getFactory(backend);
@@ -46,6 +47,7 @@ public class EphemeralBackendCheck extends AttributeCallback {
             }
             try {
                 factory.test(url);
+                EphemeralStore.clearFactory();
             } catch (ServiceException e) {
                 throw ServiceException.FAILURE(String.format("cannot set zimbraEphemeralBackendURL to %s", url), e);
             }
