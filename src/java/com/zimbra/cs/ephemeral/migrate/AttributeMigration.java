@@ -220,6 +220,9 @@ public class AttributeMigration {
 
         public ZimbraMigrationCallback() throws ServiceException {
             EphemeralStore.Factory factory = EphemeralStore.getFactory();
+            if (factory instanceof LdapEphemeralStore.Factory) {
+                throw ServiceException.FAILURE("migration to LdapEphemeralStore is not supported", null);
+            }
             String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
             factory.test(url);
             this.store = factory.getStore();
