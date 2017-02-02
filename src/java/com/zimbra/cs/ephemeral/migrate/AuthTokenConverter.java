@@ -29,12 +29,6 @@ public class AuthTokenConverter extends MultivaluedAttributeConverter {
             return null;
         }
         String token = parts[0];
-        try {
-            Long.parseLong(token);
-        } catch (NumberFormatException e) {
-            ZimbraLog.ephemeral.info("auth token %s is already in ephemeral form", ldapValueStr);
-            return null;
-        }
         Long expirationMillis;
         try {
             expirationMillis = Long.parseLong(parts[1]);
