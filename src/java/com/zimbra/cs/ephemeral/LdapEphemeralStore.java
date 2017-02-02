@@ -22,7 +22,7 @@ public class LdapEphemeralStore extends EphemeralStore {
 
     public LdapEphemeralStore(AbstractLdapHelper helper) {
         this.helper = helper;
-        setAttributeEncoder(new DynamicExpirationEncoder());
+        setAttributeEncoder(new LdapAttributeEncoder());
     }
 
     @Override
