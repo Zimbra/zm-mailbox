@@ -75,7 +75,7 @@ public class LdapEphemeralStore extends EphemeralStore {
         helper.setLocation(location);
         String encodedKey = encodeKey(key, location);
         String[] values = helper.getMultiAttr(key.getKey());
-        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder, callback);
+        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder, callback, true);
         List<String> purged = iteratorHelper.purge(Arrays.asList(values));
         deleteInternal(helper, encodedKey, purged);
     }

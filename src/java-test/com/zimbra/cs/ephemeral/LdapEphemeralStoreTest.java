@@ -82,10 +82,16 @@ public class LdapEphemeralStoreTest {
         EphemeralInput input = new EphemeralInput(new EphemeralKey("foo"), "bar");
         input.setExpiration(new AbsoluteExpiration(1000L));
         store.set(input, location);
+        input = new EphemeralInput(new EphemeralKey("foo", "1"), "bar");
+        input.setExpiration(new AbsoluteExpiration(1000L));
+        store.set(input, location);
+        input = new EphemeralInput(new EphemeralKey("foo", "2"), "bar");
+        input.setExpiration(new AbsoluteExpiration(1000L));
+        store.set(input, location);
         helper.reset();
         Thread.sleep(1500);
         store.purgeExpired(new EphemeralKey("foo"), location);
-        Map<String, Object> expected = makeMap("-foo", "bar||1000");
+        Map<String, Object> expected = makeMap("-foo", "bar||1000", "bar|1|1000", "bar|2|1000");
         verifyAttrMap(expected);
     }
 
@@ -218,7 +224,7 @@ public class LdapEphemeralStoreTest {
         }
 
         @Override
-        public EphemeralKeyValuePair decode(String key, String value) {
+        public EphemeralKeyValuePair decode(String key, String value) throws ServiceException {
             return new EphemeralKeyValuePair(new EphemeralKey(key), value);
         }
     }
