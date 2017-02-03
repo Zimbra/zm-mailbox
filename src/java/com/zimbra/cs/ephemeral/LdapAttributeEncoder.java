@@ -1,6 +1,6 @@
 package com.zimbra.cs.ephemeral;
 
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 
 /**
@@ -16,7 +16,7 @@ public class LdapAttributeEncoder extends DynamicExpirationEncoder {
     }
 
     @Override
-    public ExpirableEphemeralKeyValuePair decode(String key, String value) {
+    public ExpirableEphemeralKeyValuePair decode(String key, String value) throws ServiceException {
         if (key.equalsIgnoreCase(Provisioning.A_zimbraAuthTokens)) {
             return decodeAuthToken(value);
         } else if (key.equalsIgnoreCase(Provisioning.A_zimbraCsrfTokenData)) {
@@ -26,30 +26,27 @@ public class LdapAttributeEncoder extends DynamicExpirationEncoder {
         }
     }
 
-    private ExpirableEphemeralKeyValuePair decodeAuthToken(String value) {
+    private ExpirableEphemeralKeyValuePair decodeAuthToken(String value) throws ServiceException {
         String[] parts = value.split("\\|");
         if (parts.length != 3) {
-            ZimbraLog.ephemeral.warn("LDAP auth token %s cannot be parsed", value);
-            return null;
+            throw ServiceException.PARSE_ERROR(String.format("LDAP auth token %s cannot be parsed", value), null);
         }
         String token = parts[0];
         Long expirationMillis;
         try {
             expirationMillis = Long.parseLong(parts[1]);
         } catch (NumberFormatException e) {
-            ZimbraLog.ephemeral.warn("LDAP auth token %s does not have a valid expiration value", value);
-            return null;
+            throw ServiceException.PARSE_ERROR(String.format("LDAP auth token %s does not have a valid expiration value", value), e);
         }
         String serverVersion = parts[2];
         EphemeralKey key = new EphemeralKey(Provisioning.A_zimbraAuthTokens, token);
         return new ExpirableEphemeralKeyValuePair(key, serverVersion, expirationMillis);
     }
 
-    private ExpirableEphemeralKeyValuePair decodeCsrfToken(String value) {
+    private ExpirableEphemeralKeyValuePair decodeCsrfToken(String value) throws ServiceException {
         String[] parts = value.split(":");
         if (parts.length != 3) {
-            ZimbraLog.ephemeral.warn("CSRF auth token %s cannot be parsed", value);
-            return null;
+            throw ServiceException.PARSE_ERROR(String.format("CSRF token %s cannot be parsed", value), null);
         }
         String data = parts[0];
         String crumb = parts[1];
@@ -57,8 +54,7 @@ public class LdapAttributeEncoder extends DynamicExpirationEncoder {
         try {
             expirationMillis = Long.parseLong(parts[2]);
         } catch (NumberFormatException e) {
-            ZimbraLog.ephemeral.warn("CSRF auth token %s does not have a valid expiration value", value);
-            return null;
+            throw ServiceException.PARSE_ERROR(String.format("LDAP CSRF token %s does not have a valid expiration value", value), e);
         }
         EphemeralKey key = new EphemeralKey(Provisioning.A_zimbraCsrfTokenData, crumb);
         return new ExpirableEphemeralKeyValuePair(key, data, expirationMillis);

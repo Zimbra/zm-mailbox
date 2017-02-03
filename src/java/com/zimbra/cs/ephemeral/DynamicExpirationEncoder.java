@@ -1,5 +1,7 @@
 package com.zimbra.cs.ephemeral;
 
+import com.zimbra.common.service.ServiceException;
+
 
 /**
  * AttributeEncoder to be used with backends that do not support
@@ -16,7 +18,7 @@ public class DynamicExpirationEncoder extends AttributeEncoder {
     }
 
     @Override
-    public ExpirableEphemeralKeyValuePair decode(String key, String value) {
+    public ExpirableEphemeralKeyValuePair decode(String key, String value) throws ServiceException {
         EphemeralKey ephemeralKey;
         String decodedValue;
         String dynamicKeyPart;

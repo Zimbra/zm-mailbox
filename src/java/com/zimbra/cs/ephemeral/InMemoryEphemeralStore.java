@@ -25,7 +25,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         Multimap<String, String> map = getSpecifiedMap(target);
         String encodedKey = encodeKey(key, target);
         Collection<String> values = map.get(encodedKey);
-        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder);
+        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder, null);
         return helper.get(values);
     }
 
@@ -54,7 +54,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         Multimap<String, String> map = getSpecifiedMap(target);
         String encodedKey = encodeKey(key, target);
         Collection<String> values = map.get(encodedKey);
-        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder);
+        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder, null);
         List<String> toDelete = helper.delete(values, valueToDelete);
         for (String v: toDelete) {
             map.remove(encodedKey, v);
@@ -67,7 +67,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         Multimap<String, String> map = getSpecifiedMap(target);
         String encodedKey = encodeKey(key, target);
         Collection<String> values = map.get(encodedKey);
-        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder, true);
+        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder, null, true);
         List<String> purged = helper.purge(values);
         for (String v: purged) {
             map.remove(encodedKey, v);
@@ -80,7 +80,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         Multimap<String, String> map = getSpecifiedMap(target);
         String encodedKey = encodeKey(key, target);
         Collection<String> values = map.get(encodedKey);
-        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder);
+        DynamicResultsHelper helper = new DynamicResultsHelper(key, target, encoder, null);
         return helper.has(values);
     }
 

@@ -11,10 +11,12 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.ephemeral.DynamicResultsHelper.DeletionCallback;
 
 public class LdapEphemeralStore extends EphemeralStore {
 
     private AbstractLdapHelper helper;
+    private DeletionCallback callback;
 
     public LdapEphemeralStore() {
         this(new ZimbraLdapHelper());
@@ -22,6 +24,7 @@ public class LdapEphemeralStore extends EphemeralStore {
 
     public LdapEphemeralStore(AbstractLdapHelper helper) {
         this.helper = helper;
+        this.callback = new LdapDeletionCallback();
         setAttributeEncoder(new LdapAttributeEncoder());
     }
 
@@ -30,7 +33,7 @@ public class LdapEphemeralStore extends EphemeralStore {
             throws ServiceException {
         helper.setLocation(location);
         String[] values = helper.getMultiAttr(key.getKey());
-        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder);
+        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder, callback);
         return iteratorHelper.get(Arrays.asList(values));
     }
 
@@ -60,7 +63,7 @@ public class LdapEphemeralStore extends EphemeralStore {
         helper.setLocation(location);
         String encodedKey = encodeKey(key, location);
         // have to take into account that values may have expiration encoded in
-        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder);
+        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder, callback);
         String[] values = helper.getMultiAttr(key.getKey());
         List<String> toDelete = iteratorHelper.delete(Arrays.asList(values), valueToDelete);
         deleteInternal(helper, encodedKey, toDelete);
@@ -72,7 +75,7 @@ public class LdapEphemeralStore extends EphemeralStore {
         helper.setLocation(location);
         String encodedKey = encodeKey(key, location);
         String[] values = helper.getMultiAttr(key.getKey());
-        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder);
+        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder, callback);
         List<String> purged = iteratorHelper.purge(Arrays.asList(values));
         deleteInternal(helper, encodedKey, purged);
     }
@@ -81,7 +84,7 @@ public class LdapEphemeralStore extends EphemeralStore {
     public boolean has(EphemeralKey key, EphemeralLocation location)
             throws ServiceException {
         helper.setLocation(location);
-        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder);
+        DynamicResultsHelper iteratorHelper = new DynamicResultsHelper(key, location, encoder, callback);
         String[] values = helper.getMultiAttr(key.getKey());
         return iteratorHelper.has(Arrays.asList(values));
     }
@@ -183,6 +186,15 @@ public class LdapEphemeralStore extends EphemeralStore {
                 throw ServiceException.FAILURE("LdapEphemeralBackend can only be used with LdapEntryLocation", null);
             }
             return ((LdapEntryLocation) location).getEntry();
+        }
+    }
+
+    private class LdapDeletionCallback implements DeletionCallback {
+
+        @Override
+        public void delete(String encodedKey, List<String> values)
+                throws ServiceException {
+            deleteInternal(helper, encodedKey, values);
         }
     }
 }
