@@ -615,10 +615,10 @@ public class AttributeManager {
 
             if (flags != null && flags.contains(AttributeFlag.ephemeral)) {
                 mEphemeralAttrs.put(canonicalName, info);
+                mEphemeralAttrsSet.add(name);
             }
-
         }
-    }
+   }
 
     private void checkEphemeralFlags(String attrName, File file,
             Set<AttributeFlag> flags, String min, String max, AttributeCardinality cardinality) {

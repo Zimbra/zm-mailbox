@@ -455,7 +455,7 @@ public final class CsrfUtil {
             boolean needToAdd = true;
             String curData = account.getCsrfTokenData(crumb);
             if (curData != null) {
-                if (data != curData) {
+                if (!data.equals(curData)) {
                     account.removeCsrfTokenData(crumb, curData);
                 } else {
                     ZimbraLog.ephemeral.debug("CSRF token already stored in ephemeral storage");
