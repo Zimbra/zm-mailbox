@@ -63792,6 +63792,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * enable OCSP support for SMIME.
+     *
      * @return zimbraSmimeOCSPEnabled, or true if unset
      *
      * @since ZCS 8.8.0
