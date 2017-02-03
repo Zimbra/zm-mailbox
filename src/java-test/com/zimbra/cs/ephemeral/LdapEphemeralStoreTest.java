@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
 import com.zimbra.cs.ephemeral.EphemeralStoreTest.TestLocation;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore.AbstractLdapHelper;
@@ -102,6 +103,34 @@ public class LdapEphemeralStoreTest {
         assertTrue(store.has(new EphemeralKey("foo"), target));
     }
 
+
+    @Test
+    public void testInvalidTokens() throws Exception {
+        testInvalidToken(Provisioning.A_zimbraAuthTokens, "dynamicPart|null|value");
+        testInvalidToken(Provisioning.A_zimbraCsrfTokenData, "value:dynamicPart:null");
+    }
+
+    private void testInvalidToken(String attrName, String expected) throws Exception {
+        EphemeralLocation target = new TestLocation();
+        //sanity check: make sure a valid token works
+        EphemeralKey key = new EphemeralKey(attrName, "dynamicPart");
+        EphemeralInput input = new EphemeralInput(key, "validToken");
+        input.setExpiration(new AbsoluteExpiration(1000));
+        store.set(input, target);
+        EphemeralResult result = store.get(key, target);
+        assertEquals(result.getValue(), "validToken");
+        helper.reset();
+        //no expiration will result in an invalid auth/CSRF token
+        key = new EphemeralKey(attrName, "dynamicPart");
+        store.set(new EphemeralInput(key, "value"), target);
+        helper.reset();
+        result = store.get(key, target);
+        //the invalid token is not returned
+        assertTrue(result.isEmpty());
+        //but is instead flagged for deletion
+        verifyAttrMap(makeMap("-"+attrName, expected));
+    }
+
     private Map<String, Object> makeMap(String key, String... values) {
         Map<String, Object> map = new HashMap<String, Object>();
         for (String v: values) {
@@ -159,7 +188,7 @@ public class LdapEphemeralStoreTest {
 
         @Override
         String[] getMultiAttr(String key) throws ServiceException {
-            return store.get(new EphemeralKey("foo"), location).getValues();
+            return store.get(new EphemeralKey(key), location).getValues();
         }
 
         private String[] objectToStringArray(Object o) throws ServiceException {
@@ -181,7 +210,8 @@ public class LdapEphemeralStoreTest {
                 String[] values = objectToStringArray(kv.getValue());
                 if ((key.startsWith("+") || !key.startsWith("-")) && values.length > 0) {
                     String firstValue = values[0];
-                    EphemeralInput input = new EphemeralInput(new EphemeralKey("foo"), firstValue);
+                    String k = key.startsWith("+") ? key.substring(1) :key;
+                    EphemeralInput input = new EphemeralInput(new EphemeralKey(k), firstValue);
                     if (key.startsWith("+")) {
                         store.update(input, location);
                     } else {
@@ -190,7 +220,7 @@ public class LdapEphemeralStoreTest {
                     // if more than one value is provided, it has to be an update
                     if (values.length > 1) {
                         for (int i = 1; i < values.length; i++) {
-                            input = new EphemeralInput(new EphemeralKey("foo"), values[i]);
+                            input = new EphemeralInput(new EphemeralKey(k), values[i]);
                             store.update(input, location);
                         }
                     }
