@@ -173,7 +173,7 @@ public abstract class EphemeralStore {
         return encoder.encodeValue(input, target);
     }
 
-    protected EphemeralKeyValuePair decode(String key, String value) {
+    protected EphemeralKeyValuePair decode(String key, String value) throws ServiceException {
         return encoder.decode(key, value);
     }
 
