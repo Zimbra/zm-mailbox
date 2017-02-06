@@ -25,7 +25,7 @@ public abstract class AttributeEncoder {
     }
 
     /**
-     * Encode an ephemeral input int o a String key to be stored in the backend.
+     * Encode an ephemeral input into a String key to be stored in the backend.
      * The output key may be a function of the EphemeralKey and target.
      * @param key
      * @param target
