@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -44,7 +44,6 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeUtility;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
@@ -303,23 +302,13 @@ public class HeaderTest extends Header {
                 throw new SieveException("Exception occured while evaluating variable expression.", e);
             }
         }
-        List<String> newKeys = new ArrayList<String>();
-        for (Object key : keys) {
-            String keyT = (String) key;
-            if (keyT.startsWith("$")) {
-                keyT = zma.getVariable(keyT.substring(2, keyT.indexOf("}")));
-                newKeys.add(keyT);
-            } else {
-                newKeys.add(keyT);
-            }
-        }
 
         // Iterate over the header names looking for a match
         boolean isMatched = false;
         Iterator<String> headerNamesIter = headerNames.iterator();
         while (!isMatched && headerNamesIter.hasNext()) {
             Set<String> values = zma.getMatchingHeaderFromAllParts(headerNamesIter.next());
-            isMatched = match(comparator, matchType, new ArrayList<String>(values), newKeys, context);
+            isMatched = match(comparator, matchType, new ArrayList<String>(values), keys, context);
         }
         return isMatched;
     }
