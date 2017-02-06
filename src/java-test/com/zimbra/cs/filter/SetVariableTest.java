@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -1117,6 +1117,127 @@ public class SetVariableTest {
             Assert.assertEquals("tag2", tags[1]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /**
+     *  When the match pattern ${dollar} was defined as '$' and used in the
+     *  header/address/envelope test, this '$' should be treated as a string,
+     *  not a part of the wild-card.
+     */
+    @Test
+    public void testDollar2() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            filterScript = "require [\"variables\"];\n"
+                         + "set \"dollar\" \"$\";\n"
+                         + "set \"val\" \"xyz\";\n"
+                         + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"${dollar}${val}\" {\n"
+                         + "  tag \"header-matches\";\n"
+                         + "}\n"
+                         + "if header :is :comparator \"i;ascii-casemap\" \"Subject\" \"${dollar}${val}\" {\n"
+                         + "  tag \"header-is\";\n"
+                         + "}\n"
+                         + "if header :contains :comparator \"i;ascii-casemap\" \"Subject\" \"${dollar}${val}\" {\n"
+                         + "  tag \"header-contains\";\n"
+                         + "}\n"
+                         + "if address :all :matches :comparator \"i;ascii-casemap\" \"To\" \"${dollar}${val}@zimbra.com\" {\n"
+                         + "  tag \"address-matches\";\n"
+                         + "}\n"
+                         + "if address :all :is :comparator \"i;ascii-casemap\" \"To\" \"${dollar}${val}@zimbra.com\" {\n"
+                         + "  tag \"address-is\";\n"
+                         + "}\n"
+                         + "if address :all :contains :comparator \"i;ascii-casemap\" \"To\" \"${dollar}${val}\" {\n"
+                         + "  tag \"address-contains\";\n"
+                         + "}"
+                         + "if envelope :all :matches :comparator \"i;ascii-casemap\" \"From\" \"${dollar}${val}@zimbra.com\" {\n"
+                         + "  tag \"envelope-matches\";\n"
+                         + "}\n"
+                         + "if envelope :all :is :comparator \"i;ascii-casemap\" \"From\" \"${dollar}${val}@zimbra.com\" {\n"
+                         + "  tag \"envelope-is\";\n"
+                         + "}\n"
+                         + "if envelope :all :contains :comparator \"i;ascii-casemap\" \"From\" \"${dollar}${val}\" {\n"
+                         + "  tag \"envelope-contains\";\n"
+                         + "}"
+                         + "if not header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"${dollar}${val}\" {\n"
+                         + "  tag \"header-not-matches\";\n"
+                         + "}\n"
+                         + "if not header :is :comparator \"i;ascii-casemap\" \"Subject\" \"${dollar}${val}\" {\n"
+                         + "  tag \"header-not-is\";\n"
+                         + "}\n"
+                         + "if not header :contains :comparator \"i;ascii-casemap\" \"Subject\" \"${dollar}${val}\" {\n"
+                         + "  tag \"header-not-contains\";\n"
+                         + "}\n"
+                         + "if not address :all :matches :comparator \"i;ascii-casemap\" \"To\" \"${dollar}${val}@zimbra.com\" {\n"
+                         + "  tag \"address-not-matches\";\n"
+                         + "}\n"
+                         + "if not address :all :is :comparator \"i;ascii-casemap\" \"To\" \"${dollar}${val}@zimbra.com\" {\n"
+                         + "  tag \"address-not-is\";\n"
+                         + "}\n"
+                         + "if not address :all :contains :comparator \"i;ascii-casemap\" \"To\" \"${dollar}${val}\" {\n"
+                         + "  tag \"address-not-contains\";\n"
+                         + "}"
+                         + "if not envelope :all :matches :comparator \"i;ascii-casemap\" \"From\" \"${dollar}${val}@zimbra.com\" {\n"
+                         + "  tag \"envelope-not-matches\";\n"
+                         + "}\n"
+                         + "if not envelope :all :is :comparator \"i;ascii-casemap\" \"From\" \"${dollar}${val}@zimbra.com\" {\n"
+                         + "  tag \"envelope-not-is\";\n"
+                         + "}\n"
+                         + "if not envelope :all :contains :comparator \"i;ascii-casemap\" \"From\" \"${dollar}${val}\" {\n"
+                         + "  tag \"envelope-not-contains\";\n"
+                         + "}\n"
+                         + "if header :contains \"X-Header1\" \"${dollar}\" {\n"
+                         + "  tag \"dollar\";\n"
+                         + "}\n"
+                         + "if header :contains \"X-Header2\" \"${dollar}{\" {\n"
+                         + "  tag \"dollar-opening-brace\";\n"
+                         + "}\n"
+                         + "if header :contains \"X-Header3\" \"${dollar}}\" {\n"
+                         + "  tag \"dollar-closing-brace\";\n"
+                         + "}\n"
+                         + "if header :contains \"X-Header4\" \"${dollar}\" {\n"
+                         + "  tag \"dollar-middle\";\n"
+                         + "}\n";
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: \"$xyz\"@zimbra.com\n"
+                       + "Subject: $xyz\n"
+                       + "X-Header1: $\n"
+                       + "X-Header2: ${\n"
+                       + "X-Header3: $}\n"
+                       + "X-Header4: abc$def\n"
+                       + "\n"
+                       + "Hello World.";
+
+            LmtpEnvelope env = new LmtpEnvelope();
+            LmtpAddress sender = new LmtpAddress("<$xyz@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+            LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+            env.setSender(sender);
+            env.addLocalRecipient(recipient);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), env,
+                    new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(13, msg.getTags().length);
+            Assert.assertEquals("header-matches", msg.getTags()[0]);
+            Assert.assertEquals("header-is", msg.getTags()[1]);
+            Assert.assertEquals("header-contains", msg.getTags()[2]);
+            Assert.assertEquals("address-matches", msg.getTags()[3]);
+            Assert.assertEquals("address-is", msg.getTags()[4]);
+            Assert.assertEquals("address-contains", msg.getTags()[5]);
+            Assert.assertEquals("envelope-matches", msg.getTags()[6]);
+            Assert.assertEquals("envelope-is", msg.getTags()[7]);
+            Assert.assertEquals("envelope-contains", msg.getTags()[8]);
+            Assert.assertEquals("dollar", msg.getTags()[9]);
+            Assert.assertEquals("dollar-opening-brace", msg.getTags()[10]);
+            Assert.assertEquals("dollar-closing-brace", msg.getTags()[11]);
+            Assert.assertEquals("dollar-middle", msg.getTags()[12]);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -21,34 +21,23 @@ import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATO
 import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.ALL_TAG;
-import static org.apache.jsieve.tests.AddressPartTags.DOMAIN_TAG;
-import static org.apache.jsieve.tests.AddressPartTags.LOCALPART_TAG;
 import static com.zimbra.cs.filter.jsieve.MatchTypeTags.COUNT_TAG;
 import static com.zimbra.cs.filter.jsieve.MatchTypeTags.VALUE_TAG;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import javax.mail.MessagingException;
 
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
-import org.apache.jsieve.comparators.AsciiCasemap;
 import org.apache.jsieve.comparators.MatchTypeTags;
-import org.apache.jsieve.comparators.Matches;
 import org.apache.jsieve.exception.SieveException;
-import org.apache.jsieve.exception.SievePatternException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.optional.Envelope;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
@@ -76,6 +65,7 @@ public class EnvelopeTest extends Envelope {
         }
 
         ZimbraComparatorUtils.TestParameters params = ZimbraComparatorUtils.parseTestArguments(mail, arguments, context);
+        params.setKeys(HeaderTest.replaceVariables(params.getKeys(), mail));
 
         if (MatchTypeTags.MATCHES_TAG.equals(params.getMatchType())) {
             ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
