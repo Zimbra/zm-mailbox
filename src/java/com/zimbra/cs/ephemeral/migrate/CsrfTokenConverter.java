@@ -17,10 +17,6 @@ public class CsrfTokenConverter extends MultivaluedAttributeConverter {
     @Override
     public EphemeralInput convert(String attrName, Object ldapValue) {
         String ldapValueStr = (String) ldapValue;
-        if (ldapValueStr.split("\\|").length == 3) {
-            ZimbraLog.ephemeral.info("CSRF token %s is already in ephemeral form", ldapValueStr);
-            return null;
-        }
         String[] parts = ldapValueStr.split(":");
         if (parts.length != 3) {
             ZimbraLog.ephemeral.warn("CSRF auth token %s cannot be parsed", ldapValueStr);

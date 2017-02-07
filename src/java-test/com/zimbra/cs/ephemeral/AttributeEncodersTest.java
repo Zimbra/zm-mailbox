@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
 import com.zimbra.cs.ephemeral.EphemeralStoreTest.TestLocation;
 
@@ -48,12 +49,24 @@ public class AttributeEncodersTest {
 
         //dynamic key, expiration
         assertEquals("bar|1|1000", dynamicExpirationEncoder.encodeValue(dynamicInput, location));
+
+        //test special handling of auth and CSRF token encoding for LDAP backwards compatibility
+        ValueEncoder ldapValueEncoder = new LdapValueEncoder();
+        EphemeralKey authKey = new EphemeralKey(Provisioning.A_zimbraAuthTokens, "tokenId");
+        EphemeralInput authInput = new EphemeralInput(authKey, "serverVersion");
+        authInput.setExpiration(new AbsoluteExpiration(1000L));
+        assertEquals("tokenId|1000|serverVersion", ldapValueEncoder.encodeValue(authInput, location));
+
+        EphemeralKey csrfKey = new EphemeralKey(Provisioning.A_zimbraCsrfTokenData, "crumb");
+        EphemeralInput csrfInput = new EphemeralInput(csrfKey, "data");
+        csrfInput.setExpiration(new AbsoluteExpiration(1000L));
+        assertEquals("data:crumb:1000", ldapValueEncoder.encodeValue(csrfInput, location));
     }
 
 
     @Test
     public void testLdapEncoder() throws Exception {
-        DynamicExpirationEncoder encoder = new DynamicExpirationEncoder();
+        DynamicExpirationEncoder encoder = new LdapAttributeEncoder();
         verifyKeyValuePair(encoder.decode("foo", "bar"), "foo", null, "bar", null);
         verifyKeyValuePair(encoder.decode("foo", "bar||1000"), "foo", null, "bar", 1000L);
         verifyKeyValuePair(encoder.decode("foo", "bar|1|1000"), "foo", "1", "bar", 1000L);
@@ -61,6 +74,14 @@ public class AttributeEncodersTest {
         verifyKeyValuePair(encoder.decode("foo", "bar|1|bad"), "foo", null, "bar|1|bad", null);
         verifyKeyValuePair(encoder.decode("foo", "bar|1000"), "foo", null, "bar|1000", null);
         verifyKeyValuePair(encoder.decode("foo", "b|a|r|1|1000"), "foo", "1", "b|a|r", 1000L);
+
+        //test special handling of auth token
+        ExpirableEphemeralKeyValuePair kvp = encoder.decode(Provisioning.A_zimbraAuthTokens, "tokenId|1000|serverVersion");
+        verifyKeyValuePair(kvp, Provisioning.A_zimbraAuthTokens, "tokenId", "serverVersion", 1000L);
+
+        //test special handling of csrf token
+        kvp = encoder.decode(Provisioning.A_zimbraCsrfTokenData, "data:crumb:1000");
+        verifyKeyValuePair(kvp, Provisioning.A_zimbraCsrfTokenData, "crumb", "data", 1000L);
     }
 
     private void verifyKeyValuePair(ExpirableEphemeralKeyValuePair kvp, String mainKeyPart, String dynamicKeyPart, String value, Long expiration) {

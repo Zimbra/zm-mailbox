@@ -83,7 +83,7 @@ public class MigrateAttributesTest {
     }
 
     private EphemeralInput runConverter(String attrName, AttributeConverter converter) {
-        String value = acct.getAttr(attrName);
+        String value = acct.getAttr(attrName, false, true);
         return converter.convert(attrName, value);
     }
 

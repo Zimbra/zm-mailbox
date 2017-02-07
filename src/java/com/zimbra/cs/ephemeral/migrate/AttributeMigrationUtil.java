@@ -79,12 +79,26 @@ public class AttributeMigrationUtil {
         }
         AttributeMigration migration = new AttributeMigration(attrsToMigrate, numThreads);
         MigrationCallback callback;
+        String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
         if (!dryRun) {
-            initEphemeralBackendExtension();
+            String backendName = null;
+            if (url != null) {
+                String[] tokens = url.split(":");
+                if (tokens != null && tokens.length > 0) {
+                    backendName = tokens[0];
+                    if (backendName.equalsIgnoreCase("ldap")) {
+                        ZimbraLog.ephemeral.info("ephemeral backend is LDAP; migration is not neeeded");
+                        return;
+                    }
+                }
+            } else {
+                Zimbra.halt("no ephemeral backend specified");
+                return;
+            }
+            initEphemeralBackendExtension(backendName);
             try {
                 callback = new ZimbraMigrationCallback();
             } catch (ServiceException e) {
-                String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
                 Zimbra.halt(String.format("unable to connect to ephemeral backend at %s; migration cannot proceed", url), e);
                 return;
             }
@@ -106,40 +120,28 @@ public class AttributeMigrationUtil {
         try {
             migration.migrateAllAccounts();
         } catch (ServiceException e) {
-            String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
             Zimbra.halt(String.format("error encountered during migration to ephemeral backend at %s; migration cannot proceed", url), e);
             return;
         }
     }
 
-    private static void initEphemeralBackendExtension() throws ServiceException {
-        String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
-        if (url != null) {
-            String[] tokens = url.split(":");
-            if (tokens != null && tokens.length > 0) {
-                String backendName = tokens[0];
-                if (backendName.equalsIgnoreCase("ldap")) {
-                    ZimbraLog.ephemeral.info("Using LDAP ephemeral backend for attribute migration");
-                    return;
-                }
-                ExtensionUtil.initAllMatching(new EphemeralStore.EphemeralStoreMatcher(backendName));
-                Factory factory = EphemeralStore.getFactory(backendName);
-                if (factory == null) {
-                    Zimbra.halt(String.format(
-                            "no extension class name found for backend '%s', aborting attribute migration",
-                            backendName));
-                    return; // keep Eclipse happy
-                }
-                EphemeralStore store = factory.getStore();
-                if (store == null) {
-                    Zimbra.halt(String.format("no store found for backend '%s', aborting attribute migration",
-                            backendName));
-                    return; // keep Eclipse happy
-                }
-                ZimbraLog.ephemeral.info("Using ephemeral backend %s (%s) for attribute migration", backendName,
-                        store.getClass().getName());
-            }
+    private static void initEphemeralBackendExtension(String backendName) throws ServiceException {
+        ExtensionUtil.initAllMatching(new EphemeralStore.EphemeralStoreMatcher(backendName));
+        Factory factory = EphemeralStore.getFactory(backendName);
+        if (factory == null) {
+            Zimbra.halt(String.format(
+                    "no extension class name found for backend '%s', aborting attribute migration",
+                    backendName));
+            return; // keep Eclipse happy
         }
+        EphemeralStore store = factory.getStore();
+        if (store == null) {
+            Zimbra.halt(String.format("no store found for backend '%s', aborting attribute migration",
+                    backendName));
+            return; // keep Eclipse happy
+        }
+        ZimbraLog.ephemeral.info("Using ephemeral backend %s (%s) for attribute migration", backendName,
+                store.getClass().getName());
     }
 
     private static void usage() {
