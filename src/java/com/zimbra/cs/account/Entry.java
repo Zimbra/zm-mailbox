@@ -384,11 +384,25 @@ public abstract class Entry implements ToZJSONObject {
                 //short-circuit for LDAP backends, since the data will already be in mAttrs
                 return attrs;
             }
-            for (String attrName: mAttrMgr.getStaticEphemeralAttrs()) {
-                try {
-                    attrs.put(attrName, getEphemeralAttr(attrName));
-                } catch (ServiceException e) {
-                    continue;
+            for (Map.Entry<String, AttributeInfo> entry: mAttrMgr.getStaticEphemeralAttrs().entrySet()) {
+                String attrName= entry.getKey();
+                AttributeInfo info = entry.getValue();
+                EphemeralResult result = getEphemeralAttr(attrName);
+                if (!result.isEmpty()) {
+                    switch(info.getType()) {
+                    case TYPE_BOOLEAN:
+                        attrs.put(attrName, result.getBoolValue());
+                        break;
+                    case TYPE_INTEGER:
+                        attrs.put(attrName, result.getIntValue());
+                        break;
+                    case TYPE_LONG:
+                        attrs.put(attrName, result.getLongValue());
+                        break;
+                    default:
+                        attrs.put(attrName, result.getValue());
+                        break;
+                    }
                 }
             }
         } catch (ServiceException e) {
