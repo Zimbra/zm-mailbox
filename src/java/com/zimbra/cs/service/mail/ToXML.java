@@ -1572,7 +1572,7 @@ public final class ToXML {
             // update crypto flags - isSigned/isEncrypted
             if (SmimeHandler.getHandler() != null) {
                 if (!wholeMessage) {
-                    // check content type of attachment for encryption flag
+                    // check content type of attachment message for encryption flag
                     SmimeHandler.getHandler().updateCryptoFlags(msg, m, mm, mm);
                 } else {
                     MimeMessage originalMimeMessage = msg.getMimeMessage(false);
