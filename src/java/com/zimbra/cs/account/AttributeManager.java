@@ -133,6 +133,7 @@ public class AttributeManager {
 
     private final Map<String, AttributeInfo> mEphemeralAttrs = new HashMap<String, AttributeInfo>(); //lowercased
     private final Set<String> mEphemeralAttrsSet = new HashSet<String>(); // not lowercased
+    private final Set<String> mStaticEphemeralAttrs= new HashSet<String>(); // ephemeral attributes that can be retrieved as part of Entry.getAttrs()
 
     /*
      * Notes on certificate attributes
@@ -222,12 +223,20 @@ public class AttributeManager {
             return false;
         }
     }
+
+    public Set<String> getStaticEphemeralAttrs() {
+        return mStaticEphemeralAttrs;
+    }
+
     @VisibleForTesting
     public void addAttribute(AttributeInfo info) {
         mAttrs.put(info.mName.toLowerCase(), info);
         if (info.isEphemeral()) {
             mEphemeralAttrs.put(info.mName.toLowerCase(), info);
             mEphemeralAttrsSet.add(info.mName);
+            if (!info.isDynamic()) {
+                mStaticEphemeralAttrs.add(info.mName);
+            }
         }
     }
 
@@ -616,6 +625,9 @@ public class AttributeManager {
             if (flags != null && flags.contains(AttributeFlag.ephemeral)) {
                 mEphemeralAttrs.put(canonicalName, info);
                 mEphemeralAttrsSet.add(name);
+                if (!info.isDynamic()) {
+                    mStaticEphemeralAttrs.add(name);
+                }
             }
         }
    }

@@ -345,8 +345,8 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults) {
+        Map<String, Object> attrs = getEphemeralAttrs();
         if (applyDefaults && (mDefaults != null || mSecondaryDefaults != null)) {
-            Map<String, Object> attrs = new HashMap<String, Object>();
             // put the second defaults
             if (mSecondaryDefaults != null)
                 attrs.putAll(mSecondaryDefaults);
@@ -362,12 +362,25 @@ public abstract class Entry implements ToZJSONObject {
             if (overrideDefaults != null) {
                 attrs.putAll(overrideDefaults);
             }
-            return attrs;
-        } else {
-            return mAttrs;
         }
+        attrs.putAll(mAttrs);
+        return attrs;
     }
 
+    public Map<String, Object> getEphemeralAttrs() {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        for (String attrName: mAttrMgr.getStaticEphemeralAttrs()) {
+            try {
+                attrs.put(attrName, getEphemeralAttr(attrName));
+            } catch (ServiceException e) {
+                // don't propagate this exception, since we don't want this to interrupt
+                // a GetAccountRequest
+                ZimbraLog.ephemeral.warn("unable to get value of ephemeral attribute '%s'", attrName, e);
+                continue;
+            }
+        }
+        return attrs;
+    }
     public Map<String, Object> getUnicodeAttrs(boolean applyDefaults) {
         Map<String, Object> attrs = getAttrs(applyDefaults);
         return toUnicode(attrs);
