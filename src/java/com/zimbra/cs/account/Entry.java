@@ -54,6 +54,7 @@ import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
+import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.util.MemoryUnitUtil;
 
@@ -94,6 +95,7 @@ public abstract class Entry implements ToZJSONObject {
     private Map<String, Object> mData;
     private Map<String, Set<String>> mMultiAttrSetCache;
     private Map<String, Set<byte[]>> mMultiBinaryAttrSetCache;
+    private Map<String, String> mEphemeralCache = new HashMap<String, String>();
     private Locale mLocale;
     private final Provisioning mProvisioning;
     private AttributeManager mAttrMgr;
@@ -111,6 +113,7 @@ public abstract class Entry implements ToZJSONObject {
     	mAttrs = attrs;
         mDefaults = defaults;
         setAttributeManager();
+        addEphemeralAttrsToMap();
     }
 
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults,
@@ -120,6 +123,7 @@ public abstract class Entry implements ToZJSONObject {
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
         setAttributeManager();
+        addEphemeralAttrsToMap();
     }
 
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults,
@@ -129,6 +133,7 @@ public abstract class Entry implements ToZJSONObject {
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
         setAttributeManager();
+        addEphemeralAttrsToMap();
     }
 
     private void setAttributeManager() {
@@ -156,6 +161,7 @@ public abstract class Entry implements ToZJSONObject {
     public synchronized void setAttrs(Map<String,Object> attrs,
             Map<String,Object> defaults, Map<String,Object> secondaryDefaults, Map<String,Object> overrideDefaults) {
         mAttrs = attrs;
+        mAttrs.putAll(mEphemeralCache);
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
         this.overrideDefaults = overrideDefaults;
@@ -164,6 +170,7 @@ public abstract class Entry implements ToZJSONObject {
 
     public synchronized void setAttrs(Map<String,Object> attrs) {
         mAttrs = attrs;
+        mAttrs.putAll(mEphemeralCache);
         resetData();
     }
 
@@ -345,8 +352,8 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults) {
-        Map<String, Object> attrs = getEphemeralAttrs();
         if (applyDefaults && (mDefaults != null || mSecondaryDefaults != null)) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
             // put the second defaults
             if (mSecondaryDefaults != null)
                 attrs.putAll(mSecondaryDefaults);
@@ -362,25 +369,47 @@ public abstract class Entry implements ToZJSONObject {
             if (overrideDefaults != null) {
                 attrs.putAll(overrideDefaults);
             }
+            attrs.putAll(mAttrs);
+            return attrs;
+        } else {
+            return mAttrs;
         }
-        attrs.putAll(mAttrs);
-        return attrs;
     }
 
     public Map<String, Object> getEphemeralAttrs() {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        for (String attrName: mAttrMgr.getStaticEphemeralAttrs()) {
-            try {
-                attrs.put(attrName, getEphemeralAttr(attrName));
-            } catch (ServiceException e) {
-                // don't propagate this exception, since we don't want this to interrupt
-                // a GetAccountRequest
-                ZimbraLog.ephemeral.warn("unable to get value of ephemeral attribute '%s'", attrName, e);
-                continue;
+        try {
+            EphemeralStore.Factory ephemeralFactory = EphemeralStore.getFactory();
+            if (ephemeralFactory instanceof LdapEphemeralStore.Factory) {
+                //short-circuit for LDAP backends, since the data will already be in mAttrs
+                return attrs;
+            }
+            for (String attrName: mAttrMgr.getStaticEphemeralAttrs()) {
+                try {
+                    attrs.put(attrName, getEphemeralAttr(attrName));
+                } catch (ServiceException e) {
+                    continue;
+                }
+            }
+        } catch (ServiceException e) {
+            // don't propagate this exception, since we don't want this to interrupt
+            // instantiating or updating an entry
+            if (this instanceof Account) {
+                //currently, all ephemeral attributes are account-level
+                ZimbraLog.ephemeral.warn("unable to get ephemeral attributes for account %s", ((Account) this).getName(), e);
+            } else {
+                ZimbraLog.ephemeral.warn("unable to get ephemeral attributes", e);
             }
         }
         return attrs;
     }
+
+    private void addEphemeralAttrsToMap() {
+        if (this instanceof Account && mAttrs != null) {
+            mAttrs.putAll(getEphemeralAttrs());
+        }
+    }
+
     public Map<String, Object> getUnicodeAttrs(boolean applyDefaults) {
         Map<String, Object> attrs = getAttrs(applyDefaults);
         return toUnicode(attrs);
@@ -868,6 +897,11 @@ public abstract class Entry implements ToZJSONObject {
             store.update(input, location);
         } else {
             store.set(input, location);
+        }
+        if (dynamicComponent == null) {
+            //non-dynamic attributes are stored in the mAttrs map so that they are visible to getAttrs()
+            mAttrs.put(key, value);
+            mEphemeralCache.put(key, value);
         }
     }
 
