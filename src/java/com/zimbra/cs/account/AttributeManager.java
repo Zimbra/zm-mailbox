@@ -44,6 +44,7 @@ import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Entry.EntryType;
 import com.zimbra.cs.account.callback.CallbackContext;
 import com.zimbra.cs.account.callback.IDNCallback;
 import com.zimbra.cs.account.ldap.LdapProv;
@@ -133,7 +134,7 @@ public class AttributeManager {
 
     private final Map<String, AttributeInfo> mEphemeralAttrs = new HashMap<String, AttributeInfo>(); //lowercased
     private final Set<String> mEphemeralAttrsSet = new HashSet<String>(); // not lowercased
-    private final Map<String, AttributeInfo> mStaticEphemeralAttrs= new HashMap<String, AttributeInfo>(); // ephemeral attributes that can be retrieved as part of Entry.getAttrs()
+    private final Map<EntryType, Map<String, AttributeInfo>> mStaticEphemeralAttrs = new HashMap<EntryType, Map<String, AttributeInfo>>(); // ephemeral attributes that can be retrieved as part of Entry.getAttrs()
 
     /*
      * Notes on certificate attributes
@@ -224,8 +225,17 @@ public class AttributeManager {
         }
     }
 
-    public Map<String, AttributeInfo> getStaticEphemeralAttrs() {
-        return mStaticEphemeralAttrs;
+    public Map<String, AttributeInfo> getStaticEphemeralAttrs(EntryType entryType) {
+        return mStaticEphemeralAttrs.get(entryType);
+    }
+
+    private void addStaticEphemeralAttr(AttributeInfo info) {
+        Map<String, AttributeInfo> infoMap = mStaticEphemeralAttrs.get(info);
+        if (infoMap == null) {
+            infoMap = new HashMap<String, AttributeInfo>();
+            mStaticEphemeralAttrs.put(EntryType.ACCOUNT, infoMap);
+        }
+        infoMap.put(info.getName(), info);
     }
 
     @VisibleForTesting
@@ -235,7 +245,7 @@ public class AttributeManager {
             mEphemeralAttrs.put(info.mName.toLowerCase(), info);
             mEphemeralAttrsSet.add(info.mName);
             if (!info.isDynamic()) {
-                mStaticEphemeralAttrs.put(info.mName, info);
+                addStaticEphemeralAttr(info);
             }
         }
     }
@@ -626,7 +636,7 @@ public class AttributeManager {
                 mEphemeralAttrs.put(canonicalName, info);
                 mEphemeralAttrsSet.add(name);
                 if (!info.isDynamic()) {
-                    mStaticEphemeralAttrs.put(name, info);
+                    addStaticEphemeralAttr(info);
                 }
             }
         }

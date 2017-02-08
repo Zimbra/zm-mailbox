@@ -113,7 +113,6 @@ public abstract class Entry implements ToZJSONObject {
     	mAttrs = attrs;
         mDefaults = defaults;
         setAttributeManager();
-        addEphemeralAttrsToMap();
     }
 
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults,
@@ -123,7 +122,6 @@ public abstract class Entry implements ToZJSONObject {
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
         setAttributeManager();
-        addEphemeralAttrsToMap();
     }
 
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults,
@@ -133,7 +131,6 @@ public abstract class Entry implements ToZJSONObject {
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
         setAttributeManager();
-        addEphemeralAttrsToMap();
     }
 
     private void setAttributeManager() {
@@ -384,7 +381,7 @@ public abstract class Entry implements ToZJSONObject {
                 //short-circuit for LDAP backends, since the data will already be in mAttrs
                 return attrs;
             }
-            for (Map.Entry<String, AttributeInfo> entry: mAttrMgr.getStaticEphemeralAttrs().entrySet()) {
+            for (Map.Entry<String, AttributeInfo> entry: mAttrMgr.getStaticEphemeralAttrs(getEntryType()).entrySet()) {
                 String attrName= entry.getKey();
                 AttributeInfo info = entry.getValue();
                 EphemeralResult result = getEphemeralAttr(attrName);
@@ -418,8 +415,8 @@ public abstract class Entry implements ToZJSONObject {
         return attrs;
     }
 
-    private void addEphemeralAttrsToMap() {
-        if (this instanceof Account && mAttrs != null) {
+    protected void addEphemeralAttrsToMap() {
+        if (mAttrs != null) {
             mAttrs.putAll(getEphemeralAttrs());
         }
     }
