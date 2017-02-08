@@ -464,11 +464,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     public enum KeepType {IMPLICIT_KEEP, EXPLICIT_KEEP};
     public Message keep(KeepType type) throws ServiceException {
         String folderPath = handler.getDefaultFolderPath();
-        folderPath = CharMatcher.is('/').trimFrom(folderPath).toLowerCase(); // trim leading and trailing '/'
+        folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
         Message msg = null;
         ZimbraLog.filter.debug(type == KeepType.EXPLICIT_KEEP ? "Explicit - fileinto " : "Implicit - fileinto " +
             appendFlagTagActionsInfo(folderPath, getFlagActions(), getTagActions()));
-        if (filedIntoPaths.contains(folderPath)) {
+        if (isPathContainedInFiledIntoPaths(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
             if (type == KeepType.EXPLICIT_KEEP) {
@@ -484,6 +484,20 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         return msg;
     }
 
+    private boolean isPathContainedInFiledIntoPaths(String folderPath) {
+        // 1. Check folder name case-sensitively if it has already been registered in folderIntoPaths list
+        if (filedIntoPaths.contains(folderPath)) {
+            return true;
+        }
+        // 2. Check it case-insensitively
+        for (String path : filedIntoPaths) {
+            if (path.equalsIgnoreCase(folderPath)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Files the message into the given folder, as a result of an explicit
      * fileinto filter action.  Keeps track of the folder path, to make
@@ -491,12 +505,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
      */
     private void fileInto(String folderPath)
     throws ServiceException {
-        folderPath = CharMatcher.is('/').trimFrom(folderPath).toLowerCase(); // trim leading and trailing '/'
+        folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
         if (ZimbraLog.filter.isDebugEnabled()) {
             ZimbraLog.filter.debug(
                     appendFlagTagActionsInfo("fileinto " + folderPath, getFlagActions(), getTagActions()));
         }
-        if (filedIntoPaths.contains(folderPath)) {
+        if (isPathContainedInFiledIntoPaths(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
             ItemId id = handler.fileInto(folderPath, getFlagActions(), getTags());
