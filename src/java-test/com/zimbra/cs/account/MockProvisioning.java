@@ -206,7 +206,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void modifyAttrs(Entry entry, Map<String, ? extends Object> attrs, boolean checkImmutable) {
-        Map<String, Object> map = entry.getAttrs(false);
+        Map<String, Object> map = entry.getAttrs(false, false);
         for (Map.Entry<String, ? extends Object> attr : attrs.entrySet()) {
             String key = attr.getKey();
             if (attr.getValue() != null) {
