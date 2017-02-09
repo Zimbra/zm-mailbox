@@ -134,7 +134,7 @@ public class AttributeManager {
 
     private final Map<String, AttributeInfo> mEphemeralAttrs = new HashMap<String, AttributeInfo>(); //lowercased
     private final Set<String> mEphemeralAttrsSet = new HashSet<String>(); // not lowercased
-    private final Map<EntryType, Map<String, AttributeInfo>> mStaticEphemeralAttrs = new HashMap<EntryType, Map<String, AttributeInfo>>(); // ephemeral attributes that can be retrieved as part of Entry.getAttrs()
+    private final Map<EntryType, Map<String, AttributeInfo>> mNonDynamicEphemeralAttrs = new HashMap<EntryType, Map<String, AttributeInfo>>(); // ephemeral attributes that can be retrieved as part of Entry.getAttrs()
 
     /*
      * Notes on certificate attributes
@@ -225,20 +225,26 @@ public class AttributeManager {
         }
     }
 
-    public Map<String, AttributeInfo> getStaticEphemeralAttrs(EntryType entryType) {
-        return mStaticEphemeralAttrs.get(entryType);
+    /**
+     * Retrieves a map of ephemeral attributes that don't have dynamic components, for the given EntryType.
+     * This is used to include ephemeral data in Entry.getAttrs() results. Dynamic ephemeral attributes are
+     * excluded, as the API does not support fetching dynamic key components.
+     * @param entryType
+     */
+    public Map<String, AttributeInfo> getNonDynamicEphemeralAttrs(EntryType entryType) {
+        return mNonDynamicEphemeralAttrs.get(entryType);
     }
 
-    private void addStaticEphemeralAttr(AttributeInfo info) {
+    private void addNonDynamicEphemeralAttr(AttributeInfo info) {
         for (AttributeClass attrClass: Sets.union(info.getOptionalIn(), info.getRequiredIn())) {
             EntryType entryType = attrClass.getEntryType();
             if (entryType == null) {
                 continue;
             }
-            Map<String, AttributeInfo> infoMap = mStaticEphemeralAttrs.get(entryType);
+            Map<String, AttributeInfo> infoMap = mNonDynamicEphemeralAttrs.get(entryType);
             if (infoMap == null) {
                 infoMap = new HashMap<String, AttributeInfo>();
-                mStaticEphemeralAttrs.put(entryType, infoMap);
+                mNonDynamicEphemeralAttrs.put(entryType, infoMap);
             }
             infoMap.put(info.getName(), info);
         }
@@ -251,7 +257,7 @@ public class AttributeManager {
             mEphemeralAttrs.put(info.mName.toLowerCase(), info);
             mEphemeralAttrsSet.add(info.mName);
             if (!info.isDynamic()) {
-                addStaticEphemeralAttr(info);
+                addNonDynamicEphemeralAttr(info);
             }
         }
     }
@@ -642,7 +648,7 @@ public class AttributeManager {
                 mEphemeralAttrs.put(canonicalName, info);
                 mEphemeralAttrsSet.add(name);
                 if (!info.isDynamic()) {
-                    addStaticEphemeralAttr(info);
+                    addNonDynamicEphemeralAttr(info);
                 }
             }
         }
