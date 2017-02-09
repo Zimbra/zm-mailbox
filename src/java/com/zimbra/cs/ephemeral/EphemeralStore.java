@@ -122,9 +122,28 @@ public abstract class EphemeralStore {
         factories.put(prefix,  klass);
     }
 
-    private static final void setFactory(String factoryClassName) {
+    private static void handleFailure(FailureMode onFailure, String message, Throwable t) {
+        switch(onFailure) {
+        case halt:
+            if (t == null) {
+                Zimbra.halt(message);
+            } else {
+                Zimbra.halt(message, t);
+            }
+            break;
+        case safe:
+            if (t == null) {
+                ZimbraLog.ephemeral.debug(message);
+            } else {
+                ZimbraLog.ephemeral.debug(message, t);
+            }
+            break;
+        }
+    }
+    private static final void setFactory(String factoryClassName, FailureMode onFailure) {
         if (factoryClassName == null) {
-            Zimbra.halt("no EphemeralStore specified");
+            handleFailure(onFailure, "no EphemeralStore specified", null);
+            return;
         }
         Class<? extends Factory> factoryClass = null;
         try {
@@ -133,10 +152,11 @@ public abstract class EphemeralStore {
             try {
                 factoryClass = ExtensionUtil.findClass(factoryClassName).asSubclass(Factory.class);
             } catch (ClassNotFoundException cnfe2) {
-                Zimbra.halt("Unable to find EphemeralStore factory " + factoryClassName, cnfe2);
+                handleFailure(onFailure, String.format("Unable to find EphemeralStore factory %s", factoryClassName), cnfe2);
+                return;
             }
         }
-        setFactory(factoryClass);
+        setFactory(factoryClass, onFailure);
     }
 
     public static final void clearFactory() {
@@ -148,12 +168,16 @@ public abstract class EphemeralStore {
 
     @VisibleForTesting
     public static final void setFactory(Class<? extends Factory> factoryClass) {
+        setFactory(factoryClass, FailureMode.halt);
+    }
+
+    public static final void setFactory(Class<? extends Factory> factoryClass, FailureMode onFailure) {
         try {
             factory = factoryClass.newInstance();
             factory.startup();
             ZimbraLog.ephemeral.debug("using ephemeral store factory %s", factoryClass.getDeclaringClass().getSimpleName());
         } catch (InstantiationException | IllegalAccessException e) {
-            Zimbra.halt("Unable to initialize EphemeralStore factory " + factoryClass.getDeclaringClass().getSimpleName(), e);
+            handleFailure(onFailure, String.format("unable to initialize EphemeralsStore factory %s", factoryClass.getDeclaringClass().getSimpleName()), e);
         }
     }
 
@@ -177,7 +201,7 @@ public abstract class EphemeralStore {
         return encoder.decode(key, value);
     }
 
-    public static Factory getFactory() throws ServiceException {
+    public static Factory getFactory(FailureMode onFailure) throws ServiceException {
         if (factory == null) {
             String factoryClass = null;
             String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
@@ -189,9 +213,13 @@ public abstract class EphemeralStore {
             } else {
                 factoryClass = factories.get("ldap");
             }
-            setFactory(factoryClass);
+            setFactory(factoryClass, onFailure);
         }
         return factory;
+    }
+
+    public static Factory getFactory() throws ServiceException {
+        return getFactory(FailureMode.halt);
     }
 
     public static Factory getFactory(String backendName) {
@@ -312,5 +340,9 @@ public abstract class EphemeralStore {
          * @throws ServiceException
          */
         void test(String url) throws ServiceException;
+    }
+
+    public static enum FailureMode {
+        halt, safe;
     }
 }
