@@ -381,6 +381,9 @@ public abstract class Entry implements ToZJSONObject {
         }
     }
 
+    /**
+     * Returns values for non-dynamic ephemeral attributes.
+     */
     public Map<String, Object> getEphemeralAttrs() {
         Map<String, Object> attrs = new HashMap<String, Object>();
         try {
