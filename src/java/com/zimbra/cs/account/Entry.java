@@ -346,7 +346,7 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults) {
-        return getAttrs(applyDefaults, true);
+        return getAttrs(applyDefaults, false);
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults, boolean includeEphemeral) {
