@@ -31,7 +31,6 @@ import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.names.NameUtil;
-import com.zimbra.cs.account.soap.SoapEntry;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 /**
@@ -41,7 +40,6 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
 
     public Account(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
-        addEphemeralData();
     }
 
     @Override
@@ -516,15 +514,6 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
 
     public void cleanExpiredTokens() throws ServiceException {
         purgeAuthTokens();
-    }
-
-    private boolean supportsEphemeralData() {
-        return !(this instanceof SoapEntry);
-    }
-    private void addEphemeralData() {
-        if (supportsEphemeralData()) {
-            addEphemeralAttrsToMap();
-        }
     }
 }
 

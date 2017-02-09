@@ -95,7 +95,6 @@ public abstract class Entry implements ToZJSONObject {
     private Map<String, Object> mData;
     private Map<String, Set<String>> mMultiAttrSetCache;
     private Map<String, Set<byte[]>> mMultiBinaryAttrSetCache;
-    private Map<String, String> mEphemeralCache = new HashMap<String, String>();
     private Locale mLocale;
     private final Provisioning mProvisioning;
     private AttributeManager mAttrMgr;
@@ -158,7 +157,6 @@ public abstract class Entry implements ToZJSONObject {
     public synchronized void setAttrs(Map<String,Object> attrs,
             Map<String,Object> defaults, Map<String,Object> secondaryDefaults, Map<String,Object> overrideDefaults) {
         mAttrs = attrs;
-        mAttrs.putAll(mEphemeralCache);
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
         this.overrideDefaults = overrideDefaults;
@@ -167,7 +165,6 @@ public abstract class Entry implements ToZJSONObject {
 
     public synchronized void setAttrs(Map<String,Object> attrs) {
         mAttrs = attrs;
-        mAttrs.putAll(mEphemeralCache);
         resetData();
     }
 
@@ -349,6 +346,10 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults) {
+        return getAttrs(applyDefaults, true);
+    }
+
+    public Map<String, Object> getAttrs(boolean applyDefaults, boolean includeEphemeral) {
         if (applyDefaults && (mDefaults != null || mSecondaryDefaults != null)) {
             Map<String, Object> attrs = new HashMap<String, Object>();
             // put the second defaults
@@ -367,6 +368,13 @@ public abstract class Entry implements ToZJSONObject {
                 attrs.putAll(overrideDefaults);
             }
             attrs.putAll(mAttrs);
+            if (includeEphemeral) {
+                attrs.putAll(getEphemeralAttrs());
+            }
+            return attrs;
+        } else if (includeEphemeral) {
+            Map<String, Object> attrs = getEphemeralAttrs();
+            attrs.putAll(mAttrs);
             return attrs;
         } else {
             return mAttrs;
@@ -381,7 +389,11 @@ public abstract class Entry implements ToZJSONObject {
                 //short-circuit for LDAP backends, since the data will already be in mAttrs
                 return attrs;
             }
-            for (Map.Entry<String, AttributeInfo> entry: mAttrMgr.getStaticEphemeralAttrs(getEntryType()).entrySet()) {
+            Map<String, AttributeInfo> staticEphemeralAttrs = mAttrMgr.getStaticEphemeralAttrs(getEntryType());
+            if (staticEphemeralAttrs == null) {
+                return attrs;
+            }
+            for (Map.Entry<String, AttributeInfo> entry: staticEphemeralAttrs.entrySet()) {
                 String attrName= entry.getKey();
                 AttributeInfo info = entry.getValue();
                 EphemeralResult result = getEphemeralAttr(attrName);
@@ -908,11 +920,6 @@ public abstract class Entry implements ToZJSONObject {
             store.update(input, location);
         } else {
             store.set(input, location);
-        }
-        if (dynamicComponent == null) {
-            //non-dynamic attributes are stored in the mAttrs map so that they are visible to getAttrs()
-            mAttrs.put(key, value);
-            mEphemeralCache.put(key, value);
         }
     }
 
