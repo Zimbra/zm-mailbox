@@ -236,7 +236,14 @@ public class AttributeManager {
     }
 
     private void addNonDynamicEphemeralAttr(AttributeInfo info) {
-        for (AttributeClass attrClass: Sets.union(info.getOptionalIn(), info.getRequiredIn())) {
+        Set<AttributeClass> attrClasses = new HashSet<AttributeClass>();
+        if (info.getOptionalIn() != null) {
+            attrClasses.addAll(info.getOptionalIn());
+        }
+        if (info.getRequiredIn() != null) {
+            attrClasses.addAll(info.getRequiredIn());
+        }
+        for (AttributeClass attrClass: attrClasses) {
             EntryType entryType = attrClass.getEntryType();
             if (entryType == null) {
                 continue;
