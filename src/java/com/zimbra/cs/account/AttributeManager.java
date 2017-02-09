@@ -230,12 +230,18 @@ public class AttributeManager {
     }
 
     private void addStaticEphemeralAttr(AttributeInfo info) {
-        Map<String, AttributeInfo> infoMap = mStaticEphemeralAttrs.get(info);
-        if (infoMap == null) {
-            infoMap = new HashMap<String, AttributeInfo>();
-            mStaticEphemeralAttrs.put(EntryType.ACCOUNT, infoMap);
+        for (AttributeClass attrClass: Sets.union(info.getOptionalIn(), info.getRequiredIn())) {
+            EntryType entryType = attrClass.getEntryType();
+            if (entryType == null) {
+                continue;
+            }
+            Map<String, AttributeInfo> infoMap = mStaticEphemeralAttrs.get(entryType);
+            if (infoMap == null) {
+                infoMap = new HashMap<String, AttributeInfo>();
+                mStaticEphemeralAttrs.put(entryType, infoMap);
+            }
+            infoMap.put(info.getName(), info);
         }
-        infoMap.put(info.getName(), info);
     }
 
     @VisibleForTesting

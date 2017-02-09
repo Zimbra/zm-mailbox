@@ -23,37 +23,38 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Entry.EntryType;
 
 public enum AttributeClass {
     mailRecipient("zimbraMailRecipient",        false),
-    account("zimbraAccount",                    true),
-    alias("zimbraAlias",                        true),
-    distributionList("zimbraDistributionList",  true),
-    cos("zimbraCOS",                            true),
-    globalConfig("zimbraGlobalConfig",          true),
-    domain("zimbraDomain",                      true),
+    account("zimbraAccount",                    true, EntryType.ACCOUNT),
+    alias("zimbraAlias",                        true, EntryType.ALIAS),
+    distributionList("zimbraDistributionList",  true, EntryType.DISTRIBUTIONLIST),
+    cos("zimbraCOS",                            true, EntryType.COS),
+    globalConfig("zimbraGlobalConfig",          true, EntryType.GLOBALCONFIG),
+    domain("zimbraDomain",                      true, EntryType.DOMAIN),
     securityGroup("zimbraSecurityGroup",        false),
-    server("zimbraServer",                      true),
-    alwaysOnCluster("zimbraAlwaysOnCluster",    true),
-    ucService("zimbraUCService",                true),
+    server("zimbraServer",                      true, EntryType.SERVER),
+    alwaysOnCluster("zimbraAlwaysOnCluster",    true, EntryType.ALWAYSONCLUSTER),
+    ucService("zimbraUCService",                true, EntryType.UCSERVICE),
     mimeEntry("zimbraMimeEntry",                true),
     objectEntry("zimbraObjectEntry",            false),
     timeZone("zimbraTimeZone",                  false),
-    zimletEntry("zimbraZimletEntry",            true),
-    calendarResource("zimbraCalendarResource",  true),
-    identity("zimbraIdentity",                  true),
-    dataSource("zimbraDataSource",              true),
+    zimletEntry("zimbraZimletEntry",            true, EntryType.ZIMLET),
+    calendarResource("zimbraCalendarResource",  true, EntryType.CALRESOURCE),
+    identity("zimbraIdentity",                  true, EntryType.IDENTITY),
+    dataSource("zimbraDataSource",              true, EntryType.DATASOURCE),
     pop3DataSource("zimbraPop3DataSource",      true),
     imapDataSource("zimbraImapDataSource",      true),
     rssDataSource("zimbraRssDataSource",        true),
     liveDataSource("zimbraLiveDataSource",      true),
     galDataSource("zimbraGalDataSource",        true),
-    signature("zimbraSignature",                true),
-    xmppComponent("zimbraXMPPComponent",        true),
+    signature("zimbraSignature",                true, EntryType.SIGNATURE),
+    xmppComponent("zimbraXMPPComponent",        true, EntryType.XMPPCOMPONENT),
     aclTarget("zimbraAclTarget",                true),
     group("zimbraGroup",                        true),
-    groupDynamicUnit("zimbraGroupDynamicUnit",  false),
-    groupStaticUnit("zimbraGroupStaticUnit",    false),
+    groupDynamicUnit("zimbraGroupDynamicUnit",  false, EntryType.DYNAMICGROUP_DYNAMIC_UNIT),
+    groupStaticUnit("zimbraGroupStaticUnit",    false, EntryType.DYNAMICGROUP_STATIC_UNIT),
     shareLocator("zimbraShareLocator",          true);
 
     public static final String OC_zimbraAccount = account.getOCName();
@@ -89,12 +90,17 @@ public enum AttributeClass {
 
     String mOCName;
     boolean mProvisionable;
+    EntryType entryType;
 
-    AttributeClass(String ocName, boolean provisionable) {
+    AttributeClass(String ocName, boolean provisionable, EntryType type) {
         mOCName = ocName;
         mProvisionable = provisionable;
-
+        entryType = type;
         TM.sOCMap.put(ocName, this);
+    }
+
+    AttributeClass(String ocName, boolean provisionable) {
+        this(ocName, provisionable, null);
     }
 
     public static AttributeClass getAttributeClass(String ocName) {
@@ -115,6 +121,10 @@ public enum AttributeClass {
 
     public boolean isProvisionable() {
         return mProvisionable;
+    }
+
+    public EntryType getEntryType() {
+        return entryType;
     }
 
 }
