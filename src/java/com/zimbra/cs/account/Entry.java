@@ -347,7 +347,7 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults) {
-        return getAttrs(applyDefaults, false);
+        return getAttrs(applyDefaults, true);
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults, boolean includeEphemeral) {
@@ -432,7 +432,7 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Map<String, Object> getUnicodeAttrs(boolean applyDefaults) {
-        return getUnicodeAttrs(applyDefaults, false);
+        return getUnicodeAttrs(applyDefaults, true);
     }
 
     public Map<String, Object> getUnicodeAttrs(boolean applyDefaults, boolean includeEphemeral) {
