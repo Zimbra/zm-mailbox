@@ -437,7 +437,11 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Map<String, Object> getUnicodeAttrs(boolean applyDefaults) {
-        Map<String, Object> attrs = getAttrs(applyDefaults);
+        return getUnicodeAttrs(applyDefaults, false);
+    }
+
+    public Map<String, Object> getUnicodeAttrs(boolean applyDefaults, boolean includeEphemeral) {
+        Map<String, Object> attrs = getAttrs(applyDefaults, includeEphemeral);
         return toUnicode(attrs);
     }
 
