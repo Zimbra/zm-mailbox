@@ -1,15 +1,26 @@
 package com.zimbra.cs.account.callback;
 
+import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
+import static java.util.concurrent.Executors.newCachedThreadPool;
+
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class EphemeralBackendCheck extends AttributeCallback {
 
@@ -58,6 +69,51 @@ public class EphemeralBackendCheck extends AttributeCallback {
     }
 
     @Override
-    public void postModify(CallbackContext context, String attrName, Entry entry) {}
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
+        ExecutorService executor = newCachedThreadPool(newDaemonThreadFactory("ClearEphemeralConfigCache"));
+        List<Server> servers = null;
+        try {
+            servers = Provisioning.getInstance().getAllMailClientServers();
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("cannot fetch list of servers");
+            return;
+        }
+        for (Server server: servers) {
+            try {
+                if (server.isLocalServer()) {
+                    // don't need to flush cache on this server
+                    continue;
+                }
+            } catch (ServiceException e2) {
+                ZimbraLog.ephemeral.warn("error determining if server %s is local server", server.getServiceHostname());
+            }
+            executor.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    SoapProvisioning soapProv = new SoapProvisioning();
+                    try {
+                        String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI, true);
+                        soapProv.soapSetURI(adminUrl);
+                    } catch (ServiceException e1) {
+                        ZimbraLog.ephemeral.warn("could not get admin URL for server %s during ephemeral backend change", e1);
+                        return;
+                    }
+
+                    try {
+                        soapProv.soapZimbraAdminAuthenticate();
+                        soapProv.flushCache(CacheEntryType.config, null);
+                        ZimbraLog.ephemeral.info("sent FlushCache request to server %s", server.getServiceHostname());
+
+                    } catch (ServiceException e) {
+                        ZimbraLog.ephemeral.warn("cannot send FlushCache request to server %s", server.getServiceHostname(), e);
+                    }
+                }
+
+            });
+
+        }
+
+    }
 
 }
