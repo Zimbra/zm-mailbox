@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2017 Zimbra, Inc.
  * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -17,40 +17,30 @@
 
 package com.zimbra.soap.admin.message;
 
-import java.util.List;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
-import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required true
- * @zm-api-command-description Modify Filter rules
+ * @zm-api-command-description Get filter rules
  */
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_MODIFY_FILTER_RULES_REQUEST)
-public final class ModifyFilterRulesRequest {
+@XmlRootElement(name=AdminConstants.E_GET_OUTGOING_FILTER_RULES_REQUEST)
+public class GetOutgoingFilterRulesRequest {
     /**
      * @zm-api-field-tag type
      * @zm-api-field-description Type
      */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
     private String type;
+
     /**
      * @zm-api-field-description Account
      */
@@ -72,57 +62,44 @@ public final class ModifyFilterRulesRequest {
     @XmlElement(name=AdminConstants.E_SERVER)
     private ServerSelector server;
 
-    /**
-     * @zm-api-field-description Filter rules
-     */
-    @ZimbraJsonArrayForWrapper
-    @XmlElementWrapper(name=AdminConstants.E_FILTER_RULES /* filterRules */, required=true)
-    @XmlElement(name=AdminConstants.E_FILTER_RULE /* filterRule */, required=false)
-    private List<FilterRule> filterRules = Lists.newArrayList();
-
-    public ModifyFilterRulesRequest() {
+    public GetOutgoingFilterRulesRequest() {
         this.type = null;
         this.account = null;
         this.domain = null;
         this.cos = null;
         this.server = null;
-        this.filterRules = null;
     }
 
-    public ModifyFilterRulesRequest(AccountSelector account, List<FilterRule> filterRules, String type) {
+    public GetOutgoingFilterRulesRequest(AccountSelector accountSelector, String type) {
         this.type = type;
-        this.account = account;
+        this.account = accountSelector;
         this.domain = null;
         this.cos = null;
         this.server = null;
-        this.filterRules = filterRules;
     }
 
-    public ModifyFilterRulesRequest(DomainSelector domain, List<FilterRule> filterRules, String type) {
+    public GetOutgoingFilterRulesRequest(DomainSelector domainSelector, String type) {
         this.type = type;
         this.account = null;
-        this.domain = domain;
+        this.domain = domainSelector;
         this.cos = null;
         this.server = null;
-        this.filterRules = filterRules;
     }
 
-    public ModifyFilterRulesRequest(CosSelector cos, List<FilterRule> filterRules, String type) {
+    public GetOutgoingFilterRulesRequest(CosSelector cosSelector, String type) {
         this.type = type;
         this.account = null;
         this.domain = null;
-        this.cos = cos;
+        this.cos = cosSelector;
         this.server = null;
-        this.filterRules = filterRules;
     }
 
-    public ModifyFilterRulesRequest(ServerSelector server, List<FilterRule> filterRules, String type) {
+    public GetOutgoingFilterRulesRequest(ServerSelector serverSelector, String type) {
         this.type = type;
         this.account = null;
         this.domain = null;
         this.cos = null;
-        this.server = server;
-        this.filterRules = filterRules;
+        this.server = serverSelector;
     }
 
     /**
@@ -154,13 +131,6 @@ public final class ModifyFilterRulesRequest {
     }
 
     /**
-     * @param domainSelector the domainSelector to set
-     */
-    public void setDomain(DomainSelector domain) {
-        this.domain = domain;
-    }
-
-    /**
      * @return the domainSelector
      */
     public DomainSelector getDomain() {
@@ -168,10 +138,10 @@ public final class ModifyFilterRulesRequest {
     }
 
     /**
-     * @param cosSelector the cosSelector to set
+     * @param domainSelector the domainSelector to set
      */
-    public void setCos(CosSelector cos) {
-        this.cos = cos;
+    public void setDomain(DomainSelector domainSelector) {
+        this.domain = domainSelector;
     }
 
     /**
@@ -182,10 +152,10 @@ public final class ModifyFilterRulesRequest {
     }
 
     /**
-     * @param serverSelector the serverSelector to set
+     * @param cosSelector the cosSelector to set
      */
-    public void setServer(ServerSelector server) {
-        this.server = server;
+    public void setCos(CosSelector cosSelector) {
+        this.cos = cosSelector;
     }
 
     /**
@@ -195,37 +165,33 @@ public final class ModifyFilterRulesRequest {
         return server;
     }
 
-    public void setFilterRules(Iterable <FilterRule> filterRules) {
-        this.filterRules.clear();
-        if (filterRules != null) {
-            Iterables.addAll(this.filterRules,filterRules);
-        }
-    }
-
-    public void addFilterRule(FilterRule filterRule) {
-        this.filterRules.add(filterRule);
-    }
-
     /**
-     * Add additional filter rules
+     * @param serverSelector the serverSelector to set
      */
-    public void addFilterRules(Iterable <FilterRule> filterRules) {
-        if (filterRules != null) {
-            Iterables.addAll(this.filterRules, filterRules);
-        }
-    }
-
-    public List<FilterRule> getFilterRules() {
-        return filterRules;
-    }
-
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper
-            .add("filterRules", filterRules);
+    public void setServer(ServerSelector serverSelector) {
+        this.server = serverSelector;
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        StringBuilder sb = new StringBuilder();
+        sb.append("GetFilterRulesRequest ");
+        sb.append("type : ").append(this.type);
+        if (this.account != null) {
+            sb.append(" for account ").append(this.account.getKey())
+                .append(" by ").append(this.account.getBy());
+        } else if (this.domain != null) {
+            sb.append(" for domain ").append(this.domain.getKey())
+            .append(" by ").append(this.domain.getBy());
+        } else if (this.cos != null) {
+            sb.append(" for cos ").append(this.cos.getKey())
+            .append(" by ").append(this.cos.getBy());
+        } else if (this.server != null) {
+            sb.append(" for server ").append(this.server.getKey())
+            .append(" by ").append(this.server.getBy());
+        } else {
+            sb.append("without any selector");
+        }
+        return sb.toString();
     }
 }

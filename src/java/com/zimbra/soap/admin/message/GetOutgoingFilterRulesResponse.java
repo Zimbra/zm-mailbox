@@ -36,8 +36,8 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.mail.type.FilterRule;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_FILTER_RULES_RESPONSE)
-public final class GetFilterRulesResponse {
+@XmlRootElement(name=AdminConstants.E_GET_OUTGOING_FILTER_RULES_RESPONSE)
+public final class GetOutgoingFilterRulesResponse {
     /**
      * @zm-api-field-tag type
      * @zm-api-field-description Type
@@ -53,10 +53,10 @@ public final class GetFilterRulesResponse {
     @XmlElement(name=AdminConstants.E_FILTER_RULE /* filterRule */, required=false)
     private final List<FilterRule> rules = Lists.newArrayList();
 
-    public GetFilterRulesResponse() {
+    public GetOutgoingFilterRulesResponse() {
     }
 
-    public GetFilterRulesResponse(String type) {
+    public GetOutgoingFilterRulesResponse(String type) {
         this.type = type;
     }
 

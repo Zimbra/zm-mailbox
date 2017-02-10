@@ -43,8 +43,8 @@ import com.zimbra.soap.type.AccountSelector;
  * @zm-api-command-description Modify Filter rules
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_MODIFY_FILTER_RULES_REQUEST)
-public final class ModifyFilterRulesRequest {
+@XmlRootElement(name=AdminConstants.E_MODIFY_OUTGOING_FILTER_RULES_REQUEST)
+public final class ModifyOutgoingFilterRulesRequest {
     /**
      * @zm-api-field-tag type
      * @zm-api-field-description Type
@@ -80,7 +80,7 @@ public final class ModifyFilterRulesRequest {
     @XmlElement(name=AdminConstants.E_FILTER_RULE /* filterRule */, required=false)
     private List<FilterRule> filterRules = Lists.newArrayList();
 
-    public ModifyFilterRulesRequest() {
+    public ModifyOutgoingFilterRulesRequest() {
         this.type = null;
         this.account = null;
         this.domain = null;
@@ -89,7 +89,7 @@ public final class ModifyFilterRulesRequest {
         this.filterRules = null;
     }
 
-    public ModifyFilterRulesRequest(AccountSelector account, List<FilterRule> filterRules, String type) {
+    public ModifyOutgoingFilterRulesRequest(AccountSelector account, List<FilterRule> filterRules, String type) {
         this.type = type;
         this.account = account;
         this.domain = null;
@@ -98,7 +98,7 @@ public final class ModifyFilterRulesRequest {
         this.filterRules = filterRules;
     }
 
-    public ModifyFilterRulesRequest(DomainSelector domain, List<FilterRule> filterRules, String type) {
+    public ModifyOutgoingFilterRulesRequest(DomainSelector domain, List<FilterRule> filterRules, String type) {
         this.type = type;
         this.account = null;
         this.domain = domain;
@@ -107,7 +107,7 @@ public final class ModifyFilterRulesRequest {
         this.filterRules = filterRules;
     }
 
-    public ModifyFilterRulesRequest(CosSelector cos, List<FilterRule> filterRules, String type) {
+    public ModifyOutgoingFilterRulesRequest(CosSelector cos, List<FilterRule> filterRules, String type) {
         this.type = type;
         this.account = null;
         this.domain = null;
@@ -116,7 +116,7 @@ public final class ModifyFilterRulesRequest {
         this.filterRules = filterRules;
     }
 
-    public ModifyFilterRulesRequest(ServerSelector server, List<FilterRule> filterRules, String type) {
+    public ModifyOutgoingFilterRulesRequest(ServerSelector server, List<FilterRule> filterRules, String type) {
         this.type = type;
         this.account = null;
         this.domain = null;
