@@ -421,12 +421,7 @@ public abstract class Entry implements ToZJSONObject {
             }
         } catch (ServiceException e) {
             // don't propagate this exception, since we don't want to interrupt getAttrs() calls
-            if (this instanceof Account) {
-                //currently, all ephemeral attributes are account-level
-                ZimbraLog.ephemeral.warn("unable to get ephemeral attributes for account %s", ((Account) this).getName(), e);
-            } else {
-                ZimbraLog.ephemeral.warn("unable to get ephemeral attributes", e);
-            }
+            ZimbraLog.ephemeral.warn("unable to get ephemeral attributes for %s %s", getEntryType().getName(), getLabel());
         }
         return attrs;
     }
