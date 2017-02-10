@@ -302,6 +302,8 @@ public class AdminService implements DocumentService {
         // Filter rules
         dispatcher.registerHandler(AdminConstants.GET_FILTER_RULES_REQUEST, new GetFilterRules());
         dispatcher.registerHandler(AdminConstants.MODIFY_FILTER_RULES_REQUEST, new ModifyFilterRules());
+        dispatcher.registerHandler(AdminConstants.GET_OUTGOING_FILTER_RULES_REQUEST, new GetOutgoingFilterRules());
+        dispatcher.registerHandler(AdminConstants.MODIFY_OUTGOING_FILTER_RULES_REQUEST, new ModifyOutgoingFilterRules());
 
     }
 
