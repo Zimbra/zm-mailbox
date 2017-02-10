@@ -5,13 +5,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ephemeral.EphemeralInput.RelativeExpiration;
+import com.zimbra.cs.ldap.LdapDateUtil;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 public class EphemeralStoreTest {
 
@@ -213,6 +220,17 @@ public class EphemeralStoreTest {
         assertEquals(null, result.getBoolValue());
         assertEquals(true, result.getBoolValue(true));
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testGetAttrs() throws Exception {
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.createAccount("user1", "test123", new HashMap<String, Object>());
+        Date date = new Date();
+        acct.setLastLogonTimestamp(date);
+        Map<String, Object> attrs = acct.getAttrs(false, true);
+        assertEquals(LdapDateUtil.toGeneralizedTime(date), attrs.get(Provisioning.A_zimbraLastLogonTimestamp));
     }
 
     static class TestLocation extends EphemeralLocation {

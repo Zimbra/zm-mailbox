@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.qa.unittest.prov.soap.TestSearchDirectory;
 import com.zimbra.qa.unittest.server.TestCalDavImportServer;
 import com.zimbra.qa.unittest.server.TestDataSourceServer;
 import com.zimbra.qa.unittest.server.TestDocumentServer;
@@ -132,6 +133,7 @@ public class ZimbraSuite  {
         sClasses.add(TestSearchHeaders.class);
         sClasses.add(TestServerEnumeration.class);
         sClasses.add(TestLockoutMailbox.class);
+        sClasses.add(TestSearchDirectory.class);
     }
 
     /**

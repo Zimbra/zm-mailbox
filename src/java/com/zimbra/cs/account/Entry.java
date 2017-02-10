@@ -53,7 +53,9 @@ import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.EphemeralStore.FailureMode;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
+import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.util.MemoryUnitUtil;
 
@@ -345,6 +347,10 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults) {
+        return getAttrs(applyDefaults, true);
+    }
+
+    public Map<String, Object> getAttrs(boolean applyDefaults, boolean includeEphemeral) {
         if (applyDefaults && (mDefaults != null || mSecondaryDefaults != null)) {
             Map<String, Object> attrs = new HashMap<String, Object>();
             // put the second defaults
@@ -362,14 +368,70 @@ public abstract class Entry implements ToZJSONObject {
             if (overrideDefaults != null) {
                 attrs.putAll(overrideDefaults);
             }
+            attrs.putAll(mAttrs);
+            if (includeEphemeral) {
+                attrs.putAll(getEphemeralAttrs());
+            }
+            return attrs;
+        } else if (includeEphemeral) {
+            Map<String, Object> attrs = getEphemeralAttrs();
+            attrs.putAll(mAttrs);
             return attrs;
         } else {
             return mAttrs;
         }
     }
 
+    /**
+     * Returns values for non-dynamic ephemeral attributes.
+     */
+    public Map<String, Object> getEphemeralAttrs() {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        try {
+            EphemeralStore.Factory ephemeralFactory = EphemeralStore.getFactory(FailureMode.safe);
+            if (ephemeralFactory == null || ephemeralFactory instanceof LdapEphemeralStore.Factory) {
+                //Short-circuit for LDAP backends, since the data will already be in mAttrs.
+                //This also catches scenarios where the EphemeralStore is not available.
+                return attrs;
+            }
+            Map<String, AttributeInfo> ephemeralAttrs = mAttrMgr.getNonDynamicEphemeralAttrs(getEntryType());
+            if (ephemeralAttrs == null) {
+                return attrs;
+            }
+            for (Map.Entry<String, AttributeInfo> entry: ephemeralAttrs.entrySet()) {
+                String attrName= entry.getKey();
+                AttributeInfo info = entry.getValue();
+                EphemeralResult result = getEphemeralAttr(attrName);
+                if (!result.isEmpty()) {
+                    switch(info.getType()) {
+                    case TYPE_BOOLEAN:
+                        attrs.put(attrName, result.getBoolValue());
+                        break;
+                    case TYPE_INTEGER:
+                        attrs.put(attrName, result.getIntValue());
+                        break;
+                    case TYPE_LONG:
+                        attrs.put(attrName, result.getLongValue());
+                        break;
+                    default:
+                        attrs.put(attrName, result.getValue());
+                        break;
+                    }
+                }
+            }
+        } catch (ServiceException e) {
+            // don't propagate this exception, since we don't want to interrupt getAttrs() calls
+            ZimbraLog.ephemeral.warn("unable to get ephemeral attributes for %s %s", getEntryType().getName(), getLabel());
+        }
+        return attrs;
+    }
+
     public Map<String, Object> getUnicodeAttrs(boolean applyDefaults) {
-        Map<String, Object> attrs = getAttrs(applyDefaults);
+        return getUnicodeAttrs(applyDefaults, true);
+    }
+
+    public Map<String, Object> getUnicodeAttrs(boolean applyDefaults, boolean includeEphemeral) {
+        Map<String, Object> attrs = getAttrs(applyDefaults, includeEphemeral);
         return toUnicode(attrs);
     }
 
