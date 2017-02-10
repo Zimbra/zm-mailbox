@@ -22,25 +22,62 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.filter.RuleManager.FilterType;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ModifyFilterRulesRequest;
 import com.zimbra.soap.admin.message.ModifyFilterRulesResponse;
+import com.zimbra.soap.admin.type.CosSelector;
+import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.type.AccountSelector;
 
 public final class ModifyFilterRules extends AdminDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        Account account = null;
+        Domain domain = null;
+        Cos cos = null;
+        Server server = null;
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         ModifyFilterRulesRequest req = JaxbUtil.elementToJaxb(request);
 
+        String type = req.getType();
         AccountSelector acctSel = req.getAccount();
-        Account account = verifyAccountHarvestingAndPerms(acctSel, zsc);
+        if(acctSel != null) {
+            account = verifyAccountHarvestingAndPerms(acctSel, zsc);
+        }
+        DomainSelector domainSelector = req.getDomain();
+        if(domainSelector != null) {
+            domain = verifyDomainPerms(domainSelector, zsc);
+        }
+        CosSelector cosSelector = req.getCos();
+        if(cosSelector != null) {
+            cos = verifyCosPerms(cosSelector, zsc);
+        }
+        ServerSelector serverSelector = req.getServer();
+        if(serverSelector != null) {
+            server = verifyServerPerms(serverSelector, zsc);
+        }
 
         ModifyFilterRulesRequest mfrReq = JaxbUtil.elementToJaxb(request);
-        RuleManager.setIncomingXMLRules(account, mfrReq.getFilterRules());
+        if(account != null) {
+            RuleManager.setAccountAdminRulesFromXML(account, mfrReq.getFilterRules(), FilterType.INCOMING, type);
+        }
+        if(domain != null) {
+            RuleManager.setDomainAdminRulesFromXML(domain, mfrReq.getFilterRules(), FilterType.INCOMING, type);
+        }
+        if(cos != null) {
+            RuleManager.setCosAdminRulesFromXML(cos, mfrReq.getFilterRules(), FilterType.INCOMING, type);
+        }
+        if(server != null) {
+            RuleManager.setServerAdminRulesFromXML(server, mfrReq.getFilterRules(), FilterType.INCOMING, type);
+        }
         return zsc.jaxbToElement(new ModifyFilterRulesResponse());
     }
 

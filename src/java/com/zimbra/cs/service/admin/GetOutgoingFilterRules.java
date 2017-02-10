@@ -29,15 +29,15 @@ import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.filter.RuleManager.FilterType;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.admin.message.GetFilterRulesRequest;
-import com.zimbra.soap.admin.message.GetFilterRulesResponse;
+import com.zimbra.soap.admin.message.GetOutgoingFilterRulesRequest;
+import com.zimbra.soap.admin.message.GetOutgoingFilterRulesResponse;
 import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.type.AccountSelector;
 
-public final class GetFilterRules extends AdminDocumentHandler {
+public final class GetOutgoingFilterRules extends AdminDocumentHandler {
 
     @Override
     public Element handle(Element req, Map<String, Object> context) throws ServiceException {
@@ -46,7 +46,7 @@ public final class GetFilterRules extends AdminDocumentHandler {
         Cos cos = null;
         Server server = null;
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        GetFilterRulesRequest request = JaxbUtil.elementToJaxb(req);
+        GetOutgoingFilterRulesRequest request = JaxbUtil.elementToJaxb(req);
 
         String type = request.getType();
         AccountSelector acctSel = request.getAccount();
@@ -66,16 +66,16 @@ public final class GetFilterRules extends AdminDocumentHandler {
             server = verifyServerPerms(serverSelector, zsc);
         }
 
-        GetFilterRulesResponse resp = new GetFilterRulesResponse(type);
+        GetOutgoingFilterRulesResponse resp = new GetOutgoingFilterRulesResponse(type);
         List<FilterRule> rules = null;
         if(account != null) {
-            rules = RuleManager.getAccountAdminRulesAsXML(account, FilterType.INCOMING, type);
+            rules = RuleManager.getAccountAdminRulesAsXML(account, FilterType.OUTGOING, type);
         } else if(domain != null) {
-            rules = RuleManager.getDomainAdminRulesAsXML(domain, FilterType.INCOMING, type);
+            rules = RuleManager.getDomainAdminRulesAsXML(domain, FilterType.OUTGOING, type);
         } else if(cos != null) {
-            rules = RuleManager.getCosAdminRulesAsXML(cos, FilterType.INCOMING, type);
+            rules = RuleManager.getCosAdminRulesAsXML(cos, FilterType.OUTGOING, type);
         } else if(server != null) {
-            rules = RuleManager.getServerAdminRulesAsXML(server, FilterType.INCOMING, type);
+            rules = RuleManager.getServerAdminRulesAsXML(server, FilterType.OUTGOING, type);
         }
         resp.addFilterRules(rules);
         return zsc.jaxbToElement(resp);
