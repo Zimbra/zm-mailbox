@@ -166,8 +166,20 @@ public class NotifyMailto extends AbstractActionCommand {
                             options = new HashMap<String, String>();
                             for (String option : listOptions) {
                                 String[] token = option.split("=");
-                                String key = FilterUtil.replaceVariables(variables, matchedVariables, token[0]);
-                                String value = FilterUtil.replaceVariables(variables, matchedVariables, token[1]);
+                                String key = null;
+                                String value = null;
+                                if (token.length == 2) {
+                                    key = token[0];
+                                    value = token[1];
+                                } else if (token.length == 1) {
+                                    key = token[0];
+                                    value = "";
+                                } else {
+                                    key = "";
+                                    value ="";
+                                }
+                                key = FilterUtil.replaceVariables(variables, matchedVariables, key);
+                                value = FilterUtil.replaceVariables(variables, matchedVariables, value);
                                 options.put(key, value);
                             }
                         } else {
