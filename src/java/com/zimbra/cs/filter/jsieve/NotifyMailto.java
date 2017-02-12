@@ -201,11 +201,11 @@ public class NotifyMailto extends AbstractActionCommand {
                 String[] params = query.split("&");
                 for (String param : params) {
                     String[] token = param.split("=");
-                    if (token.length != 2) {
-                        throw new SyntaxException("'mailto' method syntax error: missing parameter");
+                    if (token.length > 2) {
+                        throw new SyntaxException("'mailto' method syntax error: too many parameters");
                     } else {
-                        if (StringUtils.isEmpty(token[0]) || StringUtils.isEmpty(token[1])) {
-                            throw new SyntaxException("'mailto' method syntax error: empty parameter");
+                        if (StringUtils.isEmpty(token[0])) {
+                            throw new SyntaxException("'mailto' method syntax error: empty parameter name");
                         }
                     }
                     // If the value or parameter name is URL encoded, it should be
@@ -220,12 +220,18 @@ public class NotifyMailto extends AbstractActionCommand {
                     } catch (IllegalArgumentException e) {
                         headerName = token[0].toLowerCase();
                     }
+                    if (token.length == 1) {
+                        // The value must be empty
+                        headerValue = "";
+                    } else {
+                        headerValue = token[1];
+                    }
                     try {
-                        headerValue = URLDecoder.decode(token[1], "UTF-8");
+                        headerValue = URLDecoder.decode(headerValue, "UTF-8");
                     } catch (UnsupportedEncodingException e)  {
                         // No exception should be thrown because the charset is always "UTF-8"
                     } catch (IllegalArgumentException e) {
-                        headerValue = token[1];
+                        // Use token[1] as is
                     }
 
                     if (!mailtoParams.containsKey(headerName)) {
