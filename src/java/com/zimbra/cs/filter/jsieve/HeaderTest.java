@@ -297,7 +297,7 @@ public class HeaderTest extends Header {
         ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
         if (matchType.equals(MatchTypeTags.MATCHES_TAG)) {
             try {
-                evaluateVarExp(zma, headerNames, false, keys);
+                evaluateVarExp(zma, headerNames, SourceType.HEADER, keys);
             } catch (MessagingException e) {
                 throw new SieveException("Exception occured while evaluating variable expression.", e);
             }
@@ -314,30 +314,32 @@ public class HeaderTest extends Header {
     }
     
     /**
-     * Matches the wildcard ("?" and "*") in the Address, Envelope, and/or Header test,
+     * Matches the wildcard ("?" and "*") in the Address, Envelope, Header or String test,
      * and stores one string for each wildcard in the variable ${n} (n=1,2,...,9).
      *
      * @param mailAdapter triggering mail object
-     * @param headerNames target header name to be matched
-     * @param envelope if set to TRUE, the headerNames should be looked up within the envelope value (e.g. MAIL FROM, RCPT TO etc.).  Otherwise the headerNames should be looked up from the message header.
+     * @param sourceNames target header name or literal value to be matched
+     * @param sourceType  where the value should be looked up, message header, envelope, or use as literal
      * @param keys matching key string
      * @throws SieveMailException
      * @throws SievePatternException
      * @throws MessagingException 
      */
-    public static void evaluateVarExp(ZimbraMailAdapter mailAdapter, List<String> headerNames, boolean envelope, List<String> keys) throws SieveMailException, SievePatternException, MessagingException {
-        
+    public static enum SourceType {HEADER, ENVELOPE, LITERAL};
+    public static void evaluateVarExp(ZimbraMailAdapter mailAdapter, List<String> sourceNames, SourceType sourceType, List<String> keys) throws SieveMailException, SievePatternException, MessagingException {
         List<String> varValues = new ArrayList<String>();
 
         String firstMatchedInputSubsequence = null;
 
-        for (Object headerName : headerNames) {
-            String hn = (String) headerName;
+        for (Object obj : sourceNames) {
+            String name = (String) obj;
             List<String> values = null;
-            if (envelope) {
-                values = mailAdapter.getEnvelope(hn);
-            } else {
-                String[] headerValues = mailAdapter.getMimeMessage().getHeader(hn);
+            switch (sourceType) {
+            case ENVELOPE:
+                values = mailAdapter.getEnvelope(name);
+                break;
+            case HEADER:
+                String[] headerValues = mailAdapter.getMimeMessage().getHeader(name);
                 if (headerValues != null && headerValues.length > 0) {
                     values = Arrays.asList(headerValues);
                 } else {
@@ -352,6 +354,11 @@ public class HeaderTest extends Header {
                     }
                 }
                 values = decodedValues;
+                break;
+            case LITERAL:
+                values = new ArrayList<String>();
+                values.add(name);
+                break;
             }
             for (String sourceStr : values) {
                 for (Object key : keys) {
