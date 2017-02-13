@@ -356,6 +356,7 @@ public class HeaderTest extends Header {
                 values = decodedValues;
                 break;
             case LITERAL:
+            default:
                 values = new ArrayList<String>();
                 values.add(name);
                 break;
