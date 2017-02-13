@@ -71,7 +71,7 @@ public class AddressTest extends Address {
         if (MatchTypeTags.MATCHES_TAG.equals(params.getMatchType())) {
             ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
             try {
-                HeaderTest.evaluateVarExp(zma, params.getHeaderNames(), false, params.getKeys());
+                HeaderTest.evaluateVarExp(zma, params.getHeaderNames(), HeaderTest.SourceType.HEADER, params.getKeys());
             } catch (MessagingException e) {
                 throw new SieveException("Exception occured while evaluating variable expression.", e);
             }

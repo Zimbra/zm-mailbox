@@ -1112,7 +1112,7 @@ public class SetVariableTest {
             String[] tags = msg.getTags();
             Assert.assertEquals(2, tags.length);
             Assert.assertEquals("tag1", tags[0]);
-            Assert.assertEquals("tag2", tags[1]);
+            Assert.assertEquals("tag2X-String", tags[1]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
@@ -1278,6 +1278,67 @@ public class SetVariableTest {
             Assert.assertEquals("dollar-middle", msg.getTags()[12]);
         } catch (Exception e) {
             fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testString() {
+        try {
+            filterScript =
+                    "set \"dollar\" \"$\";\n"
+                  + "set \"sample\" \"test text\";\n"
+                  + "# set \"abc${dollar}{sample}\" in source\n"
+                  + "if string :matches :comparator \"i;ascii-casemap\" \"abc${dollar}{sample}\" \"*${sample}\" {\n"
+                  + "  addheader :last \"X-New-Header-1\" \"${1}\";\n"
+                  + "  addheader :last \"X-New-Header-2\" \"${2}\";\n"
+                  + "}\n"
+                  + "if string :contains :comparator \"i;ascii-casemap\" \"abc${dollar}{sample}\" \"${sample}\" {\n"
+                  + "  addheader :last \"X-New-Header-3\" \"contains\";\n"
+                  + "}\n"
+                  + "if string :is :comparator \"i;ascii-casemap\" \"abc${dollar}{sample}\" \"abc${sample}\" {\n"
+                  + "  addheader :last \"X-New-Header-4\" \"is\";\n"
+                  + "}\n"
+                  + "# set \"${dollar}{sample}\" in source\n"
+                  + "if string :matches :comparator \"i;ascii-casemap\" \"${dollar}{sample}\" \"*${sample}\" {\n"
+                  + "  addheader :last \"X-New-Header-5\" \"${1}\";\n"
+                  + "  addheader :last \"X-New-Header-6\" \"${2}\";\n"
+                  + "}\n"
+                  + "if string :contains :comparator \"i;ascii-casemap\" \"${dollar}{sample}\" \"${sample}\" {\n"
+                  + "  addheader :last \"X-New-Header-7\" \"contains\";\n"
+                  + "}\n"
+                  + "if string :is :comparator \"i;ascii-casemap\" \"${dollar}{sample}\" \"${sample}\" {\n"
+                  + "  addheader :last \"X-New-Header-8\" \"is\";\n"
+                  + "}"
+                  ;
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage("From: test@zimbra.com\nSubject: hello".getBytes(), false), 0,
+                    account.getName(), null, new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            String value[] = null;
+            value = msg.getMimeMessage().getHeader("X-New-Header-1");
+            Assert.assertEquals("abc", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-2");
+            Assert.assertEquals("", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-3");
+            Assert.assertEquals("contains", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-4");
+            Assert.assertEquals("is", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-5");
+            Assert.assertEquals("", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-6");
+            Assert.assertEquals("", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-7");
+            Assert.assertEquals("contains", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-8");
+            Assert.assertEquals("is", value[0]);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
         }
     }
 }

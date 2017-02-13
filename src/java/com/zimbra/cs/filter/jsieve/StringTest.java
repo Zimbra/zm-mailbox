@@ -103,9 +103,7 @@ public class StringTest extends Header {
         }
         List<String> tempSourceValues =  new ArrayList<String>();
         for (String sourceValue : sourceValues) {
-            if (sourceValue.startsWith("${")) {
-                sourceValue = FilterUtil.replaceVariables(existingVars, matchedValues, sourceValue);
-            }
+            sourceValue = FilterUtil.replaceVariables(existingVars, matchedValues, sourceValue);
             tempSourceValues.add(sourceValue);
         }
         sourceValues = tempSourceValues;
@@ -115,7 +113,7 @@ public class StringTest extends Header {
         if (result) {
             if (matchType.equals(MatchTypeTags.MATCHES_TAG)) {
                 try {
-                    HeaderTest.evaluateVarExp(mailAdapter, sourceValues, false, keyValues);
+                    HeaderTest.evaluateVarExp(mailAdapter, sourceValues, HeaderTest.SourceType.LITERAL, keyValues);
                 } catch (MessagingException e) {
                     throw new SieveException("Exception occured while evaluating variable expression.", e);
                 }
