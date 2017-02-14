@@ -133,7 +133,7 @@ public final class RuleManager {
         } else if (entry instanceof Cos) {
             ZimbraLog.filter.debug("Setting filter rules for cos %s:\n%s", ((Cos)entry).getName(), script);
         } else if (entry instanceof Server) {
-            ZimbraLog.filter.debug("Setting filter rules for cos %s:\n%s", ((Server)entry).getName(), script);
+            ZimbraLog.filter.debug("Setting filter rules for server %s:\n%s", ((Server)entry).getName(), script);
         }
         if (script == null) {
             script = "";
