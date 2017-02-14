@@ -46,7 +46,6 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Entry.EntryType;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -984,7 +983,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         Domain domain = prov.get(domainSelector);
         if(domain == null) {
             ServiceException se = ServiceException.FAILURE(String.format("failed to get domain"), null);
-            ZimbraLog.filter.debug("DomainSelector failed to get domain", se);
+            ZimbraLog.filter.debug("DomainSelector failed to get domain - %s:%s", domainSelector.getBy().toString(), domainSelector.getKey(), se);
             throw se;
         }
         checkDomainRight(zsc, domain, Admin.R_getDomain);
@@ -1005,12 +1004,12 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             cos = prov.getCosByName(cosSelector.getKey());
         } else {
             ServiceException se = ServiceException.INVALID_REQUEST(String.format("invalid cosby"), null);
-            ZimbraLog.filter.debug("CosSelector not valid", se);
+            ZimbraLog.filter.debug("CosSelector not valid - %s:%s", cosSelector.getBy().toString(), cosSelector.getKey(), se);
             throw se;
         }
         if(cos == null) {
             ServiceException se = ServiceException.FAILURE(String.format("failed to get cos"), null);
-            ZimbraLog.filter.debug("CosSelector failed to get domain", se);
+            ZimbraLog.filter.debug("CosSelector failed to get cos - %s:%s", cosSelector.getBy().toString(), cosSelector.getKey(), se);
             throw se;
         }
         checkCosRight(zsc, cos, Admin.R_getCos);
@@ -1020,8 +1019,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     public Server verifyServerPerms(ServerSelector serverSelector, ZimbraSoapContext zsc) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         if (serverSelector == null) {
-            ServiceException se = ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_DOMAIN), null);
-            ZimbraLog.filter.debug("AccountSelector not found", se);
+            ServiceException se = ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_SERVER), null);
+            ZimbraLog.filter.debug("ServerSelector not found", se);
             throw se;
         }
         Server server = null;
@@ -1033,12 +1032,12 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             server = prov.getServerByServiceHostname(serverSelector.getKey());
         } else {
             ServiceException se = ServiceException.INVALID_REQUEST(String.format("invalid serverby"), null);
-            ZimbraLog.filter.debug("ServerSelector not valid", se);
+            ZimbraLog.filter.debug("ServerSelector not valid - %s:%s", serverSelector.getBy().toString(), serverSelector.getKey(), se);
             throw se;
         }
         if(server == null) {
             ServiceException se = ServiceException.FAILURE(String.format("failed to get server"), null);
-            ZimbraLog.filter.debug("ServerSelector failed to get domain", se);
+            ZimbraLog.filter.debug("ServerSelector failed to get server - %s:%s", serverSelector.getBy().toString(), serverSelector.getKey(), se);
             throw se;
         }
         checkRight(zsc, server, Admin.R_getServer);
