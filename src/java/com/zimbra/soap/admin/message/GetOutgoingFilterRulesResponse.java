@@ -17,78 +17,40 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
-import com.zimbra.soap.mail.type.FilterRule;
+import com.zimbra.soap.admin.type.CosSelector;
+import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.admin.type.ServerSelector;
+import com.zimbra.soap.type.AccountSelector;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_OUTGOING_FILTER_RULES_RESPONSE)
-public final class GetOutgoingFilterRulesResponse {
-    /**
-     * @zm-api-field-tag type
-     * @zm-api-field-description Type
-     */
-    @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
-    private String type;
-
-    /**
-     * @zm-api-field-description Filter rules
-     */
-    @ZimbraJsonArrayForWrapper
-    @XmlElementWrapper(name=AdminConstants.E_FILTER_RULES /* filterRules */, required=true)
-    @XmlElement(name=AdminConstants.E_FILTER_RULE /* filterRule */, required=false)
-    private final List<FilterRule> rules = Lists.newArrayList();
-
+public final class GetOutgoingFilterRulesResponse extends GetFilterRulesResponse {
     public GetOutgoingFilterRulesResponse() {
+        super();
     }
 
     public GetOutgoingFilterRulesResponse(String type) {
-        this.type = type;
+        super(type);
     }
 
-    public String getType() {
-        return type;
+    public GetOutgoingFilterRulesResponse(String type, AccountSelector accountSelector) {
+        super(type, accountSelector);
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public GetOutgoingFilterRulesResponse(String type, DomainSelector domainSelector) {
+        super(type, domainSelector);
     }
 
-    public void setFilterRules(Collection<FilterRule> list) {
-        rules.clear();
-        if (list != null) {
-            rules.addAll(list);
-        }
+    public GetOutgoingFilterRulesResponse(String type, CosSelector cosSelector) {
+        super(type, cosSelector);
     }
 
-    public void addFilterRule(FilterRule rule) {
-        rules.add(rule);
-    }
-
-    public void addFilterRules(Collection<FilterRule> list) {
-        rules.addAll(list);
-    }
-
-    public List<FilterRule> getFilterRules() {
-        return Collections.unmodifiableList(rules);
-    }
-
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this).add("type", type).add("rules", rules).toString();
+    public GetOutgoingFilterRulesResponse(String type, ServerSelector serverSelector) {
+        super(type, serverSelector);
     }
 }
