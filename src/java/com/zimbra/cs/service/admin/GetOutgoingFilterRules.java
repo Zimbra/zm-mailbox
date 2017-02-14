@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,67 +16,43 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.filter.RuleManager.FilterType;
 import com.zimbra.soap.JaxbUtil;
-import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.GetOutgoingFilterRulesRequest;
 import com.zimbra.soap.admin.message.GetOutgoingFilterRulesResponse;
-import com.zimbra.soap.admin.type.CosSelector;
-import com.zimbra.soap.admin.type.DomainSelector;
-import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.mail.type.FilterRule;
-import com.zimbra.soap.type.AccountSelector;
 
-public final class GetOutgoingFilterRules extends AdminDocumentHandler {
+public final class GetOutgoingFilterRules extends GetFilterRules {
 
     @Override
     public Element handle(Element req, Map<String, Object> context) throws ServiceException {
-        Account account = null;
-        Domain domain = null;
-        Cos cos = null;
-        Server server = null;
-        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        zsc = getZimbraSoapContext(context);
         GetOutgoingFilterRulesRequest request = JaxbUtil.elementToJaxb(req);
 
-        String type = request.getType();
-        AccountSelector acctSel = request.getAccount();
+        setAFTypeSelectorsAndEntry(request, zsc);
+
         if(acctSel != null) {
-            account = verifyAccountHarvestingAndPerms(acctSel, zsc);
-        }
-        DomainSelector domainSelector = request.getDomain();
-        if(domainSelector != null) {
-            domain = verifyDomainPerms(domainSelector, zsc);
-        }
-        CosSelector cosSelector = request.getCos();
-        if(cosSelector != null) {
-            cos = verifyCosPerms(cosSelector, zsc);
-        }
-        ServerSelector serverSelector = request.getServer();
-        if(serverSelector != null) {
-            server = verifyServerPerms(serverSelector, zsc);
+            entry = verifyAccountHarvestingAndPerms(acctSel, zsc);
+            resp = new GetOutgoingFilterRulesResponse(afType.getType(), acctSel);
+        } else if(domainSelector != null) {
+            entry = verifyDomainPerms(domainSelector, zsc);
+            resp = new GetOutgoingFilterRulesResponse(afType.getType(), domainSelector);
+        } else if(cosSelector != null) {
+            entry = verifyCosPerms(cosSelector, zsc);
+            resp = new GetOutgoingFilterRulesResponse(afType.getType(), cosSelector);
+        } else if(serverSelector != null) {
+            entry = verifyServerPerms(serverSelector, zsc);
+            resp = new GetOutgoingFilterRulesResponse(afType.getType(), serverSelector);
+        } else {
+            // one of the selector must be present
+            throw ServiceException.INVALID_REQUEST("Selector not provided.", null);
         }
 
-        GetOutgoingFilterRulesResponse resp = new GetOutgoingFilterRulesResponse(type);
-        List<FilterRule> rules = null;
-        if(account != null) {
-            rules = RuleManager.getAccountAdminRulesAsXML(account, FilterType.OUTGOING, type);
-        } else if(domain != null) {
-            rules = RuleManager.getDomainAdminRulesAsXML(domain, FilterType.OUTGOING, type);
-        } else if(cos != null) {
-            rules = RuleManager.getCosAdminRulesAsXML(cos, FilterType.OUTGOING, type);
-        } else if(server != null) {
-            rules = RuleManager.getServerAdminRulesAsXML(server, FilterType.OUTGOING, type);
-        }
+        rules = RuleManager.getAdminRulesAsXML(entry, FilterType.OUTGOING, afType);
         resp.addFilterRules(rules);
         return zsc.jaxbToElement(resp);
     }
