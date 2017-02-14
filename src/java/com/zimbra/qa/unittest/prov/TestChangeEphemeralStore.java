@@ -38,12 +38,22 @@ public class TestChangeEphemeralStore {
     public void testChangeEphemeralBackend() throws Exception {
         Assume.assumeTrue(servers.size() > 1);
         prov.getConfig().setEphemeralBackendURL(testURL);
-        Thread.sleep(5000);
+        int maxWaitMillis = 5000;
         for (Server server: servers) {
             soapProv.soapSetURI(URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI, true));
             soapProv.soapZimbraAdminAuthenticate();
-            String url = soapProv.getConfig().getEphemeralBackendURL();
-            assertEquals(testURL, url);
+            int waited = 0;
+            String newUrl = null;
+            while (waited < maxWaitMillis) {
+                newUrl = soapProv.getConfig().getEphemeralBackendURL();
+                if (newUrl.equals(testURL)) {
+                    break;
+                } else {
+                    Thread.sleep(100);
+                    waited+=100;
+                }
+            }
+            assertEquals(testURL, newUrl);
         }
     }
 }
