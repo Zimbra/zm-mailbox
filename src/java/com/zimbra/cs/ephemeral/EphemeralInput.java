@@ -83,6 +83,10 @@ public class EphemeralInput {
         return expiration == null ? null : expiration.getMillis();
     }
 
+    public Long getRelativeExpiration() {
+        return expiration == null ? null : expiration.getRelativeMillis();
+    }
+
     public boolean isDynamic() {
         return key.isDynamic();
     }
