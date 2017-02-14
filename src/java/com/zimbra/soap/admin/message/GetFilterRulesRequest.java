@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2017 Zimbra, Inc.
+ * Copyright (C) 2017 Synacor, Inc.
  * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -36,31 +36,31 @@ import com.zimbra.soap.type.AccountSelector;
 public class GetFilterRulesRequest {
     /**
      * @zm-api-field-tag type
-     * @zm-api-field-description Type
+     * @zm-api-field-description Type can be either before or after
      */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
-    private String type;
+    protected String type;
 
     /**
      * @zm-api-field-description Account
      */
-    @XmlElement(name=AdminConstants.E_ACCOUNT)
-    private AccountSelector account;
+    @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=false)
+    protected AccountSelector account;
     /**
      * @zm-api-field-description Domain
      */
-    @XmlElement(name=AdminConstants.E_DOMAIN)
-    private DomainSelector domain;
+    @XmlElement(name=AdminConstants.E_DOMAIN /* domain */, required=false)
+    protected DomainSelector domain;
     /**
      * @zm-api-field-description Domain
      */
-    @XmlElement(name=AdminConstants.E_COS)
-    private CosSelector cos;
+    @XmlElement(name=AdminConstants.E_COS /* cos */, required=false)
+    protected CosSelector cos;
     /**
      * @zm-api-field-description Domain
      */
-    @XmlElement(name=AdminConstants.E_SERVER)
-    private ServerSelector server;
+    @XmlElement(name=AdminConstants.E_SERVER /* server */, required=false)
+    protected ServerSelector server;
 
     public GetFilterRulesRequest() {
         this.type = null;
@@ -176,6 +176,12 @@ public class GetFilterRulesRequest {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("GetFilterRulesRequest ");
+        sb.append(getToStringData());
+        return sb.toString();
+    }
+
+    protected String getToStringData() {
+        StringBuilder sb = new StringBuilder();
         sb.append("type : ").append(this.type);
         if (this.account != null) {
             sb.append(" for account ").append(this.account.getKey())

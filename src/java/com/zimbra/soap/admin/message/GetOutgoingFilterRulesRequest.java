@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2017 Zimbra, Inc.
+ * Copyright (C) 2017 Synacor, Inc.
  * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -17,8 +17,6 @@
 
 package com.zimbra.soap.admin.message;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
@@ -33,165 +31,32 @@ import com.zimbra.soap.type.AccountSelector;
  * @zm-api-command-description Get filter rules
  */
 @XmlRootElement(name=AdminConstants.E_GET_OUTGOING_FILTER_RULES_REQUEST)
-public class GetOutgoingFilterRulesRequest {
-    /**
-     * @zm-api-field-tag type
-     * @zm-api-field-description Type
-     */
-    @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
-    private String type;
-
-    /**
-     * @zm-api-field-description Account
-     */
-    @XmlElement(name=AdminConstants.E_ACCOUNT)
-    private AccountSelector account;
-    /**
-     * @zm-api-field-description Domain
-     */
-    @XmlElement(name=AdminConstants.E_DOMAIN)
-    private DomainSelector domain;
-    /**
-     * @zm-api-field-description Domain
-     */
-    @XmlElement(name=AdminConstants.E_COS)
-    private CosSelector cos;
-    /**
-     * @zm-api-field-description Domain
-     */
-    @XmlElement(name=AdminConstants.E_SERVER)
-    private ServerSelector server;
-
+public class GetOutgoingFilterRulesRequest extends GetFilterRulesRequest{
     public GetOutgoingFilterRulesRequest() {
-        this.type = null;
-        this.account = null;
-        this.domain = null;
-        this.cos = null;
-        this.server = null;
+        super();
     }
 
     public GetOutgoingFilterRulesRequest(AccountSelector accountSelector, String type) {
-        this.type = type;
-        this.account = accountSelector;
-        this.domain = null;
-        this.cos = null;
-        this.server = null;
+        super(accountSelector, type);
     }
 
     public GetOutgoingFilterRulesRequest(DomainSelector domainSelector, String type) {
-        this.type = type;
-        this.account = null;
-        this.domain = domainSelector;
-        this.cos = null;
-        this.server = null;
+        super(domainSelector, type);
     }
 
     public GetOutgoingFilterRulesRequest(CosSelector cosSelector, String type) {
-        this.type = type;
-        this.account = null;
-        this.domain = null;
-        this.cos = cosSelector;
-        this.server = null;
+        super(cosSelector, type);
     }
 
     public GetOutgoingFilterRulesRequest(ServerSelector serverSelector, String type) {
-        this.type = type;
-        this.account = null;
-        this.domain = null;
-        this.cos = null;
-        this.server = serverSelector;
-    }
-
-    /**
-     * @return the type
-     */
-    public String getType() {
-        return type;
-    }
-
-    /**
-     * @param type the type to set
-     */
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    /**
-     * @return the accountSelector
-     */
-    public AccountSelector getAccount() {
-        return account;
-    }
-
-    /**
-     * @param accountSelector the accountSelector to set
-     */
-    public void setAccount(AccountSelector accountSelector) {
-        this.account = accountSelector;
-    }
-
-    /**
-     * @return the domainSelector
-     */
-    public DomainSelector getDomain() {
-        return domain;
-    }
-
-    /**
-     * @param domainSelector the domainSelector to set
-     */
-    public void setDomain(DomainSelector domainSelector) {
-        this.domain = domainSelector;
-    }
-
-    /**
-     * @return the cosSelector
-     */
-    public CosSelector getCos() {
-        return cos;
-    }
-
-    /**
-     * @param cosSelector the cosSelector to set
-     */
-    public void setCos(CosSelector cosSelector) {
-        this.cos = cosSelector;
-    }
-
-    /**
-     * @return the serverSelector
-     */
-    public ServerSelector getServer() {
-        return server;
-    }
-
-    /**
-     * @param serverSelector the serverSelector to set
-     */
-    public void setServer(ServerSelector serverSelector) {
-        this.server = serverSelector;
+        super(serverSelector, type);
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("GetFilterRulesRequest ");
-        sb.append("type : ").append(this.type);
-        if (this.account != null) {
-            sb.append(" for account ").append(this.account.getKey())
-                .append(" by ").append(this.account.getBy());
-        } else if (this.domain != null) {
-            sb.append(" for domain ").append(this.domain.getKey())
-            .append(" by ").append(this.domain.getBy());
-        } else if (this.cos != null) {
-            sb.append(" for cos ").append(this.cos.getKey())
-            .append(" by ").append(this.cos.getBy());
-        } else if (this.server != null) {
-            sb.append(" for server ").append(this.server.getKey())
-            .append(" by ").append(this.server.getBy());
-        } else {
-            sb.append("without any selector");
-        }
+        sb.append("GetOutgoingFilterRulesRequest ");
+        sb.append(super.getToStringData());
         return sb.toString();
     }
 }

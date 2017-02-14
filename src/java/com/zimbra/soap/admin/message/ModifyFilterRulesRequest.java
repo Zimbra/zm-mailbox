@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2017 Synacor, Inc.
  * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -44,33 +44,33 @@ import com.zimbra.soap.type.AccountSelector;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_MODIFY_FILTER_RULES_REQUEST)
-public final class ModifyFilterRulesRequest {
+public class ModifyFilterRulesRequest {
     /**
      * @zm-api-field-tag type
-     * @zm-api-field-description Type
+     * @zm-api-field-description Type can be either before or after
      */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
-    private String type;
+    protected String type;
     /**
      * @zm-api-field-description Account
      */
     @XmlElement(name=AdminConstants.E_ACCOUNT)
-    private AccountSelector account;
+    protected AccountSelector account;
     /**
      * @zm-api-field-description Domain
      */
     @XmlElement(name=AdminConstants.E_DOMAIN)
-    private DomainSelector domain;
+    protected DomainSelector domain;
     /**
      * @zm-api-field-description Domain
      */
     @XmlElement(name=AdminConstants.E_COS)
-    private CosSelector cos;
+    protected CosSelector cos;
     /**
      * @zm-api-field-description Domain
      */
     @XmlElement(name=AdminConstants.E_SERVER)
-    private ServerSelector server;
+    protected ServerSelector server;
 
     /**
      * @zm-api-field-description Filter rules
@@ -78,7 +78,7 @@ public final class ModifyFilterRulesRequest {
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AdminConstants.E_FILTER_RULES /* filterRules */, required=true)
     @XmlElement(name=AdminConstants.E_FILTER_RULE /* filterRule */, required=false)
-    private List<FilterRule> filterRules = Lists.newArrayList();
+    protected List<FilterRule> filterRules = Lists.newArrayList();
 
     public ModifyFilterRulesRequest() {
         this.type = null;
@@ -220,8 +220,24 @@ public final class ModifyFilterRulesRequest {
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper
-            .add("filterRules", filterRules);
+        helper.add("type", this.type);
+        if (this.account != null) {
+            helper.add("account", this.account.getKey());
+            helper.add("by", this.account.getBy());
+        } else if (this.domain != null) {
+            helper.add("domain", this.domain.getKey());
+            helper.add("by", this.domain.getBy());
+        } else if (this.cos != null) {
+            helper.add("cos", this.cos.getKey());
+            helper.add("by", this.cos.getBy());
+        } else if (this.server != null) {
+            helper.add("server", this.server.getKey());
+            helper.add("by", this.server.getBy());
+        } else {
+            helper.add("selector", null);
+        }
+        helper.add("filterRules", this.filterRules);
+        return helper;
     }
 
     @Override
