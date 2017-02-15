@@ -630,9 +630,19 @@ public final class FilterUtil {
         // Header From
         // RFC 5436 2.7. (4th item of the 'guidelines')
         if (!StringUtil.isNullOrEmpty(from)) {
+            // The "From:" header field of the notification message SHOULD be set
+            // to the value of the ":from" tag to the notify action, if one is
+            // specified, has email address syntax, and is valid according to the
+            // implementation-specific security checks.
             notification.addHeader("from", from);
         } else {
-            // RFC says: "This MUST NOT be overridden by a "from" URI header"
+            // If ":from" is not specified or is not valid, the
+            // "From:" header field of the notification message SHOULD be set
+            // either to the envelope "to" field from the triggering message, as
+            // used by Sieve...
+            // This MUST NOT be overridden by a "from" URI header, and any such
+            // URI header MUST be ignored.
+            notification.addHeader("from", mailbox.getAccount().getMail());
         }
 
         // Subject
@@ -836,47 +846,46 @@ public final class FilterUtil {
     
     
     /**
-	 * @param varName
-	 * @return
-	 */
-	public static List<String> getListOfVars(String varName) {
-		Stack<Character> stack = new Stack<Character>();
-		List<String> varNames =  new ArrayList<String>();
-		StringBuilder sb = new StringBuilder();
-		
-		char [] chars = varName.toCharArray();
-		char previous = 0;
-		boolean save = false;
-		for (int i = 0; i < chars.length; i++) {
-	        char current = chars[i];
-	        if (current == '{' && previous == '$') {
-	        	sb = new StringBuilder();
-	            stack.push(current);
-	            save = true;
-	            continue;
-	        } else if (current == '}') {
-	            char last = stack.peek();
-	            if (current == '}' && last == '{') {
-	                stack.pop();
-	                String var = sb.toString();
-	                sb = new StringBuilder();
-	                save = false;
-	                varNames.add("${" + var + "}");
-	            }
-	            
-	        } 
-	        previous = chars[i];
-	        if (save) {
-	        	sb.append(current);
-	        }
-	    }
-		return varNames;
-	}
+     * @param varName
+     * @return
+     */
+    public static List<String> getListOfVars(String varName) {
+        Stack<Character> stack = new Stack<Character>();
+        List<String> varNames =  new ArrayList<String>();
+        StringBuilder sb = new StringBuilder();
 
-	/**
-	 * @param varName
-	 * @return
-	 *  "${fo\o}"  => ${foo}  => the expansion of variable foo.
+        char [] chars = varName.toCharArray();
+        char previous = 0;
+        boolean save = false;
+        for (int i = 0; i < chars.length; i++) {
+            char current = chars[i];
+            if (current == '{' && previous == '$') {
+                sb = new StringBuilder();
+                stack.push(current);
+                save = true;
+                continue;
+            } else if (current == '}') {
+                char last = stack.peek();
+                if (current == '}' && last == '{') {
+                    stack.pop();
+                    String var = sb.toString();
+                    sb = new StringBuilder();
+                    save = false;
+                    varNames.add("${" + var + "}");
+                }
+            }
+            previous = chars[i];
+            if (save) {
+                sb.append(current);
+            }
+        }
+        return varNames;
+    }
+
+    /**
+     * @param varName
+     * @return
+     * "${fo\o}"  => ${foo}  => the expansion of variable foo.
      * "${fo\\o}" => ${fo\o} => illegal identifier => left verbatim.
      * "\${foo}"  => ${foo}  => the expansion of variable foo.
      * "\\${foo}" => \${foo} => a backslash character followed by the
@@ -906,10 +915,10 @@ public final class FilterUtil {
         if (pattern.matcher(varName).matches()) {
            return true;
         }
-    	return false;
+        return false;
     }
-	
-	 /**
+
+    /**
      * Converts a Sieve pattern in a java regex pattern
      */
     public static String sieveToJavaRegex(String pattern) {

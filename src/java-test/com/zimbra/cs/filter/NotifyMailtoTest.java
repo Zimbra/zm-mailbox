@@ -141,6 +141,37 @@ public class NotifyMailtoTest {
           + "  keep;\n"
           + "}\n";
 
+    String filterScript_NoFrom =
+            "require [\"enotify\", \"variables\"];\n"
+          + "set \"subject\" \"おしらせ\";\n"
+          + "set \"contents\" text:\r\n"
+          + "新しいメールが届きました。\n"
+          + "You've got a mail.\n"
+          + "Chao!\r\n"
+          + ".\r\n"
+          + ";"
+          + "if anyof (true) { \n"
+          + "  notify :message \"${subject}\"\n"
+          + "    \"mailto:test2@zimbra.com?to=test3@zimbra.com&Importance=High&X-Priority=1&From=notifyfrom@example.com&body=${contents}\";"
+          + "  keep;\n"
+          + "}\n";
+
+    String filterScript_InvalidFrom =
+            "require [\"enotify\", \"variables\"];\n"
+          + "set \"subject\" \"おしらせ\";\n"
+          + "set \"contents\" text:\r\n"
+          + "新しいメールが届きました。\n"
+          + "You've got a mail.\n"
+          + "Chao!\r\n"
+          + ".\r\n"
+          + ";"
+          + "if anyof (true) { \n"
+          + "  notify :message \"${subject}\"\n"
+          + "    :from \"test1...@test2@%*zimbra.com.\"\n"
+          + "    \"mailto:test2@zimbra.com?to=test3@zimbra.com&Importance=High&X-Priority=1&From=notifyfrom@example.com&body=${contents}\";"
+          + "  keep;\n"
+          + "}\n";
+
     /**
      * Tests 'notify' filter rule:
      *  - Set :message (Subject field), :from (From field) and mechanism (mailto:...)
@@ -455,6 +486,95 @@ public class NotifyMailtoTest {
             Message notifyMsg = mbox2.getMessageById(null, item);
 
             Assert.assertEquals("", notifyMsg.getFragment());
+            String[] headers = notifyMsg.getMimeMessage().getHeader("Auto-Submitted");
+            Assert.assertTrue(headers.length == 1);
+            Assert.assertEquals("auto-notified; owner-email=\"test1@zimbra.com\"", headers[0]);
+
+            headers = notifyMsg.getMimeMessage().getHeader("to");
+            Assert.assertTrue(headers.length == 1);
+            Assert.assertEquals("test2@zimbra.com, test3@zimbra.com", headers[0]);
+
+            headers = notifyMsg.getMimeMessage().getHeader("from");
+            Assert.assertFalse(notifyMsg.getSender() == null);
+            Assert.assertEquals("test1@zimbra.com", notifyMsg.getSender());
+
+            notifyMsg = mbox3.getMessageById(null, item);
+            Assert.assertEquals("おしらせ", notifyMsg.getSubject());
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+	@Test
+    public void testFromTag_noFromTag() {
+        fromTag(filterScript_NoFrom);
+    }
+
+    @Test
+    public void testFromTag_invalidFromTag() {
+        fromTag(filterScript_InvalidFrom);
+    }
+
+    /**
+     * == (triggering message) ==
+     * LMTP; MAIL FROM: &lt;xyz@example.com&gt;
+     * LMTP; RCPT TO: &lt;test1@zimbra.com&gt;
+     * LMTP; DATA
+     * From: xyz@example.com
+     * to: test1@zimbra.com
+     *
+     * == (generated notification message) ==
+     * SMTP; MAIL FROM: &lt;test1@zimbra.com&gt;
+     * SMTP; RCPT TO: &lt;test2@zimbra.com&gt;
+     * SMTP; DATA
+     * From: test1@zimbra.com
+     * To: test2@zimbra.com
+     * Subject: おしらせ
+     *
+     * 新しいメールが届きました。
+     * You've got a mail.
+     * Chao!
+     */
+    private void fromTag(String script) {
+        String sampleMsg = "Auto-Submitted: \"no\"\n"
+                + "from: xyz@example.com\n"
+                + "Subject: [acme-users] [fwd] version 1.0 is out\n"
+                + "to: foo@example.com, baz@example.com\n"
+                + "cc: qux@example.com\n";
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+            Account acct3 = Provisioning.getInstance().get(Key.AccountBy.name, "test3@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
+            Mailbox mbox3 = MailboxManager.getInstance().getMailboxByAccount(acct3);
+
+            acct1.setMail("test1@zimbra.com");
+            RuleManager.clearCachedRules(acct1);
+
+            LmtpEnvelope env = new LmtpEnvelope();
+            LmtpAddress sender = new LmtpAddress("<xyz@example.com>", new String[] { "BODY", "SIZE" }, null);
+            LmtpAddress recipient = new LmtpAddress("<test1@zimbra.com>", null, null);
+            env.setSender(sender);
+            env.addLocalRecipient(recipient);
+
+            acct1.setMailSieveScript(script);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    acct1.getName(), env, new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+
+            // The triggered message should be delivered to the target mailbox
+            Assert.assertEquals(1, ids.size());
+
+            // Notification message should be delivered to mailto and to= addresses
+            Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                    .getIds(MailItem.Type.MESSAGE).get(0);
+            Message notifyMsg = mbox2.getMessageById(null, item);
+
+            Assert.assertEquals("新しいメールが届きました。 You've got a mail. Chao!", notifyMsg.getFragment());
             String[] headers = notifyMsg.getMimeMessage().getHeader("Auto-Submitted");
             Assert.assertTrue(headers.length == 1);
             Assert.assertEquals("auto-notified; owner-email=\"test1@zimbra.com\"", headers[0]);
