@@ -32,7 +32,6 @@ import com.zimbra.soap.mail.type.FilterTests;
 import com.zimbra.soap.mail.type.FilterVariable;
 import com.zimbra.soap.mail.type.FilterVariables;
 import com.zimbra.soap.mail.type.NestedRule;
-import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * Converts a Sieve node tree to the SOAP representation of
@@ -47,6 +46,9 @@ public final class SieveToSoap extends SieveVisitor {
     private int nunOfIfProcessingStarted = 0; // For counting num of started If processings
     private int numOfIfProcessingDone = 0; // For counting num of finished If processings
     private NestedRule currentNestedRule; // keep the pointer to nested rule being processed
+    private List<FilterVariable> currentVariables = null;
+    private boolean insideIf = false;
+    private List<FilterVariable> actionVariables = null;
 
     public SieveToSoap(List<String> ruleNames) {
         this.ruleNames = ruleNames;
@@ -70,11 +72,13 @@ public final class SieveToSoap extends SieveVisitor {
         }
 
         if (!isNestedRule()){
-            if (currentRule == null) {
-                currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
-            } else {
-                currentRule.setName(getCurrentRuleName());
-                currentRule.setActive(ZmBoolean.fromBool(props.isEnabled));
+            currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
+            if (currentVariables != null) {
+                if(currentRule.getFilterVariables() == null) {
+                    currentRule.setFilterVariables(new FilterVariables());
+                }
+                currentRule.getFilterVariables().setVariables(currentVariables);
+                currentVariables = null;
             }
             currentRule.setFilterTests(new FilterTests(props.condition.toString()));
             rules.add(currentRule);
@@ -98,16 +102,17 @@ public final class SieveToSoap extends SieveVisitor {
     @Override
     protected void visitVariable(Node ruleNode, VisitPhase phase, RuleProperties props, String name, String value) {
         if (phase == VisitPhase.begin) {
-            if(currentRule == null) {
-                currentRule = new FilterRule(getCurrentRuleName(), props != null ? props.isEnabled : true);
+            if (insideIf) {
+                if (actionVariables == null) {
+                    actionVariables = Lists.newArrayList();
+                }
+                actionVariables.add(FilterVariable.createFilterVariable(name, value));
+            } else {
+                if (currentVariables == null) {
+                    currentVariables = Lists.newArrayList();
+                }
+                currentVariables.add(FilterVariable.createFilterVariable(name, value));
             }
-            if(currentRule.getFilterVariables() == null) {
-                currentRule.setFilterVariables(new FilterVariables());
-            }
-            if(currentRule.getFilterVariables().getVariables() == null) {
-                currentRule.getFilterVariables().setVariables(Lists.newArrayList());
-            }
-            currentRule.getFilterVariables().addFilterVariable(new FilterVariable(name, value));
         }
     }
 
@@ -115,9 +120,16 @@ public final class SieveToSoap extends SieveVisitor {
     protected void visitIfControl(Node ruleNode, VisitPhase phase, RuleProperties props) {
         if (phase == VisitPhase.end) {
             numOfIfProcessingDone++; // number of if for which process is done
+            insideIf = false; // if block finished
+            if (actionVariables != null && !actionVariables.isEmpty()) {
+                FilterAction action = new FilterVariables(actionVariables);
+                addAction(action);
+                actionVariables = null;
+            }
             return;
         }
         nunOfIfProcessingStarted++;   // number of if for which process is started.
+        insideIf = true; // if block started
     }
 
     private boolean isNestedRule(){
