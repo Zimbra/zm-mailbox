@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +30,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
@@ -38,8 +40,10 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.client.ZFolder;
@@ -65,6 +69,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.Variables;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
@@ -630,13 +635,34 @@ public final class FilterUtil {
         // Header From
         // RFC 5436 2.7. (4th item of the 'guidelines')
         if (!StringUtil.isNullOrEmpty(from)) {
+            // The "From:" header field of the notification message SHOULD be set
+            // to the value of the ":from" tag to the notify action, if one is
+            // specified, has email address syntax, and is valid according to the
+            // implementation-specific security checks.
             notification.addHeader("from", from);
         } else {
-            // RFC says: "This MUST NOT be overridden by a "from" URI header"
+            // If ":from" is not specified or is not valid, the
+            // "From:" header field of the notification message SHOULD be set
+            // either to the envelope "to" field from the triggering message, as
+            // used by Sieve...
+            // This MUST NOT be overridden by a "from" URI header, and any such
+            // URI header MUST be ignored.
+            notification.addHeader("from", mailbox.getAccount().getMail());
         }
 
         // Subject
         // RFC 5436 2.7. (6th item of the 'guidelines')
+        if (StringUtil.isNullOrEmpty(message)) {
+            List<String> subjectList = mailtoParams.get("subject");
+            if (subjectList != null && subjectList.size() > 0) {
+                message = subjectList.get(0);
+            } else {
+                String[] subjects = Mime.getHeaders(mimeMessage, "Subject");
+                if (subjects.length > 0) {
+                    message = subjects[0];
+                }
+            }
+        }
         notification.setSubject(message, getCharset(account, message));
 
         // Body
@@ -658,6 +684,7 @@ public final class FilterUtil {
                   "cc".equalsIgnoreCase(headerName) ||
                   "bcc".equalsIgnoreCase(headerName) ||
                   "from".equalsIgnoreCase(headerName) ||
+                  "subject".equalsIgnoreCase(headerName) ||
                   "auto-submitted".equalsIgnoreCase(headerName) ||
                   "x-zimbra-forwarded".equalsIgnoreCase(headerName) ||
                   "body".equalsIgnoreCase(headerName))) {
@@ -798,85 +825,105 @@ public final class FilterUtil {
         return tags.toArray(new String[tags.size()]);
     }
 
-    public static String replaceVariables(Map<String, String> variables, List<String> matchedValues, String varName) {
-        if (varName.indexOf("${") == -1) {
-            return varName;
-        }
-        ZimbraLog.filter.debug("Variable: %s " , varName);
-        ZimbraLog.filter.debug("Variable available: %s : %s", variables ,  matchedValues);
-        String varValue = varName;
-        List<String> varNames = getListOfVars(varName);
-		for (String var : varNames) {
-			String name = var.substring(2, var.indexOf("}"));
-			name = handleQuotedAndEncodedVar(name);
-			ZimbraLog.filter.debug("Sieve: variable expression is %s and variable name is: %s", var, name);
-			if (name.length() == 0) {
-				varValue = varName;
-			} else if (name.length() == 1 && Character.isDigit(name.charAt(0))) {
-				for (int i = 0; i < matchedValues.size(); ++i) {
-					String pattern = "${" + i + "}";
-					if (varName.contains(pattern)) {
-						varValue = varValue.replace(pattern, matchedValues.get(i));
-					}
-				}
-			} else {
-				if (isValidSieveVariableName(name)) {
-					if (variables.containsKey(name)) {
-						varValue = varValue.replace(var, variables.get(name));
-					} else {
-						varValue = varValue.replace(var, "");
-					}
-				}
-			}
-		}
-        varValue = handleQuotedAndEncodedVar(varValue);
-        ZimbraLog.filter.debug("Sieve: variable value is: %s", varValue);
-        return varValue;
-    }
-    
-    
     /**
-	 * @param varName
-	 * @return
-	 */
-	public static List<String> getListOfVars(String varName) {
-		Stack<Character> stack = new Stack<Character>();
-		List<String> varNames =  new ArrayList<String>();
-		StringBuilder sb = new StringBuilder();
-		
-		char [] chars = varName.toCharArray();
-		char previous = 0;
-		boolean save = false;
-		for (int i = 0; i < chars.length; i++) {
-	        char current = chars[i];
-	        if (current == '{' && previous == '$') {
-	        	sb = new StringBuilder();
-	            stack.push(current);
-	            save = true;
-	            continue;
-	        } else if (current == '}') {
-	            char last = stack.peek();
-	            if (current == '}' && last == '{') {
-	                stack.pop();
-	                String var = sb.toString();
-	                sb = new StringBuilder();
-	                save = false;
-	                varNames.add("${" + var + "}");
-	            }
-	            
-	        } 
-	        previous = chars[i];
-	        if (save) {
-	        	sb.append(current);
-	        }
-	    }
-		return varNames;
-	}
+     * Look-up the variable table to get the set value.
+     * If the 'sourceStr' contains a variable-ref (formatted with ${variable-name}), this method looks up the
+     * variable table with its variable-name and replaces the variable with the text value assigned by
+     * the 'set' command.
+     * According to the RFC 5229 Section 4., "Variable names are case insensitive."
+     *
+     * @param variables a list of variable name/value
+     * @param matchedVariables a list of Matched Variables
+     * @param sourceStr text string that may contain "variable-ref" (RFC 5229 Section 3.)
+     * @return Replaced text string
+     */
+    public static String replaceVariables(Map<String, String> variables, List<String> matchedVariables, String sourceStr) {
+        if (sourceStr.indexOf("${") == -1) {
+            return sourceStr;
+        }
+        ZimbraLog.filter.debug("Variable: %s " , sourceStr);
+        ZimbraLog.filter.debug("Variable available: %s : %s", variables ,  matchedVariables);
+        String resultStr = sourceStr;
 
-	/**
-	 * @param varName
-	 * @return
-	 *  "${fo\o}"  => ${foo}  => the expansion of variable foo.
+        // (1) Resolve the Matched Variables (numeric variables; "${N}" (N=0,1,...9)
+        int i = 0;
+        for (; i < matchedVariables.size() && i < 10; i++) {
+            String keyName = "(?i)" + "\\$\\{" + String.valueOf(i) + "\\}";
+            resultStr = resultStr.replaceAll(keyName, Matcher.quoteReplacement(matchedVariables.get(i)));
+        }
+        // (2) Replace the empty string to Matched Variables whose index is out of range
+        for (; i < 10; i++) {
+            String keyName = "(?i)" + "\\$\\{" + String.valueOf(i) + "\\}";
+            resultStr = resultStr.replaceAll(keyName, Matcher.quoteReplacement(""));
+        }
+
+        // (3) Resolve the named variables ("${xxx}")
+        resultStr = leastGreedyReplace(variables, resultStr);
+        ZimbraLog.filter.debug("Sieve: variable value is: %s", resultStr);
+        return resultStr;
+    }
+
+    /**
+     * Replaces all ${variable name} variables within the 'sourceStr' into the defined text value.
+     *
+     * The variable name matches as short as possible (non-greedy matching).  Unknown variables are replaced
+     * by the empty string (RFC 5229 Section 3.)
+     *
+     * @param variables map table of the variable name and value
+     * @param sourceStr text string that may contain one or more than one "variable-ref"
+     * @return Replaced text string
+     */
+    public static String leastGreedyReplace(Map<String, String> variables, String sourceStr) {
+        if (variables == null || sourceStr == null || sourceStr.length() == 0) {
+            return sourceStr;
+        }
+        sourceStr = FilterUtil.handleQuotedAndEncodedVar(sourceStr);
+        StringBuilder resultStr = new StringBuilder();
+        int start1 = 0;
+        int end = -1;
+        while (start1 < sourceStr.length()) {
+            int start2 = sourceStr.indexOf("${", start1);
+            if (start2 >= 0) {
+                resultStr.append(sourceStr.substring(start1, start2));
+                end = sourceStr.indexOf("}", start2 + 2);
+                if (end > 0) {
+                    int start3 = sourceStr.indexOf("${", start2 + 2);
+                    if (start3 > start2 && start3 < end) {
+                        start1 = start3;
+                        resultStr.append(sourceStr.substring(start2, start3));
+                    } else {
+                        // a variable name found
+                        String key = sourceStr.substring(start2 + 2, end).toLowerCase();
+                        if (key.matches("[\\p{Alpha}]+[._\\w]*")) {
+                            // the variable name is valid
+                            String value = variables.get(key);
+                            if (value != null) {
+                                resultStr.append(value);
+                            }
+                        } else {
+                            // the variable name contains some invalid characters
+                            resultStr.append(sourceStr.substring(start2, end + 1));
+                        }
+                        start1 = end + 1;
+                    }
+                } else {
+                    // no corresponding }
+                    resultStr.append(sourceStr.substring(start2, sourceStr.length()));
+                    break;
+                }
+            } else {
+                // no more ${
+                resultStr.append(sourceStr.substring(end + 1, sourceStr.length()));
+                break;
+            }
+        }
+        return resultStr.toString();
+    }
+
+    /**
+     * @param varName
+     * @return
+     * "${fo\o}"  => ${foo}  => the expansion of variable foo.
      * "${fo\\o}" => ${fo\o} => illegal identifier => left verbatim.
      * "\${foo}"  => ${foo}  => the expansion of variable foo.
      * "\\${foo}" => \${foo} => a backslash character followed by the
@@ -900,16 +947,7 @@ public final class FilterUtil {
 		return processedStr;
 	}
 
-	public static boolean  isValidSieveVariableName(String varName) {
-    	
-    	Pattern pattern = Pattern.compile("[\\p{Alpha}$_.]*|[\\d]*",  Pattern.CASE_INSENSITIVE);
-        if (pattern.matcher(varName).matches()) {
-           return true;
-        }
-    	return false;
-    }
-	
-	 /**
+    /**
      * Converts a Sieve pattern in a java regex pattern
      */
     public static String sieveToJavaRegex(String pattern) {
