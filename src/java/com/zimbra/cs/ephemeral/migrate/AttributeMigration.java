@@ -46,7 +46,7 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory;
  */
 public class AttributeMigration {
     private EntrySource source;
-    private Collection<String> attrsToMigrate;
+    private final Collection<String> attrsToMigrate;
     private boolean deleteOriginal = true;
     private boolean async = true;
     private MigrationCallback callback;
@@ -88,7 +88,8 @@ public class AttributeMigration {
     }
 
     public static void registerConverter(String attribute, AttributeConverter converter) {
-        ZimbraLog.ephemeral.debug("registering converter %s for attribute %s", converter.getClass().getName(), attribute);
+        ZimbraLog.ephemeral.debug("registering converter '%s' for attribute '%s'",
+                converter.getClass().getName(), attribute);
         converterMap.put(attribute, converter);
     }
 
@@ -128,7 +129,7 @@ public class AttributeMigration {
     }
 
     public void migrateAllAccounts() throws ServiceException {
-        ZimbraLog.ephemeral.info("beginning migration of attributes %s to ephemeral storage",
+        ZimbraLog.ephemeral.info("beginning migration of attributes '%s' to ephemeral storage for all accounts",
                 Joiner.on(", ").join(attrsToMigrate));
         if (async) {
             for (NamedEntry entry: source.getEntries()) {
@@ -172,7 +173,7 @@ public class AttributeMigration {
     }
 
     static class SomeAccountsSource implements EntrySource {
-        private List<String> accounts = new ArrayList<String>();
+        private final List<String> accounts = new ArrayList<String>();
 
         public SomeAccountsSource(String[] acctValues) {
             accounts.addAll(Arrays.asList(acctValues));
@@ -214,8 +215,8 @@ public class AttributeMigration {
      * Callback that stores the EphemeralInput in the EphemeralStore
      */
     static class ZimbraMigrationCallback implements MigrationCallback {
-        private EphemeralStore store;
-        private boolean destinationIsLdap;
+        private final EphemeralStore store;
+        private final boolean destinationIsLdap;
         private LdapProvisioning prov = null;
 
         public ZimbraMigrationCallback() throws ServiceException {
@@ -227,19 +228,20 @@ public class AttributeMigration {
             factory.test(url);
             this.store = factory.getStore();
             this.destinationIsLdap = (store instanceof LdapEphemeralStore);
-            Provisioning prov = Provisioning.getInstance();
-            if (prov instanceof LdapProvisioning) {
-                this.prov = (LdapProvisioning) prov;
+            Provisioning myProv = Provisioning.getInstance();
+            if (myProv instanceof LdapProvisioning) {
+                this.prov = (LdapProvisioning) myProv;
             } else {
-                ZimbraLog.ephemeral.warn("LdapProvisioning required to delete attributes from LDAP after migration to ephemeral storage; %s provided. "
-                        + "Old values will not be removed", prov.getClass().getName());
+                ZimbraLog.ephemeral.warn(
+                    "LdapProvisioning required to delete attributes from LDAP after migration to ephemeral storage;"
+                    + "'%s' provided. Old values will not be removed", myProv.getClass().getName());
             }
 
         }
 
         @Override
         public void setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException {
-            ZimbraLog.ephemeral.debug("migrating %s value %s", origName, String.valueOf(origValue));
+            ZimbraLog.ephemeral.debug("migrating '%s' value '%s'", origName, String.valueOf(origValue));
             store.update(input, location);
         }
 
@@ -249,7 +251,7 @@ public class AttributeMigration {
             // don't delete LDAP value if we are using LdapEphemeralStore and the attribute is single-valued,
             // since the value was already overwritten in the setEphemeralData step
             if (!(destinationIsLdap && !converter.isMultivalued())) {
-                ZimbraLog.ephemeral.debug("deleting original value for attribute %s: %s", attrName, value);
+                ZimbraLog.ephemeral.debug("deleting original value for attribute '%s': '%s'", attrName, value);
                 Map<String, Object> attrs = new HashMap<String, Object>();
                 attrs.put("-" + attrName, value);
                 if (prov != null) {
@@ -321,7 +323,8 @@ public class AttributeMigration {
             } else if (obj instanceof String[]) {
                 values = (String[]) obj;
             } else {
-                ZimbraLog.ephemeral.warn("multivalued attribute converter expects String or String[], got type %s for attribute '%s'", obj.getClass().getName(), attr);
+                ZimbraLog.ephemeral.warn("multivalued attribute converter expects String or String[],"
+                        + " got type '%s' for attribute '%s'", obj.getClass().getName(), attr);
                 return Collections.emptyList();
             }
             List<Pair<EphemeralInput, Object>> inputs = new LinkedList<Pair<EphemeralInput, Object>>();
@@ -354,15 +357,13 @@ public class AttributeMigration {
 
         @VisibleForTesting
         public void migrateAttributes() throws ServiceException {
-            if (entry instanceof NamedEntry) {
-                ZimbraLog.ephemeral.debug("migrating attributes to ephemeral storage for account %s", ((NamedEntry) entry).getId());
-            }
+            ZimbraLog.ephemeral.debug("migrating attributes to ephemeral storage for account '%s'", entry.getLabel());
             List<Pair<EphemeralInput, Object>> inputs = new LinkedList<Pair<EphemeralInput, Object>>();
 
             boolean hasDataToMigrate = false;
-            for (Map.Entry<String, AttributeConverter> entry: converters.entrySet()) {
-                String attrName = entry.getKey();
-                AttributeConverter converter = entry.getValue();
+            for (Map.Entry<String, AttributeConverter> converterEntry: converters.entrySet()) {
+                String attrName = converterEntry.getKey();
+                AttributeConverter converter = converterEntry.getValue();
                 List<Pair<EphemeralInput, Object>> migratedData = migrateAttr(attrName, converter);
                 if (!migratedData.isEmpty()) {
                     hasDataToMigrate = true;
@@ -370,7 +371,7 @@ public class AttributeMigration {
                 }
             }
             if (!hasDataToMigrate) {
-                ZimbraLog.ephemeral.info("no ephemeral data to migrate for account %s", ((NamedEntry) entry).getId());
+                ZimbraLog.ephemeral.info("no ephemeral data to migrate for account '%s'", entry.getLabel());
                 return;
             }
             EphemeralLocation location = getEphemeralLocation();
@@ -398,7 +399,8 @@ public class AttributeMigration {
                     try {
                         callback.deleteOriginal(entry, attrName, origValue, converters.get(attrName));
                     } catch (ServiceException e) {
-                        ZimbraLog.ephemeral.error("error deleting original LDAP value %s of attribute %s with callback %s",
+                        ZimbraLog.ephemeral.error(
+                                "error deleting original LDAP value '%s' of attribute '%s' with callback '%s'",
                                 origValue, attrName, callback.getClass().getName());
                     }
                 }
