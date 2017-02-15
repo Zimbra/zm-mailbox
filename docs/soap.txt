@@ -3150,7 +3150,11 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
 <GetFilterRulesResponse>
   <filterRules>
     <filterRule name="{rule-name}" [active="{0|1}"]>*
-      <filterTests condition="{allof | anyof"}>
+        <filterVariables>
+            <filterVariable name="{variable-name}" value="{variable-value}"/>
+            ...
+        </filterVariables>
+        <filterTests condition="{allof | anyof"}>
         {test}
         [test]
         ...
@@ -3161,6 +3165,10 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
         [<filterActions>...</filterActions>]
       </nestedRule>]
       [<filterActions>
+        <filterVariables>
+            <filterVariable name="{variable-name}" value="{variable-value}"/>
+            ...
+        </filterVariables>
         {action}
         [action]
         ...
@@ -3216,6 +3224,10 @@ Each test has the following optional attributes:
 
 Actions:
 
+  <filterVariables>
+    <filterVariable name="{variable-name}" value="{variable-value}"/>
+    ...
+  </filterVariables>
   <actionKeep />
   <actionDiscard />
   <actionFileInto folderPath="{folder-path}" />
