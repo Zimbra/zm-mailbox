@@ -8677,6 +8677,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
             Config config = getConfig();
             reload(config, false);
+            EphemeralStore.clearFactory();
             return;
         case globalgrant:
             if (entries != null) {
