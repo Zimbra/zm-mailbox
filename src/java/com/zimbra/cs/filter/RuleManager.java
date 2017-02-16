@@ -271,8 +271,7 @@ public final class RuleManager {
                 if (script == null) {
                     debugScript = "";
                     script = "";
-                }
-                if (!adminRuleBefore.isEmpty()) {
+                } else {
                     List<String> splits = splitScript(script);
                     requiresPart.append(splits.get(0));
                     debugScript = splits.get(1);
@@ -285,7 +284,7 @@ public final class RuleManager {
                 if (adminRuleAfter == null) {
                     debugAdminRuleAfter = "";
                     adminRuleAfter = "";
-                } else if (!adminRuleBefore.isEmpty() || !script.isEmpty()) {
+                } else {
                     List<String> splits = splitScript(adminRuleAfter);
                     requiresPart.append(splits.get(0));
                     debugAdminRuleAfter = splits.get(1);
@@ -822,6 +821,7 @@ public final class RuleManager {
      *
      * @param entry the owner domain/cos/server of the filter rule
      * @param filterType <tt>FilterType.INCOMING</tt> or <tt>FilterType.OUTGOING</tt>
+     * @param afType <tt>AdminFilterType.BEFORE</tt> or <tt>AdminFilterType.AFTER</tt>
      *
      * @see Entry#setCachedData(String, Object)
      * @throws ParseException if there was an error while parsing the Sieve script
