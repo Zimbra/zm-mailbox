@@ -567,7 +567,7 @@ public class AttributeMigration {
 
         @Override
         public void flushCache() {
-            clearConfigCacheOnAllServers(false);
+            clearConfigCacheOnAllServers(true);
         }
     }
 
@@ -605,7 +605,7 @@ public class AttributeMigration {
                     try {
                         soapProv.soapZimbraAdminAuthenticate();
                         soapProv.flushCache(CacheEntryType.config, null);
-                        ZimbraLog.ephemeral.info("sent FlushCache request to server %s", server.getServiceHostname());
+                        ZimbraLog.ephemeral.debug("sent FlushCache request to server %s", server.getServiceHostname());
 
                     } catch (ServiceException e) {
                         ZimbraLog.ephemeral.warn("cannot send FlushCache request to server %s", server.getServiceHostname(), e);
