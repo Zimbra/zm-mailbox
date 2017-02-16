@@ -45,7 +45,8 @@ public class AttributeMigrationUtil {
         OPTIONS.addOption("d", "debug", false, "Enable debug logging");
         OPTIONS.addOption("h", "help", false, "Display this help message");
         OPTIONS.addOption("a", "account", true, "Comma-separated list of accounts to migrate. If not specified, all accounts will be migrated");
-        OPTIONS.addOption("f", "reset-flag", false, "deletes the 'migration in progress' flag. Only use this in cases when something went wrong.");
+        OPTIONS.addOption("s", "set-flag", false, "Set the 'migration in progress' flag. Used for testing or debugging.");
+        OPTIONS.addOption("u", "unset-flag", false, "Unset the 'migration in progress' flag. Used for testing or debugging.");
     }
 
     public static void main(String[] args) throws Exception {
@@ -53,7 +54,8 @@ public class AttributeMigrationUtil {
         CommandLineParser parser = new GnuParser();
         CommandLine cl = parser.parse(OPTIONS, args);
         List<String> attrsToMigrate = cl.getArgList();
-        if (cl.hasOption("h") || (!cl.hasOption('f') && attrsToMigrate.isEmpty())) {
+        boolean flagChange = cl.hasOption('s') || cl.hasOption('u');
+        if (cl.hasOption("h") || (!flagChange && attrsToMigrate.isEmpty()) || (cl.hasOption('s') && cl.hasOption('u'))) {
             usage();
             return;
         }
@@ -65,17 +67,9 @@ public class AttributeMigrationUtil {
             ZimbraLog.ephemeral.error("cannot specify --num-threads with --dry-run option");
             return;
         }
-        if (dryRun && cl.hasOption('f')) {
-            ZimbraLog.ephemeral.error("cannot specify --reset-flag with --dry-run option");
-        }
-        if (cl.hasOption('f') && cl.hasOption('n')) {
-            ZimbraLog.ephemeral.error("cannot specify --reset-flag with --num-threads option");
-        }
-        if (cl.hasOption('f') && cl.hasOption('n')) {
-            ZimbraLog.ephemeral.error("cannot specify --reset-flag with --account option");
-        }
-        if (cl.hasOption('f') && cl.hasOption('k')) {
-            ZimbraLog.ephemeral.error("cannot specify --reset-flag with --keep-old option");
+        if (flagChange && (dryRun || cl.hasOption('n') || cl.hasOption('a') || cl.hasOption('k'))) {
+            ZimbraLog.ephemeral.error("cannot specify --set-flag or --unset-flag with -r, -n, -a, or -k options");
+            return;
         }
         //a null numThreads value causes the migration process to run synchronously
         Integer numThreads = null;
@@ -118,14 +112,27 @@ public class AttributeMigrationUtil {
         } else {
             callback = new DryRunMigrationCallback();
         }
-        if (cl.hasOption('f')) {
-            MigrationFlag flag = AttributeMigration.getMigrationFlag(new ZimbraMigrationCallback().getStore());
-            if (!flag.isSet()) {
-                ZimbraLog.ephemeral.info("migration flag is not set");
+        if (flagChange) {
+            EphemeralStore store = new ZimbraMigrationCallback().getStore(); //EphemeralStore containing the flag
+            MigrationFlag flag = AttributeMigration.getMigrationFlag(store);
+            if (cl.hasOption('s')) {
+                //setting flag
+                if (flag.isSet()) {
+                    ZimbraLog.ephemeral.info("migration flag is already set on %s", store.getClass().getSimpleName());
+                } else {
+                    ZimbraLog.ephemeral.info("setting the migration flag on %s", store.getClass().getSimpleName());
+                    flag.set();
+                    AttributeMigration.clearConfigCacheOnAllServers(true);
+                }
             } else {
-                ZimbraLog.ephemeral.info("resetting the migration flag");
-                flag.unset();
-                AttributeMigration.clearConfigCacheOnAllServers(true);
+                //unsetting flag
+                if (!flag.isSet()) {
+                    ZimbraLog.ephemeral.info("migration flag is not set on %s", store.getClass().getSimpleName());
+                } else {
+                    ZimbraLog.ephemeral.info("unsetting the migration flag on %s", store.getClass().getSimpleName());
+                    flag.unset();
+                    AttributeMigration.clearConfigCacheOnAllServers(true);
+                }
             }
             return;
         }
