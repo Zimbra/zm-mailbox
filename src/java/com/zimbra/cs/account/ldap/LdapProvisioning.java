@@ -524,10 +524,19 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (!storeEphemeralInLdap) {
             Map<String, AttributeInfo> ephemeralAttrMap = AttributeManager.getInstance().getEphemeralAttrs();
             Map<String, Object> ephemeralAttrs = new HashMap<String, Object>();
+            List<String> toRemove = null; // remove after iteration to avoid ConcurrentModificationException
             for (Map.Entry<String, ? extends Object> e: attrs.entrySet()) {
                 String key = e.getKey();
                 if (ephemeralAttrMap.containsKey(key.toLowerCase())) {
                     ephemeralAttrs.put(key, e.getValue());
+                    if (null == toRemove) {
+                        toRemove = Lists.newArrayListWithExpectedSize(3); // only 3 ephemeral attrs currently
+                    }
+                    toRemove.add(key);
+                }
+            }
+            if (null != toRemove) {
+                for (String key : toRemove) {
                     attrs.remove(key);
                 }
             }
