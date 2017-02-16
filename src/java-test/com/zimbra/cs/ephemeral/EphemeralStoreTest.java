@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
 import com.zimbra.cs.ephemeral.EphemeralInput.RelativeExpiration;
 import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -231,6 +232,51 @@ public class EphemeralStoreTest {
         acct.setLastLogonTimestamp(date);
         Map<String, Object> attrs = acct.getAttrs(false, true);
         assertEquals(LdapDateUtil.toGeneralizedTime(date), attrs.get(Provisioning.A_zimbraLastLogonTimestamp));
+    }
+
+    @Test
+    public void testFallbackEphemeralStore() throws Exception {
+
+        EphemeralStore primary = new InMemoryEphemeralStore();
+        EphemeralStore secondary = new InMemoryEphemeralStore();
+        EphemeralStore store = new FallbackEphemeralStore(primary, secondary);
+
+        EphemeralLocation target = new TestLocation();
+        EphemeralKey key1 = new EphemeralKey("foo1");
+        EphemeralKey key2 = new EphemeralKey("foo2");
+        EphemeralInput input1 = new EphemeralInput(key1, "bar1");
+        input1.setExpiration(new AbsoluteExpiration(1000L));
+        EphemeralInput input2 = new EphemeralInput(key2, "bar2");
+        input2.setExpiration(new AbsoluteExpiration(1000L));
+
+        //add a value via the fallback store
+        primary.set(input1, target);
+        //make sure it went to the primary store
+        assertEquals("bar1", primary.get(key1, target).getValue());
+        //but not the secondary store
+        assertTrue(secondary.get(key1, target).isEmpty());
+
+        //add a value to the secondary store
+        secondary.set(input2, target);
+
+        //make sure get() and has() work for values in both primary and secondary stores
+        assertTrue(store.has(key1, target));
+        assertTrue(store.has(key2, target));
+        assertEquals("bar1", store.get(key1, target).getValue());
+        assertEquals("bar2", store.get(key2, target).getValue());
+
+        //deleting via fallback store should delete from both primary and secondary
+        store.delete(key1, "bar1", target);
+        assertFalse(primary.has(key1, target));
+        store.delete(key2, "bar2", target);
+        assertFalse(secondary.has(key2, target));
+
+        //purging should purge from both primary and secondary as well
+        primary.set(input1, target);
+        secondary.set(input1, target);
+        store.purgeExpired(key1, target);
+        assertFalse(primary.has(key1, target));
+        assertFalse(secondary.has(key1, target));
     }
 
     static class TestLocation extends EphemeralLocation {
