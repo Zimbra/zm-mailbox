@@ -161,7 +161,6 @@ public class AttributeMigration {
         EphemeralStore store = callback.getStore();
         if (store != null) {
             getMigrationFlag(store).set();
-            EphemeralStore.clearFactory();
             migrationHelper.flushCache();
         }
     }
@@ -171,7 +170,6 @@ public class AttributeMigration {
         EphemeralStore store = callback.getStore();
         if (store != null) {
             getMigrationFlag(store).unset();
-            EphemeralStore.clearFactory();
             migrationHelper.flushCache();
         }
     }
