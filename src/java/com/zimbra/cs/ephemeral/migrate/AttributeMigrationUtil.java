@@ -44,6 +44,7 @@ public class AttributeMigrationUtil {
         OPTIONS.addOption("d", "debug", false, "Enable debug logging");
         OPTIONS.addOption("h", "help", false, "Display this help message");
         OPTIONS.addOption("a", "account", true, "Comma-separated list of accounts to migrate. If not specified, all accounts will be migrated");
+        OPTIONS.addOption("f", "reset-flag", false, "deletes the 'migration in progress' flag. Only use this in cases when something went wrong.");
     }
 
     public static void main(String[] args) throws Exception {
@@ -51,7 +52,7 @@ public class AttributeMigrationUtil {
         CommandLineParser parser = new GnuParser();
         CommandLine cl = parser.parse(OPTIONS, args);
         List<String> attrsToMigrate = cl.getArgList();
-        if (cl.hasOption("h") || attrsToMigrate.isEmpty()) {
+        if (cl.hasOption("h") || (!cl.hasOption('f') && attrsToMigrate.isEmpty())) {
             usage();
             return;
         }
@@ -62,6 +63,15 @@ public class AttributeMigrationUtil {
         if (dryRun && cl.hasOption('n')) {
             ZimbraLog.ephemeral.error("cannot specify --num-threads with --dry-run option");
             return;
+        }
+        if (dryRun && cl.hasOption('f')) {
+            ZimbraLog.ephemeral.error("cannot specify --reset-flag with --dry-run option");
+        }
+        if (cl.hasOption('f') && cl.hasOption('n')) {
+            ZimbraLog.ephemeral.error("cannot specify --reset-flag with --num-threads option");
+        }
+        if (cl.hasOption('f') && cl.hasOption('n')) {
+            ZimbraLog.ephemeral.error("cannot specify --reset-flag with --account option");
         }
         //a null numThreads value causes the migration process to run synchronously
         Integer numThreads = null;
@@ -106,22 +116,27 @@ public class AttributeMigrationUtil {
             callback = new DryRunMigrationCallback();
         }
         migration.setCallback(callback);
-        EntrySource source;
-        if (cl.hasOption('a')) {
-            String[] acctValues = cl.getOptionValue('a').split(",");
-            source = new SomeAccountsSource(acctValues);
+        if (cl.hasOption('f')) {
+            ZimbraLog.ephemeral.info("resetting the migration flag");
+            migration.endMigration();
         } else {
-            source = new AllAccountsSource();
-        }
-        migration.setSource(source);
-        if (dryRun || cl.hasOption('k')) {
-            migration.setDeleteOriginal(false);
-        }
-        try {
-            migration.migrateAllAccounts();
-        } catch (ServiceException e) {
-            Zimbra.halt(String.format("error encountered during migration to ephemeral backend at %s; migration cannot proceed", url), e);
-            return;
+            EntrySource source;
+            if (cl.hasOption('a')) {
+                String[] acctValues = cl.getOptionValue('a').split(",");
+                source = new SomeAccountsSource(acctValues);
+            } else {
+                source = new AllAccountsSource();
+            }
+            migration.setSource(source);
+            if (dryRun || cl.hasOption('k')) {
+                migration.setDeleteOriginal(false);
+            }
+            try {
+                migration.migrateAllAccounts();
+            } catch (ServiceException e) {
+                Zimbra.halt(String.format("error encountered during migration to ephemeral backend at %s; migration cannot proceed", url), e);
+                return;
+            }
         }
     }
 
