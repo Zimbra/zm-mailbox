@@ -9414,4 +9414,44 @@ TODO: delete them permanently from here
   <globalConfigValue>0</globalConfigValue>
   <desc>Specifies the amount of time a thread will wait for a JedisPool resource. A value of 0 will cause the thread to block indefinitely.</desc>
 </attr>
+
+<attr id="2102" name="zimbraChatServiceEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.8.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>enable XMPP server</desc>
+</attr>
+
+<attr id="2103" name="zimbraChatHistoryEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>enable chat history saving</desc>
+</attr>
+
+<attr id="2104" name="zimbraChatConversationAuditEnabled" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.8.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>enable dedicated log for the chat conversation (needed by some jurisdictions)</desc>
+</attr>
+
+<attr id="2105" name="zimbraChatXmppSslPortEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.8.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>enable XMPP legacy SSL port</desc>
+</attr>
+
+<attr id="2106" name="zimbraChatAllowUnencryptedPassword" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>allow unencrypted password login via XMPP</desc>
+</attr>
+
+<attr id="2107" name="zimbraChatXmppPort" type="port" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.8.0">
+  <globalConfigValue>5222</globalConfigValue>
+  <desc>XMPP plain port, usually used with startTLS</desc>
+</attr>
+
+<attr id="2108" name="zimbraChatXmppSslPort" type="port" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.8.0">
+  <globalConfigValue>5223</globalConfigValue>
+  <desc>XMPP legacy SSL port</desc>
+</attr>
+
+<attr id="2109" name="zimbraChatAllowDlMemberAddAsFriend" type="boolean" cardinality="single" optionalIn="distributionList" since="8.8.0">
+  <desc>make distribution list members friends</desc>
+</attr>
+
 </attrs>

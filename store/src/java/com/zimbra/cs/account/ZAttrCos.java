@@ -2303,6 +2303,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * enable chat history saving
+     *
+     * @return zimbraChatHistoryEnabled, or true if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2103)
+    public boolean isChatHistoryEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraChatHistoryEnabled, true);
+    }
+
+    /**
+     * enable chat history saving
+     *
+     * @param zimbraChatHistoryEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2103)
+    public void setChatHistoryEnabled(boolean zimbraChatHistoryEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatHistoryEnabled, zimbraChatHistoryEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable chat history saving
+     *
+     * @param zimbraChatHistoryEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2103)
+    public Map<String,Object> setChatHistoryEnabled(boolean zimbraChatHistoryEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatHistoryEnabled, zimbraChatHistoryEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable chat history saving
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2103)
+    public void unsetChatHistoryEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatHistoryEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable chat history saving
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2103)
+    public Map<String,Object> unsetChatHistoryEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatHistoryEnabled, "");
+        return attrs;
+    }
+
+    /**
      * API Client ID for accessing with Zimbra Community API
      *
      * @return zimbraCommunityAPIClientID, or null if unset

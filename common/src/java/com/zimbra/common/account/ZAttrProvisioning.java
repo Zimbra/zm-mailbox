@@ -4433,6 +4433,71 @@ public class ZAttrProvisioning {
     public static final String A_zimbraChangePasswordURL = "zimbraChangePasswordURL";
 
     /**
+     * make distribution list members friends
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2109)
+    public static final String A_zimbraChatAllowDlMemberAddAsFriend = "zimbraChatAllowDlMemberAddAsFriend";
+
+    /**
+     * allow unencrypted password login via XMPP
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2106)
+    public static final String A_zimbraChatAllowUnencryptedPassword = "zimbraChatAllowUnencryptedPassword";
+
+    /**
+     * enable dedicated log for the chat conversation (needed by some
+     * jurisdictions)
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2104)
+    public static final String A_zimbraChatConversationAuditEnabled = "zimbraChatConversationAuditEnabled";
+
+    /**
+     * enable chat history saving
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2103)
+    public static final String A_zimbraChatHistoryEnabled = "zimbraChatHistoryEnabled";
+
+    /**
+     * enable XMPP server
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2102)
+    public static final String A_zimbraChatServiceEnabled = "zimbraChatServiceEnabled";
+
+    /**
+     * XMPP plain port, usually used with startTLS
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2107)
+    public static final String A_zimbraChatXmppPort = "zimbraChatXmppPort";
+
+    /**
+     * XMPP legacy SSL port
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2108)
+    public static final String A_zimbraChatXmppSslPort = "zimbraChatXmppSslPort";
+
+    /**
+     * enable XMPP legacy SSL port
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2105)
+    public static final String A_zimbraChatXmppSslPortEnabled = "zimbraChatXmppSslPortEnabled";
+
+    /**
      * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
      * desc: zimbraId of child accounts
      */

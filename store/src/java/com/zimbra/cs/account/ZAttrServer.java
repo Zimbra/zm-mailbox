@@ -5924,6 +5924,460 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * allow unencrypted password login via XMPP
+     *
+     * @return zimbraChatAllowUnencryptedPassword, or false if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2106)
+    public boolean isChatAllowUnencryptedPassword() {
+        return getBooleanAttr(Provisioning.A_zimbraChatAllowUnencryptedPassword, false);
+    }
+
+    /**
+     * allow unencrypted password login via XMPP
+     *
+     * @param zimbraChatAllowUnencryptedPassword new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2106)
+    public void setChatAllowUnencryptedPassword(boolean zimbraChatAllowUnencryptedPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowUnencryptedPassword, zimbraChatAllowUnencryptedPassword ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * allow unencrypted password login via XMPP
+     *
+     * @param zimbraChatAllowUnencryptedPassword new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2106)
+    public Map<String,Object> setChatAllowUnencryptedPassword(boolean zimbraChatAllowUnencryptedPassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowUnencryptedPassword, zimbraChatAllowUnencryptedPassword ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * allow unencrypted password login via XMPP
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2106)
+    public void unsetChatAllowUnencryptedPassword() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowUnencryptedPassword, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * allow unencrypted password login via XMPP
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2106)
+    public Map<String,Object> unsetChatAllowUnencryptedPassword(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowUnencryptedPassword, "");
+        return attrs;
+    }
+
+    /**
+     * enable XMPP server
+     *
+     * @return zimbraChatServiceEnabled, or true if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2102)
+    public boolean isChatServiceEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraChatServiceEnabled, true);
+    }
+
+    /**
+     * enable XMPP server
+     *
+     * @param zimbraChatServiceEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2102)
+    public void setChatServiceEnabled(boolean zimbraChatServiceEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatServiceEnabled, zimbraChatServiceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable XMPP server
+     *
+     * @param zimbraChatServiceEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2102)
+    public Map<String,Object> setChatServiceEnabled(boolean zimbraChatServiceEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatServiceEnabled, zimbraChatServiceEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable XMPP server
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2102)
+    public void unsetChatServiceEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatServiceEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable XMPP server
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2102)
+    public Map<String,Object> unsetChatServiceEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatServiceEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * XMPP plain port, usually used with startTLS
+     *
+     * <p>Use getChatXmppPortAsString to access value as a string.
+     *
+     * @see #getChatXmppPortAsString()
+     *
+     * @return zimbraChatXmppPort, or 5222 if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2107)
+    public int getChatXmppPort() {
+        return getIntAttr(Provisioning.A_zimbraChatXmppPort, 5222);
+    }
+
+    /**
+     * XMPP plain port, usually used with startTLS
+     *
+     * @return zimbraChatXmppPort, or "5222" if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2107)
+    public String getChatXmppPortAsString() {
+        return getAttr(Provisioning.A_zimbraChatXmppPort, "5222");
+    }
+
+    /**
+     * XMPP plain port, usually used with startTLS
+     *
+     * @param zimbraChatXmppPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2107)
+    public void setChatXmppPort(int zimbraChatXmppPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppPort, Integer.toString(zimbraChatXmppPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * XMPP plain port, usually used with startTLS
+     *
+     * @param zimbraChatXmppPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2107)
+    public Map<String,Object> setChatXmppPort(int zimbraChatXmppPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppPort, Integer.toString(zimbraChatXmppPort));
+        return attrs;
+    }
+
+    /**
+     * XMPP plain port, usually used with startTLS
+     *
+     * @param zimbraChatXmppPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2107)
+    public void setChatXmppPortAsString(String zimbraChatXmppPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppPort, zimbraChatXmppPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * XMPP plain port, usually used with startTLS
+     *
+     * @param zimbraChatXmppPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2107)
+    public Map<String,Object> setChatXmppPortAsString(String zimbraChatXmppPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppPort, zimbraChatXmppPort);
+        return attrs;
+    }
+
+    /**
+     * XMPP plain port, usually used with startTLS
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2107)
+    public void unsetChatXmppPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * XMPP plain port, usually used with startTLS
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2107)
+    public Map<String,Object> unsetChatXmppPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppPort, "");
+        return attrs;
+    }
+
+    /**
+     * XMPP legacy SSL port
+     *
+     * <p>Use getChatXmppSslPortAsString to access value as a string.
+     *
+     * @see #getChatXmppSslPortAsString()
+     *
+     * @return zimbraChatXmppSslPort, or 5223 if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2108)
+    public int getChatXmppSslPort() {
+        return getIntAttr(Provisioning.A_zimbraChatXmppSslPort, 5223);
+    }
+
+    /**
+     * XMPP legacy SSL port
+     *
+     * @return zimbraChatXmppSslPort, or "5223" if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2108)
+    public String getChatXmppSslPortAsString() {
+        return getAttr(Provisioning.A_zimbraChatXmppSslPort, "5223");
+    }
+
+    /**
+     * XMPP legacy SSL port
+     *
+     * @param zimbraChatXmppSslPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2108)
+    public void setChatXmppSslPort(int zimbraChatXmppSslPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppSslPort, Integer.toString(zimbraChatXmppSslPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * XMPP legacy SSL port
+     *
+     * @param zimbraChatXmppSslPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2108)
+    public Map<String,Object> setChatXmppSslPort(int zimbraChatXmppSslPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppSslPort, Integer.toString(zimbraChatXmppSslPort));
+        return attrs;
+    }
+
+    /**
+     * XMPP legacy SSL port
+     *
+     * @param zimbraChatXmppSslPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2108)
+    public void setChatXmppSslPortAsString(String zimbraChatXmppSslPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppSslPort, zimbraChatXmppSslPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * XMPP legacy SSL port
+     *
+     * @param zimbraChatXmppSslPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2108)
+    public Map<String,Object> setChatXmppSslPortAsString(String zimbraChatXmppSslPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppSslPort, zimbraChatXmppSslPort);
+        return attrs;
+    }
+
+    /**
+     * XMPP legacy SSL port
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2108)
+    public void unsetChatXmppSslPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppSslPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * XMPP legacy SSL port
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2108)
+    public Map<String,Object> unsetChatXmppSslPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppSslPort, "");
+        return attrs;
+    }
+
+    /**
+     * enable XMPP legacy SSL port
+     *
+     * @return zimbraChatXmppSslPortEnabled, or false if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2105)
+    public boolean isChatXmppSslPortEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraChatXmppSslPortEnabled, false);
+    }
+
+    /**
+     * enable XMPP legacy SSL port
+     *
+     * @param zimbraChatXmppSslPortEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2105)
+    public void setChatXmppSslPortEnabled(boolean zimbraChatXmppSslPortEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppSslPortEnabled, zimbraChatXmppSslPortEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable XMPP legacy SSL port
+     *
+     * @param zimbraChatXmppSslPortEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2105)
+    public Map<String,Object> setChatXmppSslPortEnabled(boolean zimbraChatXmppSslPortEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppSslPortEnabled, zimbraChatXmppSslPortEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable XMPP legacy SSL port
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2105)
+    public void unsetChatXmppSslPortEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppSslPortEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable XMPP legacy SSL port
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2105)
+    public Map<String,Object> unsetChatXmppSslPortEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatXmppSslPortEnabled, "");
+        return attrs;
+    }
+
+    /**
      * IP Address/hostname for ClamAV to bind to for attachment scanning.
      * Default is localhost
      *
