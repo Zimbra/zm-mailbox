@@ -36,7 +36,7 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"variables"})
 @JsonPropertyOrder({ "variables" })
-public final class FilterVariables {
+public final class FilterVariables extends FilterAction {
 
     @XmlElement(name=MailConstants.E_FILTER_VARIABLE /* filterVariable */, required=true)
     private List<FilterVariable> variables;

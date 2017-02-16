@@ -21,6 +21,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlRootElement(name=AdminConstants.E_MODIFY_FILTER_RULES_RESPONSE)
-public class ModifyFilterRulesResponse {
+@XmlRootElement(name=AdminConstants.E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE)
+public class ModifyOutgoingFilterRulesResponse {
 }
