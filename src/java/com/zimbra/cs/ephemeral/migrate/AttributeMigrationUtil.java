@@ -21,6 +21,7 @@ import com.zimbra.cs.ephemeral.migrate.AttributeMigration.AllAccountsSource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.DryRunMigrationCallback;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationCallback;
+import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationFlag;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.SomeAccountsSource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.ZimbraMigrationCallback;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -73,6 +74,9 @@ public class AttributeMigrationUtil {
         if (cl.hasOption('f') && cl.hasOption('n')) {
             ZimbraLog.ephemeral.error("cannot specify --reset-flag with --account option");
         }
+        if (cl.hasOption('f') && cl.hasOption('k')) {
+            ZimbraLog.ephemeral.error("cannot specify --reset-flag with --keep-old option");
+        }
         //a null numThreads value causes the migration process to run synchronously
         Integer numThreads = null;
         if (!dryRun) { //dry runs are always synchronous
@@ -87,7 +91,6 @@ public class AttributeMigrationUtil {
                 return;
             }
         }
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, numThreads);
         MigrationCallback callback;
         String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
         if (!dryRun) {
@@ -115,28 +118,35 @@ public class AttributeMigrationUtil {
         } else {
             callback = new DryRunMigrationCallback();
         }
-        migration.setCallback(callback);
         if (cl.hasOption('f')) {
-            ZimbraLog.ephemeral.info("resetting the migration flag");
-            migration.endMigration();
-        } else {
-            EntrySource source;
-            if (cl.hasOption('a')) {
-                String[] acctValues = cl.getOptionValue('a').split(",");
-                source = new SomeAccountsSource(acctValues);
+            MigrationFlag flag = AttributeMigration.getMigrationFlag(new ZimbraMigrationCallback().getStore());
+            if (!flag.isSet()) {
+                ZimbraLog.ephemeral.info("migration flag is not set");
             } else {
-                source = new AllAccountsSource();
+                ZimbraLog.ephemeral.info("resetting the migration flag");
+                flag.unset();
+                AttributeMigration.clearConfigCacheOnAllServers(true);
             }
-            migration.setSource(source);
-            if (dryRun || cl.hasOption('k')) {
-                migration.setDeleteOriginal(false);
-            }
-            try {
-                migration.migrateAllAccounts();
-            } catch (ServiceException e) {
-                Zimbra.halt(String.format("error encountered during migration to ephemeral backend at %s; migration cannot proceed", url), e);
-                return;
-            }
+            return;
+        }
+        AttributeMigration migration = new AttributeMigration(attrsToMigrate, numThreads);
+        migration.setCallback(callback);
+        EntrySource source;
+        if (cl.hasOption('a')) {
+            String[] acctValues = cl.getOptionValue('a').split(",");
+            source = new SomeAccountsSource(acctValues);
+        } else {
+            source = new AllAccountsSource();
+        }
+        migration.setSource(source);
+        if (dryRun || cl.hasOption('k')) {
+            migration.setDeleteOriginal(false);
+        }
+        try {
+            migration.migrateAllAccounts();
+        } catch (ServiceException e) {
+            Zimbra.halt(String.format("error encountered during migration to ephemeral backend at %s; migration cannot proceed", url), e);
+            return;
         }
     }
 

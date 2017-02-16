@@ -60,7 +60,7 @@ public class EphemeralBackendCheck extends AttributeCallback {
 
     @Override
     public void postModify(CallbackContext context, String attrName, Entry entry) {
-        AttributeMigration.clearConfigCacheOnAllServers();
+        AttributeMigration.clearConfigCacheOnAllServers(false);
     }
 
 }

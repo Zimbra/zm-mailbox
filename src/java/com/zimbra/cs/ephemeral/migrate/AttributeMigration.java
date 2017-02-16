@@ -569,11 +569,11 @@ public class AttributeMigration {
 
         @Override
         public void flushCache() {
-            clearConfigCacheOnAllServers();
+            clearConfigCacheOnAllServers(false);
         }
     }
 
-    public static void clearConfigCacheOnAllServers() {
+    public static void clearConfigCacheOnAllServers(boolean includeLocal) {
         ExecutorService executor = newCachedThreadPool(newDaemonThreadFactory("ClearEphemeralConfigCache"));
         List<Server> servers = null;
         try {
@@ -584,7 +584,7 @@ public class AttributeMigration {
         }
         for (Server server: servers) {
             try {
-                if (server.isLocalServer()) {
+                if (server.isLocalServer() && !includeLocal) {
                     // don't need to flush cache on this server
                     continue;
                 }
