@@ -19,6 +19,7 @@ package com.zimbra.cs.filter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -585,6 +586,29 @@ public final class SoapToSieve {
             return filter.toString();
         } else if (action instanceof FilterAction.StopAction) {
             return "stop";
+        } else if (action instanceof FilterVariables) {
+            StringBuilder sb = new StringBuilder();
+            FilterVariables filterVariables = (FilterVariables) action;
+            if (filterVariables != null) {
+                List<FilterVariable> variables = filterVariables.getVariables();
+                if (variables != null && !variables.isEmpty()) {
+                    Iterator<FilterVariable> iterator = variables.iterator();
+                    while(iterator.hasNext()) {
+                        FilterVariable filterVariable = iterator.next();
+                        String varName = filterVariable.getName();
+                        String varValue = filterVariable.getValue();
+                        if (!StringUtil.isNullOrEmpty(varName) && !StringUtil.isNullOrEmpty(varValue)) {
+                            sb.append("set \"").append(varName).append("\" \"").append(varValue).append("\"");
+                        } else {
+                            ZimbraLog.filter.debug("Ignoring problem in filterVariable with name or value");
+                        }
+                        if (iterator.hasNext()) {
+                            sb.append(";\n");
+                        }
+                    }
+                }
+                return sb.toString();
+            }
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected action: %s", action);
         }
