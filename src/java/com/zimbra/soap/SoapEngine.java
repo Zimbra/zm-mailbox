@@ -176,6 +176,8 @@ public class SoapEngine {
     private SoapProtocol chooseFaultProtocolFromBadXml(InputStream in) {
         SoapProtocol soapProto = SoapProtocol.Soap12; /* Default */
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+        xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false); // This disables DTDs entirely for that factory
+        xmlInputFactory.setProperty("javax.xml.stream.isSupportingExternalEntities", false); // disable external entities
         XMLStreamReader xmlReader = null;
         int depth = 0;
         boolean inEnvelope = false;
