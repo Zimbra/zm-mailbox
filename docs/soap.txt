@@ -3150,7 +3150,11 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
 <GetFilterRulesResponse>
   <filterRules>
     <filterRule name="{rule-name}" [active="{0|1}"]>*
-      <filterTests condition="{allof | anyof"}>
+        <filterVariables>
+            <filterVariable name="{variable-name}" value="{variable-value}"/>
+            ...
+        </filterVariables>
+        <filterTests condition="{allof | anyof"}>
         {test}
         [test]
         ...
@@ -3161,6 +3165,10 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
         [<filterActions>...</filterActions>]
       </nestedRule>]
       [<filterActions>
+        <filterVariables>
+            <filterVariable name="{variable-name}" value="{variable-value}"/>
+            ...
+        </filterVariables>
         {action}
         [action]
         ...
@@ -3216,6 +3224,10 @@ Each test has the following optional attributes:
 
 Actions:
 
+  <filterVariables>
+    <filterVariable name="{variable-name}" value="{variable-value}"/>
+    ...
+  </filterVariables>
   <actionKeep />
   <actionDiscard />
   <actionFileInto folderPath="{folder-path}" />
@@ -3292,7 +3304,7 @@ Notify action:
 <actionNotify> generates the Zimbra specific format of the notify filter rule.
 <actionRFCCompliantNotify> generates the RFC 5436 and 5436 compliant notify filter rule.
 <actionRFCCompliantNotify> is available only when the global config 'zimbraMailSieveNotifyActionRFCCompliant' key is set to TRUE 
-(if this key is set to TRUE, the Zimbra-format notify action will fail to execute, and vise varsa).
+(if this key is set to TRUE, the Zimbra-format notify action will fail to execute, and vise versa).
   {from} : The from address which is displayed at the From header of the notification message.
   {subject} : The subject of the notification message.
   {method} : "mailto:" url.  Please refer to the RFC 5436 for more details.
