@@ -40,6 +40,7 @@ import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.FallbackEphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -167,8 +168,6 @@ public class AttributeMigration {
 
     @VisibleForTesting
     public void endMigration() throws ServiceException {
-        ZimbraLog.ephemeral.info("migration of attributes %s to ephemeral storage completed",
-                Joiner.on(", ").join(attrsToMigrate));
         EphemeralStore store = callback.getStore();
         if (store != null) {
             getMigrationFlag(store).unset();
@@ -178,6 +177,8 @@ public class AttributeMigration {
     }
 
     public void migrateAllAccounts() throws ServiceException {
+        ZimbraLog.ephemeral.info("beginning migration of attributes %s to ephemeral storage",
+                Joiner.on(", ").join(attrsToMigrate));
         beginMigration();
         if (async) {
             for (NamedEntry entry: source.getEntries()) {
@@ -200,6 +201,8 @@ public class AttributeMigration {
                 migrateAccount((Account) entry);
             }
         }
+        ZimbraLog.ephemeral.info("migration of attributes %s to ephemeral storage completed",
+                Joiner.on(", ").join(attrsToMigrate));
         endMigration();
     }
 
@@ -508,20 +511,33 @@ public class AttributeMigration {
             };
         }
 
+        private EphemeralStore getFlagStore() {
+            //store will usually be SSDBEphemeralStore, but it's possible for this to be
+            //FallbackEphemeralStore, in which case we want to isolate the primary store
+            //to avoid acting on LdapEphemeralStore with the custom EphemeralLocation instance above.
+            EphemeralStore flagStore;
+            if (store instanceof FallbackEphemeralStore) {
+                flagStore = ((FallbackEphemeralStore) store).getPrimaryStore();
+            } else {
+                flagStore = store;
+            }
+            return flagStore;
+        }
+
         @Override
         public void set() throws ServiceException {
             EphemeralInput input = new EphemeralInput(key, ProvisioningConstants.TRUE);
-            store.set(input, location);
+            getFlagStore().set(input, location);
         }
 
         @Override
         public void unset() throws ServiceException {
-            store.delete(key, ProvisioningConstants.TRUE, location);
+            getFlagStore().delete(key, ProvisioningConstants.TRUE, location);
         }
 
         @Override
         public boolean isSet() throws ServiceException {
-            return store.has(key, location);
+            return getFlagStore().has(key, location);
         }
     }
 
