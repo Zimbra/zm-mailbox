@@ -84,7 +84,7 @@ public class FallbackEphemeralStore extends EphemeralStore {
         @Override
         public void startup() {
             primaryFactory.startup();
-            fallbackFactory.shutdown();
+            fallbackFactory.startup();
         }
 
         @Override
