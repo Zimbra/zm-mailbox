@@ -39,6 +39,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
+import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.FallbackEphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
@@ -294,7 +295,13 @@ public class AttributeMigration {
         @Override
         public void setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException {
             ZimbraLog.ephemeral.debug("migrating '%s' value '%s'", origName, String.valueOf(origValue));
-            store.update(input, location);
+            EphemeralKey key = input.getEphemeralKey();
+            EphemeralResult existing = store.get(key, location);
+            if (existing == null || existing.isEmpty()) {
+                store.update(input, location);
+            } else {
+                ZimbraLog.ephemeral.debug("%s already has value '%s' in %s, skipping", key, existing.getValue(), store.getClass().getSimpleName());
+            }
         }
 
         @Override
