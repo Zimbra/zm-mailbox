@@ -1,0 +1,131 @@
+Return-Path: <xmlbeans-dev-return-186-smith=stanford.edu@xml.apache.org>
+Received: from leland9.Stanford.EDU (leland9.Stanford.EDU [171.67.16.83])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8NGPMKd021821
+	for <smith@popserver1.stanford.edu>; Tue, 23 Sep 2003 09:25:23 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland9.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8NGPAtc025619 for
+	<smith@stanford.edu>; Tue, 23 Sep 2003 09:25:11 -0700 (PDT)
+Received: (qmail 70224 invoked by uid 500); 23 Sep 2003 16:25:06 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 70209 invoked from network); 23 Sep 2003 16:25:06 -0000
+Message-ID: <001301c381ef$3a69b980$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: "Eric Vasilik" <ericvas@bea.com>, "David Bau" <davidbau@bea.com>, "Robert Wyrick" <rwyrick@fedex.com>
+Cc: <xmlbeans-dev@xml.apache.org>
+References: <4B2B4C417991364996F035E1EE39E2E11E9D5D@uskiex01.amer.bea.com>
+Subject: RE: GDateBuilder question
+Date: Tue, 23 Sep 2003 12:24:55 -0400
+X-Zimbra-Received: Tue, 23 Sep 2003 12:24:55 -0400
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000065-0010
+
+I'm copying this thread to xmlbeans-dev, hope it's OK.
+
+Those are two different APIs on GDateBuilder
+
+setTimeZone is supposed to set the timezone fields without changing other
+fields.  Like the other field-setting APIs, it can and will change the
+actual time.
+
+normalizeToTimeZone doesn't change the "actual" time, but reexpresses it in
+terms of the timezone that you specify.
+
+The GDate/GDateBuilder classes currently aren't aware of the difference
+between Z, +0:00 and -0:00, although we should be able to rework their code
+to teach them to track the difference.
+
+Out of curiousity, Robert, can you explain to me what is the actual
+difference between Z and +0:00?
+
+David
+----- Original Message ----- 
+From: "Eric Vasilik" <ericvas@bea.com>
+To: "David Bau" <davidbau@bea.com>; "Robert Wyrick" <rwyrick@fedex.com>
+Sent: Tuesday, September 23, 2003 11:38 AM
+Subject: [bea-readme] RE: GDateBuilder question
+
+
+I've started to look into this and I noticed the two pieces of code which
+look like they are trying to do the same thing, but are different.  Dave,
+are these two supposed to be different checks?  These are from
+GDateBuilder.java.
+
+
+    public void setTimeZone(int tzSign, int tzHour, int tzMinute)
+    {
+        if (!((tzSign == 0 && tzHour == 0 && tzMinute == 0) ||
+              ((tzSign == -1 || tzSign == 1) &&
+               (tzHour >= 0 && tzMinute >= 0) &&
+               (tzHour == 14 && tzMinute == 0 || tzHour < 14 && tzMinute <
+60))))
+            throw new IllegalArgumentException("time zone out of range
+(-14:00 to +14:00). (" +
+                (tzSign<0 ? "-" : "+") + tzHour + ":" + tzMinute + ")");
+
+
+
+
+    public void normalizeToTimeZone(int tzSign, int tzHour, int tzMinute)
+    {
+        if (!((tzSign == 0 && tzHour == 0 && tzMinute == 0) ||
+              ((tzSign == -1 || tzSign == 1) &&
+               (tzHour == 0 && tzMinute > 0 || tzHour > 0 && tzMinute >= 0)
+&&
+               (tzHour == 14 && tzMinute == 0 || tzHour < 14 && tzMinute <
+60))))
+            throw new IllegalArgumentException("time zone must be
+betwen -14:00 and +14:00");
+
+-----Original Message-----
+From: Robert Wyrick [mailto:rwyrick@fedex.com]
+Sent: Monday, September 22, 2003 3:02 PM
+To: Eric Vasilik
+Subject: GDateBuilder question
+
+
+We're having problems creating a timestamp with an explicit offset of
+'+00:00'.
+
+Why is it that a call to:
+        gdateBuilder.setTimeZone(1,0,0);
+fails with an exception?
+
+We know that using:
+        gdateBuilder.setTimeZone(0,0,0);
+will give a "technically" correct time, but it produces HH:MM::SSZ, when we
+want HH:MM:SS+00:00...
+
+The exception thrown is especially confusing:
+Exception in thread "main" java.lang.RuntimeException: Troublesome union
+exception caused by unexpected java.lang.IllegalArgumentException: time
+zone must be betwen -14:00 and +14:00
+    at com.bea.xbean.values.XmlUnionImpl.set_text(XmlUnionImpl.java:125)
+    at
+com.bea.xbean.values.XmlObjectBase.update_from_wscanon_text(XmlObjectBase.ja
+va:1003)
+    at com.bea.xbean.values.XmlObjectBase.set_String(XmlObjectBase.java:951)
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

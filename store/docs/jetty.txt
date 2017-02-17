@@ -1,0 +1,135 @@
+0. If this is the first time you setup your dev env, follow steps in
+   INSTALL*.txt to setup /opt/zimbra with mysql, ldap, etc.
+
+1. You can run "ant reset-all" target of ZimbraServer project to build
+   and start up the dev webapps including serivce/zimbra/zimbraAdmin.
+
+2. On Windows if you want to install jetty as a Windows service and
+   start/stop it that way, skip to 3.  For those who don't want to mess
+   with Windows services, use ant targets "start-jetty" and "stop-jetty"
+   of ZimbraServer project to start/stop.
+
+3. On Windows if you really want to install jetty as a Windows service
+   you can use the Java Service Wrapper.  The files are checked in
+   under ZimbraServer\tools\jetty; if you'd prefer to download them
+   yourself you can Yahoo! search for wrapper-windows-x86-32-3.2.3.zip
+   and unzip it.  Copy wrapper.exe to C:\opt\zimbra\bin, wrapper.jar and
+   wrapper.dll to C:\opt\zimbra\lib, and wrapper.conf to
+   C:\opt\zimbra\jetty\etc.  Now run:
+
+     wrapper.exe -i C:\opt\zimbra\jetty\etc\wrapper.conf 
+
+   to install jetty as a Windows Service.  Make sure the 'C' in 'C:' is
+   in upper case because wrapper.exe surprisingly is sensitive to it.
+
+   You may need to fix the permissions on the jetty directory and its
+   subdirectories in order to run jetty as a service.  Open Windows 
+   Explorer.  Right click jetty directory, click Sharing and Security...
+   Click Security tab.  Check if you have SYSTEM user in the list.
+   If there is no SYSTEM user, click Add button, type SYSTEM, 
+   click Check Names button, select the System user (usually the 
+   first one), click OK.  Now select the newly added SYSTEM user, click
+   all the permissions to Allow.  Then click Advanced button, and check
+   "Replace permission entries on all child objects with entries shown
+   here that apply to child objects".  Click OK to dismiss advanced
+   dialog.  Click OK to dismiss the sharing dialog.
+
+   To start/stop jetty service on command line, use "net start jetty"
+   and "net stop jetty".
+
+   To make sure that build.xml also uses windows service to start/stop
+   jetty, set environment variable ZIMBRA_JETTY_USE_SERVICE=1.
+
+4. On Mac OS X or Linux you should be able to bounce jetty with
+   command line 'jetty start' and 'jetty stop'.
+
+============
+
+There are more than one way to debug jetty using Eclipse.  Here we'll
+cover two approaches.
+
+I. Conventional Debugging
+
+1. Don't follow the instructions in "Debugging Jetty with Eclipse" on
+   jetty docs site (at least it didn't work for me).
+
+2. In Eclipse select Run/Debug... and right click on Java Application
+   to "New" a configuration.  Call it anything you want, such as
+   "jetty".  Choose the ZimbraServer as the debug project. Set the main
+   class to org.eclipse.jetty.start.Main.
+
+3. Switch to the Arguments tab and set
+
+   Program arguments to 
+   --ini OPTIONS=Server,servlet,servlets,jsp,jmx,resources,websocket,ext,plus,rewrite,monitor etc/jetty.xml
+   
+   and VM arguments to (without quotes)
+   "-DSTART=/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867
+   -DSTOP.KEY=stop -Dzimbra.config=/opt/zimbra/conf/localconfig.xml
+   -Djava.library.path=/opt/zimbra/lib  -XX:PermSize=128m
+   -XX:MaxPermSize=350m". Then choose "Other" under
+   working directory and set it to /opt/zimbra/jetty.
+
+4. Swtich to the Classpath tab and add the following jar files to User Entries.
+   /opt/zimbra/jetty/start.jar
+   /opt/zimbra/jetty/lib/monitor/jetty-monitor*.jar
+
+5. Switch to the Source tab and add all the java projects in your
+   workspace that you care about to debug.
+
+7. Apply the debug configuration and click Debug.  If everything goes
+   well, you should be able to stop in your source code with break
+   points.
+
+8. To stop jetty you can do this on command line "java
+   -DSTOP.PORT=7867 -DSTOP.KEY=stop -jar start.jar --stop".  Or you
+   could run the "stop-jetty-java" target under ZimbraServer.  You
+   probably don't want to press the Stop button in Eclipse debugger as
+   that wouldn't do a proper shutdown.
+
+
+II. Ant Jetty Plugin
+
+There's another radically different way to run and debug jetty with
+jetty-ant plugin.  Basically you run jetty as an ant task.  We use
+Eclipse remote debugging with jetty-ant plugin.
+
+To use jetty-ant, first you need to setup a shell for service webapp.
+Go to ZimbraServer directory and run
+ant -buildfile jetty-ant.xml jetty.webinf
+
+You'll only need to do this once unless either you clean the build directory
+or changes things such as web.xml.
+
+To launch jetty, run the following:
+ant -buildfile jetty-ant.xml jetty.run
+
+Note that due to a jetty-ant-plugin bug you need to set this env var:
+ANT_OPTS="-Djava.library.path=~/zimbra/zdesktop/lib"
+
+To debug, run the jetty.run target with ANT_OPTS like this:
+
+ANT_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Djava.library.path=/opt/zimbra/lib -Xrunjdwp:transport=dt_socket,address=4000,server=y,suspend=y" ant -buildfile jetty-ant.xml jetty.run
+
+This will start jetty-ant plugin but blocks on listening on port 4000.
+
+If you run into Out Of Memory errors, you may also want to increase the memory size by adding PermSize and MaxPermSize options.
+
+The command line will look like this with additional memory allocation options:
+
+ANT_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Djava.library.path=/opt/zimbra/lib -Xrunjdwp:transport=dt_socket,address=4000,server=y,suspend=y, -XX:PermSize=64M -XX:MaxPermSize=256M" ant -buildfile jetty-ant.xml jetty.run 
+
+Now go to Eclipse and select Run/Debug... and right click on Remote
+Java Application to "New" a configuration.  Call it anything you want
+such as "jetty-ant".  Select any project as the debug project.  Set
+Host/Port to localhost and 4000.  Then go to Source tab and add all
+the projects you are interested in debugging.
+
+Apply the configuration settings and press "Debug".  This will attach
+the debugger to the jetty-ant process.  You can see activity in the
+previously blocked jetty-ant console, and debugger will stop at your
+break points.
+
+To shutdown jetty, simply send Ctrl+C to the console window where you
+are running jetty-ant.
+

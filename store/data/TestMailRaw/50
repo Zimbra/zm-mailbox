@@ -1,0 +1,228 @@
+Return-Path: <xmlbeans-dev-return-358-smith=stanford.edu@xml.apache.org>
+Received: from leland6.Stanford.EDU (leland6.Stanford.EDU [171.67.16.60])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9AFjPLB007406
+	for <smith@popserver1.stanford.edu>; Fri, 10 Oct 2003 08:45:25 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland6.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9AFjGla029613 for
+	<smith@stanford.edu>; Fri, 10 Oct 2003 08:45:17 -0700 (PDT)
+Received: (qmail 94354 invoked by uid 500); 10 Oct 2003 15:45:12 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 94326 invoked from network); 10 Oct 2003 15:45:11 -0000
+Message-ID: <035601c38f45$75309760$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+References: <5.2.1.1.0.20031009120354.03384fe8@san-francisco.beasys.com>
+	 <030c01c38eae$78d032f0$0fa8a8c0@lightbox> <1065748890.15848.28.camel@zieg>
+Subject: Re: bts notes
+Date: Fri, 10 Oct 2003 11:44:56 -0400
+X-Zimbra-Received: Fri, 10 Oct 2003 11:44:56 -0400
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000032-0010
+
+Thanks again, notes below for both emails.
+
+----- Original Message ----- 
+From: "Scott Ziegler" <zieg@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+Sent: Thursday, October 09, 2003 9:21 PM
+Subject: [xmlbeans-dev] Re: bts notes
+
+
+> My comments after starting to use the code:
+>
+> 1. Looks like you forgot to implement some of the lookup methods in
+> BuiltinBindingLoader -- they are just returning null.
+
+Fixing.
+
+> 2. In BindingFile it feels like the maps from xmlname -> javaname should
+> contain the BindingType as the value, not the javaname (and vice
+> versa).  Otherwise there is an object creation for every lookup, which
+> seems bad.
+
+Storing namepairs rather than xmlnames or javanames to avoid the object
+creation.  Perhaps NamePair should be made public (BindingTypeName)?
+Opinions?
+
+> 3. It seems like BindingFile and BuiltinBindingLoader might share some
+> common code (or should), so perhaps they should inherit from a common
+> base class since most of the map operations are the same between the
+> two.
+
+Factoring as suggested.
+
+> 4. Personally, I think that users of these classes should not be aware
+> that xmlbeans is living underneath.  Yet I find that to create a
+> BindingLoader from a xml binding file I need to instantiate the xml
+> bean.  Ideally I would like to be able to hand some factory a Collection
+> of File objects and get back a BindingLoader, but I guess I can write
+> that myself.
+
+Will add factory methods that opeate on files/streams.
+
+> --Scott
+>
+> On Thu, 2003-10-09 at 14:44, David Bau wrote:
+> > Cool Patrick, thanks for the careful review; you got some good
+> > catches.  I'll do the things you're recommending below.
+> >
+> > Hope you don't mind, ccin'g xmlbeans-dev.
+> >
+> > David
+> > ----- Original Message ----- 
+> > From: "Patrick Calahan" <pcal@bea.com>
+> > To: "David Bau" <david.bau@bea.com>
+> > Sent: Thursday, October 09, 2003 3:06 PM
+> > Subject: bts notes
+> >
+> >
+> > >
+> > > Everything looks good, well put-together.  Could find my way around
+pretty
+> > > easily and figure it out.  Have a few comments so far, a lot of which
+is
+> > > pretty nitpicky stuff:
+> > >
+> > > - Is other stuff going to go the 'binding' package.  If so, maybe the
+bts
+> > > should be a sub-package?  If not, maybe it should be renamed to
+something
+> > > more specific (e.g. 'bts')?
+> > >
+> > > - Seems like BindingLoader should be an interface.
+
+Done.
+
+> > > - On a related note, it might be nice to have a BindingLoaderFactory
+> > > singleton which returns an instance of BindingLoader for any of a
+variety
+> > > of inputs (e.g. BindingConfigDocument).  That way, all of the
+> > BindingLoader
+> > > impls can be given package protection - I think the outside world is
+only
+> > > going to care that they are BindingLoaders.  Maybe overkill, I dunno,
+but
+> > > seems like it is such a fundamental thing that we might someday find
+> > > ourselves wanting to have more control over the constrution logic.
+> > >
+> > > - BindingType.kinds/registerClassAndType(): I'm a little nervous about
+> > this
+> > > being static.  Are we sure this really is always a singleton?  I see
+your
+> > > comment in KindRegistry about it being temporary, though, so maybe it
+> > won't
+> > > matter so much.  Are we sure it's going to go away?
+
+Hopefully we'll be able to bootstrap using our new-improved-v2 binding
+and make it go away. (Of course that will require refactoring callers of the
+BTS
+api, but we were able to do it in v1...) In the meantime, I'm not sure if
+there is
+a better approach to take instead?  Any ideas?  This is hand-done data
+binding
+lite.
+
+> > > - JavaName hashCode and equals don't take array dimensions into
+account.
+
+Fixing.
+
+> > >
+> > > - The compile time is going to want to have
+JavaName.getArrayComponent()
+> > or
+> > > somesuch, which would just return className.
+
+Adding getArrayItemType(int depth)
+
+
+> > >
+> > > - Could save a few Strings by storing JavaName array dimensions as an
+int
+> > > rather than arrayString.  Not a big deal.
+
+Yah, probably should, not changing at the moment.
+
+> > >
+> > > - Looking at comment in JavaName ctor, maybe you were going to call
+the
+> > > factory method JavaName.forClassName() instead of
+JavaName.forString().  I
+> > > think I like the former better.  Likewise, maybe XmlName.forString()
+> > should
+> > > be XmlName.forSignature()?  Neither is a big deal, but 'string' is
+just
+> > > kinda vague.
+
+I've been thinking that there may be problems that we need to solve that
+require us to make the Java name longer than just a regular class name,
+e.g.,
+"java.lang.Object{JAXRPC1}" versus "java.langObject{JAXRPC2}", so
+that's why I've called it just the vague "String".
+
+(The idea of the above is that different standards may require us to be able
+to apply different rules for the same pair of schema type and Java class,
+and
+we may need a way to differentiate.  In the situations I can see so far, the
+most natural way to differentiate would be to add a special "extra tag" onto
+the thing we use to identify the Java class.)
+
+> > >
+> > > - Classes in ...xmlbeans.x2003.x09.bindingConfig are always referenced
+by
+> > > full-qualified names in the code, as opposed to using imports.  Is
+there a
+> > > reason for this?  Makes the code a bit harder to read.
+
+Because of the way we named the APIs and the schema types, there are
+a bunch of name collisions.  Also, it's just sort of a way of making it
+clear
+when we're dealing with a physical vs logical object.  If we can think of
+better
+(different) names for either the schema types or the BTS, I'm happy to
+change
+them around.  I'm not really happy with our names (but then when can you
+ever really be happy with a name)?
+
+> > > - A few classes could use at least a one-line classdoc.  It's usually
+> > > fairly obvious what they are for, but still...
+> > >
+> > > > four levels deep! wow!
+> > > > that is too many!
+> > > > > my god, now it is five!!!!
+> > > > > > my god, now it is six!!!!
+> > > > > > > my god, now it is seven!!!!
+> > > > > > my god, now it is six!!!!
+> > > > > my god, now it is five!!!!
+> > > > back to four!
+> > > and three
+> > two
+> one
+
+Yes, adding...
+
+David
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

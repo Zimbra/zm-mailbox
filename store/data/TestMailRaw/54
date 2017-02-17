@@ -1,0 +1,88 @@
+Return-Path: <xmlbeans-dev-return-104-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.64.14.58])
+	by popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8FNjU1T009393 for
+	<smith@popserver1.stanford.edu>; Mon, 15 Sep 2003 16:45:31 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8FNjLbS028590 for
+	<smith@stanford.edu>; Mon, 15 Sep 2003 16:45:22 -0700 (PDT)
+Received: (qmail 87775 invoked by uid 500); 15 Sep 2003 23:45:13 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 87762 invoked from network); 15 Sep 2003 23:45:13 -0000
+X-Authentication-Warning: slapshot.stanford.edu: smith set sender to
+	smith@stanford.edu using -f
+Subject: Re: XmlBeans source code has been checked in ...
+From: Roland Smith <smith@stanford.edu>
+To: xmlbeans-dev@xml.apache.org
+In-Reply-To: <4B2B4C417991364996F035E1EE39E2E10D8E06@uskiex01.amer.bea.com>
+References: <4B2B4C417991364996F035E1EE39E2E10D8E06@uskiex01.amer.bea.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Message-Id: <1063669515.18282.10.camel@slapshot.stanford.edu>
+Mime-Version: 1.0
+X-Mailer: Ximian Evolution 1.4.4 
+Date: Mon, 15 Sep 2003 16:45:15 -0700
+X-Zimbra-Received: Mon, 15 Sep 2003 16:45:15 -0700
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000036-0011
+
+Not sure if this should go to users or dev...
+
+I'm trying to build with:
+
+slapshot:~/src/xml-xmlbeans/v1 111# java -version
+java version "1.4.2"
+Java(TM) 2 Runtime Environment, Standard Edition (build 1.4.2-b28)
+Java HotSpot(TM) Client VM (build 1.4.2-b28, mixed mode)
+
+On a RedHat 9 box and I am getting the following error when running "ant
+deploy":
+
+typeimpl.classes:
+    [javac] Compiling 353 source files to /home/smith/src/xml-xmlbeans/v1/build/classes/typeimpl
+    [javac] /home/smith/src/xml-xmlbeans/v1/src/typeimpl/org/apache/xmlbeans/impl/regex/RegularExpression.java:137: illegal unicode escape
+    [javac]  *          <kbd>\u005cu</kbd><var>c</var>, <kbd>\L</kbd>, <kbd>\U</kbd>,
+    [javac]                       ^
+    [javac] /home/smith/src/xml-xmlbeans/v1/src/typeimpl/org/apache/xmlbeans/impl/regex/RegularExpression.java:182: illegal unicode escape
+    [javac]  *       <dt class="REGEX"><kbd>\u005cu</kbd><var>HHHH</var>
+    [javac]                                      ^
+    [javac] /home/smith/src/xml-xmlbeans/v1/src/typeimpl/org/apache/xmlbeans/impl/regex/RegularExpression.java:206: illegal unicode escape
+    [javac]  *         <li class="REGEX">A character (including <Kbd>\e \f \n \r \t</kbd> <kbd>\u005cx</kbd><var>HH</var> <kbd>\u005cx{</kbd><var>HHHH</var><kbd>}</kbd> <!--kbd>\u005cu</kbd><var>HHHH</var--> <kbd>\u005cv</kbd><var>HHHHHH</var>)
+    [javac]                                                                                                                                                                           ^
+    [javac] /home/smith/src/xml-xmlbeans/v1/src/typeimpl/org/apache/xmlbeans/impl/regex/RegularExpression.java:499: illegal unicode escape
+    [javac]  * <!--               | '\u005cu' hex-char hex-char hex-char hex-char
+    [javac]                               ^
+    [javac] 4 errors
+
+BUILD FAILED
+file:/home/smith/src/xml-xmlbeans/v1/build.xml:588: Compile failed; see the compiler error output for details.
+Any suggestions?
+
+thanks, roland
+
+On Mon, 2003-09-15 at 14:07, Eric Vasilik wrote: 
+> The source code for XmlBeans v1 has been checked in to xml-xmlbeans at cvs.apache.org.
+> 
+> To build it, do "ant deploy".  To run the drt (Developer Regression Test) do "ant drt".
+> 
+> - Eric
+> 
+> - --
+> To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+> 
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

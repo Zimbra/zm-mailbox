@@ -1,0 +1,92 @@
+HOW TO LOCALIZE SERVER CODE
+===========================
+
+There are some end-user facing string data created by the server.  These need
+to be localized.  The first such code localized is the code that generates the
+text of auto accept/decline responses sent by calendar resource accounts.
+
+Localization relies on Java's java.util.ResourceBundle mechanism.  There is a
+utility Java class and a set of localized message files.
+
+
+Java Code
+---------
+
+The primary localization class is:
+
+    com.zimbra.cs.util.L10nUtil
+
+This class has a static public method called getMessage():
+
+    public static String getMessage(MsgKey key,
+                                    Locale lc,
+                                    Object... args)
+
+This method finds the resource bundle for the specified locale, retrieves the
+string for the specified key, and applies variable substitution with any
+arguments supplied.  The MsgKey enum lists all message keys known to code.
+
+So, for example, you can do this to get a localized string for
+"<calendar resource> has been scheduled for your appointment" line that appears
+in the auto-accept reply:
+
+    ipmort com.zimbra.cs.util.L10nUtil;
+	import com.zimbra.cs.util.L10nUtil.MsgKey;
+	...
+	Locale lc = <some locale>
+	String resName = <calendar resource display name>
+    String str =
+        L10nUtil.getMessage(MsgKey.resourceDefaultReplyAccept, lc, resName);
+
+
+Message Files
+-------------
+
+All message files are stored under /opt/zimbra/conf/msgs directory.  The default
+message file is called "ZsMsg.properties".  This name was chosen to be
+consistent with the convention used in web client code.  "Z" is for Zimbra and
+"s" is for server.  To add localize for a particular locale, you can add a file
+named "ZsMsg_<locale name>.properties" to this directory and restart Tomcat.
+Whether you're adding a new localized message file or editing one, Tomcat must
+be restarted for changes to take effect.
+
+Examples of locale name are "en_US", "en_GB", and "ja".  In other words, what
+you get by calling Locale object's toString() method.
+
+The message files are not built into the service.war web app archive for two
+reasons:
+
+    1. to allow easy installation of localized message files
+    2. to allow command-line invoked Java processes to use the same localized
+       message files
+
+Message formatting tip: The single-quote character is the quote character.
+If your message file has this line:
+
+    foo = bar
+
+the value of foo key is "bar".  The leading space is not included in the value.
+If your value starts with spaces, you can do:
+
+    foo = ' bar '
+
+If the value contains single-quote character, it must be specified as two
+single-quote characters in a row:
+
+    foo = It''s okay.
+
+Substitution variables cannot appear inside a quoted string.  End the quoted
+part before specifying variables:
+
+    foo = ' It''s a very '{0} car.
+
+
+Windows/Cygwin Gotcha
+---------------------
+
+If you're using Windows and cygwin, don't use cygwin shell to copy the localized
+file under conf/msgs directory.  Use the Windows command prompt.  Cygwin shell
+somehow sets the permission on the file differently, and Tomcat running as
+Windows service cannot read the file.
+
+<end>

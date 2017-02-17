@@ -1,0 +1,124 @@
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by dogfood.example.zimbra.com (Postfix) with ESMTP id 6F45C459D66
+	for <user1@dogfood.example.zimbra.com>; Sat, 21 May 2005 19:04:28 -0700 (PDT)
+Received: from dogfood.example.zimbra.com ([127.0.0.1])
+ by localhost (dogfood.example.zimbra.com [127.0.0.1]) (amavisd-new, port 10024)
+ with ESMTP id 23154-09 for <user1@dogfood.example.zimbra.com>;
+ Sat, 21 May 2005 19:04:28 -0700 (PDT)
+Received: from example.zimbra.com (exch1.example.zimbra.com [10.10.130.37])
+	by dogfood.example.zimbra.com (Postfix) with ESMTP id 389BC459D65
+	for <user1@dogfood.example.zimbra.com>; Sat, 21 May 2005 19:04:28 -0700 (PDT)
+X-MimeOLE: Produced By Microsoft Exchange V6.5.7226.0
+Content-class: urn:content-classes:calendarmessage
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+	boundary="----_=_NextPart_001_01C55E72.D5309A88"
+Subject: Calendar milestone
+Date: Sat, 21 May 2005 19:05:13 -0700
+Message-ID: <062EF322A9DDF14B887BCAE6C5F7E0753DB6D6@exch1.example.zimbra.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: Calendar milestone
+Thread-Index: AcVecrDzFpEauvG2Sm6g/9huBH7DGAAAAADg
+From: "User1" <user1@example.zimbra.com>
+To: "User1" <user1@example.zimbra.com>
+X-Virus-Scanned: amavisd-new at example.zimbra.com
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_01C55E72.D5309A88
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+When: Wednesday, June 08, 2005 12:00 AM to Saturday, June 11, 2005 12:00 =
+AM (GMT-08:00) Pacific Time (US & Canada); Tijuana.
+
+*~*~*~*~*~*~*~*~*~*
+
+
+
+------_=_NextPart_001_01C55E72.D5309A88
+Content-Type: text/html;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV=3D"Content-Type" CONTENT=3D"text/html; =
+charset=3Diso-8859-1">
+<META NAME=3D"Generator" CONTENT=3D"MS Exchange Server version =
+6.5.7226.0">
+<TITLE>Calendar milestone</TITLE>
+</HEAD>
+<BODY>
+<!-- Converted from text/rtf format -->
+
+<P><FONT SIZE=3D2 FACE=3D"Arial">When: Wednesday, June 08, 2005 12:00 AM =
+to Saturday, June 11, 2005 12:00 AM (GMT-08:00) Pacific Time (US &amp; =
+Canada); Tijuana.</FONT></P>
+
+<P><FONT SIZE=3D2 FACE=3D"Arial">*~*~*~*~*~*~*~*~*~*</FONT>
+</P>
+<BR>
+
+</BODY>
+</HTML>
+------_=_NextPart_001_01C55E72.D5309A88
+Content-class: urn:content-classes:calendarmessage
+Content-Type: text/calendar;
+	method=REQUEST;
+	name="meeting.ics"
+Content-Transfer-Encoding: 8bit
+
+BEGIN:VCALENDAR
+METHOD:REQUEST
+PRODID:Microsoft CDO for Microsoft Exchange
+VERSION:2.0
+BEGIN:VTIMEZONE
+TZID:(GMT-08.00) Pacific Time (US & Canada)/Tijuana
+X-MICROSOFT-CDO-TZID:13
+BEGIN:STANDARD
+DTSTART:16010101T020000
+TZOFFSETFROM:-0700
+TZOFFSETTO:-0800
+RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:16010101T020000
+TZOFFSETFROM:-0800
+TZOFFSETTO:-0700
+RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=4;BYDAY=1SU
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTAMP:20050522T020514Z
+DTSTART;TZID="(GMT-08.00) Pacific Time (US & Canada)/Tijuana":20050608T0000
+ 00
+SUMMARY:Calendar milestone
+UID:040000008200E00074C5B7101A82E0080000000040B09404385EC501000000000000000
+ 010000000B69671F90913C748A29C692A87E04E5E
+ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN="Test Use
+ s":MAILTO:user1@example.zimbra.com
+ORGANIZER;CN="User1":MAILTO:user1@example.zimbra.com
+LOCATION:
+DTEND;TZID="(GMT-08.00) Pacific Time (US & Canada)/Tijuana":20050611T000000
+DESCRIPTION:\N
+SEQUENCE:0
+PRIORITY:5
+CLASS:
+CREATED:20050522T020615Z
+LAST-MODIFIED:20050522T020615Z
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+X-MICROSOFT-CDO-BUSYSTATUS:FREE
+X-MICROSOFT-CDO-INSTTYPE:0
+X-MICROSOFT-CDO-INTENDEDSTATUS:FREE
+X-MICROSOFT-CDO-ALLDAYEVENT:TRUE
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-CDO-OWNERAPPTID:-1221240875
+END:VEVENT
+END:VCALENDAR
+
+------_=_NextPart_001_01C55E72.D5309A88--

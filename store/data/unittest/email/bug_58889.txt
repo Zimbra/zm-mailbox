@@ -1,0 +1,162 @@
+Message-Id: <E1R7v42-0001gD-2l@alfa.cardwellit.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: binary
+Content-Type: multipart/related; boundary="_----------=_1316981557257260"
+Date: Sun, 25 Sep 2011 21:12:37 +0100
+From: "Email Privacy Tester" <email-privacy-tester-qojnnwlv2lr2z73m@grepular.com>
+To: jpower2@gmail.com
+Subject: Email Privacy Tester
+X-Mailer: Mike Cardwell's email_privacy_tester Mailer
+
+This is a multi-part message in MIME format.
+
+--_----------=_1316981557257260
+MIME-Version: 1.0
+Content-Transfer-Encoding: binary
+Content-Type: multipart/alternative; boundary="_----------=_1316981557257261"
+X-Mailer: MIME::Lite 3.027 (F2.77; T1.31; A2.06; B3.08; Q3.08)
+Date: Sun, 25 Sep 2011 21:12:37 +0100
+
+This is a multi-part message in MIME format.
+
+--_----------=_1316981557257261
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset=utf-8
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/htm=
+l4/strict.dtd">
+<html lang=3D"en-GB" manifest=3D"https://grepular.com/email_privacy_tester/=
+callback?code=3Dqojnnwlv2lr2z73m&amp;test=3Dmanifest"><head><meta http-equi=
+v=3D"Content-Type" content=3D"text/html; charset=3DUTF-8"><meta name=3D"aut=
+hor" content=3D"Mike Cardwell. &lt;https://grepular.com/&gt;"><meta name=3D=
+"copyright" content=3D"Copyright =C2=A92010 Mike Cardwell. All rights reser=
+ved."><meta name=3D"description" content=3D"Email Privacy Tester"><title>Em=
+ail Privacy Tester</title><link rel=3D"alternate" type=3D"application/rss+x=
+ml" href=3D"https://grepular.com/email_privacy_tester/callback?code=3Dqojnn=
+wlv2lr2z73m&amp;test=3Drss"><link rel=3D"alternate" type=3D"application/ato=
+m+xml" href=3D"https://grepular.com/email_privacy_tester/callback?code=3Dqo=
+jnnwlv2lr2z73m&amp;test=3Datom"><script type=3D"text/javascript" src=3D"htt=
+ps://grepular.com/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp=
+;test=3Djs"></script><link rel=3D"stylesheet" type=3D"text/css" href=3D"htt=
+ps://grepular.com/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp=
+;test=3Dcss"><link rel=3D"stylesheet" type=3D"text/css" href=3D"cid:css@qoj=
+nnwlv2lr2z73m"><link rel=3D"search" type=3D"application/opensearchdescripti=
+on+xml" href=3D"https://grepular.com/email_privacy_tester/callback?code=3Dq=
+ojnnwlv2lr2z73m&amp;test=3Dopensearch"><meta http-equiv=3D"Refresh" content=
+=3D"1; URL=3Dhttps://grepular.com/email_privacy_tester/callback?code=3Dqojn=
+nwlv2lr2z73m&amp;test=3Dmeta_refresh"></head><body background=3D"https://gr=
+epular.com/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;test=
+=3Dbackground"><p>You are receiving this email because somebody at IP addre=
+ss 67.161.30.68 entered the email address <a href=3D"mailto:%6A%70%6F%77%65=
+%72%32%40%67%6D%61%69%6C%2E%63%6F%6D">jpower2@gmail.com</a> into the form a=
+t <a href=3D"https://grepular.com/email_privacy_tester/" title=3D"https://g=
+repular.com/email_privacy_tester/">https://grepular.com/email_privacy_teste=
+r/</a><br><br>If this was not you, and you wish to not receive emails from =
+this system in future, please click <a href=3D"https://grepular.com/email_p=
+rivacy_tester/remove?hash=3D0d7d78e7c2d7387069239c6e24169b56" title=3D"http=
+s://grepular.com/email_privacy_tester/remove?hash=3D0d7d78e7c2d7387069239c6=
+e24169b56">here</a></p><p style=3D"background-image:url('https://grepular.c=
+om/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;test=3Dbackgro=
+und_image');"></p><p style=3D"content:url('https://grepular.com/email_priva=
+cy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;test=3Dcss_content');"></p><=
+p style=3D"behavior:url('https://grepular.com/email_privacy_tester/callback=
+?code=3Dqojnnwlv2lr2z73m&amp;test=3Dcss_behavior') url('https://grepular.co=
+m/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;test=3Dcss_beha=
+vior')"></p><style type=3D"text/css">@font-face {src:url('https://grepular.=
+com/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&test=3Dfont_face'=
+);}</style><style type=3D"text/css">@import 'https://grepular.com/email_pri=
+vacy_tester/callback?code=3Dqojnnwlv2lr2z73m&test=3Dcss_import';</style><ob=
+ject data=3D"cid:svg@qojnnwlv2lr2z73m" type=3D"image/svg+xml"><embed src=3D=
+"cid:svg@qojnnwlv2lr2z73m" type=3D"image/svg+xml" pluginspage=3D"http://www=
+.adobe.com/svg/viewer/install/"></embed></object><iframe src=3D"cid:svg@qoj=
+nnwlv2lr2z73m"></iframe><svg xmlns=3D"http://www.w3.org/2000/svg" xmlns:xli=
+nk=3D"http://www.w3.org/1999/xlink" version=3D"1.1" baseProfile=3D"full"><i=
+mage xlink:href=3D"https://grepular.com/email_privacy_tester/callback?code=
+=3Dqojnnwlv2lr2z73m&amp;test=3Dsvg_inline_image"></image></svg><img width=
+=3D"16" height=3D"16" src=3D"https://grepular.com/email_privacy_tester/call=
+back?code=3Dqojnnwlv2lr2z73m&amp;test=3Dimg"><input type=3D"image" src=3D"h=
+ttps://grepular.com/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&a=
+mp;test=3Dimage_submit"><a href=3D"/bounce?url=3Dhttps%3A%2F%2Fqojnnwlv2lr2=
+z73m.anchor.email-privacy-tester.red.grepular.com%2F&amp;auth=3D64eba5dcea4=
+0b40fc9ff399e8b592018&amp;src=3D%2Femail_privacy_tester%2Femail_template%3F=
+ip%3D67.161.30.68%26code%3Dqojnnwlv2lr2z73m%26email%3Djpower2%40gmail.com" =
+title=3D"https://qojnnwlv2lr2z73m.anchor.email-privacy-tester.red.grepular.=
+com/"></a><link rel=3D"dns-prefetch" href=3D"https://qojnnwlv2lr2z73m.link.=
+email-privacy-tester.red.grepular.com/"><link rel=3D"prefetch" href=3D"http=
+s://grepular.com/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;=
+test=3Dlink_prefetch"><video src=3D"https://grepular.com/email_privacy_test=
+er/callback?code=3Dqojnnwlv2lr2z73m&amp;test=3Dvideo" width=3D"1" height=3D=
+"1"></video><audio src=3D"https://grepular.com/email_privacy_tester/callbac=
+k?code=3Dqojnnwlv2lr2z73m&amp;test=3Daudio" width=3D"1" height=3D"1"></audi=
+o><applet codebase=3D"https://grepular.com/email_privacy_tester/callback?co=
+de=3Dqojnnwlv2lr2z73m&amp;test=3Dapplet" code=3D"applet.class" width=3D"1" =
+height=3D"1"></applet><object width=3D"16" height=3D"16" data=3D"https://gr=
+epular.com/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;test=
+=3Dobject_data" type=3D"image/png"></object><iframe src=3D"https://grepular=
+.com/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;test=3Difram=
+e" width=3D"1" height=3D"1"></iframe><bgsound src=3D"https://grepular.com/e=
+mail_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;test=3Dbgsound" lo=
+op=3D"1" width=3D"1" height=3D"1"></bgsound><p style=3D"background-color:ex=
+pression((document.createElement('img'))['src']=3D'https://grepular.com/ema=
+il_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;test=3Dcss_expressio=
+n')"></p><object width=3D"1" height=3D"1"><param name=3D"movie" value=3D"fl=
+ash.swf"><embed src=3D"https://grepular.com/email_privacy_tester/callback?c=
+ode=3Dqojnnwlv2lr2z73m&amp;test=3Dflash" width=3D"1" height=3D"1"></embed><=
+/object><iframe width=3D"1" height=3D"1" src=3D"view-source:https://grepula=
+r.com/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;test=3Dview=
+_source"></iframe><iframe width=3D"1" height=3D"1" src=3D"data:text/html;ch=
+arset=3Dutf-8,&lt;html&gt;&lt;head&gt;&lt;meta%20http-equiv=3D%22Refresh%22=
+%20content=3D%221;%20URL=3Dhttps://grepular.com/email_privacy_tester/callba=
+ck?code=3Dqojnnwlv2lr2z73m&amp;amp;test=3Diframe_refresh%22&gt;&lt;/head&gt=
+;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;"></iframe><iframe width=3D"16" heig=
+ht=3D"16" border=3D"none" src=3D"data:text/html;charset=3Dutf-8,&lt;html&gt=
+;&lt;head&gt;&lt;/head&gt;&lt;body&gt;&lt;img%20src=3D%22https://grepular.c=
+om/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;test=3Diframe_=
+img%22&gt;&lt;/body&gt;&lt;/html&gt;"></iframe><sc<script></script>ript typ=
+e=3D"text/javascript" src=3D"https://grepular.com/email_privacy_tester/call=
+back?code=3Dqojnnwlv2lr2z73m&test=3Dscript_in_script"></sc<script></script>=
+ript></body></html>
+
+--_----------=_1316981557257261--
+
+
+--_----------=_1316981557257260
+Content-Transfer-Encoding: quoted-printable
+Content-Type: image/svg+xml
+Content-Id: <svg@qojnnwlv2lr2z73m>
+Content-Disposition: INLINE
+
+<?xml version=3D"1.0"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/=
+SVG/1.1/DTD/svg11.dtd">
+<svg xmlns=3D"http://www.w3.org/2000/svg" xmlns:xlink=3D"http://www.w3.org/=
+1999/xlink" xmlns:ev=3D"http://www.w3.org/2001/xml-events" width=3D"60" hei=
+ght=3D"60" version=3D"1.1" baseProfile=3D"full" onload=3D"init(evt)"><scrip=
+t type=3D"text/javascript">
+				function init( evt ){
+					try {
+						alert('Wow. JavaScript hidden inside SVG\'s executes in your email cl=
+ient. That\'s a potentially serious security problem. Please contact me usi=
+ng the form at https://grepular.com/contact about this.');
+					} catch(e){}
+				}
+			</script><text x=3D"0" y=3D"0" style=3D"background-image:url('https://gr=
+epular.com/email_privacy_tester/callback?code=3Dqojnnwlv2lr2z73m&amp;test=
+=3Dsvg_background_img')"/></svg>
+
+--_----------=_1316981557257260
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/css
+Content-Id: <css@qojnnwlv2lr2z73m>
+Content-Disposition: INLINE
+
+
+
+		* { background-image: url('http://grepular.com/email_privacy_tester/callb=
+ack?code=3Dqojnnwlv2lr2z73m&amp;test=3Dcss_attachment'); }
+
+=09
+
+--_----------=_1316981557257260--
+

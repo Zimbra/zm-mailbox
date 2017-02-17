@@ -1,0 +1,112 @@
+Return-Path: <xmlbeans-user-return-41-smith=stanford.edu@xml.apache.org>
+Received: from leland4.Stanford.EDU (leland4.Stanford.EDU [171.64.14.29])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9AD6XLB021718
+	for <smith@popserver1.stanford.edu>; Fri, 10 Oct 2003 06:06:33 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland4.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9AD6QgO023608 for
+	<smith@stanford.edu>; Fri, 10 Oct 2003 06:06:27 -0700 (PDT)
+Received: (qmail 10368 invoked by uid 500); 10 Oct 2003 13:06:22 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 10307 invoked from network); 10 Oct 2003 13:06:22 -0000
+Message-Id: <sf86768f.045@corp-gw.mantech.com>
+X-Mailer: Novell GroupWise Internet Agent 5.5.6.1
+Date: Fri, 10 Oct 2003 09:06:10 -0400
+X-Zimbra-Received: Fri, 10 Oct 2003 09:06:10 -0400
+From: "Darrell Teague" <darrell.teague@mantech.com>
+To: <xmlbeans-user@xml.apache.org>
+Subject: Re: Parallel Extension Question
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000003e-0010
+
+Unfortunately, W3C XML Schema doesn't quite treat "extensions" and "restric=
+tions" like you would think in a programming language.  When extending a sc=
+hema from another, you actually have to redefine all of the elements (this =
+part stinks).  I believe that the problem you may be having (would need to =
+see your XSD files) is that you have defined an element as mandatory in the=
+ base schema and in the extended schema you therefore must include it (even=
+ though you meant to override it).
+
+I don't think this is so much of an XMLBeans issue as a general schema issu=
+e.  I recommend resolution of the schema-compliance issue before trying to =
+work with XMLBeans (which needs a valid schema before it can do its work in=
+ this context).  Roger Costello does an excellent treatment of W3C XML Sche=
+ma and has examples in his tutorials on extending and restricting schema el=
+ements at http://www.xfront.com.  Hope this helps.
+
+
+>>> ammulder@alumni.princeton.edu 10/09/03 22:51 PM >>>
+	I wonder if I can construct something like this in a schema and
+get XMLBeans to generate corresponding Java classes:
+
+element "engine"
+element "car" contains an "engine"
+element "ford-engine" is an extension of "engine"
+element "ford" is an restriction of "car" where the "engine" child element=20
+  must be an instance of "ford-engine"
+the "ford*" elements are in a different namespace than the others
+
+so this would be legitimate:
+
+<a:car>
+  <a:engine>
+</a:car>
+
+and this would be legitimate:
+
+<b:ford>
+  <b:ford-engine>
+</b:ford>
+
+but this would not:
+
+<b:ford>
+  <a:engine>
+</b:ford>
+
+	I'm not sure exactly how the "Ford" would be generated into a
+JavaBean.  It would extend the "Car" bean.  Perhaps it would override the
+"setEngine" method from "Car", but then have an assertion inside that that
+"Engine" you passed in was really an "instanceof FordEngine".
+
+	I've tried to construct this in XSD, but I'm stymied by the part
+where "ford" restricts "car" to limit the type of engine passed in -- I
+keep getting the following message, and it doesn't really give me enough
+information to determine whether my syntax is wrong or the whole idea is
+wrong or what.  Is this really supposed to be possible?
+
+Thanks,
+	Aaron
+
+error: Invalid Restriction.  The derived (restricted) content model must=20
+match the base content model unless the part of the base content model=20
+that does not match is optional.  A mismatch found between a base=20
+<sequence> and a derived <sequence>.  Found derived particles that are not=20
+matched in the base content model.
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

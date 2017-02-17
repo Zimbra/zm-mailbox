@@ -1,0 +1,91 @@
+Return-Path: <xmlbeans-dev-return-335-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h93KrMLB018314 for
+	<smith@popserver1.stanford.edu>; Fri, 3 Oct 2003 13:53:22 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id h93KrCKJ010845 for
+	<smith@stanford.edu>; Fri, 3 Oct 2003 13:53:13 -0700 (PDT)
+Received: (qmail 11182 invoked by uid 500); 3 Oct 2003 20:53:05 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 11168 invoked from network); 3 Oct 2003 20:53:05 -0000
+Message-ID: <019401c389f0$58380ad0$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: "Lawrence Jones" <ljones@bea.com>, "David Bau" <davidbau@bea.com>
+Cc: <xmlbeans-dev@xml.apache.org>
+References: <4B2B4C417991364996F035E1EE39E2E11DF1EF@uskiex01.amer.bea.com>
+Subject: Re: Replacement for SniffedXmlInputStream.java
+Date: Fri, 3 Oct 2003 16:53:03 -0400
+X-Zimbra-Received: Fri, 3 Oct 2003 16:53:03 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000027-0010
+
+Lawrence,
+
+Ccing xmlbeans-dev.  The code there has been rewritten a couple times - it
+used to operate on byte[] rather than char[]s, but then was changed when
+EBCDIC support was added.
+
+The firstIndexOfAscii function can simply be renamed firstIndexOf, and it
+can do a straightforward character-comparison.  The whole try/catch/if
+thing, with lookForBytes, etc can be entirely deleted.
+
+I appreciate you looking at this stuff Lawrence; string.getBytes() is evil
+for I18N - thanks for expunging it.
+
+David
+
+
+----- Original Message ----- 
+From: Lawrence Jones
+To: David Bau
+Sent: Friday, October 03, 2003 3:21 PM
+Subject: [xmlbeans-cvs] Replacement for SniffedXmlInputStream.java
+
+
+Hi Dave
+
+I'm trying to replace all of the calls to getBytes() - so we can get this
+over with. The one I'm not quite sure about is SniffedXmlInputStream in the
+firstIndexOfAscii() method. I'm attaching a copy of an updated method below.
+
+If the purpose were just to search part of the buf[] char array for the
+String s then it seems like there would be much easier ways of doing it - so
+I think the author must have deliberately meant the comparison of char to
+byte that was previously in there.
+
+Also the getBytes() that was originally there will get the bytes according
+to the default char encoding - not always ASCII as I think was intended.
+
+So anyway I've re-written it to do what I think the user intended - I've
+used the fact that the UTF-8 encoding of any ASCII char is 1 byte. (If you
+just say getBytes("ASCII") then you may well end up with a number of '?'s in
+the bytes for chars it can't understand - so that doesn't work).
+
+Could you just quickly check it over to make sure I'm doing what was wanted?
+
+Cheers,
+
+Lawrence
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

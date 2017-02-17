@@ -1,0 +1,175 @@
+Return-Path: <xmlbeans-dev-return-110-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8G5MjYv002117 for
+	<smith@popserver1.stanford.edu>; Mon, 15 Sep 2003 22:22:45 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8G5MbgE000312 for
+	<smith@stanford.edu>; Mon, 15 Sep 2003 22:22:38 -0700 (PDT)
+Received: (qmail 10734 invoked by uid 500); 16 Sep 2003 05:22:25 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Delivered-To: moderator for xmlbeans-dev@xml.apache.org
+Received: (qmail 97557 invoked from network); 16 Sep 2003 05:05:57 -0000
+From: "Sascha Kulawik" <sascha@kulawik.de>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: Patch for Unicode-Build-Bug
+Date: Tue, 16 Sep 2003 07:07:06 +0200
+X-Zimbra-Received: Tue, 16 Sep 2003 07:07:06 +0200
+Message-ID: <000c01c37c10$5ff57a70$2302a8c0@cronus>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="----=_NextPart_000_000D_01C37C21.237E4A70"
+X-Priority: 3 (Normal)
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook, Build 10.0.4024
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+Importance: Normal
+X-Virus-Scanned: by AMaViS 0.3.12pre8
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000076-0030
+
+
+------=_NextPart_000_000D_01C37C21.237E4A70
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+here is a small fix regarding the unicode build bug as mentioned
+previously by  
+Roland Smith.
+
+Regards,
+
+Sascha
+
+--
+Sascha Kulawik
+
+Please avoid sending me Word or PowerPoint attachments.
+See http://www.fsf.org/philosophy/no-word-attachments.html
+
+------=_NextPart_000_000D_01C37C21.237E4A70
+Content-Type: application/octet-stream; name="dfgf.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment; filename="dfgf.patch"
+
+Index: v1/src/typeimpl/org/apache/xmlbeans/impl/regex/RegularExpression.jav=
+a
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+RCS file: /home/cvspublic/xml-xmlbeans/v1/src/typeimpl/org/apache/xmlbeans/=
+impl/regex/RegularExpression.java,v
+retrieving revision 1.1
+diff -u -r1.1 RegularExpression.java
+--- v1/src/typeimpl/org/apache/xmlbeans/impl/regex/RegularExpression.java	1=
+5 Sep 2003 18:20:28 -0000	1.1
++++ v1/src/typeimpl/org/apache/xmlbeans/impl/regex/RegularExpression.java	1=
+6 Sep 2003 05:03:41 -0000
+@@ -134,7 +134,7 @@
+  *      <li>Supports subtraction, union, and intersection operations for c=
+haracter classes.
+  *      <li>Not supported: <kbd>\</kbd><var>ooo</var> (Octal character rep=
+resentations),
+  *          <Kbd>\G</kbd>, <kbd>\C</kbd>, <kbd>\l</kbd><var>c</var>,
+- *          <kbd>\u005cu</kbd><var>c</var>, <kbd>\L</kbd>, <kbd>\U</kbd>,
++ *          <kbd>\\u005cu</kbd><var>c</var>, <kbd>\L</kbd>, <kbd>\U</kbd>,
+  *          <kbd>\E</kbd>, <kbd>\Q</kbd>, <kbd>\N{</kbd><var>name</var><kb=
+d>}</kbd>,
+  *          <Kbd>(?{<kbd><var>code</var><kbd>})</kbd>, <Kbd>(??{<kbd><var>=
+code</var><kbd>})</kbd>
+  *     </ul>
+@@ -161,7 +161,7 @@
+  *       <dt class=3D"REGEX"><kbd>\c</kbd><var>C</var>
+  *       <dd>Matches a control character.
+  *           The <var>C</var> must be one of '<kbd>@</kbd>', '<kbd>A</kbd>=
+'-'<kbd>Z</kbd>',
+- *           '<kbd>[</kbd>', '<kbd>\u005c</kbd>', '<kbd>]</kbd>', '<kbd>^<=
+/kbd>', '<kbd>_</kbd>'.
++ *           '<kbd>[</kbd>', '<kbd>\\u005c</kbd>', '<kbd>]</kbd>', '<kbd>^=
+</kbd>', '<kbd>_</kbd>'.
+  *           It matches a control character of which the character code is=
+ less than
+  *           the character code of the <var>C</var> by 0x0040.
+  *       <dd class=3D"REGEX">For example, a <kbd>\cJ</kbd> matches a LINE =
+FEED (U+000A),
+@@ -173,17 +173,17 @@
+  *       <dt class=3D"REGEX"><KBD>\</KBD> + a meta character
+  *       <dd>Matches the meta character.
+  *
+- *       <dt class=3D"REGEX"><kbd>\u005cx</kbd><var>HH</var> <kbd>\u005cx{=
+</kbd><var>HHHH</var><kbd>}</kbd>
++ *       <dt class=3D"REGEX"><kbd>\u005cx</kbd><var>HH</var> <kbd>\\u005cx=
+{</kbd><var>HHHH</var><kbd>}</kbd>
+  *       <dd>Matches a character of which code point is <var>HH</var> (Hex=
+adecimal) in Unicode.
+- *           You can write just 2 digits for <kbd>\u005cx</kbd><var>HH</va=
+r>, and
+- *           variable length digits for <kbd>\u005cx{</kbd><var>HHHH</var>=
+<kbd>}</kbd>.
++ *           You can write just 2 digits for <kbd>\\u005cx</kbd><var>HH</v=
+ar>, and
++ *           variable length digits for <kbd>\\u005cx{</kbd><var>HHHH</var=
+><kbd>}</kbd>.
+  *
+  *       <!--
+- *       <dt class=3D"REGEX"><kbd>\u005cu</kbd><var>HHHH</var>
++ *       <dt class=3D"REGEX"><kbd>\\u005cu</kbd><var>HHHH</var>
+  *       <dd>Matches a character of which code point is <var>HHHH</var> (H=
+exadecimal) in Unicode.
+  *       -->
+  *
+- *       <dt class=3D"REGEX"><kbd>\u005cv</kbd><var>HHHHHH</var>
++ *       <dt class=3D"REGEX"><kbd>\\u005cv</kbd><var>HHHHHH</var>
+  *       <dd>Matches a character of which code point is <var>HHHHHH</var> =
+(Hexadecimal) in Unicode.
+  *
+  *       <dt class=3D"REGEX"><kbd>\g</kbd>
+@@ -203,7 +203,7 @@
+  *       <dd>Positive character class.  It matches a character in ranges.
+  *       <dd><var>R<sub>n</sub></var>:
+  *       <ul>
+- *         <li class=3D"REGEX">A character (including <Kbd>\e \f \n \r \t<=
+/kbd> <kbd>\u005cx</kbd><var>HH</var> <kbd>\u005cx{</kbd><var>HHHH</var><kb=
+d>}</kbd> <!--kbd>\u005cu</kbd><var>HHHH</var--> <kbd>\u005cv</kbd><var>HHH=
+HHH</var>)
++ *         <li class=3D"REGEX">A character (including <Kbd>\e \f \n \r \t<=
+/kbd> <kbd>\\u005cx</kbd><var>HH</var> <kbd>\\u005cx{</kbd><var>HHHH</var><=
+kbd>}</kbd> <!--kbd>\\u005cu</kbd><var>HHHH</var--> <kbd>\\u005cv</kbd><var=
+>HHHHHH</var>)
+  *             <p>This range matches the character.
+  *         <li class=3D"REGEX"><var>C<sub>1</sub></var><kbd>-</kbd><var>C<=
+sub>2</sub></var>
+  *             <p>This range matches a character which has a code point th=
+at is >=3D <var>C<sub>1</sub></var>'s code point and &lt;=3D <var>C<sub>2</=
+sub></var>'s code point.
+@@ -496,7 +496,7 @@
+  * range-char ::=3D '\[' | '\]' | '\\' | '\' [,-efnrtv] | code-point | cha=
+racter-2
+  * code-point ::=3D '\x' hex-char hex-char
+  *                | '\x{' hex-char+ '}'
+- * <!--               | '\u005cu' hex-char hex-char hex-char hex-char
++ * <!--               | '\\u005cu' hex-char hex-char hex-char hex-char
+  * -->               | '\v' hex-char hex-char hex-char hex-char hex-char h=
+ex-char
+  * hex-char ::=3D [0-9a-fA-F]
+  * character-2 ::=3D (any character except \[]-,)
+
+
+------=_NextPart_000_000D_01C37C21.237E4A70
+Content-Type: text/plain; charset=us-ascii
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+------=_NextPart_000_000D_01C37C21.237E4A70--
+

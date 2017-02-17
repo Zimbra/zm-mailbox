@@ -1,0 +1,54 @@
+Return-Path: <xmlbeans-dev-return-209-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.64.14.58])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8OHgO27020839
+	for <smith@popserver1.stanford.edu>; Wed, 24 Sep 2003 10:42:24 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8OHgHlh015661 for
+	<smith@stanford.edu>; Wed, 24 Sep 2003 10:42:18 -0700 (PDT)
+Received: (qmail 30768 invoked by uid 500); 24 Sep 2003 17:42:12 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Delivered-To: moderator for xmlbeans-dev@xml.apache.org
+Received: (qmail 78974 invoked from network); 24 Sep 2003 12:31:31 -0000
+Message-ID: <D1D50F9C5151D2119FF000104BB3F9B7054DBC9E@NL-ROT-MAIL02>
+From: Michiel Verhoef <michiel.verhoef@logicacmg.com>
+To: "'xmlbeans-dev@xml.apache.org'" <xmlbeans-dev@xml.apache.org>
+Subject: download XMLBeans?
+Date: Wed, 24 Sep 2003 14:30:09 +0200
+X-Zimbra-Received: Wed, 24 Sep 2003 14:30:09 +0200
+MIME-Version: 1.0
+X-Mailer: Internet Mail Service (5.5.2653.19)
+Content-Type: text/plain
+X-OriginalArrivalTime: 24 Sep 2003 12:30:10.0781 (UTC)
+	FILETIME=[9890E0D0:01C38297]
+X-Virus-Scanned: CMG - by AMaViS / NAI Virus Scan
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000061-0010
+
+Hi all,
+
+After running into troubles using Castor XML and discovering XMLBeans via
+this website (http://cmaeda.com/index.php?category=java) I found out that
+binaries (or sources) are not available for download yet. 
+
+Does anybody know how I can get a version of XMLBeans to see if this really
+solves my problem?
+
+Thanks in advance,
+
+Michiel
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

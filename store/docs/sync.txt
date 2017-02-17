@@ -1,0 +1,144 @@
+<-- initial sync request -->
+
+<SyncRequest [l="{root-folder-id}"] [msgCutoff="{earliest-message-date}"] [calCutoff="{earliest-calendar-date}"] [deleteLimit="max-number-of-deleted-items"] [changeLimit="max-number-of-modified-items"]/>
+
+   <-- no token = initial sync -->
+   <--  if {root-folder-id} present, we start sync there rather than at folder 11 -->
+   <--  if {earliest-message-date} present, omit all messages and respective conversation before the specified date in second(specified in s)
+        This parameter honored in initial and delta sync as well-->
+   <--  if {earliest-calendar-date} present, omit all appointments and tasks that don't have a recurrence ending after that time (specified in ms)
+        This parameter honored in initial sync only -->
+   <--  if {max-number-of-deleted-items} present and it is greater than 0, then response will limit to the number of deleted items to the value and
+        if there are more delete queued, and another SyncRequest (using the returned token) is necessary.
+        This attribute honored in delta sync only  -->
+   <--  if {max-number-of-modified-items} present and it is greater than 0, then response will limit to the number of modified items to the value and
+        if there are more modified items queued, and another SyncRequest (using the  returned token) is necessary.
+        maximum value for changeLimit = 3990 if client send greater value in soap call, It will restricted to 3990 by server.
+        This attribute honored in delta sync only  -->
+
+
+<SyncResponse token="403" md="1077924283" s="78624627">
+  <folder id="11">
+    <folder id="9" name="Conversations" l="11">
+      <c ids="912,914,990,1920"/>
+    </folder>
+    <folder id="8" name="Tags" l="11">
+      <tag id="64" name="zimbra" color="7"/>
+    </folder>
+    <folder id="1" name="USER_ROOT" l="11">
+      <folder id="2" name="INBOX" l="1" u="199">
+        <m ids="399,461,420,386,289,592,474,582,410,571,584,454,576,342,360,369,534,574,320,488,507,338,531,487,498,398,287,537,580,606,604,578,586,428,424,599,598,596,408,412,422,414,418"/>
+      </folder>
+      <folder id="4" name="Junk" l="1"/>
+      <folder id="6" name="Drafts" l="1"/>
+      <folder id="3" name="Trash" l="1"/>
+      <folder id="10" name="Calendar" l="1"/>
+      <folder id="7" name="Contacts" l="1">
+        <cn ids="274,273,272,271,270,269,268,267,266,265,264,263,262,261,260,259,258,257,256"/>
+      </folder>
+      <folder id="5" name="Sent" l="1"/>
+      <search id="636" name="Samuel" query="from:samuel" sortBy="" types="" l="1"/>
+      <folder id="663" name="old name" l="1"/>
+      <folder id="903" name="empty folder" l="1"/>
+    </folder>
+  </folder>
+</SyncResponse>
+
+
+<-- subsequent delta sync request -->
+
+<SyncRequest token="403" [l="{root-folder-id}"]/>
+
+<SyncResponse token="500" md="1078054283">
+  <-- handle deletes first -->
+  <deleted ids="..."/>
+  <-- modified/created folders (none here) -->
+  <-- modified/created tags (none here) -->
+  <-- other modified/created things (only id/folder/date means new or content changed) */
+  <m id="275" l="2" cid="276" f="" t="" d="10780241830000" md="1078024283" ms="409"/>
+  <m id="321" l="3" cid="312" f="u" t="" d="10780241820000" md="1078025663" ms="441"/>
+  <tag id="68" name="bob" color="6" md="1078025983" ms="442"/>
+  <cn id="664" l="7" f="" t="" md="1078026283" ms="496"/>
+  <cn id="662" l="7" md="1078026270" ms="499"/>
+  <c id="1457" md="1384204523" ms="1231"/>
+</SyncResponse>
+
+<-- sync on other mailbox is done via specifying target account in SOAP header -->
+<-- if we're delta syncing on another user's mailbox and any folders have changed: -->
+<--  if there are now no visible folders, you'll get an empty <folder/> element -->
+<--  if there are any visible folders, you'll get the full visible folder hierarchy -->
+
+<-- if a {root-folder-id} other than the mailbox root (folder 1) is requested -->
+<-- or if not all folders are visible when syncing to another user's mailbox, -->
+<-- all changed items in other folders are presented as deletes -->
+
+
+<-- client resolves conflicts and passes back its changes -->
+<--   client goes through the front door (e.g. ConvAction, etc.) -->
+
+<FolderActionRequest>
+  <folder id="903" op="delete"/>
+</FolderActionRequest>
+
+<MsgActionRequest>
+  <m id="5522" op="read/>
+</MsgActionRequest>
+
+<CreateContactRequest>
+  <cn l="7" t="65">
+    <a n="lastName">Khavari</a>
+    <a n="firstName">Brunhilde</a>
+    <a n="email1">bk@hotmail.com</a>
+  </cn>
+</CreateContactRequest>
+
+
+<-- client does another sync and gets back: -->
+<--   * any changes they just made -->
+<--   * any externally-caused changes since the last sync -->
+
+<-- if typed="1" is specified on the SyncRequest, deletes are also broken down by item type -->
+
+<-- if the response is a mail.MUST_RESYNC fault, client has fallen too far out of date and must re-initial sync -->
+
+<SyncRequest token="500" typed="1"/>
+
+<SyncResponse token="521" md="1078054298" more="1">
+  <-- handle deletes first -->
+  <deleted ids="903,904,905">
+    <folder ids="903"/>
+    <m ids="904"/>
+    <c ids="905"/>
+  </deleted>
+  <-- modified/created folders -->
+  <folder id="663" name="new name" l="1" md="1078054291" ms="520"/>
+  <-- modified/created tags (none here) -->
+  <-- other modified/created things (only id/folder/date means new or content changed) */
+  <m id="5526" l="2" d="10780241820000" md="1078054265" ms="503"/>
+  <m id="5522" l="2" d="10780241820000" cid="5521" f="" t="" md="1078054297" ms="519"/>
+  <cn id="5531" l="7" md="1078054296" ms="520"/>
+</SyncResponse>
+
+<-- if more="1" is specified on the sync response, the response does *not* bring the client completely up to date.
+    more changes are still queued, and another SyncRequest (using the new returned token) is necessary. -->
+
+<SyncRequest token="500" typed="1" deleteLimit="5"/>
+
+<SyncResponse token="540:d524-900" md="1078054298" more="1">
+  <-- handle deletes first -->
+  <deleted ids="903,904,905,902,899">
+    <folder ids="903,902,899"/>
+    <m ids="904"/>
+    <c ids="905"/>
+  </deleted>
+</SyncResponse>
+
+<SyncRequest token="500" typed="1" deleteLimit="5"/>
+
+<SyncResponse token="540" md="1078054298">
+  <-- handle deletes first -->
+  <deleted ids="900,1000>
+    <m ids="900"/>
+    <c ids="1000"/>
+  </deleted>
+</SyncResponse>

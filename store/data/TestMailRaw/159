@@ -1,0 +1,170 @@
+Return-Path: <xmlbeans-user-return-89-smith=stanford.edu@xml.apache.org>
+Received: from leland9.Stanford.EDU (leland9.Stanford.EDU [171.67.16.83])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hABKEpoB006739
+	for <smith@popserver1.stanford.edu>; Tue, 11 Nov 2003 12:14:51 -0800
+	(PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland9.Stanford.EDU (8.12.10/8.12.10) with SMTP id hABKEMDL001198 for
+	<smith@stanford.edu>; Tue, 11 Nov 2003 12:14:42 -0800 (PST)
+Received: (qmail 5774 invoked by uid 500); 11 Nov 2003 20:14:14 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 5720 invoked from network); 11 Nov 2003 20:14:14 -0000
+Mime-Version: 1.0 (Apple Message framework v606)
+To: xmlbeans-user@xml.apache.org
+Message-Id: <9A06B7E0-1483-11D8-B5EC-000393D5A006@vrtx.com>
+Content-Type: multipart/alternative; boundary=Apple-Mail-1-80133309
+From: Tom Condon <tom_condon@vrtx.com>
+Subject: Need some help with validation error...
+Date: Tue, 11 Nov 2003 15:14:06 -0500
+X-Zimbra-Received: Tue, 11 Nov 2003 15:14:06 -0500
+X-Mailer: Apple Mail (2.606)
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000009f-0010
+
+
+--Apple-Mail-1-80133309
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+
+I am trying to get some xml to validate.  I have a schema that includes 
+a schema and uses my own namespace  I am getting the following error:
+
+error: Element not allowed: 
+clusteredPharmacophoreDescriptions@http://www.vpharm.com/hypervis/xml
+error: Expected element(s)
+
+
+The schema I use to define this document is:
+
+<?xml version="1.0" encoding="UTF-8"?>
+	<xs:schema targetNamespace="http://www.vpharm.com/hypervis/xml"
+		xmlns:hv="http://www.vpharm.com/hypervis/xml"
+		xmlns:xs="http://www.w3.org/2001/XMLSchema"
+		elementFormDefault="qualified">
+	<xs:include schemaLocation="HyperVisTypes.xsd"/>
+	<xs:element name="clusteredPharmacophoreDescriptions" 
+type="hv:ClusteredPharmacophoreDescriptionList"/>
+</xs:schema>
+
+The complex type I am using is defined in HyperVisTypes.xsd, the 
+beginning of looks like this:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://www.vpharm.com/hypervis/xml"
+	xmlns:hv="http://www.vpharm.com/hypervis/xml"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="qualified">
+
+
+The beginning of the xml document looks like this:
+
+<hv:clusteredPharmacophoreDescriptions  
+xmlns:xs="http://www.w3.org/2001/XMLSchema"       
+xmlns:hv="http://www.vpharm.com/hypervis/xml">
+	<hv:clusteredPharmacophoreDescription>
+		<hv:clusteredBits>
+			<hv:clusteredBit>7317823</hv:clusteredBit>
+			<hv:clusteredBit>7317371</hv:clusteredBit>
+			<hv:clusteredBit>7317303</hv:clusteredBit>
+
+Any ideas of what I am doing wrong?
+
+Thanks,
+
+Tom Condon
+--Apple-Mail-1-80133309
+Content-Transfer-Encoding: 7bit
+Content-Type: text/enriched; charset=US-ASCII
+
+I am trying to get some xml to validate.  I have a schema that
+includes a schema and uses my own namespace  I am getting the
+following error:
+
+
+<fixed><bigger>error: Element not allowed:
+clusteredPharmacophoreDescriptions@http:<color><param>2323,6E6E,2525</param>//www.vpharm.com/hypervis/xml</color>
+
+error: Expected element(s)
+
+
+
+The schema I use to define this document is:
+
+
+<<?xml version=<color><param>8989,1313,1515</param>"1.0"</color>
+encoding=<color><param>8989,1313,1515</param>"UTF-8"</color>?>
+
+	<<xs:schema
+targetNamespace=<color><param>8989,1313,1515</param>"http://www.vpharm.com/hypervis/xml"</color> 
+
+		xmlns:hv=<color><param>8989,1313,1515</param>"http://www.vpharm.com/hypervis/xml"</color> 
+
+		xmlns:xs=<color><param>8989,1313,1515</param>"http://www.w3.org/2001/XMLSchema"</color> 
+
+		elementFormDefault=<color><param>8989,1313,1515</param>"qualified"</color>>
+
+	<<xs:include
+schemaLocation=<color><param>8989,1313,1515</param>"HyperVisTypes.xsd"</color>/>
+
+	<<xs:element
+name=<color><param>8989,1313,1515</param>"clusteredPharmacophoreDescriptions"</color>
+type=<color><param>8989,1313,1515</param>"hv:ClusteredPharmacophoreDescriptionList"</color>/>
+
+<</xs:schema>
+
+
+The complex type I am using is defined in
+<color><param>8988,1312,1514</param>HyperVisTypes.xsd, the beginning
+of looks like this:
+
+
+</color><<?xml
+version=<color><param>8989,1313,1515</param>"1.0"</color> encoding=<color><param>8989,1313,1515</param>"UTF-8"</color>?>
+
+<<xs:schema
+targetNamespace=<color><param>8989,1313,1515</param>"http://www.vpharm.com/hypervis/xml"</color> 
+
+	xmlns:hv=<color><param>8989,1313,1515</param>"http://www.vpharm.com/hypervis/xml"</color> 
+
+	xmlns:xs=<color><param>8989,1313,1515</param>"http://www.w3.org/2001/XMLSchema"</color> 
+
+	elementFormDefault=<color><param>8989,1313,1515</param>"qualified"</color>>
+
+
+
+The beginning of the xml document looks like this:
+
+
+<<hv:clusteredPharmacophoreDescriptions 
+xmlns:xs=<color><param>8989,1313,1515</param>"http://www.w3.org/2001/XMLSchema"</color>      
+xmlns:hv=<color><param>8989,1313,1515</param>"http://www.vpharm.com/hypervis/xml"</color>>
+
+	<<hv:clusteredPharmacophoreDescription>
+
+		<<hv:clusteredBits>
+
+			<<hv:clusteredBit><color><param>0000,0000,FFFF</param>7317823</color><</hv:clusteredBit>
+
+			<<hv:clusteredBit><color><param>0000,0000,FFFF</param>7317371</color><</hv:clusteredBit>
+
+			<<hv:clusteredBit><color><param>0000,0000,FFFF</param>7317303</color><</hv:clusteredBit> 
+
+
+Any ideas of what I am doing wrong?
+
+
+Thanks,
+
+
+Tom Condon</bigger></fixed>
+--Apple-Mail-1-80133309--
+

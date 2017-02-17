@@ -1,0 +1,85 @@
+Return-Path: <xmlbeans-user-return-22-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h97LcCLB001476
+	for <smith@popserver1.stanford.edu>; Tue, 7 Oct 2003 14:38:13 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h97Lc5uv002027 for
+	<smith@stanford.edu>; Tue, 7 Oct 2003 14:38:06 -0700 (PDT)
+Received: (qmail 32804 invoked by uid 500); 7 Oct 2003 21:37:57 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 32791 invoked from network); 7 Oct 2003 21:37:57 -0000
+X-Authentication-Warning: slapshot.stanford.edu: smith set sender to
+	smith@stanford.edu using -f
+Subject: cursor question...
+From: Roland Smith <smith@stanford.edu>
+To: xmlbeans-user@xml.apache.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Message-Id: <1065562680.23507.50.camel@slapshot.stanford.edu>
+Mime-Version: 1.0
+X-Mailer: Ximian Evolution 1.4.4 
+Date: Tue, 07 Oct 2003 14:38:00 -0700
+X-Zimbra-Received: Tue, 07 Oct 2003 14:38:00 -0700
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000069-0010
+
+Hi. I've got a quick question object whether or not using cursors is the
+right (and/or only) approach to what I'm trying to do.
+
+I've got an XmlObject which represents the body of a SOAP message
+to construct, and I want to wrap an envelope around it. 
+
+Compiling the SOAP 1.2 xsd (with a prefix of Soap12), gives me an
+xmlbean class called:
+
+Soap12Body
+
+That declares no methods of its own, just inherits from XmlObject and
+XmlTokenSource. I'm guessing in order to add the XmlObject to
+that Body, I have to use a cursor. 
+
+I ended up writing this:
+
+    /** Given an XmlObject, wrap it in an envelope and return it */
+    public XmlObject soapEnvelope(XmlObject document)
+    {
+        Soap12EnvelopeDocument soapEnv = 
+            Soap12EnvelopeDocument.Factory.newInstance();
+        Soap12Body soapBody = soapEnv.addNewEnvelope().addNewBody();
+
+        XmlCursor sc = null, dc = null;
+        try {
+            sc = soapBody.newCursor();
+            sc.toNextToken();
+            dc = document.newCursor();
+            dc.toNextToken();
+            dc.copyXml(sc);
+        } finally {
+            if (sc != null)
+                sc.dispose();
+            if (dc != null)
+                dc.dispose();
+        }
+        return soapEnv;
+    }
+
+Is there a better approach to doing this, or is this indeed the
+correct use of cursors? It seems to work fine, just wasn't sure if it
+was the most efficient way.
+
+thanks, roland
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

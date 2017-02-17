@@ -1,0 +1,127 @@
+Return-Path: <xmlbeans-user-return-72-smith=stanford.edu@xml.apache.org>
+Received: from leland7.Stanford.EDU (leland7.Stanford.EDU [171.67.16.66])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9RN0VoB007395
+	for <smith@popserver1.stanford.edu>; Mon, 27 Oct 2003 15:00:31 -0800
+	(PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland7.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9RN0OMX003368 for
+	<smith@stanford.edu>; Mon, 27 Oct 2003 15:00:24 -0800 (PST)
+Received: (qmail 16465 invoked by uid 500); 27 Oct 2003 23:00:16 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 16451 invoked from network); 27 Oct 2003 23:00:15 -0000
+Sensitivity: 
+Subject: Re: XML to Java at run-time
+To: xmlbeans-user@xml.apache.org
+X-Mailer: Lotus Notes Release 5.0.8  June 18, 2001
+Message-ID: <OF4F0C2BB6.046A6524-ONCA256DCC.007DC715@tmca.com.au>
+From: Dmitri.Colebatch@toyota.com.au
+Date: Tue, 28 Oct 2003 10:00:09 +1100
+X-Zimbra-Received: Tue, 28 Oct 2003 10:00:09 +1100
+X-MIMETrack: Serialize by Router on SHM_ISD_A2_80/TMCA(Release 5.0.12 
+	|February 13, 2003) at 28/10/2003 10:01:20
+MIME-Version: 1.0
+Content-type: text/plain; charset=us-ascii
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000092-0010
+
+
+Are you doing document style or RPC style?
+
+We're using XMLBeans for document style web services, which then simply
+becomes a case of writing a servlet with the opening lines of the doPost
+method looking something like:
+
+public void doPost(HttpServletRequest request, HttpServletResponse
+response)
+  throws IOException, ServletException
+{
+  OurSchemaTypeDocument doc =
+OurSchemaTypeDocument.Factory.parse(request.getInputStream());
+  // process the document
+
+so from that point of view, it is _very_ easy to use.
+
+I imagine that if you're talking rpc, then it would be significantly
+harder, and you may be better off using an existing framework.
+
+hth
+dim
+
+
+
+
+
+
+"Koller, Shmuel" <Shmuel_Koller@bmc.com> on 28/10/2003 05:25:52 AM
+
+Please respond to xmlbeans-user@xml.apache.org
+
+To:    xmlbeans-user@xml.apache.org
+cc:
+Subject:    XML to Java at run-time
+
+I am looking at Java Binding tool for developing WebServices - incoming as
+SOAP/XML
+to be translated at runtime to  loading/calling of pre-written
+classes/handlers.
+In other words, I am looking for so called mapped binding (mapping only at
+run time, without code pre-generation).
+
+In a sense - that will be like loading classes/calling instances - driven
+by
+XML instance acting as a flow control.
+
+The input XML is 100% schema based, I understand XMLBeans uses xsd as well
+at run time -
+the basic question is what can be done wit XML instance without
+pre-generation of XMLObject classes.
+
+Quick and Castor are said to support mapped binding to "your code".
+Can anyone discuss/point how much XMLBeans plays in this arena ?
+
+Shmuel Koller, BMC
+
+
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+
+
+
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                               DISCLAIMER
+* This email and any attachment may contain confidential information.
+  If you are not the intended recipient you are not authorised to copy
+  or disclose all or any part of it without the prior written consent
+  of Toyota.
+* Opinions expressed in this email and any attachment are those of the
+  sender and not necessarily the opinions of Toyota.
+* Please scan this email and any attachment for viruses.  Toyota does
+  not accept any responsibility for problems caused by viruses, whether
+  it is Toyota's fault or not.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

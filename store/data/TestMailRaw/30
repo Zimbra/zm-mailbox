@@ -1,0 +1,178 @@
+Return-Path: <xmlbeans-dev-return-315-smith=stanford.edu@xml.apache.org>
+Received: from leland5.Stanford.EDU (leland5.Stanford.EDU [171.64.14.121])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h91Fnk5a016240
+	for <smith@popserver1.stanford.edu>; Wed, 1 Oct 2003 08:49:46 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland5.Stanford.EDU (8.12.10/8.12.10) with SMTP id h91Fne1W004467 for
+	<smith@stanford.edu>; Wed, 1 Oct 2003 08:49:40 -0700 (PDT)
+Received: (qmail 37054 invoked by uid 500); 1 Oct 2003 15:49:36 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 37041 invoked from network); 1 Oct 2003 15:49:35 -0000
+Message-Id: <sf7abf52.056@corp-gw.mantech.com>
+X-Mailer: Novell GroupWise Internet Agent 5.5.6.1
+Date: Wed, 01 Oct 2003 11:49:22 -0400
+X-Zimbra-Received: Wed, 01 Oct 2003 11:49:22 -0400
+From: "Darrell Teague" <darrell.teague@mantech.com>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: Re: Finalizers
+Mime-Version: 1.0
+Content-Type: multipart/alternative; boundary="=_58061082.4120A8F1"
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000001e-0010
+
+
+--=_58061082.4120A8F1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+Two more cents on this topic...
+
+Joshua Bloch of Sun and many others (myself included) have argued that reli=
+ance on finalizers for anything other than a last-ditch clean-up effort is =
+not recommended.  Instead, it is recommended that any resource consuming cl=
+asses (i.e., that open socket, file, database connection, whatever) provide=
+ some type of "close" method that should (in practice) be called by the cli=
+ent.  Granted, there is no way to ensure the client will call such a method=
+ but the finalize() method is not guaranteed to happen, in the sequence exp=
+ected, etc either.  At least with a declared public method, clients can be =
+guaranteed a tidy clean-up process (if they call it) whereas reliance on fi=
+nalizers may be non-deterministic since the JVM implementation and other fa=
+ctors beyond the developers control determine the sequence, behavior, prior=
+ity, etc of the call to finalize().=20
+
+>>> don@bea.com 09/30/03 01:12PM >>>
+As you may already know, finalizers must be used with extreme caution. =20
+Because they are run by in the GC thread (when all other threads are=20
+paused) if a finalizer deadlocks, the entire VM will be frozen.  This=20
+makes using synchronization in a finalizer particularly dangerous. =20
+There are also problems around any operations that allocate memory in a=20
+finalizer.
+
+(Note: my information may be out of date).
+
+    -Don
+
+David Bau wrote:
+
+>Eric, was thinking about the threading/object creation etc issues over the
+>weekend.
+>
+>Another interesting issue: currently we use a finalizer on cursors, but
+>finalizers seem to be fairly expensive, so apps that spew out lots and lot=
+s
+>of cursors have issues.  I wonder what problems we'd have to deal with in
+>order to eliminate the finalizer, and whether or not that would be possibl=
+e,
+>or if it would come into conflict with some of the other parameters of the
+>problem just like synchronization?
+>
+>David
+>
+>
+>- ---------------------------------------------------------------------
+>To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+>For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+>Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+>
+>
+> =20
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+--=_58061082.4120A8F1
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD>
+<META http-equiv=3DContent-Type content=3D"text/html; charset=3Diso-8859-1"=
+>
+<META content=3D"MSHTML 6.00.2800.1226" name=3DGENERATOR></HEAD>
+<BODY style=3D"MARGIN-TOP: 2px; FONT: 8pt Tahoma; MARGIN-LEFT: 2px">
+<DIV><FONT face=3D"Comic Sans MS" size=3D2>Two more cents on this=20
+topic...</FONT></DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2></FONT>&nbsp;</DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2>Joshua Bloch of Sun and many oth=
+ers=20
+(myself included)&nbsp;have argued that&nbsp;reliance on finalizers for any=
+thing=20
+other than a last-ditch clean-up effort is&nbsp;not=20
+recommended.&nbsp;&nbsp;Instead,&nbsp;it is recommended that any resource=20
+consuming classes (i.e., that open socket, file, database connection, whate=
+ver)=20
+provide some type of&nbsp;"close" method that should (in practice) be calle=
+d by=20
+the client.&nbsp; Granted, there is no way to&nbsp;ensure the client will c=
+all=20
+such a method but the finalize() method is not guaranteed to happen, in the=
+=20
+sequence expected, etc either.&nbsp; At least with a declared public=20
+method,&nbsp;clients can&nbsp;be guaranteed a tidy clean-up&nbsp;process (i=
+f=20
+they call it) whereas reliance on finalizers&nbsp;may be=20
+non-deterministic&nbsp;since the JVM implementation and other&nbsp;factors=20
+beyond the developers control determine the&nbsp;sequence, behavior, priori=
+ty,=20
+etc of the call to finalize().&nbsp;</FONT><BR><BR>&gt;&gt;&gt; don@bea.com=
+=20
+09/30/03 01:12PM &gt;&gt;&gt;<BR>As you may already know, finalizers must b=
+e=20
+used with extreme caution.&nbsp; <BR>Because they are run by in the GC thre=
+ad=20
+(when all other threads are <BR>paused) if a finalizer deadlocks, the entir=
+e VM=20
+will be frozen.&nbsp; This <BR>makes using synchronization in a finalizer=20
+particularly dangerous.&nbsp; <BR>There are also problems around any operat=
+ions=20
+that allocate memory in a <BR>finalizer.<BR><BR>(Note: my information may b=
+e out=20
+of date).<BR><BR>&nbsp;&nbsp;&nbsp; -Don<BR><BR>David Bau=20
+wrote:<BR><BR>&gt;Eric, was thinking about the threading/object creation et=
+c=20
+issues over the<BR>&gt;weekend.<BR>&gt;<BR>&gt;Another interesting issue:=20
+currently we use a finalizer on cursors, but<BR>&gt;finalizers seem to be f=
+airly=20
+expensive, so apps that spew out lots and lots<BR>&gt;of cursors have=20
+issues.&nbsp; I wonder what problems we'd have to deal with in<BR>&gt;order=
+ to=20
+eliminate the finalizer, and whether or not that would be possible,<BR>&gt;=
+or if=20
+it would come into conflict with some of the other parameters of=20
+the<BR>&gt;problem just like=20
+synchronization?<BR>&gt;<BR>&gt;David<BR>&gt;<BR>&gt;<BR>&gt;-=20
+---------------------------------------------------------------------<BR>&g=
+t;To=20
+unsubscribe, e-mail:&nbsp;&nbsp;=20
+xmlbeans-dev-unsubscribe@xml.apache.org<BR>&gt;For additional commands, e-m=
+ail:=20
+xmlbeans-dev-help@xml.apache.org<BR>&gt;Apache XMLBeans Project -- URL: <A=20
+href=3D"http://xml.apache.org/xmlbeans/">http://xml.apache.org/xmlbeans/</A=
+><BR>&gt;<BR>&gt;<BR>&gt;<BR>&gt;&nbsp;=20
+<BR>&gt;<BR><BR><BR>-=20
+---------------------------------------------------------------------<BR>To=
+=20
+unsubscribe, e-mail:&nbsp;&nbsp; xmlbeans-dev-unsubscribe@xml.apache.org<BR=
+>For=20
+additional commands, e-mail: xmlbeans-dev-help@xml.apache.org<BR>Apache XML=
+Beans=20
+Project -- URL: <A=20
+href=3D"http://xml.apache.org/xmlbeans/">http://xml.apache.org/xmlbeans/</A=
+><BR><BR></DIV></BODY></HTML>
+
+--=_58061082.4120A8F1--
+

@@ -1,0 +1,119 @@
+Return-Path: <xmlbeans-user-return-10-smith=stanford.edu@xml.apache.org>
+Received: from leland6.Stanford.EDU (leland6.Stanford.EDU [171.67.16.60])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8TIrJx8013091
+	for <smith@popserver1.stanford.edu>; Mon, 29 Sep 2003 11:53:19 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland6.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8TIrCla029462 for
+	<smith@stanford.edu>; Mon, 29 Sep 2003 11:53:13 -0700 (PDT)
+Received: (qmail 27063 invoked by uid 500); 29 Sep 2003 18:53:06 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 27043 invoked from network); 29 Sep 2003 18:53:06 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: How to get my own package names?
+Date: Mon, 29 Sep 2003 11:53:09 -0700
+X-Zimbra-Received: Mon, 29 Sep 2003 11:53:09 -0700
+Message-ID: <4B2B4C417991364996F035E1EE39E2E1085070@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: How to get my own package names?
+Thread-Index: AcOGtC0/W6/b/hm1TDGRB5HCIFh5RgABaMsQ
+From: "David Remy" <dremy@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+X-OriginalArrivalTime: 29 Sep 2003 18:53:11.0019 (UTC)
+	FILETIME=[EDEBABB0:01C386BA]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000008c-0010
+
+Hi Vidar,
+You can use an .xsdconfig file to do this.  I was looking around for this t=
+oo in the XMLBeans doc and I don't find it.  Need to get that documented.  =
+You can create a file that ends in .xsdconfig and put it into the directory=
+ that the schema is in and the schema compiler will find it.  The format of=
+ the file is:
+
+<!-- An xsdconfig file must begin with a "config" element in the=20
+        http://www.bea.com/2002/09/xbean/config namespace. Also, be sure
+        to declare any namespaces used to qualify types in your schema (her=
+e,
+        the namespace corresponding to the pol prefix. -->
+<xb:config xmlns:pol=3D"http://openuri.org/easypoLocal"=20
+    xmlns:xb=3D"http://www.bea.com/2002/09/xbean/config">
+
+    <!-- Use the "namespace" element to map a namespace to the Java package
+        name that should be generated. -->
+    <xb:namespace uri=3D"http://openuri.org/easypoLocal">
+        <xb:package>org.openuri.easypo.xsdconfig</xb:package>
+    </xb:namespace>
+
+    <!-- Use the "qname" element to map schema type names to generated
+        Java type names. In these examples, the name attribute's value is t=
+he
+        XML element name; the javaname attribute's value is the Java type=20
+        that should be generated. -->
+    <xb:qname name=3D"pol:CUST" javaname=3D"Customer"/>
+    <xb:qname name=3D"pol:PURCH_ORDER" javaname=3D"PurchaseOrder"/>
+</xb:config>
+
+This example is mapping http://openuri.org/easypoLocal to org.openuri.easyp=
+o.xsdconfig.  As you can see you can also map qnames to specific java names=
+. =20
+
+Here is a link to the xsdconfig schema http://cvs.apache.org/viewcvs.cgi/*c=
+heckout*/xml-xmlbeans/v1/src/configschema/schema/xmlconfig.xsd?rev=3DHEAD&c=
+ontent-type=3Dtext/plain.
+
+-rem
+
+> -----Original Message-----
+> From: Vidar H=E5kestad [mailto:vidar@hawkis.com]
+> Sent: Sunday, September 28, 2003 9:09 AM
+> To: xmlbeans-user@xml.apache.org
+> Subject: How to get my own package names?
+>=20
+>=20
+> Hi
+> I'm trying XMLBeans, and I'm wondering if there is a way to get my own
+> package structure (e.g. com.hawkis.myname) generated using the scomp
+> utility?
+>=20
+> Was not able to find any explicit description of this in the supplied
+> documentation.
+>=20
+> Also, after a compilation, a structure called=20
+> schema/system/s<long-string>
+> is generated. Is there a way to avoid this/selecting my own name?
+>=20
+>=20
+> Regards
+> Vidar
+>=20
+> vidar@hawkis.com
+>=20
+>=20
+> -=20
+> ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>=20
+>=20
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

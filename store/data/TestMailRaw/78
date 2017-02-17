@@ -1,0 +1,63 @@
+Return-Path: <xmlbeans-dev-return-354-smith=stanford.edu@xml.apache.org>
+Received: from leland5.Stanford.EDU (leland5.Stanford.EDU [171.64.14.121])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h97KZULB017647
+	for <smith@popserver1.stanford.edu>; Tue, 7 Oct 2003 13:35:30 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland5.Stanford.EDU (8.12.10/8.12.10) with SMTP id h97KZNtQ005744 for
+	<smith@stanford.edu>; Tue, 7 Oct 2003 13:35:23 -0700 (PDT)
+Received: (qmail 60774 invoked by uid 500); 7 Oct 2003 20:35:16 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 60761 invoked from network); 7 Oct 2003 20:35:16 -0000
+Message-ID: <00fd01c38d12$826fab30$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+References: <1065122063.14001.18.camel@zieg>
+	 <013801c389c3$79b021c0$0fa8a8c0@lightbox> <1065481386.18863.16.camel@zieg>
+Subject: Re: builtin type conversions
+Date: Tue, 7 Oct 2003 16:35:11 -0400
+X-Zimbra-Received: Tue, 7 Oct 2003 16:35:11 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000004e-0010
+
+Scott writes:
+> So I think this seperation is useful to avoid an odd dependency graph of
+> packages (or even cycles).  Perhaps someone with a better understanding
+> of the current dependency graph can suggest how to structure this?  I
+> think I'll start by just gathering up the basic parse/print methods into
+> a class of static methods.
+
+Just doing the parse/print methods for now seems fine to me; let's not
+worry about cleaning up the validation methods yet.
+
+When we work out the v2 SOM we can revisit the validation issue, and
+rationalize all those methods then. However, hopefully build dependencies
+shouldn't block this code from going into a common place.  If you're getting
+stuck by references to the impl class XmlObjectBase just to call things
+like getting the intValue() of facet constraints, for example, you should be
+able to cast to the public interface org.apache.xmlbeans.SimpleValue
+instead.
+
+David
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

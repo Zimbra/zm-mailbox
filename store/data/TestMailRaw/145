@@ -1,0 +1,99 @@
+Return-Path: <xmlbeans-dev-return-132-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.64.14.58])
+	by popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8HI4AYv006984 for
+	<smith@popserver1.stanford.edu>; Wed, 17 Sep 2003 11:04:11 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8HI40rM020197 for
+	<smith@stanford.edu>; Wed, 17 Sep 2003 11:04:01 -0700 (PDT)
+Received: (qmail 59448 invoked by uid 500); 17 Sep 2003 18:03:54 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 59434 invoked from network); 17 Sep 2003 18:03:54 -0000
+Message-ID: <009901c37d46$0cbd2150$d41e11ac@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: About me
+Date: Wed, 17 Sep 2003 14:03:50 -0400
+X-Zimbra-Received: Wed, 17 Sep 2003 14:03:50 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000091-0010
+
+Hi all,
+
+We've got a new bit of code and a new community here, so
+to both start a custom for this list and continue a
+tradition for Apache, here's a personal bio about myself.
+
+I was born in 1970 in Rochester NY, where the winters
+bring seven-foot snowdrifts and everybody is connected to
+Kodak. I spent my childhood in Seattle, Exeter NH, and
+Boston MA, and I currently live in the suburbs of
+Philadelphia where my wife works as a surgeon and my two
+kids are just starting school.
+
+My fascination with software started in when I was 9 and
+my father brought home an Atari 800, which I used to draw
+fractals and make simple little video games.
+
+While studying math at Harvard I held a few different
+computer jobs, and after studying numerical algorithms
+in graduate school at Cornell with Nick Trefethen I
+somehow found my way to Microsoft, where I helped build
+Internet Explorer and the .NET platform. I left with a
+few other Microsoft folks for Adam Bosworth's startup,
+Crossgain.  It was bought by BEA, where I am now,
+working on XML technologies.
+
+In my spare time, I started a little open source project
+called DQSD, which remains my favorite way of using Google
+and all other search engines.  The community around DQSD
+taught me first-hand about the power of open source: the
+little tool is many many times more powerful now than it
+would have ever been if I hadn't opened the project. I
+haven't been active in DQSD for the last year or so because
+I've been spending so much extra time at work on XML Beans,
+but the community remains strong.
+
+I started the XML Beans project based on some ideas of, and
+with the support of, Mark Igra, Carl Sjogreen, Rod Chavez,
+Adam Bosworth, and others, in response to the realization,
+after shipping a package of web services software, that the
+Java world could benefit from a really complete solution
+for working with XML Schema-typed data.  Bringing XMLBeans
+to Apache is being spearheaded by folks you have already
+seen around here, including Cliff, Remy, Eric, and others.
+Working in Apache is new ground for our company, and for
+us individually, and I appreciate the enormous amounts of
+help and encouragement we're getting from Apache veterans
+like Ted Leung and Steven Noels.
+
+I've contributed to large projects and open-source projects,
+but never a large open-source project. I'm excited to see
+what we can do here.  There's a lot to do and build, and
+some real potential for a very interesting and useful
+project.
+
+Hello all, thanks for your help, and welcome to xmlbeans.
+
+David
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

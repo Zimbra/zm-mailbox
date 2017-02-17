@@ -1,0 +1,171 @@
+Return-Path: <xmlbeans-dev-return-406-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.67.16.118])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hAIIP0oB010905
+	for <smith@popserver1.stanford.edu>; Tue, 18 Nov 2003 10:25:00 -0800
+	(PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id hAIIOxB0026630 for
+	<smith@stanford.edu>; Tue, 18 Nov 2003 10:24:59 -0800
+Received: (qmail 79483 invoked by uid 500); 18 Nov 2003 18:24:54 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 79469 invoked from network); 18 Nov 2003 18:24:54 -0000
+content-class: urn:content-classes:message
+Subject: RE: Failed to build with "network downloads disabled" error
+	message.
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 18 Nov 2003 10:24:57 -0800
+X-Zimbra-Received: Tue, 18 Nov 2003 10:24:57 -0800
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+Message-ID: <4B2B4C417991364996F035E1EE39E2E11E9DFC@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: Failed to build with "network downloads disabled" error
+	message.
+Thread-Index: AcOuAPi1kRB+uVAYQHCjlXVIOFoYTAAACWag
+From: "Eric Vasilik" <ericvas@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+X-OriginalArrivalTime: 18 Nov 2003 18:24:59.0311 (UTC)
+	FILETIME=[463D03F0:01C3AE01]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000005f-0010
+
+Windows has a 256 character limit on files names.  We generate files based =
+on target namespace which, in some cases, can blow past this limit.  You ma=
+y be experiencing this.
+
+-----Original Message-----
+From: Calvin Powers [mailto:calvin@cspowers.com]
+Sent: Tuesday, November 18, 2003 10:20 AM
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: Failed to build with "network downloads disabled" error
+message.
+
+
+Hmmm,
+
+Just on a  lark, I wondered if maybe my long file path to the code tree=20
+might be a problem, so I moved the code tree to the root directory of my=20
+drive and re-tried the build. Lo and Behold, the build worked just=20
+fine.  So then I dragged the exactsame directory back to its original=20
+location and retried the build. It failed with the same error as before.=20
+So I'm not sure why, but  my problem seemed to be related to the=20
+location of the tree. Possibly it's due to the very long path, possible=20
+it's due to spaces in the path?
+
+Anyway, past my build problem. Woo Hoo!
+
+--cp
+
+
+Calvin Powers wrote:
+
+> Howdy,
+>
+> I saw David Bau's presentation on XML Beans at ApacheCon today and have
+> been trying to build the code tonight.
+>
+> When I run the ant build with the default target, I get the following:
+>
+> =3D=3D=3Dbegin build messages=3D=3D=3D
+> xsdschema.classes:
+>     [java] C:\Documents and Settings\powers\My
+> Documents\IBM\wsappdev51\workspa
+> ce\sandbox\xml-xmlbeans\v1\src\xsdschema\schema\XMLSchema.xsd:0: error:
+> Could no
+> t load resource "http://www.w3.org/2001/xml.xsd" (network downloads
+> disabled).
+>     [java] C:\Documents and Settings\powers\My
+> Documents\IBM\wsappdev51\workspa
+> ce\sandbox\xml-xmlbeans\v1\src\xsdschema\schema\XMLSchema.xsd:0:
+> warning: Schema
+> <notation> is not yet supported for this release.
+>     [java] C:\Documents and Settings\powers\My
+> Documents\IBM\wsappdev51\workspa
+> ce\sandbox\xml-xmlbeans\v1\src\xsdschema\schema\XMLSchema.xsd:0: error:
+> Attribut
+> e lang@http://www.w3.org/XML/1998/namespace not found.
+>     [java] C:\Documents and Settings\powers\My
+> Documents\IBM\wsappdev51\workspa
+> ce\sandbox\xml-xmlbeans\v1\src\xsdschema\schema\XMLSchema.xsd:0: error:
+> Attribut
+> e lang@http://www.w3.org/XML/1998/namespace not found.
+>     [java] Time to build schema type system: 3.705 seconds
+>     [java] BUILD FAILED
+>
+>
+>
+> BUILD FAILED
+> C:\Documents and Settings\powers\My
+> Documents\IBM\wsappdev51\workspace\sandbox\x
+> ml-xmlbeans\v1\build.xml:690: Java returned: 1
+> =3D=3D=3D=3Dend build messages =3D=3D=3D=3D=3D
+>
+> I dug through the version 1 source, and tracked this down to
+> StscImporter.java, which is printing this message out in response to a
+> method in StscState called shouldDownLoadURI
+>
+> There's several things going on in shouldDownLoadURI, but the one that
+> seems relevant is a check against a private variable called
+> _doingDownloads.
+>
+> This is set in setOptions of the same class, apparently in response to
+> an COMPILE_DOWNLOAD_URLS entry in a class called  XmlOptions. I
+> backtracked this setting to two java files that appear to me to be some
+> of the command line tools (InstanceValidator and SchemaCompiler) but I
+> don't think I'm far enough into the build to be invoking these yet. (As
+> far as I can tell, I'm still just doing plain java compiles.
+>
+> The other way this option can be set is if a system property called
+> xmlbean.downloadurls is set to true. I tried half a dozen different ways
+> to try to get this property set on the right javac invocation but could
+> never quite seem to get it to work.
+>
+> I verified that I could download the http://www.w3.org/2001/xml.xsd from
+> the web by pasting the URL into a browser.
+>
+> So I figure I've got some sort of set up problem where the
+> xmlbean.downloadurls property is not being set.
+>
+> The other thing that puzzles me is that I see XMLScheme.xsd in the
+> source tree, so I'm wondering if maybe something else is preventing the
+> build from finding this file locally.
+>
+> Anyone have any advice?
+>
+> Thanks!
+> Calvin Powers
+>
+>
+>
+>
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+>
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

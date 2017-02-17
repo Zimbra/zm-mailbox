@@ -1,0 +1,113 @@
+Return-Path: <xmlbeans-user-return-23-smith=stanford.edu@xml.apache.org>
+Received: from leland6.Stanford.EDU (leland6.Stanford.EDU [171.67.16.60])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h982igLB024643
+	for <smith@popserver1.stanford.edu>; Tue, 7 Oct 2003 19:44:42 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland6.Stanford.EDU (8.12.10/8.12.10) with SMTP id h982iYla011654 for
+	<smith@stanford.edu>; Tue, 7 Oct 2003 19:44:35 -0700 (PDT)
+Received: (qmail 1021 invoked by uid 500); 8 Oct 2003 02:44:24 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 994 invoked from network); 8 Oct 2003 02:44:23 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: cursor question...
+Date: Tue, 7 Oct 2003 19:44:31 -0700
+X-Zimbra-Received: Tue, 7 Oct 2003 19:44:31 -0700
+Message-ID: <4B2B4C417991364996F035E1EE39E2E10D8E20@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: cursor question...
+Thread-Index: AcONG1AoaIi7Lz49SLKfDjopwt2HOQAKhu6g
+From: "Eric Vasilik" <ericvas@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+X-OriginalArrivalTime: 08 Oct 2003 02:44:32.0792 (UTC)
+	FILETIME=[1A79C180:01C38D46]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000002e-0011
+
+You should be able to do:
+
+        soapBody.set( document );
+
+instead of the cursor manipulation.  The above should effectively do the sa=
+me thing for you.  Your use of cursors is correct, but a bit more cumbersom=
+e.
+
+- Eric
+
+-----Original Message-----
+From: Roland Smith [mailto:smith@stanford.edu]
+Sent: Tuesday, October 07, 2003 2:38 PM
+To: xmlbeans-user@xml.apache.org
+Subject: cursor question...
+
+
+Hi. I've got a quick question object whether or not using cursors is the
+right (and/or only) approach to what I'm trying to do.
+
+I've got an XmlObject which represents the body of a SOAP message
+to construct, and I want to wrap an envelope around it.=20
+
+Compiling the SOAP 1.2 xsd (with a prefix of Soap12), gives me an
+xmlbean class called:
+
+Soap12Body
+
+That declares no methods of its own, just inherits from XmlObject and
+XmlTokenSource. I'm guessing in order to add the XmlObject to
+that Body, I have to use a cursor.=20
+
+I ended up writing this:
+
+    /** Given an XmlObject, wrap it in an envelope and return it */
+    public XmlObject soapEnvelope(XmlObject document)
+    {
+        Soap12EnvelopeDocument soapEnv =3D=20
+            Soap12EnvelopeDocument.Factory.newInstance();
+        Soap12Body soapBody =3D soapEnv.addNewEnvelope().addNewBody();
+
+        XmlCursor sc =3D null, dc =3D null;
+        try {
+            sc =3D soapBody.newCursor();
+            sc.toNextToken();
+            dc =3D document.newCursor();
+            dc.toNextToken();
+            dc.copyXml(sc);
+        } finally {
+            if (sc !=3D null)
+                sc.dispose();
+            if (dc !=3D null)
+                dc.dispose();
+        }
+        return soapEnv;
+    }
+
+Is there a better approach to doing this, or is this indeed the
+correct use of cursors? It seems to work fine, just wasn't sure if it
+was the most efficient way.
+
+thanks, roland
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

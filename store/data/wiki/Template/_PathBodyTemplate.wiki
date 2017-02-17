@@ -1,0 +1,5 @@
+<table class='zmwiki-breadcrumb_table' cellspacing="0" cellpadding="0">
+	<tr>
+		<wiklet class='CONTENT' />
+	</tr>
+</table>

@@ -1,0 +1,134 @@
+Return-Path: <xmlbeans-user-return-74-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.64.14.58])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9SMaDoB001803
+	for <smith@popserver1.stanford.edu>; Tue, 28 Oct 2003 14:36:13 -0800
+	(PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9SMa6xG004105 for
+	<smith@stanford.edu>; Tue, 28 Oct 2003 14:36:07 -0800 (PST)
+Received: (qmail 59289 invoked by uid 500); 28 Oct 2003 22:35:57 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 59198 invoked from network); 28 Oct 2003 22:35:54 -0000
+Sensitivity: 
+Subject: Re: Versioning of XML Schema
+To: xmlbeans-user@xml.apache.org
+X-Mailer: Lotus Notes Release 5.0.8  June 18, 2001
+Message-ID: <OF7BDA7D87.B2BF23FF-ONCA256DCD.007AD642@tmca.com.au>
+From: Dmitri.Colebatch@toyota.com.au
+Date: Wed, 29 Oct 2003 09:35:40 +1100
+X-Zimbra-Received: Wed, 29 Oct 2003 09:35:40 +1100
+X-MIMETrack: Serialize by Router on SHM_ISD_A2_80/TMCA(Release 5.0.12 
+	|February 13, 2003) at 29/10/2003 09:37:00
+MIME-Version: 1.0
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=us-ascii
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000081-0010
+
+
+Shmuel,
+
+I'll tell you what we're doing in this area, in the hope that it will be
+useful.  Firstly, XMLBeans is (from my use) very accomodating of "unknowns"
+- if you give it well formed XML, it will do its best to parse it into an
+XMLObject, normally very successfully.  Only if you explicitly call the
+validate() method will any validation occur (some experts correct me if I
+am wrong here).  When it comes to schema versions, I'll address two
+different scenarios.
+
+When making backward compatible changes, with no change to the schema
+namespace, we simply regenerate the XMLBeans classes, to include the new
+schema elements/attributes.  When receiving messages that do not include
+the additional elements/attributes, XMLBeans reports them as null when
+calling the relevant getFoo() methods...  as expected.  In this way, what
+the application does to deal with older versions of the schema is an
+application issue.
+
+When making non-backward compatible changes, we change the schema namespace
+(we use a url/date combination namespace) and generate a new set of
+XMLBeans classes, which are in a separate package to the older version
+because of the namespace change.  In our environment we have the luxury of
+routing at an earlier step meaning that our servlets know exactly which
+version they are getting, and dont need to switch based on namespace.
+However, a call to XmlObject.parse(request.getInputStream()) will return a
+typed XmlObject representing the schema of the document.  This of course
+assumes that the schema has been compiled, and previous loaded into the
+XmlBeans type system.
+
+I hope this is useful - we've found XmlBeans to be very easy to use in this
+regard.
+
+cheers
+dim
+
+
+
+
+
+"Koller, Shmuel" <Shmuel_Koller@bmc.com> on 29/10/2003 03:28:15 AM
+
+Please respond to xmlbeans-user@xml.apache.org
+
+To:    xmlbeans-user@xml.apache.org
+cc:
+Subject:    Versioning of XML Schema
+
+Assume we have a XML standard (SOAP based) version 1 schema, with its
+XMLBeans generated Java types.
+Then comes version 2 of same standard, another schema - meaning another
+XMLBean generation cycle, another set of generated Java types.
+
+How do I write ONCE a  product/application to support both Schema Versions,
+and utilize XML schema (inevitable variations) to XMLBeans-generate Java
+types ?
+
+My basic approach is that somehow this can be done, since each instance
+identifies Schema version -
+so when Schema version 2 is announced, I can split program into two paths
+everywhere each Java type has two versions..
+But thats not in line with incremental nature of new versions.
+
+Yet there may be more in XMLBeans to support this concern, please
+share/comment,
+
+Shmuel Koller, BMC
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+
+
+
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                               DISCLAIMER
+* This email and any attachment may contain confidential information.
+  If you are not the intended recipient you are not authorised to copy
+  or disclose all or any part of it without the prior written consent
+  of Toyota.
+* Opinions expressed in this email and any attachment are those of the
+  sender and not necessarily the opinions of Toyota.
+* Please scan this email and any attachment for viruses.  Toyota does
+  not accept any responsibility for problems caused by viruses, whether
+  it is Toyota's fault or not.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

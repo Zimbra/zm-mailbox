@@ -1,0 +1,225 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
+ */
+options {    JDK_VERSION = "1.6";    STATIC = false;
+    UNICODE_INPUT = true;
+    IGNORE_CASE = true;
+    ERROR_REPORTING = true;
+    TRACK_TOKENS = true;
+    SUPPORT_CLASS_VISIBILITY_PUBLIC = false;
+}PARSER_BEGIN(Parser)package com.zimbra.cs.index.query.parser;
+
+final class Parser {
+}PARSER_END(Parser)
+<*> SKIP : {
+    " " | "\t"
+}
+
+<*> TOKEN : {
+    <LPAREN: "("> : DEFAULT
+|   <RPAREN: ")"> : DEFAULT
+}
+
+<DEFAULT> TOKEN : {
+    <AND: ("and" | "&&")>
+|   <OR: ("or" | "||")>
+|   <NOT: ("not" | "!")>
+|   <PLUS: "+">
+|   <MINUS: "-">
+}
+
+<DEFAULT, TEXT> TOKEN : {
+    <TERM: <_TERM_START_CHAR> (<_TERM_CHAR>)*> : DEFAULT
+|   <#_TERM_START_CHAR: (~["{", "}", " ", "\t", "\n", "\r", ":", "+", "-", "\"", "(", ")"] | <_ESCAPED_QUOTE>)>
+|   <#_TERM_CHAR: (<_TERM_START_CHAR> | "-" | "+" | "@")>
+|   <QUOTED_TERM: "\"" (<_ESCAPED_QUOTE> | ~["\n", "\""])* "\""> : DEFAULT
+|   <#_ESCAPED_QUOTE: "\\\"">
+|   <BRACED_TERM: "{" (~["}"])+ "}"> : DEFAULT
+}
+
+// Don't match operators after these tokens
+<DEFAULT> TOKEN : {
+    <CONTENT: "content:"> : TEXT
+|   <SUBJECT: "subject:"> : TEXT
+|   <MSGID: "msgid:"> : TEXT
+|   <ENVTO: "envto:"> : TEXT
+|   <ENVFROM: "envfrom:"> : TEXT
+|   <CONTACT: "contact:"> : TEXT
+|   <TO: "to:"> : TEXT
+|   <FROM: "from:"> : TEXT
+|   <CC: "cc:"> : TEXT
+|   <TOFROM: "tofrom:"> : TEXT
+|   <TOCC: "tocc:"> : TEXT
+|   <FROMCC: "fromcc:"> : TEXT
+|   <TOFROMCC: "tofromcc:"> : TEXT
+|   <IN: "in:"> : TEXT
+|   <UNDER: "under:"> : TEXT
+|   <FILENAME: "filename:"> : TEXT
+|   <TAG: "tag:"> : TEXT
+|   <MESSAGE: "message:"> : TEXT
+|   <MY: "my:"> : TEXT
+|   <AUTHOR: "author:"> : TEXT
+|   <TITLE: "title:"> : TEXT
+|   <KEYWORDS: "keywords:"> : TEXT
+|   <COMPANY: "company:"> : TEXT
+|   <METADATA: "metadata:"> : TEXT
+|   <FIELD: <_FIELD1> | <_FIELD2>> : TEXT
+|   <#_FIELD1: "field" ("[" <TERM> "]")? ":">
+|   <#_FIELD2: "#" <TERM> ":">
+}
+
+<DEFAULT> TOKEN : {    <DATE: "date:">
+|   <MDATE: "mdate:">
+|   <DAY: "day:">
+|   <WEEK: "week:">
+|   <MONTH: "month:">
+|   <YEAR: "year:">
+|   <AFTER: "after:">
+|   <BEFORE: "before:">
+|   <APPT_START: "appt-start:">
+|   <APPT_END: "appt-end:">
+|   <CONV_START: "conv-start:">
+|   <CONV_END: "conv-end:">
+|   <SIZE: "size:">
+|   <BIGGER: "bigger:" | "larger:">
+|   <SMALLER: "smaller:">
+|   <CONV: "conv:"> : TEXT
+|   <CONV_COUNT: "conv-count:">
+|   <CONV_MINM: "conv-minm:">
+|   <CONV_MAXM: "conv-maxm:">
+|   <MODSEQ: "modseq:">
+|   <PRIORITY: "priority:">
+|   <IS: "is:">
+|   <INID: "inid:">
+|   <UNDERID: "underid:">
+|   <HAS: "has:">
+|   <TYPE: "type:">
+|   <ATTACHMENT: "attachment:">
+|   <ITEM: "item:">
+|   <SORTBY: "sortby:">
+|   <SORT: "sort:">
+}
+SimpleNode parse() #Root : {
+}{    Query() ["\r" | <EOF>] { return jjtThis; }
+}
+private void Query() : {
+}
+{
+    [SortBy()] Clause() [SortBy()] ([Conjunction()] Clause() [SortBy()])*
+}
+
+private void Clause() : {
+}
+{
+    [Modifier()]
+    (        <LPAREN> Query() <RPAREN>
+    |   TextClause()
+    |   ItemClause()
+    |   DateClause()
+    |   DefaultClause()
+    )
+}
+
+private void DefaultClause() : {
+}
+{
+    <TERM> | <QUOTED_TERM>}
+
+private void TextClause() : {
+}
+{    TextField() TextTerm()
+}
+
+private void ItemClause() : {}
+{
+    <ITEM> ItemTerm()}
+
+private void DateClause() : {}
+{    DateField() DateTerm()
+}
+
+private void TextField() #void : {
+}
+{
+    <FIELD> | <MSGID> | <MODSEQ> | <TYPE> | <MY> | <IS> | <TAG> | <PRIORITY>
+|   <FROM> | <TO> | <CC> | <ENVFROM> | <ENVTO>
+|   <TOFROM> | <TOCC> | <FROMCC> | <TOFROMCC>
+|   <SUBJECT> | <MESSAGE> | <CONTENT>
+|   <IN> | <INID> | <UNDER> | <UNDERID>
+|   <ATTACHMENT> | <HAS> | <FILENAME>
+|   <CONTACT> | <AUTHOR> | <TITLE> | <KEYWORDS> | <COMPANY> | <METADATA>
+|   <CONV> | <CONV_COUNT> | <CONV_MINM> | <CONV_MAXM>
+|   <SIZE> | <BIGGER> | <SMALLER>
+}
+
+private void DateField() #void : {
+}
+{    <DATE> | <MDATE> | <DAY> | <MONTH> | <WEEK> | <YEAR>
+|   <AFTER> | <BEFORE> | <CONV_START> | <CONV_END> | <APPT_START> | <APPT_END>
+}
+
+private void Conjunction() : {
+}
+{
+    <AND> | <OR>
+}
+
+private void Modifier() : {
+}
+{
+    <PLUS> | <MINUS> | <NOT>
+}
+
+private void DateModifier() : {
+}
+{
+    <NOT>
+}
+
+private void SortBy() : {
+}
+{
+    (<SORTBY> | <SORT>) <TERM>
+}
+
+private void TextTerm() : {
+}
+{
+    (<LPAREN> [Modifier()] TextTerm() ([Conjunction()] [Modifier()] TextTerm())* <RPAREN>)
+|   <TERM> | <QUOTED_TERM>
+}
+
+/**
+ * Allows {}'s, so these are legal: 'item:{1,2,3}', 'item:({1,2,3} or {4,5,6})'.
+ */
+private void ItemTerm() : {
+}
+{
+    (<LPAREN> [Modifier()] ItemTerm() ([Conjunction()] [Modifier()] ItemTerm())* <RPAREN>)
+|   <TERM> | <QUOTED_TERM>
+|   <BRACED_TERM>
+}
+
+/**
+ * Allows starting - (minus) signs, and we don't want to interpret those as
+ * a NOT, like we do in other cases.
+ */
+private void DateTerm() : {
+}
+{
+    (<LPAREN> [DateModifier()] DateTerm() ([Conjunction()] [DateModifier()] DateTerm())* <RPAREN>)
+|   [<MINUS> | <PLUS>] (<TERM> | <QUOTED_TERM>)
+}

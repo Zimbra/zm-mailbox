@@ -1,0 +1,118 @@
+Return-Path: <xmlbeans-dev-return-233-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8P7OoFR004918
+	for <smith@popserver1.stanford.edu>; Thu, 25 Sep 2003 00:24:50 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8P7Ogd1018492 for
+	<smith@stanford.edu>; Thu, 25 Sep 2003 00:24:43 -0700 (PDT)
+Received: (qmail 72364 invoked by uid 500); 25 Sep 2003 07:24:29 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 72350 invoked from network); 25 Sep 2003 07:24:29 -0000
+Message-ID: <3F729838.1010105@sauria.com>
+Date: Thu, 25 Sep 2003 00:24:40 -0700
+X-Zimbra-Received: Thu, 25 Sep 2003 00:24:40 -0700
+From: Ted Leung <twleung@sauria.com>
+Organization: Sauria Associates, LLC
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.5)
+	Gecko/20030923 Thunderbird/0.3
+X-Accept-Language: en-us, en
+MIME-Version: 1.0
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: code to contribute: JAM
+References: <4B2B4C417991364996F035E1EE39E2E1085062@uskiex01.amer.bea.com>
+In-Reply-To: <4B2B4C417991364996F035E1EE39E2E1085062@uskiex01.amer.bea.com>
+X-Enigmail-Version: 0.81.6.0
+X-Enigmail-Supports: pgp-inline, pgp-mime
+Content-Transfer-Encoding: 7bit
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=us-ascii; FORMAT=flowed
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000007e-0010
+
+Hi Patrick, Dave
+
+On 9/24/2003 6:37 PM, David Remy wrote:
+
+> I think this code could be valuable to v2.  Perhaps it should be checked into the v2 directory, or a sandbox directory, so that we can look at the code, and see how it would work in an xmlbeans v2 java -> xml scenario?  If that makes sense, David, would you be the one to work with Patrick to do this?
+> 
+
+Since these are new files, we will need a software grant for this.  For 
+more details see:
+
+http://nagoya.apache.org/wiki/apachewiki.cgi?Licensing
+
+Search forward for the phrase "Normal contributions by developers's". 
+For developers w/ CLA's this requirement is taken care of by the CLA, so 
+a CLA for Patrick would be fine as well, I think.
+
+Ted
+
+> -----Original Message-----
+> From: Patrick Calahan [mailto:pcal@bea.com]
+> Sent: Wednesday, September 24, 2003 5:24 PM
+> To: xmlbeans-dev@xml.apache.org
+> Subject: code to contribute: JAM
+> 
+> 
+> Hello all.  I have written a package I would like to contribute to xbeans v2.  It is an abstraction layer for Java types and their associated metadta that I believe will be critical in xbeans' compilation phase.  Just as you need a SOM to represent the schema types you are binding to and from, you use JAM to model the Java types you are binding to and from.
+> 
+> Here is a blurb from the package.html docs that provides a little
+> more detail:
+> 
+> The Java Abstraction Model (JAM) provides a representation of
+> Java abstractions (such as classes and methods) and their 
+> associated metadata.  This model serves to decouple its clients' code 
+> from any specific introspection mechanism such as javadoc or reflection.
+> 
+> This approach has several advantages:
+> 
+>   A unified API for viewing Java types
+>     Java types can be described in java sources, in class files,
+>   or even synthesized from scratch.  JAM provides a single API which
+>   allows your code to remain decoupled from tool such as reflection
+>   and javadoc.
+> 
+>   Clean and consistent access to metadata
+>     Metadata is a hot topic at the moment, and the way we deal with it
+>   is going to change dramatically over the next year or two.
+>   By writing to the JAM API, you can be sure that you won't
+>   have to rewrite your code to accommodate emerging tools and 
+>   standards (JSR175, for example).
+> 
+>   Pluggable metadata stores
+>     Metadata can be retrieved from an external source (such as an XML file) 
+>   or even generated programmatically.  This also allows metadata to 
+>   be associated with Java constructs that may not normally support 
+>   annotations (such as packages).
+> 
+>   A Node-based view of Java constructs
+>     JAM clients have the option of viewing their java constructs as a tree 
+>   of generic, DOM-like nodes (packages contain classes, classes contain 
+>   methods) each of which may have associated annotations.  This is 
+>   extremely helpful for tools which wish to support annotation
+>   inheritance.
+> 
+> 
+> -p 
+> 
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

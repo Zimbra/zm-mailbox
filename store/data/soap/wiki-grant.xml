@@ -1,0 +1,55 @@
+<t:tests xmlns:t='urn:zimbraTestHarness'>
+  <!-- global properties -->
+  <t:property name="uri" value="@WIKI_URL@"/>
+
+  <t:property name="user" value="@WIKI_USER_DEFAULT@"/>
+  <t:property name="password" value="test123"/>
+
+  <!-- authenticate -->
+  <t:test id="auth" required="true">
+    <t:request>
+      <AuthRequest xmlns='urn:zimbraAccount'>
+        <account by="name">${user}</account>
+        <password>${password}</password>
+      </AuthRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//acct:AuthResponse/acct:lifetime" match="^\d+$"/>
+      <t:select path="//acct:AuthResponse/acct:authToken" set="authToken"/>
+      <t:select path="//acct:AuthResponse/acct:sessionId" set="sessionId"/>
+    </t:response>
+  </t:test>
+
+	<!-- grant access to Notebook folder -->
+	<t:test>
+		<t:request>
+			<FolderActionRequest xmlns='urn:zimbraMail'>
+				<action id='12' op='grant'>
+					<grant gt='dom' d='@ZIMBRA_SERVER_HOSTNAME@' perm='rwid' inh='1' />
+				</action>
+			</FolderActionRequest>
+		</t:request>
+	</t:test>
+
+	<!-- create Templates folder and grant access -->
+	<t:test>
+		<t:request>
+			<CreateFolderRequest xmlns='urn:zimbraMail'>
+				<folder l='1' name='Templates' view='wiki' />
+			</CreateFolderRequest>
+		</t:request>
+		<t:response>
+			<t:select set='folderId' path='//mail:folder' attr='id' />
+		</t:response>
+	</t:test>
+	<t:test>
+		<t:request>
+			<FolderActionRequest xmlns='urn:zimbraMail'>
+				<action id='${folderId}' op='grant'>
+					<grant gt='dom' d='@ZIMBRA_SERVER_HOSTNAME@' perm='r' inh='1' />
+				</action>
+			</FolderActionRequest>
+		</t:request>
+	</t:test>
+
+</t:tests>

@@ -1,0 +1,71 @@
+Return-Path: <xmlbeans-user-return-30-smith=stanford.edu@xml.apache.org>
+Received: from leland6.Stanford.EDU (leland6.Stanford.EDU [171.67.16.60])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h98HYSLB005737
+	for <smith@popserver1.stanford.edu>; Wed, 8 Oct 2003 10:34:29 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland6.Stanford.EDU (8.12.10/8.12.10) with SMTP id h98HYMla025488 for
+	<smith@stanford.edu>; Wed, 8 Oct 2003 10:34:23 -0700 (PDT)
+Received: (qmail 75341 invoked by uid 500); 8 Oct 2003 17:34:17 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 75327 invoked from network); 8 Oct 2003 17:34:17 -0000
+Date: Wed, 8 Oct 2003 10:34:16 -0700
+X-Zimbra-Received: Wed, 8 Oct 2003 10:34:16 -0700
+Subject: Re: Namespace Question...
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Mime-Version: 1.0 (Apple Message framework v552)
+From: Roland Smith <smith@stanford.edu>
+To: xmlbeans-user@xml.apache.org
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <9E289A90-F9AC-11D7-B5A5-000393D5A006@vrtx.com>
+Message-Id: <A3D23A16-F9B5-11D7-803B-000A95D98EF2@stanford.edu>
+X-Mailer: Apple Mail (2.552)
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000085-0010
+
+Something like the following should work, if I recall correctly:
+
+HashMap suggestedPrefixes = new HashMap();
+suggestedPrefixes.put("http://foo.com/", "foo");
+XmlOptions opts = new XmlOptions();
+opts.setSaveSuggestedPrefixes(opts);
+
+String output = document.xmlText(opts);
+
+roland
+
+On Wednesday, October 8, 2003, at 09:29  AM, Tom Condon wrote:
+
+> I have a schema that uses the prefix "hv:" for a namespace I have 
+> defined.  I have no problem reading documents that conform to my 
+> schema.  When I write a document, the prefix "ns:" is used.  I know 
+> that this works in the schema world, but my document is getting read 
+> in by a SAX parser that expects a specific prefix.
+>
+> How do you specify what prefix is used for your namespace?
+>
+> Thanks for any help,
+>
+> Tom Condon
+>
+>
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

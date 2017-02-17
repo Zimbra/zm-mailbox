@@ -1,0 +1,115 @@
+This document will describe the login flow of the new unified login page (JSP, no-ajax).
+
+IF (no authtoken) {
+
+  1a. IF (modeMixed or modeHttps and currentMode == http)  {
+       if modeMixed add zinitmode=http to param
+       redirect to current URL (include *all* query params
+      }
+
+  1b. prompt for username/password
+      also prompt for new password, new confirm password if needed (after a login failure, for example)
+
+  1c. submit back to login page
+
+  1d. verify username/password using AuthRequest (request skin, locale, etc)
+
+      if bad username/passsword or password expired/must change, display error and go back to 1b.
+
+  1e. get back AuthResponse plus any needed prefs/attrs for skin/locale/enabled apps, etc.
+
+  1f. if  <refer>other-server</refer> is set in AuthResponse, WRONG SERVER,
+      REDIRECT to that server, pass authToken in URL.
+      Also pass remember me, and any other params. Also set ZM_AUTH_TOKEN.
+      Picks up at 2a on other server.
+
+   1f. goto 3a.
+
+} ELSE IF (auth token cookie or auth token in URL query param) {
+
+  2a. call AuthRequest with the authToken (request skin, locale, etc)
+
+
+  2b. get back AuthResponse plus any needed prefs/attrs for skin/locale/enabled apps, etc.
+
+  2c. if we get back auth expired and/or can't parse auth token, GOTO 1a.
+
+      BONUS: if token is expired but account is valid, do account lookup and redirect to correct
+             server if need be.
+
+  2d. if <refer> is set in AuthResponse, WRONG SERVER,
+      REDIRECT to that server, pass authToken in URL, and any other params.
+      Picks up at 2a on other server.
+
+  2e. goto 3a.
+  
+}
+
+we are on CORRECT SERVER
+
+
+  3a. set ZM_AUTH_TOKEN cookie if need be (passed in URL, or new via login).
+      if modeHttps, then set secure cookie
+      if zremember available, use it, otherwise default to no?
+
+  3b. If zinitmode == http and currentmode != http,
+      REDIRECT to http version of current URL, passing all query params except zinitmode.
+      picks up back at 3a.
+
+  3c. start app
+
+      if (ajax) /* by account pref/cos or browser detect) */
+
+          forward/jsp:include to ajax client, pass skin/attrs
+
+       else if (basic) /* by account pref/cos or browser detect) */
+
+          redirect to /h/search, including any extra query params
+          (if possible, try do a jsp:forward instead)
+
+
+
+
+----------------------------------------------------------------------------------
+
+login-specific query/form params (all others ignored and passed to app):
+
+
+zauthtoken      - authtoken passed in via URL
+zrememberme     - remember me value
+zclient         - basic/advanced/mobile/etc (which client to launch, overrides COS/pref)
+zinitmode       - set to http if we started in http and redirect to https for login purposes
+
+login form variables:
+
+username
+password
+loginNewPassword
+loginConfirmNewPassword
+
+additional:
+
+locale          - to override browser detected locale for login page?
+
+note: others like debug, etc, are considered to be app-specific and will get passed through.
+
+----------------------------------------------------------------------------------
+
+preauth notes:
+
+ We'll want to modify it to by default redirect to /zimbra, not /zimbra/mail.
+
+ We'll should also modify it to inject cookie via zauthtoken query param and login page
+ to avoid an extra redirect (when preauth is sent to wrong server)
+
+
+----------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------
+
+ TODO: modify AuthRequest that takes and <authToken> to check "zimbraPasswordMustChange",
+       and if set, treat the token like it was expired.
+
+------------------------------------------------------------------------------------

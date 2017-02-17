@@ -1,0 +1,78 @@
+Return-Path: <xmlbeans-dev-return-419-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.67.16.115]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hAKNDhoB004523 for
+	<smith@popserver1.stanford.edu>; Thu, 20 Nov 2003 15:13:43 -0800 (PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id hAKNDfet019939 for
+	<smith@stanford.edu>; Thu, 20 Nov 2003 15:13:41 -0800
+Received: (qmail 80693 invoked by uid 500); 20 Nov 2003 23:13:33 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 80678 invoked from network); 20 Nov 2003 23:13:33 -0000
+X-Sent: 20 Nov 2003 23:13:39 GMT
+Mime-Version: 1.0 (Apple Message framework v606)
+In-Reply-To: <007c01c3afaa$d120e180$0fa8a8c0@lightbox>
+References: <4B2B4C417991364996F035E1EE39E2E124FAC1@uskiex01.amer.bea.com>
+	 <E1D81676-1AD0-11D8-B755-003065DC754C@apache.org>
+	 <007c01c3afaa$d120e180$0fa8a8c0@lightbox>
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Message-Id: <875D5E13-1BAF-11D8-8A20-003065DC754C@apache.org>
+Content-Transfer-Encoding: 7bit
+From: robert burrell donkin <rdonkin@apache.org>
+Subject: Re: XmlBeans.jar size
+Date: Thu, 20 Nov 2003 23:16:11 +0000
+X-Zimbra-Received: Thu, 20 Nov 2003 23:16:11 +0000
+To: xmlbeans-dev@xml.apache.org
+X-Mailer: Apple Mail (2.606)
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000043-0010
+
+
+On 20 Nov 2003, at 21:11, David Bau wrote:
+
+> Robert writes:
+>
+>> i'd suggest that creating a target that builds a runtime jar would be 
+>> a
+>> very worthy endeavour but i'd think carefully before distributing it
+>> officially. it would be very useful if the runtime classes were
+>> separated into different (documented) packages since this allows users
+>> to roll their own runtime library just by unpacking and repacking a
+>> distribution.
+>
+> Robert, this sounds like the right approach to me.
+>
+> Any interest in helping us make this happen, i.e., adding a 
+> "split-jars"
+> build target to our build.xml?
+>
+> As always, looking for help in any form.  :-)
+
+realistically, i don't have the time right now. it's very likely that 
+jakarta  matters are going to have to take up a lot (or more likely 
+most) of my time in the near future.
+
+i can now run java 1.4 on my main development machine and i have plans 
+to take a better look at the xml-beans source but until i can set aside 
+the time i need, i'm going to have to heckle from the sidelines...
+
+so if there's anyone who's just dying to for an easy way to start 
+contributing and fancy's a crack at this, now's a good time to jump 
+in...
+
+- robert
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

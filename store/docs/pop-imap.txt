@@ -1,0 +1,59 @@
+IMAP protocol and extensions supported:
+
+    [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
+    [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
+    [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
+    [AUTH=PLAIN]       RFC 4616: The PLAIN Simple Authentication and Security Layer (SASL) Mechanism
+    [AUTH=GSSAPI]      RFC 1731: IMAP4 Authentication Mechanisms
+    [ACL]              RFC 4314: IMAP4 Access Control List (ACL) Extension
+    [BINARY]           RFC 3516: IMAP4 Binary Content Extension
+    [CATENATE]         RFC 4469: Internet Message Access Protocol (IMAP) CATENATE Extension
+    [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
+    [CONDSTORE]        RFC 4551: IMAP Extension for Conditional STORE Operation or Quick Flag Changes Resynchronization
+    [ENABLE]           RFC 5161: The IMAP ENABLE Extension
+    [ESEARCH]          RFC 4731: IMAP4 Extension to SEARCH Command for Controlling What Kind of Information Is Returned
+    [ESORT]            RFC 5267: Contexts for IMAP4
+    [I18NLEVEL=1]      RFC 5255: Internet Message Access Protocol Internationalization
+    [ID]               RFC 2971: IMAP4 ID Extension
+    [IDLE]             RFC 2177: IMAP4 IDLE command
+    [IMAPURL]          RFC 2192: IMAP URL Scheme
+    [LIST-EXTENDED]    RFC 5258: Internet Message Access Protocol version 4 - LIST Command Extensions
+    [LIST-STATUS]      RFC 5819: IMAP4 Extension for Returning STATUS Information in Extended LIST
+    [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
+    [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
+    [MULTIAPPEND]      RFC 3502: Internet Message Access Protocol (IMAP) - MULTIAPPEND Extension
+    [NAMESPACE]        RFC 2342: IMAP4 Namespace
+    [QRESYNC]          RFC 5162: IMAP4 Extensions for Quick Mailbox Resynchronization
+    [QUOTA]            RFC 2087: IMAP4 QUOTA extension
+    [RIGHTS=ektx]      RFC 4314: IMAP4 Access Control List (ACL) Extension
+    [SASL-IR]          RFC 4959: IMAP Extension for Simple Authentication and Security Layer (SASL) Initial Client Response
+    [SEARCHRES]        RFC 5182: IMAP Extension for Referencing the Last SEARCH Result
+    [SORT]             RFC 5256: Internet Message Access Protocol - SORT and THREAD Extensions
+    [THREAD=ORDEREDSUBJECT]  RFC 5256: Internet Message Access Protocol - SORT and THREAD Extensions
+    [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
+    [UNSELECT]         RFC 3691: IMAP UNSELECT command
+    [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
+    [$MDNSent]         RFC 3503: Message Disposition Notification (MDN) profile for Internet Message Access Protocol (IMAP)
+
+    Also support AUTH=X-ZIMBRA:
+       Initial (and only) SASL response is identical to that of AUTH PLAIN, except that X-ZIMBRA takes a valid Zimbra auth token
+       as the password (e.g. "authzid^@authcid^@authtoken").  The authtoken must match authcid, and then the normal authorization
+       check is made for authzid with the caveat that admin access is granted only if the supplied authtoken is an admin token.
+
+POP protocol and extensions supported:
+
+    RFC 1939: Post Office Protocol - Version 3 
+    
+        supported: DELE, LIST, NOOP, PASS, QUIT, RETR, STAT, TOP, UIDL, USER
+      unsupported: APOP (optional, and requires clear-text password to be stored)
+    
+    RFC 2449: POP3 Extension Mechanism
+    
+        supported: CAPA, TOP, USER, UIDL, EXPIRE, IMPLEMENTATION
+      unsupported: SASL, RESP-CODES, LOGIN-DELAY, PIPELINING
+      
+    RFC 2595: Using TLS with IMAP, POP3 and ACAP 
+    
+        supported: STLS
+
+    

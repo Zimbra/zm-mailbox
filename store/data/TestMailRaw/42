@@ -1,0 +1,101 @@
+Return-Path: <xmlbeans-dev-return-231-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8P3tVFR027506
+	for <smith@popserver1.stanford.edu>; Wed, 24 Sep 2003 20:55:32 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8P3tOd1006023 for
+	<smith@stanford.edu>; Wed, 24 Sep 2003 20:55:25 -0700 (PDT)
+Received: (qmail 87294 invoked by uid 500); 25 Sep 2003 03:55:13 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 87279 invoked from network); 25 Sep 2003 03:55:13 -0000
+Message-ID: <001301c38318$1c525f40$6401a8c0@third>
+From: "Chris Fry" <christopher.fry@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+References: <4C2F1577F2EF2840A9AE9EC61860C8810A0FED@usseex01.amer.bea.com>
+Subject: Re: STAX
+Date: Wed, 24 Sep 2003 20:50:06 -0700
+X-Zimbra-Received: Wed, 24 Sep 2003 20:50:06 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 5.50.4522.1200
+X-MimeOLE: Produced By Microsoft MimeOLE V5.50.4522.1200
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000002a-0010
+
+Hey Cliff,
+
+Oh, I was going to check in the RI jar as a library not in src form, this
+would allow us to get to work on the binding runtime.  I would imagine at
+somepoint we would port the internal parser to implement 173 or build a
+walker over the splay tree.
+
+FYI the jar is publicly available at http://jcp.org/en/jsr/detail?id=173
+
+-Chris
+----- Original Message -----
+From: "Cliff Schmidt" <cliff@bea.com>
+To: <xmlbeans-dev@xml.apache.org>; <christopher.fry@bea.com>
+Sent: Wednesday, September 24, 2003 6:43 PM
+Subject: RE: STAX
+
+
+> Chris,
+>
+> As the spec lead for JSR 173/STAX, it would be great to have you
+> involved, but the process you described isn't really how things work.
+> If you've got code you'd like to contribute, you can email it to this
+> list and we can see how it would fit in with the rest of the project
+> and check it in if it makes sense.  If you're talking about an entire
+> RI, you might want to post the source somewhere for the community to
+> review. It might also be something more appropriate for another part
+> of the XML project.  We have been talking about making XMLBeans v2
+> work with JSR 173, but I don't know if it's appropriate for the entire
+> RI to be checked in to the tree (aside from the obvious questions of
+> licensing).
+>
+> Cliff
+>
+>
+> On Wednesday, September 24, 2003 5:13 PM, Chris Fry wrote:
+>
+> > Hey Everyone,
+> >
+> > Looks like STAX integration is on the plan for v2, do you all think I
+> > should checkin the latest STAX RI to drive the work?  I've got a
+> > submission ready, ziegler will just have to approve it.
+> >
+> > -Chris
+> >
+> >
+> > -
+> > ---------------------------------------------------------------------
+> > To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org For
+> > additional commands, e-mail: xmlbeans-dev-help@xml.apache.org Apache
+> > XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

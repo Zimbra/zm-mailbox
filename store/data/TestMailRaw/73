@@ -1,0 +1,79 @@
+Return-Path: <xmlbeans-dev-return-152-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8J0Laws006897
+	for <smith@popserver1.stanford.edu>; Thu, 18 Sep 2003 17:21:36 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8J0LTLH024557 for
+	<smith@stanford.edu>; Thu, 18 Sep 2003 17:21:29 -0700 (PDT)
+Received: (qmail 62889 invoked by uid 500); 19 Sep 2003 00:21:20 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 62874 invoked from network); 19 Sep 2003 00:21:19 -0000
+Date: Fri, 19 Sep 2003 09:26:06 +0900
+X-Zimbra-Received: Fri, 19 Sep 2003 09:26:06 +0900
+From: Tetsuya Kitahata <tetsuya@apache.org>
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: Getting an XMLBeans distribution onto a download site somewhere
+In-Reply-To: <017301c37e40$9be37e10$d41e11ac@lightbox>
+References: <20030919084349.B9A0.TETSUYA@apache.org>
+	 <017301c37e40$9be37e10$d41e11ac@lightbox>
+Message-Id: <20030919091940.B9A3.TETSUYA@apache.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Becky! ver. 2.06.02
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000049-0010
+
+
+On Thu, 18 Sep 2003 19:57:25 -0400
+(Subject: Re: Getting an XMLBeans distribution onto a download site somewhere)
+"David Bau" <david.bau@bea.com> wrote:
+
+> imho I like the punctuation between 1 and the following number, e.g., 1-0 or
+> 1_0, since eventually we'll get into the 17s and 18's I'm sure.  I don't
+> know when we'd make a decision between two or three sub-version numbers -
+> XMLBeans v1 is stable and we should keep it stable - so just one sub-version
+> number seems fine to me.
+> 
+> Maybe just xmlbeans-1-0-dev-kit.zip?
+> 
+> David
+
+Hi,
+
+I think the "two or three sub-version numbers" would depend upon
+the release manager's decision.
+
+--
+
+Ah... forgot to mention.
+
+How about xmlbeans-1_0-devkit-(all|src|bin).zip ??
+# xmlbeans-1_0-devkit-all.zip (All)
+# xmlbeans-1_0-devkit-bin.zip (Binary)
+# xmlbeans-1_0-devkit-src.zip (Source)
+(WS-WSIF is using these style ... <all|bin|src>)
+
+Hope this helps
+
+Cheers,
+
+__ Tetsuya <tetsuya@apache.org> __
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

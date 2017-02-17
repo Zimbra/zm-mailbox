@@ -1,0 +1,101 @@
+Return-Path: <xmlbeans-user-return-29-smith=stanford.edu@xml.apache.org>
+Received: from leland5.Stanford.EDU (leland5.Stanford.EDU [171.64.14.121])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h98HXrLB005245
+	for <smith@popserver1.stanford.edu>; Wed, 8 Oct 2003 10:33:53 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland5.Stanford.EDU (8.12.10/8.12.10) with SMTP id h98HXjtQ016390 for
+	<smith@stanford.edu>; Wed, 8 Oct 2003 10:33:46 -0700 (PDT)
+Received: (qmail 72717 invoked by uid 500); 8 Oct 2003 17:33:40 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 72704 invoked from network); 8 Oct 2003 17:33:40 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: XMLBeans Speed
+Date: Wed, 8 Oct 2003 10:33:43 -0700
+X-Zimbra-Received: Wed, 8 Oct 2003 10:33:43 -0700
+Message-ID: <4B2B4C417991364996F035E1EE39E2E11E9DAF@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: XMLBeans Speed
+Thread-Index: AcONv8On9aL251+hRkyEB8a62FPy0wAAiVZA
+From: "Eric Vasilik" <ericvas@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+X-OriginalArrivalTime: 08 Oct 2003 17:33:44.0333 (UTC)
+	FILETIME=[5278DBD0:01C38DC2]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000001f-0010
+
+What, exactly, is taking 2 seconds?  Is it:
+
+    XmlObject.Factory.parse( ... ) ???  (Or similar parse on a generated Fa=
+ctory?)
+
+The schema associated with an instance should not affect the initial load t=
+ime for that document.
+
+Are you timing the first load, or are you warming up the VM before performi=
+ng the timing?
+
+- Eric
+
+-----Original Message-----
+From: Aaron Mulder [mailto:ammulder@alumni.princeton.edu]
+Sent: Wednesday, October 08, 2003 10:18 AM
+To: xmlbeans-user@xml.apache.org
+Subject: XMLBeans Speed
+
+
+	I'm looking at using XMLBeans for Apache Geronimo for reading
+XML deployment descriptors.  Last time I tried the BEA version, I couldn't=20
+quite get it to work, but now using the "v1" Apache code I've gotten it=20
+running.
+
+	The problem is, it takes about 2 seconds to read a 50-line XML
+file.  The schema is quite complex (it's the J2EE schema, split across 5
+or 6 xsd files), but we're using beans created ahead of time with the
+SchemaCompiler and the input file is simple.  The delay doesn't seem to be
+related to looking things up on the network (delay is the same when I set
+an EntityResolver and/or disable networking on the box).
+
+	When I write out the same file, it goes in about 50ms, so it's=20
+just reading that is the problem.
+
+	Any guidance would be appreciated.
+
+	Also, we'll need a release of the Apache version to be available=20
+to maven in order to fully integrate XMLBeans into the Geronimo build.  I=20
+gather you're working on that already, but if not, please do.  :)
+
+Thanks,
+	Aaron
+
+(generated schema file with the SchemaCompiler)
+InputStream in =3D new BufferedInputStream(...);
+EjbJarDocument doc =3D EjbJarDocument.Factory.parse(in);
+Writer out =3D new PrintWriter(..., true);
+doc.save(out);
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

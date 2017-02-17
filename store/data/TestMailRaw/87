@@ -1,0 +1,116 @@
+Return-Path: <xmlbeans-dev-return-294-smith=stanford.edu@xml.apache.org>
+Received: from leland5.Stanford.EDU (leland5.Stanford.EDU [171.64.14.121])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8THPWx8008776
+	for <smith@popserver1.stanford.edu>; Mon, 29 Sep 2003 10:25:33 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland5.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8THPPUS011575 for
+	<smith@stanford.edu>; Mon, 29 Sep 2003 10:25:26 -0700 (PDT)
+Received: (qmail 82549 invoked by uid 500); 29 Sep 2003 17:25:20 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 82511 invoked from network); 29 Sep 2003 17:25:19 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: V2 Store discussion...
+Date: Mon, 29 Sep 2003 10:25:21 -0700
+X-Zimbra-Received: Mon, 29 Sep 2003 10:25:21 -0700
+Message-ID: <4B2B4C417991364996F035E1EE39E2E10D8E0F@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: V2 Store discussion...
+Thread-Index: AcOGq5qFUEtSOrCbQE2XCk/CA+befwAAZuLw
+From: "Eric Vasilik" <ericvas@bea.com>
+To: <christopher.fry@bea.com>, <xmlbeans-dev@xml.apache.org>
+X-OriginalArrivalTime: 29 Sep 2003 17:25:22.0716 (UTC)
+	FILETIME=[A9C46DC0:01C386AE]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000057-0010
+
+Did the JDK make the map operations safe in the face of multiple threads do=
+ing operations which modify the map?   I believe that users should expect r=
+ead oriented operations to be thread safe and write operations to be unsafe=
+ (uses will need to synchronize in order to make them safe).
+
+The problem I'm facing with the architecture of the store is one where it s=
+eems that I have to trade off synchronize/finalize with object creation.  I=
+'ve found that creating fewer objects benefits performance, but renders rea=
+d operations thread unsafe.
+
+Dave and I talked this morning about this and we believe that performance o=
+f the store is so important that making the store thread safe (for read ope=
+rations) will be optional and *off* by default. =20
+
+Any thoughts?  Any confusion about this trade off? =20
+
+- Eric
+
+-----Original Message-----
+From: Chris Fry [mailto:christopher.fry@bea.com]
+Sent: Monday, September 29, 2003 9:55 AM
+To: xmlbeans-dev@xml.apache.org; Eric Vasilik
+Subject: RE: V2 Store discussion...
+
+
+I think you should be careful not to make the same mistakes that the JDK
+made early on with the map implementations.  The early map implementations
+were thread safe and very slow, so no-one used them.  It might be best to
+have two implementations of the store (one that is thread safe & one that
+isn't) so that users can choose safety over performance.  Or performance if
+they know the data will only be read in a single thread as may be the case
+in WS-invocations...
+
+-C
+
+> -----Original Message-----
+> From: David Bau [mailto:david.bau@bea.com]
+> Sent: Monday, September 29, 2003 8:27 AM
+> To: Eric Vasilik
+> Cc: xmlbeans-dev@xml.apache.org
+> Subject: V2 Store discussion...
+>
+>
+> Eric, was thinking about the threading/object creation etc
+> issues over the
+> weekend.
+>
+> Another interesting issue: currently we use a finalizer on
+> cursors, but
+> finalizers seem to be fairly expensive, so apps that spew out
+> lots and lots
+> of cursors have issues.  I wonder what problems we'd have to
+> deal with in
+> order to eliminate the finalizer, and whether or not that
+> would be possible,
+> or if it would come into conflict with some of the other
+> parameters of the
+> problem just like synchronization?
+>
+> David
+>
+>
+> -
+> ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

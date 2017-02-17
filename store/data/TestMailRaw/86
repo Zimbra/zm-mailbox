@@ -1,0 +1,87 @@
+Return-Path: <xmlbeans-cvs-return-343-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8TJKVx8001600
+	for <smith@popserver1.stanford.edu>; Mon, 29 Sep 2003 12:20:32 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8TJKQd1020309 for
+	<smith@stanford.edu>; Mon, 29 Sep 2003 12:20:26 -0700 (PDT)
+Received: (qmail 78129 invoked by uid 500); 29 Sep 2003 19:20:20 -0000
+Mailing-List: contact xmlbeans-cvs-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-cvs@xml.apache.org>
+List-Help: <mailto:xmlbeans-cvs-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-cvs-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-cvs-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-cvs@xml.apache.org
+Received: (qmail 78116 invoked from network); 29 Sep 2003 19:20:20 -0000
+Received: from unknown (HELO minotaur.apache.org) (209.237.227.194) by
+	daedalus.apache.org with SMTP; 29 Sep 2003 19:20:20 -0000
+Received: (qmail 71001 invoked by uid 1738); 29 Sep 2003 19:20:29 -0000
+Date: 29 Sep 2003 19:20:29 -0000
+X-Zimbra-Received: 29 Sep 2003 19:20:29 -0000
+Message-ID: <20030929192029.71000.qmail@minotaur.apache.org>
+From: davidbau@apache.org
+To: xml-xmlbeans-cvs@apache.org
+Subject: cvs commit: xml-xmlbeans/v2 build.xml
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+Mime-Version: 1.0
+X-Evolution: 00000056-0010
+
+davidbau    2003/09/29 12:20:29
+
+  Modified:    v2       build.xml
+  Log:
+  Adding a URL to our v2 build.xml from which the freely-available JSR 173 RI can
+  be downloaded as a temporary solution for a JSR 173 impl.
+  
+  Not checking in the JSR 173 RI into Apache because we do not want to distribute
+  non-apache-licensed code. Eventually we will get a JSR 173 project started at
+  Apache, or we will build a 173 impl inside XMLBeans under Apache license.  But
+  for now, we will have the dev team use the RI as a way of getting started.
+  
+  Code review: zieg
+  DRT: passed
+  
+  Revision  Changes    Path
+  1.2       +9 -1      xml-xmlbeans/v2/build.xml
+  
+  Index: build.xml
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v2/build.xml,v
+  retrieving revision 1.1
+  retrieving revision 1.2
+  diff -u -r1.1 -r1.2
+  --- build.xml	26 Sep 2003 21:23:25 -0000	1.1
+  +++ build.xml	29 Sep 2003 19:20:29 -0000	1.2
+  @@ -17,10 +17,18 @@
+       <delete dir="build"/>
+     </target>
+   
+  -  <target name="deploy" depends="sources, xbean, drt.jar, random.jar" />
+  +  <target name="deploy" depends="downloads, sources, xbean, drt.jar, random.jar" />
+   
+     <target name="sources" depends="dirs">
+       <zip destfile="build/ar/xbeansrc.zip" basedir="." excludes="build/**"/>
+  +  </target>
+  +
+  +  <target name="downloads" depends="dirs">
+  +    <get dest="build/lib/jsr173.jar"
+  +         src="http://workshop.bea.com/xmlbeans/jsr173/jsr173.jar"
+  +         verbose="true"
+  +         usetimestamp="true"
+  +         ignoreerrors="true"/> 
+     </target>
+   
+     <target name="xbean" depends="xbean.jar">
+  
+  
+  
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: xmlbeans-cvs-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-cvs-help@xml.apache.org
+

@@ -1,0 +1,79 @@
+Return-Path: <xmlbeans-dev-return-97-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8DBLf1T019617 for
+	<smith@popserver1.stanford.edu>; Sat, 13 Sep 2003 04:21:41 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8DBLYEK016625 for
+	<smith@stanford.edu>; Sat, 13 Sep 2003 04:21:34 -0700 (PDT)
+Received: (qmail 8348 invoked by uid 500); 13 Sep 2003 11:21:32 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 8334 invoked from network); 13 Sep 2003 11:21:32 -0000
+Message-ID: <022901c379e9$2d9387d0$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: Setting up bugzilla, list archiving, etc
+Date: Sat, 13 Sep 2003 07:21:27 -0400
+X-Zimbra-Received: Sat, 13 Sep 2003 07:21:27 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000038-0010
+
+Hi all; we've got the code cleaned up, moved to org.apache packages, etc,
+and we're basically ready to check it into apache CVS now; we're just
+waiting on infrastructure to set up accounts and cvs access for us.  We're
+also going to start using this mailing list for development work, which
+means we need to make sure user discussions happen on
+xmlbeans-user@xml.apache.org.
+
+Forgive me for a bit, for a little while things on xmlbeans-dev are going to
+have to be boring setup issues.  We need a functional development space
+here.
+
+There are a couple initial things I need a little guidance and help with.
+Any help would be apprecitated!
+
+1. Bugzilla.  Try submitting a bug to XMLBeans at
+http://nagoya.apache.org/bugzilla/enter_bug.cgi?product=XMLBeans - you'll
+see that it complains that "You need to have at least one component for this
+product in order to create a new bug."
+
+Can somebody grant me (david.bau@bea.com) appropriate access so that I can
+set up components (and whatever else is needed for our bugzilla area?)  I'm
+new to bugzilla so if I'm missing something simple please let me know.
+
+2. Mailing lists and archives.     Let's start making sure we use
+xmlbeans-user@ for user questions and use xmlbeans-dev@ for development
+discussion, and moderating the lists appropriately.  We probably need to set
+up a couple moderators - I'm willing to help moderate a bit, if somebody can
+help me get set up to do so.
+
+Also, I'd like to have our lists archived at http://mail-archive.com/; I
+find their service pretty snappy. I think I've just set that up through
+ezmlm; we'll see if this message gets archived.
+
+This is the beginning, not the end, of boring setup issues, so bear with
+me...
+
+David
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

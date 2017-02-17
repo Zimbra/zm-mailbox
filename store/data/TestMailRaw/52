@@ -1,0 +1,62 @@
+Return-Path: <xmlbeans-dev-return-336-smith=stanford.edu@xml.apache.org>
+Received: from leland4.Stanford.EDU (leland4.Stanford.EDU [171.64.14.29])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h93LMlLB005887
+	for <smith@popserver1.stanford.edu>; Fri, 3 Oct 2003 14:22:48 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland4.Stanford.EDU (8.12.10/8.12.10) with SMTP id h93LMfpV029408 for
+	<smith@stanford.edu>; Fri, 3 Oct 2003 14:22:41 -0700 (PDT)
+Received: (qmail 66771 invoked by uid 500); 3 Oct 2003 21:22:34 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 66758 invoked from network); 3 Oct 2003 21:22:33 -0000
+Message-ID: <01c701c389f4$769779d0$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: Adding Patrick Calahan as a committer
+Date: Fri, 3 Oct 2003 17:22:33 -0400
+X-Zimbra-Received: Fri, 3 Oct 2003 17:22:33 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000034-0010
+
+To quote from my last mail -
+
+(3) I'd like to have us use Patrick's contributed JAM code to help us get
+going on the start-from-java compilation path, but then we need to make it
+possible for Patrick to maintain that code and contribute other things on
+the start-from-java scenario.
+
+I propose we add Patrick as a committer.
+
+I think the Apache procedure is that basically Patrick needs to have a CLA
+and that we have to have a vote among the existing committers.  I think he
+said that he faxed in a CLA when he sent his initial JAM code.
+
+My vote is:
+
++1, because I want to start doing some start-from-java
+compilation work asap, and want to make it easy for Patrick to continue
+to help.
+
+David
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

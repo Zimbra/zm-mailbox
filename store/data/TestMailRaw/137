@@ -1,0 +1,228 @@
+Return-Path: <xmlbeans-dev-return-298-smith=stanford.edu@xml.apache.org>
+Received: from leland9.Stanford.EDU (leland9.Stanford.EDU [171.67.16.83])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8TIRQx8023664
+	for <smith@popserver1.stanford.edu>; Mon, 29 Sep 2003 11:27:27 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland9.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8TIRGoH028619 for
+	<smith@stanford.edu>; Mon, 29 Sep 2003 11:27:17 -0700 (PDT)
+Received: (qmail 86197 invoked by uid 500); 29 Sep 2003 18:26:59 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 86154 invoked from network); 29 Sep 2003 18:26:59 -0000
+Message-Id: <5.2.1.1.0.20030929103344.01f72160@san-francisco.beasys.com>
+X-Sender: pcal@san-francisco.beasys.com (Unverified)
+X-Mailer: QUALCOMM Windows Eudora Version 5.2.1
+Date: Mon, 29 Sep 2003 11:23:48 -0700
+X-Zimbra-Received: Mon, 29 Sep 2003 11:23:48 -0700
+To: xmlbeans-dev@xml.apache.org, <christopher.fry@bea.com>, <xmlbeans-dev@xml.apache.org>
+From: Patrick Calahan <pcal@bea.com>
+Subject: RE: V2 Store discussion...
+In-Reply-To: <4B2B4C417991364996F035E1EE39E2E10D8E0F@uskiex01.amer.bea.c om>
+Mime-Version: 1.0
+Content-Type: multipart/alternative; boundary="=====================_2067796==.ALT"
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000089-0010
+
+
+--=====================_2067796==.ALT
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+
+At 10:25 AM 9/29/2003 -0700, Eric Vasilik wrote:
+>Did the JDK make the map operations safe in the face of multiple threads 
+>doing operations which modify the map?   I
+
+Yeah, early classes like java.util.Hashtable and Vector were internally 
+synchronized with respect to reads and writes.
+
+It may be interesting to note that when Collections came along, most of the 
+classes came with a note in big bold letters that access to them must be 
+externally synchronized.  Given that Collections has been very 
+well-received and is probably the single most-used API in the JDK, I wonder 
+how much of a requirement threadsafe XMLBeans really is going to be for users.
+
+-p
+
+
+
+>The problem I'm facing with the architecture of the store is one where it 
+>seems that I have to trade off synchronize/finalize with object 
+>creation.  I've found that creating fewer objects benefits performance, 
+>but renders read operations thread unsafe.
+>
+>Dave and I talked this morning about this and we believe that performance 
+>of the store is so important that making the store thread safe (for read 
+>operations) will be optional and *off* by default.
+>
+>Any thoughts?  Any confusion about this trade off?
+>
+>- Eric
+>
+>-----Original Message-----
+>From: Chris Fry [mailto:christopher.fry@bea.com]
+>Sent: Monday, September 29, 2003 9:55 AM
+>To: xmlbeans-dev@xml.apache.org; Eric Vasilik
+>Subject: RE: V2 Store discussion...
+>
+>
+>I think you should be careful not to make the same mistakes that the JDK
+>made early on with the map implementations.  The early map implementations
+>were thread safe and very slow, so no-one used them.  It might be best to
+>have two implementations of the store (one that is thread safe & one that
+>isn't) so that users can choose safety over performance.  Or performance if
+>they know the data will only be read in a single thread as may be the case
+>in WS-invocations...
+>
+>-C
+>
+> > -----Original Message-----
+> > From: David Bau [mailto:david.bau@bea.com]
+> > Sent: Monday, September 29, 2003 8:27 AM
+> > To: Eric Vasilik
+> > Cc: xmlbeans-dev@xml.apache.org
+> > Subject: V2 Store discussion...
+> >
+> >
+> > Eric, was thinking about the threading/object creation etc
+> > issues over the
+> > weekend.
+> >
+> > Another interesting issue: currently we use a finalizer on
+> > cursors, but
+> > finalizers seem to be fairly expensive, so apps that spew out
+> > lots and lots
+> > of cursors have issues.  I wonder what problems we'd have to
+> > deal with in
+> > order to eliminate the finalizer, and whether or not that
+> > would be possible,
+> > or if it would come into conflict with some of the other
+> > parameters of the
+> > problem just like synchronization?
+> >
+> > David
+> >
+> >
+> > -
+> > ---------------------------------------------------------------------
+> > To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+> > For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+> > Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+> >
+> >
+>
+>
+>- ---------------------------------------------------------------------
+>To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+>For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+>Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+--=====================_2067796==.ALT
+Content-Type: text/html; charset="us-ascii"
+
+<html>
+<body>
+<font size=3>At 10:25 AM 9/29/2003 -0700, Eric Vasilik wrote:<br>
+<blockquote type=cite class=cite cite>Did the JDK make the map operations
+safe in the face of multiple threads doing operations which modify the
+map?&nbsp;&nbsp; I </blockquote><br>
+Yeah, early classes like java.util.Hashtable and Vector were internally
+synchronized with respect to reads and writes. <br><br>
+It may be interesting to note that when Collections came along, most of
+the classes came with a note in big bold letters that access to them must
+be externally synchronized.&nbsp; Given that Collections has been very
+well-received and is probably the single most-used API in the JDK, I
+wonder how much of a requirement threadsafe XMLBeans really is going to
+be for users.<br><br>
+-p<br><br>
+<br><br>
+<blockquote type=cite class=cite cite>The problem I'm facing with the
+architecture of the store is one where it seems that I have to trade off
+synchronize/finalize with object creation.&nbsp; I've found that creating
+fewer objects benefits performance, but renders read operations thread
+unsafe.<br><br>
+Dave and I talked this morning about this and we believe that performance
+of the store is so important that making the store thread safe (for read
+operations) will be optional and *off* by default.&nbsp; <br><br>
+Any thoughts?&nbsp; Any confusion about this trade off?&nbsp; <br><br>
+- Eric<br><br>
+-----Original Message-----<br>
+From: Chris Fry
+[<a href="mailto:christopher.fry@bea.com" eudora="autourl">mailto:christopher.fry@bea.com</a>]<br>
+Sent: Monday, September 29, 2003 9:55 AM<br>
+To: xmlbeans-dev@xml.apache.org; Eric Vasilik<br>
+Subject: RE: V2 Store discussion...<br><br>
+<br>
+I think you should be careful not to make the same mistakes that the
+JDK<br>
+made early on with the map implementations.&nbsp; The early map
+implementations<br>
+were thread safe and very slow, so no-one used them.&nbsp; It might be
+best to<br>
+have two implementations of the store (one that is thread safe &amp; one
+that<br>
+isn't) so that users can choose safety over performance.&nbsp; Or
+performance if<br>
+they know the data will only be read in a single thread as may be the
+case<br>
+in WS-invocations...<br><br>
+-C<br><br>
+&gt; -----Original Message-----<br>
+&gt; From: David Bau
+[<a href="mailto:david.bau@bea.com" eudora="autourl">mailto:david.bau@bea.com</a>]<br>
+&gt; Sent: Monday, September 29, 2003 8:27 AM<br>
+&gt; To: Eric Vasilik<br>
+&gt; Cc: xmlbeans-dev@xml.apache.org<br>
+&gt; Subject: V2 Store discussion...<br>
+&gt;<br>
+&gt;<br>
+&gt; Eric, was thinking about the threading/object creation etc<br>
+&gt; issues over the<br>
+&gt; weekend.<br>
+&gt;<br>
+&gt; Another interesting issue: currently we use a finalizer on<br>
+&gt; cursors, but<br>
+&gt; finalizers seem to be fairly expensive, so apps that spew out<br>
+&gt; lots and lots<br>
+&gt; of cursors have issues.&nbsp; I wonder what problems we'd have
+to<br>
+&gt; deal with in<br>
+&gt; order to eliminate the finalizer, and whether or not that<br>
+&gt; would be possible,<br>
+&gt; or if it would come into conflict with some of the other<br>
+&gt; parameters of the<br>
+&gt; problem just like synchronization?<br>
+&gt;<br>
+&gt; David<br>
+&gt;<br>
+&gt;<br>
+&gt; -<br>
+&gt;
+---------------------------------------------------------------------<br>
+&gt; To unsubscribe, e-mail:&nbsp;&nbsp;
+xmlbeans-dev-unsubscribe@xml.apache.org<br>
+&gt; For additional commands, e-mail:
+xmlbeans-dev-help@xml.apache.org<br>
+&gt; Apache XMLBeans Project -- URL:
+<a href="http://xml.apache.org/xmlbeans/" eudora="autourl">http://xml.apache.org/xmlbeans/</a><br>
+&gt;<br>
+&gt;<br><br>
+<br>
+-
+---------------------------------------------------------------------<br>
+To unsubscribe, e-mail:&nbsp;&nbsp;
+xmlbeans-dev-unsubscribe@xml.apache.org<br>
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org<br>
+Apache XMLBeans Project -- URL:
+<a href="http://xml.apache.org/xmlbeans/" eudora="autourl">http://xml.apache.org/xmlbeans/</a></font></blockquote></body>
+</html>
+
+--=====================_2067796==.ALT--
+

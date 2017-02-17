@@ -1,0 +1,126 @@
+Return-Path: <xmlbeans-user-return-87-smith=stanford.edu@xml.apache.org>
+Received: from leland4.Stanford.EDU (leland4.Stanford.EDU [171.64.14.29])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hAAKAcoB029447
+	for <smith@popserver1.stanford.edu>; Mon, 10 Nov 2003 12:10:38 -0800
+	(PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland4.Stanford.EDU (8.12.10/8.12.10) with SMTP id hAAKAU5H022786 for
+	<smith@stanford.edu>; Mon, 10 Nov 2003 12:10:30 -0800 (PST)
+Received: (qmail 26945 invoked by uid 500); 10 Nov 2003 20:10:23 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 26925 invoked from network); 10 Nov 2003 20:10:23 -0000
+Message-ID: <02f101c3a7c6$c1f9e990$0100a8c0@parsecc3f76316>
+From: "Javier Ramos" <ramos@parsec.es>
+To: <xmlbeans-user@xml.apache.org>
+References: <200311101624.hAAGOfo1015197@whale.cs.indiana.edu>
+Subject: Re: how to deal with extensible schemas
+Date: Mon, 10 Nov 2003 21:10:58 +0100
+X-Zimbra-Received: Mon, 10 Nov 2003 21:10:58 +0100
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000047-0010
+
+Hi,
+
+    I am still trying to copy a document inside a placeholder in an
+extensible schema. Usage of cursors semms to be the solution, as pointed out
+by Yogesh.
+
+But now I face another problem: if I try to copy a whole document, instead
+of a document fragment, I get an exception ( IllegalArgumentException )
+telling me that the operation cannot be carried out for a whole document.
+
+Is there a way around this??
+
+Javier
+
+
+----- Original Message ----- 
+From: "Yogesh L. Simmhan" <ysimmhan@cs.indiana.edu>
+To: <xmlbeans-user@xml.apache.org>
+Sent: Monday, November 10, 2003 5:24 PM
+Subject: RE: how to deal with extensible schemas
+
+
+> You can create an XmlCursor for the XmlObject you wish to insert and to
+the
+> Container and use the copyXml method in the cursor.
+>
+> e.g. to insert 'child' XmlObject in container,
+>
+>         XmlCursor cursorTo = container.newCursor();
+>         cursorTo.toNextToken();
+>
+>         XmlCursor cursorFrom = child.newCursor();
+>         cursorFrom.copyXml(cursorTo);
+>
+>         cursorFrom.dispose();
+>         cursorTo.dispose();
+>
+> --Yogesh
+>
+> ________________________________________
+> From: Javier Ramos [mailto:ramos@parsec.es]
+> Sent: Monday, November 10, 2003 5:50 AM
+> To: xmlbeans-user@xml.apache.org
+> Subject: how to deal with extensible schemas
+>
+> Hi,
+>
+> I am trying to figure out how to deal with extensible schemas. What want
+is
+> to have the possibility to use xs:any element to declare that any xml
+content
+> can be hooked under a given element. If I create a schema like:
+>
+> <xs:complexType name="container">
+> <xs:sequence>
+> <xs:any minOccurs="0"/>
+> </xs:sequence>
+> </xs:complexType>
+>
+> when I use scomp to generate java code and classes I obtain a dummy class
+> for the element type 'container' and can find no way to hook any XMLObject
+> inside it.
+>
+> In XMLCursor I can see there are methods to insert single elements or
+> attributes, but no way to insert a whole XMLObject contents under a given
+cursor
+> position.
+> In XMLObject I cannot find nothing of help.
+>
+> Does anybody have any ideas?
+>
+> Javier
+>
+>
+>
+>
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

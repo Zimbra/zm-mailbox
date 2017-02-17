@@ -1,0 +1,162 @@
+Return-Path: <xmlbeans-user-return-102-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.67.16.119])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hAJIY6oB027286
+	for <smith@popserver1.stanford.edu>; Wed, 19 Nov 2003 10:34:06 -0800
+	(PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id hAJIY4ii028998 for
+	<smith@stanford.edu>; Wed, 19 Nov 2003 10:34:05 -0800
+Received: (qmail 90561 invoked by uid 500); 19 Nov 2003 18:33:59 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 90547 invoked from network); 19 Nov 2003 18:33:58 -0000
+Message-ID: <000001c3aecb$aac0ebf0$900210ac@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+References: <001a01c3adc2$538f8080$1400a8c0@solero>
+Subject: Re: Problem with variable content containers ( lengthy )
+Date: Wed, 19 Nov 2003 07:20:24 -0500
+X-Zimbra-Received: Wed, 19 Nov 2003 07:20:24 -0500
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000001c-0010
+
+Hello Javier,
+
+
+Your code works!  It did include a few typos.
+
+XMLBeans should work fine here - it is a basic case of element and type
+substitution.  (If it didn't it would be a bug in XMLBeans...) Can I add
+your test case to the xmlbeans regression test suite?
+
+Now, details.  I did need to change a few things in your schemas and XML doc
+because the schemas didn't actually compile as you pasted them - there were
+a couple issues where the schemas used an undefined namespace prefix, and
+another issue where you referenced an undefined element because of a
+namespace prefix mixup. Here is the actual schema that I compiled and ran:
+
+
+File 1:
+
+====
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:r="http://waf.parsec.es/xmlbind/request"
+    targetNamespace="http://waf.parsec.es/xmlbind/request"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified">
+
+<xs:complexType name="RequestDataType">
+    <xs:attribute name="creationDate" type="xs:date"/>
+</xs:complexType>
+
+<xs:element name="RequestData" abstract="true" type="r:RequestDataType"/>
+
+<xs:complexType name="Data">
+<xs:sequence>
+    <xs:element ref="r:RequestData" maxOccurs="unbounded"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="Request">
+<xs:sequence>
+    <xs:element name="Data" type="r:Data" minOccurs="1" maxOccurs="1"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:element name="Request" type="r:Request"/>
+
+</xs:schema>
+====
+
+
+File 2:
+====
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+xmlns:xs="http://www.w3.org/2001/XMLSchema"
+xmlns:rq="http://waf.parsec.es/xmlbind/request"
+xmlns:r="http://parsys.parsec.es/xmlbind/request/login"
+targetNamespace="http://parsys.parsec.es/xmlbind/request/login"
+elementFormDefault="qualified"
+attributeFormDefault="unqualified">
+
+<xs:import
+namespace="http://waf.parsec.es/xmlbind/request/data"
+/>
+
+<xs:complexType name="LoginRequestType">
+<xs:complexContent>
+    <xs:extension base="rq:RequestDataType">
+        <xs:sequence>
+            <xs:element name="UserId" type="xs:string"/>
+        <xs:element name="Password" type="xs:string"/>
+    </xs:sequence>
+</xs:extension>
+</xs:complexContent>
+</xs:complexType>
+
+<xs:element name="LoginRequest" type="r:LoginRequestType"
+substitutionGroup="rq:RequestData"/>
+
+</xs:schema>
+====
+
+
+
+The test case follows, which also fixes a namespace issue:
+
+
+====
+    // Thanks to Javier Ramos
+    public void test5() throws Exception
+    {
+        String instanceSource =
+                "<r:Request xmlns:r='http://waf.parsec.es/xmlbind/request'
+xmlns:lr='http://parsys.parsec.es/xmlbind/request/login'>" +
+                "   <r:Data>" +
+                "       <lr:LoginRequest>" +
+                "           <lr:UserId>ramos</lr:UserId>" +
+                "           <lr:Password>pass</lr:Password>" +
+                "       </lr:LoginRequest>" +
+                "   </r:Data>" +
+                "</r:Request>";
+
+        RequestDocument doc = RequestDocument.Factory.parse(instanceSource);
+
+        RequestDataType[] data =
+doc.getRequest().getData().getRequestDataArray();
+        assertEquals(data.length, 1);
+        assertTrue("request data should be instanceof LoginRequestType",
+data[0] instanceof LoginRequestType);
+        assertEquals(new
+QName("http://parsys.parsec.es/xmlbind/request/login", "LoginRequest"),
+data[0].newCursor().getName());
+        assertEquals("ramos", ((LoginRequestType)data[0]).getUserId());
+    }
+====
+
+
+
+David
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

@@ -1,0 +1,2 @@
+<td class='zmwiki-pageIcon'><wiklet class='ICON' /></td>
+<td class='zmwiki-pageLink'><wiklet class='URL' /></td>

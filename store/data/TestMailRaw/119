@@ -1,0 +1,74 @@
+Return-Path: <xmlbeans-dev-return-282-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8QN60x8021788
+	for <smith@popserver1.stanford.edu>; Fri, 26 Sep 2003 16:06:00 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8QN5rnd000507 for
+	<smith@stanford.edu>; Fri, 26 Sep 2003 16:05:54 -0700 (PDT)
+Received: (qmail 17044 invoked by uid 500); 26 Sep 2003 23:05:45 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 17029 invoked from network); 26 Sep 2003 23:05:45 -0000
+Message-ID: <02be01c38482$b24d2140$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+References: <5.2.1.1.0.20030926140425.021e21d8@san-francisco.beasys.com>
+Subject: Re[2]: V2 store
+Date: Fri, 26 Sep 2003 19:05:35 -0400
+X-Zimbra-Received: Fri, 26 Sep 2003 19:05:35 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000077-0010
+
+Pcal writes:
+> I'm not sure I agree that large payloads do necessarily lead us to lazy
+object creation.  In many (most?) cases, large payloads are large because
+they contain big chunks of base64 data, and those can be dealt with
+out-of-band.
+
+Agreed, big base64 seems like it should be special-cased if you're going
+straight from parser->unmarshaller or marshaller->outputter.  We should
+build awareness of large base64 blobs into our fast lossy binding framework.
+
+I'm not convinced blobs are what "large data" means for most people.
+Anecdotally there are indeed folks with large numbers of rows of data rather
+than just blobs that are large.  Just had a (gee fun work ;-) dinner sitting
+next to somebody in the pharma IT business who told me all about their
+many-rows-of-data.  A single regulatory filing, which is basically a single
+atomic transaction, when printed out (as is sometimes required by law),
+weighs many many tons and fills an entire tractor-trailer.  They're
+transmitting things like tables of data for millions of drug-trial data
+points at once.
+
+Pcal writes:
+> And in the case where someone really does have to bite off 20GB of
+structured XML data at once, I have to wonder if they aren't better served
+by writing directly to an API like 173.
+
+Maybe; but maybe it's possible to make it easier too, and imho worth some
+thinking.  Seems a shame to have to rewrite your app when some parameter
+(like size of message) evolves.
+
+David
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

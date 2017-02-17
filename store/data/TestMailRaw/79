@@ -1,0 +1,61 @@
+Return-Path: <xmlbeans-dev-return-102-smith=stanford.edu@xml.apache.org>
+Received: from leland5.Stanford.EDU (leland5.Stanford.EDU [171.64.14.121])
+	by popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8E84X1T007428 for
+	<smith@popserver1.stanford.edu>; Sun, 14 Sep 2003 01:04:34 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland5.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8E84RkD000028 for
+	<smith@stanford.edu>; Sun, 14 Sep 2003 01:04:27 -0700 (PDT)
+Received: (qmail 63591 invoked by uid 500); 14 Sep 2003 08:04:13 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 63578 invoked from network); 14 Sep 2003 08:04:13 -0000
+Message-ID: <028001c37a96$ce19db70$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+References: <022901c379e9$2d9387d0$0fa8a8c0@lightbox>
+	 <3F63C3BE.3020807@ozemail.com.au>
+Subject: Re: list archiving
+Date: Sun, 14 Sep 2003 04:04:19 -0400
+X-Zimbra-Received: Sun, 14 Sep 2003 04:04:19 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000004f-0010
+
+> Just to double check :>.  You have seen the Eyebrowse archiving that is 
+> already occuring?
+
+Yup, aware of eyebrowse and marc; I find marc sometimes slow
+(and very dark :-)), and eyebrowse faster but sometimes down.
+Given that folks look for xml archives on marc, I've sent a request
+to marc to be archived there.
+
+I'm trying to set up mail-archive.com in addition. (Why? Archives
+in a couple places don't hurt and should improve availability.  Of
+the alternatives I'm aware of I personally like the speed of the
+mail-archive.com interface; I've been reading general.*.apache
+etc there.  It used to be possible see the confirmation emails to
+sign up mail-archive.com, but they seem to have turned off that
+feature, so archive@mail-archive.com needs to be signed up
+to the list without confirmation somehow.)
+
+David
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

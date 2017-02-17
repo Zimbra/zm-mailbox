@@ -1,0 +1,142 @@
+Return-Path: <xmlbeans-dev-return-334-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.64.14.58])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h93KalLB008261
+	for <smith@popserver1.stanford.edu>; Fri, 3 Oct 2003 13:36:48 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id h93Kaewj008019 for
+	<smith@stanford.edu>; Fri, 3 Oct 2003 13:36:41 -0700 (PDT)
+Received: (qmail 83704 invoked by uid 500); 3 Oct 2003 20:36:33 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 83681 invoked from network); 3 Oct 2003 20:36:33 -0000
+Message-ID: <018b01c389ee$08912ea0$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: Binding-config api checkin coming
+Date: Fri, 3 Oct 2003 16:36:29 -0400
+X-Zimbra-Received: Fri, 3 Oct 2003 16:36:29 -0400
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000088-0010
+
+Some notes on an upcoming checkin.
+
+I'm about to check in some "BindingType" wrapper classes that make it easier
+to assemble a binding-config file or load one.  I just phoned Scott to get a
+code review, summary here:
+
+Big picture, here is what I'm thinking about right now:
+
+(1) For v2, based on the various feature and design docs, we clearly need to
+factor "binding" from "schema/xml".  Partly this is because there are so
+many ways of doing binding - that area needs to be very pluggable, whereas
+schema+xml (like Java itself) is more of an immovable (yet very complex)
+rock.
+
+(2) The biggest new binding areas for us that weren't previously covered by
+v1 code are the start-from-java compiler path and the various forms of
+"fast/lossy" runtime binding, like JAXB or JSR-101 style binding.
+We need to get some running code in this area to convince ourselves that we
+understand it and can do it.
+
+(3) I'd like to have us use Patrick's contributed JAM code to help us get
+going on the start-from-java compilation path, but then we need to make it
+possible for Patrick to maintain that code and contribute other things on
+the start-from-java scenario.  What do you all say we add Patrick as a
+committer?  How would we go about doing that?  I'll send another email about
+this explicitly.
+
+(4) For fast/lossy runtime binding, the right person to get the inital code
+running is you Scott.  Clearly the first thing to work on is the simplest
+forms of fast/lossy binding, a la JSR 101 - simple JavaBean
+getters+setters+fields.  Once we are crawling there we can move on to JAXB
+and fancier stuff. Scott is going to need a compiletime to produce a
+binding-config for him to work off of at runtime.  BUT, that will take at
+least a little while to get a compiler going, so in the meantime, scott
+should work off of a "stubbed out compiletime", i.e., where the binding
+model is built by-hand.
+
+(5) So the first thing I'm doing is putting together the API for wrapping
+binding-config. The idea is basically in support of scott's binding design
+docs:
+- have a single place that represents how java+schema line up, by pairs of
+types and pairs of properties.
+- have this binding config be composable, e.g., one per JAR, with multiple
+JARs on the classpath
+- have an API that provides a compiler an easy way to build this all up, and
+runtime an easy way to query it all
+- to connect compiletime and runtime, the model should be serializable in a
+nice form.  I'm just using scott's binding-config.xsd directly - the
+serialization format will be XML.
+
+So Scott, you should be able to work by making your own binding-config.xml
+file according to your schema, loading it via BindingFile.forDocument(...),
+and then using the simple BindingFile/BindingType/BindingProperty API I'm
+about to check in.  Obviously, when you see it, it's not filled in or
+finished yet, but it can load+save itself and provide basic functionality.
+
+You'll all see in the binding-config.xsd file that we've got only two kinds
+of binding defined right now
+
+- By-name-bean binding - where you can line up getters/setters or fields in
+Java with element or attribute QNames in XML. (The unmarshaller ignores
+sequencing; the marshaller can only correctly serialize simple sequences.)
+- By-particle-binding - this is the JAXB style where you can line up
+getter/setters with actual particles in a content model tree.  (This is not
+filled out at all)
+
+We're obviously missing:
+
+- Simple type binding.  I will add something here as soon as I can.  I know
+you'll obviously need this Scott.
+
+Other things in the code
+
+- you'll also see that there is a BindingLoader concept which is a
+generalization of BindingFile; a BindingLoader can represent a whole search
+path of binding configs, e.g. via a classpath - and there is a
+BindingPathLoader which is a simple BindingLoader compositor.
+
+- We identify bindings based on the java+xml types that are bound to each
+other.  So I am making an abstraction JavaName and XmlName which represent a
+java class name and an xml schema component path.  A "java class name" is fu
+lly-qualified, with $'s separating inner classes and [][] at the end for
+arrays.  An "xml component name" is a path string that allows you to
+uniquely navigate through a logical SOM.  It's a generalization of the "xml
+type signature" concept we have in XmlBeans v1, because it can refer to
+individual particles, model groups, etc - as JAXB requires us to be able to
+do.
+
+Right now those two abstractions have a bunch of code but are not used
+(short of .forString() and .toString()), so take a look at them, and if I've
+done something wrong, now is the time to change them rather than after we
+start using those things everywhere.
+
+Patrick, based on your work in JAM, I'd esp like your input on whether
+JavaName is done right or wrong, or if the whole naming thing should be done
+some other way.
+
+Checkin coming soon,
+
+David
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

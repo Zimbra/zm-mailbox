@@ -1,0 +1,58 @@
+Return-Path: <xmlbeans-user-return-52-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9AL3cLB019037 for
+	<smith@popserver1.stanford.edu>; Fri, 10 Oct 2003 14:03:39 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9AL3WKJ009950 for
+	<smith@stanford.edu>; Fri, 10 Oct 2003 14:03:33 -0700 (PDT)
+Received: (qmail 10819 invoked by uid 500); 10 Oct 2003 21:03:25 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 10802 invoked from network); 10 Oct 2003 21:03:24 -0000
+Message-ID: <D44A54C298394F4E967EC8538B1E00F10248C932@lgchexch002.lgc.com>
+From: Dominique Devienne <DDevienne@lgc.com>
+To: "'xmlbeans-user@xml.apache.org'" <xmlbeans-user@xml.apache.org>
+Subject: RE: XMLBeans/Java Web Start Issues
+Date: Fri, 10 Oct 2003 16:02:49 -0500
+X-Zimbra-Received: Fri, 10 Oct 2003 16:02:49 -0500
+MIME-Version: 1.0
+X-Mailer: Internet Mail Service (5.5.2653.19)
+Content-Type: text/plain
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000052-0010
+
+> -----Original Message-----
+> From: David Bau [mailto:david.bau@bea.com]
+> 
+> We assume that the classloader that was used to load the TypeSystemHolder
+> class for each compiled schema also has access to the .xsb files that are
+> JARed up together with the TypeSystemHolder.class file.  Perhaps this is
+> the
+> wrong assumption?  But then in that case I'm not sure which classloader we
+> should be using which would have access to classloader resources instead.
+
+Might be... Because of ClassLoader delegation, a CL lower in the CL
+hierarchy might have loaded TypeSystemHolder.class, so wouldn't know of
+classes in JARs/dirs controlled by CLs higher in the hierarchy, where the
+.xsb files might be living!?!?
+
+Maybe the context class loader should be used. Then it's the reponsability
+of the client code to set it up correctly, which usually a framework does
+for you (like the servlet container for example). Or you could try your
+current method, then the context loader, then ...
+
+I'm no class loader expert though. --DD
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

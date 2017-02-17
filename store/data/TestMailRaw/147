@@ -1,0 +1,202 @@
+Return-Path: <xmlbeans-user-return-79-smith=stanford.edu@xml.apache.org>
+Received: from leland7.Stanford.EDU (leland7.Stanford.EDU [171.67.16.66])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hA6I9ToB024606
+	for <smith@popserver1.stanford.edu>; Thu, 6 Nov 2003 10:09:29 -0800 (PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland7.Stanford.EDU (8.12.10/8.12.10) with SMTP id hA6I8b9w027616 for
+	<smith@stanford.edu>; Thu, 6 Nov 2003 10:09:19 -0800 (PST)
+Received: (qmail 92844 invoked by uid 500); 6 Nov 2003 18:08:29 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 92821 invoked from network); 6 Nov 2003 18:08:29 -0000
+X-VirusChecked: Checked
+X-Env-Sender: kkress@bankofny.com
+X-Msg-Ref: server-20.tower-16.messagelabs.com!1068142109!2561783
+X-StarScan-Version: 5.1.9.3; banners=bankofny.com,-,-
+To: xmlbeans-user@xml.apache.org
+Subject: Re: Official release yet?
+MIME-Version: 1.0
+Message-ID: <OF6D187C6B.A8259626-ON85256DD6.0062A9E2-85256DD6.006382FF@bankofny.com>
+From: kkress@bankofny.com
+Date: Thu, 6 Nov 2003 13:08:27 -0500
+X-Zimbra-Received: Thu, 6 Nov 2003 13:08:27 -0500
+Content-Type: multipart/alternative; boundary="=_alternative 006382FA85256DD6_="
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000093-0010
+
+
+--=_alternative 006382FA85256DD6_=
+Content-Type: text/plain; charset="us-ascii"
+
+Srini,
+
+xmlbeans v1 was developed under BEA's umbrella and was 
+released to the public.
+
+BEA and the xmlbeans developers then decided it belonged in the 
+open source community and the code moved to the Apache
+Foundation.
+
+The foundation has a policy that the community around a codebase
+is more important than the code itself. The community must
+prove that it is open, dynamic and responsive; it must also
+show that it has staying power, that it will not implode and
+disappear. The proving ground is called incubation.
+
+So the community surrounding the code is in the incubator,
+where it will remain until The Apache Foundation's is satisfied
+that there is a viable support and development community 
+that will stand the test of time.
+
+Work has begun on a new version of xmlbeans as outlined in 
+http://nagoya.apache.org/wiki/apachewiki.cgi?XmlBeansFeaturePlan
+
+As the foundation members have repeatedly told the xmlbeans
+committers, incubation is about community, not about code quality.
+We believe the quality is there and we are demonstrating that
+the community is viable.
+
+I think you will quickly be convinced that there is an
+active and responsive group of people supporting both
+v1 and v2 of xmlbeans.
+
+  Ken.
+
+-- 
+Ken Kress                                     kkress@bankofny.com
+SAS, The Bank of New York                            484.605.4834
+
+
+
+
+Srinivas Yermal <syermal@encover.com>
+11/05/2003 05:24 PM
+Please respond to xmlbeans-user
+
+ 
+        To:     xmlbeans-user@xml.apache.org
+        cc: 
+        Subject:        Official release yet?
+
+
+Hi,
+
+I am really impressed after reading up quite a bit on xmlbeans. I am at 
+the threshold of using it at my work in a project. But the thing that is 
+holding me below this threshold is the fact that it is in incubation. 
+What does it mean precisely to be in incubation and does it mean that 
+xmlbeans cannot be used in a production environment? I did search quite 
+a bit looking for comparisons and other articles but in vain.
+
+Another question I have is you have two different trees in CVS (V1 & 
+V2). Does it mean that you are already working on version 2? I am a bit 
+confused.
+
+Thanks,
+Srini.
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+
+
+
+________________________________________________________________________
+The information in this e-mail, and any attachment therein, is confidential and for use by the addressee only. If you are not the intended recipient, please return the e-mail to the sender and delete it from your computer. Although The Bank of New York attempts to sweep e-mail and attachments for viruses, it does not guarantee that either are virus-free and accepts no liability for any damage sustained as a result of viruses.
+--=_alternative 006382FA85256DD6_=
+Content-Type: text/html; charset="us-ascii"
+
+
+<br><font size=2 face="sans-serif">Srini,</font>
+<br>
+<br><font size=2 face="sans-serif">xmlbeans v1 was developed under BEA's umbrella and was </font>
+<br><font size=2 face="sans-serif">released to the public.</font>
+<br>
+<br><font size=2 face="sans-serif">BEA and the xmlbeans developers then decided it belonged in the </font>
+<br><font size=2 face="sans-serif">open source community and the code moved to the Apache</font>
+<br><font size=2 face="sans-serif">Foundation.</font>
+<br>
+<br><font size=2 face="sans-serif">The foundation has a policy that the community around a codebase</font>
+<br><font size=2 face="sans-serif">is more important than the code itself. The community must</font>
+<br><font size=2 face="sans-serif">prove that it is open, dynamic and responsive; it must also</font>
+<br><font size=2 face="sans-serif">show that it has staying power, that it will not implode and</font>
+<br><font size=2 face="sans-serif">disappear. The proving ground is called incubation.</font>
+<br>
+<br><font size=2 face="sans-serif">So the community surrounding the code is in the incubator,</font>
+<br><font size=2 face="sans-serif">where it will remain until The Apache Foundation's is satisfied</font>
+<br><font size=2 face="sans-serif">that there is a viable support and development community </font>
+<br><font size=2 face="sans-serif">that will stand the test of time.</font>
+<br>
+<br><font size=2 face="sans-serif">Work has begun on a new version of xmlbeans as outlined in </font>
+<br><font size=2 face="sans-serif">http://nagoya.apache.org/wiki/apachewiki.cgi?XmlBeansFeaturePlan</font>
+<br>
+<br><font size=2 face="sans-serif">As the foundation members have repeatedly told the xmlbeans</font>
+<br><font size=2 face="sans-serif">committers, incubation is about community, not about code quality.</font>
+<br><font size=2 face="sans-serif">We believe the quality is there and we are demonstrating that</font>
+<br><font size=2 face="sans-serif">the community is viable.</font>
+<br>
+<br><font size=2 face="sans-serif">I think you will quickly be convinced that there is an</font>
+<br><font size=2 face="sans-serif">active and responsive group of people supporting both</font>
+<br><font size=2 face="sans-serif">v1 and v2 of xmlbeans.</font>
+<br>
+<br><font size=2 face="sans-serif">&nbsp; Ken.</font>
+<br><font size=2 face="sans-serif"><br>
+-- <br>
+Ken Kress &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; kkress@bankofny.com<br>
+SAS, The Bank of New York &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;484.605.4834</font>
+<br>
+<br>
+<br>
+<table width=100%>
+<tr valign=top>
+<td>
+<td><font size=1 face="sans-serif"><b>Srinivas Yermal &lt;syermal@encover.com&gt;</b></font>
+<p><font size=1 face="sans-serif">11/05/2003 05:24 PM</font>
+<br><font size=1 face="sans-serif">Please respond to xmlbeans-user</font>
+<br>
+<td><font size=1 face="Arial">&nbsp; &nbsp; &nbsp; &nbsp; </font>
+<br><font size=1 face="sans-serif">&nbsp; &nbsp; &nbsp; &nbsp; To: &nbsp; &nbsp; &nbsp; &nbsp;xmlbeans-user@xml.apache.org</font>
+<br><font size=1 face="sans-serif">&nbsp; &nbsp; &nbsp; &nbsp; cc: &nbsp; &nbsp; &nbsp; &nbsp;</font>
+<br><font size=1 face="sans-serif">&nbsp; &nbsp; &nbsp; &nbsp; Subject: &nbsp; &nbsp; &nbsp; &nbsp;Official release yet?</font></table>
+<br>
+<br>
+<br><font size=2><tt>Hi,<br>
+<br>
+I am really impressed after reading up quite a bit on xmlbeans. I am at <br>
+the threshold of using it at my work in a project. But the thing that is <br>
+holding me below this threshold is the fact that it is in incubation. <br>
+What does it mean precisely to be in incubation and does it mean that <br>
+xmlbeans cannot be used in a production environment? I did search quite <br>
+a bit looking for comparisons and other articles but in vain.<br>
+<br>
+Another question I have is you have two different trees in CVS (V1 &amp; <br>
+V2). Does it mean that you are already working on version 2? I am a bit <br>
+confused.<br>
+<br>
+Thanks,<br>
+Srini.<br>
+<br>
+<br>
+- ---------------------------------------------------------------------<br>
+To unsubscribe, e-mail: &nbsp; xmlbeans-user-unsubscribe@xml.apache.org<br>
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org<br>
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/<br>
+<br>
+</tt></font>
+<br>
+<br>
+
+--=_alternative 006382FA85256DD6_=--
+

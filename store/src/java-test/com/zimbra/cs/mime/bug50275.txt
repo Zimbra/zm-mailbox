@@ -1,0 +1,52 @@
+Return-Path: 	prvs=84406c7c5=someone@someplace.es
+Received: 	from SAME_SERVER (LHLO SAME_SERVER) (IP.IP.IP.IP) by SERVER with LMTP; Mon, 23 Aug 2010 21:40:10 +0200 (CEST)
+Received: 	from localhost (localhost.localdomain [127.0.0.1]) by SAME_SERVER (Postfix) with ESMTP id 8EBA6C8221 for <someone@someplace.com>; Mon, 23 Aug 2010 21:40:10 +0200 (CEST)
+X-Quarantine-ID: 	<iyyuQnzONYgg>
+X-Virus-Scanned: 	amavisd-new at
+X-Amavis-Alert: 	BAD HEADER SECTION, Non-encoded 8-bit data (char C3 hex): Subject: Encuesta 2010 'Valoraci\303\263n del software[...]
+X-Spam-Flag: 	NO
+X-Spam-Score: 	3.146
+X-Spam-Level: 	***
+X-Spam-Status: 	No, score=3.146 tagged_above=-10 required=6.6 tests=[BAYES_50=0.8, SPF_NEUTRAL=0.779, SUBJECT_NEEDS_ENCODING=0.049, SUBJ_ILLEGAL_CHARS=1.518] autolearn=no
+Received: 	from SAME_SERVER ([127.0.0.1]) by localhost (SAME_SERVER [127.0.0.1]) (amavisd-new, port 10024) with ESMTP id iyyuQnzONYgg for <someone@someplace.com>; Mon, 23 Aug 2010 21:40:08 +0200 (CEST)
+Received: 	from SOME.SERVER.IP (SOME.SERVER.IP [IP.IP.IP.IP]) by SAME_SERVER (Postfix) with ESMTP id 4D40CC821A for <someone@someplace.com>; Mon, 23 Aug 2010 21:40:08 +0200 (CEST)
+Received: 	(qmail 7768 invoked from network); 23 Aug 2010 19:40:14 -0000
+Received: 	from SAME.SERVER.IP (IP.IP.IP.IP) by SOME.SERVER.IP with SMTP; 23 Aug 2010 19:40:14 -0000
+Received: 	from ironport.ntm-gmbh.de ([62.245.157.252]) by SAME.SERVER.IP with Microsoft SMTPSVC(6.0.3790.3959); Mon, 23 Aug 2010 21:39:57 +0200
+X-IronPort-AV: 	E=Sophos;i="4.56,259,1280700000"; d="scan'208";a="9883479"
+Received: 	from sqc.ntm-gmbh.de ([62.245.157.226]) by ironport.ntm-gmbh.de with ESMTP; 23 Aug 2010 21:39:56 +0200
+Received: 	from localhost.localdomain (IP.IP.IP.IP [IP.IP.IP.IP]) by sqc.ntm-gmbh.de (Postfix) with ESMTP id 23BB5D8010E for <someone@someplace.com>; Mon, 23 Aug 2010 21:39:56 +0200 (CEST)
+MIME-Version: 	1.0
+Content-Transfer-Encoding: 	8bit
+Content-Type: 	multipart/mixed; boundary="_----------=_1282592395283023896"
+X-Mailer: 	MIME::Lite 3.021 (F2.76; T1.24; A2.04; B3.07_01; Q3.07)
+Date: 	Mon, 23 Aug 2010 21:39:55 +0200
+From: 	someone@someplace.es
+To: 	someone@someplace.com
+Subject: 	Encuesta 2010 'Valoración del software libre en la sociedad de Internet'
+Message-Id: 	<20100823193956.23BB5D8010E@sqc.ntm-gmbh.de>
+X-OriginalArrivalTime: 	23 Aug 2010 19:39:57.0704 (UTC) FILETIME=[F7CFD080:01CB42FA]
+
+Estimado Amigo/a,
+Linux Magazine participa en la segunda encuesta de software libre del portal "Portal Programas". Para conseguir una representación sólida que nos aporte datos significativos y así poder hacer una radiografía de la demografía que utiliza el software libre, os animamos a participar respondiendo a unas pocas preguntas.
+Según el propio texto introductorio de la encuesta:
+"El software libre está muy extendido y la mayoría lo utilizamos prácticamente a diario, pero no siempre conocemos las ventajas de utilizarlo. A través de esta encuesta pretendemos estudiar el conocimiento, uso y confianza que la sociedad de Internet tiene del software libre: ¿Realmente los usuarios saben qué es software libre? ¿Lo utilizan porque es gratuito o por que siguen su filosofía? ¿Por qué algunos dejan de usarlo? Vamos a responder preguntas que nos ayudarán a todos los que fomentamos el uso de software libre a conocer la realidad del software libre, el trabajo que falta por realizar y a encontrar soluciones para que más usuarios lo conozcan, lo usen y confíen en él.
+La encuesta está abierta a todo el mundo; justamente su gran ventaja es que no se va a enfocar en un tipo de usuario concreto (usuarios de Windows, de Linux, seguidores del software libre...). Vamos a conocer la realidad global del software libre, y para eso tenemos que contar con todos los usuarios. Es un trabajo complicado, pues pocas veces se han realizado informes sobre software libre que abarquen a perfiles de usuarios diversos, pero que sin duda proporcionará mucha información para el desarrollo de esta comunidad. Los resultados se publicarán el próximo 18 de septiembre, coincidiendo con el Día Internacional del Software Libre.
+Este es el segundo año que desde PortalProgramas.com se realiza esta encuesta, y entre las conclusiones del año pasado:
+El 91% de quienes han probado el software libre lo continúan usando
+el 85% de usuarios confían en el software libre; entre quienes desconfían de él, en el 52% de los casos lo hacen por miedo a que puedan insertar código dañino en sus programas
+Nos encantaría que participaras para que tengamos en cuenta tu opinión sobre el software libre y porque ayudarás al desarrollo de esta comunidad; son sólo 9 preguntas que responderás en menos de 3 minutos."
+La encuesta se encuentra en
+http://www.portalprogramas.com/encuestas/65356
+Y las conclusiones del año pasado se pueden leer en
+http://www.portalprogramas.com/descargas/estudio-valoracion-software-libre.pdf
+Un saludo
+Paul C. Brown
+Director
+--
+Linux Magazine - Edición en Castellano
+http://www.linux-magazine.es
+Linux New Media Spain S.L.
+Facebook: http://www.facebook.com/linuxmagazine.es
+Twitter: http://twitter.com/linux_spain
+Los boletines de Linux Magazine son un servicio sólo para suscriptores y usuarios que hayan solicitado expresamente este servicio. Si desea cancelar su suscripción a este servicio de Linux Magazine, por favor visite http://www.linux-magazine.es/Readers/Newsletter.

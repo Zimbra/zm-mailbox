@@ -1,0 +1,53 @@
+How to setup external LDAP auth
+-------------------------------
+
+1. Set domain attribute zimbraAuthMech to ldap.
+
+2. Three things are needed for authenticating to the external LDAP server:
+       - URL of the LDAP server: zimbraAuthLdapURL
+       - password entered by user
+       - the bind DN for the user, this can be setup using one of the following 3 ways. 
+
+      (A) zimbraAuthLdapBindDn
+          This is the bind DN template      
+
+      (B) zimbraAuthLdapSearchFilter
+          If set, then 
+              zimbraAuthLdapSearchBindPassword
+              zimbraAuthLdapSearchBindDn
+              zimbraAuthLdapSearchBase 
+          also need to be set.  
+          Server uses the four attrs to get the bind DN for the user.  
+          Server first does a LDAP search against the external LDAP server with:
+                 credential: specified by zimbraAuthLdapSearchBindDn/zimbraAuthLdapSearchBindPassword 
+                search base: zimbraAuthLdapSearchBase
+              search filter: zimbraAuthLdapSearchFilter under 
+          The search would return the bind DN for the user, if found.
+
+      (C) Account attribute zimbraAuthLdapExternalDn
+          Unlike (A) and (B), which are domain settings, this is an account level setting.   
+          This overrides the bind template and/or search setting, and directly contains the DN for the user in the external ldap server.
+  
+      zimbraAuthLdapBindDn and zimbraAuthLdapSearchFilter can contain expansion variables that are to be substituted by components in the account name:
+          %n = username with @ (or without, if no @ was specified)
+          %u = username with @ removed
+          %d = domain as foo.com
+          %D = domain as dc=foo,dc=com
+    
+          e.g. for user pshao@zimbra.com
+          %n => pshao@zimbra.com
+          %u => pshao
+          %d => zimbra.com
+          %D => dc=zimbra,dc=com
+
+      example for zimbraAuthLdapBindDn: uid=%u,ou=people,%D  (whatever LDAP DIT structure they are using)
+      example for zimbraAuthLdapSearchFilter: (&(mail=%u@%d)(objectclass=person))   (whatever object class they are using)
+
+      Note: 
+          - if all (A), (B), (C) are configured, the precedence order is (C), (B), (A), and there is no fallback to another 
+            method on failure.
+            For example, if both (B) and (C) are configured and (B) failed, it won't try to auth again using (C).
+            
+          - (A) is preferred over (B) because (B) does an extra LDAP search.
+          
+      

@@ -1,0 +1,30 @@
+<table cellpadding="0" cellspacing="0" width="100%"><tbody>
+	<tr>
+		<td class="zmwiki-breadcrumbHeader">
+			<table cellpadding="0" cellspacing="0" width="100%">
+				<tr>
+					<td class="zmwiki-breadcrumbs zmwiki-smallGrayLinks" width="100%"><wiklet class='PATH' format="template" /></td>
+					<td class="zmwiki-tags" width="100%"><wiklet class='TAGS' /></td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+	<tr>
+		<td class="zmwiki-titleHeader">
+	
+			<table border="0" cellpadding="0" cellspacing="0" width="100%">
+				<tr>
+					<td class="zmwiki-pageIcon" valign="top"><!--wiklet class='ICON' /--></td>
+					<td><span class="zmwiki-pageName" valign="top"><wiklet class='NAME' /></span><br> 
+					<span class="zmwiki-author zmwiki-smallGrayLinks"><wiklet class='MSG' key='wikiBy'/> <wiklet class='CREATOR' /></span><br>
+					<!--span class="zmwiki-author">Modified on <wiklet class='MODIFYDATE'/></span--> 
+					</td>
+					
+				</tr>
+			</table>
+			
+		</td>
+	</tr>
+</table>
+
+

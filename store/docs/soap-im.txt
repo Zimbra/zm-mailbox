@@ -1,0 +1,570 @@
+IM Soap API Reference
+=======================
+
+A few terms:
+
+ROSTER: your list of buddies
+
+CHAT: an ongoing threaded conversation between you and one or more
+other participants.  Some chats are 1:1 and some are multi-user (part
+of a conference room)
+
+GATEWAY: a service that allows the user to connect to 3rd party IM
+services, e.g. the Yahoo! IM service.
+
+ROLE: In MUC chat, this is something you have while you're IN the chat room
+      - Moderator, None, Participant, Visitor
+
+AFFILIATION: in MUC chat, a description of the rights you have to the room, not
+      related to being actually "in" the room. 
+      - Owner, Admin, Member, Outcast, None
+   
+
+------------------------------------------
+
+Additional IM error codes (see soap.txt for explanation of error
+codes):
+
+     im.INVALID_ADDRESS  - IM address is invalid (missing @ sign and
+                           not able to find in default domain)
+
+
+------------------------------------------
+
+
+
+IMGetRoster -- get buddy list
+-----------
+<IMGetRosterRequest/>
+
+<IMGetRosterResponse>
+     <presence SEE BELOW/> // MY current presence value
+     
+     <chats>
+        [  // 0 or more active chats
+           <chat thread="threadID">
+              <pcps> // participants in this chat
+                 [<p id="num" addr="address" [me="1"] [fulladdr="full_address_if_avail"]
+                      [name="friendly_name"] [role="ROLE"] [affiliation="AFFILIATION"]/>]*
+              </pcps>
+           </chat>
+        ]*
+     </chats>
+
+     Roster data is sent asynchronously from the server (see "Asynchronous Roster Response" below)
+     in the next notification block.
+
+</IMGetRosterResponse>
+
+
+
+IMSubscribe -- subscribe to someone's presence / modify subscription 
+-----------
+<IMSubscribeRequest addr="foo@bar.com" [name="friendly name"] [groups="group,group..."] [op="add|remove"]/>
+
+// If the user specified an alias, the server will resolve the alias
+// to a canonical address -- and add the canonical address to the
+// Buddy List.  The addr returned might be different than the
+// requested addr
+<IMSubscribeResponse addr="might-be-different@domain.com"/>
+
+
+IMAuthorizeSubscribe -- used to OK another user adding you to their buddy list
+--------------------    send this in response to a <subscribe> notification
+                        Optionally, add this user to my buddy list as well
+
+<IMAuthorizeSubscribeRequest addr="foo@bar.com" authorized="true|false"
+                             [add="true|false" name="nickname" groups="group,group..."]/>
+<IMAuthorizeSubscribeResponse/>
+
+
+IMSetPresence -- modify your presence state
+-------------
+<IMSetPresenceRequest [idle="seconds_idle"]>
+   [
+     <presence [lang="en"] [show="away|chat|dnd|xa|online|offline"] [priority="0-255"] [status="CUSTOM_STATUS"]/>
+   ]+  // if multiple, each must have a different lang  
+</IMSetPresenceRequest>
+
+<IMSetPresenceResponse>
+
+
+IMSendMessage -- send a new message, optional chat parameter
+-------------
+To an existing chat:
+<IMSendMessageRequest>
+   <message thread="threadID">
+      [<subject [lang="LANGUAGE"]>
+         Plaintext Subject
+      </subject>]*   // HTML
+      <body>
+         <text>
+            PLAINTEXT
+         </text>
+      [  <html>
+            HTML text (xhtml required: balance tags)
+         </html>]
+      [<typing/>]
+      </body>
+   </message>
+</IMSendMessageRequest>
+   
+...OR create a new chat:
+<IMSendMessageRequest>
+   <message addr="foo@bar.com">
+      [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // HTML
+      [<body [lang="LANGUAGE">BODY</body>]              // HTML
+      [<typing/>]
+   </message>
+</IMSendMessageRequest>
+
+<IMSendMessageResponse thread="thread id"/>
+
+**Send a blank message to indicate/stop typing indicator by itself**
+
+
+
+IMGetChat -- return the chat history (param = num messages)
+---------
+<IMGetChatRequest thread="threadID" [seq="1st-sequence-to-retrieve"]/>
+
+// chat unknown (server restart?  server flushed it due to idleness?)
+<IMGetChatResponse thread="threadID" error="not_found"/>
+
+// chat known:
+<IMGetChatResponse>
+   <chat thread="threadID">
+      <pcps>  // PARTICIPANT
+         <p id="num" addr="address" [me="1"] [fulladdr="full_address_if_avail"]
+                 [name="friendly_name"] [role="ROLE"] [affiliation="AFFILIATION"]/>*
+      </pcps>
+      <messages>
+         <message seq="sequence-number" ts="timestamp" from="id">
+            [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // HTML
+            [<body [lang="LANGUAGE">PLAINTEXT BODY</body>]              // plaintext
+            [<html>HTML BODY</html>]
+         </message>
+      </messages>   
+   </chat>
+</IMGetChatResponse>
+
+
+IMJoinConferenceRoom
+---------------------
+-- This API joins specified conference room, creating it if it didn't
+   already exists.
+-- The API returns a CHAT.  The <IMGetChatConfiguration>,
+   <IMModifyChatRequest>, and <IMGetChat> APIs can be used on that
+   chat.
+-- Use the "threadID" paremeter to <IMSendMessageRequest> to send a
+   message to this existing chat.   
+
+<IMJoinConferenceRoomRequest [nickname="nickname] [password="password"] [thread="threadId"] addr="chatAddr"/>
+
+        addr: the full address of the room.  This should be of the form
+              ROOMNAME@CONFERENCE_SERVICE - eg
+              myroom@conference.myhost.com  See IMListConferenceRooms
+              as a way to get a list of CONFERENCE_SERVICEs available 
+ 
+        thread: used for converting a 1:1 chat into a MUC
+
+        nickname: the "nickname" used for you in the room.  All users
+                  in a room are required to have a unique nickname in
+                  that room.  If you don't specify one, the server will
+                  use your bare username (the part of your name before
+                  the @ sign) as your nickname.  If you get a
+                  "NicknameConflict" response, you will have to try a
+                  different name.
+
+        password: used to enter password-protected rooms
+
+<IMJoinConferenceRoomResponse thread="threadId" status="STATUS1,STATUS2,..." [error="ERROR"]
+
+-- If the "NewRoomCreated" status is set, then this is a new room and
+   you're the owner!  The room is created in the "locked" state until
+   configured.  You need to (at the very least) send an
+   <IMModifyChat op=configure> request to the room in order to allow
+   other people to enter the room
+
+STATUS codes:
+        NewRoomCreated  // this is a NEW, LOCKED, ROOM. You must configure it.
+
+        // These are all informational, for future use only.  You can ignore them
+        // for now:
+        EnteringRoomJIDAvailable
+        AffiliationChange
+        ShowsUnavailableMembers
+        DoesNotShowUnavailableMembers
+        ConfigurationChange
+        OccupantPresence
+        LoggingEnabled
+        LoggingDisabled
+        NonAnonymous
+        SemiAnonymous
+        FullyAnonymous
+        RoomnickChanged //  your nickname is assigned or changed
+        YouHaveBeenBanned // 301 - you have been banned
+        NewRoomNickname // 303
+        KickedFromRoom // 307 -- you have been kicked from room
+        RemovedForAffiliationChange // 321 - you have been removed b/c your affiliation changed
+        RemovedForMembersOnly // 322 - room is now members-only, and you aren't a member
+        RemovedShutdown // 332 - system or conference service is shutting down
+
+ERROR codes:
+    PasswordRequired - couldn't enter room password required
+    Banned - room owner has banned you from the room
+    NoSuchRoom - 
+    NotAllowed - Room doesn't exist, and you're not allowed to create a new one
+    MustUseReservedRoomnick - 
+    NotAMember - Room is invite-only, and you aren't a member
+    NicknameConflict - Someone else is already using your nickname
+    MaxUsers - Room has reached capacity
+    Unknown
+
+**also look for notification: <n type="enteredchat" thread="threadId"/>**
+
+
+IMGetChatConfiguration
+-----------------------
+Get all configuration information about the specified chat.  Note that
+1:1 chats will have almost no configuration while MUC chats have many config
+
+<IMGetChatConfiguration (thread="threadId" || addr="address") [requestOwnerConfig="1"]/>
+
+  thread: a threadId from a chat you have already joined (see IMJoinChat)
+  
+  addr: a direct address for the conference room (e.g. roomname@conference.domain.com)
+  
+  requestOwnerConfig: if TRUE, then attempt to get the "owner's" config for the room, all values private or public.
+                      you can only get the owner's config for a room you have joined (thread specified)
+                      you can only get the owner's config if you are an owner of the room
+
+                      
+<IMGetChatConfifurationResponse (thread="threadId" || addr="address") isMuc="1|0" error="ERROR_CODE"/>
+   ERROR_CODES:
+     not_allowed:   you requested the owner config information but you are not an owner of this room
+     no_response_from_remote: the conference service did not respond to our requests
+     not_a_conference_room: the requested conference room doesn't exist, or you don't have permission to access it in that way
+
+<IMGetChatConfigurationResponse (thread="threadId" || addr="address") isMUC="1|0">
+   [<var name="name">VALUE</var>]*
+   [
+      <var name="name" multi="1">
+         [<value>VALUE</value>]+
+      </var> 
+   ]*
+</IMGetChatConfigurationResponse>   
+
+   isMUC: if TRUE then this is a chatroom, otherwise it is a 1:1 chat
+
+
+   Config Vars:
+   ------------
+       open             boolean         room is unlocked and may be entered?
+       creationdate     string          date this room was created
+       publicroom       boolean         room is hidden from RoomList
+       moderated        boolean         chat is moderated
+       persistent       boolean         room not deleted if server restarts
+       membersonly      boolean         only members may join, only admins can invite
+       nonanonymous     boolean         if TRUE, then users are not anonymous
+       semianonymous    boolean         no idea what this means
+       passwordprotect  boolean         is a password required to join
+       password         string          the password for the room (make sure you set
+                                        passwordprotect to be '1' if you want the password
+                                        enabled)
+       numoccupants     integer         number of people currently in the room
+       maxusers         integer         max # users allowed
+       longname         string          natural language name of room - this is the
+                                        'name' returned for the room via <IMListConferenceRooms>
+       description      string          short description of room
+
+       subject          string          current subject in room
+       subjectmodifyable boolean        can the subject be modified by participants?
+
+       allowinvites     boolean         allow Occupants to invite others
+
+       presencebroadcast MULTI-string   list of Roles which get presence updates
+       
+       whois            MULTI-string    list of Affiliations who may discover real JIDs of Occupants  
+       owners           MULTI-string    list of room owners (can change config)
+       admins           MULTI-string    list of users with ADMIN affiliation
+
+       enablelogging    boolean         log room conversations
+       reservednick     boolean         only login with registered nickname?
+       canchangenick    boolean         allow occupants to change nicknames
+       allowregister    boolean         allow users to register with the room
+
+
+FUTRUE - either don't work, or I haven't verified they work...but they're in the XMPP spec
+------
+       getmemberlist    MULTI-string    list of Roles/Affiliations that may retrieve member list
+       contactid        string - extended - roominfo_contactjid = contact address for room
+       logs_url         string - extended - roominfo_logs - URL for archived discussions from room
+
+       
+   
+IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, etc
+------------
+<IMModifyChatRequest thread="threadId" op="close"/>
+<IMModifyChatRequest thread="threadId" op="adduser" addr="address>INVITATION_MESSAGE</IMModifyChatRequest>
+
+<IMModifyChatRequest thread="threadId" op="configure">
+    [<var name="name">VALUE</var>]*
+    [<var name="name" multi="1">[<value>VALUE</value>]*</var>]*
+</IMModifyChatRequest>
+        --- see IMGetChatConfiguration for list of supported variables
+
+RESPONSES:
+
+<IMModifyChatResponse thread="threadID" error="not_found"/>
+  // chat unknown (server restart?  server flushed it due to idleness?)
+  // use <IMJoinConferenceRoomRequest> to join/create a MUC
+
+<IMModifyChatResponse thread="threadID" error="not_allowed"/>
+  // you do not have permission to modify this chat (not owner/admin)
+
+// successful
+<IMModifyChatResponse thread="threadId"/>
+
+
+IMGetPrivacyList -- request the privacy list
+-----------------
+<IMGetPrivacyListRequest [name="list_name"]/> // gets default list if
+                                              // no name specified
+   // response in 'privacy' notification below
+<IMGetPrivacyListResponse/>
+
+
+IMSetPrivacyList -- sets the list
+-------------------
+<IMSetPrivacyListRequest>
+   <list [name="name"]> // use default list if no name specified
+      [
+         // Entries are evaluated by the server in increasing order (1 then 2 then 3 ...)
+         //
+         // EG, this will allow 'foo@bar.com' but block all others @bar.com:
+         //   <item action="allow" order="1" addr="foo@bar.com"/>
+         //   <item action="deny" order="2" addr="bar.com"/>
+         //
+         <item action="allow|deny" order="UNIQUE_POSITIVE_INTEGER" addr="address OR domain"/>
+      ]*
+   </list>
+</IMSetPrivacyListRequest>
+
+<IMSetPrivacyListResponse/>
+
+
+IMGatewayList - gateways to external IM services
+--------------
+<IMGatewayListRequest/>
+
+
+<IMGatewayListResponse>
+  <service name="name" type="aim|msn|yahoo|icq" domain="type.mydomain.com">
+[     <registration  name="remoteName" state="connectionState" [timeUntilNextConnect="msec_until_next_connect_attempt"/> ] ]
+  </service>
+</IMGatewayListResponse/>
+
+connectedState is one of:
+   bad_auth               -- auth is bad, will not try to reconnect
+   intentionally_offline  -- user's local im presence is "offline" so not connected
+   disabled               -- the user's account has been disabled, we will not try to reconnect
+                               (this is probably b/c we detected the user logged into the service
+                                directly from another location)
+   online
+   shutdown               -- shutting down
+   start                  -- just created, will attempt first connect soon
+   trying_to_connect      -- connection attempt in progress
+NOT_IMPLEMENTED_YET:   booted_by_other_login  -- will not retry connect: someone has connected to our account has connected from another place
+
+IMGatewayRegister 
+-----------------
+<IMGatewayRegisterRequest op="reg" service="SERVICE_NAME" name="remoteName" password="remotePassword"/>
+<IMGatewayRegisterRequest op="unreg" service="SERVICE_NAME"/>
+<IMGatewayRegisterRequest op="reconnect" service="SERVICE_NAME"/> // tell the service to try a reconnect right now, also re-enable if the service was in the disabled state
+
+<IMGatewayRegisterResponse result="0|1"/>
+
+
+IMSetIdle
+-----------------
+<IMSetIdleRequest isIdle="1|0" idleTime="seconds_idle"/>
+<IMSetIdleResponse/>
+
+-- idleTime is number of seconds since last user action.  Client should
+make a best-effort to calculate this, but is free to return "0" if
+unsupported.
+
+-- Throws ServiceException.SESSION_REQUIRED if there is no session
+   referenced (a session MUST be active for this API to be used)
+
+When calculating presence, the sever will look at the "idle" values of
+all active web client sessions.  If all sessions are "idle" then the
+server will update the user's status to "away".
+
+The web client must be careful to unset the "idle" status when the
+user comes back, otherwise the user's presence will be stuck in the
+"Away" state and the user won't understand why.
+
+
+============================================
+CONFERENCE APIS
+  - A "conference service" can host one or more Conferences.  A user
+    can join a Conference (thereby creating a "Chat")
+============================================
+See: IMJoinConferenceRoomRequest
+See: IMModifyChatRequest
+See: IMGetChatConfiguration
+
+
+IMListConferenceServices
+-------------------------
+- List all the known conference services within our cloud
+
+<IMListConferenceServicesRequest/>
+<IMListConferenceServicesResponse>
+   <svc name="SERVICE_NAME" addr="SERVICE_ADDRESS"/>
+</IMListConferenceServicesResponse>
+
+List all the known conference services (MUC servers)
+
+
+IMListConferenceRooms
+----------------------
+- List all the rooms currently active in a given conference service
+
+<IMListConferenceRoomsRequest/>
+<IMListConferenceRoomsResponse>
+   <room name="ROOM_NAME" addr="ROOM_ADDRESS"/>
+</IMListConferenceRoomsResponse>   
+
+List all the available conference rooms on the requested server.
+Rooms can be joined via the <IMJoinConferenceRoomRequest> API.
+
+
+
+============================================================
+IM NOTIFICATIONS
+============================================================
+
+//
+// In soap header block (see soap.txt):
+//
+  [<soap:Header>
+     <context xmlns="urn:zimbra">
+       ...
+       <notify>
+          [<deleted.../>]
+          [<created.../>]
+          [<modified.../>]
+          [
+             <im>
+                [
+                //  Asynchronous Roster Response                
+                    <n type="roster">     
+                       [<n type="subscribed"...>]* // see "subscribed" notification below
+                       [<n type="unsubscribed"...>]* // see "unsubscribed" notification below
+                       ...
+                    </n>
+                ]?
+
+                'ask' means we are pending a response to our request to subscribe/unsubscribe
+                 ---> EG:  (subscription="none" ask="subscribe") means we're waiting
+                 for a response to subscribe, but we haven't received one yet
+                [
+                   <n type="subscribed" to="TOADDR" name="NAME" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // subscription is ACTIVE (you are receiving their presence)
+                ]*
+                [
+                   <n type="unsubscribed" to="TOADDR" name="NAME" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // subscription is NOT ACTIVE (you are NOT currently receiving their presence information)
+                ]*
+                [
+                // NEW MESSAGE RECEIVED:
+                   <n type="message" from="address" thread="chat-id" ts="TIMESTAMP" [error="MESSAGE_ERROR_CONDITION"]>
+                      [<subject [lang="LANG"]>SUBJECT</subject>]
+                      [<body [lang="LANG"] html="1|0">BODY</body>]
+                      [<typing/>]
+                   </n>
+                ]*
+                [
+                // Presence update for a specific user
+                   <n type="presence" from="FROMADDR" [lang="en"] [show="away|chat|dnd|xa"] [priority="0-255"] [status="STATUS"]/>
+                ]*
+                [
+                // User wants to add you to their buddy list (see <AuthorizeSubscribe> above)
+                   <n type="subscribe" from="FROMADDR"/> 
+                ]*
+                [
+                   <n type="enteredchat" thread="chat-id" addr="ADDRESS"> // specified user entered the chat
+                      <p id="num" addr="address" [me="1"] [fulladdr="full_address_if_avail"]
+                          [name="friendly_name"] [role="ROLE"] [affiliation="AFFILIATION"]/>
+                   </n>   
+                ]*
+                [
+                   <n type="chatpresence" thread="chat-id" addr="ADDRESS" role="ROLE" affiliation="AFFILIATION"> // presence update for chat user
+                      <p id="num" addr="address" [me="1"] [fulladdr="full_address_if_avail"]
+                          [name="friendly_name"] [role="ROLE"] [affiliation="AFFILIATION"]/>
+                   </n>   
+                ]*
+                [
+                   <n type="leftchat" [me="1"] thread="chat-id" addr="ADDRESS"/> // specified user left the chat
+                ]*
+                [
+                   <n type="chatclosed" thread="chat-id"/> // specified chat has been closed
+                ]*
+                [
+                 // An invitation to join a group chat:
+                   <n type="invited" thread="chat-id" addr="ADDRESS">INVITATION_MESSAGE</n>
+                ]*
+                [
+                // interop gateway has succeeded/failed to connect us, see <IMGatewayListResponse> above for more info
+                  <n type="gwStatus" service="GATEWAY_SERVICE_NAME" state="connectedState SEE ABOVE" [timeUntilNextConnect="msec_until_next_connect_attempt"/> ] />
+                ]*
+                [
+                // your account has connected to the interop service from another location
+                  <n type="otherLocation" service="GATEWAY_SERVICE_NAME" username="REMOTE_SERVICE_USERNAME"/>
+                ]
+                [
+                // privacy (block/allow) list
+                  <n type="privacy">
+                     <list name="name">
+                        [
+                           <item action="deny" order="UNIQUE_POSITIVE_INTEGER" addr="address OR domain"/>
+                        ]*
+                     </list>
+                  </n>   
+                ]
+             </im>]
+          ]?     
+        </notify>]
+
+        
+MESSAGE_ERROR_CONDITIONS:
+        forbidden
+        
+        internal_server_error
+        
+        item_not_found - user not found (usually NOT sent
+        
+        jid_malformed - address is malformed
+        
+        not_acceptable - server didn't like your message
+                          (e.g. bad-word filter rejected it)
+
+        not_allowed - you're not allowed to send a message there
+
+        payment_required
+
+        recipient_unavailable - that user is temporarily unavailable
+
+        redirect - that user is at a different address
+
+        remote_server_not_found - could not contact the user's domain
+
+        remote_server_timeout
+
+        resource_constraint - the system is too busy right now
+
+        service_unavailable - messages are not accepted by the service
+
+        undefined_condition
+

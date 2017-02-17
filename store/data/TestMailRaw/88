@@ -1,0 +1,79 @@
+Return-Path: <xmlbeans-dev-return-112-smith=stanford.edu@xml.apache.org>
+Received: from leland5.Stanford.EDU (leland5.Stanford.EDU [171.64.14.121])
+	by popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8GD91Yv003662 for
+	<smith@popserver1.stanford.edu>; Tue, 16 Sep 2003 06:09:01 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland5.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8GD8tqi029562 for
+	<smith@stanford.edu>; Tue, 16 Sep 2003 06:08:56 -0700 (PDT)
+Received: (qmail 91068 invoked by uid 500); 16 Sep 2003 13:05:43 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 91048 invoked from network); 16 Sep 2003 13:05:42 -0000
+Message-ID: <3F670AA5.3050405@fuzzymagic.com>
+Date: Tue, 16 Sep 2003 09:05:41 -0400
+X-Zimbra-Received: Tue, 16 Sep 2003 09:05:41 -0400
+From: Sean Brandt <sean@fuzzymagic.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.4)
+	Gecko/20030624
+X-Accept-Language: en-us, en
+MIME-Version: 1.0
+To: xmlbeans-dev@xml.apache.org
+Subject: [PATCH] Add to ways to find javac in CodeGenUtil
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000058-0010
+
+The code assumes that java.home is pointing to the jre directory inside
+an sdk install ( which IMHO is incorrect ). This patch tests for javac
+in {java.home}/bin/javac{.exe} as well as the odd ../bin location it
+previously searched.
+
+-Sean
+
+-----
+Index: src/xmlcomp/org/apache/xmlbeans/impl/tool/CodeGenUtil.java
+===================================================================
+RCS file:
+/home/cvspublic/xml-xmlbeans/v1/src/xmlcomp/org/apache/xmlbeans/impl/tool/CodeGenUtil.java,v
+retrieving revision 1.1
+diff -u -r1.1 CodeGenUtil.java
+--- src/xmlcomp/org/apache/xmlbeans/impl/tool/CodeGenUtil.java  15 Sep
+2003 18:20:33 -0000      1.1
++++ src/xmlcomp/org/apache/xmlbeans/impl/tool/CodeGenUtil.java  16 Sep
+2003 12:57:00 -0000
+@@ -401,6 +401,16 @@
+             return result;
+         }
+
++       result = new File(home + sep + "bin",tool);
++       if ( result.isFile()) {
++               return result;
++       }
++
++        result = new File(result.getPath() + ".exe");
++        if (result.isFile()) {
++            return result;
++        }
++
+         // just return the original toolFile and hope that it is on the
+PATH.
+         return toolFile;
+     }
+
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

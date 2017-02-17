@@ -1,0 +1,58 @@
+Date: Fri, 13 Apr 2012 13:53:23 -0700 (PDT)
+From: Qa Test1 <qa-test1@zimbra.com>
+To: Jeff Wagner <jwagner@vmware.com>
+Message-ID: <1333291928.20.1334350452532.JavaMail.jwagner@prome-2n-dhcp138.eng.vmware.com>
+In-Reply-To: <237585114.16.1334350437622.JavaMail.jwagner@prome-2n-dhcp138.eng.vmware.com>
+Subject: Sign Test
+MIME-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; 
+	boundary="----=_Part_18_1717267712.1334350452319"
+X-Mailer: Zimbra 7.2.0_GA_2670 (ZimbraWebClient - FF3.0 (Mac)/7.2.0_GA_2670)
+
+------=_Part_18_1717267712.1334350452319
+From: Qa Test1 <qa-test1@zimbra.com>
+To: Jeff Wagner <jwagner@vmware.com>
+Message-Id: <840314646.17.1334350452235.JavaMail.jwagner@prome-2n-dhcp138.eng.vmware.com>
+In-Reply-To: <237585114.16.1334350437622.JavaMail.jwagner@prome-2n-dhcp138.eng.vmware.com>
+Subject: Sign Test
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Sign test
+------=_Part_18_1717267712.1334350452319
+Content-Type: application/pkcs7-signature; name=smime.p7s
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=smime.p7s
+Content-Description: S/MIME Cryptographic Signature
+
+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
+1s31oDcSufZUFl6XqfsunbI4nAAAAAAAAA==
+------=_Part_18_1717267712.1334350452319--

@@ -1,0 +1,150 @@
+Return-Path: <xmlbeans-dev-return-316-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h91HEp5a011229 for
+	<smith@popserver1.stanford.edu>; Wed, 1 Oct 2003 10:14:51 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id h91HEXV4023787 for
+	<smith@stanford.edu>; Wed, 1 Oct 2003 10:14:34 -0700 (PDT)
+Received: (qmail 96594 invoked by uid 500); 1 Oct 2003 17:14:28 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 96581 invoked from network); 1 Oct 2003 17:14:27 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: Finalizers
+Date: Wed, 1 Oct 2003 10:14:26 -0700
+X-Zimbra-Received: Wed, 1 Oct 2003 10:14:26 -0700
+Message-ID: <4B2B4C417991364996F035E1EE39E2E10D8E10@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: Finalizers
+Thread-Index: AcOIM6KhGv/ZLmAyR8eg1QrVBIbC4gACNCSw
+From: "Eric Vasilik" <ericvas@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+X-OriginalArrivalTime: 01 Oct 2003 17:14:27.0714 (UTC)
+	FILETIME=[782E8E20:01C3883F]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000003a-0010
+
+
+My plans for the next version of the store are to remove finalizing XmlCurs=
+or.  Finalizing them in V1, was indeed, a "last-ditch clean-up effort".   =20
+
+Let me describe a bit why this situation came about.
+
+The V1 XML store creates fewer objects than the XmlCursor can address.  Whe=
+n XML content is manipulated, say, moved from one place to another, cursors=
+ within that content need to be moved with it.  This requires the store to =
+search for these cursors which requires that the XML have a list of cursors=
+ in the vicinity of the XML being manipulated.  Basically, the cursors poin=
+t to the XML and the XML points back to the cursors. (note: cursors are act=
+ually implemented with two objects)
+
+This means that if cursors are not closed (we have a dispose method on curs=
+or which performs this), then the XML will continue to point to the cursors=
+, not allowing them to be garbage collected.
+
+If users creates and forget cursors many times on the same XML document wit=
+hout disposing them, you can get into a situation where you run out of memo=
+ry.  Cursors do not seem like a resource (like sockets or database connecti=
+ons), and users can easily not assume they do not need to be disposed (clos=
+ed).
+
+Thus, we added a finalizer.  If the user called dispose, the finalizer woul=
+d do nothing.
+
+Ironically, recently I looked into a bug where I discovered that the rate o=
+f the creation of cursors (which were properly being disposed) was greater =
+than the rate that they were being finalized.  This, effective, starvation =
+caused an out of memory exception!
+
+I've learned my lesson, finalizers bad.  What I would have liked to have se=
+en was a way for an object to unregister itself for finalization.  With thi=
+s, when a cursor was disposed, I could have notified the VM that a particul=
+ar object no longer needed finalization.  Does such a thing exist?
+
+- Eric
+
+-----Original Message-----
+From: Darrell Teague [mailto:darrell.teague@mantech.com]
+Sent: Wednesday, October 01, 2003 8:49 AM
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: Finalizers
+
+
+Two more cents on this topic...
+
+Joshua Bloch of Sun and many others (myself included) have argued that reli=
+ance on finalizers for anything other than a last-ditch clean-up effort is =
+not recommended.  Instead, it is recommended that any resource consuming cl=
+asses (i.e., that open socket, file, database connection, whatever) provide=
+ some type of "close" method that should (in practice) be called by the cli=
+ent.  Granted, there is no way to ensure the client will call such a method=
+ but the finalize() method is not guaranteed to happen, in the sequence exp=
+ected, etc either.  At least with a declared public method, clients can be =
+guaranteed a tidy clean-up process (if they call it) whereas reliance on fi=
+nalizers may be non-deterministic since the JVM implementation and other fa=
+ctors beyond the developers control determine the sequence, behavior, prior=
+ity, etc of the call to finalize().=20
+
+>>> don@bea.com 09/30/03 01:12PM >>>
+As you may already know, finalizers must be used with extreme caution. =20
+Because they are run by in the GC thread (when all other threads are=20
+paused) if a finalizer deadlocks, the entire VM will be frozen.  This=20
+makes using synchronization in a finalizer particularly dangerous. =20
+There are also problems around any operations that allocate memory in a=20
+finalizer.
+
+(Note: my information may be out of date).
+
+    -Don
+
+David Bau wrote:
+
+>Eric, was thinking about the threading/object creation etc issues over the
+>weekend.
+>
+>Another interesting issue: currently we use a finalizer on cursors, but
+>finalizers seem to be fairly expensive, so apps that spew out lots and lot=
+s
+>of cursors have issues.  I wonder what problems we'd have to deal with in
+>order to eliminate the finalizer, and whether or not that would be possibl=
+e,
+>or if it would come into conflict with some of the other parameters of the
+>problem just like synchronization?
+>
+>David
+>
+>
+>- ---------------------------------------------------------------------
+>To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+>For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+>Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+>
+>
+> =20
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

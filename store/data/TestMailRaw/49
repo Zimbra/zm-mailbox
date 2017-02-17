@@ -1,0 +1,101 @@
+Return-Path: <xmlbeans-user-return-131-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.67.16.119])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hB4NgToB018878
+	for <smith@popserver1.stanford.edu>; Thu, 4 Dec 2003 15:42:29 -0800 (PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id hB4NgSU5017894 for
+	<smith@stanford.edu>; Thu, 4 Dec 2003 15:42:28 -0800
+Received: (qmail 11945 invoked by uid 500); 4 Dec 2003 23:42:20 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 11932 invoked from network); 4 Dec 2003 23:42:19 -0000
+Message-ID: <017001c3bac0$34cf16a0$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+References: <FAF98113-25D3-11D8-BCCC-000393D5A006@vrtx.com>
+	 <015a01c3baad$e640c9a0$0fa8a8c0@lightbox>
+	 <F349361B-26AD-11D8-A026-000393D5A006@vrtx.com>
+Subject: Re: XMLBeans or perhaps just an XML question...
+Date: Thu, 4 Dec 2004 18:41:55 -0500
+X-Zimbra-Received: Thu, 4 Dec 2004 18:41:55 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000031-0010
+
+Any XmlObject can be coerced to a SimpleValue (another interface in the same
+package), and from that you can say
+
+((SimpleValue)xobj).getStringValue();
+
+For a complex type, this will return the text value of the contents with all
+the tags removed (and &lt; entities etc resolved).
+
+David
+----- Original Message ----- 
+From: "Thomas Condon" <tom_condon@vrtx.com>
+To: <xmlbeans-user@xml.apache.org>
+Sent: Thursday, December 04, 2003 6:02 PM
+Subject: [xmlbeans-user] Re: XMLBeans or perhaps just an XML question...
+
+
+> I changed the type to xs:anyType and when I access the XMLObject using
+> toString() I get
+>
+> <xml-fragment xmlns:xs="http://www.w3.org/2001/XMLSchema"
+> xmlns:hv="http://www.vpharm.com/hypervis/xml">25.0</xml-fragment>
+>
+> How do I just get the 25.0 as a string?
+>
+> Thanks for the help.  It has been invaluable.
+>
+> Tom Condon
+>
+>
+> On Dec 4, 2003, at 4:30 PM, David Bau wrote:
+>
+> > In XML and XML Schema, strings are just strings - they're not allowed
+> > to
+> > contain elements.
+> >
+> > If you were to say something like
+> >
+> > msg.setBody("<foo><bar/></foo>");
+> >
+> > then what you'd get is something like
+> > <body>&lt;foo&gt;&lt;bar/&gt;&lt;/foo&gt;</body>
+> >
+> > If you really want whole tags inside an element like <body>, but you
+> > don't
+> > want to constrain what kind of structure you have in there, then what
+> > you
+> > have is the "xs:anyType" type rather than the "xs:string" type.
+> >
+> > I.e., write as follows:
+> >
+> >    <xs:element name="body" type="xs:anyType"/>
+> >
+> > That should do it - then you should be able to copy whole XmlObject (or
+> > document) subtrees, complete with subelements and so on, into your
+> > <body>.
+> >
+> > David
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

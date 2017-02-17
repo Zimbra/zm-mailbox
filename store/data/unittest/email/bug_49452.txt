@@ -1,0 +1,92 @@
+Return-Path: no-reply@plus1solutions.net
+Received: from mta02.zimbra.com (LHLO mta02.zimbra.com) (10.113.63.62) by
+ corp.zimbra.com with LMTP; Fri, 30 Jul 2010 06:24:49 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mta02.zimbra.com (Postfix) with ESMTP id 23641C7823E;
+	Fri, 30 Jul 2010 06:29:11 -0700 (PDT)
+X-Virus-Scanned: amavisd-new at zimbra.com
+X-Spam-Flag: NO
+X-Spam-Score: 0.229
+X-Spam-Level: 
+X-Spam-Status: No, score=0.229 tagged_above=-10 required=3
+	tests=[BAYES_00=-1.9, HTML_IMAGE_ONLY_28=1.404, HTML_MESSAGE=0.001,
+	MIME_HTML_ONLY=0.723, TO_EQ_FM_HTML_ONLY=0.001] autolearn=no
+Received: from mta02.zimbra.com ([127.0.0.1])
+	by localhost (mta02.zimbra.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id sm73-WHD+fBB; Fri, 30 Jul 2010 06:29:02 -0700 (PDT)
+Received: from mailhost3.vmware.com (mailhost3.vmware.com [10.16.27.45])
+	by mta02.zimbra.com (Postfix) with ESMTP id B31C8C78258
+	for <support@zimbra.com>; Fri, 30 Jul 2010 06:28:55 -0700 (PDT)
+Received: from proofpoint-agent-3.vmware.com (proofpoint-agent-3.vmware.com [10.16.79.14])
+	by mailhost3.vmware.com (Postfix) with ESMTP id 889B8CD903
+	for <support@zimbra.com>; Fri, 30 Jul 2010 06:28:55 -0700 (PDT)
+Received: from sledgehammer.vmware.com (sledgehammer.vmware.com [10.16.79.36])
+	by proofpoint-agent-3.vmware.com (8.14.3/8.14.3) with ESMTP id o6UDSp1L007089
+	for <support@zimbra.com>; Fri, 30 Jul 2010 06:28:55 -0700
+Received: from enterprisemail.vps-host.net (enterprisemail.vps-host.net [69.89.1.77])
+	by sledgehammer.vmware.com (Postfix) with ESMTP id 193491B003
+	for <support@zimbra.com>; Fri, 30 Jul 2010 06:28:51 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by enterprisemail.vps-host.net (Postfix) with ESMTP id 1706B132452C;
+	Fri, 30 Jul 2010 09:28:51 -0400 (EDT)
+Received: from enterprisemail.vps-host.net ([127.0.0.1])
+	by localhost (enterprisemail.vps-host.net [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Adw6VvdkA9W6; Fri, 30 Jul 2010 09:28:51 -0400 (EDT)
+Received: from plus1staging.net (plus1staging.net [216.154.215.195])
+	by enterprisemail.vps-host.net (Postfix) with ESMTPA id F36FC13244FC;
+	Fri, 30 Jul 2010 09:28:50 -0400 (EDT)
+From: no-reply@plus1solutions.net
+Reply-To: screenings@plusonesolutions.net
+To: support@zimbra.com
+Message-ID: <458273.0.1280496530828.JavaMail.tomcat@plus1staging.net>
+Subject: Support Case 00056380
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 30 Jul 2010 09:28:50 -0400 (EDT)
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10432:5.0.10011,1.0.148,0.0.0000
+ definitions=2010-07-30_03:2010-07-30,2010-07-30,1970-01-01 signatures=0
+X-Proofpoint-Spam-Details: rule=tag_notspam policy=tag score=0 spamscore=0 ipscore=0 phishscore=0
+ bulkscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
+ engine=6.0.2-1004200000 definitions=main-1007300060
+
+<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 3.2 Final//EN'><HTML><HEAD></HEAD><=
+BODY ><TABLE BORDER=3D'0' CELLPADDING=3D'0' CELLSPACING=3D'0' WIDTH=3D'600'=
+ STYLE=3D'Font-Family : Arial, Helvetica, sans-serif ; Font-Size : 12px'><T=
+R><TD ROWSPAN=3D'2'><a href=3D'http://www.plusonesolutions.net'><img src=3D=
+'http://resources.plus1solutions.net/images/logo.gif' alt=3D'PlusOne Soluti=
+ons' width=3D'154' height=3D'60' ALIGN=3D'BOTTOM' BORDER=3D'0' HSPACE=3D'10=
+' VSPACE=3D'1'/></TD><TD HEIGHT=3D'5'></TD></TR><TR><TD HEIGHT=3D'12' COLSP=
+AN=3D'2'></TD></TR><TR><TD HEIGHT=3D'1' COLSPAN=3D'2'><hr/></TD></TR></TABL=
+E><TABLE BORDER=3D'0' CELLPADDING=3D'0' CELLSPACING=3D'0' WIDTH=3D'600' STY=
+LE=3D'Font-Family : Arial, Helvetica, sans-serif ; Font-Size : 12px'><TR><T=
+D><STYLE type=3D'text/css'>{ font-family:arial; font-size:10pt; }P { font-f=
+amily:arial; font-size:10pt; margin-left:10px;} table tr td.footbar {height=
+:22px; width:590px; padding-left:10px; font-size:12px; font-family:Arial;} =
+table tr td.disclaimer {font-size:6.5pt; width:590px;  padding-left:10px; c=
+olor:#666666;}</STYLE><p>Dear RICHARD LANGTRY:</p><p>MERRILL STRUCHEN is re=
+questing your approval to add ZZ TOPS to their list of authorized companies=
+ for the purpose of providing services.</p><p>To approve or decline this re=
+quest, <a href=3D'https://www.plus1staging.net/plus1staging.net/companyAuth=
+orization.jsp?_tq=3DIat3Cj7MEAvFJQTNw801o2PbvIX9XRLm1wRGSoLTzHaISuqsFYNXU1b=
+PLdoeJb/5XbLAJYlfS0Tu
+3+hmi4ASgT9KHHY8l6SP/M7gtZL2gkK/PX22785onUkhvFLyP5/TO+nYJL4i76XX1cAyJbbx4ap=
+x
+t6IaOeNOxLHjMJ2Godq1yxOJjgdY3OYcAIX6c4bNz1In6rJo6ag=3D' target=3D'_blank'>C=
+lick Here</a> and respond accordingly OR</p><p>Log in to the Company Portal=
+ and follow these steps:</p><p><ol><li>Select Employee/Relationships in lef=
+t menu bar</li><li>Select Authorized Employees</li><li>Select technician re=
+cord with a status of Company Approval Pending</li><li>Select Approve or De=
+cline</li><li>Select Apply</li><li>Answer question - Does your employee pro=
+vide service on behalf of your company to all other companies with which yo=
+u have a business relationship</li><li>Select Save</li><li>Select Continue<=
+/li></ol></p><p>MERRILL STRUCHEN will be notified of your decision promptly=
+. If you have any questions, please contact  PlusOne Solutions, Inc. at 877=
+-943-0100 or send an email to <a href=3D'mailto:screenings@plusonesolutions=
+.net'>screenings@plusonesolutions.net</a>.</p><p>Sincerely,</p><p>PlusOne S=
+olutions</p><hr/><table cellpadding=3D'0' cellspacing=3D'0' border=3D'0'><t=
+r><td class=3D'disclaimer'><br/><b>Please do not reply to this email direct=
+ly. </b><a href=3D'http://plusonesolutions.net/contact_us'>Contact Us</a><b=
+r/> Copyright 2010 PlusOne Solutions, Inc.  All rights reserved. <br/> 30 W=
+indsormere Way, Suite 300, Oviedo, Florida 32765</td></tr></table></TD></TR=
+></TABLE></BODY></HTML>

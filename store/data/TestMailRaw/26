@@ -1,0 +1,107 @@
+Return-Path: <xmlbeans-user-return-90-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hABL3doB004515
+	for <smith@popserver1.stanford.edu>; Tue, 11 Nov 2003 13:03:39 -0800
+	(PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.10/8.12.10) with SMTP id hABL3Sfm016479 for
+	<smith@stanford.edu>; Tue, 11 Nov 2003 13:03:28 -0800 (PST)
+Received: (qmail 89431 invoked by uid 500); 11 Nov 2003 21:03:21 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 89414 invoked from network); 11 Nov 2003 21:03:21 -0000
+Message-ID: <016901c3a897$3a4d2c10$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+References: <9A06B7E0-1483-11D8-B5EC-000393D5A006@vrtx.com>
+Subject: Re: Need some help with validation error...
+Date: Tue, 11 Nov 2003 16:03:15 -0500
+X-Zimbra-Received: Tue, 11 Nov 2003 16:03:15 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000001a-0010
+
+Hi Tom,
+
+Not sure, looks OK, though the schema and example are incomplete so it's
+hard to know for 100% sure.
+
+How are you loading your document - is it via
+ClusteredPharmacoreDescriptionsDocument.Factory.parse(...), or are you using
+the command-line validator?  Are the schemas compiled or loaded dynamically?
+
+David
+----- Original Message ----- 
+From: Tom Condon
+To: xmlbeans-user@xml.apache.org
+Sent: Tuesday, November 11, 2003 3:14 PM
+Subject: [xmlbeans-user] Need some help with validation error...
+
+
+I am trying to get some xml to validate. I have a schema that includes a
+schema and uses my own namespace I am getting the following error:
+
+error: Element not allowed:
+clusteredPharmacophoreDescriptions@http://www.vpharm.com/hypervis/xml
+error: Expected element(s)
+
+
+The schema I use to define this document is:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://www.vpharm.com/hypervis/xml"
+xmlns:hv="http://www.vpharm.com/hypervis/xml"
+xmlns:xs="http://www.w3.org/2001/XMLSchema"
+elementFormDefault="qualified">
+<xs:include schemaLocation="HyperVisTypes.xsd"/>
+<xs:element name="clusteredPharmacophoreDescriptions"
+type="hv:ClusteredPharmacophoreDescriptionList"/>
+</xs:schema>
+
+The complex type I am using is defined in HyperVisTypes.xsd, the beginning
+of looks like this:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://www.vpharm.com/hypervis/xml"
+xmlns:hv="http://www.vpharm.com/hypervis/xml"
+xmlns:xs="http://www.w3.org/2001/XMLSchema"
+elementFormDefault="qualified">
+
+
+The beginning of the xml document looks like this:
+
+<hv:clusteredPharmacophoreDescriptions
+xmlns:xs="http://www.w3.org/2001/XMLSchema"
+xmlns:hv="http://www.vpharm.com/hypervis/xml">
+<hv:clusteredPharmacophoreDescription>
+<hv:clusteredBits>
+<hv:clusteredBit>7317823</hv:clusteredBit>
+<hv:clusteredBit>7317371</hv:clusteredBit>
+<hv:clusteredBit>7317303</hv:clusteredBit>
+
+Any ideas of what I am doing wrong?
+
+Thanks,
+
+Tom Condon
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

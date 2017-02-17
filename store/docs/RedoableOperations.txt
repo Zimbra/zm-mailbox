@@ -1,0 +1,161 @@
+# List of object types whose primary keys are externally visible
+
+account
+blob_info
+mailbox_blob
+conversation
+tag
+saved_search
+
+
+# This is a list of Java methods that map to redo log entries.
+# They are the high-level application logics that cause state
+# change in MySQL, Blob Store, and Lucene.
+#
+# The methods are public and are used by the
+# com.zimbra.cs.service[.*] packages.
+
+
+# Provisioning
+
+Account.createAccount
+	NEW ROWS (account)
+	- Inputs: email address
+	- Changes: 1 account (NEW)
+	- Important generated IDs: account.id
+	- How to redo:
+		- Create an account with a specified ID.
+Mailbox.createMailbox
+	- Inputs: Account object
+	- Changes: 1 mailbox (NEW or existing)
+
+
+
+####################################################################
+#
+# FROM MAILBOX CLASS
+#
+####################################################################
+
+
+# Blob
+
+BlobManager.storeMailMessage
+	NEW ROWS (blob_info)
+	- Inputs: MIME message
+	- Changes: 1 blob_info, 1 blob in Blob Store
+	- Important generated IDs: blob_info.id
+	- How to redo:
+		- Create a blob_info entry with a specific ID.
+		- Store the blob using specified URI.
+Mailbox.receiveMessage (add a message to a mailbox)
+	NEW ROWS (mailbox_blob, conversation)
+	- Inputs: blob.id [, blob size, MIME message, hasAttachment, isFromMe, fragment]
+	- Changes: 1 mailbox_blob (NEW), 1 conversation (NEW or existing), mailbox size
+	- Important generated IDs: mailbox_blob.id, conversation.id (if NEW)
+	- Corresponds to a document to index in Lucene
+	- How to redo:
+		- Create a mailbox_blob with a specified ID.
+		- Create a conversation with a specified ID.
+		- Add mailbox_blob to conversation.
+	- Redo inputs: blob.id, mailbox_blob.id, conversation.id
+
+# Mailbox, Messages, and Conversations
+
+Mailbox.deleteMessage
+	- Inputs: mailbox_blob.id
+	- Changes: 1 mailbox_blob, 1 conversation
+Mailbox.setMessageFlag
+	- Inputs: mailbox_blob.id, flag (boolean)
+	- Changes: 1 mailbox_blob (flagged_flag), 1 conversation (flagged_count)
+Mailbox.markMessageUnread
+	- Inputs: mailbox_blob.id, unread (boolean)
+	- Changes: 1 mailbox_blob (unread_flag), 1 conversation (unread_count)
+Mailbox.moveMessage
+	NEW ROWS (conversation)
+	- Inputs: mailbox_blob.id, location (i.e. mailbox, trash, or spam)
+	- Changes: 1 mailbox_blob, 2 conversations
+	- Important generated IDs: conversation.id (if necessary, in destination location)
+	- How to redo:
+		- Repeat the call to moveMessage, but somehow passing in a specific
+		  ID for the destination conversation.  If the destination conversation
+		  doesn't exist, one should be created with that ID.
+
+Mailbox.deleteConversation
+	- Inputs: conversation.id
+	- Changes: 1 conversation, all mailbox_blob's in that conversation
+Mailbox.moveConversation
+	NEW ROWS (conversation)
+	- Inputs: conversation.id, location
+	- Changes: source conversation, mailbox_blob's in that conversation, new destination conversation
+	- Important generated IDs: conversation.id (for destination location, if necessary)
+Mailbox.setConversationFlag
+	- Inputs: conversation.id, flag (boolean)
+	- Changes: 1 conversation, all mailbox_blob's in that conversation
+Mailbox.markConversationUnread
+	- Inputs: conversation.id, unread (boolean)
+	- Changes: 1 conversation, all mailbox_blob's in that conversation
+Mailbox.alterConversationTags
+	- Inputs: conversation.id, tag.id, addTag (boolean)
+	- Changes: 1 conversation_tag (add or remove)
+
+
+Mailbox.createTag
+	NEW ROWS (tag.id)
+	- Inputs: name, color (byte)
+	- Changes: 1 tag
+	- Important generated IDs: tag.id
+Mailbox.deleteTag
+	- Inputs: tag id
+	- Changes: 1 tag
+Mailbox.renameTag
+	- Inputs: tag id, name
+	- Changes: 1 tag
+Mailbox.setTagColor
+	- Inputs: tag id, color (byte)
+	- Changes: 1 tag
+
+
+
+####################################################################
+#
+# FROM ACCOUNT CLASS
+#
+####################################################################
+
+Account.setPref (not used yet)
+	- Inputs: pref name string, value string
+	- Changes: 1 account_pref (NEW)
+Account.setPrefs
+	- Inputs: map of (pref name, value) strings
+	- Changes: multiple account_pref (NEW)
+Account.deletePref (not used yet)
+	- Inputs: pref name string
+	- Changes: 1 account_pref (DELETE)
+Account.createSavedSearch
+	NEW ROWS (saved_search)
+	- Inputs: name string, query string
+	- Changes: 1 saved_search
+	- Important generated IDs: saved_search.id
+Account.modifySavedSearch
+	- Inputs: search id, name string, query string
+	- Changes: 1 saved_search
+Account.deleteSavedSearch
+	- Inputs: search id
+	- Changes: 1 saved_search (DELETE)
+
+
+
+TODO LIST
+
+- Redo log rollover - trigger off of checkpoint?
+                      or replace the notion of checkpoint with rollover?
+- Full-blown crash recovery routines in/around RedoLogManager
+- Full-blown standby-mode redo player
+- SocketRedoLogger
+- SoapRedoLogger - do we want to tolerate the bloatness of XML?
+- Logic for archiving redo logs that get rolled over
+	- be careful with a log whose last CKPT entry shows pending txns
+	- crash recovery will require this file, so it can't be moved off
+- Add finally{} block to all places that use RedoableOp-derived class
+	- so that we can do op.abortIfActive() when any exception is thrown

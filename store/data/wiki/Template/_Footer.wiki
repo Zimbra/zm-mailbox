@@ -1,0 +1,7 @@
+	<table width="100%">
+		<tbody><tr><td class="zmwiki-copyright zmwiki-smallGrayLinks" width="*">Copyright &copy; 2006 <a href="http://www.zimbra.com">Zimbra Inc.</a>, All rights reserved.</td>
+			<td class="zmwiki-copyright zmwiki-smallGrayLinks" align=right>
+				Do not distribute without permission.
+			 </td>
+		</tr>
+	</tbody></table>

@@ -1,0 +1,397 @@
+OVERVIEW
+========
+Currently, we have "mail object" based access control mechanism in that 
+ACLs are generally associated with a single object in a user's Mailbox,
+for example, a folder or a tag.  The ACLs for mail object based access 
+controls are persisted in the user's database, in the METADATA column on the 
+MAIL_ITEM row for the folder or tag.   ZimbraServer/docs/acl.txt describes 
+"mail object" based access controls.
+
+In addition to the above access control scheme, it is required that we 
+support access control on the account level, where permissions are 
+granted on the account level, instead of on individual folders or tags.
+
+Implementation of account based access controls is not changing any aspect 
+of "mail object" based access controls.   However many of the terminologies 
+and concepts are shared between the two.
+
+This document describes the account based access control mechanism.  
+On a side note, the role based delegated admin feature in GnR will be built 
+on the same model.
+
+
+RIGHTS
+======
+Unlike mail object based access controls, rights for account based controls 
+are defined on a "higher", or "functionality" level.  For example, instead 
+of the generic combination of "read', 'write" rights that can be applied to 
+all mail objects, rights for account based access controls are like 
+"viewFreeBusy", "invite", ...
+
+zmmailbox listPermission(lp) command list all the supported permissions.
+
+NEGATIVE RIGHTS
+===============
+Negative right are to specifically deny certain privileges to the "grantee".
+Negative rights will take precedence over positive rights.
+
+For example, if you granted "no invite" to user A, then invites from user A 
+would not be able to automatically book the target account's calendar for the 
+appointment.  Regardless of what other grants for the same right is applied to 
+user A(e.g. allow all authed users).
+
+
+GRANTEES
+========
+Like mail object based access controls:
+(1) a user always has full, irrevocable rights to their own mailbox.
+
+(2) global administrators are allowed full access to everything on the system.
+
+(3) delegated administrators are allowed full access to a user's 
+    mailbox if the delegated admin as effective adminLoginAs/adminLoginCalendarResourceAs
+    right on the user.
+
+Rights can be granted(allowed or denied) to other principals.  
+The type of supported grantees are:
+
+        user        - a Zimbra user
+        group       - a Zimbra group(distribution list)
+        domain      - a Zimbra domain
+        all-authed  - all authed Zimbra usres
+        key         - an external user with an access key
+        public      - the public
+
+
+CONFLICTING GRANTEES
+====================
+When more than one ACEs of an ACL on the same right match a grantee and all ACEs 
+don't agree on the same allow/deny for the right, the ACE with the most specific 
+match takes precedence; and if all matching ACEs are equally related to the grantee, 
+the negative ACE takes precedence.
+
+example 1:
+    - ACL has:
+          . allow user A for right R
+          . deny group G for right R
+    - user A is in group G
+    => user A will be allowed for right R, because user match is more specific than group match.
+     
+     
+example 2:
+    - ACL has:
+          . allow group G1 for right R
+          . deny group G2 for right R
+    - group G2 is a member of group G1
+    - user A is a member of group G2
+    => user A will be denied for right R, because G2 is a more specific match than G1.
+     
+     
+example 3:
+    - ACL has:
+          . allow group G1 for right R
+          . deny group G2 for right R
+    - group G1 and G2 are not member of each other
+    - user A is in both group G1 and group G2
+    => user A will be denied, because negative ACE takes precedence.
+    
+                
+If multiple ACEs conflict for a right for the same grantee, this is a wrong setting, which 
+should not happen if all modification to ACLs are done via the supported granting/revoking 
+interfaces: SOAP and zmmailbox.   If for any reason such ACL does exist (e.g. 
+via ldapmodify, or zmprov ma command(should we make zimberaACE immutable so 
+it cannot be modified by zmprov?)), the result is **unexpected**, depending on 
+which ACE is encountered first when we iterate through the ACL.  We could've 
+spent more cycles detecting such settings and honor the negative ACE if there 
+is one, but currently the implementation choice is not to do so.
+
+e.g. - ACL has:
+           . allow user A for right R
+           . deny user A for right R
+     => user A could be allowed or denied for right R, randomly.  
+  
+
+ACL STORAGE AND SERIALIZATION FORMAT
+====================================
+ACLs are persisted in LDAP in the multi-valued "zimbraACE" attribute on the 
+target LDAP entry.  ACE stands for "access control entry", multiple ACEs makes 
+an ACL(access control list).
+
+ACEs are serialized in LDAP in the following format:
+
+    {grantee} {grantee-type} [-]{right}
+
+        grantee: 
+                grantee type    stored 
+                -----------------------------------------------------
+                usr             zimbraId of the account
+                grp             zimbraId of the distribution list
+                gst             {grantee email}:{password}
+                key             {grantee email (or just a name)}:{access key}
+                all             pseudo id 00000000-0000-0000-0000-000000000000
+                pub             pseudo id 99999999-9999-9999-9999-999999999999
+                
+                grantee name for key grantees, password, and access key(if provided by user) can have 
+                spaces, they are enclosed in {}.  {} are not allowed for them.
+                 
+        grantee-type: usr | grp | gst | key | all | pub
+        
+        right: one of the supported right.
+               if a '-' (minus sign) is prepended to the right, it means the right is 
+               specifically denied.
+                        
+    e.g. fe0e1a88-e6e3-4fe1-b608-3ab6ce50351f grp -viewFreeBusy
+         fd6227f2-87e6-4453-9ccc-16853a6f8d27 usr viewFreeBusy
+         foo@bar.com:apple tree key viewFreeBusy
+         foo bar:8d159aed5fb9431d8ac52db5e20baafb key viewFreeBusy
+         foo bar:ocean blue key viewFreeBusy
+         00000000-0000-0000-0000-000000000000 all viewFreeBusy
+         99999999-9999-9999-9999-999999999999 pub invite    
+         
+         
+Note: zimbraACE should NOT be directly modified via zmprov or any LDAP tools.  
+      They should only be modified via zmmailbox commands.  See GRANTING TOOLS below.
+      
+      
+GRANTING TOOLS
+==============
+(A) WEB UI
+
+(B) zmmailbox commands
+    - for granting/revoking rights on the selected user account 
+    - does not have privilege to grant/revoke rights on targets 
+      other than the selected account.  To grant a right on 
+      group, domain, or global level use the zmprov command.
+
+1. List all permission related commands
+   command: help permission
+   
+   scope: any
+   
+   example:
+       mbox> help permission
+
+          getPermission(gp)            [opts] [right1 [right2...]]
+            -v/--verbose                 verbose output
+        
+          grantPermission(grp)         {account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}
+        
+          listPermission(lp)           [opts] 
+            -v/--verbose                 verbose output
+        
+          revokePermission(rvp)        {account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}
+        
+          To grant/revoke permission on entries an account can inherit grants from(group, domain, global), use "zmprov grr/rvr" commands.
+            
+       
+2. List and describe all permissions that can be granted 
+   command: listPermission(lp) [opts] 
+              -v/--verbose     verbose output
+            
+   scope: after a mailbox is selected
+   
+   example:
+       mbox> sm user1@example.com
+       mailbox: user1@example.com, size: 0 B, messages: 0, unread: 0
+       
+       mbox user1@example.com> lp -v
+         invite: automatically add meeting invites from grantee to the target's calendar
+             e.g. (1) When user Y is invited to a meeting, an appt is added to his calendar 
+                      automatically(tentatively) only if invite is from A, B, C or anyone in group G. 
+                  (2) Conf room Y can only be booked by users A, B, C and group G.
+
+         viewFreeBusy: view free/busy
+             e.g. Free/busy for Y can only be seen by users A, B, C and group G.
+   
+       
+3. Get rights currently granted.
+   command: getPermission(gp) [opts] [right1 [right2...]]
+              -v/--verbose    verbose output
+              
+            Optional right(s) can be specified to get only ACEs for those rights.
+            
+   scope: after a mailbox is selected
+   
+   example:
+       mbox> sm user1@example.com
+       mailbox: user1@example.com, size: 0 B, messages: 0, unread: 0
+       
+       mbox user1@example.com> gp
+             Permission      Type  Display
+       ----------------  --------  -------
+                 invite       all  
+          -viewFreeBusy   account  user2@example.com
+          -viewFreeBusy     group  groupX@example.com
+           viewFreeBusy       all  
+           viewFreeBusy    public  
+           
+       mbox user1@example.com> gp invite
+             Permission      Type  Display
+       ----------------  --------  -------
+                 invite       all 
+
+   Note: 
+       - grants are sorted by Permission, then type(from the most specific to the least specific: 
+         account, group, all, public), then grantee display name. 
+       - To be consistent with the modifyFolderGrant(mfg) command, which is for mail object based permissions, 
+         grantee types are displayed as account(for user grantee), group(for group grantee), all(for all-authed 
+         grantee), and public(for public grantee).
+         
+         
+4. Grant(allow or deny) a right to a grantee or a group of grantee. 
+   To deny a right, put a '-' in front of the right.
+   
+   command: grantPermission(grp) {account {name}|group {name}|all|public {[-]right}}
+   
+   scope: after a mailbox is selected
+   
+   example:
+       mbox> sm user1@example.com
+       mailbox: user1@example.com, size: 0 B, messages: 0, unread: 0
+       
+       mbox user1@example.com> grp account user3 invite
+         granted: 
+           account user3@example.com invite
+           
+       mbox user1@example.com> grp group group1@foo.com -viewFreeBusy
+         granted: 
+           group group1@foo.com -viewFreeBusy
+           
+       mbox user1@example.com> grp group group2 invite
+          granted: 
+            group group2@example.com invite
+            
+       mbox user1@example.com> grp domain example.com invite       
+            granted: 
+              domain example.com invite
+            
+       mbox user1@example.com> grp all viewFreeBusy
+          granted: 
+            all  viewFreeBusy
+            
+       mbox user1@example.com> grp public -viewFreeBusy
+          granted: 
+            public  -viewFreeBusy
+ 
+       mbox user1@example.com> gp
+             Permission      Type  Display
+       ----------------  --------  -------
+                 invite   account  user3@example.com
+                 invite     group  group2@example.com
+          -viewFreeBusy     group  group1@foo.com
+                 invite    domain  example.com
+          -viewFreeBusy    public  
+           viewFreeBusy       all  
+   
+   Note: 
+       (1) if domain is not given for account or group grantee, the domain of the selected 
+           mailbox will be used. 
+       (2) if a grantee currently has a grant(positive or negative) for a right, granting 
+           to the same grantee with a different privilege overwrite the grant.  For example, 
+           if user A currently is allowed the right to invite, "grp account A -invite" will 
+           change the grant(i.e. ACE) from allowed to denied.
+       (3) to complete remove a grant(i.e. an ACE) from a grantee, use the revokePermission(rvp) 
+           command, see 5. below.    
+                    
+         
+5. Revoke a right previously granted to a grantee or a group of grantees. 
+   To revoke a denied right, put a '-' in front of the right.
+   
+   command: revokePermission(rvp) {account {name}|group {name}|all|public {[-]right}}
+   
+   scope: after a mailbox is selected
+   
+   example: 
+       mbox> sm user1@example.com
+       mailbox: user1@example.com, size: 0 B, messages: 0, unread: 0
+       
+       mbox user1@example.com> gp
+             Permission      Type  Display
+       ----------------  --------  -------
+                 invite   account  user3@example.com
+                 invite     group  group2@example.com
+          -viewFreeBusy     group  group1@foo.com
+          -viewFreeBusy    public  
+           viewFreeBusy       all 
+
+       mbox user1@example.com> rvp group group1@foo.com viewFreeBusy
+         revoked 0 permission
+         (didn't revoke any permission because group1@foo.com does not have a viewFreeBusy 
+          grant, it only has a -viewFreeBusy grant)
+          
+       mbox user1@example.com> rvp group group1@foo.com -viewFreeBusy
+         revoked: 
+           group group1@foo.com -viewFreeBusy 
+           
+       mbox user1@example.com> rvp all viewFreeBusy
+         revoked: 
+           all  viewFreeBusy 
+           
+       mbox user1@example.com> rvp account  user3@example.com invite
+         revoked: 
+           account user3@example.com invite
+           
+       mbox user1@example.com> gp
+             Permission      Type  Display
+       ----------------  --------  -------
+                 invite     group  group2@example.com
+          -viewFreeBusy    public
+               
+               
+   Note: when revoking a negative permission, "-" has to be prepended to the right, 
+         otherwise the permission will not be revoked.  See example above.
+      
+         
+(C) zmprov commands
+1. Granting
+   - use the grr(grantRight) command
+   
+   - "zmprov help right" for help
+   
+   - legitimate granting target types for user rights:
+     account, calresource, dl, domain, global
+     
+   - global adminS (zimbraIsAdminAccount is TRUE) can grant any user right on 
+     targets of any of the legitimate granting types.
+     e.g. - grant the invite right on a domain to public
+            > zmprov grr domain test.com pub invite
+          
+     e.g. - grant the viewFreeBusy right on a domain to all zimbra users in the same domain
+            zmprov grr domain test.com dom test.com viewFreeBusy
+            
+     e.g. - grant the viewFreeBusy right on a domain to all zimbra users in another domain
+            (all users in domain test2.com can access fb data on all users in domain test1.com)
+            zmprov grr domain test1.com dom test2.com viewFreeBusy 
+            
+     e.g. - grant the viewFreeBusy right on the global target to all zimbra users on the system
+            zmprov grr global all viewFreeBusy
+            
+     e.g. - grant negative viewFreeBusy on the global target to all users in a domain  
+            zmprov grr global domain test.com -viewFreeBusy 
+            
+     e.g. - grant delegable viewFreeBusy right on a domain to a delegated admin
+            zmprov grr domain test.com usr admin1@example.com +viewFreeBusy     
+   
+   - delegated admins (zimbraIsDelegatedAdminAccount IS true) can grant on targets 
+     on which the admin has effective "can delegate" privilege for the right.
+     e.g. - auth as an delegated admin, try to grant the viewFreeBusy right on a domain 
+            when the delegated admin does not have effective "can delegate" privilege for 
+            the right on the domain -> will get PERM-DENIED
+                zmprov cd example.com
+                zmprov ca da@example.com test123 zimbraIsDelegatedAdminAccount TRUE
+                zmprov cd test1.com
+                zmprov cd test2.com
+                zmprov -a da@example.com -p test123 grr domain test1.com dom test2.com viewFreeBusy
+                ERROR: service.PERM_DENIED (permission denied: insuffcient right to grant)
+            
+          - global admin granrt the "can delegate" privilege to the delegated admin for 
+            the right on the domain
+                zmprov grr domain test1.com usr da@example.com +viewFreeBusy
+            
+          - now the delegated admin can grant it on the domain
+                zmprov -a da@example.com -p test123 grr domain test1.com dom test2.com viewFreeBusy
+
+2. Revoking              
+   - use the rvr(revokeRight) command
+   
+   - "zmprov help right" for help

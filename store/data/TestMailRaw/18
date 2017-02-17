@@ -1,0 +1,338 @@
+Return-Path: <davidson@yahoo.com>
+Received: from kenny.example.zimbra.com ([unix socket]) by kenny.example.zimbra.com
+	(Cyrus v2.1.16) with LMTP; Wed, 31 Mar 2004 14:03:17 -0800
+X-Sieve: CMU Sieve 2.2
+Received: from smtp011.mail.yahoo.com (smtp011.mail.yahoo.com
+	[216.136.173.31]) by kenny.example.zimbra.com (Postfix) with SMTP id 90C3840041B
+	for <roland@example.zimbra.com>; Wed, 31 Mar 2004 14:03:16 -0800 (PST)
+Received: from unknown (HELO churchill) (davidson@208.15.232.133 with
+	login) by smtp011.mail.yahoo.com with SMTP; 31 Mar 2004 22:07:59 -0000
+From: "Ross Davidson" <davidson@yahoo.com>
+To: <roland@example.zimbra.com>
+Subject: 
+Date: Wed, 31 Mar 2004 14:08:00 -0800
+X-Zimbra-Received: Wed, 31 Mar 2004 14:08:00 -0800
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="----=_NextPart_000_002E_01C41729.93ED7FD0"
+X-Mailer: Microsoft Office Outlook, Build 11.0.5510
+Thread-Index: AcQXbKENIVRvdkvBToOh5ncr43089A==
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+Message-Id: <20040331220316.90C3840041B@kenny.example.zimbra.com>
+X-Evolution-Source: imap://smith@10.10.130.30/
+X-Evolution: 00000012-0118
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_002E_01C41729.93ED7FD0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+> Can we try and preserve capital and for now try and make do with a 
+
+> single Exchange box . Anand, since you will be focusing more on the 
+
+> Appliance infrastructure (file system, distrib, etc etc etc), I am 
+
+> hoping this will not be a problem. Dan, as we discussed yesterday, if 
+
+> you could make your main priority figuring out what the Exchange APIs 
+
+> provide, followed by how Notes work , that would rock.
+
+> Can we try and preserve capital and for now try and make do with a 
+
+> single Exchange box . Anand, since you will be focusing more on the 
+
+> Appliance infrastructure (file system, distrib, etc etc etc), I am 
+
+> hoping this will not be a problem. Dan, as we discussed yesterday, if 
+
+> you could make your main priority figuring out what the Exchange APIs 
+
+> provide, followed by how Notes work , that would rock.
+
+> Can we try and preserve capital and for now try and make do with a 
+
+> single Exchange box . Anand, since you will be focusing more on the 
+
+> Appliance infrastructure (file system, distrib, etc etc etc), I am 
+
+> hoping this will not be a problem. Dan, as we discussed yesterday, if 
+
+> you could make your main priority figuring out what the Exchange APIs 
+
+> provide, followed by how Notes work , that would rock.
+
+ 
+
+
+------=_NextPart_000_002E_01C41729.93ED7FD0
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
+osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns=3D"http://www.w3.org/TR/REC-html40">
+
+<head>
+<META HTTP-EQUIV=3D"Content-Type" CONTENT=3D"text/html; charset=3Dus-ascii"=
+>
+<meta name=3DGenerator content=3D"Microsoft Word 11 (filtered medium)">
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:Garamond;
+	panose-1:2 2 4 4 3 3 1 1 8 3;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:0in;
+	font-size:10.0pt;
+	font-family:Arial;}
+h1
+	{margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:12.0pt;
+	margin-left:.3in;
+	text-indent:-.3in;
+	page-break-after:avoid;
+	mso-list:l0 level1 lfo1;
+	background:black;
+	font-size:16.0pt;
+	font-family:Garamond;
+	color:white;}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:purple;
+	text-decoration:underline;}
+span.EmailStyle17
+	{mso-style-type:personal-compose;
+	font-family:Arial;
+	color:windowtext;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;}
+div.Section1
+	{page:Section1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:1767772350;
+	mso-list-template-ids:1968484972;}
+@list l0:level1
+	{mso-level-style-link:"Heading 1";
+	mso-level-text:%1;
+	mso-level-tab-stop:.3in;
+	mso-level-number-position:left;
+	margin-left:.3in;
+	text-indent:-.3in;}
+@list l0:level2
+	{mso-level-text:"%1\.%2";
+	mso-level-tab-stop:.4in;
+	mso-level-number-position:left;
+	margin-left:.4in;
+	text-indent:-.4in;}
+@list l0:level3
+	{mso-level-text:"%1\.%2\.%3";
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	margin-left:.5in;
+	text-indent:-.5in;}
+@list l0:level4
+	{mso-level-text:"%1\.%2\.%3\.%4";
+	mso-level-tab-stop:.6in;
+	mso-level-number-position:left;
+	margin-left:.6in;
+	text-indent:-.6in;}
+@list l0:level5
+	{mso-level-text:"%1\.%2\.%3\.%4\.%5";
+	mso-level-tab-stop:.7in;
+	mso-level-number-position:left;
+	margin-left:.7in;
+	text-indent:-.7in;}
+@list l0:level6
+	{mso-level-text:"%1\.%2\.%3\.%4\.%5\.%6";
+	mso-level-tab-stop:.8in;
+	mso-level-number-position:left;
+	margin-left:.8in;
+	text-indent:-.8in;}
+@list l0:level7
+	{mso-level-text:"%1\.%2\.%3\.%4\.%5\.%6\.%7";
+	mso-level-tab-stop:.9in;
+	mso-level-number-position:left;
+	margin-left:.9in;
+	text-indent:-.9in;}
+@list l0:level8
+	{mso-level-text:"%1\.%2\.%3\.%4\.%5\.%6\.%7\.%8";
+	mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	margin-left:1.0in;
+	text-indent:-1.0in;}
+@list l0:level9
+	{mso-level-text:"%1\.%2\.%3\.%4\.%5\.%6\.%7\.%8\.%9";
+	mso-level-tab-stop:1.1in;
+	mso-level-number-position:left;
+	margin-left:1.1in;
+	text-indent:-1.1in;}
+ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style>
+<!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext=3D"edit">
+  <o:idmap v:ext=3D"edit" data=3D"1" />
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body lang=3DEN-US link=3Dblue vlink=3Dpurple>
+
+<div class=3DSection1>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; Can we try and preserve capital and for now try and mak=
+e do
+with a <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; single Exchange box . Anand, since you will be focusing
+more on the <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; Appliance infrastructure (file system, distrib, etc etc
+etc), I am <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; hoping this will not be a problem. Dan, as we discussed
+yesterday, if <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; you could make your main priority figuring out what the
+Exchange APIs <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; provide, followed by how Notes work , that would rock.<=
+o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; Can we try and preserve capital and for now try and mak=
+e do
+with a <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; single Exchange box . Anand, since you will be focusing
+more on the <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; Appliance infrastructure (file system, distrib, etc etc
+etc), I am <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; hoping this will not be a problem. Dan, as we discussed
+yesterday, if <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; you could make your main priority figuring out what the
+Exchange APIs <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; provide, followed by how Notes work , that would rock.<=
+o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; Can we try and preserve capital and for now try and mak=
+e do
+with a <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; single Exchange box . Anand, since you will be focusing
+more on the <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; Appliance infrastructure (file system, distrib, etc etc
+etc), I am <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; hoping this will not be a problem. Dan, as we discussed
+yesterday, if <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; you could make your main priority figuring out what the
+Exchange APIs <o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal style=3D'margin-bottom:0in;margin-bottom:.0001pt;text-=
+autospace:
+none'><font size=3D2 face=3D"Courier New"><span style=3D'font-size:10.0pt;f=
+ont-family:
+"Courier New"'>&gt; provide, followed by how Notes work , that would rock.<=
+o:p></o:p></span></font></p>
+
+<p class=3DMsoNormal><font size=3D2 face=3DArial><span style=3D'font-size:1=
+0.0pt'><o:p>&nbsp;</o:p></span></font></p>
+
+</div>
+
+</body>
+
+</html>
+
+------=_NextPart_000_002E_01C41729.93ED7FD0--
+

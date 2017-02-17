@@ -1,0 +1,58 @@
+MIME-Version: 1.0
+X-Sieve: CMU Sieve 2.2
+X-Mailer: Apple Mail (2.613)
+Date: Fri, 21 May 2004 17:32:46 -0000
+X-Zimbra-Received: Fri, 21 May 2004 17:32:46 -0000
+From: Marc MacIntyre <mason@example.zimbra.com>
+To: "skillibrew@example.zimbra.com" <skillibrew@example.zimbra.com>
+Subject: test
+X-Priority: 3
+Message-ID: <DF6ED7B6-AB4C-11D8-A0FD-000A9582EE7C@example.zimbra.com>
+Content-Type: multipart/alternative;
+  boundary="------------Boundary-00=_LXYIIo8asvF%EGZf02ye"
+
+--------------Boundary-00=_LXYIIo8asvF%EGZf02ye
+Content-Type: text/plain; charset=us-ascii;
+Content-Transfer-Encoding: 7bit
+
+Hey, sam - all your passwords are set to 9999123 for now.
+
+
+-- 
+Marc MacIntyre
+mason@example.zimbra.com
+
+
+--------------Boundary-00=_LXYIIo8asvF%EGZf02ye
+Content-Type: text/html; charset=us-ascii;
+Content-Transfer-Encoding: Quoted-printable
+
+<=21DOCTYPE HTML PUBLIC =22-//W3C//DTD HTML 3.2//EN=22>
+<HTML>
+<HEAD>
+<META HTTP-EQUIV=3D=22Content-Type=22 CONTENT=3D=22text/html; =
+charset=3Dus-ascii=22>
+<META NAME=3D=22Generator=22 CONTENT=3D=22MS Exchange Server version =
+6.5.7226.0=22>
+<TITLE>test</TITLE>
+</HEAD>
+<BODY>
+<=21-- Converted from text/plain format -->
+
+<P><FONT SIZE=3D2>Hey, sam - all your passwords are set to 9999123 for =
+now.</FONT>
+</P>
+<BR>
+
+<P><FONT SIZE=3D2>-- </FONT>
+
+<BR><FONT SIZE=3D2>Marc MacIntyre</FONT>
+
+<BR><FONT SIZE=3D2>mason=40example.zimbra.com</FONT>
+</P>
+
+</BODY>
+</HTML>=
+
+--------------Boundary-00=_LXYIIo8asvF%EGZf02ye--
+

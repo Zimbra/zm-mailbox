@@ -1,0 +1,271 @@
+Return-Path: <xmlbeans-dev-return-146-smith=stanford.edu@xml.apache.org>
+Received: from leland9.Stanford.EDU (leland9.Stanford.EDU [171.67.16.83])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8INHHcA005708
+	for <smith@popserver1.stanford.edu>; Thu, 18 Sep 2005 16:17:17 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland9.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8INH5Jn016982 for
+	<smith@stanford.edu>; Thu, 18 Sep 2005 16:17:05 -0700 (PDT)
+Received: (qmail 95849 invoked by uid 500); 18 Sep 2005 23:16:48 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 95809 invoked from network); 18 Sep 2005 23:16:48 -0000
+Message-ID: <015201c37e3a$ee7bce80$d41e11ac@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+References: <012801c37e19$9ef367e0$d41e11ac@lightbox>
+	 <3F6A0808.7020901@sauria.com>
+Subject: Re: Future XMLBeans feature work?
+Date: Thu, 18 Sep 2005 19:16:46 -0400
+X-Zimbra-Received: Thu, 18 Sep 2005 19:16:46 -0400
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000005c-0010
+
+From: "Ted Leung" <twleung@sauria.com>
+> I think that it would be good to post the wiki text here periodically.
+
+Cool.  Here's the text as it stands right now, just pasted from the wiki:
+
+
+= XmlBeansFeaturePlan =
+
+This is a living, working document where we organize and spec proposed
+features.
+
+XMLBeans feature work breaks down into several areas:
+
+== Overall V2 Vision ==
+
+Seems to me there are several core values that will drive v2:
+
+1. '''Keep the same level of simplicity.'''
+
+XMLBeans helps you manage the problem of XML schema binding via "binding
+type libraries" that tie together Java objects and corresonding typed XML
+instances.  Using a schema type is (in v1), and should remain (in v2) as
+easy as putting a type library JAR on your classpath and then using a Java
+class; you need to be able to be confident that details such as classpath
+loading of multiple type libraries, polymorphism, and substitution are dealt
+with correctly for you.
+
+Maintaining this level of simplicity will mean that some features may not be
+able to be realized.  But this simplicity is a core value of XMLBeans, and
+we should not sacrifice it in v2.
+
+2. '''Reduce footprint.'''
+
+The key performance thrust of this release should be to put XMLBeans on a
+diet.  Currently both our runtime JAR and our generated code JARs are too
+large; we should also work to reduce the in-memory footprint of instances.
+
+3. '''Cover key additional use cases.'''
+
+We need to identify several additional use-cases that need to be supported
+by XMLBeans in the v2 release.  I would like for XMLBeans to be particularly
+useful and applicable for XML web services (my gut feeling is that most in
+the community would agree), so key cases that seem important to me are:
+
+# JSR 101/109-compatible start-from Java binding.  There is a whole
+community of binding solutions that are ''lossy'', ''fast'', and
+''start-from-Java'', and many folks have a need for this kind of binding at
+times.  A key challenge will be to figure out how to make this kind of
+binding coexist seamlessly with XMLBeans 1.0-style start-from schema
+full-fidelity binding while maintaining our core value of simplicity.  If
+done, this should be done in a way compatible with JSR 101/109.
+# DOM support.  Currently XMLBeans has its own API, XMLCursor, for accessing
+the full XML infoset, and we should continue to evolve and invest in that
+API.  However, some applications require the w3c DOM API, and we should
+implement at least level 2 Core.  Key challenge is to do this without
+sacrificing performance.
+# SAAJ support.  Web services applications demand SAAJ as well as DOM
+support.  Again, key challenge is to support this usage without sacrificing
+performance.
+# JAXB 1.0-compatible start-from schema binding.  Despite the fact that
+there are serious limitations in the design of JAXB, it is a blessed
+standard that some will want to be able to comply with.  XMLBeans should be
+able to generate a type libarary in JAXB 1.0 style that can coexist with
+other type libraries.
+
+The set of key use cases that need to be covered by XMLBeans v2 needs to be
+discussed and developed over time; the list above is just my proposed
+starting point.  In addition to the "key" features, there will be of course
+lots of other things we implement.  But it is helpful to pick a few large,
+ambitious goals that we will prioritize highly.
+
+4. '''Maintain compatibility and complete the v1 feature set.'''
+
+While looking forward to future features, we need to also pay attention to
+the existing feature set and continue to improve, refine, and complete it.
+
+# Even as the public APIs evolve, we should continue to support XMLBeans 1.0
+JARs, if at all possible, so we can bring the community of users forward
+without too much pain.
+# XPath support needs to be filled out.  Currently there is a simple and
+very fast streaming XPath engine that is strong enough to support schema
+validation, but it does not even support [#] syntax.
+
+
+== Code Size ==
+
+Making a small jar dependency would boost XmlBeans's popularity - right now
+3Mb is quite big for an XML <-> bean tool.  Here are the things that would
+need to be done to do so:
+
+'''Removing the compiler itself from the runtime'''.  Currently there are a
+small number of
+features which invoke the schema compiler (to compile .xsd files) during
+runtime.  We should
+probably make these features use reflection to access the schema compiler,
+and move the
+schema compiler itself, as well as the things only it depends on (such as
+the schema-for-schema)
+into a separate xbeantool.jar.
+
+'''Putting xsb on a diet'''.  The way compiled schema information is stored
+in xmlbeans is too
+fat today.  We should analyze it and put it on a diet, to strive for goals
+including reduce generated code size, reduce the size of xbeans.jar itself,
+and to improve performance.
+
+'''Factoring command-line tools from the runtime'''.  There are currently
+several command-line
+tools and an ant task that are part of xbeans.jar.  We should probably try
+factoring these out
+to a separate xbeantools.jar to save a few more bytes.
+
+== Java-XML binding ==
+
+For example, XMLBeans is not currently capable doing lossy binding; nor is
+it capable of following JAXB rules.  These are all potential Java<->XML
+binding features.
+
+'''Start with Java'''.  You should be able to bind to XML starting with
+POJOs (plain old java objects).  Generate schema from the Java as well as
+the ability to load and save XML conforming to the schema.
+
+'''Start from both'''.  Start from both Java and schema, and customize the
+binding rules between the Java and the schema.  This would permit maximum
+flexibility and control of XML binding.
+
+'''Fast, lossy binding'''.  XMLBeans 1.0 only does full-fidelity, fully
+lossless binding, which inherently imposes higher memory requirements than
+lossy binding that is available with other tools.  XMLBeans 2.0 should
+provide fast, lossy binding as a seamless option.
+
+'''JAXB 1.0'''.  XMLBeans 1.0 implements much functionality that is similar
+to JAXB 1.0, but does not implement the JAXB 1.0 spec.  XMLBeans 2.0 should
+provide an implementation of JAXB 1.0.
+
+'''Full-fidelity binding starting from Java'''.  Starting from a simple Java
+class, enhance the code (or require that the developer implement according
+to a certain design pattern) so that it is possible to do full-fidelity
+binding.
+
+== Instance handling ==
+
+For example, XMLBeans does not currently support JSR 173; it cannot
+on-demand load partial streams of data; it does not support a live DOM or
+SAAJ API directly.  These are all potential XML instance features.
+
+
+'''DOM Level 2 (Core)'''.  Currently XMLBeans provides two different APIs to
+the same data.  We should provide DOM Level 2 core as an additional way of
+accessing the same data, kept in sync all the time.
+
+'''SAAJ'''.  Similar to DOM Level 2, but we should enable a SAAJ API
+interface to the same underlying data.
+
+'''JSR 173 support'''.  We should have the ability to load from a JSR 173
+stream and produce out a JSR 173 stream.
+
+'''Incremental loading of large streams'''.  It is sometimes important to be
+able to handle very large documents without bringing them all into memory.
+One strategy for allowing this, when applications need to just manipulate
+front matter (e.g., SOAP headers) in a large stream is to load large streams
+incrementally into memory rather than all at once.
+
+'''Dealing with large instances on the filesystem'''.  A different strategy
+for dealing with large instances is to use the disk as a memory resource.
+Parts of the XML infoset that are not being actively manipulated are written
+out to disk to save on RAM.
+
+'''Binary XML'''.  People forever have been discussing compressed, binary
+formats for XML.  We should consider the alternatives here and consider
+implementing a format.  Particularly interesting if done in conjunction with
+the previous (large instances) problem.
+
+== Compilation ==
+
+For example, XMLBeans schema compilation needs to be made faster, and the
+.xsb format needs to be made smaller.  Annotations to .xsd to support things
+like typed references are in this area.  Also Java code generation, and
+potentially basic start-from-Java support is a compilation issue.
+
+'''Schema annotation support'''. JAXB an other applications require access
+to annotations present in the schema.  The compiler should process and
+remember these.
+
+'''Start-from-Java support'''.  We need to be able to introspect .class
+files or .java files to allow for generation of schema and binding models
+when starting-with-Java.
+
+'''Improving speed of code generation'''.  Javac and JAR are quite slow at
+compiling our boilerplate generated code.  We should consider generating
+.class or JAR files directly.
+
+'''Full-fidelity enhancement of POJO classes'''.  One technique for adding
+full-xml-fidelity features (e.g., the ability to retain element order) to
+plain Java classes that are bound to XML is to enhance the Java classes.
+
+== Relational binding ==
+
+In particular, supporting disconnected dataset functionaity and binding to
+JDBC-backed sources is of potential interest.  Tracking changelists,
+supporting relational concepts like primary keys, and so on are all
+potential features here.
+
+'''Maintain changelog of changes in the store'''.  When working with data
+that is disconnected from a transacted database, it is important to be able
+to remember the set of changes so that they can be merged and committed all
+at once back to the database.
+
+== Cool features ==
+
+'''ID references'''.  ID and IDREFs are currently validated, but they are
+not maintained in instances.  They should be maintained so that a user can
+simply say .getRef() to navigate to the ID that is referenced.
+
+'''Extend schema to add typed-reference features'''.  Referential integrity
+features (ID, key, keyref) in schema are untyped.  For convenient access,
+these should be typed.  But this requires an extension to schema; one should
+be designed.
+
+'''Control the generated javadoc'''.  For example, we might want to pick up
+extra information from annotations in the schema to place in the generated
+javadocs.
+
+'''External references'''. For example, it might be interesting to be able
+to work with a special "xlink" data type that can link between separate data
+types.
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

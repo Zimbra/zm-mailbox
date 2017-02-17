@@ -1,0 +1,163 @@
+Grab the source from:
+
+http://web.mit.edu/Kerberos/
+
+To install, read the install guide (currently online at http://web.mit.edu/Kerberos/krb5-1.6/), or follow these steps (as root):
+
+1. tar xvf krb5-1.6.2-signed.tar
+
+2. tar tzvf krb5-1.6.2.tar.gz
+
+3. cd krb5-1.6.2/src
+
+4. ./configure --prefix=/usr/local
+
+5. make
+
+6. make install
+
+7. edit/create /etc/krb5.conf. A sample krb5.conf file looks like:
+
+[libdefaults]
+        default_realm = MACPRO.LOCAL
+
+[realms]
+        MACPRO.LOCAL = {
+                kdc = macpro.local
+                admin_server = macpro.local
+         }
+
+[domain_realm]
+	.local = MACPRO.LOCAL
+
+[logging]
+    kdc = FILE:/var/log/krb5kdc.log
+    admin_server = FILE:/var/log/kadmin.log
+    default = FILE:/var/log/krb5lib.log
+
+Substitute MACPRO.LOCAL for your Kerberos Realm name (can be whatever you want, typically your domain name uppercased though),
+and "macpro.local" with the server you are installing the Kerberos KDC on.
+
+Make sure the specified log directory exists.
+
+The [domain_realm] section is used to map domain names to Kerberos realms.
+
+NOTE: the /etc/krb5.conf file should get installed on any client machines using Kerberos (i.e., all the mailbox servers)
+
+8. Create  /usr/local/var/krb5kdc/kdc.conf
+
+this is the config file used by the server. You can just copy krb5.conf to kdc.conf, since we aren't doing anything special.
+
+9. create the kerberos database, using the same REALM name as step (7):
+
+/usr/local/sbin/kdb5_util create -r MACPRO.LOCAL -s
+
+10. create: /usr/local/var/krb5kdc/kadm5.acl
+
+this is the ACL file used for remote admin. You can just add a single line:
+
+*/admin@MACPRO.LOCAL *
+
+which grants all access to any admin principals.
+
+11. Create some Kerberos accounts, for testing/admin:
+
+/usr/local/sbin/kadmin.local
+
+macpro:/usr/local schemers$ /usr/local/sbin/kadmin.local
+Authenticating as principal schemers/admin@MACPRO.LOCAL with password.
+kadmin.local:  addprinc schemers/admin@MACPRO.LOCAL
+addprinc schemers/admin@MACPRO.LOCAL
+WARNING: no policy specified for schemers/admin@MACPRO.LOCAL; defaulting to no policy
+Enter password for principal "schemers/admin@MACPRO.LOCAL": admin123
+Re-enter password for principal "schemers/admin@MACPRO.LOCAL": admin123
+Principal "schemers/admin@MACPRO.LOCAL" created.
+
+kadmin.local:  addprinc user1@MACPRO.LOCAL
+addprinc user1@MACPRO.LOCAL
+WARNING: no policy specified for user1@MACPRO.LOCAL; defaulting to no policy
+Enter password for principal "user1@MACPRO.LOCAL": test123
+Re-enter password for principal "user1@MACPRO.LOCAL": test123
+Principal "user1@MACPRO.LOCAL" created.
+kadmin.local:  exit
+
+The second user (user1@MACPRO.LOCAL) we created will be used for testing. First user is an admin user, and only needed for remote admin.
+
+12. Start up the KDC and the kadmind:
+
+  /usr/local/sbin/krb5kdc
+  /usr/local/sbin/kadmind
+
+You should be able to now config external Kerberos AUTH for passwords.
+
+This document should get updated when we add SASL IMAP support, etc.
+
+13. Create IMAP service principle
+
+For each server, create a service principle for the Zimbra IMAP service.
+This should be of the form "imap/<host>@<realm>" where <host> is the fully
+qualified host name of the Zimbra server and <realm> is the Kerberos
+realm name. The server host name *must* match the the value of the
+"zimbra_server_hostname" local configuration property. For example:
+
+macpro:/usr/local schemers$ /usr/local/sbin/kadmin.local
+Authenticating as principal schemers/admin@MACPRO.LOCAL with password.
+kadmin.local:  addprinc -randkey imap/macpro.local@MACPRO.LOCAL
+WARNING: no policy specified for imap/macpro.local@MACPRO.LOCAL; defaulting to no policy
+Principal "imap/macpro.local@MACPRO.LOCAL" created.
+
+14. Create local keytab for service principle
+
+For each server, a keytab file must be created with the service principle
+key. This file should be located in $ZIMBRA_ROOT/conf/krb5.keytab where
+ZIMBRA_ROOT is the Zimbra installation directory (i.e. /opt/zimbra).
+
+macpro:/usr/local schemers$ /usr/local/sbin/kadmin.local
+Authenticating as principal schemers/admin@MACPRO.LOCAL with password.
+kadmin:  ktadd -keytab /opt/zimbra/conf/krb5.keytab imap/macpro.local@MACPRO.LOCAL
+Entry for principal imap/macpro.local@MACPRO.LOCAL with kvno 3, encryption type Triple DES cbc mode with HMAC/sha1 added to keytab WRFILE:/opt/zimbra/conf/krb5.keytab.
+Entry for principal imap/macpro.local@MACPRO.LOCAL with kvno 3, encryption type DES cbc mode with CRC-32 added to keytab WRFILE:/opt/zimbra/conf/krb5.
+
+15. Set ZIMBRA_KERBEROS_REALM environment variable
+
+This is used by the build script to automatically provision zimbraForeignPrinciple for the 'user1' test user account. Otherwise, the default is to use the ZIMBRA.COM realm.
+
+
+===================================================================================
+Provisioning Tasks on the Zimbra side:
+
+(A) Prepare a domain for kerberos5 authentication :
+    1. Set domain authentication mechanism to kerberos5
+           zmprov md example.com zimbraAuthMech kerberos5
+
+    2. Set domain zimbraAuthKerberos5Realm to the kerberos5 realm in which users in this Zimbra domain are created in the kerberos database
+           zmprov md example.com zimbraAuthKerberos5Realm EXAMPLE.COM
+
+
+(B) Provision Zimbra accounts  
+    When a user attempts to login to Zimbra as user/password, and when the domain's zimbraAuthMech is "kerberos5", 
+    system will authenticate to a kerberos KDC instead of LDAP.
+    
+    Kerberos credential for the user is:
+        password: password entered by user
+        principal: the kerberos principal for a user can be resolved by one of the two ways.
+                   Method 1.  {localpart-of-Zimbra-email-address}@{zimbraAuthKerberos5Realm} 
+                        For example, for user1@example.com, the kerberos principal will be user1@EXAMPLE.COM
+                
+                   or
+                
+                   Method 2. Kerberos principal can also be resolved on a per-account basis, instead of using the realm defined in zimbraAuthKerberos5Realm.
+                       This allows accounts in the same Zimbra domain to be mapped to different kerberos realms.  
+                       To do this, Set the account's zimbraForeignPrincipal as kerberos5:{kerberos5-principal}.  
+                       If zimbraForeignPrincipal of the account starts with "kerberos5:", system will authenticate to kerberos using the text appears after the 
+                       "kerberos5:" in zimbraForeignPrincipal as the principal.  
+                
+                       For example:
+                           zmprov ma user2@example.com +zimbraForeignPrincipal kerberos5:foo@MYREALM.COM
+                
+                       In the above example, for user2@example.com, the kerberos principal will be foo@MYREALM.COM
+                       
+                    Note, method 2 take precedence over method 1.  That is, if the account has a zimbraForeignPrincipal in the form of 
+                    "kerberos5:{kerberos5-principal}", system will resolve the kerberos principal using method 2, otherwise it will use method 1.   
+                    If authentication failed using method 2, it does NOT fallback to method 1.
+

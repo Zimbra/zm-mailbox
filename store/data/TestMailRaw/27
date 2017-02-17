@@ -1,0 +1,70 @@
+Return-Path: <xmlbeans-dev-return-232-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8P6QVFR025423 for
+	<smith@popserver1.stanford.edu>; Wed, 24 Sep 2003 23:26:31 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8P6QN3h019858 for
+	<smith@stanford.edu>; Wed, 24 Sep 2003 23:26:24 -0700 (PDT)
+Received: (qmail 98761 invoked by uid 500); 25 Sep 2003 06:26:11 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 98741 invoked from network); 25 Sep 2003 06:26:11 -0000
+Message-ID: <3F728A8D.1090006@sauria.com>
+Date: Wed, 24 Sep 2003 23:26:21 -0700
+X-Zimbra-Received: Wed, 24 Sep 2003 23:26:21 -0700
+From: Ted Leung <twleung@sauria.com>
+Organization: Sauria Associates, LLC
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.5)
+	Gecko/20030923 Thunderbird/0.3
+X-Accept-Language: en-us, en
+MIME-Version: 1.0
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: STAX
+References: <4C2F1577F2EF2840A9AE9EC61860C8810A0FED@usseex01.amer.bea.com>
+	 <001301c38318$1c525f40$6401a8c0@third>
+In-Reply-To: <001301c38318$1c525f40$6401a8c0@third>
+X-Enigmail-Version: 0.81.6.0
+X-Enigmail-Supports: pgp-inline, pgp-mime
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000001b-0010
+
+On 9/24/2003 8:50 PM, Chris Fry wrote:
+
+> Hey Cliff,
+> 
+> Oh, I was going to check in the RI jar as a library not in src form, this
+> would allow us to get to work on the binding runtime.  I would imagine at
+> somepoint we would port the internal parser to implement 173 or build a
+> walker over the splay tree.
+> 
+> FYI the jar is publicly available at http://jcp.org/en/jsr/detail?id=173
+> 
+
+Chris,
+
+I couldn't find the linke to the Jar file on that page.  If it has the 
+usual Sun clickthrough binary license, then it probably cannot be 
+checked into the repository, because the typical clickthrough license 
+doesn't grant the ASF the ability to redistribute the jar.
+
+I think it would be very nice to have XMLBeans implement JSR 173, but we 
+need to make sure that all IP issues get taken care of.
+
+Ted
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

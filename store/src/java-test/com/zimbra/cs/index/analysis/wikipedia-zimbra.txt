@@ -1,0 +1,69 @@
+Zimbra
+
+From Wikipedia, the free encyclopedia
+Zimbra Collaboration Suite (ZCS) is a groupware product created by Zimbra, Inc., located in Palo Alto, California, USA. The company was purchased by Yahoo! in September 2007[1], and subsequently purchased by VMware on Tuesday, January 12, 2010[2]. The software consists of both client and server components. Two versions of Zimbra are available: an open-source version, and a commercially supported version ("Zimbra Network") with closed-source components such as a proprietary MAPI connector to Outlook for calendar synchronization.
+
+The ZCS Web Client is a full-featured collaboration suite that supports email, group calendars and document sharing using an Ajax web interface that enables tool tips, drag-and-drop items, and right-click menus in the UI. Also included are advanced searching capabilities and date relations, online document authoring, "Zimlet" mashups and a full administration UI. It is written using the Zimbra Ajax Toolkit.
+
+The ZCS Server uses several open source projects (see the section, Included open source projects). It exposes a SOAP application programming interface to all its functionality and also is an IMAP and POP3 server. The server runs on many distributions of Linux as well as on Mac OS X.
+
+ZCS can synchronize mail, contacts, and calendar items with open-source mail clients such as Novell Evolution and also with proprietary clients such as Microsoft Outlook and Apple Mail, but only through proprietary connectors available exclusively in the commercially supported version. Zimbra also provides native two-way sync to many mobile devices (Nokia Eseries, BlackBerry, Windows Mobile, iPhone, Android).
+
+According to former Zimbra President and CTO Scott Dietzen, the name for Zimbra is derived from the song "I Zimbra" by Talking Heads[3].
+
+Contents
+
+1 Software license
+2 Included open source projects
+3 See also
+4 References
+5 External links
+Software license
+
+Zimbra Collaboration Suite (ZCS) source code is available under the terms of the Zimbra Public License (ZPL) which is derived from the Mozilla Public License (MPL), and accordingly requires that modifications made to existing files, if distributed, be provided in source code form to the recipients under the same license. It also includes a clause requiring trademarks, logos, etc. be preserved making it an "attribution-style" open source license.
+
+Categorically it is similar to the Open Source Initiative (OSI) Common Public Attribution License (CPAL).
+
+Included open source projects
+
+The ZCS Server utilizes open source projects such as:
+
+Postfix
+MySQL
+OpenLDAP
+Apache Tomcat (replaced by Jetty since 5.0)
+Lucene
+Verity
+ClamAV
+SpamAssassin
+AMaViS and Amavisd-new
+DSPAM
+Aspell
+James
+Sieve
+Perdition mail retrieval proxy (until 4.5)
+nginx (since 5.0)
+See also
+
+Ajax
+Atmail
+Comparison of feed aggregators
+Groupware
+Online office suite
+Zarafa Collaboration Platform
+References
+
+^ Zimbra.com (2007-09-17). "Yahoo! Acquires Zimbra". Zimbra.com. Retrieved 2010-05-30.
+^ Vance, Ashlee (2010-01-13). "VMware Gently Nudges Microsoft with a Zimbra - Bits Blog - NYTimes.com". Bits.blogs.nytimes.com. Retrieved 2010-05-30.
+^ Swisher, Kara (2009-04-24). "Yahoo Hires Adobe Vet Lamkin; Dietzen Takes New Strategy Post | Kara Swisher | BoomTown | AllThingsD". Kara.allthingsd.com. Retrieved 2010-05-30.
+External links
+
+Official site: blog, community, forums, wiki, demo, download, etc.
+Review: Zimbra Webmail
+Yahoo! Public License 1.1
+Pre-integrated Zimbra server (open source edition)
+Retrieved from "http://en.wikipedia.org/wiki/Zimbra"
+Categories: VMware | Free email software | Email websites | Instant messaging | Mail transfer agents | Mac OS X software | Mac OS X Server | Mac OS X email clients | Free groupware | Collaborative software | Ajax (programming) | Web 2.0
+This page was last modified on 7 September 2010 at 15:27.
+Text is available under the Creative Commons Attribution-ShareAlike License; additional terms may apply. See Terms of Use for details.
+Wikipedia¨ is a registered trademark of the Wikimedia Foundation, Inc., a non-profit organization.

@@ -1,0 +1,84 @@
+Return-Path: <xmlbeans-dev-return-173-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8MKZvTZ012349
+	for <smith@popserver1.stanford.edu>; Mon, 22 Sep 2005 13:35:57 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8MKZn5G014907 for
+	<smith@stanford.edu>; Mon, 22 Sep 2005 13:35:50 -0700 (PDT)
+Received: (qmail 84538 invoked by uid 500); 22 Sep 2005 20:35:42 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 84516 invoked from network); 22 Sep 2005 20:35:42 -0000
+Message-ID: <00fe01c38149$14b7c750$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>, "robert burrell donkin" <rdonkin@apache.org>
+References: <A6AD8022-EB4B-11D7-A7F2-003065DC754C@apache.org>
+Subject: Re: Future XMLBeans feature work?
+Date: Mon, 22 Sep 2005 16:35:35 -0400
+X-Zimbra-Received: Mon, 22 Sep 2005 16:35:35 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000009e-0010
+
+Robert writes:
+> IMHO start-from-java has quite a bit of hidden complexity. betwixt has
+
+I completely agree, start-from-java can be very complex.  I'd be interested
+if you can expand any of the lessons you've seen in betwixt in this area.
+
+> i'd say that it would be a good idea to think about pluggable
+> compatibility. i would whether it would be possible to use adapters to
+> allow xml-bean generated, JAXB compliant and start-from-java mapped (eg
+
+Pluggability is very interesting to me too.  Beyond a certain level,
+pluggability can get very difficult both to get working and to maintain (I'm
+thinking that it is potentially very difficult to be fully pluggable when it
+comes to "interior" data, because it requires an incestuous relationship
+with the particular unmarshalling framework to know how to delegate
+subparts, and this probably would make it difficult to maintain and evolve;
+but it should be easier to be pluggable when it comes to "leaf" data.
+Probably this is OK since "leaves" can be very large, whole subtrees).
+
+> it seems to me that a lot of the inefficiency (in typical usage senarios)
+> now comes from building up large object models in memory. it's quite
+> common to have large, repetitive xml documents where really, it's the
+> smaller sub-elements only which want to be mapped to (and from) java.
+
+Is the idea that you want to tell the unmarshaller to "work on" just a small
+portion of the stream at once, and that the application might iterate this
+process to deal with a very large stream?  I think it makes sense to me.
+Can I ask you to give me an example of a real-world scenario that would want
+to work this way, to help me think about it?
+
+> be easier for most coder to understand filters and controllers in an
+> object pipeline than a SAX (or SAX-like) one.
+
+To me this seems like the core pull versus push issue.  (I think?)  The core
+advantage (imho) of JSR 173-like pull streams over SAX-style push streams is
+that they should make it much eaiser to set up filters and pipelines, ala
+FilterInputStream etc. (I've noted the 173 issue on the Feature page.)
+
+David
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

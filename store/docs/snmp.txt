@@ -1,0 +1,26 @@
+Notes on snmp support.
+
+	Traps only - there is no support for snmp queries, since there is no
+	MIB for the product as yet.
+
+Zimbra OID:
+	Enterprise number for zimbra TBD.
+
+MIB Objects:
+	zmStatus := zimbra.1
+	zmServiceName := zmStatus.0 (String)
+	zmServiceStatus := zmStatus.1 (Int)
+		0 for down, 1 for up.
+
+Traps supported:
+	zmtraps := zimbra.0
+	zmServiceStatusTrap := zmtraps.0
+		Includes an zmStatus object.
+
+When snmp is configured to run, traps will be generated every 
+time the status of a service changes.
+
+Snmp configuration:
+	- install the zimbra-snmp package.
+	- run the createsnmp script, provide requested information (trap host)
+	- start services (zmcontrol startup)

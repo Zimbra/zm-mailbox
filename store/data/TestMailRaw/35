@@ -1,0 +1,58 @@
+Return-Path: <xmlbeans-dev-return-326-smith=stanford.edu@xml.apache.org>
+Received: from leland6.Stanford.EDU (leland6.Stanford.EDU [171.67.16.60])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h92JNILB023433
+	for <smith@popserver1.stanford.edu>; Thu, 2 Oct 2003 12:23:19 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland6.Stanford.EDU (8.12.10/8.12.10) with SMTP id h92JNDla026210 for
+	<smith@stanford.edu>; Thu, 2 Oct 2003 12:23:13 -0700 (PDT)
+Received: (qmail 27459 invoked by uid 500); 2 Oct 2003 19:14:19 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 27418 invoked from network); 2 Oct 2003 19:14:18 -0000
+Subject: builtin type conversions
+From: Scott Ziegler <zieg@bea.com>
+To: xmlbeans-dev@xml.apache.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Message-Id: <1065122063.14001.18.camel@zieg>
+Mime-Version: 1.0
+X-Mailer: Ximian Evolution 1.4.5 
+Date: Thu, 02 Oct 2003 12:14:23 -0700
+X-Zimbra-Received: Thu, 02 Oct 2003 12:14:23 -0700
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000023-0010
+
+For the v2 fast/lossy runtime, I need a fast way to marshall/unmarshall
+the XML Schema builtin types.  Ideally this would be a library of static
+methods that involve as few objects as possible (hopefully zero in most
+cases).  A JAXB impl is required to provide this functionality by
+implementing the  DatatypeConverterInterface.  I noticed that
+org.apache.xmlbeans.impl.values.JavaFloatHolder has exactly what I want
+with these two methods:
+
+    public static String serialize(float f)
+    public static float validateLexical(String v,
+                                        ValidationContext context)
+
+But unfortunately this pattern is not observed consistently in the other
+datatype classes.  Can we agree on some pattern and have all datatype
+classes implement them?  We might also consider making such methods
+public as I'm sure they will be useful for some.
+
+--Scott
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

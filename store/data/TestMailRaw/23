@@ -1,0 +1,150 @@
+Return-Path: <xmlbeans-user-return-78-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hA6I3loB020765
+	for <smith@popserver1.stanford.edu>; Thu, 6 Nov 2003 10:03:48 -0800 (PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.10/8.12.10) with SMTP id hA6I38Qe014609 for
+	<smith@stanford.edu>; Thu, 6 Nov 2003 10:03:14 -0800 (PST)
+Received: (qmail 68452 invoked by uid 500); 6 Nov 2003 18:01:16 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 68421 invoked from network); 6 Nov 2003 18:01:16 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: Official release yet?
+Date: Thu, 6 Nov 2003 10:01:18 -0800
+X-Zimbra-Received: Thu, 6 Nov 2003 10:01:18 -0800
+Message-ID: <4B2B4C417991364996F035E1EE39E2E10850B5@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: Official release yet?
+Thread-Index: AcOj9WAq9yphtrGeTPycgjKg+rWC7wAlMavA
+From: "David Remy" <dremy@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+X-OriginalArrivalTime: 06 Nov 2003 18:01:19.0897 (UTC)
+	FILETIME=[FB3EA090:01C3A48F]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000017-0010
+
+I will take a shot at answering this from my perspective.  XMLBeans was ori=
+ginally developed at BEA and the version that was originally brought into A=
+pache was shipped as a part of the Weblogic 8.1 platform products.  So XMLB=
+eans v1 has been through a rigorous testing cycle and is being used in prod=
+uction in significant applications now (including many of the Weblogic prod=
+ucts).  Since submission to Apache there has been enhancements and bug fixe=
+s.  These have only served to further stabilize and improve XMLBeans.  For =
+example substitution groups and redefines were pretty much the only XML Sch=
+ema features that were not supported in the BEA version but are now support=
+ed in the Apache version of XMLBeans.  BEA has been doing it's own rigorous=
+ testing of the latest bits and will catch up to the latest Apache version =
+later this year in it's service pack 2 of the Weblogic platform.  So, in my=
+ opinion, from what I have seen from users and from the testing XMLBeans v1=
+ is stable and reliable. =20
+
+The incubation status is mostly related to the progress XMLBeans is making =
+in terms of establishing a community and integrating the Apache processes. =
+ It is not intended to be a reflection of the stability/maturity (or lack o=
+f maturity) of the technology.  That being said, as you will see in disclai=
+mer text, Apache is not endorsing or standing behind any XMLBeans (or other=
+ incubating project) distribution until it is out of incubation.  It is sti=
+ll possible that XMLBeans would not make it out of incubation to full Apach=
+e project/subproject status.  Most of the current committers are very activ=
+e right now (albeit on v2 which i will elaborate on) and represent the orig=
+inal team of XMLBeans developers as well as other developers such as Patric=
+k Calahan to help with some of the new use cases that we want to address in=
+ v2.  We believe XMLBeans has a very important future in java/xml binding a=
+nd that users should have to learn only one java/xml programming model that=
+ would work across most if not all of the xml programming uses cases.
+
+As I said above XMLBeans v1 is pretty stable, meets it primary use case (in=
+ memory, non-lossy, 100% schema compliant, fast, etc.) extremely well.  It =
+seemed appropriate to keep that stable as we look to expand the use cases f=
+or XMLBeans (with the intent of keeping full backwards api compat with XMLB=
+eans 1).  So we have started on XMLBeans v2 in Apache. XMLBeans v2 will hav=
+e all of the functionality of v1 (plus some enhancements) but will also sup=
+port key uses cases that will make it viable for other important java/xml b=
+inding use cases.  A wiki page on the XMLBeans v2 feature plan is here (htt=
+p://nagoya.apache.org/wiki/apachewiki.cgi?XmlBeansFeaturePlan).  Key use ca=
+ses include jsr101/109 binding, DOM and maybe SAAJ support, possibly JAXB 1=
+.0 support, and java to schema type scenarios.  Web services uses cases as =
+well as some other interesing use cases tend to not emphasize the non-lossy=
+ nature of XMLBeans 1.0 style binding so we would like to provide users the=
+ ability to compile schema/java for java/xml binding and choose their usage=
+ options as late as possible.  Some options would have to be chosen at buil=
+d time and would affect programming model significantly other options could=
+ be chosen at runtime (probably when loading the xml instance).  For exampl=
+e it might be cool if the user could compile schema/wsdl for use in web ser=
+vices scenario and perhaps by default have it be lossy (i.e., throw the xml=
+ away), read only which could be very fast but perhaps in another scenario =
+use the same generated xmlbeans jar in a non-lossy, read-write scenario (an=
+ underlying xml store would be created).=20
+
+We are just getting started with v2 and you will begin to see more posts on=
+ the dev list and user list about it.  The code is building and passing bas=
+ic tests but I don't think there is anything runnable yet except the curren=
+t xmlbeans 1 type functionality.  We continue to run the XMLBeans 1.0 tests=
+ on all commits in order to assure backwards compat.=20
+
+XMLBeans 2 has no official target date and I expect development on it will =
+go on for awhile (a year or so?).  As a user I think you should be able to =
+be comfortable that XMLBeans v1 is currently stable and pretty mature and w=
+ill be supported into XMLBeasn v2 (although not officially sanctioned by Ap=
+ache).
+
+wordy post here, hope it helps.
+
+rem
+(Dave Remy, other job: BEA XMLBeans dev lead)
+
+> -----Original Message-----
+> From: Srinivas Yermal [mailto:syermal@encover.com]
+> Sent: Wednesday, November 05, 2003 2:25 PM
+> To: xmlbeans-user@xml.apache.org
+> Subject: Official release yet?
+>=20
+>=20
+> Hi,
+>=20
+> I am really impressed after reading up quite a bit on=20
+> xmlbeans. I am at=20
+> the threshold of using it at my work in a project. But the=20
+> thing that is=20
+> holding me below this threshold is the fact that it is in incubation.=20
+> What does it mean precisely to be in incubation and does it mean that=20
+> xmlbeans cannot be used in a production environment? I did=20
+> search quite=20
+> a bit looking for comparisons and other articles but in vain.
+>=20
+> Another question I have is you have two different trees in CVS (V1 &=20
+> V2). Does it mean that you are already working on version 2?=20
+> I am a bit=20
+> confused.
+>=20
+> Thanks,
+> Srini.
+>=20
+>=20
+> -=20
+> ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>=20
+>=20
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

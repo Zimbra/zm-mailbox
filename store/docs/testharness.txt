@@ -1,0 +1,147 @@
+General format is:
+
+<t:tests xmlns:t="urn:zimbraTestHarness">
+ 
+ <!-- in order to reference namespaces in the xpath expressions, they need to either be
+      pre-defined, or defined with the namespace command.
+      
+      The following are pre-defined:
+      
+      acct   -> urn:zimbraAccount
+      mail   -> urn:zimbraMail
+      admin  -> urn:zimbraAdmin
+      zimbra -> urn:zimbra
+      soap   -> http://www.w3.org/2003/05/soap-envelope
+      soap12 -> http://www.w3.org/2003/05/soap-envelope
+	  soap11 -> http://schemas.xmlsoap.org/soap/envelope/
+      
+-->
+      
+ <t:namespace prefix="foo" uri="http://foo.com/"/>
+ 
+ 
+ <!-- properties are normally defined at the top.
+     there are some special properties:
+     
+     uri          the uri of the server to connect to
+
+     authToken    the auth token to use in requests   
+
+     sessionId    the session id to use in requests
+
+     TIME         evaluates to System.currentTimeMillis()
+
+     COUNTER      starts at 1, and increments everytime it is referenced
+
+     GENTIME      evaluates to current time, in generalized time format (YYYYMMDDhhmmssZ)
+     
+     GENTIME([+-]?\d+[dhms]?) 
+     
+                  evaluates to current time +/- the specified number of days/hours/minutes/seconds,
+                  in generalized time format (YYYYMMDDhhmmssZ). Defaults to +/days.
+                  
+                  For example: ${GENTIME(-7d)} will expand to the current time minus 7 days. 
+
+     properties get expanded in attrs and element values by referencing them
+     as ${propname}.
+     
+     
+ -->
+ 
+ <t:property name="..." value="..."/>
+
+ <!-- one or more t:test elements 
+      id       attribute is used to name this test, so others that depend on it can refer to it.
+      required attribute is used to indicate that the test harness should stop if this test fails
+      depends  attribute is used to indicate this test should only be run if the others listed passed
+      dump     attribute is used to dump out the SOAP request/response
+ -->
+  
+ <t:test id="auth" [required="true|false"] [depends="a,b,c"] [dump="true|false"]/>
+  <t:request>
+    <!-- the body of the request goes here (i.e,. the child of the soap:body) -->
+  </t:request>
+  <t:response>
+    <!-- one or more select elements. 
+       path     attribute is is an xpath expression to match an element. test fails if path isn't found
+       attr     attribute means match/set operate on the name attribute instead of element's value
+       match    a regex to match on. test fails if regex doesn't match
+       set      name of property to set 
+    -->
+       
+	<t:select path="..."  [attr="..."] [match="..."] [set="..."] >
+	   <!-- additional selects can be nested, their paths are relative to
+	        the outer select's element -->
+	<t:select/>
+  </t:response>
+ </t:test>
+
+ <!-- more test elements -->
+
+</t:tests>
+
+
+EXAMPLE
+
+<t:tests xmlns:t="urn:zimbraTestHarness">
+
+ <t:property name="user" value="user1@example.zimbra.com"/>
+ <t:property name="password" value="zimbra"/>
+ <t:property name="tag.name" value="zimbra"/>
+ <t:property name="tag.newname" value="test"/>
+
+ <t:property name="uri" value="http://localhost:7070/service/soap/"/>
+
+ <t:test id="auth" required="true">
+  <t:request>
+   <acct:AuthRequest xmlns:acct="urn:zimbraAccount">
+     <account by="name">${user}</account>
+     <password>${password}</password>
+   </acct:AuthRequest>
+  </t:request>
+  <t:response>
+    <!-- this select makes sure there is a lifetime element in the response -->
+	<t:select path="//acct:AuthResponse/lifetime"  match="^\d+$"/>
+    <!-- this select makes sure there is an authToken element in the response, and saves
+         its value in the authToken property -->
+	<t:select path="//acct:AuthResponse/authToken" set="authToken"/>
+  </t:response>
+ </t:test>
+
+<t:test>
+ <t:request>
+   <acct:CreateTagRequest xmlns:acct="urn:zimbraAccount">
+     <tag name="${tag.name}"/>
+   </acct:CreateTagRequest>
+ </t:request>
+  <t:response>
+    <!-- select the tag element in the response, then grab set the tag.id property -->
+	<t:select path="//acct:CreateTagResponse/tag">
+	  <t:select attr="id" set="tag.id"/>
+	</t:select>
+ </t:response>
+</t:test>
+
+<t:test>
+ <t:request>
+   <acct:RenameTagRequest xmlns:acct="urn:zimbraAccount">
+     <tag id="${tag.id}" name="${tag.newname}"/>
+   </acct:RenameTagRequest>
+ </t:request>
+  <t:response>
+	<t:select path="//acct:RenameTagResponse"/>
+ </t:response>
+</t:test>
+
+<t:test>
+ <t:request>
+   <acct:DeleteTagRequest xmlns:acct="urn:zimbraAccount">
+     <tag id="${tag.id}"/>
+   </acct:DeleteTagRequest>
+ </t:request>
+  <t:response>
+	<t:select path="//acct:DeleteTagResponse"/>
+ </t:response>
+</t:test>
+
+</t:tests>

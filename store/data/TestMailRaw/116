@@ -1,0 +1,71 @@
+Return-Path: <xmlbeans-dev-return-135-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8I5UTkU008236
+	for <smith@popserver1.stanford.edu>; Wed, 17 Sep 2003 22:30:29 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8I5UMLH003175 for
+	<smith@stanford.edu>; Wed, 17 Sep 2003 22:30:22 -0700 (PDT)
+Received: (qmail 76384 invoked by uid 500); 18 Sep 2003 05:30:09 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 76368 invoked from network); 18 Sep 2003 05:30:09 -0000
+Message-ID: <3F6942EB.70502@sauria.com>
+Date: Wed, 17 Sep 2003 22:30:19 -0700
+X-Zimbra-Received: Wed, 17 Sep 2003 22:30:19 -0700
+From: Ted Leung <twleung@sauria.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.5b)
+	Gecko/20030901 Thunderbird/0.2
+X-Accept-Language: en-us, en
+MIME-Version: 1.0
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: Getting the distribution onto a download site somewhere ...
+References: <4B2B4C417991364996F035E1EE39E2E108504A@uskiex01.amer.bea.com>
+In-Reply-To: <4B2B4C417991364996F035E1EE39E2E108504A@uskiex01.amer.bea.com>
+X-Enigmail-Version: 0.81.6.0
+X-Enigmail-Supports: pgp-inline, pgp-mime
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000074-0010
+
+On 9/17/2003 5:21 PM, David Remy wrote:
+
+> Thinking about how to do the binary distribution for XMLBeans.  We 
+> have a build target that creates xkit.zip which contains the 
+> xbeans.jar, some helpful utilities, some sample schemas, and the 
+> docs.  This is what has been distributed to users in the past.  Where 
+> should I put xkit.zip so that I can refer to it from a link on the 
+> website?  Is there a directory somewhere (ideally that is mirrored) 
+> for putting to this file and future xmlbeans distributions? 
+>  
+> I noticed xmlsecurity uses 
+> http://www.apache.org/dyn/closer.cgi/xml/security/ to provide access 
+> to a mirror site.  Can/should we do this for xmlbeans also?  Or 
+> something else?
+>  
+>
+All XML projects are moving over to the new ASF mirroring system.  Docs 
+below
+
+Instructions for what needs to be done can be found at :
+http://cvs.apache.org/~bodewig/mirror.html
+and
+http://www.apache.org/dev/mirrors.html
+
+Ted
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

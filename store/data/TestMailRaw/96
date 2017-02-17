@@ -1,0 +1,210 @@
+Return-Path: <xmlbeans-cvs-return-410-smith=stanford.edu@xml.apache.org>
+Received: from leland7.Stanford.EDU (leland7.Stanford.EDU [171.67.16.66])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9KJ7bCc009212
+	for <smith@popserver1.stanford.edu>; Mon, 20 Oct 2003 12:07:38 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland7.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9KJ7V2V002600 for
+	<smith@stanford.edu>; Mon, 20 Oct 2003 12:07:32 -0700 (PDT)
+Received: (qmail 52466 invoked by uid 500); 20 Oct 2003 19:07:25 -0000
+Mailing-List: contact xmlbeans-cvs-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-cvs@xml.apache.org>
+List-Help: <mailto:xmlbeans-cvs-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-cvs-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-cvs-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-cvs@xml.apache.org
+Received: (qmail 52452 invoked from network); 20 Oct 2003 19:07:25 -0000
+Received: from unknown (HELO minotaur.apache.org) (209.237.227.194) by
+	daedalus.apache.org with SMTP; 20 Oct 2003 19:07:25 -0000
+Received: (qmail 10020 invoked by uid 1757); 20 Oct 2003 19:07:34 -0000
+Date: 20 Oct 2003 19:07:34 -0000
+X-Zimbra-Received: 20 Oct 2003 19:07:34 -0000
+Message-ID: <20031020190734.10019.qmail@minotaur.apache.org>
+From: pcal@apache.org
+To: xml-xmlbeans-cvs@apache.org
+Subject: cvs commit:
+	xml-xmlbeans/v2/src/jam/org/apache/xmlbeans/impl/jam/internal/javadoc
+	JDClassLoaderFactory.java
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=us-ascii
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+Mime-Version: 1.0
+X-Evolution: 00000060-0010
+
+pcal        2003/10/20 12:07:34
+
+  Modified:    v2       build.xml
+               v2/src/jam/org/apache/xmlbeans/impl/jam JFileSet.java
+               v2/src/jam/org/apache/xmlbeans/impl/jam/internal
+                        JFileSetImpl.java
+               v2/src/jam/org/apache/xmlbeans/impl/jam/internal/javadoc
+                        JDClassLoaderFactory.java
+  Log:
+  add jam to build, integ some jam changes
+  
+  Revision  Changes    Path
+  1.8       +23 -1     xml-xmlbeans/v2/build.xml
+  
+  Index: build.xml
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v2/build.xml,v
+  retrieving revision 1.7
+  retrieving revision 1.8
+  diff -u -r1.7 -r1.8
+  --- build.xml	16 Oct 2003 00:02:49 -0000	1.7
+  +++ build.xml	20 Oct 2003 19:07:34 -0000	1.8
+  @@ -670,9 +670,30 @@
+   
+     </target>
+   
+  +  <!-- jam target =============================================== -->
+  +
+  +  <target name="jam.classes" depends="dirs">
+  +    <mkdir dir="build/classes/jam"/>
+  +    <javac srcdir="src/jam" destdir="build/classes/jam" source="1.4" debug="on">
+  +      <classpath>
+  +        <pathelement location="build/classes/configschema"/>
+  +        <pathelement location="build/classes/xmlinputstream"/>
+  +        <pathelement location="build/classes/xmlpublic"/>
+  +        <pathelement location="build/classes/common"/>
+  +        <pathelement location="build/classes/repackage"/>
+  +        <pathelement location="build/classes/typeimpl"/>
+  +        <pathelement location="build/classes/xmlconfig"/>
+  +        <pathelement location="build/classes/configschema"/>
+  +        <pathelement location="build/classes/toolschema"/>
+  +        <pathelement location="build/classes/xsdschema"/>
+  +      </classpath>
+  +    </javac>
+  +
+  +  </target>
+  +
+     <!-- binding target =============================================== -->
+   
+  -  <target name="binding.classes" depends="dirs, repackage.classes, typeimpl.classes, xmlpublic.classes, typestore.classes, configschema.classes">
+  +  <target name="binding.classes" depends="dirs, repackage.classes, typeimpl.classes, xmlpublic.classes, typestore.classes, configschema.classes, jam.classes">
+       <mkdir dir="build/classes/binding"/>
+       <javac srcdir="src/binding" destdir="build/classes/binding" source="1.4" debug="on">
+         <classpath>
+  @@ -686,6 +707,7 @@
+           <pathelement location="build/classes/configschema"/>
+           <pathelement location="build/classes/toolschema"/>
+           <pathelement location="build/classes/xsdschema"/>
+  +        <pathelement location="build/classes/jam"/>
+         </classpath>
+       </javac>
+   
+  
+  
+  
+  1.2       +2 -0      xml-xmlbeans/v2/src/jam/org/apache/xmlbeans/impl/jam/JFileSet.java
+  
+  Index: JFileSet.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v2/src/jam/org/apache/xmlbeans/impl/jam/JFileSet.java,v
+  retrieving revision 1.1
+  retrieving revision 1.2
+  diff -u -r1.1 -r1.2
+  --- JFileSet.java	29 Sep 2003 21:29:05 -0000	1.1
+  +++ JFileSet.java	20 Oct 2003 19:07:34 -0000	1.2
+  @@ -74,6 +74,8 @@
+   
+     public void exclude(String pattern);
+   
+  +  public void setClasspath(String cp);
+  +
+     public void setCaseSensitive(boolean b);
+   
+     public File[] getFiles() throws IOException;
+  
+  
+  
+  1.2       +11 -3     xml-xmlbeans/v2/src/jam/org/apache/xmlbeans/impl/jam/internal/JFileSetImpl.java
+  
+  Index: JFileSetImpl.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v2/src/jam/org/apache/xmlbeans/impl/jam/internal/JFileSetImpl.java,v
+  retrieving revision 1.1
+  retrieving revision 1.2
+  diff -u -r1.1 -r1.2
+  --- JFileSetImpl.java	29 Sep 2003 21:29:05 -0000	1.1
+  +++ JFileSetImpl.java	20 Oct 2003 19:07:34 -0000	1.2
+  @@ -76,6 +76,7 @@
+   
+     private List mIncludes = new ArrayList();
+     private List mExcludes = new ArrayList();
+  +  private String mClasspath = null;
+     private boolean mCaseSensitive = true;
+     private File mBasedir;
+     protected String[] includes;
+  @@ -153,6 +154,15 @@
+       mCaseSensitive = b;
+     }
+   
+  +  public void setClasspath(String classpath) {
+  +    mClasspath = classpath;
+  +  }
+  +
+  +    // =========================================================================
+  +  // Public methods
+  +
+  +  public String getClasspath() { return mClasspath; }
+  +
+     // ========================================================================
+     // Directory scanner stuff
+   
+  @@ -796,6 +806,4 @@
+       }
+       return ret;
+     }
+  -
+  -
+  -}
+  +}
+  \ No newline at end of file
+  
+  
+  
+  1.2       +9 -0      xml-xmlbeans/v2/src/jam/org/apache/xmlbeans/impl/jam/internal/javadoc/JDClassLoaderFactory.java
+  
+  Index: JDClassLoaderFactory.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v2/src/jam/org/apache/xmlbeans/impl/jam/internal/javadoc/JDClassLoaderFactory.java,v
+  retrieving revision 1.1
+  retrieving revision 1.2
+  diff -u -r1.1 -r1.2
+  --- JDClassLoaderFactory.java	29 Sep 2003 21:29:06 -0000	1.1
+  +++ JDClassLoaderFactory.java	20 Oct 2003 19:07:34 -0000	1.2
+  @@ -61,6 +61,7 @@
+   import org.apache.xmlbeans.impl.jam.JAnnotationLoader;
+   import org.apache.xmlbeans.impl.jam.JClassLoader;
+   import org.apache.xmlbeans.impl.jam.JFileSet;
+  +import org.apache.xmlbeans.impl.jam.internal.JFileSetImpl;
+   
+   import java.io.*;
+   import java.util.ArrayList;
+  @@ -106,6 +107,14 @@
+             throws IOException, FileNotFoundException {
+       List argList = new ArrayList();
+       argList.add("-private");
+  +
+  +    String cp = ((JFileSetImpl)fileset).getClasspath();
+  +    if (cp != null) {
+  +      argList.add("-docletpath");
+  +      argList.add(cp);
+  +      argList.add("-classpath");
+  +      argList.add(cp);
+  +    }
+       File[] files = fileset.getFiles();
+       if (files.length == 0) {
+         throw new FileNotFoundException("No input files found.");
+  
+  
+  
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: xmlbeans-cvs-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-cvs-help@xml.apache.org
+

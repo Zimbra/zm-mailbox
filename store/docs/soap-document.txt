@@ -1,0 +1,208 @@
+//
+// Notebook feature and WikiItem are deprecated as of 7.0.0.  Briefcase
+// and Documents are still supported and they can be used to store
+// versioned rich text content as WikiItem.
+//
+// Documents are stored in the mailbox of the requestor.  The access to
+// the Documents will be determined by ACL of the folder the Notes are 
+// stored.  By default Documents are accesible to the account holder only, thus 
+// private.  Documents can be shared (via changing the ACL of the Folder
+// that contains Document) to other users, group, or to everyone.
+// 
+
+//
+// General Document sync strategy
+//
+// Zimbra Documents are server side file storage.  It is possible to
+// set up a sync client between Zimbra and another type of file storage
+// mechanism, such as cloud or files on a disk.  The sync client should
+// use the sync protocol described in sync.txt.  For Document sync, the 
+// following approach can be made.
+//
+// - the Documents are stored in Folders with view set to document.
+//   although the server can store mix of item in any given folder, it is
+//   generally assumed the folders are also typed.
+//
+// - Downloading Document should use the REST interface for the Document.
+//   http://{server}/home/{username}/Briefcase/{filename}      // by name
+//   http://{server}/home/[~]{username}/?id={item-id}          // by id
+
+//
+// - Creating and updating Document can be done in two different ways.
+//
+//   first way is to use FileUploadServlet to upload the document,
+//   then calling SaveDocumentRequest using upload-id returned from
+//   FileUploadServlet.
+//
+//   alternatively REST interface can be used to create or update
+//   existing Document by name by sending PUT request to the
+//   same REST URL used for downloading the Document.  Using the REST
+//   interface has somewhat limited capability as the description cannot be
+//   added, and the Document cannot be renamed in the same request.
+//
+//
+
+// Create / Update
+//
+// A Document represents a file.  A file can be created by uploading to 
+// FileUploadServlet.  Or it can refer to an attachment of an existing message.
+//
+// Documents are versioned.  The server maintains the metadata of each version, 
+// such as by who and when the version was edited, and the fragment.
+//
+// When updating an existing Document, the client must supply the id of 
+// Document, and the last known version of the document in 'ver' attribute. 
+// This is used to prevent blindly overwriting someone else's change made 
+// between the update.  The update will succeed only when the last known 
+// version supplied by the client matches the current version of the item 
+// identified by item-id.
+//
+// Saving a new document, as opposed to adding a revision of existing document, 
+// should leave the id and ver fields empty in the request.  Then the server
+// checks and see if the named document already exists, if so returns an error.
+//
+// The request should contain either <upload> element or <msg> element, but 
+// not both.  When <upload> is used, the document should be first uploaded to 
+// FileUploadServlet, and then use the upload-id from the FileUploadResponse.
+// When <m> is used, the document is retrieved from an existing message in 
+// the mailbox, identified by the msg-id and part-id.  The content of the 
+// document can be inlined in <content/> element.  The content can come from 
+// another document / revision specified in <doc/> sub element.
+<SaveDocumentRequest>
+  <doc [id="{item-id}" ver="{last-known-version}"] [name="{file-name}"] [ct="{content-type}"]
+      [l="{folder-id}"] [desc="{description}"] [descEnabled="true|false"] [f="{flags}"]>
+    [<upload id="{upload-id}"/>]
+    [<m id="{msg-id}" part="{part-id}"/>]
+    [<content>{inlined-document-content-string}</content>]
+    [<doc id="{item-id}" ver="{version-to-restore-to}"/>]
+  </doc>
+</SaveDocumentRequest>
+
+{flags} = any of the flags specified in soap.txt, with the addition of "t", which specifies
+that the document is a note.
+
+<SaveDocumentResponse>
+  <doc id="{item-id}" ver="{version}" name="{item-name}"/>
+</SaveDocumentResponse>
+
+//
+// Example
+//
+// - Saving a new document
+//
+// REQUEST:
+//
+//<SaveDocumentRequest xmlns:ns0="urn:zimbraMail">
+//  <doc>
+//    <upload id="18baa043-394f-42ae-be8a-110b279cb696:cc2f2fdf-7957-4412-aa83-6433662ce5d0"/>
+//  </doc>
+//</SaveDocumentRequest>
+//
+// RESPONSE:
+//
+//<SaveDocumentResponse xmlns:ns0="urn:zimbraMail">
+//  <doc ver="1" id="574" name="PICT0370.JPG"/>
+//</SaveDocumentResponse>
+//
+//
+// - Updating an existing document
+//
+// REQUEST:
+//
+//<SaveDocumentRequest xmlns:ns0="urn:zimbraMail">
+//  <doc ver="1" id="574" desc="rev 2.0">
+//    <upload id="18baa043-394f-42ae-be8a-110b279cb696:fcb572ce-2a81-4ad3-b55b-cb998c47b416"/>
+//  </doc>
+//</SaveDocumentRequest>
+//
+// RESPONSE:
+//
+//<SaveDocumentResponse xmlns:ns0="urn:zimbraMail">
+//  <doc ver="2" id="574" name="PICT0370.JPG"/>
+//</SaveDocumentResponse>
+//
+//
+
+//
+// Search
+// The contents and the filename of the Documents are indexed.  
+// Use the existing Search API with "types" set to "document".
+//
+
+// Get
+// through the rest URL:
+//   http://{server}/home/{username}/Briefcase/{filename}      // by name
+//   http://{server}/home/[~]{username}/?id={item-id}          // by id
+//
+
+//
+// ListDocumentRevisions
+//
+// returns {num} number of revisions starting from {version} of the requested
+// document.  {num} defaults to 1.  {version} defaults to the current version.
+//
+<ListDocumentRevisionsRequest>
+  <doc id="{item-id}" [ver="{version}"] [count="{num}"]/>
+</ListDocumentRevisionsRequest>
+
+<ListDocumentRevisionsResponse>
+  [<doc name="{name}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" cd="{created-date}" l="{folder}" [f="{flags}"] [tn="{tag-names}"] [loid="{lock-owner-account-id}"] [loe="{lock-owner-email}"] [desc="{optional-description}] [descEnabled="true|false"]>
+     <fr>... fragment ...</fr>
+  </doc>]+
+  [<user id="{account-id}" name="{display-name}" email="{email-address}"/>]*
+</ListDocumentRevisionsResponse>
+
+Documents that have multiple revisions have the flag "/", which indicates that the document is versioned.
+
+//
+// DiffDocument
+//
+// performs line by line diff of two revisions of a Document or WikiItem,
+// then returns a list of <chunk/> containing the result.  Sections of text
+// that are identical to both versions are indicated with disp="common".
+// For each conflict the chunk will show disp="first", disp="second" or both.
+// 
+//
+// v3:
+// line 1<br>
+// line 2<br>
+// line 3<br>
+// line 4<br>
+// line 5<br>
+// <br>
+//
+// v4:
+// line 1<br>
+// line 2<br>
+// line 3.6<br>
+// line 4<br>
+// line 5<br>
+// <br>
+// 
+// REQUEST:
+// -------------
+// <DiffDocumentRequest xmlns:ns0="urn:zimbraMail">
+//   <doc v1="3" v2="4" id="641"/>
+// </DiffDocumentRequest>
+// 
+// RESPONSE:
+// --------------
+// <DiffDocumentResponse xmlns:ns0="urn:zimbraMail">
+//   <chunk disp="common">line 1&lt;br&gt;
+// line 2&lt;br&gt;</chunk>
+//   <chunk disp="first">line 3&lt;br&gt;</chunk>
+//   <chunk disp="second">line 3.6&lt;br&gt;</chunk>
+//   <chunk disp="common">line 4&lt;br&gt;
+// line 5&lt;br&gt;
+// &lt;br&gt;</chunk>
+// </DiffDocumentResponse>
+//
+
+<DiffDocumentRequest>
+  <doc id="{item-id}" v1="{version}" v2="{version}"/>
+</DiffDocumentRequest>
+
+<DiffDocumentResponse>
+  <chunk disp="common|first|second"> ... text ... </chunk>+
+</DiffDocumentResponse>
+

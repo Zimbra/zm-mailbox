@@ -1,0 +1,138 @@
+Return-Path: <xmlbeans-dev-return-438-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.67.16.119])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hB3JAXoB013582
+	for <smith@popserver1.stanford.edu>; Wed, 3 Dec 2003 11:10:33 -0800 (PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id hB3JAWV6008368 for
+	<smith@stanford.edu>; Wed, 3 Dec 2003 11:10:32 -0800
+Received: (qmail 30524 invoked by uid 500); 3 Dec 2003 19:10:26 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 30511 invoked from network); 3 Dec 2003 19:10:26 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: Design Questions
+Date: Wed, 3 Dec 2003 11:09:40 -0800
+X-Zimbra-Received: Wed, 3 Dec 2003 11:09:40 -0800
+Message-ID: <4B2B4C417991364996F035E1EE39E2E10D8E2F@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: Design Questions
+Thread-Index: AcO5sWcHlL00/aetQy2rsWZbS97c7QAHaypg
+From: "Eric Vasilik" <ericvas@bea.com>
+To: <xmlbeans-dev@xml.apache.org>, <jsleeman@lig.net>
+X-OriginalArrivalTime: 03 Dec 2003 19:09:42.0717 (UTC)
+	FILETIME=[01DE86D0:01C3B9D1]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000050-0010
+
+We originally had something like the following:
+
+    class XmlLoader
+    {
+        static XmlObject parse ( File f ) { ... }
+    }
+
+The, to get a MyDocument, you would do:
+
+    MyDocument myDoc =3D (MyDocument) XmlLoader.parse( ... );
+
+If the XML to be parsed was not of the correct type (i.e. it did not have t=
+he correct document element which made it a MyDocument), XmlLoader.parse wo=
+uld still parse this XML, but it would not create a MyDocument, and the cas=
+t above would fail and a ClassCastException would be thrown.  However, with=
+ the current design:
+
+    interface MyDocument implements XmlObject ...
+    {
+        static final class Factory
+        {
+            static MyDocument parse ( File f ) { ... }
+        }
+    }
+
+One would say:
+
+    MyDocument myDoc =3D MyDocument.Factory.parse( ... );
+
+First, this is easier to read because there is no cast.  Also, because we g=
+enerate a specific function to create MyDocuments, if the incoming XML does=
+ not conform to the MyDocument schema, instead of getting a CLassCastExcept=
+ion, we can perform a test and throw a nicer exception describing what was =
+found and what was expected.
+
+The reason we make a nested static class is because interfaces cannot have =
+non virtual methods.
+
+Also, because we interfaces and not a hierarchy of classes, an object hiera=
+rchy approach will not work.
+
+Hope this makes sense!
+
+- Eric
+
+-----Original Message-----
+From: jas [mailto:jsleeman@lig.net]
+Sent: Wednesday, December 03, 2003 7:27 AM
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: Design Questions
+
+
+Ok, I did some searching in the archive and didn't see an answer to a
+question I had on v1.  I've been looking at this software for the past 2
+weeks for particular patterns used.  One question I have is - why was the
+approach of using an internal final static factory inside of each xml type
+interface used?  It certainly is clever but I am wondering why there was
+not a typical object hierarchy strategy used?  I didn't think one could
+override final members but I wrote test code mimicking this approach and
+proved it to myself.  I assume because it is done inside of an interface
+that it is not a problem.
+
+Thanks,
+jas
+
+
+
+
+>> I am doing pattern research on xmlbeans and I was wondering if this is
+>> the
+>> most appropriate place to post my questions in regards to why certain
+>> approaches were used.
+>
+> yep :)
+>
+> just FYI: the mailing list archive's pretty thin on v1 - since v2 is in
+> the process of development and v1 was created outside apache - but IIRC
+> there's some stuff on the wiki and on the website.
+>
+> - robert
+>
+>
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

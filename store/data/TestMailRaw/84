@@ -1,0 +1,132 @@
+Return-Path: <xmlbeans-user-return-46-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9AJTbLB026938
+	for <smith@popserver1.stanford.edu>; Fri, 10 Oct 2003 12:29:37 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9AJTQCa012670 for
+	<smith@stanford.edu>; Fri, 10 Oct 2003 12:29:27 -0700 (PDT)
+Received: (qmail 7134 invoked by uid 500); 10 Oct 2003 19:29:20 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 7121 invoked from network); 10 Oct 2003 19:29:20 -0000
+Message-ID: <03c001c38f64$c60e66c0$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+References: <F876C2FA-FB4E-11D7-8890-000393D5A006@vrtx.com>
+Subject: Re: XMLBeans/Java Web Start Issues
+Date: Fri, 10 Oct 2003 15:29:04 -0400
+X-Zimbra-Received: Fri, 10 Oct 2003 15:29:04 -0400
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000054-0010
+
+Hi Tom,
+
+The basic problem that is occurring here is that XMLBeans depends on the
+ability to use a ClassLoader not only to load classes, but also to retrieve
+non-.class resources from the JAR.  (In our case, we're looking for .xsb
+files.)  I can't imagine that the problem is unique to XMLBeans; certainly
+various programs store all sorts of data such as message files and
+properties files on their classpath, and rely on classloader.getResource()
+to retrieve them.
+
+It sounds like Java Web Start and JavaSpaces are playing classloader tricks
+that prevent us from accessing our classloader resources.  I'm not familiar
+with either of those two technologies, but if somebody listening here is,
+I'd be interested in what we can do to to work around the issue.
+
+We assume that the classloader that was used to load the TypeSystemHolder
+class for each compiled schema also has access to the .xsb files that are
+JARed up together with the TypeSystemHolder.class file.  Perhaps this is the
+wrong assumption?  But then in that case I'm not sure which classloader we
+should be using which would have access to classloader resources instead.
+
+David
+
+----- Original Message ----- 
+From: "Tom Condon" <tom_condon@vrtx.com>
+To: <xmlbeans-user@xml.apache.org>
+Sent: Friday, October 10, 2003 2:24 PM
+Subject: [xmlbeans-dev] XMLBeans/Java Web Start Issues
+
+
+> I have an application that works 100% when run from my local machines.
+> When I deploy it with Java Web Start, it seems to that when I try to
+> read in an XML document it throws an exception with the following stack
+> trace:
+>
+> java.lang.ExceptionInInitializerError
+> at com.vpharm.hypervis.xml.SignalRunDocument.<clinit>(Unknown Source)
+> at com.vpharm.hypervis.xml.SignalRunDocument$Factory.parse(Unknown
+> Source)
+> at com.vpharm.hypervis.model.HyperVisModel.loadModelFromFile(Unknown
+> Source)
+> at com.vpharm.hypervis.HyperVis$15.run(Unknown Source)
+> at java.lang.Thread.run(Unknown Source)
+> Caused by: java.lang.RuntimeException: Could not instantiate
+> SchemaTypeSystemImpl (java.lang.reflect.InvocationTargetException): is
+> the version of xbean.jar correct?
+> at
+> schema.system.s22209E9B13AF85B626E3B9D5EF84A88D.TypeSystemHolder.loadTyp
+> eSystem(Unknown Source)
+> at
+> schema.system.s22209E9B13AF85B626E3B9D5EF84A88D.TypeSystemHolder.<clinit
+>  >(Unknown Source)
+> ... 5 more
+> Caused by: java.lang.reflect.InvocationTargetException
+> at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native
+> Method)
+> at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown
+> Source)
+> at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown
+> Source)
+> at java.lang.reflect.Constructor.newInstance(Unknown Source)
+> ... 7 more
+> Caused by: org.apache.xmlbeans.SchemaTypeLoaderException: XML-BEANS
+> compiled schema: Could not locate compiled schema resource
+> schema/system/s22209E9B13AF85B626E3B9D5EF84A88D/index.xsb
+> (schema.system.s22209E9B13AF85B626E3B9D5EF84A88D.index) - code 0
+> at
+> org.apache.xmlbeans.impl.schema.SchemaTypeSystemImpl$XsbReader.<init>(Sc
+> hemaTypeSystemImpl.java:1110)
+> at
+> org.apache.xmlbeans.impl.schema.SchemaTypeSystemImpl.initFromHeader(Sche
+> maTypeSystemImpl.java:312)
+> at
+> org.apache.xmlbeans.impl.schema.SchemaTypeSystemImpl.<init>(SchemaTypeSy
+> stemImpl.java:192)
+> ... 11 more
+>
+>
+> I assume that the problem is some ClassLoader problem in either
+> XMLBeans or Java Web Start.  My colleague, Carl Elkin has posted what I
+> think is the same problem in a different scenario (using Java Spaces).
+>
+> Does anyone have any ideas what the problem may be?
+>
+> Thanks,
+>
+> Tom Condon
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

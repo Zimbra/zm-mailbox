@@ -1,0 +1,181 @@
+Categories
+----------
+We are switching the log4j category naming convention from a strict physical 
+classname-based naming convention to a combo. Subsystems will be grouped
+and named logically, all under the `zimbra` name. 
+
+For example, the following categories will be pre-defined:
+
+* zimbra.misc
+* zimbra.pop
+* zimbra.imap
+* zimbra.index
+* zimbra.journal
+* zimbra.lmtp
+* zimbra.mailbox
+* zimbra.account
+* zimbra.replication
+* zimbra.security
+* zimbra.soap
+
+NOTE: The `zimbra.*` loggers are strictly for messages that are for 
+Operator-Important messages...Where "operator" means the person who
+runs the software in the field. The messages must make sense to 
+someone who doesn't know the details of the system.
+
+The `zimbra.*` DEBUG level is for (extra information for OPERATORS to
+enable if they are trying to debug. E.G. Might trace the individual
+steps in an operation ("creating DB entry...creating LDAP entry....
+creating Index") in a way that helps the operator diagnose a problem.
+
+You should use the most-specific category available. If none apply (and
+you aren't creating a major new subsystem), then use the `zimbra.misc` category.
+
+We should continue to use the classname itself when we want to enable
+fine-grained debugging/tracing of a subsystem/class.
+
+Defaults
+--------
+By default, everything under `zimbra.*` will be configured to log at the 
+following levels:
+
+* INFO
+* WARN
+* ERROR
+* FATAL
+
+Everything under `com.zimbra.*` will be turned off by default.
+
+Anything logged at FATAL will cause an SNMP trap. It may turn out admins 
+also want to trap errors, as they can be indicative of a larger problem.
+
+Anything logged at FATAL/ERROR will be sent to syslog. We might also decide
+to send all WARNs to syslog as well.
+
+Guide to Log Levels
+-------------------
+
+```
+FATAL   The FATAL level designates very severe error events that will 
+        presumably lead the application to abort, or have impact on a large
+        number of users. For example, being unable to contact the mysql
+        database.
+      
+ERROR   The ERROR level designates error events that might still allow 
+        the application to continue running, or impact a single user. 
+        For example, a single mailbox having a corrupt index, or being
+        unable to delete a message from a mailbox.
+          
+WARN    The WARN level designates potentially harmful situations, but are
+        usually recoverable or can be ignored. For example, using a default
+        value (baked into source code) when expected config data isn't found.
+
+INFO    The INFO level designates informational messages that highlight the
+        progress of the application at coarse-grained level. For example,
+        server start-up, mailbox creation/deletion, account creation. You
+        would generally not want to log something at info if it happens on
+        every single request. If we need that type of logging (i.e., each
+        operation for auditing), then we should create a category, like 
+        "zimbra.mailbox.op", and have logging for it set to OFF by default.
+
+DEBUG   Events that would generally be useful to help a customer and/or 
+        support debug problems at a customer site. For example, logging
+        all parameters in a command, logging each request, etc. To enable
+        even more fine-grained logging, we should use the classname itself
+        as the category, and enable debugging on the class.
+```
+
+Making logging calls in code
+----------------------------
+All loggers will be defined as public static members on the following
+class:
+
+````
+package com.zimbra.common.util;
+
+public class ZimbraLog {
+  public Log misc; // "zimbra.misc";
+  public Log index; // "zimbra.index";
+  // etc
+}
+````
+
+So, to log an error in your code under the zimbra.mailbox category, you'd
+use:
+
+    ZimbraLog.mailbox.error("...");
+
+If you are doing debug logging and/or or it is very expensive to compute your
+log string, then you will generally want to make sure that level is enabled
+before constructing the string:
+
+````
+if (ZimbraLog.index.isDebugEnabled())
+  ZimbraLog.index.debug(foo+" "+bar);
+````
+
+If you are logging something to the `zimbra.*` categories at 
+INFO/WARN/ERROR/CRITICAL you probably don't need to check.
+
+If there are cases where you want extra levels of debugging/information,
+then you can use the classname-based category naming. 
+
+For example:
+
+    private static Log mLog = LogFactory.getLog(Mailbox.class);
+    ...
+    ZimbraLog.mailbox.info("mailbox created...");
+    ...
+    if (ZimbraLog.mailbox.isDebugEnabled()) 
+      ZimbraLog.mailbox.debug("coarse-grained debug info...");
+    ...
+    if (mLog.isDebugEnabled()) {
+       // lots and lots of debugging spew
+       mLog.debug("...");
+    }
+
+Now if someone needs to really debug a particular class, they can enable
+DEBUG for `log4j.logger.com.zimbra.cs.mailbox.Mailbox`.
+
+NOTE: The class was called ZimbraLog because the Zimbra class is used
+for another purpose, and there are a billion Log classes already.
+
+Nested Diagnostic Context
+-------------------------
+The logging format has been modified to include `[%x]` in the output, which 
+instructs log4j to log the NDC. If one is not set, then `[]` is output.
+
+From the log4j NDC javadoc:
+
+````
+"A Nested Diagnostic Context, or NDC in short, is an instrument to distinguish
+interleaved log output from different sources. Log output is typically
+interleaved when a server handles multiple clients near-simultaneously.
+
+Interleaved log output can still be meaningful if each log entry from 
+different contexts had a distinctive stamp. This is where NDCs come into play."
+````
+
+SoapEngine.java has been modified to set/clear the NDC at the beginning/end
+of a request. In particular, it sets the NDC to this:
+
+    ip={request-ip-address};name={account-name}[;aname={authtoken-account-name}]
+
+where "name" is the account name (i.e., the account id the request
+is operating on). "aname" is only present if the authtoken id is different
+then the "id" (i.e., an admin is doing an operation on an account).
+
+If the account lookups fail for whatever reason, only the UUIDs will be logged, as "id" and "aid".
+
+For example:
+
+    2005-01-25 16:52:17,763 DEBUG [http-7070-Processor4] [ip=192.168.1.10;name=user1@example.zimbra.com] SoapEngine - dispatch: doc GetMsgRequest
+
+Additionally, if the `DocumentHandler.getRequestedMailbox` method is called,
+then the NDC is modified to also include `mid={mailbox-id}`. By convention,
+this method is called at the start of any requests that operate on a mailbox.
+We might just want to have mailbox/index-related methods log the mailbox
+id themselves though.
+
+Moving forward, we'll need to make sure that the NDC is set correctly for
+all entry points (content servlet, pop, imap).

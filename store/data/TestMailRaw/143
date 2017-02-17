@@ -1,0 +1,55 @@
+Return-Path: <xmlbeans-dev-return-103-smith=stanford.edu@xml.apache.org>
+Received: from leland5.Stanford.EDU (leland5.Stanford.EDU [171.64.14.121])
+	by popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8FNKf1T024191 for
+	<smith@popserver1.stanford.edu>; Mon, 15 Sep 2003 16:20:42 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland5.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8FNKXkD018001 for
+	<smith@stanford.edu>; Mon, 15 Sep 2003 16:20:34 -0700 (PDT)
+Received: (qmail 68069 invoked by uid 500); 15 Sep 2003 23:20:25 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Delivered-To: moderator for xmlbeans-dev@xml.apache.org
+Received: (qmail 28369 invoked from network); 15 Sep 2003 21:07:19 -0000
+content-class: urn:content-classes:message
+Subject: XmlBeans source code has been checked in ...
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 15 Sep 2003 14:07:21 -0700
+X-Zimbra-Received: Mon, 15 Sep 2003 14:07:21 -0700
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+Message-ID: <4B2B4C417991364996F035E1EE39E2E10D8E06@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: XmlBeans source code has been checked in ...
+Thread-Index: AcN7zVqm0/g4nXKTTMKpPiP8n2fcuw==
+From: "Eric Vasilik" <ericvas@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+Cc: <xmlbeans-user@xml.apache.org>, <xmlbeans-cvs@xml.apache.org>
+X-OriginalArrivalTime: 15 Sep 2003 21:07:25.0008 (UTC)
+	FILETIME=[5CB05D00:01C37BCD]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000008f-0011
+
+
+The source code for XmlBeans v1 has been checked in to xml-xmlbeans at cvs.=
+apache.org.
+
+To build it, do "ant deploy".  To run the drt (Developer Regression Test) d=
+o "ant drt".
+
+- Eric
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
