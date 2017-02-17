@@ -1,0 +1,34 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="zm-client" default="jar">
+  <import file="../zm-zcs/ant-global.xml"/>
+  <target name="deploy" depends="jar,set-dev-version,undeploy">
+    <ant dir="${server.dir}" target="stop-webserver" inheritAll="false"/>
+    <!-- untill zm* scripts are fixed to use versioned zm* jars, we have to deploy this with jar with a fixed name -->
+    <copy file="${build.dir}/${jar.file}" tofile="${common.jars.dir}/zimbraclient.jar"/>
+    <copy todir="${jetty.webapps.dir}/zimbra/WEB-INF/lib/">
+      <fileset dir="${build.dir}" includes="${jar.file}"/>
+    </copy>
+    <copy todir="${jetty.webapps.dir}/zimbraAdmin/WEB-INF/lib/">
+      <fileset dir="${build.dir}" includes="${jar.file}"/>
+    </copy>
+    <copy todir="${jetty.webapps.dir}/service/WEB-INF/lib/">
+      <fileset dir="${build.dir}" includes="${jar.file}"/>
+    </copy>
+    <ant dir="${server.dir}" target="start-webserver" inheritAll="false"/>
+  </target>
+  <!-- mailboxd will not start without zm-client library, so this target does not attempt to start it -->
+  <target name="undeploy">
+    <ant dir="${server.dir}" target="stop-webserver" inheritAll="false"/>
+    <delete>
+      <fileset dir="${common.jars.dir}" includes="zm-client*.jar,zimbraclient*.jar"/>
+      <fileset dir="${jetty.endorsed.jars.dir}" includes="zm-client*.jar,zimbraclient*.jar"/>
+      <fileset dir="${jetty.webapps.dir}/zimbra/WEB-INF/lib" includes="zm-client*.jar,zimbraclient*.jar"/>
+      <fileset dir="${jetty.webapps.dir}/zimbraAdmin/WEB-INF/lib" includes="zm-client*.jar,zimbraclient*.jar"/>
+      <fileset dir="${jetty.webapps.dir}/service/WEB-INF/lib" includes="zm-client*.jar,zimbraclient*.jar"/>
+    </delete>
+  </target>
+  <target name="jar" depends="compile" description="Creates the jar file">
+    <antcall target="zimbra-jar">
+      <param name="implementation.title" value="Zimbra Client"/>
+    </antcall>
+  </target>
+</project>
