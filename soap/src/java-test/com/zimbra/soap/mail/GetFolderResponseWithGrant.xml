@@ -1,0 +1,40 @@
+<GetFolderResponse xmlns="urn:zimbraMail">
+<!--
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2011, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
+ * ***** END LICENSE BLOCK *****
+-->
+  <folder id="1" rev="1" s="0" i4next="2" i4ms="1" name="USER_ROOT" ms="1" n="0" l="11">
+    <folder id="16" rev="1" s="0" i4next="17" i4ms="1" name="Briefcase" ms="1" n="0" l="1" view="document"/>
+    <folder id="10" f="#" rev="1" s="0" i4next="282" i4ms="515" name="Calendar" ms="1" n="1" l="1" view="appointment"/>
+    <folder id="14" rev="1" s="0" i4next="15" i4ms="1" name="Chats" ms="1" n="0" l="1" view="message"/>
+    <folder id="7" rev="1" s="0" i4next="8" i4ms="1" name="Contacts" ms="1" n="0" l="1" view="contact"/>
+    <folder id="6" rev="1" s="0" i4next="7" i4ms="1" name="Drafts" ms="1" n="0" l="1" view="message"/>
+    <folder id="13" rev="1" s="0" i4next="303" i4ms="1104" name="Emailed Contacts" ms="1" n="1" l="1" view="contact"/>
+    <folder id="2" f="u" u="4" rev="1" s="13540" i4next="282" i4ms="510" name="Inbox" ms="1" n="5" l="1" view="message"/>
+    <folder id="4" rev="1" s="0" i4next="5" i4ms="1" name="Junk" ms="1" n="0" l="1" view="message"/>
+    <folder id="300" f="i" rev="1100" s="0" i4next="301" i4ms="1100" name="NewFolder" ms="1101" n="0" l="1" view="message">
+      <acl>
+        <grant d="wonder@mc.example.net" zid="8d0f48ba-644f-4424-b16e-351f873dff59" gt="usr" perm="rwidx"/>
+      </acl>
+    </folder>
+    <folder id="5" rev="1" s="9681" i4next="302" i4ms="1102" name="Sent" ms="1" n="3" l="1" view="message"/>
+    <folder id="15" f="#" rev="1" s="0" i4next="16" i4ms="1" name="Tasks" ms="1" n="0" l="1" view="task"/>
+    <folder id="3" rev="1" s="5045" i4next="285" i4ms="509" name="Trash" ms="1" n="2" l="1"/>
+  </folder>
+</GetFolderResponse>
