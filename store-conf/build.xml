@@ -1,0 +1,20 @@
+<project name="zm-store-conf" default="conf-dist">
+	<import file="../zm-zcs/ant-global.xml" />
+	<property name="dist.conf.dir" value="build/conf" />
+	<property name="conf.dir" value="conf" />
+	<property name="conf.cont.dir" value="${conf.dir}/contacts" />
+	<property name="conf.msgs.dir" value="${conf.dir}/msgs" />
+	<target name="conf-dist">
+		<copy todir="${dist.conf.dir}" overwrite="true">
+			<fileset dir="${conf.dir}" includes="*.*" />
+		</copy>
+		<copy todir="${dist.conf.dir}/contacts" overwrite="true">
+			<fileset dir="${conf.cont.dir}" includes="*.xml" />
+		</copy>
+		<copy todir="${dist.conf.dir}/msgs" overwrite="true">
+			<fileset dir="${conf.msgs.dir}" includes="*.properties" />
+		</copy>
+		<zip destfile="build/zimbrastoreconf.zip" basedir="${dist.conf.dir}" />
+	</target>
+
+</project>

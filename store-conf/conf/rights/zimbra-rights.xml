@@ -1,0 +1,849 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<rights>
+
+<!-- 
+********************
+    admin rights
+********************
+-->
+
+<!-- 
+========================================================
+                      account rights
+========================================================
+-->
+
+<right name="getAccount" type="getAttrs" targetType="account">
+  <desc>get all account attributes</desc>
+</right>
+
+<right name="modifyAccount" type="setAttrs" targetType="account">
+  <desc>modify all account attributes</desc>
+</right>
+
+<right name="listAccount" type="preset" targetType="account">
+  <desc>see account in GetAllAccounts/SearchDirectoryResponse</desc>
+</right>
+
+<right name="renameAccount" type="preset" targetType="account">
+  <desc>rename account</desc>
+</right>
+
+<right name="deleteAccount" type="preset" targetType="account">
+  <desc>delete account</desc>
+</right>
+
+<right name="addAccountAlias" type="preset" targetType="account">
+  <desc>add account alias</desc>
+</right>
+
+<right name="removeAccountAlias" type="preset" targetType="account">
+  <desc>remove account alias</desc>
+</right>
+
+<right name="getAccountInfo" type="preset" targetType="account">
+  <desc>get basic account info: account id, home server, and access URLs</desc>
+</right>
+
+<right name="getAccountMembership" type="preset" targetType="account">
+  <desc>get all groups the account is a member of</desc>
+</right>
+
+<right name="adminLoginAs" type="preset" targetType="account" cache="1">
+  <desc>
+    login to the user's account as an administrator
+  </desc>
+</right>
+
+<right name="checkRightUsr" type="preset" targetType="account">
+  <desc>check if the account has any effective rights</desc>
+</right> 
+
+<right name="getMailboxInfo" type="preset" targetType="account">
+  <desc>get mailbox id and size(quota) of an account</desc>
+</right>
+
+<right name="purgeMessages" type="preset" targetType="account">
+  <desc>purge messages of an account</desc>
+</right>
+
+<right name="reindexMailbox" type="preset" targetType="account">
+  <desc>reindex mailbox</desc>
+</right> 
+
+<right name="moveAccountMailbox" type="preset" targetType="account">
+  <desc>move account mailbox</desc>
+</right>        
+ 
+<right name="setAccountPassword" type="preset" targetType="account">
+  <desc>set account password, not restricted by password strength policies</desc>
+</right>
+
+<right name="changeAccountPassword" type="preset" targetType="account">
+  <desc>change account password, restricted by password strength policies</desc>
+</right>
+
+<right name="checkPasswordStrength" type="preset" targetType="account">
+  <desc>check password strength</desc>
+</right>
+
+<right name="configurePasswordStrength" type="setAttrs" targetType="account,calresource,cos">
+  <desc>configure password strength</desc>
+  <attrs>
+      <a n="zimbraPasswordMinLength"/>
+      <a n="zimbraPasswordMaxLength"/>
+      <a n="zimbraPasswordMinUpperCaseChars"/>
+      <a n="zimbraPasswordMinLowerCaseChars"/>
+      <a n="zimbraPasswordMinNumericChars"/>
+      <a n="zimbraPasswordMinPunctuationChars"/>
+  </attrs>
+</right>
+
+<right name="viewAdminSavedSearch" type="getAttrs" targetType="account,calresource">
+  <desc>view admin saved searches</desc>
+  <attrs>
+      <a n="zimbraAdminSavedSearches"/>
+  </attrs>
+</right>
+
+<right name="setAdminSavedSearch" type="setAttrs" targetType="account,calresource">
+  <desc>save admin saved searches</desc>
+  <attrs>
+      <a n="zimbraAdminSavedSearches"/>
+  </attrs>
+</right>  
+
+<right name="configureQuota" type="setAttrs" targetType="account,cos">
+  <desc>configure quota</desc>
+  <attrs>
+      <a n="zimbraMailQuota"/>
+      <a n="zimbraQuotaWarnPercent"/>
+      <a n="zimbraQuotaWarnInterval"/>
+      <a n="zimbraQuotaWarnMessage"/>
+  </attrs>
+</right> 
+
+<right name="viewAccountAdminUI" type="preset" targetType="account">
+  <desc>
+    execute the GetAdminConsoleUIComp SOAP when an account 
+    other than the authenticated account is specified in the request.  
+  </desc>
+</right>
+
+<right name="viewDistributionListAdminUI" type="preset" targetType="dl">
+  <desc>
+    execute the GetAdminConsoleUIComp SOAP when a distribution list 
+    is specified in the request.  
+  </desc>
+</right>
+
+<right name="configureAdminUI" type="setAttrs" targetType="account,dl">
+  <desc>configure admin UI components</desc>
+  <attrs>
+    <a n="zimbraAdminConsoleUIComponents"/>
+  </attrs>
+</right>
+
+<!-- 
+========================================================
+                 calendar resource rights
+========================================================
+-->
+
+<right name="getCalendarResource" type="getAttrs" targetType="calresource">
+  <desc>get all calendar resource attributes</desc>
+</right>
+
+<right name="modifyCalendarResource" type="setAttrs" targetType="calresource">
+  <desc>modify all calendar resource attributes</desc>
+</right>
+
+<right name="listCalendarResource" type="preset" targetType="calresource">
+  <desc>see calendar resource in GetAllCalendarResources/SearchDirectoryResponse</desc>
+</right>
+
+<right name="renameCalendarResource" type="preset" targetType="calresource">
+  <desc>rename calendar resource</desc>
+</right>
+
+<right name="deleteCalendarResource" type="preset" targetType="calresource">
+  <desc>delete calendar resource</desc>
+</right>
+
+<right name="addCalendarResourceAlias" type="preset" targetType="calresource">
+  <desc>add calendar resource alias</desc>
+</right>
+
+<right name="removeCalendarResourceAlias" type="preset" targetType="calresource">
+  <desc>remove calendar resource alias</desc>
+</right>
+
+<right name="adminLoginCalendarResourceAs" type="preset" targetType="calresource">
+  <desc>login to the calendar resource as an admin.</desc>
+</right>
+       
+<right name="getCalendarResourceInfo" type="preset" targetType="calresource">
+  <desc>get account id, home server, cos id and name, and access URL</desc>
+</right>
+       
+<right name="setCalendarResourcePassword" type="preset" targetType="calresource">
+  <desc>set calendar resource password, not restricted by password strength policies</desc>
+</right>
+
+<right name="changeCalendarResourcePassword" type="preset" targetType="calresource">
+  <desc>set calendar resource password, restricted by password strength policies</desc>
+</right> 
+
+<right name="checkCalendarResourcePasswordStrength" type="preset" targetType="calresource">
+  <desc>check password strength</desc>
+</right>    
+
+<right name="reindexCalendarResourceMailbox" type="preset" targetType="calresource">
+  <desc>reindex mailbox</desc>
+</right> 
+
+<right name="moveCalendarResourceMailbox" type="preset" targetType="calresource">
+  <desc>move calendar resource mailbox</desc>
+</right>   
+
+<!-- 
+========================================================
+                      COS rights
+========================================================
+-->
+
+<right name="getCos" type="getAttrs" targetType="cos">
+  <desc>get all cos attributes</desc>
+</right>
+
+<right name="modifyCos" type="setAttrs" targetType="cos">
+  <desc>set all cos attributes</desc>
+</right>
+
+<right name="listCos" type="preset" targetType="cos">
+  <desc>see cos in GetAllCos/SearchDirectoryResponse</desc>
+</right>
+
+<right name="renameCos" type="preset" targetType="cos">
+  <desc>rename cos</desc>
+</right>
+
+<right name="deleteCos" type="preset" targetType="cos">
+  <desc>delete cos</desc>
+</right>
+
+<right name="assignCos" type="preset" targetType="cos">
+  <desc>assign the cos (to domains or accounts)</desc>
+</right>
+
+<right name="manageZimlet" type="preset" targetType="cos">
+  <desc>activate/deactivate zimlets on a cos</desc>
+</right>
+
+<right name="configureCosConstraint" type="setAttrs" targetType="cos">
+  <desc>configure cos constraint</desc>
+  <attrs>
+    <a n="zimbraConstraint"/>
+  </attrs>
+</right>
+
+<!-- 
+========================================================
+                      config rights
+========================================================
+-->
+
+<right name="getGlobalConfig" type="getAttrs" targetType="config">
+  <desc>get all global config attributes</desc>
+</right>
+
+<right name="modifyGlobalConfig" type="setAttrs" targetType="config">
+  <desc>modify all global config attributes</desc>
+</right>
+
+<right name="configureGlobalConfigConstraint" type="setAttrs" targetType="config">
+  <desc>configure global config constraint</desc>
+  <attrs>
+    <a n="zimbraConstraint"/>
+  </attrs>
+</right>
+
+<!-- 
+========================================================
+                 distribution list rights
+========================================================
+-->
+
+<right name="checkRightGrp" type="preset" targetType="dl">
+  <desc>check if the group has any effective rights</desc>
+</right> 
+
+<right name="getDistributionList" type="getAttrs" targetType="dl">
+  <desc>get all distribution list attributes</desc>
+</right>
+
+<right name="modifyDistributionList" type="setAttrs" targetType="dl">
+  <desc>set all distribution list attributes</desc>
+</right>
+
+<right name="listDistributionList" type="preset" targetType="dl">
+  <desc>see distribution list in GetAllCos/SearchDirectoryResponse</desc>
+</right>
+
+<right name="renameDistributionList" type="preset" targetType="dl">
+  <desc>rename distribution list</desc>
+</right>
+
+<right name="deleteDistributionList" type="preset" targetType="dl">
+  <desc>delete distribution list</desc>
+</right>
+
+<right name="addDistributionListAlias" type="preset" targetType="dl">
+  <desc>add distribution list alias</desc>
+</right>
+
+<right name="removeDistributionListAlias" type="preset" targetType="dl">
+  <desc>remove distribution list alias</desc>
+</right>
+
+<right name="getDistributionListMembership" type="preset" targetType="dl">
+  <desc>get all groups the distribution list is a member of</desc>
+</right>
+
+<right name="addDistributionListMember" type="preset" targetType="dl">
+  <desc>add member to distribution list</desc>
+</right>
+
+<right name="removeDistributionListMember" type="preset" targetType="dl">
+  <desc>remove member from distribution list</desc>
+</right>
+
+
+<!-- 
+========================================================
+                 dynamic group
+========================================================
+-->
+
+<right name="getGroup" type="getAttrs" targetType="group">
+  <desc>get all group attributes</desc>
+</right>
+
+<right name="modifyGroup" type="setAttrs" targetType="group">
+  <desc>set all group attributes</desc>
+</right>
+
+<right name="listGroup" type="preset" targetType="group">
+  <desc>see group in GetAllCos/SearchDirectoryResponse</desc>
+</right>
+
+<right name="renameGroup" type="preset" targetType="group">
+  <desc>rename group</desc>
+</right>
+
+<right name="deleteGroup" type="preset" targetType="group">
+  <desc>delete group</desc>
+</right>
+
+<right name="addGroupAlias" type="preset" targetType="group">
+  <desc>add group alias</desc>
+</right>
+
+<right name="removeGroupAlias" type="preset" targetType="group">
+  <desc>remove group alias</desc>
+</right>
+
+<right name="addGroupMember" type="preset" targetType="group">
+  <desc>add member to group</desc>
+</right>
+
+<right name="removeGroupMember" type="preset" targetType="group">
+  <desc>remove member from group</desc>
+</right>
+
+
+
+<!-- 
+========================================================
+                      domain rights
+========================================================
+-->
+
+<right name="getDomain" type="getAttrs" targetType="domain">
+  <desc>get all domain attributes</desc>
+</right>
+
+<right name="modifyDomain" type="setAttrs" targetType="domain">
+  <desc>set all domain attributes</desc>
+</right>
+
+<right name="listDomain" type="preset" targetType="domain">
+  <desc>see domain in GetAllCos/SearchDirectoryResponse</desc>
+</right>
+
+<right name="deleteDomain" type="preset" targetType="domain">
+  <desc>delete domain</desc>
+</right>
+
+<right name="createSubDomain" type="preset" targetType="domain">
+  <desc>create sub domain</desc>
+</right>
+
+<right name="checkDomainMXRecord" type="preset" targetType="domain">
+  <desc>check domain MX record</desc>
+</right>
+
+<right name="countAccount" type="preset" targetType="domain">
+  <desc>count accounts in a domain</desc>
+</right>
+
+<right name="countAlias" type="preset" targetType="domain">
+  <desc>count aliases in a domain</desc>
+</right>
+
+<right name="countDistributionList" type="preset" targetType="domain">
+  <desc>count DLs in a domain</desc>
+</right>
+
+<right name="countCalendarResource" type="preset" targetType="domain">
+  <desc>count resources in a domain</desc>
+</right>
+
+<right name="getDomainQuotaUsage" type="preset" targetType="domain">
+  <desc>get domain quota usage</desc>
+</right>
+
+<right name="createAccount" type="preset" targetType="domain">
+  <desc>create account in the domain</desc>
+</right>
+
+<right name="autoProvisionAccount" type="preset" targetType="domain">
+  <desc>auto provision account in the domain in MANUAL mode</desc>
+</right>
+
+<right name="createCalendarResource" type="preset" targetType="domain">
+  <desc>create calendar resource in the domain</desc>
+</right>
+
+<right name="createDistributionList" type="preset" targetType="domain">
+  <desc>create distribution list in the domain</desc>
+</right>
+
+<right name="createGroup" type="preset" targetType="domain">
+  <desc>create group in the domain</desc>
+</right>
+
+<right name="createAlias" type="preset" targetType="domain">
+  <desc>create alias in this domain</desc>
+</right>
+
+<right name="deleteAlias" type="preset" targetType="domain">
+  <desc>delete alias in this domain</desc>
+</right>
+
+<right name="listAlias" type="preset" targetType="domain">
+  <desc>list alias in this domain</desc>
+</right>
+
+<right name="accessGAL" type="preset" targetType="domain">
+  <desc>access GAL(global address list)</desc>
+</right>
+         
+<right name="checkExchangeAuthConfig" type="preset" targetType="domain">
+  <desc>check exchange auth config</desc>
+</right>
+
+<right name="configureWikiAccount" type="setAttrs" targetType="domain,config">
+  <desc>configure attributes for wiki account</desc>
+   <attrs>
+    <a n="zimbraNotebookAccount"/>                                
+  </attrs> 
+</right>
+
+
+<right name="configureExternalGAL" type="setAttrs" targetType="domain">
+  <desc>configure attributes for external GAL</desc>
+   <attrs>
+    <a n="zimbraGalMode"/>
+    <a n="zimbraGalLdapURL"/>
+    <a n="zimbraGalLdapSearchBase"/>
+    <a n="zimbraGalLdapBindDn"/>
+    <a n="zimbraGalLdapBindPassword"/>
+    <a n="zimbraGalLdapFilter"/>
+    <a n="zimbraGalAutoCompleteLdapFilter"/>
+    <a n="zimbraGalSyncLdapURL"/>
+    <a n="zimbraGalSyncLdapSearchBase"/>
+    <a n="zimbraGalSyncLdapFilter"/>
+    <a n="zimbraGalSyncLdapAuthMech"/>
+    <a n="zimbraGalSyncLdapBindDn"/>
+    <a n="zimbraGalSyncLdapBindPassword"/>                                   
+  </attrs> 
+</right>
+
+<right name="configureExternalAuth" type="setAttrs" targetType="domain">
+  <desc>configure attributes for external auth</desc>
+   <attrs>
+    <a n="zimbraAuthMech"/>
+    <a n="zimbraAuthLdapURL"/>
+    <a n="zimbraAuthLdapBindDn"/>
+    <a n="zimbraAuthLdapSearchBase"/>
+    <a n="zimbraAuthLdapSearchFilter"/>
+    <a n="zimbraAuthLdapSearchBindDn"/>
+    <a n="zimbraAuthLdapSearchBindPassword"/>      
+    <a n="zimbraAuthFallbackToLocal"/>
+    <a n="zimbraAuthKerberos5Realm"/>
+    <a n="zimbraAuthLdapStartTlsEnabled"/>
+  </attrs> 
+</right>         
+
+
+   
+<!-- 
+========================================================
+                    server rights
+========================================================
+-->   
+
+<right name="getServer" type="getAttrs" targetType="server">
+  <desc>get all server attributes</desc>
+</right>
+
+<right name="modifyServer" type="setAttrs" targetType="server">
+  <desc>set all server attributes</desc>
+</right>
+
+<right name="listServer" type="preset" targetType="server">
+  <desc>see server in GetAllServers/SearchDirectoryResponse</desc>
+</right>
+
+<right name="deleteServer" type="preset" targetType="server">
+  <desc>delete server</desc>
+</right>
+
+<right name="flushCache" type="preset" targetType="server">
+  <desc>flush LDAP, skin, local caches on server</desc>
+</right>
+
+<right name="checkDirectoryOnFileSystem" type="preset" targetType="server">
+  <desc>check and create directory on file system</desc>
+</right>
+
+<right name="checkHealth" type="preset" targetType="server">
+  <desc>check server health</desc>
+</right>
+       
+<right name="getSessions" type="preset" targetType="server">
+  <desc>dump/get sessions</desc>
+</right>
+
+<right name="getMailboxStats" type="preset" targetType="server">
+  <desc>get mailbox stats homed on the server</desc>
+</right>
+
+<right name="manageMailQueue" type="preset" targetType="server">
+  <desc>view and take actions on mail queues</desc>
+</right>   
+
+<right name="manageAccountLogger" type="preset" targetType="server">
+  <desc>add/remove account loggers</desc>
+</right>
+
+<right name="manageVolume" type="preset" targetType="server">
+  <desc>create, volumes</desc>
+</right>  
+
+<right name="applianceAll" type="preset" targetType="server">
+  <desc>catchall, appliance</desc>
+</right>
+
+<right name="deployZimlet" type="preset" targetType="server">
+  <desc>deploy and undeploy zimlets on a server</desc>
+</right>
+
+<right name="backupAccount" type="preset" targetType="server">
+  <desc>backup accounts on a server</desc>
+</right> 
+
+<right name="restoreAccount" type="preset" targetType="server">
+  <desc>restore accounts on a server</desc>
+</right> 
+
+<right name="rolloverRedoLog" type="preset" targetType="server">
+  <desc>rollover redo log on a server</desc>
+</right> 
+
+<right name="moveMailboxToServer" type="preset" targetType="server">
+  <desc>move mailboxes to a server</desc>
+</right> 
+
+<right name="moveMailboxFromServer" type="preset" targetType="server">
+  <desc>move mailboxes from a server and purge moved mailboxes</desc>
+</right> 
+
+<right name="getServiceStatus" type="preset" targetType="server">
+  <desc>get service status of server</desc>
+</right>
+
+<right name="manageCrossMailboxSearchTask" type="preset" targetType="server">
+  <desc>create/abort/delete/purge/get status of a cross mailbox search task</desc>
+</right>
+
+<right name="getServerStats" type="preset" targetType="server">
+  <desc>get stats of server</desc>
+</right>
+
+<right name="getHSMStatus" type="preset" targetType="server">
+  <desc>get HSM process status for a server</desc>
+</right>
+
+<right name="moveBlobs" type="preset" targetType="server">
+  <desc>move blobs, start and abort HSM thread on a server</desc>
+</right>
+
+<right name="createMigrationTask" type="preset" targetType="server">
+    <desc>create bulk migration task on a server</desc>
+</right>
+
+<right name="getCertificateInfo" type="preset" targetType="server">
+    <desc>view SSL certificates installed on the target server</desc>
+</right>
+
+<right name="installCertificate" type="preset" targetType="server">
+    <desc>install SSL certificates on the target server</desc>
+</right>
+
+<right name="getCSR" type="preset" targetType="server">
+    <desc>get CSR from the target server</desc>
+</right>  
+   
+<right name="generateCSR" type="preset" targetType="server">
+    <desc>generate CSR on the target server</desc>
+</right>
+
+<!-- 
+========================================================
+                    alwaysOnCluster rights
+========================================================
+-->   
+
+<right name="getAlwaysOnCluster" type="getAttrs" targetType="alwaysoncluster">
+  <desc>get all alwaysOnCluster attributes</desc>
+</right>
+
+<right name="modifyAlwaysOnCluster" type="setAttrs" targetType="alwaysoncluster">
+  <desc>set all alwaysOnCluster attributes</desc>
+</right>
+
+<right name="listAlwaysOnCluster" type="preset" targetType="alwaysoncluster">
+  <desc>see alwaysOnCluster in GetAllAlwaysOnClusters</desc>
+</right>
+
+<right name="deleteAlwaysOnCluster" type="preset" targetType="alwaysoncluster">
+  <desc>delete alwaysOnCluster</desc>
+</right>
+    
+<!-- 
+========================================================
+                    UC service rights
+========================================================
+-->   
+
+<right name="getUCService" type="getAttrs" targetType="ucservice">
+  <desc>get all UC service attributes</desc>
+</right>
+
+<right name="modifyUCService" type="setAttrs" targetType="ucservice">
+  <desc>set all UC service attributes</desc>
+</right>
+
+<right name="listUCService" type="preset" targetType="ucservice">
+  <desc>see UC service in GetAllUCServices/SearchDirectoryResponse</desc>
+</right>
+
+<right name="deleteUCService" type="preset" targetType="ucservice">
+  <desc>delete UC service</desc>
+</right>
+
+<right name="renameUCService" type="preset" targetType="ucservice">
+  <desc>rename UC service</desc>
+</right>
+
+<!-- 
+========================================================
+                    XMPP component rights
+========================================================
+--> 
+
+<right name="getXMPPComponent" type="getAttrs" targetType="xmppcomponent">
+  <desc>get all XMPP component attributes</desc>
+</right>
+
+<right name="modifyXMPPComponent" type="setAttrs" targetType="xmppcomponent">
+  <desc>set all XMPP component attributes</desc>
+</right>
+
+<right name="listXMPPComponent" type="preset" targetType="xmppcomponent">
+  <desc>see XMPP component in GetAllXMPPComponents</desc>
+</right>
+
+<right name="deleteXMPPComponent" type="preset" targetType="xmppcomponent">
+  <desc>delete XMPP component</desc>
+</right>
+
+
+
+<!-- 
+========================================================
+                    zimlet rights
+========================================================
+--> 
+
+<right name="getZimlet" type="getAttrs" targetType="zimlet">
+  <desc>get all zimlet attributes</desc>
+</right>
+
+<right name="modifyZimlet" type="setAttrs" targetType="zimlet">
+  <desc>set all zimlet attributes</desc>
+</right>
+
+<right name="listZimlet" type="preset" targetType="zimlet">
+  <desc>see zimlet in GetAllZimlets</desc>
+</right>
+
+<right name="deleteZimlet" type="preset" targetType="zimlet">
+  <desc>delete zimlet</desc>
+</right>
+
+
+<!-- 
+========================================================
+                    global grant rights
+========================================================
+-->
+<right name="countServer" type="preset" targetType="global">
+  <desc>get a count of server objects</desc>
+</right>
+
+<right name="countDomain" type="preset" targetType="global">
+  <desc>get a count of domain objects</desc>
+</right>
+
+<right name="countCos" type="preset" targetType="global">
+  <desc>get a count of COS objects</desc>
+</right>
+
+<right name="createCos" type="preset" targetType="global">
+  <desc>create cos</desc>
+</right>
+
+<right name="createServer" type="preset" targetType="global">
+  <desc>create server</desc>
+</right>
+
+<right name="createAlwaysOnCluster" type="preset" targetType="global">
+  <desc>create alwaysOnCluster</desc>
+</right>
+
+<right name="createUCService" type="preset" targetType="global">
+  <desc>create UC service</desc>
+</right>
+
+<right name="createTopDomain" type="preset" targetType="global">
+  <desc>create a top-level domain</desc>
+</right>
+
+<right name="createXMPPComponent" type="preset" targetType="global">
+  <desc>create XMPP component</desc>
+</right>
+
+<right name="createZimlet" type="preset" targetType="global">
+  <desc>create zimlet</desc>
+</right>
+
+<right name="installZCSLicense" type="preset" targetType="global">
+    <desc>install Zimbra License file on the target server</desc>
+</right>
+   
+<right name="getAllFreeBusyProviders" type="preset" targetType="global">
+    <desc>Retrieve a list of Free/Busy providers via GetAllFreeBusyProvidersRequest SOAP request</desc>
+</right>
+
+<right name="checkSoftwareUpdates" type="preset" targetType="global">
+    <desc>check for Zimbra software updates</desc>
+</right>
+
+<right name="uploadClientSoftware" type="preset" targetType="global">
+    <desc>upload client software via Admin Console</desc>
+</right>
+
+<!--
+========================================================
+                    archiving rights
+========================================================
+-->
+<right name="manageAccountArchives" type="preset" targetType="account">
+    <desc>create, enable and disable archiving for accounts</desc>
+</right>
+<right name="manageCalendarResourceArchives" type="preset" targetType="calresource">
+    <desc>create, enable and disable archiving for calendar resources</desc>
+</right>
+
+<!--
+========================================================
+                    sync rights
+========================================================
+-->
+<right name="remoteWipe" type="preset" targetType="account">
+    <desc>remotely wipe account's devices</desc>
+</right>
+
+<!--
+========================================================
+                    misc rights
+========================================================
+-->
+
+<right name="crossDomainAdmin" type="preset" targetType="domain">
+  <desc>cross domain admin right</desc>
+</right>
+
+
+<right name="viewGrants" type="getAttrs" targetType="account,calresource,cos,dl,domain,server,xmppcomponent,zimlet,config,global">
+  <desc>view grants on all target types</desc>
+  <!-- 
+      Use just the one same right on all target types for now.
+         
+      e.g. If this right is granted on a domain, the grantee 
+            can see zimbraACE on the domain, all DLs, and all 
+            accounts in the domain.
+            
+            To do things like:
+            "can see grants granted on all accounts in the domain
+             but cannot see any grants on the domain entry itself"
+            
+            grant an inline right on the domain entry, like:
+                get:account:zimbraACE
+            and do not grant this right.
+            
+            This right the equivalent of the sum of the following inline
+            rights:
+                get.account.zimbraACE
+                get.calresource.zimbraACE
+                get.cos.zimbraACE
+                get.dl.zimbraACE
+                get.domain.zimbraACE
+                get.server.zimbraACE
+                get.xmppcomponent.zimbraACE
+                get.zimlet.zimbraACE
+                get.config.zimbraACE
+                get.global.zimbraACE
+  -->
+  <attrs>
+      <a n="zimbraACE"/>
+  </attrs>
+</right>
+
+
+
+</rights>
