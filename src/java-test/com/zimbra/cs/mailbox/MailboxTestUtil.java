@@ -186,7 +186,8 @@ public final class MailboxTestUtil {
             if (recurCount > 10) {
                 throw new IOException("Gave up after multiple IOExceptions", ioe);
             }
-            ZimbraLog.test.info("delete dir failed due to IOException (probably files still in use). Waiting a moment and trying again");
+            ZimbraLog.test.info("delete dir='%s' failed due to IOException '%s' (probably files still in use)."
+                    + "Waiting a moment and trying again", dir, ioe.getMessage());
             //wait a moment and try again; this can bomb if files still being written by some thread
             try {
                 Thread.sleep(2500);
