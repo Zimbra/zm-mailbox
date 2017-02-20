@@ -1,6 +1,6 @@
 <project name="zm-common" default="jar">
 
-  <import file="../zm-zcs/ant-global.xml"/>
+  <import file="../build-common.xml"/>
   
   <!-- Targets -->
   <target name="jar" depends="compile" description="Creates the jar file">

@@ -1,5 +1,5 @@
 <project name="zm-milter" default="jar">
-  <import file="../zm-zcs/ant-global.xml"/>
+  <import file="../build-common.xml"/>
 
   <target name="jar" depends="compile" description="Creates the jar file">
     <antcall target="zimbra-jar">

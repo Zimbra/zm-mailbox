@@ -7,7 +7,7 @@
        update-baseline-apidesc - Run this and checkin the results after a major release.
                                  Future changelog info will be relative to this
     -->
-  <import file="../zm-zcs/ant-global.xml"/>
+  <import file="../build-common.xml"/>
 
   <property name="xml.schema.dir" location="${build.classes.dir}/com/zimbra/soap"/>
 
@@ -31,7 +31,7 @@
   <!-- END   ZimbraSoapDocs Properties -->
 
   <target name="resolve-tools" depends="init-ivy">
-    <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
+    <property name="ivy.settings.file" value="../build-ivysettings.xml" />
     <ivy:resolve file="ivy-tools.xml" />
     <ivy:cachepath pathid="tools.ext.class.path" />
   </target>
@@ -42,7 +42,7 @@
   </path>
 
   <target name="resolve-soapdocs" depends="init-ivy">
-    <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
+    <property name="ivy.settings.file" value="../build-ivysettings.xml" />
     <ivy:resolve file="ivy-soapdocs.xml" />
     <ivy:cachepath pathid="soapdocs.ext.class.path" />
   </target>
@@ -54,7 +54,7 @@
   </path>
 
   <target name="resolve-soapdoclet" depends="init-ivy">
-    <property name="ivy.settings.file" value="../zm-zcs/ivysettings.xml" />
+    <property name="ivy.settings.file" value="../build-ivysettings.xml" />
     <ivy:resolve file="ivy-soapdoclet.xml" />
     <ivy:cachepath pathid="soapdoclet.ext.class.path" />
   </target>

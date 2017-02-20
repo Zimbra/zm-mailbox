@@ -1,0 +1,606 @@
+<project name="build-common" xmlns:ivy="antlib:org.apache.ivy.ant">
+    <!-- Set properties that can be used in all projects. -->
+    <dirname property="zimbra.root.dir" file="${ant.file.build-common}/../"/>
+    <!-- Java -->
+    <property name="javac.target" value="1.8"/>
+    <!-- base path for ivy cache, local repository, ant libraries, etc -->
+
+    <property name="dev.home"  value="${user.home}"/>
+
+    <!-- Add "init-ivy" depends to your "resolve" target and the following will
+         automatically download and install ivy if necessary. -->
+    <property name="ivy.jar.dir" location="${dev.home}/.ant/lib" />
+    <property name="ivy.install.version" value="2.3.0" />
+    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy-2.3.0.jar" />
+    <property name="ivy.status" value="integration" />
+    <property name="ivy.organisation" value="zimbra" />
+    <property name="ivy.publish.src.artifacts.pattern" value="build/[artifact]-[revision].[ext]" />
+    <property name="ivy.deliver.ivy.pattern" value="${dev.home}/.zcs-deps/[organisation]/[module]/[module]-[revision].[ext]" />
+    <property name="ivy.module" value="${ant.project.name}" />
+    <target name="download-ivy">
+      <if>
+        <not>
+          <available file="${ivy.jar.file}" type="file"/>
+        </not>
+        <then>
+          <mkdir dir="${ivy.jar.dir}"/>
+          <!-- download Ivy from web site so that it can be used even without any special installation. 
+             Note, that 'get' task will not try downloading if this file is already downloaded. -->
+          <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" 
+             dest="${ivy.jar.file}" usetimestamp="true"/>  
+        </then>
+      </if>
+    </target>
+
+    <target name="init-ivy" depends="download-ivy">
+      <!-- If ivy is not downloaded yet, try to load ivy here from ivy home. -->
+        <path id="ivy.lib.path">
+            <fileset dir="${ivy.jar.dir}" includes="*.jar"/>
+        </path>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+        <ivy:settings id="dev.settings" file="../build-ivysettings.xml"/>
+    </target>
+    <!-- common resolve target that should work to resolve dependencies based on ivy.xml for most projects -->
+    <target name="resolve" depends="init-ivy" description="resolve dependencies">
+      <ivy:resolve settingsRef="dev.settings" />
+      <ivy:cachepath pathid="class.path" />
+    </target>
+    <!-- Ignore the classpath from the shell running ant.  This avoids dependency
+      on the user's environment and suppresses the warning about includeAntRuntime. -->
+    <property name="build.sysclasspath" value="ignore"/>
+
+    <!-- Standard directory paths -->
+    <property name="src.dir" location="src" />
+    <property name="src.java.dir" location="src/java" />
+    <property name="src.bin.dir" location="src/bin" />
+    <property name="src.libexec.dir" location="src/libexec" />
+    <property name="src.zimlet.dir" location="src/zimlet" />
+    <property name="jars.dir" location="jars" />
+    <property name="build.dir" location="build" />
+    <property name="build.tmp.dir" location="${build.dir}/tmp" />
+    <property name="dist.dir" location="${build.dir}/dist" />
+    <property name="dist.lib.dir" location="${dist.dir}/lib"/>
+    <property name="dist.lib.ext.dir" location="${dist.lib.dir}/ext"/>
+    <property name="build.classes.dir" location="${build.dir}/classes" />
+    <property name="build.instrumented.dir" location="${build.dir}/classes-inst" />
+    <property name="build.coverage.dir" location="${build.dir}/coverage" />
+    <property name="build.zimlet.dir" location="${build.dir}/zimlet" />
+    <property name="test.dir" location="${build.dir}/test"/>
+    <property name="itest.dir" location="${build.dir}/itest"/>
+    <property name="test.src.dir" location="src/java-test"/>
+    <property name="test.classes.dir" location="${build.dir}/test-classes"/>
+
+    <path id="all.java.path">
+        <pathelement location="${src.java.dir}" />
+    </path>
+    <!-- Standard build dependencies path -->
+    <property name="build.deps.dir" location="${dev.home}/.zcs-deps"/>
+
+    <!-- Standard install paths -->
+    <property name="zimbra.home.dir" location="/opt/zimbra" />
+    <property name="jetty.home.dir" location="${zimbra.home.dir}/jetty"/>
+    <property name="jetty.webapps.dir" location="${jetty.home.dir}/webapps"/>
+    <property name="common.jars.dir" location="${zimbra.home.dir}/lib/jars"/>
+    <property name="jetty.endorsed.jars.dir" location="${jetty.home.dir}/common/endorsed"/>
+    <property name="jetty.common.jars.dir" location="${jetty.home.dir}/common/lib"/>
+    <property name="ext-common.jars.dir" location="${zimbra.home.dir}/lib/ext-common"/>
+    <property name="common.sourcejars.dir" location="${zimbra.home.dir}/jars-src"/>
+
+    <!-- ZimbraCommon -->
+    <property name="common.dir" location="../zm-common"/>
+    <property name="common.src.java.dir" location="${common.dir}/src/java"/>
+    <property name="common.classes.dir" location="${common.dir}/build/classes"/>
+    <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
+    <property name="common.internal.jars.dir" location="../jars-internal/jars"/>
+
+    <!-- ZimbraNative -->
+    <property name="native.dir" location="../zm-native" />
+    <property name="native.classes.dir" location="${native.dir}/build/classes" />
+    <property name="native.jarfile" location="${native.dir}/build/zimbra-native.jar" />
+
+    <!-- ZimbraServer -->
+    <property name="server.dir" location="../zm-store"/>
+    <property name="server.classes.dir" location="${server.dir}/build/classes"/>
+    <property name="server.test.classes.dir" location="${server.dir}/build/test-classes"/>
+    <property name="server.jarfile" location="${server.dir}/build/zimbrastore.jar"/>
+    <property name="server.jars.dir" location="${zimbra.home.dir}/jars"/>
+    <property name="server.conf.dir" location="${server.dir}/conf"/>
+
+    <!-- ZimbraSoap -->
+    <property name="soap.dir" location="../zm-soap"/>
+    <property name="soap.classes.dir" location="${soap.dir}/build/classes"/>
+    <property name="soap.jarfile" location="${soap.dir}/build/zimbrasoap.jar"/>
+
+    <!-- ZimbraWebClient -->
+    <property name="web.client.dir" location="${zimbra.root.dir}/ZimbraWebClient"/>
+
+    <!-- ZimbraClient -->
+    <property name="client.dir" location="../zm-client"/>
+    <property name="client.classes.dir" location="${client.dir}/build/classes"/>
+    <property name="client.jarfile" location="${client.dir}/build/zimbraclient.jar"/>
+
+    <!-- ZimbraTagLib -->
+    <property name="taglib.dir" location="${zimbra.root.dir}/ZimbraTagLib"/>
+    <property name="taglib.classes.dir" location="${taglib.dir}/build/classes"/>
+    <property name="taglib.jarfile" location="${taglib.dir}/build/zimbrataglib.jar"/>
+    <property name="taglib.jars.dir" location="${taglib.dir}/jars"/>
+
+    <!-- Emma -->
+    <property name="emma.dir" value="/usr/share/java" />
+
+    <path id="emma.lib" >
+      <pathelement location="${emma.dir}/emma.jar" />
+      <pathelement location="${emma.dir}/emma_ant.jar" />
+    </path>
+
+    <path id="emma.run.classpath" >
+      <pathelement location="${build.classes.dir}" />
+    </path>
+
+    <!-- Classpath for running unit test, it needs classes from build dir -->
+    <path id="test.class.path">
+      <path refid="class.path"/>
+      <pathelement location="${build.classes.dir}" />
+      <pathelement location="${test.classes.dir}" />
+    </path>
+
+    <!-- Platform -->
+    <condition property="native.os" value="MacOSX">
+        <os name="Mac OS X"/>
+    </condition>
+    <condition property="native.os" value="Linux">
+        <os name="Linux"/>
+    </condition>
+    <condition property="native.so" value="jnilib">
+        <os name="Mac OS X"/>
+    </condition>
+    <condition property="native.so" value="so">
+        <not><os name="Mac OS X"/></not>
+    </condition>
+    <condition property="native.arch" value="">
+        <os name="Mac OS X"/>
+    </condition>
+    <condition property="native.arch" value=".${os.arch}">
+        <not>
+            <os name="Mac OS X"/>
+        </not>
+    </condition>
+    <condition property="is-windows">
+        <os family="windows"/>
+    </condition>
+    <condition property="is-unix">
+        <not><os family="windows"/></not>
+    </condition>
+
+    <!-- Build version -->
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath>
+            <pathelement location="${build.deps.dir}/ant-contrib-1.0b1.jar"/>
+        </classpath>
+    </taskdef>
+    <tstamp/>
+
+    <condition property="zimbra.version.dir" value="${zimbra.root.dir}/zm-build/RE" else="${zimbra.root.dir}/zimbra-package-stub/version">
+        <available file="${zimbra.root.dir}/zm-build/RE" type="dir"/>
+    </condition>
+
+    <condition property="zimbra.buildinfo.platform" value="${native.os}">
+        <not><isset property="${zimbra.buildinfo.platform}"/></not>
+    </condition>
+
+    <loadfile property="zimbra.buildinfo.majorversion" srcFile="${zimbra.version.dir}/MAJOR">
+      <filterchain>
+        <striplinebreaks/>
+      </filterchain>
+    </loadfile>
+
+    <loadfile property="zimbra.buildinfo.minorversion" srcFile="${zimbra.version.dir}/MINOR">
+      <filterchain>
+        <striplinebreaks/>
+      </filterchain>
+    </loadfile>
+
+    <loadfile property="zimbra.buildinfo.microtag" srcFile="${zimbra.version.dir}/MICRO">
+      <filterchain>
+        <striplinebreaks/>
+      </filterchain>
+    </loadfile>
+
+    <property name="zimbra.buildinfo.version" value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microtag}_${zimbra.buildinfo.buildnum}.${user.name}"/>
+
+    <echo message="Using version from ${zimbra.version.dir}, ${zimbra.buildinfo.version}"/>
+
+    <propertyregex property="zimbra.buildinfo.majorversion"
+                   input="${zimbra.buildinfo.version}"
+                   regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+                   select="\1"
+                   casesensitive="false" />
+
+    <propertyregex property="zimbra.buildinfo.minorversion"
+                   input="${zimbra.buildinfo.version}"
+                   regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+                   select="\2"
+                   casesensitive="false" />
+
+    <propertyregex property="zimbra.buildinfo.microversion"
+                   input="${zimbra.buildinfo.version}"
+                   regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+                   select="\3"
+                   casesensitive="false" />
+
+    <propertyregex property="zimbra.buildinfo.relclass"
+                   input="${zimbra.buildinfo.version}"
+                   regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)"
+                   select="\4"
+                   casesensitive="false" />
+
+    <condition property="zimbra.buildinfo.relnum" value="0">
+        <not><isset property="${zimbra.buildinfo.relnum}"/></not>
+    </condition>
+
+    <condition property="zimbra.buildinfo.type" value="">
+        <not><isset property="${zimbra.buildinfo.type}"/></not>
+    </condition>
+    <condition property="zimbra.buildinfo.release" value="${user.name}">
+        <not><isset property="${zimbra.buildinfo.release}"/></not>
+    </condition>
+    <condition property="zimbra.buildinfo.date" value="${DSTAMP}-${TSTAMP}">
+        <not><isset property="${zimbra.buildinfo.date}"/></not>
+    </condition>
+    <condition property="zimbra.buildinfo.host" value="${zimbra.server.hostname}">
+        <not><isset property="${zimbra.buildinfo.host}"/></not>
+    </condition>
+    <property name="zimbra.buildinfo.all"
+              value="Version: ${zimbra.buildinfo.version}; Type: ${zimbra.buildinfo.type}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
+
+    <target name="set-dev-version">
+      <if>
+        <not>
+          <isset property="jar.file"/>
+        </not>
+        <then>
+          <exec executable="git" outputproperty="git.timestamp">
+            <arg value="log"/>
+            <arg value="-1"/>
+            <arg value="--pretty=format:%at"/>
+          </exec>
+          <property name="dev.version" value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}.${git.timestamp}"/>
+          <property name="jar.file" value="${ant.project.name}-${dev.version}.jar"/>
+        </then>
+      </if>
+    </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <target name="build-init">
+      <mkdir dir="${build.classes.dir}"/>
+      <mkdir dir="${dist.dir}"/>
+    </target>
+
+    <target name="compile" depends="build-init,resolve" description="Compiles from src/java into build/classes.">
+        <mkdir dir="${build.classes.dir}" />
+        <javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}" encoding="utf-8">
+            <src refid="all.java.path" />
+        </javac>
+    </target>
+
+    <target name="test-compile" depends="compile">
+      <if>
+        <available file="${test.src.dir}" type="dir"/>
+        <then>
+          <mkdir dir="${test.classes.dir}"/>
+            <javac destdir="${test.classes.dir}" srcdir="${test.src.dir}" classpathref="test.class.path"
+               debug="true" target="${javac.target}" encoding="utf-8" />
+            <copy todir="${test.classes.dir}">
+              <fileset dir="${test.src.dir}" excludes="**/*.java"/>
+            </copy>
+         </then>
+      </if>
+    </target>
+
+    <target name="test" depends="test-compile" description="Run unit tests">
+      <if>
+        <available file="${test.src.dir}" type="dir"/>
+        <then>
+          <property name="test.path" refid="test.class.path"/>
+          <delete dir="${test.dir}" quiet="true"/>
+          <mkdir dir="${test.dir}/output"/>
+          <mkdir dir="${test.dir}/report"/>
+          <mkdir dir="${test.dir}/extensions"/>
+          <move todir="${test.dir}/extensions/com/zimbra/extensions" failonerror="false">
+            <fileset dir="${test.classes.dir}/com/zimbra/extensions" />
+          </move>
+          <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
+          <junit printsummary="on" showoutput="true" failureproperty="junit.failure" tempdir="${test.dir}" fork="true">
+            <classpath refid="test.class.path"/>
+            <assertions><enable/></assertions>
+            <formatter type="xml"/>
+            <batchtest todir="${test.dir}/output">
+                <fileset dir="${test.src.dir}">
+                    <include name="**/*Test.java"/>
+                    <exclude name="**/*ITest.java"/>
+                    <exclude name="**/Abstract*Test.java"/>
+                </fileset>
+            </batchtest>
+          </junit>
+          <junitreport todir="${test.dir}/report">
+            <fileset dir="${test.dir}/output"/>
+            <report todir="${test.dir}/report"/>
+          </junitreport>
+          <echo>Test Report: ${test.dir}/report/index.html</echo>
+          <fail if="junit.failure" message="Unit test failed"/>
+        </then>
+        <else>
+          <echo>${test.src.dir} not found. Will not run unit tests</echo>
+        </else>
+      </if>
+    </target>
+
+    <target name="test-hudson" depends="test-compile" description="Run hudson unit tests">
+        <property name="test.path" refid="test.class.path"/>
+        <delete dir="${test.dir}" quiet="true"/>
+        <mkdir dir="${test.dir}/output"/>
+        <mkdir dir="${test.dir}/report"/>
+        <mkdir dir="${test.dir}/extensions"/>
+        <move todir="${test.dir}/extensions/com/zimbra/extensions" failonerror="false">
+            <fileset dir="${test.classes.dir}/com/zimbra/extensions" />
+        </move>
+        <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
+        <junit printsummary="on" showoutput="true" failureproperty="junit.failure" tempdir="${test.dir}">
+            <classpath refid="test.class.path"/>
+            <assertions><enable/></assertions>
+            <formatter type="xml"/>
+            <batchtest todir="${test.dir}/output">
+                <fileset dir="${test.src.dir}">
+                    <include name="**/*Test.java"/>
+                    <exclude name="**/*ITest.java"/>
+                    <exclude name="**/Abstract*Test.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+        <junitreport todir="${test.dir}/report">
+            <fileset dir="${test.dir}/output"/>
+            <report todir="${test.dir}/report"/>
+        </junitreport>
+        <echo>Test Report: ${test.dir}/report/index.html</echo>
+        <fail if="junit.failure" message="Unit test failed"/>
+    </target>
+
+    <!-- e.g. ant -Dtest.name=com.zimbra.cs.mailbox.ContactTest single-test -->
+    <target name="single-test" depends="test-compile" description="Run single unit test">
+        <fail message="test.name must be set - Need e.g. ant -Dtest.name=com.zimbra.cs.mailbox.ContactTest single-test"
+              unless="test.name"/>
+        <property name="single.test.dir" value="${test.dir}-${test.name}"/>
+        <delete dir="${single.test.dir}" quiet="true"/>
+        <mkdir dir="${single.test.dir}/output"/>
+        <mkdir dir="${single.test.dir}/report"/>
+        <mkdir dir="${test.dir}/extensions"/>
+        <move todir="${test.dir}/extensions/com/zimbra/extensions" failonerror="false">
+            <fileset dir="${test.classes.dir}/com/zimbra/extensions" />
+        </move>
+        <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
+        <junit fork="yes" printsummary="on" showoutput="true" failureproperty="junit.failure" tempdir="${single.test.dir}">
+            <classpath refid="test.class.path"/>
+            <assertions><enable/></assertions>
+            <formatter type="xml"/>
+            <test name="${test.name}" todir="${single.test.dir}/output" />
+        </junit>
+        <junitreport todir="${single.test.dir}/report">
+            <fileset dir="${single.test.dir}/output"/>
+            <report todir="${single.test.dir}/report"/>
+        </junitreport>
+        <echo>Test Report: ${single.test.dir}/report/index.html</echo>
+        <fail if="junit.failure" message="Single Unit test failed"/>
+    </target>
+
+    <target name="emma" description="Emma Instrumentation">
+
+      <taskdef resource="emma_ant.properties" classpathref="emma.lib"/>
+      <delete dir="${build.instrumented.dir}" quiet="true" />
+      <mkdir dir="${build.instrumented.dir}" />
+      <delete dir="${build.coverage.dir}" quiet="true"/>
+      <mkdir dir="${build.coverage.dir}" />
+      <emma>
+        <instr instrpathref="emma.run.classpath"
+               destdir="${build.instrumented.dir}"
+               metadatafile="${build.coverage.dir}/metadata.emma"
+               merge="true"
+               />
+      </emma>
+    </target>
+
+    <target name="test-coverage" depends="test-compile,emma" description="Run unit tests">
+      <property name="test.path" refid="class.path"/>
+      <delete dir="${test.dir}" quiet="true"/>
+      <mkdir dir="${test.dir}/output"/>
+      <mkdir dir="${test.dir}/report"/>
+      <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
+      <taskdef resource="emma_ant.properties" classpathref="emma.lib"/>
+      <junit fork="yes" printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
+        <classpath refid="emma.lib" />
+        <classpath location="${build.instrumented.dir}" />
+        <classpath refid="class.path"/>
+        <classpath path="${test.classes.dir}"/>
+        <jvmarg value="-Demma.coverage.out.file=${build.coverage.dir}/coverage.emma" /> 
+        <jvmarg value="-Demma.coverage.out.merge=true" /> 
+        <formatter type="xml"/>
+        <batchtest todir="${test.dir}/output">
+          <fileset dir="${test.src.dir}">
+            <include name="**/*Test.java"/>
+            <exclude name="**/*ITest.java"/>
+            <exclude name="**/Abstract*Test.java"/>
+            <exclude name="**/RemoteMailboxContactOpsTest.java"/>
+            <exclude name="**/yc/**/*.java"/>
+          </fileset>
+        </batchtest>
+      </junit>
+      <junitreport todir="${test.dir}/report">
+        <fileset dir="${test.dir}/output"/>
+        <report todir="${test.dir}/report"/>
+      </junitreport>
+      <emma>
+        <report sourcepath="${src.java.dir}">
+          <fileset dir="${build.coverage.dir}">
+            <include name="*.emma" />
+          </fileset>
+          <xml outfile="${build.coverage.dir}/coverage.xml" />
+        </report>
+      </emma>
+      <echo>Test Report: ${test.dir}/report/index.html</echo> 
+      <fail if="junit.failure" message="Unit test failed"/>
+    </target>
+
+    <target name="integration-test" depends="test-compile" description="Run integration tests">
+        <property name="test.path" refid="class.path"/>
+        <delete dir="${itest.dir}" quiet="true"/>
+        <mkdir dir="${itest.dir}/output"/>
+        <mkdir dir="${itest.dir}/report"/>
+        <junit printsummary="on" failureproperty="junit.failure" tempdir="${itest.dir}">
+            <classpath refid="class.path"/>
+            <classpath path="${test.classes.dir}"/>
+            <assertions><enable/></assertions>
+            <formatter type="xml"/>
+            <batchtest todir="${itest.dir}/output">
+                <fileset dir="${test.src.dir}">
+                    <include name="**/*ITest.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+        <junitreport todir="${itest.dir}/report">
+            <fileset dir="${itest.dir}/output"/>
+            <report todir="${itest.dir}/report"/>
+        </junitreport>
+        <echo>Test Report: ${itest.dir}/report/index.html</echo>
+        <fail if="junit.failure" message="Integration test failed"/>
+    </target>
+
+    <target name="generate-jar-version" description="Creates the Version class that prints the version of the jarfile.  This class is the Main-Class in the jarfile's manifest.">
+        <fail unless="build.dir" />
+        <fail unless="build.classes.dir" />
+
+        <if>
+            <not><available file="${build.dir}/buildinfo/com/zimbra/buildinfo/Version.java"/></not>
+            <then>
+                <mkdir dir="${build.dir}/buildinfo/com/zimbra/buildinfo"/>
+                <echo file="${build.dir}/buildinfo/com/zimbra/buildinfo/Version.java">
+                    package com.zimbra.buildinfo;
+
+                    public class Version {
+
+                    public static void main(String[] args) {
+                        Package p = Version.class.getPackage();
+                        System.out.println("Implementation-Title: " + p.getImplementationTitle() +
+                            "\nImplementation-Version: " + p.getImplementationVersion() +
+                            "\nImplementation-Vendor: " + p.getImplementationVendor() + "\n");
+                        }
+                    }
+                </echo>
+            </then>
+        </if>
+        <javac destdir="${build.classes.dir}" debug="true" target="${javac.target}" srcdir="${build.dir}/buildinfo" />
+    </target>
+
+    <target name="zimbra-jar" depends="generate-jar-version,set-dev-version" description="Builds a standard jar file that prints its version info when executed.  Optionally sets the Zimbra-Extension-Class attribute in the manifest if the zimbra.extension.class property is set.">
+        <condition property="jar.file" value="${ant.project.name}-${dev.version}.jar">
+          <not><isset property="jar.file"/></not>
+        </condition>
+        <fail unless="implementation.title"/>
+        <if>
+          <not>
+            <isset property="jar.build.dir"/>
+          </not>
+          <then>
+            <property name="jar.build.dir" value="${build.classes.dir}"/>
+          </then>
+        </if>
+        <if>
+          <not>
+            <isset property="excludes"/>
+          </not>
+          <then>
+            <property name="excludes" value=""/>
+          </then>
+        </if>
+        <if>
+          <not>
+            <isset property="includes"/>
+          </not>
+          <then>
+            <property name="includes" value=""/>
+          </then>
+        </if>
+        <echo>building jar from ${jar.build.dir}</echo>
+        <if>
+            <isset property="zimbra.extension.class"/>
+            <then>
+            <jar destfile="${build.dir}/${jar.file}" basedir="${jar.build.dir}" includes="${includes}" excludes="${excludes}">
+                <manifest>
+                    <attribute name="Main-Class" value="com.zimbra.buildinfo.Version" />
+                    <attribute name="Implementation-Vendor" value="Zimbra Software, LLC"/>
+                    <attribute name="Implementation-Title" value="${implementation.title}"/>
+                    <attribute name="Implementation-Version" value="${zimbra.buildinfo.version}"/>
+                    <attribute name="Specification-Vendor" value="Zimbra Software, LLC"/>
+                    <attribute name="Specification-Title" value="Zimbra Collaboration Suite"/>
+                    <attribute name="Specification-Version" value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+                    <attribute name="Zimbra-Extension-Class" value="${zimbra.extension.class}"/>
+                </manifest>
+            </jar>
+            </then>
+            <else>
+            <jar destfile="${build.dir}/${jar.file}" basedir="${jar.build.dir}" includes="${includes}" excludes="${excludes}">
+                <manifest>
+                    <attribute name="Main-Class" value="com.zimbra.buildinfo.Version" />
+                    <attribute name="Implementation-Vendor" value="Zimbra Software, LLC"/>
+                    <attribute name="Implementation-Title" value="${implementation.title}"/>
+                    <attribute name="Implementation-Version" value="${zimbra.buildinfo.version}"/>
+                    <attribute name="Specification-Vendor" value="Zimbra Software, LLC"/>
+                    <attribute name="Specification-Title" value="Zimbra Collaboration Suite"/>
+                    <attribute name="Specification-Version" value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+                </manifest>
+            </jar>
+            </else>
+        </if>
+    </target>
+
+    <target name="clean-cache" description="Delete ivy cache">
+        <delete dir="${dev.home}/.ivy2/cache/zimbra/${ant.project.name}"/>
+        <delete dir="${dev.home}/.zcs-deps/zimbra/${ant.project.name}"/>
+        <delete>
+            <fileset dir="${dev.home}/.ivy2/cache" includes="*${ant.project.name}*"/>
+        </delete>
+    </target>
+
+    <target name="publish-local" depends="clean-cache,jar,set-dev-version,init-ivy">
+      <ivy:publish settingsRef="dev.settings" pubrevision="${dev.version}" resolver="local" overwrite="true" />
+    </target>
+
+    <target name="zmlocalconfig">
+      <echo>Running localconfig with with argument: ${localconfig-args}</echo>
+      <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+        <arg line="${localconfig-args}"/>
+      </java>
+    </target>
+    
+    <target name="dist.dependencies">
+         <antcall target="depend.${ant.project.name}"/>
+    </target>
+
+    <target name="publish-foss-local">
+      <ant dir="${native.dir}" target="publish-local" inheritAll="false"/>
+      <ant dir="${common.dir}" target="publish-local" inheritAll="false"/>
+      <ant dir="${soap.dir}" target="publish-local" inheritAll="false"/>
+      <ant dir="${client.dir}" target="publish-local" inheritAll="false"/>
+      <ant dir="${server.dir}" target="publish-local" inheritAll="false"/>
+    </target>
+
+    <target name="deploy-foss">
+      <ant dir="${native.dir}" target="deploy" inheritAll="false"/>
+      <ant dir="${common.dir}" target="deploy" inheritAll="false"/>
+      <ant dir="${soap.dir}" target="deploy" inheritAll="false"/>
+      <ant dir="${client.dir}" target="deploy" inheritAll="false"/>
+      <ant dir="${server.dir}" target="deploy" inheritAll="false"/>
+    </target>
+</project>
