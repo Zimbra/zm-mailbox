@@ -1238,6 +1238,10 @@ public class AttributeManager {
         return mEphemeralAttrs;
     }
 
+    public Set<String> getEphemeralAttributeNames() {
+        return mEphemeralAttrsSet;
+    }
+
     boolean hasFlag(AttributeFlag flag, String attr) {
         return mFlagToAttrsMap.get(flag).contains(attr);
     }
