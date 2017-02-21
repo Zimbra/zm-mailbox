@@ -14,6 +14,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
@@ -55,9 +56,12 @@ public class AttributeMigrationUtil {
         CommandLine cl = parser.parse(OPTIONS, args);
         List<String> attrsToMigrate = cl.getArgList();
         boolean flagChange = cl.hasOption('s') || cl.hasOption('u');
-        if (cl.hasOption("h") || (!flagChange && attrsToMigrate.isEmpty()) || (cl.hasOption('s') && cl.hasOption('u'))) {
+        if (cl.hasOption("h") || (cl.hasOption('s') && cl.hasOption('u'))) {
             usage();
             return;
+        }
+        if (attrsToMigrate.isEmpty()) {
+            attrsToMigrate.addAll(AttributeManager.getInstance().getEphemeralAttributeNames());
         }
         if (cl.hasOption('d')) {
             ZimbraLog.ephemeral.setLevel(Level.debug);
@@ -179,7 +183,7 @@ public class AttributeMigrationUtil {
     private static void usage() {
         HelpFormatter format = new HelpFormatter();
         format.printHelp(new PrintWriter(System.err, true), 80,
-            "zmmigrateattrs [options] attr1 [attr2 attr3 ...]", null, OPTIONS, 2, 2, null);
+            "zmmigrateattrs [options] [attr1 attr2 attr3 ...]", null, OPTIONS, 2, 2, null);
             System.exit(0);
     }
 }
