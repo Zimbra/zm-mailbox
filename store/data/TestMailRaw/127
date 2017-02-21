@@ -1,0 +1,66 @@
+Return-Path: <xmlbeans-user-return-127-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.67.16.118])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hB3L2RoB024141
+	for <smith@popserver1.stanford.edu>; Wed, 3 Dec 2003 13:02:27 -0800 (PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id hB3L2QZq021329 for
+	<smith@stanford.edu>; Wed, 3 Dec 2003 13:02:26 -0800
+Received: (qmail 8937 invoked by uid 500); 3 Dec 2003 21:02:19 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 8923 invoked from network); 3 Dec 2003 21:02:19 -0000
+Mime-Version: 1.0 (Apple Message framework v606)
+Content-Transfer-Encoding: 7bit
+Message-Id: <FAF98113-25D3-11D8-BCCC-000393D5A006@vrtx.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+To: xmlbeans-user@xml.apache.org
+From: Thomas Condon <tom_condon@vrtx.com>
+Subject: XMLBeans or perhaps just an XML question...
+Date: Wed, 3 Dec 2004 16:02:18 -0500
+X-Zimbra-Received: Wed, 3 Dec 2004 16:02:18 -0500
+X-Mailer: Apple Mail (2.606)
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000007f-0010
+
+Given the following schema:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://www.vpharm.com/hypervis/xml"
+xmlns:hv="http://www.vpharm.com/hypervis/xml"
+xmlns:xs="http://www.w3.org/2001/XMLSchema"
+elementFormDefault="qualified"
+attributeFormDefault="unqualified">
+	<xs:include schemaLocation="HyperVisTypes.xsd"/>
+	<xs:element name="msg" type="hv:SocketMessage"/>
+</xs:schema>
+
+where hv:SocketMessage is defined as follows:
+
+<xs:complexType name="SocketMessage">
+		<xs:sequence>
+			<xs:element name="type" type="xs:string" nillable="false"/>
+			<xs:element name="body" type="xs:string"/>
+			<xs:element name="annotation" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+
+should there be anything illegal in setting the body element to a 
+string that is the string form of another XML Document?
+
+XMLBeans does not like it when I set the body to be an XML document as 
+opposed to a simple string.
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

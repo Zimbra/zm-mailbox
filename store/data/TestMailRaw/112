@@ -1,0 +1,129 @@
+Return-Path: <xmlbeans-dev-return-94-smith=stanford.edu@xml.apache.org>
+Received: from leland4.Stanford.EDU (leland4.Stanford.EDU [171.64.14.29])
+	by popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8CJhOSb001863 for
+	<smith@popserver1.stanford.edu>; Fri, 12 Sep 2003 12:43:24 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland4.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8CJhHNm021255 for
+	<smith@stanford.edu>; Fri, 12 Sep 2003 12:43:17 -0700 (PDT)
+Received: (qmail 57237 invoked by uid 500); 12 Sep 2003 19:43:10 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 57218 invoked from network); 12 Sep 2003 19:43:10 -0000
+X-VirusChecked: Checked
+X-Env-Sender: kkress@bankofny.com
+X-Msg-Ref: server-5.tower-20.messagelabs.com!1063395941!2020355
+X-StarScan-Version: 5.0.7; banners=bankofny.com,-,-
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: Source Code
+MIME-Version: 1.0
+Message-ID: <OFE6F7D5EC.107AFC2B-ON85256D9F.006C34AF-85256D9F.006C4CB3@bankofny.com>
+From: kkress@bankofny.com
+Date: Fri, 12 Sep 2003 15:42:55 -0400
+X-Zimbra-Received: Fri, 12 Sep 2003 15:42:55 -0400
+Content-Type: multipart/alternative; boundary="=_alternative 006C4CAE85256D9F_="
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000070-0010
+
+
+--=_alternative 006C4CAE85256D9F_=
+Content-Type: text/plain; charset="us-ascii"
+
+http://workshop.bea.com/xmlbeans/XsdUpload.jsp
+
+I'm not sure if the code has migrated into CVS yet. I understand
+it will be soon.
+
+In the meantime, you can delve into the source code using
+the link above.
+
+  Ken.
+
+-- 
+Ken Kress                                     kkress@bankofny.com
+SAS, The Bank of New York                            484.605.4834
+
+
+
+
+"Jennifer Sleeman" <jsleeman@lig.net>
+09/12/2003 06:23 AM
+Please respond to xmlbeans-dev
+
+ 
+        To:     xmlbeans-dev@xml.apache.org
+        cc: 
+        Subject:        Source Code
+
+
+I am looking for the source code for xmlbeans, it is possible to get it?
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+
+
+
+________________________________________________________________________
+The information in this e-mail, and any attachment therein, is confidential and for use by the addressee only. If you are not the intended recipient, please return the e-mail to the sender and delete it from your computer. Although The Bank of New York attempts to sweep e-mail and attachments for viruses, it does not guarantee that either are virus-free and accepts no liability for any damage sustained as a result of viruses.
+--=_alternative 006C4CAE85256D9F_=
+Content-Type: text/html; charset="us-ascii"
+
+
+<br><font size=2 face="sans-serif">http://workshop.bea.com/xmlbeans/XsdUpload.jsp</font>
+<br>
+<br><font size=2 face="sans-serif">I'm not sure if the code has migrated into CVS yet. I understand</font>
+<br><font size=2 face="sans-serif">it will be soon.</font>
+<br>
+<br><font size=2 face="sans-serif">In the meantime, you can delve into the source code using</font>
+<br><font size=2 face="sans-serif">the link above.</font>
+<br>
+<br><font size=2 face="sans-serif">&nbsp; Ken.<br>
+<br>
+-- <br>
+Ken Kress &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; kkress@bankofny.com<br>
+SAS, The Bank of New York &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;484.605.4834</font>
+<br>
+<br>
+<br>
+<table width=100%>
+<tr valign=top>
+<td>
+<td><font size=1 face="sans-serif"><b>&quot;Jennifer Sleeman&quot; &lt;jsleeman@lig.net&gt;</b></font>
+<p><font size=1 face="sans-serif">09/12/2003 06:23 AM</font>
+<br><font size=1 face="sans-serif">Please respond to xmlbeans-dev</font>
+<br>
+<td><font size=1 face="Arial">&nbsp; &nbsp; &nbsp; &nbsp; </font>
+<br><font size=1 face="sans-serif">&nbsp; &nbsp; &nbsp; &nbsp; To: &nbsp; &nbsp; &nbsp; &nbsp;xmlbeans-dev@xml.apache.org</font>
+<br><font size=1 face="sans-serif">&nbsp; &nbsp; &nbsp; &nbsp; cc: &nbsp; &nbsp; &nbsp; &nbsp;</font>
+<br><font size=1 face="sans-serif">&nbsp; &nbsp; &nbsp; &nbsp; Subject: &nbsp; &nbsp; &nbsp; &nbsp;Source Code</font></table>
+<br>
+<br>
+<br><font size=2><tt>I am looking for the source code for xmlbeans, it is possible to get it?<br>
+<br>
+- ---------------------------------------------------------------------<br>
+To unsubscribe, e-mail: &nbsp; xmlbeans-dev-unsubscribe@xml.apache.org<br>
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org<br>
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/<br>
+<br>
+</tt></font>
+<br>
+<br>
+
+<HTML><BODY><BR>
+________________________________________________________________________<BR>
+The information in this e-mail, and any attachment therein, is confidential and for use by the addressee only. If you are not the intended recipient, please return the e-mail to the sender and delete it from your computer. Although The Bank of New York attempts to sweep e-mail and attachments for viruses, it does not guarantee that either are virus-free and accepts no liability for any damage sustained as a result of viruses.<BR>
+</BODY></HTML>
+
+--=_alternative 006C4CAE85256D9F_=--
+

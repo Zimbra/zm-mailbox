@@ -1,0 +1,153 @@
+<t:tests xmlns:t="urn:zimbraTestHarness">
+
+    <t:property name="uri" value="https://localhost:7071/service/admin/soap/"/>
+    
+    <!-- system properties: 
+             DOMAIN_NAME 
+             ADMIN_USER
+             ADMIN_PASSWORD
+    -->
+    <t:property name="domain.name" value="${DOMAIN_NAME}"/>
+    <t:property name="admin.user" value="${ADMIN_USER}"/>
+    <t:property name="admin.password" value="${ADMIN_PASSWORD}"/>
+    
+    <t:property name="password" value="test123"/>
+    <t:property name="parent.user" value="family-parent@${domain.name}"/>
+    
+    <t:property name="child1.user" value="family-child1-visible@${domain.name}"/>
+    <t:property name="child2.user" value="family-child2-visible@${domain.name}"/>
+    <t:property name="child3.user" value="family-child3-visible@${domain.name}"/>
+    <t:property name="child4.user" value="family-child4-invisible@${domain.name}"/>
+    <t:property name="child5.user" value="family-child5-invisible@${domain.name}"/>
+    <t:property name="child6.user" value="family-child6-invisible@${domain.name}"/>
+
+    <t:test id="admin-login" required="true">
+		<t:objective>login as admin</t:objective>
+        <t:request>
+            <AuthRequest xmlns="urn:zimbraAdmin">
+                <name>${admin.user}</name>
+                <password>${password}</password>
+            </AuthRequest>
+        </t:request>
+        <t:response>
+            <t:select path="//admin:AuthResponse/admin:lifetime"  match="^\d+$"/>
+            <t:select path="//admin:AuthResponse/admin:authToken" set="authToken"/>
+            <t:select path="//admin:AuthResponse/admin:session" set="sessionId"/>
+        </t:response>
+    </t:test>
+
+    <t:test id="create-child1" required="true">
+        <t:request>
+            <CreateAccountRequest xmlns="urn:zimbraAdmin">
+                <name>${child1.user}</name>
+                <password>${password}</password>
+                <a n="cn">Demo User Family Child 1</a>
+                <a n="displayName">child1</a>
+                <a n="zimbraFeatureOptionsEnabled">TRUE</a>
+            </CreateAccountRequest>
+        </t:request>
+        <t:response>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child1.id"/>
+        </t:response>
+    </t:test>
+    
+    <t:test id="create-child2" required="true">
+        <t:request>
+            <CreateAccountRequest xmlns="urn:zimbraAdmin">
+                <name>${child2.user}</name>
+                <password>${password}</password>
+                <a n="cn">Demo User Family Child 2</a>
+                <a n="displayName">child2</a>
+                <a n="zimbraFeatureOptionsEnabled">FALSE</a>
+            </CreateAccountRequest>
+        </t:request>
+        <t:response>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child2.id"/>
+        </t:response>
+    </t:test> 
+    
+    <t:test id="create-child3" required="true">
+        <t:request>
+            <CreateAccountRequest xmlns="urn:zimbraAdmin">
+                <name>${child3.user}</name>
+                <password>${password}</password>
+                <a n="cn">Demo User Family Child 3</a>
+                <a n="displayName">child3</a>
+                <a n="zimbraFeatureOptionsEnabled">FALSE</a>
+            </CreateAccountRequest>
+        </t:request>
+        <t:response>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child3.id"/>
+        </t:response>
+    </t:test> 
+    
+    <t:test id="create-child4" required="true">
+        <t:request>
+            <CreateAccountRequest xmlns="urn:zimbraAdmin">
+                <name>${child4.user}</name>
+                <password>${password}</password>
+                <a n="cn">Demo User Family Child 4</a>
+                <a n="displayName">child4</a>
+                <a n="zimbraFeatureOptionsEnabled">TRUE</a>
+            </CreateAccountRequest>
+        </t:request>
+        <t:response>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child4.id"/>
+        </t:response>
+    </t:test> 
+    
+    <t:test id="create-child5" required="true">
+        <t:request>
+            <CreateAccountRequest xmlns="urn:zimbraAdmin">
+                <name>${child5.user}</name>
+                <password>${password}</password>
+                <a n="cn">Demo User Family Child 5</a>
+                <a n="displayName">child5</a>
+                <a n="zimbraFeatureOptionsEnabled">FALSE</a>
+            </CreateAccountRequest>
+        </t:request>
+        <t:response>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child5.id"/>
+        </t:response>
+    </t:test> 
+    
+    <t:test id="create-child6" required="true">
+        <t:request>
+            <CreateAccountRequest xmlns="urn:zimbraAdmin">
+                <name>${child6.user}</name>
+                <password>${password}</password>
+                <a n="cn">Demo User Family Child 6</a>
+                <a n="displayName">child6</a>
+                <a n="zimbraFeatureOptionsEnabled">FALSE</a>
+            </CreateAccountRequest>
+        </t:request>
+        <t:response>
+            <t:select path="//admin:CreateAccountResponse/admin:account" attr="id"  set="child6.id"/>
+        </t:response>
+    </t:test> 
+    
+    <t:test id="create-parent" required="true">
+        <t:request>
+            <CreateAccountRequest xmlns="urn:zimbraAdmin">
+                <name>${parent.user}</name>
+                <password>${password}</password>
+                <a n="cn">Demo User Family Parent</a>
+                <a n="displayName">parent</a>
+                <a n="zimbraChildAccount">${child1.id}</a>
+                <a n="zimbraChildAccount">${child2.id}</a>
+                <a n="zimbraChildAccount">${child3.id}</a>
+                <a n="zimbraChildAccount">${child4.id}</a>
+                <a n="zimbraChildAccount">${child5.id}</a>
+                <a n="zimbraChildAccount">${child6.id}</a>
+                <a n="zimbraPrefChildVisibleAccount">${child1.id}</a>
+                <a n="zimbraPrefChildVisibleAccount">${child2.id}</a>
+                <a n="zimbraPrefChildVisibleAccount">${child3.id}</a>
+            </CreateAccountRequest>
+        </t:request>
+        <t:response>
+            <t:select path="//admin:CreateAccountResponse/admin:account"/>
+        </t:response>
+    </t:test>  
+
+    
+</t:tests>

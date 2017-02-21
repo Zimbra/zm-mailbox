@@ -1,0 +1,80 @@
+Return-Path: <xmlbeans-dev-return-304-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8UHDB5a004483
+	for <smith@popserver1.stanford.edu>; Tue, 30 Sep 2003 10:13:12 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8UHD4d1013253 for
+	<smith@stanford.edu>; Tue, 30 Sep 2003 10:13:05 -0700 (PDT)
+Received: (qmail 18021 invoked by uid 500); 30 Sep 2003 17:12:59 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 18008 invoked from network); 30 Sep 2003 17:12:59 -0000
+Message-ID: <3F79B992.7020206@bea.com>
+Date: Tue, 30 Sep 2003 10:12:50 -0700
+X-Zimbra-Received: Tue, 30 Sep 2003 10:12:50 -0700
+From: Don Ferguson <don@bea.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.4)
+	Gecko/20030624 Netscape/7.1 (ax)
+X-Accept-Language: en-us, en
+MIME-Version: 1.0
+To: xmlbeans-dev@xml.apache.org
+CC: Eric Vasilik <eric.vasilik@bea.com>
+Subject: Re: V2 Store discussion...
+References: <003501c3869e$25cfdc80$0fa8a8c0@lightbox>
+In-Reply-To: <003501c3869e$25cfdc80$0fa8a8c0@lightbox>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000072-0010
+
+As you may already know, finalizers must be used with extreme caution.  
+Because they are run by in the GC thread (when all other threads are 
+paused) if a finalizer deadlocks, the entire VM will be frozen.  This 
+makes using synchronization in a finalizer particularly dangerous.  
+There are also problems around any operations that allocate memory in a 
+finalizer.
+
+(Note: my information may be out of date).
+
+    -Don
+
+David Bau wrote:
+
+>Eric, was thinking about the threading/object creation etc issues over the
+>weekend.
+>
+>Another interesting issue: currently we use a finalizer on cursors, but
+>finalizers seem to be fairly expensive, so apps that spew out lots and lots
+>of cursors have issues.  I wonder what problems we'd have to deal with in
+>order to eliminate the finalizer, and whether or not that would be possible,
+>or if it would come into conflict with some of the other parameters of the
+>problem just like synchronization?
+>
+>David
+>
+>
+>- ---------------------------------------------------------------------
+>To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+>For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+>Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+>
+>
+>  
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

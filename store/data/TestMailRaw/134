@@ -1,0 +1,79 @@
+Return-Path: <xmlbeans-dev-return-95-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.64.14.58])
+	by popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8D0ls1T005372 for
+	<smith@popserver1.stanford.edu>; Fri, 12 Sep 2003 17:47:54 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8D0lkxh016520 for
+	<smith@stanford.edu>; Fri, 12 Sep 2003 17:47:47 -0700 (PDT)
+Received: (qmail 34018 invoked by uid 500); 13 Sep 2003 00:47:36 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 33974 invoked from network); 13 Sep 2003 00:47:35 -0000
+Subject: RE: Source Code
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 12 Sep 2003 17:47:42 -0700
+X-Zimbra-Received: Fri, 12 Sep 2003 17:47:42 -0700
+Message-ID: <4C2F1577F2EF2840A9AE9EC61860C88114D3DD@usseex01.amer.bea.com>
+content-class: urn:content-classes:message
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: Source Code
+Thread-Index: AcN5ZiChSunDY+HRRiebMFldzS110QABremg
+From: "Cliff Schmidt" <cliff@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+Cc: <infrastructure@apache.org>, <pmc@incubator.apache.org>, <pmc@xml.apache.org>
+X-OriginalArrivalTime: 13 Sep 2003 00:47:43.0915 (UTC)
+	FILETIME=[A4883FB0:01C37990]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000086-0010
+
+We are ready to migrate the XMLBeans source into CVS as soon as=20
+the infrastructure team sets up accounts for the initial=20
+committers (see [1]).  We will send out an announcement to=20
+general@xml, general@incubator, and announcements@xml.apache.org=20
+once this is done.
+
+Cliff
+
+[1] http://nagoya.apache.org/eyebrowse/ReadMsg?listName=3Dgeneral@incubator=
+.apache.org&msgNo=3D1663
+
+On Friday, September 12, 2003 12:43 PM, kkress@bankofny.com wrote:
+
+> http://workshop.bea.com/xmlbeans/XsdUpload.jsp
+>=20
+> I'm not sure if the code has migrated into CVS yet. I understand
+> it will be soon.
+>=20
+> In the meantime, you can delve into the source code using
+> the link above.
+
+ "Jennifer Sleeman" <jsleeman@lig.net>=20
+09/12/2003 06:23 AM=20
+Please respond to xmlbeans-dev=20
+
+        =20
+        To:        xmlbeans-dev@xml.apache.org=20
+        cc:        =20
+        Subject:        Source Code=20
+
+
+
+I am looking for the source code for xmlbeans, it is possible to get it?
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

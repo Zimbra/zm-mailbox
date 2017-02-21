@@ -1,0 +1,66 @@
+Return-Path: <xmlbeans-dev-return-293-smith=stanford.edu@xml.apache.org>
+Received: from leland5.Stanford.EDU (leland5.Stanford.EDU [171.64.14.121])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8THP8x8008476
+	for <smith@popserver1.stanford.edu>; Mon, 29 Sep 2003 10:25:09 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland5.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8THP2US011547 for
+	<smith@stanford.edu>; Mon, 29 Sep 2003 10:25:02 -0700 (PDT)
+Received: (qmail 80673 invoked by uid 500); 29 Sep 2003 17:24:57 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 80658 invoked from network); 29 Sep 2003 17:24:56 -0000
+Message-ID: <00c201c386ad$8f81d2a0$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>, <christopher.fry@bea.com>, "'Eric Vasilik'" <eric.vasilik@bea.com>
+References: <005201c386aa$5fe5bdc0$2f1e11ac@farralon>
+Subject: Re: [xmlbeans-dev] RE: V2 Store discussion...
+Date: Mon, 29 Sep 2003 13:17:26 -0400
+X-Zimbra-Received: Mon, 29 Sep 2003 13:17:26 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000003f-0010
+
+----- Original Message ----- 
+From: "Chris Fry" <christopher.fry@bea.com>
+
+
+> I think you should be careful not to make the same mistakes that the JDK
+> made early on with the map implementations.  The early map implementations
+> were thread safe and very slow, so no-one used them.  It might be best to
+> have two implementations of the store (one that is thread safe & one that
+> isn't) so that users can choose safety over performance.  Or performance
+if
+> they know the data will only be read in a single thread as may be the case
+> in WS-invocations...
+
++1
+
+Makes sense.  Or if not a 2nd implementation, then some other way to make
+the synchronization cost optional.  We'd probably want to be fast by
+default.  I agree that most usage is single-threaded.  And if your perf is
+bad, people will avoid your whole API, and then thread safety will be a moot
+point.
+
+D
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

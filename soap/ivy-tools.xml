@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<ivy-module version="2.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+  <info organisation="zimbra" module="zm-soap" status="integration" />
+  <!-- omits dom4j which pulls in an old version of Xerces whose
+       DocumentBuilderFactory class doesn't have method setFeature(String, boolean) -->
+  <dependencies>
+    <dependency org="log4j" name="log4j" rev="1.2.16" />
+    <dependency org="zimbra" name="zm-common" rev="latest.integration" />
+  </dependencies>
+</ivy-module>

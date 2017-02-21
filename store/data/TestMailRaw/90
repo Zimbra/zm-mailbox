@@ -1,0 +1,95 @@
+Return-Path: <xmlbeans-dev-return-440-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.67.16.118])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hB4LPUoB017982
+	for <smith@popserver1.stanford.edu>; Thu, 4 Dec 2003 13:25:30 -0800 (PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id hB4LPS94015072 for
+	<smith@stanford.edu>; Thu, 4 Dec 2003 13:25:28 -0800
+Received: (qmail 92720 invoked by uid 500); 4 Dec 2003 21:25:21 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 92697 invoked from network); 4 Dec 2003 21:25:21 -0000
+Message-ID: <014f01c3baad$1163fd60$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+References: <20031204073221.13882.qmail@web80410.mail.yahoo.com>
+Subject: Re: Contributing to XMLBeans
+Date: Thu, 4 Dec 2003 16:24:55 -0500
+X-Zimbra-Received: Thu, 4 Dec 2003 16:24:55 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000005a-0010
+
+Cool!  Here are a couple possible ideas that might be a good first project
+and helpful to users.
+
+(1) A number of people have asked for more useful information from the XML
+schema validator.  For example, "great that some element is missing here -
+but which element?"  And "I don't want to strip the QName of the offending
+attribute from the text of the message, I want XmlError to have it."  This
+would be a good project, and I know there are some users who would thank you
+very much. And depending on how involved you want to get, it could be an
+algorithmically interesting project as well.
+
+(2) Also, a common request is "why doesn't v1 support more of XPath?"  Well,
+cezar has done some good v2 work for using Jaxen for XPath, but this work
+hasn't been ported into v1.  Perhaps you might want to see what it would
+take (I'm sure Cezar would help) to make v1 support Jaxen for XPath too.
+
+Or... Do you have a specific area of interest?
+
+David
+
+
+----- Original Message ----- 
+From: "Dutta Satadip" <s-dutta@sbcglobal.net>
+To: <xmlbeans-dev@xml.apache.org>
+Sent: Thursday, December 04, 2003 2:32 AM
+Subject: [xmlbeans-dev] Contributing to XMLBeans
+
+
+> Hello,
+> My name is dutta and I have been looking at the xmlbeans source code (v1)
+and going through the available documentation. I  used XML beans last year
+and thought ..this would be so good if this was available in the opensource.
+I came to know about this project from a friend who went to ApacheCon.
+>
+> I am interested in contributing to this project. Typically I would try and
+look at bugzilla and go from there. The website listed the V2 Feature plan
+(http://nagoya.apache.org/wiki/apachewiki.cgi?XmlBeansFeaturePlan). Based on
+reading the email archives it seemed like there was work on V2 going on,
+however given the long list of features, I was wondering if anyone can help
+me find some starting point that would help progress the project forward.
+>
+> A little bit about my background. I have been programming since 7th
+grade..started with logo and have since gone through a variety of languages
+C,C++, Basic, Pascal,Perl. I have been working with Java since 1997 and XML
+since 2000. I have a MS in Computer Science from Virginia Tech -Go Hokies!!.
+My bread and butter job is at Hewlett Packard.I also like writing and
+regularly write for ACM Computing Reviews(reviews.com) and also have written
+a article for Java Developers Journal.
+>
+> With Regards
+> Dutta:)
+>
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

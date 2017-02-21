@@ -1,0 +1,71 @@
+Return-Path: <xmlbeans-dev-return-96-smith=stanford.edu@xml.apache.org>
+Received: from leland4.Stanford.EDU (leland4.Stanford.EDU [171.64.14.29])
+	by popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8D8gc1T004113 for
+	<smith@popserver1.stanford.edu>; Sat, 13 Sep 2003 01:42:39 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland4.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8D8gWNm000886 for
+	<smith@stanford.edu>; Sat, 13 Sep 2003 01:42:32 -0700 (PDT)
+Received: (qmail 35526 invoked by uid 500); 13 Sep 2003 08:42:18 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 35511 invoked from network); 13 Sep 2003 08:42:17 -0000
+X-Sent: 13 Sep 2003 08:42:30 GMT
+Date: Sat, 13 Sep 2003 09:44:36 +0100
+X-Zimbra-Received: Sat, 13 Sep 2003 09:44:36 +0100
+Subject: Re: Source Code
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Mime-Version: 1.0 (Apple Message framework v482)
+From: robert burrell donkin <rdonkin@apache.org>
+To: xmlbeans-dev@xml.apache.org
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <1734.68.55.36.165.1063362239.squirrel@www.lig.net>
+Message-Id: <81795406-E5C6-11D7-AE6D-003065DC754C@apache.org>
+X-Mailer: Apple Mail (2.482)
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000001d-0010
+
+hi jennifer
+
+xml beans is in the process of being donated to apache by BEA. this 
+process takes a little time - not only do all the legalities need to be 
+finished but also all the source code needs to be checked and converted so 
+that it conforms to the ASF rules. (this basically ensures that it is 
+legally clean for public access.)
+
+i know that the xml beans teams are working hard on this and that we're 
+all looking forward to seeing the code in cvs but i'm afraid your going to 
+need to be a little patient. i'd hope that we'll see an announcement on 
+this list once the source has been added to cvs. you might also like to 
+subscribe to the CVS list for xml beans (post to xmlbeans-cvs-subscribe at 
+xml.apache.org with subscribe in the subject) so you'll be able to see the 
+commits as they are made.
+
+i'm not sure whether BEA makes the source of it's version available but it 
+may be worth browsing http://workshop.bea.com/xmlbeans/quickStart.jsp.
+
+- robert
+
+On Friday, September 12, 2003, at 11:23 AM, Jennifer Sleeman wrote:
+
+> I am looking for the source code for xmlbeans, it is possible to get it?
+>
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

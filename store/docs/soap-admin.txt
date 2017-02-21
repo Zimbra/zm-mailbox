@@ -1,0 +1,2924 @@
+-----------------------------
+ urn:zimbraAdmin
+-----------------------------
+
+Attributes for all commands can have multiple values:
+
+  <a n="name1">{value}</a>
+  <a n="name2">{value}</a>
+  <a n="name1">{value}</a>
+
+Note that name1 appears twice.
+
+When updating multiple attributes, you need to specify all the old values at the same time you specify new ones.
+
+----------------------------
+ <AuthRequest xmlns="urn:zimbraAdmin" [persistAuthTokenCookie="1"] [csrfTokenSecured="0|1"]>
+   [<name>...</name>]
+   [<account by="name|id|foreignPrincipal">...</account>]
+   <password>...</password>
+ </AuthRequest>
+
+ Only one of <name> or <account> can/must be specified.
+
+ <AuthResponse>
+   <authToken>...</authToken>
+   [<csrfToken>...</csrfToken>]
+   <lifetime>{lifetime-in-milliseconds}</lifetime>
+ </AuthResponse>
+
+  {persistAuthTokenCookie} = controls whether the auth token cookie in the response should 
+                             be persisted when the browser exits.
+                             0: (default)
+                                the cookie will be deleted when the Web browser exits.
+                             1: The "Expires" attribute of the cookie will be set per rfc6265.
+
+  {csrfTokenSecured} = controls whether the client has the capability to handle CSRF token
+                0: (default) the client is not capable of handling CSRF token
+                1: The client is capable of handling CSRF token.
+
+Note: Only works with admin/domain-admin accounts
+
+Access: domain admin sufficient
+
+----------------------------
+ <DelegateAuthRequest xmlns="urn:zimbraAdmin" [duration="{duration}"]>
+   <account by="id|name">...</account>
+ </DelegateAuthRequest>
+
+ <DelegateAuthResponse>
+   <authToken>...</authToken>
+   <lifetime>...</lifetime>
+ </DelegateAuthResponse>
+
+Used to request a new auth token that is valid for the specified account. The id of the auth token will be the id of the target account,
+and the requesting admin's id will be stored in the auth token for auditing purposes.
+
+{duration} = lifetime in seconds of the newly-created authtoken. defaults to 1 hour. Can't be longer then zimbraAuthTokenLifetime.
+
+----------------------------
+
+<CreateAccountRequest>
+  <name>...</name>
+  <password>...</password>*
+  <a n="attr-name">...</a>+
+</CreateAccountRequest>
+
+<CreateAccountResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>
+</CreateAccountResponse>
+
+Notes:
+
+  accounts without passwords can't be logged into
+
+  name must include domain (uid@name), and domain specified in name must exist
+
+  default value for zimbraAccountStatus is "active"
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<GetAccountRequest [applyCos="{apply-cos}"] [attrs="{req-attrs}"]>
+  <account by="id|name|foreignPrincipal">...</account>
+</GetAccountRequest>
+
+<GetAccountResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>
+</GetAccountResponse>
+
+{apply-cos} = 0|1 (1 is default)
+
+ if {apply-cos} is 1, then COS rules apply and unset attrs on an account will get their value from the COS.
+
+ if {apply-cos} is 0, then only attributes directly set on the account will be returned
+
+{req-attrs} = comma-seperated list of attrs to return
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+-----------------------------
+
+<GetAccountInfoRequest>
+  <account by="id|name">...</account>
+</GetAccountInfoRequest>
+
+  Note: For historical reasons, there are some minor differences between the Admin and Account versions of
+        GetAccountInfoResponse.
+
+<GetAccountInfoResponse>
+   <name>{account-name}</name>
+   <a n="{name}">{value}</a>+
+   <soapURL>{acct-soap-url}</soapURL>+
+   <adminSoapURL>{admin-soap-url}</adminSoapURL>
+   <publicMailURL>{web-mail-url}</publicMailURL>
+</GetInfoResponse>
+
+  {account-name} = email address (user@domain)
+
+  {attrs} = account attrs. Currently only two attrs are returned:
+
+      zimbraId       - the unique UUID of the zimbra account
+      zimbraMailHost - the server on which this user's mail resides
+
+  {acct-soap-url} = URL to talk to for soap service for this account. i.e:
+
+       http://server:7070/service/soap/
+
+       Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
+       the only one URL will be returned.
+
+  {admin-soap-url} = URL for the Admin SOAP service
+                     Note: Admin app only runs over SSL.
+
+  {web-mail-url} = URL for the Web Mail application
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<GetAccountMembershipRequest>
+  <account by="id|name|foreignPrincipal">...</account>
+</GetAccountMembershipRequest>
+
+<GetAccountMembershipResponse>
+    <dl name="{name}" id="{id}"  via="{via-dl-name}">
+      <a n="zimbraIsAdminGroup">...</a>+
+    </dl>+
+</GetAccountMembershipResponse>
+
+{via-dl-name} = is present if the account is a member of the returned list because they are either a direct
+                or indirect member of another list that is a member of the returned list. For example,
+                if a user is a member of engineering@domain.com, and engineering@domain.com is a member of all@domain.com,
+                then <dl name="all@domain.com" ... via="engineering@domain.com"/> would be returned.
+
+
+-----------------------------
+
+<GetAllAdminAccountsRequest [applyCos="{apply-cos}"]/>
+
+<GetAllAdminAccountsResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>
+</GetAllAdminAccountsResponse>
+
+-----------------------------
+
+<ModifyAccountRequest>
+  <id>{value-of-zimbraId}</id>
+  <a n="...">...</a>+
+</ModifyAccountRequest>
+
+<ModifyAccountResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>
+</ModifyAccountResponse>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+Access: domain admin sufficient. limited set of attributes that can be updated by a domain admin.
+
+   note: this request is by default proxied to the account's home server
+
+-----------------------------
+
+<RenameAccountRequest>
+  <id>{value-of-zimbraId}</id>
+  <newName>{new-account-name}</newName>
+</RenameAccountRequest>
+
+<RenameAccountResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>
+</RenameAccountResponse>
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+-----------------------------
+
+<DeleteAccountRequest>
+  <id>{value-of-zimbraId}</id>
+</DeleteAccountRequest>
+
+<DeleteAccountResponse/>
+
+Deletes the account with the given id.  If the request is sent
+to the server on which the mailbox resides, the mailbox is
+deleted as well.
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+-----------------------------
+
+<SetPasswordRequest>
+  <id>{value-of-zimbraId}</id>
+  <newPassword>...</newPassword>
+</SetPasswordRequest>
+
+<SetPasswordResponse>
+  [<message>...</message>]
+</SetPasswordResponse>
+
+Access: domain admin sufficient
+
+<message> : If the password had violated any policy, it is returned in the
+            <message> element, and the password is still set successfully.
+
+   note: this request is by default proxied to the account's home server
+
+-----------------------------
+
+<CheckPasswordStrengthRequest>
+  <id>{value-of-zimbraId}</id>
+  <password>...</password>
+</CheckPasswordStrengthRequest>
+
+<CheckPasswordStrengthResponse/>
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+-----------------------------
+
+<AddAccountAliasRequest>
+  <id>{value-of-zimbraId}</id>
+  <alias>...</alias>
+</AddAccountAliasRequest>
+
+<AddAccountAliasResponse/>
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+-----------------------------
+
+<RemoveAccountAliasRequest>
+  <id>{value-of-zimbraId}</id>
+  <alias>...</alias>
+</RemoveAccountAliasRequest>
+
+<RemoveAccountAliasResponse/>
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+-----------------------------
+
+<ResetAllLoggersRequest/>
+
+<ResetAllLoggersResponse/>
+
+Removes all account loggers and reloads /opt/zimbra/conf/log4j.properties.
+
+-----------------------------
+NOTE: SearchAccountsRequest is deprecated. See SearchDirectoryRequest.
+
+<SearchAccountsRequest [limit="..."] [offset="..."] [domain="{domain-name}"] [applyCos="{apply-cos}"]
+         [attrs="a1,a2,a3"] [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] [types="{type}"]>
+  <query>...</query>
+</SearchAccountsRequest>
+
+<SearchAccountsResponse more="{more-flag}" [searchTotal="{search-total}"]>
+  <account name="{name}" id="{id} isExternal="1|0"">
+    <a n="...">...</a>+
+  </account>
+  <alias name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </alias>
+  <dl name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </dl>
+</SearchAccountsResponse>
+
+Notes:
+SearchAccountsRequest
+  <query> - query string should be an LDAP-style filter string (RFC 2254)
+  limit - the number of accounts to return (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+  domain - the domain name to limit the search to
+  applyCos - whether or not (0/1) to apply the COS policy to account. specify 0 if only
+             requesting attrs that aren't inherited from COS
+  applyConfig - whether or not (0/1) to apply the global config attrs to domain. specify 0 if only
+               requesting attrs that aren't inherited from global config
+  attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
+  sortBy - name of attribute to sort on. default is the account name.
+  sortAscending - whether to sort in ascending order (0/1), 1 is default
+    more-flag = true if more accounts left to return
+    search-total = total number of accounts that matched search (not affected by limit/offset)
+    types = comma-separated list of types to return. legal values are:
+            accounts|resources
+            (default is accounts)
+
+SearchAccountsResponse
+  isExternal: whether the account's zimbraMailTranport points to the designated protocol(lmtp) and server(home server of the account).
+
+Access: domain admin sufficient (a domain admin can't specify "domains" as a type)
+
+-----------------------------
+
+ <AutoCompleteGalRequest domain="{domain}" [type="{type}"] limit="limit-returned">
+   <name>...</name>
+ </AutoCompleteGalRequest>
+
+ <AutoCompleteGalResponse more="{more}" [tokenizeKey="{tokenize-key-op}"]>
+   <cn>...</cn>*
+ </AutoCompleteGalResponse>
+
+  {limit} = an integer specifying the maximum number of results to return
+
+  {type} = type of addresses to auto-complete on
+           "account" for regular user accounts, aliases and distribution lists
+           "resource" for calendar resources
+           "all" for combination of both types
+           if omitted, defaults to "accounts"
+
+  {more-flag} = 1 if the results were truncated.
+
+  {tokenize-key-op} = and|or
+         - Not present if the search key was not tokenized.
+         - Some clients backtrack on GAL results assuming the results of a more
+           specific key is the subset of a more generic key, and it checks cached
+           results instead of issuing another SOAP request to the server.
+           If search key was tokenized and expanded with AND or OR, this cannot
+           be assumed.
+
+Notes: admin verison of mail equiv. Used for testing via zmprov.
+
+-----------------------------
+ <SearchGalRequest [type="{type}"] [limit="..."]>
+   <name>...</name>
+ </SearchGalRequest>
+
+ <SearchGalResponse more="{more}" [tokenizeKey="{tokenize-key-op}"]>
+   <cn>...</cn>*
+ </SearchGalResponse>
+
+  {more-flag} = 1 if the results were truncated.
+
+  {tokenize-key-op} = and|or
+         - Not present if the search key was not tokenized.
+         - Some clients backtrack on GAL results assuming the results of a more
+           specific key is the subset of a more generic key, and it checks cached
+           results instead of issuing another SOAP request to the server.
+           If search key was tokenized and expanded with AND or OR, this cannot
+           be assumed.
+
+  {type} = type of addresses to search
+           "account" for regular user accounts, aliases and distribution lists
+           "resource" for calendar resources
+           "all" for combination of both types
+           if omitted, defaults to "all"
+
+Notes: admin verison of mail equiv. Used for testing via zmprov.
+
+-----------------------------
+
+<SearchDirectoryRequest [limit="..."] [offset="..."] [domain="{domain-name}"] [applyCos="{apply-cos}"] [maxResults="..."]
+         [attrs="a1,a2,a3"] [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] [types="{type}"] [countOnly="{if-count-only}"]>
+  <query>...</query>
+</SearchDirectoryRequest>
+
+<SearchDirectoryResponse [num={number-count}] [more="{more-flag}"] [searchTotal="{search-total}"]>
+  <account name="{name}" id="{id}" isExternal="1|0">
+    <a n="...">...</a>+
+  </account>*
+  <alias name="{name}" id="{id} type="account|distributionlist|resource" targetName={target-name}">
+    <a n="...">...</a>+
+  </alias>*
+  <dl name="{name}" id="{id}>
+    <a n="...">...</a>+
+  </dl>*
+  <domain name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </domain>*
+  <cos name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </cos>*
+</SearchDirectoryResponse>
+
+Notes:
+SearchDirectoryRequest
+  <query> - query string should be an LDAP-style filter string (RFC 2254)
+  maxResults = maximum results that the backend will attempt to fetch from the directory before
+  returning a account.TOO_MANY_SEARCH_RESULTS error.
+
+  limit - the number of accounts to return per page (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+  domain - the domain name to limit the search to (do not use if searching for domains)
+  applyCos - whether or not (0/1) to apply the COS policy to account. specify 0 if only
+             requesting attrs that aren't inherited from COS
+  attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
+  sortBy - name of attribute to sort on. default is the account name.
+  sortAscending - whether to sort in ascending order (0/1), 1 is default
+    more-flag = true if more accounts left to return
+    search-total = total number of accounts that matched search (not affected by limit/offset)
+    types = comma-separated list of types to return. legal values are:
+            accounts|distributionlists|aliases|resources|domains|coses
+            (default is accounts)
+
+SearchDirectoryResponse
+  isExternal: whether the account's zimbraMailTranport points to the designated protocol(lmtp) and server(home server of the account).
+
+Access: domain admin sufficient (though a domain admin can't specify "domains" as a type)
+
+-----------------------------
+
+<GetQuotaUsageRequest [limit="..."] [offset="..."] [domain="{limit-to-domain}"] [allServers="1"]
+         [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] [refresh="1"]>
+</GetQuotaUsageRequest>
+
+<GetQuotaUsageResponse more="{more-flag}" [searchTotal="{search-total}"]>
+  <account name="{name}" id="{id}" used="{quota-used}" limit="{quota-limit}"/>+
+</GetQuotaUsageResponse>
+
+Notes:
+GetQuotaUsageRequest
+  limit - the number of accounts to return (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+  domain - the domain name to limit the search to
+  allServers - whether to fetch quota usage for all domain accounts from across all mailbox servers (0/1), 0 is default,
+               applicable when domain attribute is specified
+  sortBy - valid values: "percentUsed", "totalUsed", "quotaLimit"
+  sortAscending - whether to sort in ascending order (0/1), 0 is default, so highest quotas are returned first
+  refresh - whether to always recalculate the data even when cached values are available.  0 is default.
+  more-flag = true if more accounts left to return
+  search-total = total number of accounts that matched search (not affected by limit/offset)
+  used = used quota in bytes, or 0 if no quota used
+  limit = quota limit in bytes, or 0 if unlimited
+
+The target server should be specified in the soap header (see soap.txt, <targetServer>).
+
+When sorting by "quotaLimit", 0 is treated as the highest value possible.
+
+-----------------------------
+
+Computes the aggregate quota usage for all domains in the system.
+The request handler issues GetAggregateQuotaUsageOnServerRequest to all mailbox servers and computes the aggregate
+quota used by each domain.
+The request handler updates the zimbraAggregateQuotaLastUsage domain attribute and sends out warning messages for each
+domain having quota usage greater than a defined percentage threshold.
+
+<ComputeAggregateQuotaUsageRequest/>
+
+<ComputeAggregateQuotaUsageResponse>
+  <domain name="{name}" id="{id}" used="{quota-used-in-the-system}"/>*
+</ComputeAggregateQuotaUsageResponse>
+
+-----------------------------
+
+Gets the aggregate quota usage for all domains on the server.
+
+<GetAggregateQuotaUsageOnServerRequest/>
+
+<GetAggregateQuotaUsageOnServerResponse>
+  <domain name="{name}" id="{id}" used="{quota-used-on-the-server}"/>*
+</GetAggregateQuotaUsageOnServerResponse>
+
+-----------------------------
+
+<GetAllMailboxesRequest [limit="..."] [offset="..."]>
+</GetAllMailboxesRequest>
+
+<GetAllMailboxesResponse>
+  <mbox id="..." groupid="..." accountid="..." indexvolumeid="..." itemidcheckpoint="..." contactcount="..." sizecheckpoint="..."
+        changecheckpoint="..." trackingsync="..." trackingimap="..." lastbackupat="..." lastsoapaccess="..." newmessages="..." idxdeferredcount="..."/>+
+</GetAllMailboxesResponse>
+
+Notes:
+Returns all data from the mailbox table (in db.sql), except for the "comment" column.
+  limit - the number of mailboxes to return (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+
+-----------------------------
+
+<GetMailboxStatsRequest/>
+
+<GetMailboxStatsResponse>
+  <stats numMboxes="..." totalSize="..."/>
+</GetMailboxStatsResponse>
+
+Notes:
+  numMboxes: total number of mailboxes
+  totalSize: total size of all mailboxes
+
+-----------------------------
+
+<GetAllAccountsRequest>
+  [<domain by="id|name">...</domain>]
+  [<server by="id|name">...</server>]
+<GetAllAccountsRequest/>
+
+<GetAllAccountsResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>
+</GetAllAccountsResponse>
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<CreateDomainRequest>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateDomainRequest>
+
+<CreateDomainResponse>
+  <domain name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </domain>
+</CreateDomainResponse>
+
+Notes:
+
+  extra attrs:
+
+  description
+  zimbraNotes
+
+-----------------------------
+
+<GetDomainRequest [applyConfig="{apply-config}"] [attrs="{req-attrs}"]>
+  <domain by="id|name|virtualHostname">...</domain>
+</GetDomainRequest>
+
+<GetDomainResponse>
+  <domain name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </domain>
+</GetDomainResponse>
+
+{apply-config} = 0|1 (1 is default)
+
+ if {apply-config} is 1, then certain unset attrs on a domain will get their value from the global config.
+
+ if {apply-config} is 0, then only attributes directly set on the domain will be returned
+
+ {req-attrs} = comma-seperated list of attrs to return
+
+-----------------------------
+
+<GetDomainInfoRequest [applyConfig="{apply-config}"]>
+  <domain by="id|name|virtualHostname">...</domain>
+</GetDomainInfoRequest>
+
+<GetDomainInfoResponse>
+  <domain name="..." id="...">
+    <a n="...">...</a>+
+  </domain>
+</GetDomainInfoResponse>
+
+This call does *not* require an auth token; however when called without an auth token only the following attributes required pre-login are returned.
+zimbraSkinLogoURL
+zimbraAdminConsoleLoginURL
+zimbraWebClientLoginURL
+zimbraWebClientLoginURLAllowedUA
+zimbraWebClientLoginURLAllowedIP
+
+When called without auth token the domain name/ID are not returned instead 'VALUE-BLOCKED' is emitted, regardless of whether the requested domain exists or not.
+
+If the domain does not exist values are returned from the global config object.
+
+{apply-config} = 0|1 (1 is default)
+
+ if {apply-config} is 1, then certain unset attrs on a domain will get their value from the global config.
+
+ if {apply-config} is 0, then only attributes directly set on the domain will be returned
+
+-----------------------------
+
+<GetAllDomainsRequest [applyConfig="{apply-config}"]/>
+
+<GetAllDomainsResponse>
+  <domain name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </domain>+
+</GetAllDomainsResponse>
+
+-----------------------------
+
+<ModifyDomainRequest>
+  <id>{value-of-zimbraId}</id>
+  <a n="...">...</a>+
+</ModifyDomainRequest>
+
+<ModifyDomainResponse>
+  <domain name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </domain>
+</ModifyDomainResponse>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+
+<DeleteDomainRequest>
+  <id>{value-of-zimbraId}</id>
+</DeleteDomainRequest>
+
+<DeleteDomainResponse/>
+
+-----------------------------
+<CreateCosRequest>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateCosRequest>
+
+<CreateCosResponse>
+  <cos name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </cos>
+</CreateCosResponse>
+
+Notes:
+
+  extra attrs:
+
+  description
+  zimbraNotes
+
+-----------------------------
+<CopyCosRequest>
+  <name>{dest-cos-name}</name>
+  <cos by="id|name">{src-cos-id-or-name}</cos>
+</CopyCosRequest>
+
+<CopyCosResponse>
+  <cos name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </cos>
+</CopyCosResponse>
+
+-----------------------------
+<GetCosRequest [attrs="{req-attrs}"]>
+  <cos by="id|name">...</cos>
+</GetCosRequest>
+
+<GetCosResponse>
+  <cos name="{name}" id="{id}">
+    <a [c="{cos-attr}"] n="...">...</a>+
+  </cos>
+</GetCosResponse>
+
+{req-attrs} = comma-seperated list of attrs to return
+
+{cos-attr} = 0 (default) means the attrs applies to any account's that belong to the cos
+             1 means the attr applies only to the cos object itself
+
+-----------------------------
+
+<GetAllCosRequest/>
+
+<GetAllCosResponse>
+  <cos name="{name}" id="{id}">
+    <a [c="{cos-attr}"] n="...">...</a>+
+  </cos>+
+</GetAllCosResponse>
+
+-----------------------------
+
+<ModifyCosRequest>
+  <id>{value-of-zimbraId}</id>
+  <a n="...">...</a>+
+</ModifyCosRequest>
+
+<ModifyCosResponse>
+  <cos name="{name}" id="{id}">
+    <a [c="{cos-attr}"] n="...">...</a>+
+  </cos>+
+</ModifyCosResponse>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+
+<RenameCosRequest>
+  <id>{value-of-zimbraId}</id>
+  <newName>{new-cos-name}</newName>
+</RenameCosRequest>
+
+<RenameCosResponse>
+  <cos name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </cos>
+</RenameCosResponse>
+
+-----------------------------
+
+<DeleteCosRequest>
+  <id>{value-of-zimbraId}</id>
+</DeleteCosRequest>
+
+<DeleteCosResponse/>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+<CreateServerRequest>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateServerRequest>
+
+<CreateServerResponse>
+  <server name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </server>
+</CreateServerResponse>
+
+Notes:
+
+  extra attrs:
+
+  description
+  zimbraNotes
+
+-----------------------------
+
+<GetServerRequest [applyConfig="{apply-config}"] [attrs="{req-attrs}"]>
+  <server by="id|name|serviceHostname">...</server>
+</GetServerRequest>
+
+<GetServerResponse>
+  <server name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </server>
+</GetServerResponse>
+
+{apply-config} = 0|1 (1 is default)
+
+by "serviceHostname" will return the server that has zimbraServiceHostname set to the specified value.
+
+ if {apply-config} is 1, then certain unset attrs on a server will get their value from the global config.
+
+ if {apply-config} is 0, then only attributes directly set on the server will be returned
+
+ {req-attrs} = comma-seperated list of attrs to return
+
+-----------------------------
+
+You can get all servers defined in the system or you can get all
+servers that have a particular service enabled (eg, mta, antispam,
+spell).
+
+<GetAllServersRequest [service="service-name"] [applyConfig="{apply-config}"]/>
+
+<GetAllServersResponse>
+  <server name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </server>+
+</GetAllServerResponse>
+
+-----------------------------
+
+<ModifyServerRequest>
+  <id>{value-of-zimbraId}</id>
+  <a n="...">...</a>+
+</ModifyServerRequest>
+
+<ModifyServerResponse>
+  <server name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </server>
+</ModifyServerResponse>]
+
+Note: an empty attribute value removes the specified attr
+
+   note: this request is by default proxied to the referenced server
+
+-----------------------------
+
+<DeleteServerRequest>
+  <id>{value-of-zimbraId}</id>
+</DeleteServerRequest>
+
+<DeleteServerResponse/>
+
+Note: an empty attribute value removes the specified attr
+
+   note: this request is by default proxied to the referenced server
+
+-----------------------------
+
+<GetConfigRequest>
+ <a n="....">
+</GetServerRequest>
+
+<GetConfigResponse>
+  <a n="...">...</a>+
+</GetConfigResponse>
+
+-----------------------------
+<GetAllConfigRequest/>
+
+<GetAllConfigResponse>
+  <a n="...">...</a>+
+</GetAllConfigResponse>
+
+-----------------------------
+<ModifyConfigRequest>
+  <a n="...">...</a>+
+</ModifyConfigRequest>
+
+<ModifyConfigResponse/>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+<GetServerStatsRequest>
+  <stat name="{stat-name}"/>*
+</GetServerStatsRequest>
+
+<GetServerStatsResponse>
+  <stat name="{stat-name}" description="{text}">{stat-value}</stat>+
+</GetServerStatsResponse>
+
+Returns server monitoring stats.  These are the same stats that are logged
+to mailboxd.csv.  If no <stat> element is specified, all server stats
+are returned.  If the stat name is invalid, returns a SOAP fault.
+
+-----------------------------
+<GetLoggerStatsRequest>
+  <hostname hn="..."/>?
+  <stats name="..." [limit=true]/><values><stat name="counter1"/><stat name="counterN"/></values>?</stats>?
+  <stats name="...">1</stats>?
+  <startTime time="ts"/>?
+  <endTime time="ts"/>?
+</GetLoggerStatsRequest>
+
+<GetLoggerStatsResponse>
+  <!-- first case, list of reporting hostnames -->
+  <hostname hn="..."/>+
+
+  <!-- second case, list of stat groupings for a given host-->
+  <hostname hn="...">
+    <stats name="..."/>+
+  </hostname>
+
+  <!-- third case, list of columns for a given host and grouping -->
+  <hostname hn="...">
+    <stats name="...">
+      <values>
+        <stat name="..."/>+
+      </values>
+    </stats>
+  </hostname>
+
+  <!-- fourth case, actual stat results -->
+  <hostname hn="...">
+    <stats name="...">
+      <values t="...">+
+        <stat name="..." value="X"/>+
+      </values>
+    </stats>
+  </hostname>
+
+</GetLoggerStatsResponse>
+
+Query to retrieve Logger statistics in ZCS 6.0.
+
+Use cases:
+
+1 - no elements specified
+  - result: a listing of reporting host names
+2 - hostname specified
+  - result: a listing of stat groups for the specified host
+3 - hostname and stats specified, text content of stats non-empty
+  - result: a listing of columns for the given host and group
+4 - hostname and stats specified, text content empty, startTime/endTime optional
+  - result: all of the statistics for the given host/group are returned, if start
+    and end are specified, limit/expand the timerange to the given setting.
+    if limit=true is specified, attempt to reduce result set to under 500 records
+
+-----------------------------
+<GetServiceStatusRequest/>
+
+<GetServiceStatusResponse>
+  <timezone id="{timezone-id}" displayName="{timezone-display-name}"></timezone>
+  <status server="..." service="..." t="{date-time}">{value}</status>*
+</GetServiceStatusResponse>
+
+{timezone-id}             timezone id, e.g "America/Los_Angeles"
+{timezone-display-name}   timezone display anme, e.g. "Pacific Standard Time"
+{date-time}               format is number of seconds in 1970, utc time.
+
+-----------------------------
+
+<PurgeMessagesRequest>
+    [<mbox id="{account-id}"/>]
+</PurgeMessagesRequest>
+
+purges aged messages out of trash, spam, and entire mailbox
+  (if <mbox> element is omitted, purges all mailboxes on server)
+  
+<PurgeMessagesResponse>
+    <mbox id="{account-id}" mbxid="{mailbox-id}" s="{size}"/>
+</PurgeMessagesResponse>  
+
+-----------------------------
+
+<RecalculateMailboxCountsRequest>
+   <mbox id="{account-id}"/>
+</RecalculateMailboxCountsRequest>
+
+<RecalculateMailboxCountsResponse>
+   <mbox id="{account-id}" used="{quota-used}"/>
+</RecalculateMailboxCountsResponse>
+
+forces immediate recalculation of total mailbox quota usage and all folder unread and size counts
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+-----------------------------
+
+<ReIndexRequest action="start|status|cancel">
+  <mbox id="{account-id}" [types={types} | ids={ids}]/>
+</ReIndexRequest>
+
+<ReIndexResponse status="started|running|cancelled|idle" statusCode="-3,-2,-1,0,1,2">
+  [<progress numSucceeded="SUCCEEDED" numFailed="FAILED" numRemaining="REMAINING">]
+</ReIndexResponse>
+
+   -types -ids are optional, however at most ONE may be specified:
+      {ids] = comma-separated list of IDs to re-index.
+      {types} 	= comma-separated list.  Legal values are:
+                  conversation|message|contact|appointment|task|note|wiki|document
+
+  action start - start reindexing
+    status started - success
+    status running - reindexing is already running
+  action status - show reindexing progress
+    status running - returns progress information
+    status idle - reindexing is not running
+  action cancel - cancel reindexing
+    status cancelled - success and returns progress information
+    status idle - reindexing is not running
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+---------------------------
+
+<CompactIndexRequest action="start|status">
+  <mbox id="{account-id}"/>
+</CompactIndexRequest>
+
+<CompactIndexResponse status="started|running|idle">
+</CompactIndexResponse>
+
+  action start - start index compaction
+    status started - success
+    status running - index compaction is already running
+  action status - show index compaction progress
+    status running - index compaction is running
+    status idle - index compaction is not running
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+---------------------------
+
+<GetIndexStatsRequest>
+  <mbox id="{account-id}"/>
+</GetIndexStatsRequest>
+
+<GetIndexStatsResponse>
+  <stats maxDocs="..." deletedDocs="..."/>
+</GetIndexStatsResponse>
+
+Notes:
+  maxDocs: Returns total number of docs in this index, including docs not yet flushed (still in the RAM buffer), not counting deletions.
+  deletedDocs: number of deleted docs for the index
+
+-----------------------------
+
+<DeleteMailboxRequest>
+  <mbox id="{account-id}"/>
+</DeleteMailboxRequest>
+
+the request includes the account ID (uuid) of the target mailbox
+on success, the response includes the mailbox ID (numeric) of the deleted mailbox
+the <mbox> element is left out of the response if no mailbox existed for that account
+
+<DeleteMailboxResponse>
+  [<mbox mbxid="{mailbox-id}"/>]
+</DeleteMailboxResponse>
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+-----------------------------
+<GetMailboxRequest>
+  <mbox id="{account-id}"/>
+</GetMailboxRequest>
+
+<GetMailboxResponse>
+  <mbox mbxid="{mailbox-id}" s="{size-in-bytes}"/>
+</GetMailboxResponse>
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
+
+-----------------------------
+
+Runs the server-side unit test suite.
+
+If <test>'s are specified, then run the requested tests (instead of
+the standard test suite).  Otherwise the standard test suite is run.
+
+<RunUnitTestsRequest>
+   [<test>className[#testName[+testName]*]</test>]*
+</RunUnitTestsRequest>
+
+<RunUnitTestsResponse numFailed="{n}" numSkipped="{n}" numExecuted="{n}" execSeconds="{n}">
+    { Summary of test execution times and success/failure status }
+</RunUnitTestsResponse>
+
+where className is for a class which extends junit.framework.TestCase
+
+-----------------------------
+All the Check* SOAP calls potentially return the following two things:
+
+<code>{code}</code>
+<message>{message}</message>
+
+where:
+
+code is one of the following Strings:
+
+ code                         description
+ -------                      -----------
+ check.OK                     everything went ok
+ check.UNKNOWN_HOST           unable to resolve a hostname
+ check.CONNECTION_REFUSED     connection to a port was refused
+ check.SSL_HANDSHAKE_FAILURE  SSL connect problem, most likely untrusted certificate
+ check.COMMUNICATION_FAILURE  generic communication failure
+ check.AUTH_FAILED            authentication failed. invalid credentials (bad dn/password)
+ check.AUTH_NOT_SUPPORTED     authentication flavor not supported. LDAP server probably
+                              configured to not allow passwords
+ check.NAME_NOT_FOUND         unable to resolve an LDAP name. most likely invalid search base
+ check.INVALID_SEARCH_FILTER  invalid ldap search filter
+ check.FAILURE                generic failure
+
+message is the detailed Java stack trace, used mainly for diagnosotics where the code
+isn't specific enough. Not user-friendly, but still useful for debugging problems.
+
+Any SOAP faults returned indicate a problem with the request itself, not the thing being
+checked.
+
+----------------------------------------
+
+<CheckHostnameResolveRequest>
+ <hostname>...</hostname>
+</CheckHostnameResolveRequest>
+
+<CheckHostnameResolveResponse>
+  <code>...</code>
+  <message>...</message>*
+</CheckHostnameResolveResponse>
+
+------------------------------------------------------------
+
+<CheckGalConfigRequest>
+  <a n='zimbraGalMode'>ldap</a>
+
+  <a n='zimbraGalLdapURL'>...</a>
+  <a n='zimbraGalLdapSearchBase'>...</a>
+  <a n='zimbraGalLdapFilter'>...</a>
+  <a n='zimbraGalLdapAuthMech'>...</a>
+  <a n='zimbraGalLdapBindDn'>...</a>*
+  <a n='zimbraGalLdapBindPassword'>...</a>*
+  <a n='zimbraGalLdapKerberos5Principal'>...</a>*
+  <a n='zimbraGalLdapKerberos5Keytab'>...</a>*
+
+  <a n='zimbraGalSyncLdapURL'>...</a>
+  <a n='zimbraGalSyncLdapSearchBase'>...</a>
+  <a n='zimbraGalSyncLdapFilter'>...</a>
+  <a n='zimbraGalSyncLdapAuthMech'>...</a>
+  <a n='zimbraGalSyncLdapBindDn'>...</a>*
+  <a n='zimbraGalSyncLdapBindPassword'>...</a>*
+  <a n='zimbraGalSyncLdapKerberos5Principal'>...</a>*
+  <a n='zimbraGalSyncLdapKerberos5Keytab'>...</a>*
+
+  <a n='zimbraGalAutoCompleteLdapFilter'>...</a>
+
+  <a n='zimbraGalTokenizeAutoCompleteKey'>...</a>
+  <a n='zimbraGalTokenizeSearchKey'>...</a>
+
+  <query limit="...">...</query>*
+  <action>{GAL-action}</action>*
+</CheckGalConfigRequest>
+
+<CheckGalConfigResponse>
+  <code>...</code>
+  <message>...</message>*
+  <cn>...</cn>*
+</CheckGalConfigResponse>
+
+notes:
+ - zimbraGalMode must be set to ldap, even if you eventually want to set it to "both".
+ - <action> is optional.  GAL-action can be autocomplete|search|sync.  Default is search.
+ - <query> is ignored if <action> is "sync".
+ - AuthMech can be none|simple|kerberos5.
+      - Default is simple if both BindDn/BindPassword are provided.
+      - Default is none if not both BindDn/BindPassword are provided.
+ - BindDn/BindPassword are required if AuthMech is "simple".
+ - Kerberos5Principal/Kerberos5Keytab are required only if AuthMech is "kerberos5".
+ - zimbraGalSyncLdapXXX attributes are for GAL sync.  They are ignored if <action> is not sync.
+   For GAL sync, if a zimbraGalSyncLdapXXX attribute is not set, server will fallback to the corresponding zimbraGalLdapXXX attribute.
+
+------------------------------------------------------------
+
+<CheckAuthConfigRequest>
+  <a n='zimbraAuthMech'>ldap</a>
+  <a n='zimbraAuthLdapURL'>...</a>
+  <a n='zimbraAuthLdapBindDn'>...</a>
+  <a n='zimbraAuthLdapSearchFilter'>...</a>
+  <a n='zimbraAuthLdapSearchBase'>...</a>
+  <a n='zimbraAuthLdapSearchBindDn'>...</a>
+  <a n='zimbraAuthLdapSearchBindPassword'>...</a>
+  <name>...</name>
+  <password>...</password>
+</CheckAuthConfigRequest>
+
+<CheckAuthConfigResponse>
+  <code>...</code>
+  <message>...</message>*
+  <bindDn>{dn-computed-from-supplied-binddn-and-name}</bindDn>
+</CheckAuthConfigResponse>
+
+notes:
+  - zimbraAuthMech must be set to ldap/ad. There is no reason to check zimbra.
+  - zimbraAuthLdapURL must be set
+  - either zimbraAuthLdapBindDn or zimbraAuthLdapSearchFilter must be set
+
+  The following are optional, and only looked at if zimbraAuthLdapSearchFilter is set:
+     - zimbraAuthLdapSearchBase is optional and defaults to ""
+     - zimbraAuthLdapSearchBind{Dn,Password} are both optional
+
+-----------------------------------
+
+<CreateVolumeRequest>
+  <volume type="..." name="..." rootpath="..."
+          compressBlobs="..." compressionThreshold="..."/>
+</CreateVolumeRequest>
+
+<CreateVolumeResponse>
+  <volume id="{id}"/>
+</CreateVolumeResponse>
+
+Notes:
+
+  id: ID of volume
+  type: type of volume;
+        1 = primary message volume
+        2 = secondary message volume
+        10 = index volume
+  name: name or description of volume
+  rootPath: absolute path to root of volume, e.g. /opt/zimbra/store
+  compressBlobs: boolean value that specifies whether blobs in this
+    volume are compressed
+  compressionThreshold: long value that specifies the maximum uncompressed
+    file size, in bytes, of blobs that will not be compressed
+    (in other words blobs larger than this threshold are compressed)
+  isCurrent: 1 if the volume is current, 0 if not
+
+-----------------------------
+
+<GetVolumeRequest id="{id}"/>
+
+<GetVolumeResponse>
+  <volume id="{id}" type="..." name="..." rootpath="..."
+          compressBlobs="..." compressionThreshold="..."
+          isCurrent="0|1"/>
+</GetVolumeResponse>
+
+-----------------------------
+
+<GetAllVolumesRequest/>
+
+<GetAllVolumesResponse>
+  <volume .../>+  <!-- each volume element is same as in GetVolumeResponse -->
+</GetAllVolumeResponse>
+
+-----------------------------
+
+<ModifyVolumeRequest id="{id}">
+  <volume [type="..."] [name="..."] [rootpath="..."]
+          [compressBlobs="..."] [compressionThreshold="..."]/>
+</ModifyVolumeRequest>
+
+<ModifyVolumeResponse/>
+
+-----------------------------
+
+<DeleteVolumeRequest id="{id}"/>
+
+<DeleteVolumeResponse/>
+
+-----------------------------
+
+<GetCurrentVolumesRequest/>
+
+<GetCurrentVolumesResponse>
+  <volume type="1" id="{id}"/>
+  [<volume type="2" id="{id}"/>]  <!-- optional -->
+  <volume type="10" id="{id}"/>
+</GetCurrentVolumesResponse>
+
+-----------------------------
+
+<SetCurrentVolumeRequest type="{type}" id="{id}"/>
+
+<SetCurrentVolumeResponse/>
+
+Notes:
+
+  type: 1 (primary message), 2 (secondary message) or 10 (index)
+  Each SetCurrentVolumeRequest can set only one current volume type.
+
+-----------------------------
+
+<CheckBlobConsistencyRequest [checkSize="0|1"] [reportUsedBlobs="0|1"]/>
+  <volume id="..." />*
+  <mbox id="..." />*
+</CheckBlobConsistencyRequest>
+
+<CheckBlobConsistencyResponse>
+  <mbox id="...">
+    <missingBlobs>
+      <item id="{id}" rev="{n}" volumeId="{id}" blobPath="{path}" s="{data-size}" external="{external-flag}"/>*
+    </missingBlobs>
+    <unexpectedBlobs>
+      <blob volumeId="{id}" path="{path}" fileSize="{size} external="{external-flag}"/>*
+    </unexpectedBlobs>
+    <incorrectSize>
+      <item id="{id}" rev="{n}" volumeId="{id}" s="{size}">*
+        <blob fileSize="{size}" s="{data-size}" path="{path}" external="{external-flag}"/>
+      </item>
+    </incorrectSize>
+    <incorrectRevision>
+      <item id="{id}" rev="{n}" volumeId="{id}" s="{size}">*
+        <blob fileSize="{size}" path="{path}" rev="{n}" external="{external-flag}"/>
+      </item>
+    </incorrectRevision>
+    <usedBlobs>
+      <item id="{id}" rev="{n}" volumeId="{id}" s="{size}">*
+        <blob fileSize="{size}" path="{path}" rev="{n}" external="{external-flag}"/>
+      </item>
+    </usedBlobs>
+  </mbox>*
+</CheckBlobConsistencyResponse>
+
+Notes: 
+
+Checks for items that have no blob, blobs that have no item, and items that
+have an incorrect blob size stored in their metadata.  If no volumes are
+specified, all volumes are checked. If no mailboxes are specified, all mailboxes are checked.
+Blob sizes are checked by default. Set checkSize to 0 to avoid the CPU overhead of uncompressing
+compressed blobs in order to calculate size. 
+
+external-flag - boolean indicating if the blob is stored locally in FileBlobStore or in an ExternalStoreManager
+
+Blob consistency checking for external blob stores is supported with limitations.
+
+The volume element is ignored for external stores.
+For external blobs the volumeId is always -1 and the path is the locator used by the external store. 
+Unexpected blob detection is only possible if the external store implementation partitions blobs by mailbox. 
+If reportUsedBlobs is set to 1 a complete list of all blobs used by the mailbox(es) is returned. 
+
+-----------------------------
+
+<ExportAndDeleteItemsRequest [exportDir="path"] [exportFilenamePrefix="name"]>
+  <mbox id="{id}">
+    <item id="{id}" version={ver}/>
+    ...
+  </mbox>
+</ExportAndDeleteItemsRequest>
+
+<ExportAndDeleteItemsResponse/>
+
+Exports the database data for the given items with SELECT INTO OUTFILE
+and deletes the items from the mailbox.  Exported filenames follow the
+pattern <prefix><table_name>.txt.  The files are written sqlExportDir.
+When sqlExportDir is not specified, data is not exported.  Export is
+only supported for MySQL.
+
+-----------------------------
+
+<CreateDistributionListRequest [dynamic="1"]>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateDistributionListRequest>
+
+<CreateDistributionListResponse>
+  <dl name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </dl>
+</CreateDistributionListResponse>
+
+Notes:
+  dynamic: create a dynamic distribution list
+
+  extra attrs:
+      description
+      zimbraNotes
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<GetDistributionListRequest [limit="{limit}"] [offset="{offset}"]
+                            [sortAscending="{sort-ascending}"] [attrs="{req-attrs}"]>
+  <dl by="id|name">...</dl>
+</GetDistributionListRequest>
+
+<GetDistributionListResponse more="{more-flag}" [total="{total}"]>
+  <dl name="{name}" id="{id}" dynamic="1|0">
+    [<owners>
+      <owner id="..." name="..." type="..."/>+
+    </owners>]
+    <dlm>{member}</dlm>+
+    <a n="...">...</a>+
+  </dl>
+</GetDistributionListResponse>
+
+Notes:
+
+    limit - the number of accounts to return (0 is default and means
+            all)
+    offset - the starting offset (0, 25, etc)
+    sort-ascending - whether to sort in ascending order (0/1), 1 is
+                     default
+
+    more-flag = true if more accounts left to return
+    total = total number of distribution lists (not affected by limit/offset)
+
+    req-attrs = comma-seperated list of attrs to return
+    
+    dynamic = whether this is a dynamic distribution list
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<GetAllDistributionListsRequest>
+  [<domain by="id|name">...</domain>]
+</GetAllDistributionListsRequest>
+
+<GetAllDistributionListsResponse>
+  <dl name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </dl>
+</GetAllDistributionListsResponse>
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<AddDistributionListMemberRequest>
+  <id>{value-of-zimbraId}</id>
+  <dlm>{member}</dlm>+
+</AddDistributionListMemberRequest>
+
+<AddDistributionListMemberResponse>
+</AddDistributionListMemeberResponse>
+
+Access: domain admin sufficient
+
+Adding existing members is allowed, even if it may result in this request
+being a no-op because all <dlm> addrs are already members.
+
+-----------------------------
+
+<RemoveDistributionListMemberRequest>
+  <id>{value-of-zimbraId}</id>
+  <dlm>{member}</dlm>+
+  [<account>{name|id}</account>+]
+</RemoveDistributionListMemberRequest>
+
+<RemoveDistributionListMemberResponse>
+</RemoveDistributionListMemberResponse>
+
+Access: domain admin sufficient
+
+Unlike add, remove of a non-existent member causes an exception and no
+modification to the list.
+
+when "account" element is used all aliases as well as main email address of the account will be removed from the DL. 
+Unlike when using "dlm" element, if none of the email addresses that belong to an account referenced in "account" element are 
+members of the DL, no exception is thrown.
+
+-----------------------------
+
+<ModifyDistributionListRequest>
+  <id>{value-of-zimbraId}</id>
+  <a n="...">...</a>+
+</ModifyDistributionListRequest>
+
+
+<ModifyDistributionListResponse>
+  <dl name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </dl>
+</ModifyDistributionListResponse>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<DeleteDistributionListRequest>
+  <id>{value-of-zimbraId}</id>
+</DeleteDistributionListRequest>
+
+<DeleteDistributionListResponse/>
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<AddDistributionListAliasRequest>
+  <id>{value-of-zimbraId}</id>
+  <alias>...</alias>
+</AddAliasRequest>
+
+<AddDistributionListAliasResponse/>
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<RemoveDistributionListAliasRequest>
+  <id>{value-of-zimbraId}</id>
+  <alias>...</alias>
+</RemoveDistributionListAliasRequest>
+
+<RemoveDistributionListAliasResponse/>
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<RenameDistributionListRequest>
+  <id>{value-of-zimbraId}</id>
+  <newName>{new-DL-name}</newName>
+</RenameDistributionListRequest>
+
+<RenameDistributionListResponse>
+  <dl name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </dl>
+</RenameDistributionListResponse>
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<GetDistributionListMembershipRequest>
+  <dl by="id|name">...</dl>
+</GetDistributionListMembershipRequest>
+
+<GetDistributionListMembershipResponse>
+    <dl name="{name}" id="{id}"  via="{via-dl-name}" />+
+</GetDistributionListMembershipResponse>
+
+{via-dl-name} = is present if the dl is a member of the returned list because they are either a direct
+                or indirect member of another list that is a member of the returned list. For example,
+                if a dl is a member of engineering@domain.com, and engineering@domain.com is a member of all@domain.com,
+                then <dl name="all@domain.com" ... via="engineering@domain.com"/> would be returned.
+
+-----------------------------
+
+<GetClusterStatusRequest/>
+
+<GetClusterStatusResponse>
+  <clusterName>{cluster-name}</clusterName>
+  <servers>
+    <server name="{server-name}" status="{1-or-0}"/>*
+  </servers>
+  <services>
+    <service name="{service-name}" state="{state-string-from-console}"  owner="{server-name}" lastOwner="{server-name}" restarts="{number}"/>*
+  </services>
+</GetClusterStatusResponse>
+
+-----------------------------
+
+<FailoverClusterServiceRequest>
+  <service name="{service-name}" newServer="{server-name}"/>
+</FailOverClusterServiceRequest>
+
+<FailoverCluserServiceResponse/>
+
+-----------------------------
+
+<GetVersionInfoRequest/>
+
+<GetVersionInfoResponse>
+  <info version="{version-string}" release="{release-string}" buildDate="{YYYYMMDD-hhmm}" buildHost="{host-name}"/>
+</GetVersionInfoResponse>
+
+-----------------------------
+
+<GetLicenseInfoRequest/>
+
+<GetLicenseInfoResponse>
+  <expiration date={date-YYYYMMDD-format}></expiration>
+</GetLicenseInfoResponse>
+
+-----------------------------
+
+<ConfigureZimletRequest>
+  <content aid="{attachment-id}"/>
+</ConfigureZimletRequest>
+
+<ConfigureZimletResponse/>
+
+-----------------------------
+
+<DeployZimletRequest action="deployAll|deployLocal|status" flush="0|1" synchronous="0|1">
+  <content aid="{attachment-id}"/>
+<DeployZimletRequest/>
+
+<DeployZimletResponse>
+  [<progress server="{server-name}" status="succeeded|failed|pending" error="{error-message}"/>]+
+</DeployZimletResponse>
+
+-----------------------------
+
+# priority is listed in the global list <zimlets> ... </zimlets> only.
+# that's because the priority value is relative to other Zimlets in the list.
+# the same Zimlet may show different priority number depending on what other
+# Zimlets priorities are.  the same Zimlet will show priority 0 if all by itself,
+# or priority 3 if there are three other Zimlets with higher priority.
+
+<GetZimletStatusRequest [attrs="{req-attrs}"]/>
+
+<GetZimletStatusResponse>
+  <zimlets>
+    <zimlet name="{zimlet-name}" priority="int" extension="true/false" status="enabled/disabled"/>
+    ...
+  </zimlets>
+  <cos name="default">
+    <zimlet name="{zimlet-name}" extension="true/false" status="enabled/disabled"/>
+    ...
+  </cos>
+  ...
+</GetZimletStatusResponse>
+
+{req-attrs} = comma-seperated list of attrs to return
+
+-----------------------------
+
+# returns the admin extension addon Zimlets.
+
+<GetAdminExtensionZimletsRequest/>
+
+<GetAdminExtensionZimletsResponse>
+  <zimlets>
+    <zimlet>
+      <zimletContext baseUrl="..."/>
+      <zimlet extension="true" version="{version-string}" name="{zimlet-name}" description="{zimlet-description}">
+        <include>...</include>+
+      </zimlet>
+    </zimlet>
+  </zimlets>
+</GetAdminExtensionZimletsResponse>
+
+-----------------------------
+
+<ModifyZimletRequest>
+  <zimlet name="{zimlet-name}">
+    [<status [value="enabled/disabled"]/>]
+    [<acl [cos="{cos-name}" acl="grant/deny"]/>]
+    [<priority [value="integer"]/>]
+  </zimlet>
+</ModifyZimletRequest>
+
+<ModifyZimletResponse/>
+
+-----------------------------
+
+<UndeployZimletRequest name="{zimlet-name}"/>
+
+<UndeployZimletResponse/>
+
+-----------------------------
+
+<GetZimletRequest>
+  <zimlet name="{zimlet-name}"/>
+</GetZimletRequest>
+
+<GetZimletResponse>
+  <zimlet name="{name}" id="{id}" [hasKeyword="{keyword}"]>
+    <a n="...">...</a>+
+  </zimlet>
+</GetZimletResponse>
+
+-----------------------------
+
+<GetAllZimletsRequest exclude="{exclude}"/>
+
+<GetAllZimletsResponse>
+  <zimlet name="{name}" id="{id}" [hasKeyword="{keyword}"]>
+    <a n="...">...</a>+
+  </zimlet>+
+</GetAllZimletsResponse>
+
+Notes:
+  {exclude} can be "none|extension|mail"
+  when exclude="extension" is specified the response returns only mail Zimlets
+  when exclude="mail" is specified the response returns only admin extensions
+  when exclude = "none" both mail and admin zimlets are returned
+
+  default is "none"
+-----------------------------
+
+<CreateZimletRequest>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateZimletRequest>
+
+<CreateZimletResponse>
+  <zimlet name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </zimlet>
+</CreateZimletResponse>
+
+-----------------------------
+
+<DeleteZimletRequest>
+  <zimlet name="{zimlet-name}"/>
+</DeleteZimletRequest>
+
+<DeleteZimletResponse/>
+
+-----------------------------
+
+<DumpSessionsRequest [listSessions="1"] [groupByAccount="1"]/>
+
+<DumpSessionsResponse activeSessions="count">
+   <soap activeSessions="count" activeAccounts="count">
+   [ if listSessions set:
+      [
+        <s zid="accountId" name="accountName" sid="sessionId" cd="creationDate" ld="lastAccessedDate"
+           SOAP-SPECIFIC-PARAMETERS, e.g. [notify="0" if noNotify is set]...</s>
+      ]
+      OR (depends on groupByAccount setting)
+      [
+         <zid id="accountId" name="accountName">
+            <s sid="sessionId" cd="creationDate" ld="lastAccessedDate/>*
+         </zid>*
+      ]
+   ]
+   </soap>
+
+   <imap>...</imap>
+   <admin>...</admin>
+</DumpSessionsResponse>
+
+If accountName is unvailable for some reason, it will be set to the same as accountId.
+
+-----------------------------
+
+<GetSessionsRequest type="{session-type}" refresh="0|1"
+  [limit="..."] [offset="..."] [sortBy="{sort-by}"]/>
+
+<GetSessionsResponse more="{more-flag}" [total="{total}"]>
+  <s zid="accountId" name="accountName" sid="sessionId" cd="creationDate" ld="lastAccessedDate"/>
+</GetSessionsResponse>
+
+Notes:
+
+GetSessionsRequest
+
+    type = soap|imap|admin
+    refresh = if 1, ignore any cached results and start fresh.
+  limit - the number of sessions to return per page (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+  sortBy - nameAsc, nameDesc, createdAsc, createdDesc, accessedAsc, accessedDesc
+
+    more-flag = true if more sessions left to return
+    total = total number of accounts that matched search (not affected by limit/offset)
+
+
+Access: domain admin sufficient (though a domain admin can't specify "domains" as a type)
+
+-----------------------------
+
+Note: Calendar resource is a special type of Account.  The Create, Delete,
+Modify, Rename, Get, GetAll, and Search operations are very similar to
+those of Account.
+
+
+<CreateCalendarResourceRequest>
+  <name>...</name>
+  <password>...</password>*
+  <a n="attr-name">...</a>+
+</CreateCalendarResourceRequest>
+
+<CreateCalendarResourceResponse>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>
+</CreateCalendarResourceResponse>
+
+Notes:
+
+  name must include domain (uid@name), and domain specified in name must exist
+
+  a calendar resource does not have a password (you can't login as a resource)
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<DeleteCalendarResourceRequest>
+  <id>{value-of-zimbraId}</id>
+</DeleteCalendarResourceRequest>
+
+<DeleteCalendarResourceResponse/>
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the resource's home server
+
+-----------------------------
+
+<ModifyCalendarResourceRequest>
+  <id>{value-of-zimbraId}</id>
+  <a n="...">...</a>+
+</ModifyCalendarResourceRequest>
+
+<ModifyCalendarResourceResponse>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>
+</ModifyCalendarResourceResponse>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+Access: domain admin sufficient. limited set of attributes that can be updated by a domain admin.
+
+   note: this request is by default proxied to the resource's home server
+
+-----------------------------
+
+<RenameCalendarResourceRequest>
+  <id>{value-of-zimbraId}</id>
+  <newName>{new-resource-name}</newName>
+</RenameCalendarResourceRequest>
+
+<RenameCalendarResourceResponse>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>
+</RenameCalendarResourceResponse>
+
+Access: domain admin sufficient
+
+   note: this request is by default proxied to the resource's home server
+
+-----------------------------
+
+<GetCalendarResourceRequest [applyCos="{apply-cos}"] [attrs="{req-attrs}"]>
+  <calresource by="id|name|foreignPrincipal">...</calresource>
+</GetCalendarResourceRequest>
+
+<GetCalendarResourceResponse>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>
+</GetCalendarResourceResponse>
+
+{apply-cos} = 0|1 (1 is default)
+
+ if {apply-cos} is 1, then COS rules apply and unset attrs on the calendar resource will get their value from the COS.
+
+ if {apply-cos} is 0, then only attributes directly set on the calendar resource will be returned
+
+{req-attrs} = comma-seperated list of attrs to return
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<GetAllCalendarResourcesRequest>
+  [<domain by="id|name">...</domain>]
+  [<server by="id|name">...</server>]
+<GetAllCalendarResourcesRequest/>
+
+<GetAllCalendarResourcesResponse>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>
+</GetAllCalendarResourcesResponse>
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<SearchCalendarResourcesRequest [limit="..."] [offset="..."] [domain="{domain-name}"] [applyCos="{apply-cos}"]
+         [attrs="a1,a2,a3"] [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] >
+  <searchFilter> ... </searchFilter>
+</SearchCalendarResourcesRequest>
+
+<SearchCalendarResourcesResponse more="{more-flag}" [searchTotal="{search-total}"]>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>
+</SearchCalendarResourcesResponse>
+
+Notes:
+SearchCalendarResourcesRequest
+  limit - the number of calendar resources to return (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+  domain - the domain name to limit the search to
+  applyCos - whether or not (0/1) to apply the COS policy to calendar resource. specify 0 if only
+             requesting attrs that aren't inherited from COS
+  attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
+  sortBy - name of attribute to sort on. default is the calendar resource name.
+  sortAscending - whether to sort in ascending order (0/1), 1 is default
+    more-flag = true if more calendar resources left to return
+    search-total = total number of calendar resources that matched search (not affected by limit/offset)
+
+searchFilter: See SearchCalendarResourcesRequest section in soap.txt.
+
+Access: domain admin sufficient
+
+-----------------------------
+
+Get a count of all the mail queues by counting the number of files in
+the queue directories.  Note that the admin server waits for queue
+counting to complete before responding - client should invoke requests
+for different servers in parallel.
+
+<GetMailQueueInfoRequest>
+  <server name="{mta-server}"/>
+</GetMailQueueInfoRequest>
+
+<GetMailQueueInfoResponse/>
+  <server name="{mta-server}">
+    <queue name="deferred" n="{N}"/>
+    <queue name="incoming" n="{N}"/>
+    <queue name="active" n="{N}"/>
+    <queue name="hold" n="{N}"/>
+    <queue name="corrupt" n="{N}"/>
+  </server>
+</GetMailQueueInfoResponse>
+
+-----------------------------
+
+Summarize and/or search a particular mail queue on a particular
+server.  The admin SOAP server initiates a MTA queue scan (via ssh)
+and then caches the result of the queue scan.  To force a queue scan,
+specify scan=1 in the request.
+
+The response has two parts.
+
+- <qs> elements summarize queue by various types of data (sender
+  addresss, recipient domain, etc).  Only the deferred queue has error
+  summary type.
+
+- <qi> elements list the various queue items that match the requested
+  query.
+
+The stale-flag in the response means that since the scan, some queue
+action was done and the data being presented is now stale.  This
+allows us to let the user dictate when to do a queue scan.
+
+The scan-flag in the response indicates that the server has not
+completed scanning the MTA queue, and that this scan is in progress,
+and the client should ask again in a little while.
+
+The more-flag in the response indicates that more qi's are available
+past the limit specified in the request.
+
+<GetMailQueueRequest>
+  <server name="{mta-server}">
+    <queue name="{queue-name}" [scan="{0,1}"] [wait={seconds}]>
+      <query [offset={offset}] [limit={limit}]>
+          <field name="{field1}">
+              <match value="{value1}"/>     # OR's all values
+              <match value="{value2}"/>
+              <match value="{value3}"/>
+          </field>
+          <field name="{field2}">           # AND's all fields
+              <match value="{value3}"/>
+              <match value="{value5}"/>
+          </field>
+      </query>
+    </queue>
+  </server>
+<GetMailQueueRequest>
+
+<GetMailQueueResponse>
+  <server name="{mta-server}">
+    <queue name="{queue-name}" stale="{stale-flag}" time="{scan-time}" more="{more-flag}" scan="{scan-flag} total="{total}">
+
+      <qs type="reason|to|from|todomain|fromdomain|addr|host">
+        <qsi n="{count}" t="{text-for-item}">+
+      </qs>+
+
+      <qi id="{id}" from="{sender}" to="{recipients-comma-seperated}"
+          time="{arrival-time}" filter="{content-filter}"
+          addr="{origin-ip-address} host="{origin-host-name}"/>+
+    </queue>
+  </server>
+</GetMailQueueResponse>
+
+Example of qs node is:
+
+   <qs type="fromdomain">
+      <item n="10" t="yahoo.com"/>
+      <item n="10" t="google.com"/>
+   </qs>
+
+   <qs type="reason">
+      <item n="10" t="connect to 10.10.20.40 failed"/>
+      <item n="10" t="connect to 10.10.20.50 timed out"/>
+   </qs>
+
+Example of qi nodes:
+
+   <qi id="ABCDEF1234"
+       from="jack@example.com"
+       to="foo@example.com,bar@example.com"
+       time="1142622329"  XXX - should this be in milliseconds?
+       filter="smtp-amavis:[127.0.0.1]:10024"
+       addr="10.10.130.27"
+       host="phillip.liquidsys.com">
+
+-----------------------------
+
+Command to act on invidual queue files.  This proxies through to
+postsuper.  list-of-ids can be ALL.
+
+<MailQueueActionRequest>
+  <server name="{mta-server}">
+     <queue name="{queue-name}">
+       <action op="delete|hold|release|requeue"/ by="id|query">
+               {list-of-ids|}
+          ||
+               {<query> # just like GetMailQueue
+                  <field name="name">
+                    <match value="val"/>
+                  </field>
+                </query>}
+       </action>
+     </queue>
+  </server>
+</MailQueueActionRequest>
+
+<MailQueueActionResponse>
+  - response is same as GetMailQueueResponse above.
+</MailQueueActionResponse>
+
+-----------------------------
+
+Command to invoke postqueue -f.  All queues cached in the server are
+are stale after invoking this because this is a global operation to
+all the queues in a given server.
+
+<MailQueueFlushRequest>
+  <server name="{mta-server}">
+</MailQueueFlushRequest>
+
+<MailQueueFlushResponse/>
+
+-----------------------------
+
+[Deprecated since 7.0]
+
+Initializes the Notebook account used for public folder and templates.
+
+{template-dir} is a directory on the server that contains the Wiki
+templates.  {template-folder} is a folder in the Mailbox that
+the templates are being imported to.  The default value of {template-folder}
+is "Template" folder.
+
+When the element template is present in the request,
+the server will populate the template directory of the account
+with the template files in the directory.
+
+If the optional element domain is present, it will create the domain
+level wiki account used for public wiki folder for the domain.
+
+If the optional element account is present, the value will be used to
+create the account, and then sets either zimbraNotebookDefaultAccount
+or zimbraNotebookDomainAccount LDAP attribute.
+
+<InitNotebookRequest>
+  [<template dest="{template-folder}">{template-dir}</template>]
+  [<name>...</name>]
+  [<password>...</password>]
+  [<domain by="id|name">...</domain>]
+</InitNotebookRequest>
+
+<InitNotebookResponse/>
+
+-----------------------------
+
+<CreateDataSourceRequest/>
+  <id>{account-id}</id>
+  <dataSource type="pop3" name="{data-source-name}">
+   <a n="zimbraDataSourceName">My POP3 Account</a>
+   <a n="zimbraDataSourceIsEnabled">TRUE</a>
+   <a n="zimbraDataSourceHost">pop.myisp.com</a>
+   <a n="zimbraDataSourcePort">110</a>
+   <a n="zimbraDataSourceUsername">mylogin</a>
+   <a n="zimbraDataSourcePassword">mypassword</a>
+   <a n="zimbraDataSourceFolderId">{folder-id}</a>
+  </dataSource>
+</CreateDataSourceRequest>
+
+<CreateDataSourceResponse>
+  <dataSource type="{type}" name="..." id="...">
+   <a n="...">{value}</a>+
+  </dataSource>
+</CreateDataSourceResponse>
+
+Creates a data source that imports mail items into the specified folder.  Currently
+the only type supported is pop3.
+
+every attribute value is returned except password.
+
+   note: this request is by default proxied to the account's home server
+
+---------------------------
+
+<GetDataSourcesRequest>
+  <id>{account-id}</id>
+</GetDataSourcesRequest>
+
+<GetDataSourcesResponse>
+
+  <dataSource type="{type}" name="..." id="...">
+   <a n="...">{value}</a>+
+  </dataSource>
+  ...
+</GetDataSourcesResponse>
+
+Returns all data sources defined for the given mailbox.  For each data source,
+every attribute value is returned except password.
+
+   note: this request is by default proxied to the account's home server
+
+---------------------------
+
+<ModifyDataSourceRequest>
+  <id>{account-id}</id>
+  <dataSource id="{id}">
+   <a n="...">{value}</a>+
+  </dataSource>
+</ModifyDataSourceRequest>
+
+<ModifyDataSourceResponse/>
+
+Changes attributes of the given data source.  Only the attributes specified in the request
+are modified. To change the name, specify "zimbraDataSourceName" as an attribute.
+
+   note: this request is by default proxied to the account's home server
+
+---------------------------
+
+<DeleteDataSourceRequest>
+  <id>{account-id}</id>
+  <dataSource id="{id}"/>
+</DeleteDataSourceRequest>
+
+<DeleteDataSourceResponse/>
+
+Deletes the given data source.
+
+   note: this request is by default proxied to the account's home server
+
+---------------------------
+
+<FixCalendarTZRequest
+  [sync="0|1"]      // default 0
+                    // 0 = command returns right away
+                    // 1 = command blocks until processing finishes
+  [after="millis"]  // fix appts/tasks that have instances after this time
+                    // default = January 1, 2008 00:00:00 in GMT+13:00 timezone.
+>
+  <account name="<email>|all"/>+  // list of email addresses, or "all" for all
+                                  // accounts on this mailbox server
+  <tzfixup ... />   // fixup rules
+</FixCalendarTZRequest>
+
+<FixCalendarTZResponse/>
+
+Fix timezone definitions in appointments and tasks to reflect changes in
+daylight savings time rules in various timezones.
+
+---------------------------
+
+The WaitSet APIs are now in the urn:zimbraMail namespace, and are documented
+in soap-waitset.txt
+
+***See soap-waitset.txt for WaitSet API documentation***
+
+---------------------------
+
+# returns admin saved searches.
+
+<GetAdminSavedSearchesRequest>
+  <search name="{search-name}"/>*
+</GetAdminSavedSearchesRequest>
+
+  If no <search> is present server will return all saved searches.
+
+<GetAdminSavedSearchesResponse>
+  <search name="{search-name}">{{search-query}}</search>*
+</GetAdminSavedSearchesResponse>
+
+---------------------------
+
+# modifies admin saved searches.
+
+# returns the admin saved searches.
+<ModifyAdminSavedSearchesRequest>
+  {<search name="{search-name}">{search-query}</search>}+
+</ModifyAdminSavedSearchesRequest>
+
+  If {search-query} is empty => delete the search if it exists
+  If {search-name} already exists => replace with new {search-query}
+  If {search-name} does not exist => save as a new search
+
+<ModifyAdminSavedSearchesResponse/>
+
+-----------------------------
+
+# Changes logging settings on a per-account basis.
+
+<AddAccountLoggerRequest>
+  <account by="id|name">...</account>
+  <logger category="{category-name | all}" level="debug|info|warn|error"/>
+</AddAccountLoggerRequest>
+
+<AddAccountLoggerResponse>
+  <logger category="{category-name}" level="debug|info|warn|error"/>+
+</AddAccountLoggerResponse>
+
+  Adds a custom logger for the given account and log category.  The logger
+  stays in effect only during the lifetime of the current server instance.
+  If the request is sent to a server other than the one that the account
+  resides on, it is proxied to the correct server.
+
+  If the category is "all", adds a custom logger for every category
+  for the given user.
+
+<RemoveAccountLoggerRequest>
+  [<account by="id|name">...</account>]
+  [<logger category="{category-name}"/>]
+</RemoveAccountLoggerRequest>
+
+<RemoveAccountLoggerResponse/>
+
+  Removes one or more custom loggers.  If both the account and logger are
+  specified, removes the given account logger if it exists.  If only the account
+  is specified or the category is "all", removes all custom loggers from that
+  account.  If only the logger is specified, removes that custom logger from all
+  accounts.  If neither element is specified, removes all custom loggers from
+  all accounts on the server that receives the request.
+
+
+<GetAccountLoggersRequest>
+  <account by="id|name">...</account>
+</GetAccountLoggersRequest>
+
+<GetAccountLoggersResponse>
+  <logger category="{category-name} level="debug|info|warn|error"/>*
+</GetAccountLoggersResponse>
+
+  Returns custom loggers created for the given account since the
+  last server start.  If the request is sent to a server other than the
+  one that the account resides on, it is proxied to the correct server.
+
+
+<GetAllAccountLoggersRequest/>
+
+<GetAllAccountLoggersResponse>
+  <accountLogger id="{account-id}" name="{account-name}">
+    <logger category="{category-name} level="debug|info|warn|error"/>+
+  </accountLogger>*
+</GetAllAccountLoggersResponse>
+
+  Returns all account loggers that have been created on the given server
+  since the last server start.
+
+-----------------------------
+
+# Check existence of one or more directories and optionally create them.
+
+<CheckDirectoryRequest>
+  <directory path="{path}" [create="0|1"]/>+
+</CheckDirectoryRequest>
+
+  path = full path to the directory
+  create = default 0; if 1, create the directory if it doesn't exist
+
+<CheckDirectoryResponse>
+  <directory path="{path}"			// same path as in the request
+             exists="1|0"			// path exists, or not
+             isDirectory="1|0"		// path is a directory, or not
+             readable="1|0"			// path is readable, or not
+             writable="1|0"/>+		// path is writable, or not
+</CheckDirectoryResponse>
+
+-----------------------------
+
+# Flush memory cache for specified LDAP or directory scan type/entries
+
+<FlushCacheRequest>
+  <cache type="skin|locale|account|cos|domain|server|zimlet" [allServers="1|0"]>
+    [<entry by={id|name}>value</entry>+]
+  </cache>
+</FlushCacheRequest>
+
+  allServers:
+      0 (default) = flush cache only on the local server
+      1           = flush cache on all servers (this can take on systems with lots of servers)
+
+
+  Directory scan caches(source of data is on local disk of the server):
+      skin|locale
+
+  LDAP caches(source of data is LDAP):
+      account|cos|domain|server|zimlet
+
+  For LDAP caches, one or more optional <entry> can be specified.
+  If <entry>(s) are specified, only the specified entries will be flushed.
+  If no <entry> is given, all enties of the type will be flushed from cache.
+
+  type can contain a combination of skin, locale and zimlet. E.g. type='skin,locale,zimlet' or type='zimletskin'
+<FlushCacheResponse/>
+
+
+-----------------------------
+
+# count number of accounts by cos in a domain,
+
+<CountAccountRequest>
+    <domain by="{domain-by}">...</domain>
+</CountAccountRequest>
+
+
+<CountAccountResponse>
+    <cos id="{cos-id}" name="cos-name">{account-count}</cos>+
+</CountAccountResponse>
+
+    Note, it doesn't include any account with zimbraIsSystemResource=TRUE,
+    nor does it include any calendar resources.
+
+
+
+e.g.
+<CountAccountResponse>
+   <cos id="044382d5-f2c5-4265-9a1a-ac255fce729f" name="basic">123</cos>
+   <cos id="723d7cf6-8d76-443a-b5f3-c56563a8b4c7" name="standard">456</cos>
+   <cos id="35c6e603-123a-4a08-b485-b00e1f6d1663" name="premium">789</cos>
+   <cos id="35c6e603-123a-4a08-b485-b00e1f6d1663" name="default">55</cos>
+</CountAccountResponse>
+
+
+-----------------------------
+
+# count number of objects.  
+# Returns number of objects of requested type.
+
+<CountObjectsRequest type="{count-objects-type}">
+    [<domain by="{domain-by}">...</domain>]
+    [<ucservice by="{ucservice-by}">...</ucservice>]
+</CountObjectsRequest>
+
+{count-objects-type} = userAccount | 
+                       account | 
+                       alias | 
+                       dl |
+                       calresource |
+                       domain |
+                       cos | 
+                       server |
+                       accountOnUCService |
+                       cosOnUCService |
+                       domainOnUCService
+
+<CountObjectsResponse num="{result}" type="{count-objects-type}">
+</CountObjectsResponse>
+
+Note: For account/alias/dl, if a <domain> is specified, only entries on the 
+      specified domain are counted.  If no domain is specified, entries on 
+      all domains are counted.
+      
+      For accountOnUCService/cosOnUCService/domainOnUCService, <ucservice> is required, 
+      and <domain> cannot be specified.
+
+---------------------------------------------------------------------------
+# Get server's network interfaces. Returns IP  addresses and net masks
+# This call will use zmrcd to call /opt/zimbra/libexec/zmserverips
+
+<GetServerNIfsRequest [type="{ipv4|ipv6|both}"]>
+ <server by="id|name|serviceHostname">...</server>
+</GetServerNIfsRequest>
+
+<GetServerNIfsResponse>
+  <ni>
+  <a n="addr" [type="{ipv4|ipv6}"]>ip address</a>
+  <a n="mask">network mask</a>
+  </ni>*
+</GetServerNIfsResponse>
+
+---------------------------------------------------------------------------
+
+# free/busy providers
+
+<GetAllFreeBusyProvidersRequest/>
+
+<GetAllFreeBusyProvidersResponse>
+  [<provider name="{provider-name}" propagate="{1|0}" queue="{location-of-the-queue}" prefix="{prefix-used-in-zimbraForeignPrincipal}" start="{seconds-since-epoch of free/busy cache start time}" end="{seconds-since-epoch of free/busy cache end time}"/>]+
+</GetAllFreeBusyProvidersResponse>
+
+---------------------------------------------------------------------------
+
+# if the optional element <provider/> is present in the request, the response
+# contains the requested provider only.  if no provider is supplied in the
+# request, the response contains all the providers.
+
+<GetFreeBusyQueueInfoRequest>
+  [<provider name="{provider-name}"/>]
+</GetFreeBusyQueueInfoRequest>
+
+<GetFreeBusyQueueInfoResponse>
+  [
+    <provider name="{provider-name}">
+      [<account id="{account-id}"/>]+
+    </provider>
+  ]+
+</GetFreeBusyQueueInfoResponse>
+
+---------------------------------------------------------------------------
+
+# the request must include either <domain/> or <account/>
+# when <domain/> is specified in the request, the server will push
+# the free/busy for all the accounts in the domain to the configured
+# free/busy providers.
+# when <account/> list is specified, the server will push the free/busy
+# for the listed accounts to the providers.
+
+<PushFreeBusyRequest>
+  [<domain name="{comma separated list of domains}"/>]
+  [<account id="{account-id}"/>]+
+</PushFreeBusyRequest>
+
+<PushFreeBusyResponse/>
+
+----------------------------------------
+
+# purges the queue for the given freebusy provider on the current host.
+
+<PurgeFreeBusyQueueRequest>
+  [<provider name="{provider-name}"/>]
+</PurgeFreeBusyQueueRequest>
+
+<PurgeFreeBusyQueueResponse/>
+
+----------------------------------------
+
+<CheckExchangeAuthRequest>
+  <auth url="{url-to-exchange-server}" user="{exchange-user-name}" pass="{exchange-password}" scheme="basic|form" [type="webdav|ews"]/>
+</CheckExchangeAuthRequest>
+
+<CheckExchangeAuthResponse>
+  <code>...</code>
+  <message>...</message>*
+</CheckExchangeAuthResponse>
+
+----------------------------------------
+
+<GetAllLocalesRequest/>
+
+<GetAllLocalesResponse>
+  <locale id="en_US" name="English (United States)"/>
+  ...
+</GetAllLocalesResponse>
+
+Returns all locales defined in the system.  This is the same list returned by
+java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
+
+----------------------------------------
+
+<PurgeAccountCalendarCacheRequest id="{value-of-zimbraId}"/>
+
+<PurgeAccountCalendarCacheRequest/>
+
+Access: domain admin sufficient
+
+   Purge the calendar cache for an account.
+   note: this request is by default proxied to the account's home server
+
+----------------------------------------
+
+<GetShareInfoRequest>
+    [<grantee type="{grantee_type}" [id="{grantee-id}"] [name="{grantee-name}"]/>]
+    <owner by="{owner-by}">...</owner>
+</GetShareInfoRequest>
+
+Iterate through all folders of the owner's mailbox and return shares that match
+grantees specified by the <grantee> specifier.
+
+e.g.
+
+<GetShareInfoRequest>
+    <grantee name="dl@test.com"/>]
+    <owner by="name">user1@test.com</owner>
+</GetShareInfoRequest>
+
+returns all shares owned by user1@test.com that are shared with dl@test.com.
+
+<GetShareInfoResponse>
+    [<share ownerId="{owner-id}" ownerEmail={owner-email} [ownerName="{owner-display-name}"]
+            folderId="{folder-id}" folderPath="{fully-qualified-path}"
+            view="{default-type}" rights="{rights}"
+            granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}" [granteeDisplayName="{grantee-display-name}">]]+
+</GetShareInfoResponse>
+
+
+----------------------------
+
+<CreateGalSyncAccountRequest name="{identifier}" domain="{domain-name}" type="zimbra|ldap" server="{server}" [folder="{contact-folder-name}"] >
+  <account by="id|name">...</account>
+  <a n="attr-name">...</a>+
+</CreateGalSyncAccountRequest>
+
+<CreateGalSyncAccountResponse>
+  <name>...</name>
+  <account name="{name}" id="{id}"/>
+</CreateGalSyncAccountResponse>
+
+Notes:
+
+  - if the referenced account is not found it will be created.
+    - the identifier used in name attr is used for SyncGal and SearchGal.
+    - name attribute is for the name of the data source.
+    - if folder attr is not present it'll default to Contacts folder.
+    - passed in attrs in <a/> are used to initialize the gal data source.
+  - server is a required parameter and specifies the mailhost on which this account resides.  
+
+
+example for creating gal sync account for Zimbra LDAP server.
+
+    <CreateGalSyncAccountRequest name="zimbra" domain="mydomain.com" type="zimbra" server="mailhost.mydomain.com">
+      <account by="name">gal@mydomain.com</account>
+    </CreateGalSyncAccountRequest>
+
+example for creating domain gal sync account.
+
+    <CreateGalSyncAccountRequest name="mydomain" domain="mydomain.com" type="ldap" server="mailhost.mydomain.com">
+      <account by="name">gal@mydomain.com</account>
+      <a n="zimbraGalSyncLdapURL">ldap://ldap.mydomain.com</a>
+      <a n="zimbraGalSyncLdapStartTlsEnabled">TRUE</a>
+      <a n="zimbraGalSyncLdapSearchBase">cn=users</a>
+      <a n="zimbraGalSyncLdapAuthMech">simple</a>
+      <a n="zimbraGalSyncLdapBindDn">uid=admin,cn=users</a>
+      <a n="zimbraGalSyncLdapBindPassword">password</a>
+      <a n="zimbraGalSyncLdapFilter">(&amp;(mail=*)(objectClass=user))</a>
+      <a n="zimbraGalLdapAttrMap">whenChanged,modifyTimeStamp=modifyTimeStamp</a>
+      <a n="zimbraGalLdapAttrMap">whenCreated,createTimeStamp=createTimeStamp</a>
+      <a n="zimbraGalLdapAttrMap">zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16</a>
+    </CreateGalSyncAccountRequest>
+
+Access: domain admin sufficient
+
+----------------------------
+
+<AddGalSyncDataSourceRequest name="{identifier}" domain="{domain-name}" type="zimbra|ldap" [folder="{contact-folder-name}"] >
+  <account by="id|name">...</account>
+  <a n="attr-name">...</a>+
+</AddGalSyncDataSourceRequest>
+
+<AddGalSyncDataSourceResponse>
+  <account name="{name}" id="{id}"/>
+</AddGalSyncDataSourceResponse>
+
+Notes: 
+  - Add additional data sources to the existing galsync account.
+  - non-existing account causes an exception.
+  - name attribute is for the name of the data source.
+  
+Access: domain admin sufficient
+
+----------------------------
+
+<SyncGalAccountRequest>
+  <account id="{account-id}">
+    <datasource by="id|name" [fullSync="true|false"] [reset="true"] />+
+  </account>+
+</SyncGalAccountRequest>
+
+<SyncGalAccountResponse/>
+
+Notes:
+
+    If fullSync is set to false (or unset) the default behavior is trickle sync
+    which will pull in any new contacts or modified contacts since last sync.
+
+    If fullSync is set to true, then the server will go through all the contacts
+    that appear in GAL, and resolve deleted contacts in addition to new or
+    modified ones.
+
+    If reset attribute is set, then all the contacts will be populated again,
+    regardless of the status since last sync.  Reset needs to be done when there
+    is a significant change in the configuration, such as filter, attribute map,
+    or search base.
+
+----------------------------
+
+<DeleteGalSyncAccountRequest>
+  <account by="id|name">...</account>
+</DeleteGalSyncAccountRequest>
+
+<DeleteGalSyncAccountResponse/>
+
+Remove its zimbraGalAccountId from the domain, then deletes the account.
+
+----------------------------
+
+<ReloadMemcachedClientConfigRequest/>
+
+<ReloadMemcachedClientConfigResponse/>
+
+Reloads the memcached client configuration on this server.  Memcached client layer
+is reinitialized accordingly.  Call this command after updating memcached server list,
+for example.
+
+----------------------------
+
+<GetMemcachedClientConfigRequest/>
+
+<GetMemcachedClientConfigResponse
+  serverList="..."             // comma-separated list of host:port for memcached servers
+  hashAlgorithm="..."          // KETAMA_HASH, etc.
+  binaryProtocol="1|0"         // whether memcached binary protocol is in use
+  defaultExpirySeconds="..."   // default entry expiry in seconds
+  defaultTimeoutMillis="..."   // default timeout in milliseconds
+/>
+
+Returns the memcached client configuration on a mailbox server.
+
+----------------------------
+
+<MigrateAccountRequest>
+  <migrate action="bug72174|bug78254|wiki|contactGroup" id="{zimbraId-of-account}"/>
+</MigrateAccountRequest>
+
+<MigrateAccountResponse/>
+
+----------------------------
+
+<NoOpRequest/>
+
+<NoOpResponse/>
+
+A request that does nothing and always returns nothing. Used to keep an admin session alive.
+
+----------------------------
+
+<GetAttributeInfoRequest [attrs="{attrs-to-return}"] [entryTypes="{entry-types}"]/>
+
+{attrs-to-return} = comma-seperated list of attrs to return
+
+{entry-type} = comma-seperated list of entry types.  Attributes on the specified entry types will be returned.
+               valid entry types:
+                   account,alias,distributionList,cos,globalConfig,domain,server,mimeEntry,zimletEntry,
+                   calendarResource,identity,dataSource,pop3DataSource,imapDataSource,rssDataSource,
+                   liveDataSource,galDataSource,signature,xmppComponent,aclTarget
+
+Only one of attrs or entryTypes can be specified.  
+If both are specified, INVALID_REQUEST will be thrown.
+If neither is specified, all attributes will be returned.
+
+
+<GetAttributeInfoResponse>
+    <a n="..." desc="..."/>+
+</GetAttributeInfoResponse>
+
+----------------------------
+<AutoProvAccountRequest>
+    <domain by="name|id">...</domain>  
+    <principal by="dn|name">...</principal>
+    [<password>...</password>]
+</AutoProvAccountRequest>
+
+
+<AutoProvAccountResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>
+</AutoProvAccountResponse>
+
+----------------------------
+
+<SearchAutoProvDirectoryRequest [limit="..."] [offset="..."] [maxResults="..."] 
+    [attrs="a1,a2,a3"] [refresh="1"] keyAttr="{key-attr}">
+  <domain by="name|id">...</domain>  
+  [<name>...</name>]  
+  [<query>...</query>]
+</SearchDirectoryRequest>
+
+<SearchAutoProvDirectoryResponse more="{more-flag}" [searchTotal="{search-total}"]>
+  <entry dn="...">
+    <key>...</key>+
+    <a n="...">...</a>+
+  </entry>*
+</SearchAutoProvDirectoryResponse>
+
+Notes:
+  <name>  - name to fill the auto provisioning search template configured on the domain 
+  <query> - query string should be an LDAP-style filter string (RFC 2254)
+  only one of <name> or <query> can be provided.  If neither is provided, the configured 
+  search filter for auto provision will be used.
+    
+  maxResults = maximum results that the backend will attempt to fetch from the directory before
+  returning a account.TOO_MANY_SEARCH_RESULTS error.
+
+  limit    - the number of accounts to return per page (0 is default and means all)
+  offset   - the starting offset (0, 25, etc)
+  domain   - the Zimbra domain name
+  keyAttr  - name of attribute for the key.  Value of the key attribute will appear in the 
+             <key> element in the response.  It is recommended to pick a key attribute that 
+             is single-valued and can unique identify an entry in the external auto provision 
+             directory.  If the key attribute contains multiple values then multiple <key> 
+             elements will appear in the response. 
+             Entries are returned in ascending key order.
+  attrs    - comma-seperated list of attrs to return
+  refresh  - whether to always re-search in LDAP even when cached entries are available.  0 is default.
+  
+  more-flag = true if more entries left to return
+  search-total = total number of accounts that matched search (not affected by limit/offset)
+
+-----------------------------
+<AutoProvTaskControlRequest action="start|status|stop">
+</AutoProvTaskControlRequest>
+
+<AutoProvTaskControlResponse status="started|running|idle|stopped">
+</AutoProvTaskControlResponse>
+
+Under normal situations, the EAGER auto provisioning task(thread) should be started/stopped 
+automatically by the server when appropriate.  The task should be running when 
+zimbraAutoProvPollingInterval is not 0 and zimbraAutoProvScheduledDomains is not empty.  
+The task should be stopped otherwise.
+ 
+This API is to manually force start/stop or query status of the EAGER auto provisioning task. 
+It is only for diagnosis purpose and should not be used under normal situations.
+
+  action start - start EAGER auto provisioning task
+    status started - success
+    status running - EAGER auto provisioning task is already running
+  action status - show EAGER auto provisioning task status
+    status running - EAGER auto provisioning task is running
+    status idle - EAGER auto provisioning task is not running
+  action stop - stop EAGER auto provisioning task
+    status stopped - success
+    status idle - EAGER auto provisioning task is not running
+
+   
+-----------------------------
+
+The system retention policy SOAP APIs allow the administrator to edit
+named system retention policies that users can apply to folders and tags.
+See soap.txt for more details about the <retentionPolicy> element structure.
+
+<GetSystemRetentionPolicyRequest>
+  [<cos by="id|name">...</cos>]
+</GetSystemRetentionPolicyRequest>
+
+<GetSystemRetentionPolicyResponse>
+  <retentionPolicy xmlns="urn:zimbraMail">
+    <keep>
+      <policy id="{id}" name="{name}" type="system" lifetime="{duration}"/>*
+    </keep>
+    <purge>
+      <policy id="{id}" name="{name}" type="system" lifetime="{duration}"/>*
+    </purge>
+  </retentionPolicy>
+</GetSystemRetentionPolicyResponse>
+
+
+<CreateSystemRetentionPolicyRequest>
+  [<cos by="id|name">...</cos>]
+  <keep>
+    <policy name="{name}" lifetime="{duration}" xmlns="urn:zimbraMail"/>
+  </keep> |
+  <purge>
+    <policy name="{name}" lifetime="{duration}" xmlns="urn:zimbraMail"/>
+  </purge>
+</CreateSystemRetentionPolicyRequest>
+
+<CreateSystemRetentionPolicyResponse>
+  <policy id="{id}" name="{name}" type="system" lifetime="{duration}" xmlns="urn:zimbraMail"/>
+</CreateSystemRetentionPolicyResponse>
+
+
+<ModifySystemRetentionPolicyRequest>
+  [<cos by="id|name">...</cos>]
+  <policy id="{id}" [name="{name}"] [lifetime="{duration}"] xmlns="urn:zimbraMail"/>
+</ModifySystemRetentionPolicyRequest>
+
+<ModifySystemRetentionPolicyResponse>
+  <policy id="{id}" type="system" name="{name}" lifetime="{interval"} xmlns="urn:zimbraMail"/>
+</ModifySystemRetentionPolicyResponse>
+
+
+<DeleteSystemRetentionPolicyRequest>
+  [<cos by="id|name">...</cos>]
+  <policy id="{id}" xmlns="urn:zimbraMail"/>
+</DeleteSystemRetentionPolicyRequest>
+
+<DeleteSystemRetentionPolicyResponse/>
+
+If "cos" element is specified the opeartion create/modify/get/delete gets applied on Cos otherwise globalConfig.
+
+-----------------------------
+<ClearCookieRequest>
+    <cookie name="{cookie-name}"/>+
+</ClearCookieRequest>
+
+<ClearCookieResponse/>
+
+-----------------------------
+
+<CreateUCServiceRequest>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateUCServiceRequest>
+
+<CreateUCServiceResponse>
+  <ucservice name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </ucservice>
+</CreateUCServiceResponse>
+
+-----------------------------
+
+<GetUCServiceRequest [attrs="{req-attrs}"]>
+  <ucservice by="id|name">...</ucservice>
+</GetUCServiceRequest>
+
+<GetUCServiceResponse>
+  <ucservice name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </ucservice>
+</GetUCServiceResponse>
+
+{req-attrs} = comma-seperated list of attrs to return
+
+-----------------------------
+
+<GetAllUCServicesRequest/>
+
+<GetAllUCServicesResponse>
+  <ucservice name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </ucservice>+
+</GetAllUCServicesResponse>
+
+-----------------------------
+
+<ModifyUCServiceRequest>
+  <id>{value-of-zimbraId}</id>
+  <a n="...">...</a>+
+</ModifyUCServiceRequest>
+
+<ModifyUCServiceResponse>
+  <ucservice name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </ucservice>
+</ModifyUCServiceResponse>]
+
+-----------------------------
+
+<DeleteUCServiceRequest>
+  <id>{value-of-zimbraId}</id>
+</DeleteUCServiceRequest>
+
+<DeleteUCServiceResponse/>
+
+----------------------------
+
+<RenameUCServiceRequest>
+  <id>{value-of-zimbraId}</id>
+  <newName>{new-name}</newName>
+</RenameUCServiceRequest>
+
+<RenameUCServiceResponse>
+  <ucservice name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </ucservice>
+<RenameUCServiceResponse />
+
+-----------------------------
+
+<VerifyStoreManagerRequest [num="{numberOfBlobs}"] [fileSize="{fileSize}"]/>
+
+<VerifyStoreManagerResponse linkTime="{linkTime}" incomingTime="{incomingTime}" fetchTime="{fetchTime}"
+   stageTime="{stageTime}" deleteTime="{deleteTime}" storeManagerClass="{storeManagerClass}"/>
+
+Verify basic StoreManager functionality and performance. To be used by integrators during StoreManager development.
+
+numberOfBlobs - number of blobs to create. Defaults to 1000 if not specified.
+fileSize - size of each blob file in bytes. Defaults to 1024 if not specified. 
+
+All times reported in response are the total elapsed time for all blobs. 
+
+storeManagerClass - Java class name for the currently deployed StoreManager implementation
+incomingTime - time (ms) for the store incoming operation
+stageTime - time (ms) for the stage operation
+linkTime - time (ms) for the link operation
+fetchTime - time (ms) for the fetch operation
+deleteTime - time (ms) for the delete operation
+
+-----------------------------
+
+<GetAllSkinsRequest/>
+
+<GetAllSkinsResponse>
+  <skin name="{skin-name}"/>+
+</GetAllSkinsResponse>
+
+-----------------------------
+
+<DedupeBlobsRequest action="start|stop|status|reset"/>
+  <volume id="..." />*
+</DedupeBlobsRequest>
+
+<DedupeBlobsResponse status="running|stopped" totalCount="{number of links created}" totalSize="{size saved}">
+	<volumeBlobsProgress volumeId="{volumeId}" progress="{progress}"/>*
+	<blobDigestsProgress volumeId="{volumeId}" progress="{progress}"/>*
+</DedupeBlobsResponse>
+
+-----------------------------
+
+-----------------------------
+<ResetLdapClientRequest allServers="1|0"/>
+
+allServers:
+      0 (default) = reset ldap client only on the local server
+      1           = reset ldap client all servers (this can take on systems with lots of servers)
+
+
+<ResetLdapClientResponse/>
+
+----------------------------
+<LockoutMailboxRequest op="{start|end}">
+  <account by="id|name">...</account>
+</LockoutMailboxRequest>
+
+<LockoutMailboxResponse/>
+
+
+Access:
+ - domain admin sufficient.
+ - requires moveAccountMailbox grant on target account.
+ - requires moveCalendarResourceMailbox grant on target calendar resource.
+ - requires moveMailboxFromServer grant on target server
+
+note: this request is by default proxied to the account's home server

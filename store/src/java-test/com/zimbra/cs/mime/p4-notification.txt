@@ -1,0 +1,8 @@
+Change 259706 by psurana@psurana-qa on 2010/11/26 03:14:06
+
+  bug:none
+  tagged CheckLicenseRequest_AccountSetup areas="network"
+
+Affected files ...
+
+... //depot/HELIX/ZimbraQA/data/soapvalidator/MailClient/Misc/CheckLicenseRequest.xml#2 edit

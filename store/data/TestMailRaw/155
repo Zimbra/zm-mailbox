@@ -1,0 +1,469 @@
+Return-Path: <xmlbeans-dev-return-332-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h93Hb4LB021964 for
+	<smith@popserver1.stanford.edu>; Fri, 3 Oct 2003 10:37:04 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id h93HajKJ025940 for
+	<smith@stanford.edu>; Fri, 3 Oct 2003 10:36:46 -0700 (PDT)
+Received: (qmail 96946 invoked by uid 500); 3 Oct 2003 17:36:40 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Delivered-To: moderator for xmlbeans-dev@xml.apache.org
+Received: (qmail 17591 invoked from network); 3 Oct 2003 15:42:23 -0000
+In-Reply-To: <013701c389c2$b6a7d920$0fa8a8c0@lightbox>
+To: xmlbeans-user@xml.apache.org
+Cc: xmlbeans-dev@xml.apache.org, xmlbeans-user@xml.apache.org
+Subject: Re: ArrayStoreException when using RMI
+MIME-Version: 1.0
+X-Mailer: Lotus Notes Release 6.0.1 February 07, 2003
+Message-ID: <OFE6867712.B3D5F68E-ON85256DB4.00559031-85256DB4.005645CE@vrtx.com>
+From: Carl_Elkin@vrtx.com
+Date: Fri, 3 Oct 2003 11:42:19 -0400
+X-Zimbra-Received: Fri, 3 Oct 2003 11:42:19 -0400
+X-MIMETrack: Serialize by Router on BOS01MAIL01/M/BOS1/VRTX(Release
+	6.0.2CF2|July 23, 2003) at 10/03/2003 11:42:21 AM, Serialize complete at
+	10/03/2003 11:42:21 AM, Itemize by SMTP Server on
+	BOS01HUB/H/BOS1/VRTX(Release 6.0.2CF2|July 23, 2003) at 10/03/2003 11:42:21
+	AM, Serialize by Router on BOS01HUB/H/BOS1/VRTX(Release 6.0.2CF2|July 23,
+	2003) at 10/03/2003 11:42:23 AM, Serialize complete at 10/03/2003 11:42:23
+	AM
+Content-Type: multipart/alternative; boundary="=_alternative 005645CD85256DB4_="
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000009b-0010
+
+
+--=_alternative 005645CD85256DB4_=
+Content-Type: text/plain; charset="US-ASCII"
+
+Actually, I hadn't realized this earlier, but in the case where ther jar 
+file is read over RMI, the targetList contains objects of the class
+org.apache.xmlbeans.impl.values.XmlAnyTypeImpl
+
+which would certainly explain the ArrayStoreException, as this is not a 
+subclass or implementation of my DTO class.  However, when my jar file is 
+in the classpath of the piece of code that runs the command, then the list 
+contains objects of the form MSIDTOimpl (as expected) and everything works 
+fine.
+
+So why could downloading a jar over RMI cause objects to be of the type 
+XmlAnyTypeImpl?
+
+[Just in case this has something to do with a configuration problem in my 
+schema, the relevant part of my schema follows at the end of this 
+message.]
+
+Thank you,
+Carl
+
+
+<?xml version="1.0"?>
+<xs:schema xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" 
+           xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+        xmlns:dto=
+"http://www.vpharm.com/application/tuplespace/dtos/generated"
+                targetNamespace=
+"http://www.vpharm.com/application/tuplespace/dtos/generated"
+           jaxb:version="1.0">
+        <xs:element name="DTOCollection">
+                <xs:complexType>
+                        <xs:sequence>
+                                <xs:element name="DTO" type="dto:DTO" 
+minOccurs="0" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                </xs:complexType>
+        </xs:element>
+        <xs:complexType name="DTO"/>
+        <xs:complexType name="MSIDTO">
+                <xs:complexContent>
+                        <xs:extension base="dto:DTO">
+                                <xs:sequence>
+                                        <xs:element name="id" type=
+"xs:long"/>
+                                </xs:sequence>
+                        </xs:extension>
+                </xs:complexContent>
+        </xs:complexType>
+
+
+
+
+
+
+"David Bau" <david.bau@bea.com> 
+10/03/2003 11:26 AM
+Please respond to
+xmlbeans-user@xml.apache.org
+
+
+To
+<xmlbeans-user@xml.apache.org>, <xmlbeans-dev@xml.apache.org>
+cc
+
+Subject
+Re: ArrayStoreException when using RMI
+
+
+
+
+
+
+Hm, I don't get it!
+
+I could understand the B.4 issue if we were allocating an array whose 
+array
+type was actually a subclass of
+com.vpharm.application.tuplespace.dtos.generated.DTO[] rather than array 
+of
+the interface itself.  However, we're not - we are allocating an array 
+whose
+type is an array of the interface, so substituting in stubs should be just
+fine.
+
+Anybody else on xmlbeans-dev have any insights?
+
+David
+----- Original Message ----- 
+From: Carl_Elkin@vrtx.com
+To: xmlbeans-user@xml.apache.org
+Sent: Friday, October 03, 2003 10:51 AM
+Subject: [xmlbeans-dev] ArrayStoreException when using RMI
+
+
+
+Hi all,
+
+   I am continuing to use XMLBeans without a problem, when I use it 
+locally.
+However, I get an ArrayStoreException when I pass it over RMI and use it 
+on
+a remote server.  Here's what I am doing:
+
+          DTOCollectionDocument dtos =
+            DTOCollectionDocument.Factory.parse(instream);
+        DTO[] dtoArray = dtos.getDTOCollection().getDTOArray();
+
+(the document to parse contains msidtos, which are an extension of DTO.)
+
+When I run this locally, it works without any problems.  However, I am
+running this remotely using Sun's JavaSpaces technology.  A client
+serializes the objects, sends them over the wire to a worker running on a
+remote machine.  The worker on the remote machine obtains a jar,
+reinstantiates the relevant objects, and executes the code.
+
+If the worker has the xmlbeans-produced jar in its classpath initially, no
+problems are encountered.  However, if it uses the classloader to obtain 
+the
+jar via an RMI server, then the following exception is thrown:
+
+java.lang.ArrayStoreException
+     [java]     at java.lang.System.arraycopy(Native Method)
+     [java]     at java.util.ArrayList.toArray(ArrayList.java:301)
+     [java]     at
+com.vpharm.application.tuplespace.dtos.generated.impl.DTOCollectionDocumentI
+mpl$DTOCollectionImpl.getDTOArray(Unknown Source)
+
+
+The autogenerated method in DTOCollectionDocumentImpl that throws the
+exception looks like this:
+        /**
+         * Gets array of all "DTO" elements
+         */
+        public com.vpharm.application.tuplespace.dtos.generated.DTO[]
+getDTOArray()
+        {
+            synchronized (monitor())
+            {
+                check_orphaned();
+                java.util.List targetList = new java.util.ArrayList();
+                get_store().find_all_element_users(DTO$0, targetList);
+                com.vpharm.application.tuplespace.dtos.generated.DTO[]
+result = new
+com.vpharm.application.tuplespace.dtos.generated.DTO[targetList.size()];
+                targetList.toArray(result);
+                return result;
+            }
+        }
+
+____________
+
+
+I *think* what is happening is explained by Question b.4 from
+http://java.sun.com/j2se/1.4.2/docs/guide/rmi/faq.html#array
+
+> RMI replaces the remote objects with the stub and therefore the type of
+the array must be that of the interface. The code would look like:
+>    FooRemote[] f = new FooRemote[10];
+>   for (int i = 0; i < f.length; i++) {
+>      f[i] = new FooRemoteImpl();
+>   }
+> Now RMI can put the stub into each cell of the array without an 
+exception
+on the remote call.
+
+Do you think this is applicable, or is something else going on?
+
+If this is an RMI issue, is there anything I can do about it, short of
+rewriting auto-generated code?  If not, does this mean that XMLBeans 
+cannot
+be used with RMI?
+
+Thanks,
+Carl
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+
+--=_alternative 005645CD85256DB4_=
+Content-Type: text/html; charset="US-ASCII"
+
+
+<br><font size=2 face="sans-serif">Actually, I hadn't realized this earlier,
+but in the case where ther jar file is read over RMI, the targetList contains
+objects of the class</font>
+<br><font size=2 face="Courier New">org.apache.xmlbeans.impl.values.XmlAnyTypeImpl</font>
+<br>
+<br><font size=2 face="sans-serif">which would certainly explain the ArrayStoreException,
+as this is not a subclass or implementation of my DTO class. &nbsp;However,
+when my jar file is in the classpath of the piece of code that runs the
+command, then the list contains objects of the form MSIDTOimpl (as expected)
+and everything works fine.</font>
+<br>
+<br><font size=2 face="sans-serif">So why could downloading a jar over
+RMI cause objects to be of the type XmlAnyTypeImpl?</font>
+<br>
+<br><font size=2 face="sans-serif">[Just in case this has something to
+do with a configuration problem in my schema, the relevant part of my schema
+follows at the end of this message.]</font>
+<br>
+<br><font size=2 face="sans-serif">Thank you,</font>
+<br><font size=2 face="sans-serif">Carl</font>
+<br>
+<br>
+<br><font size=2 color=#808080 face="Courier New">&lt;?xml version=&quot;1.0&quot;?&gt;</font>
+<br><font size=2 color=#000080 face="Courier New">&lt;xs:schema</font><font size=2 face="Courier New">
+</font><font size=2 color=#000080 face="Courier New">xmlns:jaxb=</font><font size=2 color=#008000 face="Courier New">&quot;http://java.sun.com/xml/ns/jaxb&quot;</font><font size=2 face="Courier New">
+</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;</font><font size=2 color=#000080 face="Courier New">xmlns:xs=</font><font size=2 color=#008000 face="Courier New">&quot;http://www.w3.org/2001/XMLSchema&quot;</font><font size=2 face="Courier New">
+</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;</font><font size=2 color=#000080 face="Courier New">xmlns:dto=</font><font size=2 color=#008000 face="Courier New">&quot;http://www.vpharm.com/application/tuplespace/dtos/generated&quot;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">targetNamespace=</font><font size=2 color=#008000 face="Courier New">&quot;http://www.vpharm.com/application/tuplespace/dtos/generated&quot;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;</font><font size=2 color=#000080 face="Courier New">jaxb:version=</font><font size=2 color=#008000 face="Courier New">&quot;1.0&quot;</font><font size=2 color=#000080 face="Courier New">&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;xs:element</font><font size=2 face="Courier New">
+</font><font size=2 color=#000080 face="Courier New">name=</font><font size=2 color=#008000 face="Courier New">&quot;DTOCollection&quot;</font><font size=2 color=#000080 face="Courier New">&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;xs:complexType&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;xs:sequence&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;xs:element</font><font size=2 face="Courier New">
+</font><font size=2 color=#000080 face="Courier New">name=</font><font size=2 color=#008000 face="Courier New">&quot;DTO&quot;</font><font size=2 face="Courier New">
+</font><font size=2 color=#000080 face="Courier New">type=</font><font size=2 color=#008000 face="Courier New">&quot;dto:DTO&quot;</font><font size=2 face="Courier New">
+</font><font size=2 color=#000080 face="Courier New">minOccurs=</font><font size=2 color=#008000 face="Courier New">&quot;0&quot;</font><font size=2 face="Courier New">
+</font><font size=2 color=#000080 face="Courier New">maxOccurs=</font><font size=2 color=#008000 face="Courier New">&quot;unbounded&quot;</font><font size=2 color=#000080 face="Courier New">/&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;/xs:sequence&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;/xs:complexType&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;/xs:element&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;xs:complexType</font><font size=2 face="Courier New">
+</font><font size=2 color=#000080 face="Courier New">name=</font><font size=2 color=#008000 face="Courier New">&quot;DTO&quot;</font><font size=2 color=#000080 face="Courier New">/&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;xs:complexType</font><font size=2 face="Courier New">
+</font><font size=2 color=#000080 face="Courier New">name=</font><font size=2 color=#008000 face="Courier New">&quot;MSIDTO&quot;</font><font size=2 color=#000080 face="Courier New">&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;xs:complexContent&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;xs:extension</font><font size=2 face="Courier New">
+</font><font size=2 color=#000080 face="Courier New">base=</font><font size=2 color=#008000 face="Courier New">&quot;dto:DTO&quot;</font><font size=2 color=#000080 face="Courier New">&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;xs:sequence&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;xs:element</font><font size=2 face="Courier New">
+</font><font size=2 color=#000080 face="Courier New">name=</font><font size=2 color=#008000 face="Courier New">&quot;id&quot;</font><font size=2 face="Courier New">
+</font><font size=2 color=#000080 face="Courier New">type=</font><font size=2 color=#008000 face="Courier New">&quot;xs:long&quot;</font><font size=2 color=#000080 face="Courier New">/&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;/xs:sequence&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;/xs:extension&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;/xs:complexContent&gt;</font>
+<br><font size=2 face="Courier New">&nbsp; &nbsp; &nbsp; &nbsp; </font><font size=2 color=#000080 face="Courier New">&lt;/xs:complexType&gt;</font>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<table width=100%>
+<tr valign=top>
+<td width=40%><font size=1 face="sans-serif"><b>&quot;David Bau&quot; &lt;david.bau@bea.com&gt;</b>
+</font>
+<p><font size=1 face="sans-serif">10/03/2003 11:26 AM</font>
+<table border>
+<tr valign=top>
+<td bgcolor=white>
+<div align=center><font size=1 face="sans-serif">Please respond to<br>
+xmlbeans-user@xml.apache.org</font></div></table>
+<br>
+<td width=59%>
+<table width=100%>
+<tr>
+<td>
+<div align=right><font size=1 face="sans-serif">To</font></div>
+<td valign=top><font size=1 face="sans-serif">&lt;xmlbeans-user@xml.apache.org&gt;,
+&lt;xmlbeans-dev@xml.apache.org&gt;</font>
+<tr>
+<td>
+<div align=right><font size=1 face="sans-serif">cc</font></div>
+<td valign=top>
+<tr>
+<td>
+<div align=right><font size=1 face="sans-serif">Subject</font></div>
+<td valign=top><font size=1 face="sans-serif">Re: ArrayStoreException when
+using RMI</font></table>
+<br>
+<table>
+<tr valign=top>
+<td>
+<td></table>
+<br></table>
+<br>
+<br>
+<br><font size=2><tt>Hm, I don't get it!<br>
+<br>
+I could understand the B.4 issue if we were allocating an array whose array<br>
+type was actually a subclass of<br>
+com.vpharm.application.tuplespace.dtos.generated.DTO[] rather than array
+of<br>
+the interface itself. &nbsp;However, we're not - we are allocating an array
+whose<br>
+type is an array of the interface, so substituting in stubs should be just<br>
+fine.<br>
+<br>
+Anybody else on xmlbeans-dev have any insights?<br>
+<br>
+David<br>
+----- Original Message ----- <br>
+From: Carl_Elkin@vrtx.com<br>
+To: xmlbeans-user@xml.apache.org<br>
+Sent: Friday, October 03, 2003 10:51 AM<br>
+Subject: [xmlbeans-dev] ArrayStoreException when using RMI<br>
+<br>
+<br>
+<br>
+Hi all,<br>
+<br>
+ &nbsp; I am continuing to use XMLBeans without a problem, when I use it
+locally.<br>
+However, I get an ArrayStoreException when I pass it over RMI and use it
+on<br>
+a remote server. &nbsp;Here's what I am doing:<br>
+<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;DTOCollectionDocument dtos =<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;DTOCollectionDocument.Factory.parse(instream);<br>
+ &nbsp; &nbsp; &nbsp; &nbsp;DTO[] dtoArray = dtos.getDTOCollection().getDTOArray();<br>
+<br>
+(the document to parse contains msidtos, which are an extension of DTO.)<br>
+<br>
+When I run this locally, it works without any problems. &nbsp;However,
+I am<br>
+running this remotely using Sun's JavaSpaces technology. &nbsp;A client<br>
+serializes the objects, sends them over the wire to a worker running on
+a<br>
+remote machine. &nbsp;The worker on the remote machine obtains a jar,<br>
+reinstantiates the relevant objects, and executes the code.<br>
+<br>
+If the worker has the xmlbeans-produced jar in its classpath initially,
+no<br>
+problems are encountered. &nbsp;However, if it uses the classloader to
+obtain the<br>
+jar via an RMI server, then the following exception is thrown:<br>
+<br>
+java.lang.ArrayStoreException<br>
+ &nbsp; &nbsp; [java] &nbsp; &nbsp; at java.lang.System.arraycopy(Native
+Method)<br>
+ &nbsp; &nbsp; [java] &nbsp; &nbsp; at java.util.ArrayList.toArray(ArrayList.java:301)<br>
+ &nbsp; &nbsp; [java] &nbsp; &nbsp; at<br>
+com.vpharm.application.tuplespace.dtos.generated.impl.DTOCollectionDocumentI<br>
+mpl$DTOCollectionImpl.getDTOArray(Unknown Source)<br>
+<br>
+<br>
+The autogenerated method in DTOCollectionDocumentImpl that throws the<br>
+exception looks like this:<br>
+ &nbsp; &nbsp; &nbsp; &nbsp;/**<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; * Gets array of all &quot;DTO&quot; elements<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; */<br>
+ &nbsp; &nbsp; &nbsp; &nbsp;public com.vpharm.application.tuplespace.dtos.generated.DTO[]<br>
+getDTOArray()<br>
+ &nbsp; &nbsp; &nbsp; &nbsp;{<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;synchronized (monitor())<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;{<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;check_orphaned();<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;java.util.List
+targetList = new java.util.ArrayList();<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;get_store().find_all_element_users(DTO$0,
+targetList);<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;com.vpharm.application.tuplespace.dtos.generated.DTO[]<br>
+result = new<br>
+com.vpharm.application.tuplespace.dtos.generated.DTO[targetList.size()];<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;targetList.toArray(result);<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;return result;<br>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;}<br>
+ &nbsp; &nbsp; &nbsp; &nbsp;}<br>
+<br>
+____________<br>
+<br>
+<br>
+I *think* what is happening is explained by Question b.4 from<br>
+http://java.sun.com/j2se/1.4.2/docs/guide/rmi/faq.html#array<br>
+<br>
+&gt; RMI replaces the remote objects with the stub and therefore the type
+of<br>
+the array must be that of the interface. The code would look like:<br>
+&gt; &nbsp; &nbsp;FooRemote[] f = new FooRemote[10];<br>
+&gt; &nbsp; for (int i = 0; i &lt; f.length; i++) {<br>
+&gt; &nbsp; &nbsp; &nbsp;f[i] = new FooRemoteImpl();<br>
+&gt; &nbsp; }<br>
+&gt; Now RMI can put the stub into each cell of the array without an exception<br>
+on the remote call.<br>
+<br>
+Do you think this is applicable, or is something else going on?<br>
+<br>
+If this is an RMI issue, is there anything I can do about it, short of<br>
+rewriting auto-generated code? &nbsp;If not, does this mean that XMLBeans
+cannot<br>
+be used with RMI?<br>
+<br>
+Thanks,<br>
+Carl<br>
+<br>
+<br>
+- ---------------------------------------------------------------------<br>
+To unsubscribe, e-mail: &nbsp; xmlbeans-user-unsubscribe@xml.apache.org<br>
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org<br>
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/<br>
+<br>
+</tt></font>
+<br>
+--=_alternative 005645CD85256DB4_=--
+

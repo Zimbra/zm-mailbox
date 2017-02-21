@@ -1,0 +1,188 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2008, 2009, 2010, 2012, 2013, 2014, 2016 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
+ */
+
+package com.zimbra.cs.redolog.util;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.redolog.RedoPlayer;
+import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.util.Zimbra;
+
+public class ParallelRedoPlayer extends RedoPlayer {
+
+    private PlayerThread[] mPlayerThreads;
+
+    public ParallelRedoPlayer(boolean writable, boolean unloggedReplay,
+                              boolean ignoreReplayErrors, boolean skipDeleteOps,
+                              int numThreads, int queueCapacity, boolean handleMailboxConflict) {
+        super(writable, unloggedReplay, ignoreReplayErrors, skipDeleteOps, handleMailboxConflict);
+        ZimbraLog.redolog.debug("Starting ParallelRedoPlayer");
+        numThreads = Math.max(numThreads, 1);
+        mPlayerThreads = new PlayerThread[numThreads];
+        for (int i = 0; i < numThreads; i++) {
+            String name = "RedoPlayer-" + Integer.toString(i);
+            PlayerThread player = new PlayerThread(queueCapacity);
+            mPlayerThreads[i] = player;
+            player.setName(name);
+            player.start();
+        }
+    }
+
+    @Override public void shutdown() {
+        ZimbraLog.redolog.debug("Shutting down ParallelRedoPlayer");
+        try {
+            super.shutdown();
+        } finally {
+            for (int i = 0; i < mPlayerThreads.length; i++) {
+                mPlayerThreads[i].shutdown();
+            }
+        }
+        ZimbraLog.redolog.debug("ParallelRedoPlayer shutdown complete");
+    }
+
+    @Override protected void playOp(RedoableOp op) throws Exception {
+        checkError();
+        int mboxId = op.getMailboxId();
+        if (mboxId == RedoableOp.MAILBOX_ID_ALL || mboxId == RedoableOp.UNKNOWN_ID) {
+            // Multi-mailbox ops are executed by the main thread to prevent later ops
+            // that depend on this op's result aren't run out of order.
+            if (ZimbraLog.redolog.isDebugEnabled())
+                ZimbraLog.redolog.info("Executing: " + op.toString());
+            op.redo();
+        } else {
+            // Ops for the same mailbox must be played back in order.  To ensure that,
+            // all ops for the same mailbox are sent to the same player thread.  The
+            // ops are added to the thread's internal queue and played back in order.
+            // This assignment of ops to threads will result in uneven distribution.
+            int index = Math.abs(mboxId % mPlayerThreads.length);
+            PlayerThread player = mPlayerThreads[index];
+            RedoTask task = new RedoTask(op);
+            if (ZimbraLog.redolog.isDebugEnabled())
+                ZimbraLog.redolog.info("Enqueuing: " + op.toString());
+            try {
+                player.enqueue(task);
+            } catch (InterruptedException e) {}
+        }
+    }
+
+    private Throwable mError = null;
+    private final Object mErrorLock = new Object();
+
+    private void raiseError(Throwable t) {
+        synchronized (mErrorLock) {
+            mError = t;
+        }
+    }
+
+    private void checkError() throws ServiceException {
+        synchronized (mErrorLock) {
+            if (mError != null)
+                throw ServiceException.FAILURE(
+                        "Redo playback stopped due to an earlier error: " + mError.getMessage(), mError);
+        }
+    }
+
+    private boolean hadError() {
+        synchronized (mErrorLock) {
+            return mError != null;
+        }
+    }
+
+    private static class RedoTask {
+        private RedoableOp mOp;
+        public RedoTask(RedoableOp op)  { mOp = op; }
+        public RedoableOp getOp()       { return mOp; }
+        public boolean isShutdownTask() { return false; }
+    }
+
+    /**
+     * Special task to tell the queue drain thread to go away.
+     */
+    private static class ShutdownTask extends RedoTask {
+        public ShutdownTask() { super(null); }
+        @Override
+        public boolean isShutdownTask() { return true; }
+    }
+
+    private class PlayerThread extends Thread {
+        private BlockingQueue<RedoTask> mQueue;
+
+        private PlayerThread(int queueCapacity) {
+            queueCapacity = Math.max(queueCapacity, 1);
+            mQueue = new LinkedBlockingQueue<RedoTask>(queueCapacity);
+        }
+
+        public void enqueue(RedoTask task) throws InterruptedException {
+            mQueue.put(task);
+        }
+
+        public void shutdown() {
+            if (hadError())
+                mQueue.clear();  // Ensure mQueue.put() below will not block.
+            ShutdownTask t = new ShutdownTask();
+            try {
+                mQueue.put(t);
+            } catch (InterruptedException e) {}
+            try {
+                join();
+            } catch (InterruptedException e) {}
+        }
+
+        @Override public void run() {
+            while (true) {
+                RedoTask task;
+                try {
+                    task = mQueue.take();
+                } catch (InterruptedException e) {
+                    break;
+                }
+                if (task.isShutdownTask())
+                    break;
+
+                if (hadError()) {
+                    // If there was an error, keep consuming from the queue without executing anything.
+                    // This thread must consume all tasks until shutdown task is received.  If this
+                    // thread stopped consuming, the producer may not be able to enqueue the shutdown
+                    // task.
+                    continue;
+                }
+
+                RedoableOp op = task.getOp();
+                try {
+                    if (ZimbraLog.redolog.isDebugEnabled()) {
+                        ZimbraLog.redolog.info("Executing: " + op.toString());
+                    }
+                    if (handleMailboxConflict) {
+                        redoOpWithMboxConflict(op);
+                    } else {
+                        op.redo();
+                    }
+                } catch (OutOfMemoryError oome) {
+                    Zimbra.halt("Out of memory while executing redo op", oome);
+                } catch (Throwable e) {
+                    ZimbraLog.redolog.error("Unable to execute redo op: " + op.toString(), e);
+                    if (!ignoreReplayErrors())
+                        raiseError(e);
+                }
+            }
+        }
+    }
+}

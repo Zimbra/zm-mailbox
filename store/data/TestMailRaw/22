@@ -1,0 +1,84 @@
+Return-Path: <xmlbeans-dev-return-127-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8H0qvYv025418 for
+	<smith@popserver1.stanford.edu>; Tue, 16 Sep 2003 17:52:57 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8H0qoGH016669 for
+	<smith@stanford.edu>; Tue, 16 Sep 2003 17:52:50 -0700 (PDT)
+Received: (qmail 71895 invoked by uid 500); 17 Sep 2003 00:52:40 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 71882 invoked from network); 17 Sep 2003 00:52:40 -0000
+Message-ID: <00c601c37cb5$ff5437a0$d41e11ac@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: "Lawrence Jones" <ljones@bea.com>
+Cc: <xmlbeans-dev@xml.apache.org>
+References: <4B2B4C417991364996F035E1EE39E2E11DF15D@uskiex01.amer.bea.com>
+Subject: Re: [bea-readme] Patch Submission 
+Date: Tue, 16 Sep 2003 20:52:40 -0400
+X-Zimbra-Received: Tue, 16 Sep 2003 20:52:40 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000016-0010
+
+Thanks for the fixes Lawrence.  We need to start figuring out how to use
+bugzilla to track bugs.
+
+Will get them in soon.
+
+David
+
+
+----- Original Message ----- 
+From: "Lawrence Jones" <ljones@bea.com>
+To: "David Bau" <davidbau@bea.com>
+Cc: <xmlbeans-dev@xml.apache.org>
+Sent: Tuesday, September 16, 2003 8:28 PM
+Subject: [bea-readme] Patch Submission
+
+
+Hi Dave
+
+Here's the patch submission.
+
+Description:
+
+This patch updates XmlBeans to fix CR120759 and CR122401. CR120759 was a bug
+where elements or attributes which were defined in one schema by using a ref
+attribute referencing another schema and the types of the referenced element
+or attribute were anonymous and the second schema was compiled in a
+different schema type system. In this case when the schema was compiled, the
+XSB file generated for that element or attribute would contain a type
+"_XT_null" which then caused a NullPointerException when used. CR122401
+removes a length limitation on serialized XmlObjects. Previously the code
+used writeUTF() which has a limitation of 65535 bytes. Now we use
+writeObject() which does not have this limitation. Care has been taken to
+ensure that serialized objects written using the previous version of the
+code can still be read.
+
+The patch file is attached.
+
+Cheers,
+
+Lawrence
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

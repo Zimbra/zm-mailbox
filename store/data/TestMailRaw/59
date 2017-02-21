@@ -1,0 +1,97 @@
+Return-Path: <xmlbeans-user-return-45-smith=stanford.edu@xml.apache.org>
+Received: from leland4.Stanford.EDU (leland4.Stanford.EDU [171.64.14.29])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9AIUNLB021283
+	for <smith@popserver1.stanford.edu>; Fri, 10 Oct 2003 11:30:23 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland4.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9AIUGgO014200 for
+	<smith@stanford.edu>; Fri, 10 Oct 2003 11:30:17 -0700 (PDT)
+Received: (qmail 41121 invoked by uid 500); 10 Oct 2003 18:28:46 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 37600 invoked from network); 10 Oct 2003 18:27:59 -0000
+Date: Fri, 10 Oct 2003 14:24:22 -0400
+X-Zimbra-Received: Fri, 10 Oct 2003 14:24:22 -0400
+Mime-Version: 1.0 (Apple Message framework v552)
+Content-Type: text/plain; delsp=yes; charset=US-ASCII; format=flowed
+Subject: XMLBeans/Java Web Start Issues
+From: Tom Condon <tom_condon@vrtx.com>
+To: xmlbeans-user@xml.apache.org
+Content-Transfer-Encoding: 7bit
+Message-Id: <F876C2FA-FB4E-11D7-8890-000393D5A006@vrtx.com>
+X-Mailer: Apple Mail (2.552)
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000003b-0010
+
+I have an application that works 100% when run from my local machines.   
+When I deploy it with Java Web Start, it seems to that when I try to  
+read in an XML document it throws an exception with the following stack  
+trace:
+
+java.lang.ExceptionInInitializerError
+	at com.vpharm.hypervis.xml.SignalRunDocument.<clinit>(Unknown Source)
+	at com.vpharm.hypervis.xml.SignalRunDocument$Factory.parse(Unknown  
+Source)
+	at com.vpharm.hypervis.model.HyperVisModel.loadModelFromFile(Unknown  
+Source)
+	at com.vpharm.hypervis.HyperVis$15.run(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+Caused by: java.lang.RuntimeException: Could not instantiate  
+SchemaTypeSystemImpl (java.lang.reflect.InvocationTargetException): is  
+the version of xbean.jar correct?
+	at  
+schema.system.s22209E9B13AF85B626E3B9D5EF84A88D.TypeSystemHolder.loadTyp 
+eSystem(Unknown Source)
+	at  
+schema.system.s22209E9B13AF85B626E3B9D5EF84A88D.TypeSystemHolder.<clinit 
+ >(Unknown Source)
+	... 5 more
+Caused by: java.lang.reflect.InvocationTargetException
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native  
+Method)
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown  
+Source)
+	at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown  
+Source)
+	at java.lang.reflect.Constructor.newInstance(Unknown Source)
+	... 7 more
+Caused by: org.apache.xmlbeans.SchemaTypeLoaderException: XML-BEANS  
+compiled schema: Could not locate compiled schema resource  
+schema/system/s22209E9B13AF85B626E3B9D5EF84A88D/index.xsb  
+(schema.system.s22209E9B13AF85B626E3B9D5EF84A88D.index) - code 0
+	at  
+org.apache.xmlbeans.impl.schema.SchemaTypeSystemImpl$XsbReader.<init>(Sc 
+hemaTypeSystemImpl.java:1110)
+	at  
+org.apache.xmlbeans.impl.schema.SchemaTypeSystemImpl.initFromHeader(Sche 
+maTypeSystemImpl.java:312)
+	at  
+org.apache.xmlbeans.impl.schema.SchemaTypeSystemImpl.<init>(SchemaTypeSy 
+stemImpl.java:192)
+	... 11 more
+
+
+I assume that the problem is some ClassLoader problem in either  
+XMLBeans or Java Web Start.  My colleague, Carl Elkin has posted what I  
+think is the same problem in a different scenario (using Java Spaces).
+
+Does anyone have any ideas what the problem may be?
+
+Thanks,
+
+Tom Condon
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

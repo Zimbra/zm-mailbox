@@ -1,0 +1,76 @@
+Return-Path: <xmlbeans-dev-return-136-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8IJIgcA010270
+	for <smith@popserver1.stanford.edu>; Thu, 18 Sep 2005 12:18:42 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8IJIUq4016087 for
+	<smith@stanford.edu>; Thu, 18 Sep 2005 12:18:35 -0700 (PDT)
+Received: (qmail 1878 invoked by uid 500); 18 Sep 2005 19:18:24 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 1864 invoked from network); 18 Sep 2005 19:18:24 -0000
+Message-ID: <012801c37e19$9ef367e0$d41e11ac@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: Future XMLBeans feature work?
+Date: Thu, 18 Sep 2005 15:18:19 -0400
+X-Zimbra-Received: Thu, 18 Sep 2005 15:18:19 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000035-0011
+
+OK, so the v1 code is up, and we're going to be bugfixing it for a while.
+Thanks for the couple patches so far; I hope folks have having some success
+trying out and getting around the code.  I'm going to try to write up
+something about internal architecture to help this along.  Remy is trying to
+get the website up.
+
+Bugfixing is obvious (I still don't have bugzilla set up yet though...), but
+what about major new things? Seems to me there are a fairly large number of
+interesting things to work on, and that we should start an XMLBeans v2
+feature list.
+
+I'm going to try to begin to organize some feature requests and ideas that
+have been knocking around in the wiki.
+
+http://nagoya.apache.org/wiki/apachewiki.cgi?XmlBeansFeaturePlan
+
+Somebody already discovered this page and already added a request about
+reducing code size - thanks! (neat, who was it?)  I think that's right, and
+I've expanded that suggestion to have more details.
+
+It's just a beginning of a list here and isn't nearly complete or final, but
+I'd appreciate it if folks took a peek an suggested things that are missing,
+or if there are areas that they'd like to contribute - I hope folks feel
+free to add suggestions directly into the wiki; or discuss them here.
+
+We need to grow these one-liners in this list into specs with specific
+contributors etc, pick which ones we're going to do in the short term and
+which ones we're not etc.
+
+I'm not sure if like or don't like using the wiki; should I post the text of
+it here on this list?
+
+David
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

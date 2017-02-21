@@ -1,0 +1,63 @@
+Return-Path: <xmlbeans-user-return-44-smith=stanford.edu@xml.apache.org>
+Received: from leland9.Stanford.EDU (leland9.Stanford.EDU [171.67.16.83])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9AFIRLB024811
+	for <smith@popserver1.stanford.edu>; Fri, 10 Oct 2003 08:18:28 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland9.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9AFIGNH009971 for
+	<smith@stanford.edu>; Fri, 10 Oct 2003 08:18:18 -0700 (PDT)
+Received: (qmail 48109 invoked by uid 500); 10 Oct 2003 15:18:13 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 48096 invoked from network); 10 Oct 2003 15:18:13 -0000
+Message-ID: <033f01c38f41$b021d7c0$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+References: <sf868fcc.033@corp-gw.mantech.com>
+Subject: Re: Parallel Extension Question
+Date: Fri, 10 Oct 2003 11:17:57 -0400
+X-Zimbra-Received: Fri, 10 Oct 2003 11:17:57 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000018-0010
+
+And XMLBeans itself has a "validate" command-line (in the xkit dist under
+bin/) which is pretty good and simple, and can validate either schemas or
+schemas plus instances.  Although of course if you're validating to check
+XMLBeans itself, you may want to try something else... :-)
+
+David
+
+----- Original Message ----- 
+From: "Darrell Teague" <darrell.teague@mantech.com>
+To: <xmlbeans-user@xml.apache.org>
+Sent: Friday, October 10, 2003 10:53 AM
+Subject: [xmlbeans-dev] Re: Parallel Extension Question
+
+
+There are several W3C XML Schema validation tools available and I am sure
+others on the list would have suggestions.  I will go with the mainstay that
+you will probably hear about:
+
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

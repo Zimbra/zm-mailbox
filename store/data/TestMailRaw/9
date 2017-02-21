@@ -1,0 +1,103 @@
+Return-Path: <owner-ietf-sasl@mail.imc.org>
+Received: from popserver1.Stanford.EDU ([unix socket]) by
+	popserver1.Stanford.EDU (Cyrus v2.1.16) with LMTP; Sun, 29 Feb 2004
+	16:19:08 -0800
+X-Sieve: CMU Sieve 2.2
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.67.16.115]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id i210J8A1003870 for
+	<smith@popserver1.stanford.edu>; Sun, 29 Feb 2004 16:19:08 -0800 (PST)
+Received: from above.proper.com (above.proper.com [208.184.76.39]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with ESMTP id i210J5IK020939; Sun, 29
+	Feb 2004 16:19:05 -0800
+Received: from above.proper.com (localhost.vpnc.org [127.0.0.1]) by
+	above.proper.com (8.12.11/8.12.8) with ESMTP id i1TNq52T058284; Sun, 29 Feb
+	2004 15:52:05 -0800 (PST) (envelope-from owner-ietf-sasl@mail.imc.org)
+Received: (from majordom@localhost) by above.proper.com
+	(8.12.11/8.12.9/Submit) id i1TNq5J5058283; Sun, 29 Feb 2004 15:52:05 -0800
+	(PST)
+X-Authentication-Warning: above.proper.com: majordom set sender to
+	owner-ietf-sasl@mail.imc.org using -f
+Received: from rufus.isode.com (rufus.isode.com [62.3.217.251]) by
+	above.proper.com (8.12.11/8.12.8) with ESMTP id i1TNq0bL058245 for
+	<ietf-sasl@imc.org>; Sun, 29 Feb 2004 15:52:01 -0800 (PST) (envelope-from
+	Alexey.Melnikov@isode.com)
+Received: from isode.com (MISHA.isode.net [218.37.230.80]) by
+	rufus.isode.com via TCP (with SMTP (internal)) with ESMTPA; Sun, 29 Feb
+	2004 23:51:47 +0000
+Message-ID: <40423F33.8020708@isode.com>
+Date: Mon, 01 Mar 2004 04:36:19 +0900
+X-Zimbra-Received: Mon, 01 Mar 2004 04:36:19 +0900
+From: Alexey Melnikov <Alexey.Melnikov@isode.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.4)
+	Gecko/20030624 Netscape/7.1 (ax)
+X-Accept-Language: en-us, en
+X-Zimbra-Object: url
+MIME-Version: 1.0
+To: Simon Josefsson <jas@extundo.com>
+CC: "Kurt D. Zeilenga" <Kurt@OpenLDAP.org>, SASL WG <ietf-sasl@imc.org>
+Subject: Re: SASLprep in rfc2222bis-06
+References: <200402162041.PAA20167@ietf.org>
+	 <6.0.1.1.0.20040216200054.04c9df08@127.0.0.1>	<4031F175.1070301@isode.com>
+	 <iluy8r1fuqb.fsf_-_@latte.josefsson.org>
+	 <6.0.1.1.0.20040223154320.04b42a30@127.0.0.1>
+	 <ilullmr84gw.fsf@latte.josefsson.org>
+	 <6.0.1.1.0.20040225140352.04ba6fb8@127.0.0.1>
+	 <iluk72a20fy.fsf@latte.josefsson.org>
+In-Reply-To: <iluk72a20fy.fsf@latte.josefsson.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Sender: owner-ietf-sasl@mail.imc.org
+Precedence: bulk
+List-Archive: <http://www.imc.org/ietf-sasl/mail-archive/>
+List-ID: <ietf-sasl.imc.org>
+List-Unsubscribe: <mailto:ietf-sasl-request@imc.org?body=unsubscribe>
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000009-0110
+
+
+Simon Josefsson wrote:
+
+> ...
+>
+>I think the most important modification that should be done is to
+>stress the relationship "authorization identity"<->"protocol profile"
+>and "authentication identity"<-> "mechanism".  This isn't clear now,
+>but helps with the conceptual understanding.  I wasn't aware of this
+>distinction after reading RFC 2222, so it appears to be something new
+>in 2222bis.  Perhaps adding the sentences as below could help, if they
+>are correct (I'm not sure, correct me if not).
+>
+>Regards,
+>Simon
+>
+>4.2.  Authorization and authentication identities
+>
+>   SASL authentication deals with two identities: the authorization
+>   identity and the authentication identity. The transmitted
+>   authorization identity may be an empty string (zero length), but the
+>   transmitted authentication identity may not be an empty string.
+>
+>   A mechanisms which are incapable of transmitting an authorization
+>   identity must be treated as if it always transmits an authorization
+>   identity of an empty string.
+>
+>   Authentication identity is the identity derived from the client's
+>   authentication credentials.  Any normalization of the
+>   authentication identity is defined by each mechanism, the profile
+>   does not influence it.
+>
+>   The authorization identity is used by the server as the primary
+>   identity for making access policy decisions.  Any normalization of
+>   the authorization identity is defined within each SASL protocol
+>   profile, and occur before the authorization identity is handed to
+>   the mechanism.  The mechanism may not modify (by, e.g.,
+>   normalization) the authorization identity.
+>
+I've integrated the suggested text about normalization. See:
+
+http://www.sasl.org/
+
+Alexey
+
+
+

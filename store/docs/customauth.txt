@@ -1,0 +1,200 @@
+============
+Introduction
+============
+It is required that Zimbra server should allow server extensions to register 
+a mechanism that can implement auth.  Today we allow external auth via LDAP, 
+but this would let us do external auth to a provider's proprietary identity 
+database.
+
+================
+SOAP AuthRequest
+================
+Currently the AuthRequest SOAP API can identify the account by name, id, or
+foreignPrincipal.  
+
+For example:
+	
+ <AuthRequest xmlns="urn:zimbraAccount">
+   <account by="id">15b89480-45d9-4d7a-b6bb-42997a54466c</account>]
+   <password>test123</password>]
+ </AuthRequest>
+ 
+ <AuthRequest xmlns="urn:zimbraAccount">
+   <account by="name">user1@zimbra.com</account>]
+   <password>test123</password>]
+ </AuthRequest>
+ 
+ <AuthRequest xmlns="urn:zimbraAccount">
+   <account by="foreignPrincipal">6502127767</account>]
+   <password>test123</password>]
+ </AuthRequest>
+
+The current AuthRequest SOAP command is going to be used for custom auth.
+When an AuthRequest comes in, system will check the designated auth mechanism 
+for the domain.  If it is set to custom auth, system will invoke the registered 
+custom auth handler to authenticate the user.
+
+
+================================================
+Where does the custom handler reside at runtime?
+================================================
+It has to be implemented and deployed as defined by the Zimbra extension framework
+Please refer to ZimbrServer/docs/extensions.txt for developing and deploying 
+server extensions.
+
+
+==================================
+Preparing a domain for custom auth
+==================================
+Domain is the scope for authentication mechanisms.  To enable a domain for custom 
+auth, set the domain attribute zimbraAuthMech to:
+	custom:{registered-custom-auth-handler-name} [arg1 arg2 ...]
+
+For example:
+zmprov modifyDomain {domain|id} zimbraAuthMech custom:sample http://foo.com:123 "  bar abc"
+
+In the above example:
+- "sample" is the name under which a custom auth handler is registered.  
+- "http://foo.com:123" and "  bar abc" are arguments that will be passed to the authenticate 
+  method of the handler.
+
+
+===========================================
+Registering a custom authentication handler
+===========================================
+Invoke ZimbraCustomAuth.register(handlerName, handler) in the init method of the extension.  
+Details below.
+
+Class: 
+    com.zimbra.cs.account.auth.ZimbraCustomAuth
+    
+Method:
+	public synchronized static void register(String handlerName, ZimbraCustomAuth handler);
+	
+	    handlerName: 
+	        Name under which this custom auth handler is registered to 
+	        Zimbra's authentication infrastructure.  This is the name that 
+	        needs to be set in the zimbraAuthMech attribute of the domain 
+	        that uses this custom auth.  For example, if the registered 
+	        name here is "sample", then zimbraAuthMech must be set to
+	        custom:sample.
+	
+        handler:
+        	The object on which the authenticate method will be invoke for this 
+        	custom auth handler.  It has to be an instance of ZimbraCustomAuth 
+        	(or subclasses of it).  See "Handling authenticating requests in extension" 
+        	for description on the ZimbraCustomAuth class.
+        	
+
+For example:
+
+public class SampleExtensionCustomAuth implements ZimbraExtension {
+
+    public void init() throws ServiceException {
+        /* 
+         * Register to Zimbra's authentication infrastructure
+         * 
+         * custom:sample should be set for domain attribute zimbraAuthMech 
+         */
+        ZimbraCustomAuth.register("sample", new SampleCustomAuth());
+    }
+    
+    ...
+}
+     
+
+=============================================
+Handling authenticating requests in extension
+=============================================
+When an AuthRequest come in, if the domain is specified to use custom auth
+(by setting the zimbraAuthMech domain attribute to custom:{...}), the 
+authenticating framework will invoke the authenticate method on the ZimbraCustomAuth 
+instance passed as the handler parameter to ZimbraCustomAuth.register().
+
+The account object for the principal to be authenticated and the clear-text password 
+entered by user are passed to the ZimbraCustomAuth.authenticate() method.  All 
+attributes of the account can be retrieved from the account object.   
+
+Basically, there is no limitation on what can be done in ZimbraCustomAuth.authenticate 
+in order to auth an user.  It can be as simple as an one liner, or it can go off to 
+the internet using whatever protocol of choice.   
+ 
+It is very important to note that the same instance(the instance passed in to the
+register() method) of ZimbraCustomAuth object is invoked for all auth requests that
+need to go through this custom auth handler.  It is the implementor's responsibility 
+to ensure thread safety during the life span of ZimbraCustomAuth.authenticate().
+ 
+The authenticate method should do one of the following to indicate to the framework 
+the result of the auth.
+
+- auth succeeded: return
+     If the method returns, it indicates the authentication has succeeded.
+     
+- auth failed: throw Exception
+     If an Exception is thrown, it indicates the authentication has failed.
+     (1) if the Exception is an instance of com.zimbra.common.service.ServiceException, 
+         the same exception instance will be re-thrown by the framework to the SOAP 
+         AuthRequest.
+     (2) if the Exception is not an instance of com.zimbra.common.service.ServiceException,
+     	 the framework will catch the Exception and throw AccountServiceException.AUTH_FAILED 
+     	 exception to the SOAP AuthRequest.
+     
+ 
+The ZimbraCustomAuth class and relevant methods for implementors:
+-----------------------------------------------------------------
+
+public abstract class ZimbraCustomAuth {
+
+    /*
+     * Register a custom auth handler.
+     * It should be invoked from the init() method of ZimbraExtension.
+     */
+    public synchronized static void register(String handlerName, ZimbraCustomAuth handler);
+    
+    /*
+     * Method invoked by the framework to handle authentication requests.
+     * A custom auth implementation must implement this abstract method.
+     * 
+     * @param account: The account object of the principal to be authenticated
+     *                 all attributes of the account can be retrieved from this object.
+     *                   
+     * @param password: Clear-text password.
+     * 
+     * @param context: Map containing context information.  
+     *                 A list of context data is defined in com.zimbra.cs.account.auth.AuthContext
+     * 
+     * @param args: Arguments specified in the zimbraAuthMech attribute
+     * 
+     * @return Returning from this function indicating the authentication has succeeded. 
+     *  
+     * @throws Exception.  If authentication failed, an Exception should be thrown.
+     */
+    public abstract void authenticate(Account acct, String password, Map<String, Object> context, List<String> args) throws Exception;
+}
+
+Implementor should extend the ZimbraCustomAuth and implement the authenticate method.
+
+For example:
+
+public class SampleCustomAuth extends ZimbraCustomAuth {
+
+    public void authenticate(Account acct, 
+                             String password, 
+                             Map<String, Object> context, 
+                             List<String> args) throws Exception {
+        /*
+         * mock logic to demo:
+         *     - usage of the parameters
+         *     - returning for success auth 
+         *     - throwing Zimbra ServiceException for unsuccessful auth.
+         *     - throwing non ServiceException for unsuccessful auth.
+         */ 
+        if (!password.equals("too-old"))
+           throw AccountServiceException.CHANGE_PASSWORD();
+         
+        if (!password.equals("test123"))
+           throw MyException("Invalid password!!");
+           
+        // returning indicating the auth has succeeded
+    }
+} 

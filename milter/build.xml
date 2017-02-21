@@ -1,0 +1,9 @@
+<project name="zm-milter" default="jar">
+  <import file="../build-common.xml"/>
+
+  <target name="jar" depends="compile" description="Creates the jar file">
+    <antcall target="zimbra-jar">
+      <param name="implementation.title" value="Zimbra Milter"/>
+    </antcall>
+  </target>
+</project>

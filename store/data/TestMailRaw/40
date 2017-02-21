@@ -1,0 +1,137 @@
+Return-Path: <xmlbeans-dev-return-357-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9A1LfLB003053
+	for <smith@popserver1.stanford.edu>; Thu, 9 Oct 2003 18:21:41 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9A1LXCa020187 for
+	<smith@stanford.edu>; Thu, 9 Oct 2003 18:21:34 -0700 (PDT)
+Received: (qmail 53192 invoked by uid 500); 10 Oct 2003 01:21:23 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 53176 invoked from network); 10 Oct 2003 01:21:23 -0000
+Subject: Re: bts notes
+From: Scott Ziegler <zieg@bea.com>
+To: xmlbeans-dev@xml.apache.org
+In-Reply-To: <030c01c38eae$78d032f0$0fa8a8c0@lightbox>
+References: <5.2.1.1.0.20031009120354.03384fe8@san-francisco.beasys.com>
+	 <030c01c38eae$78d032f0$0fa8a8c0@lightbox>
+Content-Transfer-Encoding: 7bit
+Message-Id: <1065748890.15848.28.camel@zieg>
+Mime-Version: 1.0
+X-Mailer: Ximian Evolution 1.4.5 
+Date: Thu, 09 Oct 2003 18:21:31 -0700
+X-Zimbra-Received: Thu, 09 Oct 2003 18:21:31 -0700
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000028-0010
+
+My comments after starting to use the code:
+
+1. Looks like you forgot to implement some of the lookup methods in
+BuiltinBindingLoader -- they are just returning null.
+
+2. In BindingFile it feels like the maps from xmlname -> javaname should
+contain the BindingType as the value, not the javaname (and vice
+versa).  Otherwise there is an object creation for every lookup, which
+seems bad.
+
+3. It seems like BindingFile and BuiltinBindingLoader might share some
+common code (or should), so perhaps they should inherit from a common
+base class since most of the map operations are the same between the
+two.
+
+4. Personally, I think that users of these classes should not be aware
+that xmlbeans is living underneath.  Yet I find that to create a
+BindingLoader from a xml binding file I need to instantiate the xml
+bean.  Ideally I would like to be able to hand some factory a Collection
+of File objects and get back a BindingLoader, but I guess I can write
+that myself.
+
+--Scott
+
+On Thu, 2003-10-09 at 14:44, David Bau wrote:
+> Cool Patrick, thanks for the careful review; you got some good
+> catches.  I'll do the things you're recommending below.
+> 
+> Hope you don't mind, ccin'g xmlbeans-dev.
+> 
+> David
+> ----- Original Message ----- 
+> From: "Patrick Calahan" <pcal@bea.com>
+> To: "David Bau" <david.bau@bea.com>
+> Sent: Thursday, October 09, 2003 3:06 PM
+> Subject: bts notes
+> 
+> 
+> >
+> > Everything looks good, well put-together.  Could find my way around pretty
+> > easily and figure it out.  Have a few comments so far, a lot of which is
+> > pretty nitpicky stuff:
+> >
+> > - Is other stuff going to go the 'binding' package.  If so, maybe the bts
+> > should be a sub-package?  If not, maybe it should be renamed to something
+> > more specific (e.g. 'bts')?
+> >
+> > - Seems like BindingLoader should be an interface.
+> >
+> > - On a related note, it might be nice to have a BindingLoaderFactory
+> > singleton which returns an instance of BindingLoader for any of a variety
+> > of inputs (e.g. BindingConfigDocument).  That way, all of the
+> BindingLoader
+> > impls can be given package protection - I think the outside world is only
+> > going to care that they are BindingLoaders.  Maybe overkill, I dunno, but
+> > seems like it is such a fundamental thing that we might someday find
+> > ourselves wanting to have more control over the constrution logic.
+> >
+> > - BindingType.kinds/registerClassAndType(): I'm a little nervous about
+> this
+> > being static.  Are we sure this really is always a singleton?  I see your
+> > comment in KindRegistry about it being temporary, though, so maybe it
+> won't
+> > matter so much.  Are we sure it's going to go away?
+> >
+> > - JavaName hashCode and equals don't take array dimensions into account.
+> >
+> > - The compile time is going to want to have JavaName.getArrayComponent()
+> or
+> > somesuch, which would just return className.
+> >
+> > - Could save a few Strings by storing JavaName array dimensions as an int
+> > rather than arrayString.  Not a big deal.
+> >
+> > - Looking at comment in JavaName ctor, maybe you were going to call the
+> > factory method JavaName.forClassName() instead of JavaName.forString().  I
+> > think I like the former better.  Likewise, maybe XmlName.forString()
+> should
+> > be XmlName.forSignature()?  Neither is a big deal, but 'string' is just
+> > kinda vague.
+> >
+> > - Classes in ...xmlbeans.x2003.x09.bindingConfig are always referenced by
+> > full-qualified names in the code, as opposed to using imports.  Is there a
+> > reason for this?  Makes the code a bit harder to read.
+> >
+> > - A few classes could use at least a one-line classdoc.  It's usually
+> > fairly obvious what they are for, but still...
+> >
+> >
+> 
+> 
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+> 
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

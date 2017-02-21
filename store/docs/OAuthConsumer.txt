@@ -1,0 +1,22 @@
+Consumer registration process:
+This procedure is to happen out of band.
+ZCS will share consumer key and consumer secret with consumer.
+
+Separate keys will be generated for Android Zimbra native client and iOS native client.
+Registration for these consumers would happen on ZCS side (Using zmprov)
+   "zmprov mcf +zimbraOAuthConsumerCredentials <consumer_key>:<consumer_secret>:<consumer_app_name>"
+
+---------------------------------------------------------------------------------------------------------------------
+OAuth URLs to be used by consumers :
+---------------------------------------------------------------------------------------------------------------------
+Request Token URL       : <zimbra_base_url>/service/oauth/req_token?device=<device_model>
+User Authorization URL : <zimbra_base_url>/service/oauth/authorization
+Access Token RUL        : <zimbra_base_url>/service/oauth/access_token
+---------------------------------------------------------------------------------------------------------------------
+
+Custom parameters to be sent by consumer:
+In Request token URL custom parameters are sent.
+
+Custom parameter in request token URL:
+ - For mobile app consumer : device (This parameter will contain device information)
+ - For web app consumer : <TBD>

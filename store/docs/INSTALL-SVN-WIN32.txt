@@ -1,0 +1,86 @@
+Building a Windows Server
+
+Although Windows is not a supported server platform in the marketplace, ZCO developers can and do build a Windows version of the ZCS server.  The requisite software must be installed prior to building.  Perform the following steps to build a windows server from the main branch (substitute another branch if desired):
+•	Checkout the following from perforce:
+
+//depot/main/Ajax/...
+//depot/main/ThirdParty/jetty/...
+//depot/main/ThirdPartyBuilds/windows/... 
+//depot/main/ZimbraAdminExt/...
+//depot/main/ZimbraCommon/...
+//depot/main/ZimbraConvertd/...
+//depot/main/ZimbraIM/...
+//depot/main/ZimbraLicenseExtension/...
+//depot/main/ZimbraLicenseTools/...
+//depot/main/ZimbraMigrationTools/... 
+//depot/main/ZimbraNetwork/...
+//depot/main/ZimbraServer/... 
+//depot/main/ZimbraTagLib/... 
+//depot/main/ZimbraWebClient/... 
+//depot/main/Zimlet/...
+//depot/main/SoapClient/...
+
+
+
+
+•	Install the JDK.  The installation package we use is jdk-1_5_0_07-windows-i586-p.exe.  Install this into c:\opt\zimbra\java.  Set the JAVA_HOME environment variable to  c:\opt\zimbra\java
+
+•	Install Ant.  A current installation package that works is apache-ant-1.6.5-bin.zip.  Unzip the ant package, and place the unzipped files in c:\ant.  Put c:\ant\bin in the PATH variable.
+
+•	Install MYSQL 5.  The installation package we use is mysql-essential-5-0-27-win32.msi.  Do a custom install and configure it to run on port 7306.  Make sure to install it in \opt\zimbra\mysql.  The admin account should be called “root” with a password of “zimbra”.  The build.xml file in ZimbraServer relies on the root account to create the Zimbra database with user and password.  Install MYSQL as a Windows service.
+
+•	Install OpenLDAP.  We use the CDS SilverBuild from perforce, in main/ThirdPartyBuilds/windows/openldap/CDS-Silver-3.7.1-Setup.exe.  Install this into c:\opt\zimbra\openldap.  Occasionally, there can be configuration problems with OpenLDAP.  If an error 19 occurs when trying to start the service, it is possible that slapd.conf is not in the correct location.  In this case, cd to \opt\zimbra\openldap and copy slapd.conf.default to slapd.conf.
+
+ 
+•	If you are installing the latest version of ldap ie..
+symas 2.4.23
+Make sure the conf file is up to date(latest slapd.conf for windows7 from perforce)
+Make sure LdapModify.exe is up to date.
+Before starting the build ,make sure you can start openldap service.
+Some useful commands to troubleshoot ldap
+
+	ldapwhoami -x -D "cn=config" -w zimbra -H
+
+	slapd.exe -f slapd.conf -d -1
+
+
+•	Stop LDAP , delet e  file named  alock @  /opt/zimbra/data/ldap/hdb/db/
+•	Make sure build.custom.properties is in Zimbraserver source code location.If not get it 
+From perforce.
+
+•	Install Jetty.  The first time, you can run ant reset-all; this will install Jetty.  There is a bug in the main branch build for Windows that sometimes causes ant reset-all to fail, but in any case, this will install Jetty.  If ant reset-all does fail, run the following commands (main branch used in this example):
+
+cd \depot\main\ZimbraServer
+ant reset-the-world
+cd \depot\main\ZimbraWebClient
+ant deploy
+ant clean admin-deploy
+ant admin-deploy
+cd \depot\main\ZimbraLicenseExtension
+ant deploy-dev
+
+
+If ant reset-all runs to completion, complete  the build by deploying the license:
+
+cd \depot\main\ZimbraLicenseExtension
+ant deploy-dev
+
+cd\depot\main\ZimbraLicenseTools
+ant deploy-dev-license
+
+
+To test the deployment, go to a browser, and enter http://localhost:7070/zimbra/.  Login as user1, with a password of test123.  There are 4 usernames created by the build; user1 is the one that is populated with data.  To test the deployment of the admin console, enter https://localhost:7071/zimbraAdmin in your browser.  There will probably be a message about the website’s security certificate, and you may need to create an exception.
+
+To start and stop the local server, use the following commands 
+
+cd \depot\main\ZimbraServer
+ant start-jetty-java	// starts the server
+ant stop-jetty-java	// stops the server
+
+
+
+To pick up server changes without resetting the world and thereby invaliding all existing users, sync the latest code from perforce and do:
+
+cd \depot\main\ZimbraWebClient
+ant deploy
+

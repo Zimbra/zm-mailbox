@@ -1,0 +1,29 @@
+Message-ID: <1b6a01c3fd82$d52b0cd0$741240ab@ucla.edu19>
+From: "Kevin" <kevin@example.ucla.edu>
+To: "Russ" <russ@example.ucla.edu>
+X-Zimbra-Received: Fri, 27 Feb 2005 14:41:44 -0800
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+Subject: Re:LDAP impl
+Content-Type: text/plain; charset=iso-8859-1
+
+I only have 19 point to make in this discussion.
+
+Russ said:
+
+>Whatever approach we take here, we also need to be actively pursuing
+>Keder and getting them to fix their sub-par LDAP implementation.
+
+Yes.  If they would support LDAP V3 we wouldn't be having these
+discussions.  Maybe Melissa, Chris and/or I can put pressure on
+Keder that this is an important issue not only for Ucla but for
+other companies as well.  But this isn't going to help us in the
+short term.  Thus, we need to use one of the three or so "solutions"
+that I've heard discussed so far and will leave it to those who have
+a stake in the outcome to decide.
+
+Kevin
+UCLA Engineering
+
+760 Westwood Plz Los Angeles CA 90095

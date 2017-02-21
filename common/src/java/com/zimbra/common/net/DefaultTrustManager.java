@@ -1,0 +1,91 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2008, 2009, 2010, 2013, 2014, 2016 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.common.net;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+
+import com.zimbra.common.localconfig.LC;
+
+/**
+ * Default cacerts backed trust manager
+ *
+ * @author jjzhuang
+ */
+class DefaultTrustManager implements X509TrustManager {
+    private X509TrustManager keyStoreTrustManager;
+
+    protected DefaultTrustManager() throws GeneralSecurityException {
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        InputStream kin = null;
+        try {
+            kin = new FileInputStream(LC.mailboxd_truststore.value());
+            try {
+                keyStore.load(kin, LC.mailboxd_truststore_password.value().toCharArray());
+            } catch (IOException x) {
+                throw new KeyStoreException(x);
+            }
+        } catch (FileNotFoundException x) {
+            throw new KeyStoreException(x);
+        } finally {
+            if (kin != null)
+                try {
+                    kin.close();
+                } catch (IOException x) {
+                    throw new KeyStoreException(x);
+                }
+        }
+
+        TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        factory.init(keyStore);
+        TrustManager[] trustManagers = factory.getTrustManagers();
+        for (TrustManager tm : trustManagers)
+            if (tm instanceof X509TrustManager) {
+                keyStoreTrustManager = (X509TrustManager)tm;
+                return;
+            }
+        throw new KeyStoreException(TrustManagerFactory.getDefaultAlgorithm() + " trust manager not supported");
+    }
+
+    public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+        keyStoreTrustManager.checkClientTrusted(chain, authType);
+    }
+
+    public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+        keyStoreTrustManager.checkServerTrusted(chain, authType);
+    }
+
+    public X509Certificate[] getAcceptedIssuers() {
+        return keyStoreTrustManager.getAcceptedIssuers();
+    }
+}
+
+
+
+
+

@@ -1,0 +1,54 @@
+Return-Path: <xmlbeans-dev-return-290-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8TFRex8023441 for
+	<smith@popserver1.stanford.edu>; Mon, 29 Sep 2003 08:27:40 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8TFRVV4021499 for
+	<smith@stanford.edu>; Mon, 29 Sep 2003 08:27:32 -0700 (PDT)
+Received: (qmail 59743 invoked by uid 500); 29 Sep 2003 15:27:09 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 59684 invoked from network); 29 Sep 2003 15:27:09 -0000
+Message-ID: <003501c3869e$25cfdc80$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: "Eric Vasilik" <eric.vasilik@bea.com>
+Cc: <xmlbeans-dev@xml.apache.org>
+Subject: V2 Store discussion...
+Date: Mon, 29 Sep 2003 11:27:07 -0400
+X-Zimbra-Received: Mon, 29 Sep 2003 11:27:07 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000006f-0010
+
+Eric, was thinking about the threading/object creation etc issues over the
+weekend.
+
+Another interesting issue: currently we use a finalizer on cursors, but
+finalizers seem to be fairly expensive, so apps that spew out lots and lots
+of cursors have issues.  I wonder what problems we'd have to deal with in
+order to eliminate the finalizer, and whether or not that would be possible,
+or if it would come into conflict with some of the other parameters of the
+problem just like synchronization?
+
+David
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

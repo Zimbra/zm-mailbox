@@ -1,0 +1,1237 @@
+=================
+1. Introduction
+=================
+Role based delegate admin is about "who" can do "what" on "which" objects.  
+
+The following terms are used in modeling and implementation of the system:
+
+1.1 Grantees - "who" can do
+    One or a group of Zimbra admin users that can be granted permissions for scoped 
+    operations(i.e. rights) on specified target objects.
+        Grantee can be:
+            - an account: 
+                  the grant is applied to the authenticated account
+                  
+            - a group(i.e. "distribution list"):
+                  the grant is applied to any authenticated account in the group
+
+
+1.2 Targets - on "which" objects 
+    Objects on which operations can be performed and rights can be granted on.
+        A target can be:
+            - account
+            - calendar resource
+            - cos
+            - distribution list
+            - domain
+            - global config
+            - global grant
+            - server
+            - xmppcomponent
+            - zimlet
+           
+    There are three aspects of targets that need to be dealt with:
+    (A) target object, on which a rights are granted.
+    (B) type of target, for which rights are applicable.
+    (C) scope of targets, in which granted rights are effective.
+    
+    Depending on the context, we are dealing with different aspects of a "target".
+    See "2. About Targets" for discussion on targets.
+        
+
+1.3 Rights - "what" can or cannot be done
+    See "3. Rights" for the full list of rights for each target type.
+    
+    - positive rights
+      For example: allow setPassword
+                   allow createAccount
+    
+    - negative rights
+      Rights specifically denied to a grantee.
+      For example: deny setPassword
+                   deny createAccount
+                 
+      Purpose of negative rights is to partially negate rights granted to a wider scope of grantees or 
+      granted on a wider scope of targets.
+      
+      Use cases:
+          - negate a subset of grantees:
+              . all members of group-admins, except for admin-1 and admin-2, can create accounts in domain company.com.
+                (admin-1 and admin-2 are in group group-admins)
+              . no one in group-newbies can create accounts in domain company.com, except for admin-3 and admin-4.
+                (admin-3 and admin-4 are in group group-newbies)
+            
+          - negate a subset of targets:
+              . admin-2 can change password of all accounts in domain company.com, except for ceo@company.com and cfo@company.com.
+                (ceo@company.com and cfo@company.com are in domain company.com)
+              . Password of members in group-bosses cannot be changed by admin-1, except for foo. 
+                (foo is in group group-bosses)                           
+    
+
+    
+1.4 Grant
+    The assertion "who can/cannot do what on which objects" is called a "grant".    
+
+    For example:
+        grantee                         right                target
+        ---------------------------------------------------------------------------
+        members of group-1    can       createAccount  on    domain-2  
+        admin-1               cannot    setPassword    on    all users in domain-1
+
+
+1.5 ACE (Access Control Entry)
+    A grant is represented by an ACE.
+      - An ACE defines a grant.
+      - An ACE is stored in an LDAP attribute on the target entry.
+      - An ACE consists of three parts:
+            (1) Zimbra ID of the grantee  (e.g. 6ecd16b8-5ced-4aa0-8f95-bdc331d8c22a)
+            (2) Type of the grantee       (e.g. usr)
+            (3) Allowed or denied right   (e.g. -createAccount)
+          
+       See "4. Storage - LDAP" for storage and format of ACE.
+
+     
+1.6 ACL (Access Control List)
+      A list of ACEs, stored in a LDAP attribute on target entries.  The attribute is multi-valued, 
+      each value represents an ACE, the collection of all the values represents the ACL for the target.
+
+            
+==================
+2. About Targets
+==================
+Depending on the context, there are three aspects of targets that need to be dealt with:
+
+(A) target object, on which rights are granted.
+        As described in 1.5, ACEs are defined on target entries.  
+        For example, the domain entry "company.com" is a target object.
+
+(B) type of target, for which rights are applicable.
+        Each right can only be applied on the type or types of objects that makes sense.
+        For example:
+            - the setPassword right is only applicable to account and calendar resource object types.  
+            - the createAccount and modifyDomain rights are only applicable to domain objects.
+            - the addDistributionListMember right is applicable to distribution list objects.
+
+(C) scope of targets, in which granted rights are effective.
+        Do not mix up this with (A) or (B).
+        
+        Take the setPassword right for example.  While it is a right that is only applicable to accounts 
+        and calendar resource, the setPassword right can be granted on a domain object.  The notion of granting 
+        an account/CR right on a domain specifies that the right is effective on all accounts/CRs in the domain.
+        
+        Following is the complete description on target scopes.  If the grant is on a:
+        - account           : the account entry
+        
+        - calendar resource : the calendar resource entry
+        
+        - cos               : the cos entry
+        
+        - distribution list : if the right is applicable to:
+                              - distribution lists: 
+                                    the distribution list and all distribution lists under this distribution list.
+                              - accounts and calendar resources: 
+                                    all accounts and calendar resources that are direct/indirect members of this  
+                                    distribution list
+                              
+        - domain            : if the right is applicable to: 
+                              - domains:
+                                    the domain entry (note, not any sub-domains under this domain)
+                              - distribution lists: 
+                                    all distributions lists in this domain     
+                              - accounts and calendar resources: 
+                                    all accounts and calendar resources in this domain
+                                    
+         
+        - global config     : the global config entry
+        
+        - global grant      : the global grant entry 
+
+        - server            : the server entry
+        
+        - xmppcomponent     : the xmpp component entry
+        
+        - zimlet            : the zimlet entry
+        
+        
+===========
+3. Rights
+===========
+
+3.1 How Are Rights Defined
+
+3.1.1 System-Defined Rights
+
+      System rights are defined in ZimbraServer/conf/zimbra-rights.xml file
+      
+      There are 4 types of rights: preset, setAttrs, getAttrs, combo
+        
+      Naming convention:
+                                                                           checked by SOAP handler
+      ----------------------------------------------------------------------------------------------------------------
+      create{Object}    - create an object                                 Create{Object}Request
+      delete{Object}    - delete an object                                 Delete{Object}Request
+      rename{Object}    - rename an object                                 Rename{Object}Request
+      list{Object}      - know the existence of an object                  GetAll{Object}Request, SearchDirectory
+      get{Object}       - read all attributes on an object                 Get{Object}Request
+      modify{Object}    - modify and read all attributes on an object      Modify{Object}Request
+      view{Object}      - read some attributes on an object                Get{Object}Request
+      configure{Object} - modify and read some attributes on an object     Modify{Object}Request
+               
+
+3.1.1.1 preset Right
+      - Has predefined, fixed implication on targets.
+            e.g. createAccount  - create account
+                 renameDomain   - rename domain
+                 reindexMailbox - reindex mailbox
+                 seeServer      - know the existence of a server 
+                 
+      - Is associated with a fixed target type
+                 createAccount  - domain
+                 reanmeAccount  - account
+                 seeServer      - server 
+               
+      - Independent of other rights on the same target.  
+            e.g. :
+                - if grantee G is allowed the setPassword, renameAccount, restoreAccount rights on 
+                  account A, we do not check if G is allowed/denied the modifyAccount right on A when 
+                  set password/rename account/restore account are executed.
+                - if grantee G is allowed the backupAccount, viewEmail, getMailboxDump rights on 
+                  domain D, we do not check if G is allowed/denied the getAccount right on A 
+                  when backup account/view email/get mailbox dump are executed.
+            
+      - Some Operations Require Rights on Multiple Targets
+            If a right involves accessing multiple targets, the grantee needs to have adequate 
+            rights on all pertinent targets. 
+            For example:
+                - to create alias alias-1@domain-2.com for account account-1@domain-1.com, the grantee must 
+                  have rights to: 
+                      - addAccountAlias on account-1 (this allows adding an alias for account-1) 
+                        AND 
+                      - createAlias in domain-2.com (this allows creating an alias entry in domain domain-2.com)
+                - Likewise to remove the alias from the account, the grantee must have rights to: 
+                      - removeAccountAlias of account-1@domain-1.com
+                        AND 
+                      - deleteAlias in domain-2.com.      
+
+
+3.1.1.2 getAttr Right
+      - Allows reading attribute values.
+            e.g. getAccount - get all attributes of account
+                 viewQuota  - get zimbraMailQuota, zimbraQuotaWarnPercent, zimbraQuotaWarnInterval, zimbraQuotaWarnMessage attributes
+                 
+      - Can be associated with none or multiple target types.           
+      
+
+3.1.1.3 setAttr Right
+      - Allows modifying and reading attribute values.
+            e.g. modifyAccount  = modify all attributes of account
+                 configureQuota - get zimbraMailQuota, zimbraQuotaWarnPercent, zimbraQuotaWarnInterval, zimbraQuotaWarnMessage attributes
+
+      - Can be associated with none or multiple target types.   
+
+3.1.1.4 combo Right
+      - Right containing other rights.
+ 
+      - Cannot be associated with a target type.  
+      
+
+3.1.2 Inline Attribute Rights
+      - Specified on the grants
+      
+      - Format is {op}.{target-type}.{attribute-name}
+        {op}: get | set
+              get: reading the attribute
+              set: reading and writing the attribute
+                
+        {target-type}:   
+                account           |
+                resource          |  
+                cos               |
+                distributionlist  |
+                domain            |
+                config            |
+                server            |
+                xmppcomponent     |
+                zimlet
+
+        {attribute-name}: attribute name
+       
+     -  e.g.
+          set.account.zimbraMailStatus
+          get.domain.zimbraMailStatus
+          set.cos.zimbraMailQuota
+          
+     - In a grant(zimbraACE), it shows up at the spot for {right}
+          2246ffcf-1ae2-402a-be91-bc0b3be4c0f0 usr set.account.zimbraMailStatus
+                
+
+3.2 Target Types of a Right
+    - Target types on which the right is applicable.
+      
+    - If a right is granted on a target it is not applicable to, the grant is not effective (ignored).
+    
+    - For preset rights: one
+          The target on which the right is applicable.
+          
+    - For getAttrs/setAttrs rights: one, or multiple
+          The right is only applicable on those target types
+          
+          e.g. 1. can modify zimbraMailStatus on accounts
+                  <right name="configureAccountMailStatus" type="setAttrs" targetType="account">
+                      <desc>configure account mail status</desc>
+                      <attrs>
+                          <a n="zimbraMailStatus"/>
+                      </attrs>
+                  </right>
+                  
+                  - if granted on a domain, can modify zMS on all accounts in the domain
+                  - if granted on a distribution list, can modify zMS on all accounts in the DL
+                  - if granted on an account, can modify zMS on the account
+
+          e.g. 2. can modify zimbraMailStatus on domains
+                  <right name="configureDomainMailStatus" type="setAttrs" targetType="domain,distributionlist,account">
+                      <desc>configure domain mail status</desc>
+                      <attrs>
+                          <a n="zimbraMailStatus"/>
+                      </attrs>
+                  </right>
+                
+                  - if granted on a domain, can modify zMS on the domain, and on all the DLs in the domain, and on all accounts in the domain.
+                  - if granted on a distribution list, can modify zMS on the DL, and on all direct/indirect sub-DLs in the DL, 
+                    and on all direct/indirect account members in the DL.
+                  - if granted on an account, can modify zMS on the account
+
+          e.g. 3. can modify zimbraMailStatus on domains
+                  <right name="configureDomainMailStatus" type="setAttrs" targetType="domain">
+                      <desc>configure domain mail status</desc>
+                      <attrs>
+                          <a n="zimbraMailStatus"/>
+                      </attrs>
+                  </right>
+                
+                  - if granted on a domain, can modify zMS on the domain (only on the domain entry, not accounts/DLs in the domain)
+                  - if granted on a distribution list, no effect
+                  - if granted on an account, no effect
+       
+    - For combo rights: none
+          Target types specified for each right the combo right contains apply.
+
+
+3.3 Granting Rules for getAttr/setAttr System and Inline Rights
+      
+    - getAttr/setAttr are checked in SOAP get{object}/modify{object} handlers.  As follows:
+    
+          Naming convention of rights:
+              (1) allow get{object}     : can READ ALL attributes on the entry
+              (2) allow view***         : can READ SOME attributes on the entry
+              (3) allow modify{object}  : can READ and WRITE ALL attributes on the entry
+              (4) allow configure***    : can READ and WRITE SOME attributes on the entry
+            
+              (5) deny get{object}      : cannot READ any attributes on the entry
+              (6) deny view***          : cannot READ SOME attributes on the entry
+              (7) deny modify{object}   : cannot WRITE ALL attributes on the entry     (note: does not deny read, just doesn't have a say on read)
+              (8) deny configure***     : cannot WRITE SOME attributes on the entry    (note: does not deny read, just doesn't have a say on read)
+            
+          The above can be short-handed in this table:
+              (Table-1)
+                                                  allow    allow    deny    deny 
+                                                  read     write    read    write
+                                                  (A)      (B)      (C)     (D)
+              -----------------------------------------------------------------------
+              (1) allow get{object}               all
+              (2) allow view***                   some
+              (3) allow modify{object}            all      all
+              (4) allow configure***              some     some
+              (5) deny get{object}                                  all
+              (6) deny view***                                      some
+              (7) deny modify{object}                                       all
+              (8) deny configure***                                         some
+
+    
+          For each attribute, the read/write permission is determined as follows:
+              (Table-2)
+                  
+                     allow     deny     result
+              --------------------------------  
+              (W)                       deny
+              (X)    *                  allow
+              (Y)              *        deny
+              (Z)    *         *        deny
+                 
+             
+            e.g. 
+            1. Q: target allows modifyAccount right to the current admin, but does not have an ACE entry for configureQuota right 
+                  - can the current admin modify zimbraMailQuota of the target?
+               A: Yes.  Because (3):(B)="allow write all" => result in (X)
+            
+            2. Q: target allows modifyAccount right to the current admin, but has an entry for "deny configureQuota" 
+                  - can the current admin modify zimbraMailQuota of the target?
+               A: No.  Because (3):(B)="allow write all" and (8):(D)="deny write some" => result in (Z)
+            
+            3. Q: target has ACE entry "deny getAccount" and an ACE entry "allow configureQuota" for the current admin 
+                  - can the current admin see the value of zimbraMailQuota of the target?
+               A: No.   Because (5):(C)="deny read all" and (4):(A)="allow read some" =>  => result in (Z)
+                  However, if the question is "can the current admin *modify* the value of zimbraMailQuota of the target?" the answer would be Yes.
+                  Because (5):(D)="not specified" and (4):(B)="allow write some" => result in (X)
+      
+
+3.4 Limit(constraints) for Modifying Attributes
+    Attributes cannot be modified to a value beyond the constraints for the attribute.   If there is no constraint 
+    for an attribute, it can be modified to any value allowed by the attribute syntax.
+    
+    Constraints are defined in the multi-value attribute zimbraConstraint, each value in zimbraConstraint specifies 
+    the constraint for an attribute.  zimbraConstraint can be set on COS and global config entries.
+    
+    Each zimbraConstraint value is in the format of:
+    
+        {attr-name}:{min-max} | {values}
+        {min-max} = [min={min-value}][:max={max-value}]  (min and max are inclusive)
+        {values} = {comma-separated allowed boolean values}
+    
+        - for neumeric(integer, interval, port) attributes:
+              {attr-name}:{min-max}
+              
+              e.g. zimbraPasswordMinLength:min=4:max=6 (can be set to value between 4 and 6)
+                   zimbraPrefOutOfOfficeCacheDuration:min=1m:max=7d (can be set to value between 1m and 7d)
+                   zimbraMailQuota:min=100000000 (min=100000000, no max limit)
+                   zimbraSignatureMaxNumEntries:max=10 (no min limit, max=10)
+              
+        - for boolean attributes:
+              {attr-name}:{values}
+              
+              e.g. zimbraFeatureMailEnabled:values=TRUE,FALSE (can be set to TRUE or FALSE)
+                   zimbraFeatureContactsEnabled:values=FALSE (can be set to FALSE)
+                   
+        - for enum attributes:
+              {attr-name}:{values}
+             
+              e.g. zimbraDomainStatus:values=active,maintenance,locked,closed
+                   zimbraGalMode:values=zimbra 
+    
+    For account and cos attributes, constraints are specified in the corresponding COS attribute zimbraConstraint.
+    For domain and  server attributes, constraints are specified in the global config attribute zimbraConstraint.
+    
+    An admin is allowed to set attributes beyond constraints only if he has right to modify the zimbraConstraint 
+    attribute that defines the constraint for the object he is modifying.  
+    
+    For example, if zimbraConstraint on cos C has:
+          zimbraPasswordMinLength:min=6:max=8
+          zimbraSignatureMaxNumEntries:max=10
+          
+    - if the authed admin has right to modify zimbraConstraint on cos C (and has right to modify the corresponding
+      account/cos attributes), he can set:
+          zimbraPasswordMinLength to any value
+          zimbraSignatureMaxNumEntries to any value
+          all attributes to any value on cos C and accounts assigned to cos C
+          
+    - if the authed admin does not have right to modify zimbraConstraint on cos C (and has right to modify the 
+      corresponding account/cos attributes), he can set:    
+          zimbraPasswordMinLength to between 6 and 8
+          zimbraSignatureMaxNumEntries to a value less than or equal to 10
+          all other attributes to any value on cos C and accounts assigned to cos C
+    
+    
+
+3.5 System Defined Rights
+      The lists are tentative, they can certainly change during the development cycles of the delegate admin
+      project, and afterwards as the product evolves.
+
+3.5.1 account:
+          see output of: zmprov gar account
+
+3.5.2 calendar resource:
+          see output of: zmprov gar calresource
+
+3.5.3 cos
+          see output of: zmprov gar cos
+
+    
+3.5.4 distribution list
+          see output of: zmprov gar dl
+          
+          Notes: 
+              - All rights for account/calendar resource can also be granted on distribution list targets.
+                When account/calendar resource rights are granted on a DL entry, the ACEs are 
+                interpreted as "apply to all direct or indirect account/calendar resource members 
+                of this distribution list".  
+                
+              - Also see "(C) scope of targets" under "2. About Targets".
+    
+
+3.5.5 domain
+          see output of: zmprov gar domain
+          
+          Notes: 
+              - All rights for account/calendar resource can also be granted on domain targets.
+                When account/calendar resources rights are granted on a domain entry, the ACEs are 
+                interpreted as "apply to all accounts/calendar resources in this domain"
+                
+              - All rights for distribution list can also be granted on domain targets.
+                When distribution list rights are granted on a domain entry, the ACEs are interpreted 
+                as "apply to all distribution lists in this domain"
+          
+              - Also see "(C) scope of targets" under "2. About Targets".      
+                
+              - See "3.6 The crossDomainAdmin Right" for the crossDomainAdmin right.
+
+
+3.5.6 global config
+          see output of: zmprov gar config
+
+
+3.5.7 global grant
+          see output of: zmprov gar global
+          
+          Notes:
+              - All rights for all other targets can also be granted on the global grant targets.     
+                When any rights are granted on a global grant entry, the ACEs are 
+                interpreted as "apply to all entries" onthe system.
+                e.g. If you grant a createAccount(which is a domain ight) right to adminA on the 
+                     global grant entry, it means adminA can createAccount in all domains on the 
+                     system.
+
+3.5.8 server
+          see output of: zmprov gar server
+
+3.5.9 xmpp components
+          see output of: zmprov gar xmppcomponent
+
+3.5.10 zimlet
+          see output of: zmprov gar zimlet
+
+
+
+3.6 The crossDomainAdmin Right (a domain right)
+
+The purpose of the crossDomainAdmin right is to close possible security holes that can happen by adding users from an
+"unrelated management umbrella" to a distribution list that is under the administration of another "management umbrella".
+
+An "management umbrella" is the concept of "one admin or a group of admins can manage several domains".  
+
+e.g. - adminA@X.com can manage(e.g. CreateAccount, ModifyAccount, ...) users in domain X.com, Y.com, and Z.com.
+     - adminB@P.com can manage users in domain P.com, Q.com, and R.com.
+     - adminGroup@M.com can manage users in domains M.com and N.com
+     
+In the above example, domain X.com, Y.com, and Z.com are under the same "management umbrella", domains 
+P.com, Q.com, and R.com are under the same "management umbrella", and domains M.com and N.com are 
+under the same "management umbrella".   The three "management umbrella"s are "unrelated" to one another.
+
+This can be implemented by granting rights on the domains, e.g.:
+
+domain X.com (grant: {id-of-adminA@X.com} usr {right})
+domain Y.com (grant: {id-of-adminA@X.com} usr {right})
+domain Z.com (grant: {id-of-adminA@X.com} usr {right})
+
+domain P.com (grant: {id-of-adminB@P.com} usr {right})
+domain Q.com (grant: {id-of-adminB@P.com} usr {right})
+domain R.com (grant: {id-of-adminB@P.com} usr {right})
+
+domain M.com (grant: {id-of-adminGroup@M.com} grp {right})
+domain N.com (grant: {id-of-adminGroup@M.com} grp {right})
+
+Note: by adding admin users to adminGroup@M.com, you are giving right that is allowed to the 
+adminGroup@M.com to the admin user.  Members of adminGroup@M.com can be in *any* domain. 
+e.g. admin@B.com, admin@C.com.  The behavior that admin@B.com, admin@C.com *can* manage 
+users in M.com and N.com, is NOT a security hole.   Because they are added explicitly by the 
+admin who decides "who can manage domains M.com an N.com".    That is, adding out-of-domain 
+admins to a grantee group is fine, it is not a security concern.
+
+However, adding out-of-domain users to a "target group" can open security holes.
+
+Using the above example, consider this hierarchy:
+    domain X.com
+        group DL@X.com
+            user user1@X.com
+            user user2@Y.com
+            user user3@Z.com 
+            user user4@P.com
+            
+    Let's take the changePassword right as an example, assuming {right} is changePassword.
+            
+    Now, it is fine when adminA@X.com changes password on users user1@X.com, user2@Y.com, user3@Z.com, 
+    because adminA@X.com is granted the changePassword right on domains X.com, Y.com and Z.com.
+
+    But, if adminA@X.com is changing password on user4@P.com, this is a security hole and we should NOT allow
+    it.  
+    
+    However, if letting adminA@X.com execute rights on user4@P.com is desired, we provide a way so that management 
+    of domain P.com can say "sure, admins from domain X can administrate users in my domain".
+    
+    The mechanism is the "crossDomainAdmin" right.  It works as follows:  
+    
+    - The crossDomainAdmin right is a domain right.  That is, it is only applicable when granted 
+      on a domain.
+       
+    - The "grantee" of a crossDomainAdmin right is, and has to be a domain. This is the only case when 
+      the grantee of a grant is not an account or group.
+      
+    - The grant looks:
+      {id-of-allowed-domain} dom crossDomainAdmin
+      
+      for example:
+      On domain P.com, the admin who has the privilege to grant right on domain P.com can grant:
+          {id-of-domain-X.com} dom crossDomainAdmin
+          {id-of-domain-Y.com} dom crossDomainAdmin
+          
+      The two grants allows admins in domain X.com and Y.com (note, they don't have any other right on domain 
+      P.com) to execute their rights on users in P.com.   
+
+
+Internally, the algorithm for deciding on cross domain ACL checking is:
+1. Go through the regular checking, if denied, stop
+
+2. Otherwise (i.e. allowed) check if the target is a "domain-ed" entry.
+   A domain-ed entry is a: domain, distribution list, account, alias, 
+   or calendar resource.   If the target is not a domain-ed entry, allow 
+   the right, stop.
+   
+3. Otherwise (i.e. target is a domain-ed entry) check if the authed admin 
+   is in the same domain of the target.  If it is, allow the right, stop.
+   
+4. Otherwise (i.e. target is a domained-ed entry and is in a different domain 
+   than the domain of the authed admin), check if the grant that allows the right 
+   is granted on a target that is in the same domain of the target. If it is, 
+   allow the right, stop.
+   
+   this is the case:
+        domain X.com (grant: allow admin@Y.com right)
+           user1@X.com  <-- the target
+           
+   Although user is in a different domain(X.com) than the authed admin's domain(Y.com),
+   the grant is on X.com, which is the same domain of the target entry (user1@X.com).
+   For this case, it is naturally allowed without having to check the crossDomainAdmin right. 
+   
+5. Otherwise (i.e. the grant that allows it is *not* in the same domain of the target), 
+   check if the authed admin has the crossDomainAdmin right on the domain of the 
+   target entry,  If it is, allow the right, stop.
+   
+   this is the case:
+        domain X.com
+           group group@X.com (grant: {id-of-adminB@X.com} usr rightFoo)   <-- the grant
+               user user1@P.com   <-- the target
+               
+        then on domain P.com, if either:
+        - domain X.com has the crossDomainAdmin right, or
+        - adminB@X.com also has rightFoo right
+        then it is allowed.
+        
+        that is: either     
+        domain P.com (grant: {id-of-domain-X.com} dom crossDomainAdmin)
+        or
+        domain P.com (grant: {id-of-adminB@X.com} usr rightFoo)
+        or
+        user user1@P.com (grant: {id-of-adminB@X.com} usr rightFoo)
+        
+   Note:
+       - target right inheritance from a group is based on target "being a member" in the group.
+       - target right inheritance from a domain is based on target "being in the domain".
+       
+       Therefore, being a member in a group in a different domain does NOT make the 
+       target inheirt rights from the domain of the group.
+       
+       For example:
+            group group@X.com has members user@X.com, user@Y.com
+            
+            then: 
+                - group@X.com can inherit grants granted on domain X.com, because 
+                  group@X.com is in domain X.com.
+                  e.g. if an admin is granted addDistributionListMember right on 
+                       domain X.com, the right is inherited on group@X.com
+                  
+                - user@X.com can inherit grants granted on domain X.com, because 
+                  user@X.com is in domain X.com.
+                  e.g. if an admin is granted changePassword right on 
+                       domain X.com, the right is inherited on user@X.com.
+                  
+                - user@Y.com CANNOT inherit grants granted on domain X.com, because 
+                  user@Y.com is NOT in domain Y.com.
+                  
+                - user@X.com and user@Y.com can inherit grants granted on group group@X.com, 
+                  because user@X.com and user@Y.com are members in group group@X.com.
+                  e.g. if an admin is granted changePassword right on group@X.com.
+                       the right is inherited on user@X.com and user@Y.com.
+                       
+                       There is no cross domain issue for inherited rights for user@X.com, 
+                       because user@X.com is in the same domain as the target(group@X.com) 
+                       from which the rights are inherited from.
+                       
+                       However, for user@Y.com, the inherited grants are effective only when
+                       one of the following is true:
+                       1. the admin is in domain Y.com, or
+                       2. the admin is in a domain that has crossDomainAdmin right on 
+                          domain Y.com
+                       
+                       Otherwise the inherited grants are not effective on user@Y.com.
+
+             
+        
+6. Otherwise, deny.               
+     
+
+
+==================================
+4. Granting and Revoking
+================================== 
+
+4.1 Admin Accounts and Admin Groups
+
+4.1.1 System Admin Account
+      A "system admin account" is an account with the account attribute zimbraIsAdminAccount set to TRUE.
+
+      - A "system admin" is a "can do all" admin.  It is allowed for all admin SOAP commands, including 
+        granting/revoking *any* right on *any* target to *any* admin/group.   
+        
+      - When a right is checked, if the authed admin is a system admin, it is always allowed.  Server does *not* 
+        check any ACL, whether positive or negative.  
+      
+      - A system admin can create other system admins, by setting their zimbraIsAdminAccount to TRUE.
+    
+      - A system admin should not received any grant(i.e. be the grantee of grants), because it is 
+        already allowed for everything.  Granting to a system admin is considered an operational error.  
+        
+        
+4.1.2 Delegated Admin Account and Admin Group
+      A "delegated admin account" is an account with the account attribute zimbraIsDelegatedAdminAccount set to TRUE.
+      An "admin group" is a distribution list with the DL attribute zimbraIsAdminGroup set to TRUE.
+      
+      - Only delegated admin accounts and admin groups can be granted admin rights.
+        (i.e. be the grantee of an admin grant.)
+        
+      - If a delegated admin is "promoted" to a system admin (setting zimbraIsAdminAccount to TRUE), all existing 
+        grants, including negative grants, will be *ignored*, and everythings will be allowed.  
+        Note: - server will not automatically set zimbraIsDelegatedAdminAccount to FALSE, nor will it 
+                enforce the admin to do so.  
+              - all grants will still be in tact, server will not automatically revoke all existing grants, 
+                nor will it enforce the admin to do so.
+              
+      - If a system admin is "demoted" to a delegated admin (setting zimbraIsAdminAccount to FALSE and 
+        zimbraIsDelegatedAdminAccount TO TRUE), if there are any existing grants, they will start to take effect.
+        
+      
+4.1.3 Grants Are Valid only When the Grantee's Admin Flag is On 
+      - When an account's zimbraIsDelegatedAdminAccount attribute changed from TRUE to FALSE, all existing grants to 
+        the delegated admin account become invalid.  
+        When zimbraIsDelegatedAdminAccount is changed from FALSE to TRUE, all existing grants automatically become 
+        valid again.
+
+      - When a group's zimbraIsAdminGroup is is changed from TRUE to FALSE, all existing grants to the admin 
+        group become invalid.    
+        When zimbraIsAdminGroup is changed from FALSE to TRUE, all existing grants automatically become valid again.
+
+      - The above let admins temporary disable things without having to blow away and later recreate the grants.
+
+
+4.2 Granting/Revoking
+
+4.2.1 Who can grant (executing grant/revoke commands)
+      Delegated admin accounts and system admin accounts can grant/revoke admin rights.  
+    
+4.2.2 Who can be Granted to (being the grantee)  
+      Rights can only be granted to admin accounts/groups, i.e. being the grantee of an admin grant.
+    
+4.2.3 Which Rights and Target Entries can be Granted
+      When a right is granted with the "can grant" modifier, the grantee of the grant can further 
+      grant the right or part of the right to others, on the same target on which his own grants 
+      are on, or on targets that can inherit the grants(sub-targets).
+      
+      e.g. if adminA has grants on a distribution list dl@test.com:
+                 {id-of-adminA} usr changePassword
+                 {id-of-adminA} usr +modifyAccount
+                 {id-of-adminA} usr +manageDistributionList
+                 
+           and suppose manageDistributionList is a combo right that includes two rights:
+           addDistributionMember and removeDistributionMember.
+           
+           Then, 
+           - adminA cannot grant changePassword (he can only execute the right himself)
+           - adminA can grant the modifyAccount right on dl@test.com
+           - adminA can grant inline rights set.account.zimbraMailStatus or get.account.zimbraMailStatus,
+             because get/set account zimbraMailStatus is "part of" the modifyAccount right.
+           - adminA can grant the addDistributionMember right
+           - Rights can be granted on dl@test.com or any dl/account members of dl@test.com.
+      
+      Note, if a right overlaps with the to-be-granted-right is specified denied to the grantor on a
+            sub-target, then the granting attempt will be denied.  Otherwise the admin get granted 
+            the right will end of having "more" rights than the granting admin.
+            
+            e.g continue with the above example, if user1@test.com and user2@test.com are members 
+                of dl@test.com, and there is a negative grant on user1@test.com that denies adminA 
+                to modify zimbraFeatureCalendarEnabled, like:
+                     {id-of-adminA} usr -set.account.zimbraFeatureCalendarEnabled
+                     
+                Then:
+                - adminA *cannot* grant the modifyAccount right on dl@test.com to others(e.g. adminB).  
+                  Because if the granting is allowed, then adminB will be able to set zimbraFeatureCalendarEnabled 
+                  on account user1@test.com, which adminA is not allowed to do.
+                - adminA *can* still grant the modifyAccount right on user2@test.com to others.
+                    
+      
+4.2.4 Which Target Type can a Right be Granted on
+      A right can only be granted on target types the right is applicable or on targets from 
+      which the right can be inherited from.
+      
+      e.g. an "account right" (e.g. renameAccount) can be granted on:
+              - accounts
+              - distribution lists
+              - domains
+              - global grant  
+              
+      e.g. a "account and cos" right (e.g. configureQuota) can be granted on:        
+              - accounts
+              - distribution lists
+              - domains
+              - cos's
+              - global grant  
+              
+              
+      For combo right, if any right in the combo right is not applicable on the target, the 
+      right cannot be granted on the target.
+      
+      e.g. if a combo right contains:
+                modifyAccount  (an account right)
+                configureQuota (a cos and account right)
+                modifyCos      (a cos right)
+           
+           then:
+           - the combo right *cannot* be granted on account targets, because modifyCos 
+             is only applicable on cos targets.
+           - the combo right *cannot* be granted on cos targets, because modifyAccount 
+             is only applicable on account targets.
+           - the combo right *can* be granted on the global grant target, because both 
+             account and cos can inherit from global grant.   
+ 
+ 
+=================
+5. Storage - LDAP
+=================
+
+5.1 Grants
+
+    A grant, which is represented by an ACE, is stored in a LDAP attribute zimbraACE on target entries.  
+
+    zimbraACE:
+    ---------- 
+        type="astring"
+        cardinality="multi" (each value is an Access Control Entry, hence making an ACL)
+        optionalIn="account,distributionList,cos,domain,globalConfig,server,xmppcomponent,zimlet"
+            
+            
+    zimbraACE Format:
+    -----------------   
+        {grantee-zimbraId} {grantee-type} [{right-modifier}]{right} 
+        
+            {grantee-zimbraId} = zimbraId of the grantee
+            
+            {grantee-type} = usr - grantee is an admin account
+                             grp - grantee is a group of admin accounts
+                             dom - grantee is a domain (only for the crossDomainAdmin right)
+                             
+            {right} = the right.
+            
+            {right-modifier} = - | +
+                               '-': the right is specifically denied. 
+                               '+': the right is allowed, and the whole or part of the 
+                                    right can be delegated to others.
+                               missing (no modifier): the right is allowed.             
+        
+    
+         e.g.
+            - On a domain target:    
+                  75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 usr createAccount
+                      ==> account 75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 can create accounts in this domain.
+                      
+                  55e1d53f-83cb-4d4c-a6a8-3b3da7841fd1 grp -setPassword
+                      ==> None of any direct or indirect members of DL 55e1d53f-83cb-4d4c-a6a8-3b3da7841fd1 can  
+                          set password for any accounts in this domain
+                          
+                  75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 usr -configureGAL
+                      ==> account 75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 can configure GAL on this domain
+                      
+                  75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 usr +configureGAL
+                      ==> account 75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 can configure GAL on this domain 
+                          and can delegate the right to others.
+        
+            - On an account target:
+                  3b00a6bd-12ca-417d-9312-c5664a8c26b3 grp -setPassword
+                      ==> None of any direct or indirect members of DL 3b00a6bd-12ca-417d-9312-c5664a8c26b3 can 
+                          set password for this account.
+                          
+                  c2e3fd70-97ac-43a4-8caa-4bf681251a49 usr configureQuota
+                      ==> account c2e3fd70-97ac-43a4-8caa-4bf681251a49 can configure quota of this account.
+                      
+                  2246ffcf-1ae2-402a-be91-bc0b3be4c0f0 usr set.account.zimbraMailStatus
+                      ==> account 2246ffcf-1ae2-402a-be91-bc0b3be4c0f0 can set account attribute zimbraMailStatus.
+                       
+        
+    Indexing:
+    ---------    
+        zimbraACE is indexed.  This is to discover the "all rights granted to a grantee G" information for admin console.
+        
+    
+    Queries:
+    --------
+        TODO
+
+
+
+    
+5.2 Add the "global grant" Entry
+    DN: cn=globalgrant,cn=zimbra
+    
+    - For granting grants that affect all entries on the system.  e.g all cos's, all servers, all domains.
+    
+    - For granting the create{Object} rights that cannot be granted on any target becasue the target does not exist yet.
+      e.g. createTopDomain, createCos, createServer.
+           
+
+5.3 Add ACL Related Attributes
+
+- zimbraACE 
+       see 5.1
+
+- zimbraConstratint
+      <attr id="766" name="zimbraConstraint" type="string" cardinality="multi" optionalIn="globalConfig,cos" since="6.0">
+        <desc>
+            attribute constraints
+            TODO: fill all the constraints
+        </desc>
+      </attr>
+
+- zimbraIsDelegatedAdminAccount
+      see 4.
+
+- zimbraIsAdminGroup
+      see 4.
+      
+     
+5.4 Deprecated Attributes
+
+- zimbraIsDomainAdminAccount
+      All right checking will be based on ACL.   zimbraIsDomainAdminAccount will be ignored throughout the server code.
+      Current accounts with zimbraIsDomainAdminAccount=TRUE will be migrated by granting them the equivalent rights.
+      
+      
+=====================
+6. ACL Checking Rules
+=====================
+
+6.1 The Most Specific Grant Takes Precedence
+    A) Target Scope
+       
+       most specific                                                          least specific 
+       ----------------------------------------------------------------------------------------
+       account            -> distribution lists -> domain(of the account)  -> global grant
+       distribution list  -> distribution lists -> domain(of the DL)       -> global grant
+       domain                                                              -> global grant
+       cos                                                                 -> global grant
+       server                                                              -> global grant
+       xmppcomponents                                                      -> global grant
+       zimlet                                                              -> global grant
+       
+       Note:
+         - all groups the account is a direct/indirect member of are considered equally 
+           when judging the grants.  We take union of all grants granted on all groups the 
+           target account is a member of.  If there is any negative grants, deny.  If 
+           the union is empty, deny,  Otherwise, allow.
+           
+         - sub domain does not have a role in grant judging.
+       
+       
+       e.g.1  given the following grants for right R:
+       
+            domain D (grant-1: allow admin A)
+                group G1 (grant-2: deny admin A)
+                    account U (grant-3: allow admin A)
+                 
+            - admin A is allowed, because the most specific grant(grant-3) allows it.
+          
+       
+       e.g.2 given the following grants for right R:
+         
+            domain D (grant-1: allow admin A)
+                group G1 (grant-2: deny admin A)
+                    group G2 (grant-3: allow admin A)
+                        account U 
+                   
+            - admin A is denied, because grant-2 denies it.
+              Note: grant-2 and grant-3 are equally related to account U, grant-2 takes
+                    precedence because it is a negative grant. (see 5.2)
+
+    
+    
+    B) Grantee Scope
+    
+       most specific                                 least specific 
+       ------------------------------------------------------------
+       account                                       distribution lists
+       
+       Note:
+         - all groups the account is a direct/indirect member of are considered equally 
+           when judging the grants.  We take union of all grants granted on all groups the 
+           target account is a member of.  If there is any negative grants, deny.  If 
+           the union is empty, deny,  Otherwise, allow.
+       
+       e.g.1 given the following grants for right R:
+
+           user account U (grant-1: deny GA) (grant-2: allow A2)
+                  
+           admin group GA (A1 and A2 are members of group GA)
+               admin account A1
+               admin account A2
+                     
+           - admin A1 is denied for right R on account U, because grant-1 denies it.  
+                
+           - admin A2 is allowed for right R on account U, because grant-2 allows it.
+             grant-2 takes precedence over grant-1 because it is directly granted to the 
+             admin account, whereas grant-1 is granted to a group.
+                
+       
+    C) Combining Target Scope and Grantee Scope: Target Relativity takes Precedence over Grantee Relativity
+       
+       For example, given the following grants for right R:
+       
+           group GU (grant-1: deny admin A)
+                   user account U (grant-2: allow group GA)
+                       
+           group GA (A is a member of group GA)
+               admin account A
+                   
+           - A is *allowed* for right R on target account U, because grant-2(granted on the target itself) is 
+             more specific to account U than grant-1(granted on a group the target account is a member of).
+             Even if on the grantee side, grant-1(grant to account A) is more specific than grant-2(grant to a group 
+             the authed account is a member of)
+                                  
+
+6.2 Negative Grants Takes Precedence Over Positive Grants
+    If grants are all equally related to the target and grantee, and they conflict - dome deny, some allow,
+    then the negative grant takes precedence.
+    
+    e.g.1. 
+           target account U (grant-1: allow group GA) (grant-2: deny group GA)
+           
+           admin account A is a member of group GA
+           
+           - admin account A is denied, because grant-2, the negative grant, takes precedence.
+           
+    e.g.2. 
+           group GU-1 (grant-1: deny admin A)
+               group GU-2 (grant-2: allow admin A)
+                   account U
+           
+           - admin A is denied, because grant-1 and grant-2 are equally related to the target account U,
+             so the negtive grant takes precedence.  
+       
+    
+    
+6.3 For Get{object}/Modify{object} SOAP Requests
+    All positive/negative rights will be expanded down to each attribute level and computed into an
+    effective set of attributes allowed for read/write.
+    
+    Get{object}/Modify{object} will be allowed only if all attributes requested for Get/Modify are allowed 
+    to be read/modified; otherwise the entire request will be denied(PERM_DENIED exception) and no attribute 
+    is returned/modified.
+
+
+===============
+7. Admin SOAP
+===============
+
+See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
+
+7.1 Granting and Revoking Rights on a Target
+    
+    - GrantRightRequest
+      Grant right on a target.
+
+    - RevokeRightRequest
+      Revoke right previously granted on a target.
+
+
+7.2 Checking Rights and Getting Grants on a Target
+
+    - CheckRightRequest
+      Check if a principal has the specified right on target.
+    
+    - GetEffectiveRightsRequest
+      Returns all *effective* rights the authenticated admin has on the specified target entry.
+    
+      Effective rights are the rights the admin is actually allowed.  It is the net result of 
+      applying ACL checking rules given the target and grantee.  Specifically denied rights 
+      will *not* be returned.
+    
+      The result can help the admin console decide on what tabs to display after a target 
+      is selected.  For example, after user1 is selected, if the admin does not have right 
+      to setPassword, it should probably hide or gray out the setPassword tab.
+    
+    - GetAllEffectiveRightsRequest
+      Like GetEffectiveRightsRequest, but this call returns effective rights on all targets 
+      onthe system, not just a specific target. 
+    
+    - GetGrantsRequest
+      Returns all grants on the specified target entry.
+      The authenticated admin must have an effective "viewGrants" (TBD) system right on the specified target.
+             
+    - GetCreateObjectAttrsRequest
+      
+      Returns attributes, with defaults and constratints if any,  that can be set by the authed admin when an 
+      object is created.
+      
+      GetCreateObjectAttrsRequest returns the equivalent of setAttrs portion of GetEffectiveRightsResponse.
+      GetCreateObjectAttrsRequest is needed becasue GetEffectiveRightsRequest requires a target, but when we are 
+      creating a object, the target object does not exist yet.
+      
+      The result can help the admin console decide on what tabs/attributes to display for creating objects.
+    
+
+7.3 Get/GetAll Right Definition
+
+    - GetRightRequest
+      Get definition for a right.
+    
+    - GetAllRights
+      Get all system defined rights
+      
+
+
+===========
+8. zmprov
+===========
+
+8.1 zmprov -l (ldap)
+    - zmprov -l will continue to support all it is supporting now, including create/delete/rename any objects and modifying 
+      any non-immutable attributes
+
+    - "zmprov -l" is ***not*** restricted by any ACL.   
+    
+    - This is reasonable and is not a security hole because in order to run "zmprov -l", someone must actually logon to a box 
+      ZCS is installed and has read access to localconfig.xml, which contains the LDAP root password.
+
+
+8.2 zmprov (via soap)
+
+    run "zmprov help right" for all right related zmprov commands.
+
+
+========================================
+9. Admin console
+========================================
+
+Admin console will only display/enable the UI components that are:
+
+(1) Allowed to the authenticated admin baesd on the effective rights granted to the 
+    admin and/or to an admin group the admin belongs.
+and
+(2) Enabled by zimbraAdminConsoleUIComponents
+    zimbraAdminConsoleUIComponents is a multi-value attribute on account and distributuon list.
+    Admin console will only enable views/tabs that are listed in zimbraAdminConsoleUIComponents.
+    UI components not listed in zimbraAdminConsoleUIComponents will be disabled, even when the 
+    authed admin has enough rights for the tasks.
+
+
+TODO: document the list of all admin console UI components.
+
+
+========================================
+10. Backward Compatibility and Migration
+========================================
+
+10.1 Switch to the new Access Manager
+   
+    The new ACL based access manager and the legacy domain based access manager check disjoint, 
+    non-conflicting bits of the authed account and target objects.   This makes switching back 
+    and forth between the two access managers possible.  However keep in mind it is not an 
+    officially supported feature.  That is, after upgrading to GnR, the only officially supported 
+    permission checking scheme is the ACL based admin.
+    
+    The legacy domain based access manager looks at the authed account's zimbraIsAdminAccount 
+    and zimbraIsDomainAdminAccount attributes.  It does *not* look at any ACL.
+    
+    The new pure ACL based access manager looks at the authed account's zimbraIsAdminAccount 
+    and zimbraIsDelegatedAdminAccount.  If zimbraIsAdminAccount is TRUE, everything is allowed, 
+    without checking any ACL.  Otherwise if zimbraIsDelegatedAdminAccount, it checks ACLs 
+    granted to the account or any admin groups it belongs.
+    
+    To use the legacy domain based access manager, do:
+        zmlocalconfig -e zimbra_class_accessmanager=com.zimbra.cs.account.accesscontrol.DomainACLAccessManager
+    
+    To use the new pure ACL based access manager, do:
+        zmlocalconfig -e zimbra_class_accessmanager=com.zimbra.cs.account.accesscontrol.ACLAccessManager
+        
+    then restart the server.
+    
+    *** Important note: the localconfig key has to be consistent across all servers, or else the 
+        behavior is unexpected.  And again, only the pure ACL based access manager is officially 
+        supported.
+    
+
+10.2 Migrating Current Admin Accounts
+
+10.2.1 For current global admins (zimbraIsAdminAccount),
+       Nothing needs to be done.  The zimbraIsAdminAccount attribute will continue to allow  
+       them to do anything.  
+
+10.2.2 For current domain admins (zimbraIsDomainAdminAccount),
+       (1) set zimbraIsDelegatedAdminAccount to TRUE
+       
+       (2) Grant the following rights to them.  These rights will give them exactly the 
+           same(no more no less) privilege they had in FRANKLIN.
+           
+           - On their domain: domainAdminRights
+             e.g. 
+                zmprov grr domain test.com usr domainadmin@test.com domainAdminRights
+                or use the admin console
+          
+           - On COS's they used be able to see: domainAdminCosRights 
+             The domainAdminCosRights combo right contains rights allowing them to:
+             - see COS's visible to them in GetAllDomains
+             - do GetCos on COS's visible to them.
+             e.g.
+                zmprov grr cos cos1 usr domainadmin@test.com domainAdminCosRights
+                zmprov grr cos cos2 usr domainadmin@test.com domainAdminCosRights
+                or use the admin console
+             
+           - On global grant: domainAdminZimletRights
+             The domainAdminZimletRights combo right contains rights allowing them to:
+             - see all zimlets in GetAllZimlets
+             - do GetZimlet on any zimlet.
+             e.g.
+                zmprov grr global usr domainadmin@test.com domainAdminZimletRights
+           
+
+10.3 Reference and Documentations
+
+(1) ZimbraServer/docs/rights.txt
+        Rights needed for each admin SOAP command and notes.
+        This file is generated by running the "zmprov getRightsDoc(grd) command.
+        It is also checked in p4.
+        
+(2) zmprov getAllRights(gar) [-v] {target-type}
+        List all admin rights.     
+        If {target-type} is given, it returns rights *grantable* on the target type.
+        e.g. 
+            zmprov gar -v domain
+            returns all rigths that are grantable on a domain, which includes all 
+            domain rights, account rights, calendar resource rights, and distribution 
+            list rights.
+            
+10.4. TODO
+     We still need to go in all admin extensions to convert the right checking code 
+     to use the right checking new API.   I currently only converted admin SOAPs in 
+     the core product.
+     
+
+===========================
+11. References, requirements
+===========================
+- Kevin Kluge's requirement doc: 
+  https://dogfood.zimbra.com/home/kluge/Public/delegateAdmin
+
+- role based delegate administration
+  http://bugzilla.zimbra.com/show_bug.cgi?id=11515
+
+- server side infrastructure for role based delegated administration
+  http://bugzilla.zimbra.com/show_bug.cgi?id=18277
+
+- Customer Care App Requirements 
+  http://twiki.corp.yahoo.com/view/Mail/ZimbraCustomerCareApp
+  

@@ -1,0 +1,127 @@
+Return-Path: <xmlbeans-dev-return-170-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8MJL7TZ027040 for
+	<smith@popserver1.stanford.edu>; Mon, 22 Sep 2003 12:21:08 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8MJKW2m024407 for
+	<smith@stanford.edu>; Mon, 22 Sep 2003 12:20:59 -0700 (PDT)
+Received: (qmail 3961 invoked by uid 500); 22 Sep 2003 19:20:26 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 3948 invoked from network); 22 Sep 2003 19:20:26 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: Getting the distribution onto a download site somewhere ...
+Date: Mon, 22 Sep 2003 12:20:29 -0700
+X-Zimbra-Received: Mon, 22 Sep 2003 12:20:29 -0700
+Message-ID: <4B2B4C417991364996F035E1EE39E2E11CCD0B@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: Getting the distribution onto a download site somewhere ...
+Thread-Index: AcOBOZtZYghAyv6JQuujIMz5/B0znwAAHXow
+From: "David Remy" <dremy@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+X-OriginalArrivalTime: 22 Sep 2003 19:20:31.0071 (UTC)
+	FILETIME=[96937EF0:01C3813E]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=us-ascii
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000002f-0010
+
+So XMLBeans must get out of incubation without a 'Release'?  I thought a
+part of judging the community was whether XMLBeans was able to have a
+couple of releases, at least minor releases, to show that there was an
+active productive community.  It seems like a difficult proposition for
+XMLBeans to create momentum if it is not towards a specific release(s).
+I mean what would the community be working towards?  The way I have been
+thinking about incubation is to go forth and begin working like a full
+fledged Apache project and naturally XMLBeans would prove it could build
+a productive community (or not).  I assume most active Apache projects
+are working regularly working towards a release (or perhaps even a
+version release).
+
+XMLBeans 1.0 is already a well tested codebase that is in user's hands
+right now.  The code that is in CVS is even further bug fixed with many
+improvements and features, so it seems in everyone's best interest to
+make it available in a recognizable way.  It seems that doing this the
+correct way would be a step in XMLBeans growing and establishing the
+Apache practices. =20
+
+That being said I started the discussion for tactical reasons so that we
+could make a distribution available somewhere.  I certainly think in the
+short term we could do the naming thing.  XMLBeans is just now working
+on getting the site into forrest.  I was just looking for a place to
+link to so that users could get a distribution in addition to source.
+Doing nightly builds, much less release builds, haven't been worked out
+at all yet. =20
+
+Personally, it seems more logical to me that incubated projects should
+actually be required to have a release or two to prove that they have a
+productive community rather than the other way around.  The fact that
+the project is incubation should give users the indication of the risk
+they are taking and protect the Apache brand. =20
+
+rem
+
+
+
+> -----Original Message-----
+> From: Ted Leung [mailto:twleung@sauria.com]=20
+> Sent: Monday, September 22, 2003 11:44 AM
+> To: xmlbeans-dev@xml.apache.org
+> Subject: Re: Getting the distribution onto a download site=20
+> somewhere ...
+>=20
+>=20
+> Dave,
+>=20
+> The majority opinion on general@incubator is that XMLBeans=20
+> cannot make=20
+> an "official" release until it exits incubation.  So we need=20
+> to come up=20
+> with a creative release name that indicates the stability of XMLBeans=20
+> without claim to be a full ASF project/release.  At the=20
+> moment I can't=20
+> think of anything less ugly than
+>=20
+> incubated-xmlbeans-1.0.0.zip
+>=20
+> unless you guys want to label it something creative like 1.0.1beta=20
+> something and leave the 1.0 release @ BEA.
+>=20
+> Ted
+>=20
+> On 9/18/2003 1:59 PM, David Remy wrote:
+>=20
+> >cool, thanks Ted.  the first document here mentions using ssh to=20
+> >minotaur to set up the directories.  what password should I use for=20
+> >this?  (I tried my committer password ...)
+> >
+> > =20
+> >
+> >
+>=20
+>=20
+> -=20
+> ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+> For additional commands, e-mail:=20
+> xmlbeans-dev-help@xml.apache.org Apache XMLBeans Project --=20
+> URL: http://xml.apache.org/xmlbeans/
+>=20
+>=20
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

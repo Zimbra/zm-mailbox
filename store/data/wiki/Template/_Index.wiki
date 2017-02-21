@@ -1,0 +1,3 @@
+<wiklet class='TOC' format="template" bodyTemplate="_TocBodyTemplate" itemTemplate="_TocItemTemplate" />
+
+

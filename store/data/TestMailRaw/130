@@ -1,0 +1,67 @@
+Return-Path: <xmlbeans-user-return-25-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.64.14.58])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h98FcoLB020393
+	for <smith@popserver1.stanford.edu>; Wed, 8 Oct 2003 08:38:50 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id h98FchCb000836 for
+	<smith@stanford.edu>; Wed, 8 Oct 2003 08:38:43 -0700 (PDT)
+Received: (qmail 47595 invoked by uid 500); 8 Oct 2003 15:38:39 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 47582 invoked from network); 8 Oct 2003 15:38:38 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Subject: FW: relaxing the JDK 1.4 requirement
+Date: Wed, 8 Oct 2003 08:38:40 -0700
+X-Zimbra-Received: Wed, 8 Oct 2003 08:38:40 -0700
+Message-ID: <4B2B4C417991364996F035E1EE39E2E11CCDFD@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: relaxing the JDK 1.4 requirement
+Thread-Index: AcONsj6nNv1vBW03Q5uKwj/gR1D6WQ==
+From: "David Remy" <dremy@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+X-OriginalArrivalTime: 08 Oct 2003 15:38:41.0916 (UTC)
+	FILETIME=[404F9BC0:01C38DB2]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000082-0010
+
+I think this message was accidently rejected by a moderator so I am
+forwarding.
+
+> -----Original Message-----
+> From: Maurice_E_Sherman@Keane.Com=20
+> [mailto:Maurice_E_Sherman@Keane.Com]=20
+> Sent: Wednesday, October 08, 2003 7:42 AM
+> To: xmlbeans-user@xml.apache.org
+> Subject: relaxing the JDK 1.4 requirement
+>=20
+>=20
+>=20
+> XMLBeans seems ideal for my project, but I'm constrained to=20
+> using a 1.3.1 JDK in deployment, but not in development. =20
+> Anyone have any advice on the feasibility of using XMLBeans=20
+> in a JDK 1.3.1 deployment environment.
+>=20
+> Thanks,
+> Maurice
+>=20
+>=20
+>=20
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

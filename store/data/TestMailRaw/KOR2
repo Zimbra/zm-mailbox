@@ -1,0 +1,78 @@
+Received:  from gateway.example.zimbra.com ([10.10.130.30]) by scooby.toons.example.zimbra.com with Microsoft SMTPSVC(6.0.3790.0); Thu, 24 Jun 2004 11:30:59 -0700
+Received:  from example.zimbra.com (unknown [10.10.130.37]) by gateway.example.zimbra.com (Postfix) with ESMTP id AF4FB2408A for <jhamm@toons.example.zimbra.com>; Thu, 24 Jun 2004 11:31:23 -0700 (PDT)
+Content-class: urn:content-classes:message
+Subject: =?ks_c_5601-1987?B?UkU6IMfRsdsgxde9usauIChLb3JlYW4gdGVzdCk=?=
+Date: Thu, 24 Jun 2004 11:31:13 -0700
+X-Zimbra-Received: Thu, 24 Jun 2004 11:31:13 -0700
+Message-ID: <062EF322A9DDF14B887BCAE6C5F7E0755EB2@exch1.example.zimbra.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+	boundary="----_=_NextPart_003_01C45A19.65187380"
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: =?ks_c_5601-1987?B?x9Gx2yDF1726xq4gKEtvcmVhbiB0ZXN0KQ==?=
+Thread-Index: AcRaGV5wQQ/gGNTmQr62Klxg6mn9yQAAAaCw
+From: "Jiho Hamm" <jhamm@example.zimbra.com>
+X-MimeOLE: Produced By Microsoft Exchange V6.5.7226.0
+To: "Jiho Hamm" <jhamm@example.zimbra.com>,
+	"Jiho Hamm" <jhamm@toons.example.zimbra.com>
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_003_01C45A19.65187380
+Content-Type: text/plain;
+	charset="ks_c_5601-1987"
+Content-Transfer-Encoding: quoted-printable
+
+first reply
+=C3=B9=B9=F8=C2=B0 =B4=E4=C0=E5
+
+________________________________
+
+From: Jiho Hamm=20
+Sent: Thursday, June 24, 2004 11:31 AM
+To: jhamm@toons.example.zimbra.com; Jiho Hamm
+Subject: =C7=D1=B1=DB =C5=D7=BD=BA=C6=AE (Korean test)
+
+
+This is a test message in Korean.
+=C7=D1=B1=DB =C5=D7=BD=BA=C6=AE =B8=DE=BC=BC=C1=F6=C0=D4=B4=CF=B4=D9.
+Sent from Outlook between two Exchange accounts.
+=20
+
+------_=_NextPart_003_01C45A19.65187380
+Content-Type: text/html;
+	charset="ks_c_5601-1987"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD>
+
+<META content=3D"MSHTML 6.00.2800.1400" name=3DGENERATOR></HEAD>
+<BODY>
+<DIV dir=3Dltr align=3Dleft><SPAN class=3D760583018-24062004><FONT =
+color=3D#0000ff=20
+size=3D2>first reply</FONT></SPAN></DIV>
+<DIV dir=3Dltr align=3Dleft><SPAN class=3D760583018-24062004><FONT =
+color=3D#0000ff=20
+size=3D2>=C3=B9=B9=F8=C2=B0 =B4=E4=C0=E5</FONT></SPAN></DIV><BR>
+<DIV class=3DOutlookMessageHeader lang=3Den-us dir=3Dltr align=3Dleft>
+<HR tabIndex=3D-1>
+<FONT face=3DTahoma size=3D2><B>From:</B> Jiho Hamm <BR><B>Sent:</B> =
+Thursday, June=20
+24, 2004 11:31 AM<BR><B>To:</B> jhamm@toons.example.zimbra.com; Jiho=20
+Hamm<BR><B>Subject:</B> =C7=D1=B1=DB =C5=D7=BD=BA=C6=AE (Korean =
+test)<BR></FONT><BR></DIV>
+<DIV></DIV>
+<DIV><SPAN class=3D879342918-24062004><FONT face=3D=B1=BC=B8=B2 =
+size=3D2>This is a test message=20
+in Korean.</FONT></SPAN></DIV>
+<DIV><SPAN class=3D879342918-24062004><FONT face=3D=B1=BC=B8=B2 =
+size=3D2>=C7=D1=B1=DB =C5=D7=BD=BA=C6=AE=20
+=B8=DE=BC=BC=C1=F6=C0=D4=B4=CF=B4=D9.</FONT></SPAN></DIV>
+<DIV><SPAN class=3D879342918-24062004><FONT face=3D=B1=BC=B8=B2 =
+size=3D2>Sent from Outlook=20
+between two Exchange accounts.</FONT></SPAN></DIV>
+<DIV><SPAN class=3D879342918-24062004></SPAN>&nbsp;</DIV></BODY></HTML>
+
+------_=_NextPart_003_01C45A19.65187380--

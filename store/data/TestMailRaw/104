@@ -1,0 +1,87 @@
+Return-Path: <xmlbeans-user-return-65-smith=stanford.edu@xml.apache.org>
+Received: from leland5.Stanford.EDU (leland5.Stanford.EDU [171.64.14.121])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9MNkAdX000214
+	for <smith@popserver1.stanford.edu>; Wed, 22 Oct 2003 16:46:10 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland5.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9MNk2Vj002099 for
+	<smith@stanford.edu>; Wed, 22 Oct 2003 16:46:03 -0700 (PDT)
+Received: (qmail 69411 invoked by uid 500); 22 Oct 2003 23:45:49 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 69380 invoked from network); 22 Oct 2003 23:45:49 -0000
+Message-ID: <3F971628.6030303@wyrick.org>
+Date: Wed, 22 Oct 2004 17:43:36 -0600
+X-Zimbra-Received: Wed, 22 Oct 2004 17:43:36 -0600
+From: Robert Wyrick <rob@wyrick.org>
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.4) Gecko/20030711
+X-Accept-Language: en-us, en
+MIME-Version: 1.0
+To: xmlbeans-user@xml.apache.org
+Subject: Re: deep equals implementation?
+References: <OF27BE0517.D02F021E-ONCA256DC7.008108C4@tmca.com.au>
+In-Reply-To: <OF27BE0517.D02F021E-ONCA256DC7.008108C4@tmca.com.au>
+X-Enigmail-Version: 0.76.1.0
+X-Enigmail-Supports: pgp-inline, pgp-mime
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000068-0010
+
+With careful use of :
+
+         xmlOptions.setLoadSubstituteNamespaces(namespaceMap);
+and
+         xmlOptions.setSaveImplicitNamespaces(namespaceMap);
+
+I was able to find a tempory workaround for the very problems you mention.
+This may or may not work in your case, but it worked in ours.
+
+For "deep" compares, we simply marshal back to a string and do a string 
+compare.
+It's NOT an ideal solution and you end up with some odd looking xml when you
+marshal non-document nodes, but it works.
+
+-Rob
+
+Dmitri.Colebatch@toyota.com.au wrote:
+
+>Eric,
+>
+>Firstly, thanks for your response.  I did try walking the trees with
+>cursor, but found that equivalent trees with different namspace
+>declarations generated different tokens, understandably... I'm not sure
+>that is clear, what I mean is:
+>
+><foo xmlns="http://foo" />
+>
+>is different to
+>
+><foo:foo xmlns:foo="http://foo" />
+>
+>in terms of the cursor walk.... but I want them to be the equal.
+>
+>Any advice on getting past that would be appreciated, I had trouble trying
+>to see how to easily get past this in XmlCursor.... probably my lack of sax
+>parsing isn't helping (o:
+>
+>cheers
+>dim
+>  
+>
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

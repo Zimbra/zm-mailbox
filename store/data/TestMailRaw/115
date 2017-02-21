@@ -1,0 +1,92 @@
+Return-Path: <xmlbeans-user-return-43-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9AEsHLB015517
+	for <smith@popserver1.stanford.edu>; Fri, 10 Oct 2003 07:54:17 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9AEsACa024004 for
+	<smith@stanford.edu>; Fri, 10 Oct 2003 07:54:11 -0700 (PDT)
+Received: (qmail 8085 invoked by uid 500); 10 Oct 2003 14:54:07 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 8072 invoked from network); 10 Oct 2003 14:54:06 -0000
+Message-Id: <sf868fcc.033@corp-gw.mantech.com>
+X-Mailer: Novell GroupWise Internet Agent 5.5.6.1
+Date: Fri, 10 Oct 2003 10:53:37 -0400
+X-Zimbra-Received: Fri, 10 Oct 2003 10:53:37 -0400
+From: "Darrell Teague" <darrell.teague@mantech.com>
+To: <xmlbeans-user@xml.apache.org>
+Subject: Re: Parallel Extension Question
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000073-0010
+
+There are several W3C XML Schema validation tools available and I am sure o=
+thers on the list would have suggestions.  I will go with the mainstay that=
+ you will probably hear about:
+
+Sun's free multi-schema validation (Java-based) tool:
+http://wwws.sun.com/software/xml/developers/multischema/
+
+I use the one above and it works very well though is command-line oriented.
+
+XMLSpy from Altova: Excellent GUI product - runs on Windows only.  Relative=
+ly inexpensive but not free.
+http://www.xmlspy.com/
+
+TurboXML package from TIBCO: Very good GUI product - all Java based (runs o=
+n any platform) with rich XML repository and project management capabilitie=
+s.  More expensive than XMLSpy but more powerful and useful in a software s=
+hop that is developing lots of schemas every day.
+http://www.tibco.com/solutions/products/extensibility/turbo_xml.jsp
+
+Hope this helps.
+
+>>> ammulder@alumni.princeton.edu 10/10/03 10:45 AM >>>
+On Fri, 10 Oct 2003, Darrell Teague wrote:
+> Unfortunately, W3C XML Schema doesn't quite treat "extensions" and
+> "restrictions" like you would think in a programming language.  When
+> extending a schema from another, you actually have to redefine all of
+> the elements (this part stinks).  I believe that the problem you may be
+> having (would need to see your XSD files) is that you have defined an
+> element as mandatory in the base schema and in the extended schema you
+> therefore must include it (even though you meant to override it).
+>=20
+> I don't think this is so much of an XMLBeans issue as a general schema
+> issue.  I recommend resolution of the schema-compliance issue before
+> trying to work with XMLBeans (which needs a valid schema before it can
+> do its work in this context).  Roger Costello does an excellent
+> treatment of W3C XML Schema and has examples in his tutorials on
+> extending and restricting schema elements at http://www.xfront.com. =20
+> Hope this helps.
+
+	Is there a good schema validation tool I could use to confirm that
+my schema is valid?  I thought it was, but I'm fairly new to schemas, and
+I guess I should prove that before claiming it's an XMLBeans issue.  :)
+
+Aaron
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

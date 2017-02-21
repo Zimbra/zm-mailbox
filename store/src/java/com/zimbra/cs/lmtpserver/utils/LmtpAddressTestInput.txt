@@ -1,0 +1,123 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2013, 2014, 2016 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
+ */
+#
+# Legal empty address
+#
++:<>
+
+#
+# Illegal: too short, not <> enclosed
+#
+-:<
+-:>
+-:
+-:foo
+-:foo@bar.com
+-:<foo@bar.com
+
+#
+# Legal source routes
+#
++:<@hosts.int:user@d.bar.org>
++:<@hosts.int,@jkl.org:user@d.bar.org>
++:<@hosts.int,@jkl.org,@foo.com:user@d.bar.org>
++:<@[192.168.1.10]:user@d.bar.org>
++:<@[192.168.1.2],@[192.168.1.5]:user@d.bar.org>
++:<@hosts.int,@jkl.org,@[10.10.120]:user@d.bar.org>
++:<@hosts.int,@jkl.org,@[10.10.120]:@[192.168.1.2]:user@d.bar.org>
++:<@hosts.int:@hosts.int:user@d.bar.org>
++:<@hosts.int,@jkl.org:@hosts.int,@jkl.org:user@d.bar.org>
++:<@hosts.int,@jkl.org,@foo.com:@hosts.int,@jkl.org,@foo.com:user@d.bar.org>
++:<@hosts.int,@jkl.org,@foo.com:>
+
+#
+# Empty source routes are not allowed, but we use the same code that
+# accepts empty domain names inside source routes so we allow it.
+# Shouldn't be a big deal.
+# 
++:<@:user@d.bar.org>
+
+#
+# Invalid source routes
+#
+-:<@domain>
+-:<@[192.168.1.2]>
+-:<@hosts.intuser@d.bar.org>
+-:<@hosts.int@jkl.org:user@d.bar.org>
+-:<@hosts.int,@jkl.org,@foo.com:]>
+-:<@[192a.168.1.10]:user@d.bar.org>
+-:<@[192.168.1.2@[192.168.1.5]:user@d.bar.org>
+-:<@hosts.int,@jkl.org,@[10.10.120]@[192.168.1.2]:user@d.bar.org>
+-:<@hosts.*int:@hosts.int:@bar>
+-:<@hosts.int,*@jkl.org:@hosts.int,@jkl.org:user@d.bar.org>
+-:<@hosts.int,@jkl.org,@foo.com*:@hosts.int,@jkl.org,@foo.com:user@d.bar.org>
+-:<@hosts.int,@jkl.org,@foo.com*@:hosts.int,@jkl.org,@foo.com:user@d.bar.org>
+
+#
+# Plain local parts
+#
++:<foo>
++:        <foo>   
++:<foo@>
++:<f|o@bar>
++:<foo@bar>
++:<foo.bar@[192.167.1.1]>
++:<foobar-@[192.167.1.1]>
++:<+foobar@[192.167.1.1]>
+-:<<foo@bar>
+-:<f<oo@bar>
+-:<foo<@bar>
+-:<(oo@bar>
+-:<o,o@bar>
+-:<fo]@bar>
+-:<fo @bar>
+
+#
+# Quoted local parts
+#
++:<"">
++:<""@domain>
++:<""@192.9732239873274>
++:<"foo">
++:        <"foo">   
++:<"foo"@>
++:<"f|o"@bar>
++:<"foo"@bar>
++:<"foo.bar"@[192.167.1.1]>
++:<"foobar-"@[192.167.1.1]>
++:<"+foobar"@[192.167.1.1]>
++:<"<foo"@bar>
++:<"f<oo"@bar>
++:<"foo<"@bar>
++:<"(oo"@bar>
++:<"o,o"@bar>
++:<"fo]"@bar>
++:<" fo"@bar>
++:<"f o"@bar>
++:<"fo "@bar>
++:<"foo@bar">
+-:<"kjl ds fskj lfsld fslkj&&(*&(*(@bar>
+-:<"j\"@bar>
+-:<"j\"k@bar>
+-:<"foo"xyz@bar>
+
+#
+# Check address extensions (see recipient_delimiter docs).
+#
++:<a+b>
++:<+ab>
++:<ba+>

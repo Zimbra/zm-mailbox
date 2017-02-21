@@ -1,0 +1,64 @@
+Return-Path: <xmlbeans-user-return-42-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9AEjLLB012768
+	for <smith@popserver1.stanford.edu>; Fri, 10 Oct 2003 07:45:22 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9AEjG0G025592 for
+	<smith@stanford.edu>; Fri, 10 Oct 2003 07:45:16 -0700 (PDT)
+Received: (qmail 87688 invoked by uid 500); 10 Oct 2003 14:44:54 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 87662 invoked from network); 10 Oct 2003 14:44:54 -0000
+X-Authentication-Warning: www.princetongames.org: ammulder owned process
+	doing -bs
+Date: Fri, 10 Oct 2003 10:47:39 -0400 (EDT)
+X-Zimbra-Received: Fri, 10 Oct 2003 10:47:39 -0400 (EDT)
+From: Aaron Mulder <ammulder@alumni.princeton.edu>
+X-X-Sender: ammulder@www.princetongames.org
+To: xmlbeans-user@xml.apache.org
+Subject: Re: Parallel Extension Question
+In-Reply-To: <sf86768f.045@corp-gw.mantech.com>
+Message-ID: <Pine.LNX.4.44.0310101041450.26242-100000@www.princetongames.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000098-0010
+
+On Fri, 10 Oct 2003, Darrell Teague wrote:
+> Unfortunately, W3C XML Schema doesn't quite treat "extensions" and
+> "restrictions" like you would think in a programming language.  When
+> extending a schema from another, you actually have to redefine all of
+> the elements (this part stinks).  I believe that the problem you may be
+> having (would need to see your XSD files) is that you have defined an
+> element as mandatory in the base schema and in the extended schema you
+> therefore must include it (even though you meant to override it).
+> 
+> I don't think this is so much of an XMLBeans issue as a general schema
+> issue.  I recommend resolution of the schema-compliance issue before
+> trying to work with XMLBeans (which needs a valid schema before it can
+> do its work in this context).  Roger Costello does an excellent
+> treatment of W3C XML Schema and has examples in his tutorials on
+> extending and restricting schema elements at http://www.xfront.com.  
+> Hope this helps.
+
+	Is there a good schema validation tool I could use to confirm that
+my schema is valid?  I thought it was, but I'm fairly new to schemas, and
+I guess I should prove that before claiming it's an XMLBeans issue.  :)
+
+Aaron
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

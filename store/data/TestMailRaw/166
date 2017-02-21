@@ -1,0 +1,50 @@
+Received:  from jhamm.example.zimbra.com ([10.10.130.108]) by scooby.toons.example.zimbra.com with Microsoft SMTPSVC(6.0.3790.0); Fri, 25 Jun 2004 11:53:27 -0700
+Content-class: urn:content-classes:message
+Subject: Test with unspecified MAIL FROM
+Date: Fri, 25 Jun 2004 11:54:30 -0700
+X-Zimbra-Received: Fri, 25 Jun 2004 11:54:30 -0700
+Message-ID: <SCOOBYqsMyPASKGu93h00000005@scooby.toons.example.zimbra.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+	boundary="----_=_NextPart_003_01C45AE5.B2FAAD80"
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: Test with unspecified MAIL FROM
+Thread-Index: AcRa5dlgCVyEvpTsQBuvTVxPv1TYTw==
+X-MimeOLE: Produced By Microsoft Exchange V6.5.7226.0
+From: <No Where>
+To: "Jiho Hamm" <jhamm@toons.Zimbra.com>
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_003_01C45AE5.B2FAAD80
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+Hi, there.
+
+------_=_NextPart_003_01C45AE5.B2FAAD80
+Content-Type: text/html;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV=3D"Content-Type" CONTENT=3D"text/html; =
+charset=3Diso-8859-1">
+<META NAME=3D"Generator" CONTENT=3D"MS Exchange Server version =
+6.5.7226.0">
+<TITLE>Test with unspecified MAIL FROM</TITLE>
+</HEAD>
+<BODY>
+<!-- Converted from text/plain format -->
+
+<P><FONT SIZE=3D2>Hi, there.<BR>
+</FONT>
+</P>
+
+</BODY>
+</HTML>
+------_=_NextPart_003_01C45AE5.B2FAAD80--

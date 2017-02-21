@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<localconfig>
+
+  <key name="ssl_allow_untrusted_certs">
+    <value>true</value>
+  </key>
+
+  <!--
+    MySQL Connection Properties
+
+    Full list of properties are documented at:
+    http://dev.mysql.com/doc/connector/j/en/cj-configuration-properties.html#id2757028
+  -->
+  <!-- Uncomment to enable SQL tracing.  Traces go to mailbox.log. -->
+  <!--
+  <key name="zimbra_mysql_connector_profileSQL">
+    <value>true</value>
+  </key>
+  <key name="zimbra_mysql_connector_logSlowQueries">
+    <value>true</value>
+  </key>
+  <key name="zimbra_mysql_connector_slowQueryThresholdMillis">
+    <value>50</value>
+  </key>
+  <key name="zimbra_mysql_connector_dumpQueriesOnException">
+    <value>true</value>
+  </key>
+  -->
+  <!-- MySQL bug: NullPointerException is thrown if explainSlowQueries is
+       enabled and a slow query is detected.  Do not use this option. -->
+  <!--
+  <key name="zimbra_mysql_connector_explainSlowQueries">
+    <value>false</value>
+  </key>
+  -->
+
+<!-- 
+Use the following sintax to disable individual Admin SOAP handlers. 
+This feature is used for securing admin server in hosted deployment (bug# 30510). If this key is present, any Admin SOAP handlers that are not in the white list will not be loaded.
+	<key name="admin_soap_white_list">
+		<value>{coma-saparated list of SOAP Requests to include, e.g.: urn:zimbraAdmin::RenameAccountRequest,urn:zimbraAdmin::ModifyAccountRequest}.</value>
+	</key>
+	See admin_soap_white_list.txt for more information about this configuration key.
+-->
+  <!-- Switches to turn off various features for performance testing -->
+  <key name="debug_disable_conversation">
+    <value>false</value>
+  </key>
+  <key name="debug_disable_filter">
+    <value>false</value>
+  </key>
+  <key name="debug_disable_message_analysis">
+    <value>false</value>
+  </key>
+  <key name="debug_disable_mime_part_extraction">
+    <value>false</value>
+  </key>
+  <key name="debug_disable_indexing">
+    <value>false</value>
+  </key>
+  <key name="debug_disable_indexing_attachments_separately">
+    <value>false</value>
+  </key>
+  <key name="debug_disable_indexing_attachments_together">
+    <value>false</value>
+  </key>
+  <key name="debug_disable_objects">
+    <value>false</value>
+  </key>
+  <key name="debug_validate_outgoing_icalendar">
+    <value>true</value>
+  </key>
+
+  <key name="debug_disable_mailbox_group">
+    <value>false</value>
+  </key>
+  <key name="zimbra_disk_cache_servlet_flush">
+    <value>false</value>
+  </key>
+  <key name="zimbra_mailbox_groups">
+    <value>100</value>
+  </key>
+</localconfig>

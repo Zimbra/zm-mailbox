@@ -1,0 +1,118 @@
+Return-Path: <xmlbeans-dev-return-333-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h93JqkLB012336 for
+	<smith@popserver1.stanford.edu>; Fri, 3 Oct 2003 12:52:47 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id h93JqeKJ006406 for
+	<smith@stanford.edu>; Fri, 3 Oct 2003 12:52:41 -0700 (PDT)
+Received: (qmail 12710 invoked by uid 500); 3 Oct 2003 19:52:34 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 12697 invoked from network); 3 Oct 2003 19:52:33 -0000
+Date: Fri, 3 Oct 2003 12:52:38 -0700
+X-Zimbra-Received: Fri, 3 Oct 2003 12:52:38 -0700
+From: Scott Ziegler <zieg@bea.com>
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: builtin type conversions
+Message-ID: <20031003195238.GA19811@zieg.beasys.com>
+References: <1065122063.14001.18.camel@zieg>
+	 <013801c389c3$79b021c0$0fa8a8c0@lightbox>
+Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <013801c389c3$79b021c0$0fa8a8c0@lightbox>
+User-Agent: Mutt/1.4.1i
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=us-ascii
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000006c-0010
+
+Comments inline.
+
+On Fri, Oct 03, 2003 at 11:31:52AM -0400, David Bau wrote:
+> For each primitive we probably need to have four functions:
+> 
+> (1) Lex the characters into a logical value (and note any well-formedness
+> error in doing so)
+> float lexFloat(CharSequence input, Collection errors)
+> 
+>   (1.1) Note that customized whitespace-collapse rules may be need to be
+> applied while doing (1) [strings only?]
+> String lexString(CharSequence input, int wsRule, Collection errors)
+> 
+> (2) Validate custom lexical rules for a user-defined type (patterns, length,
+> etc) (and note any error)
+> void validateFloatLex(CharSequence input, SchemaType actualType, Collection
+> errors)
+> 
+> (3) Validate custom logical rules for a user-defined type (min, max, etc)
+> void validateFloatValue(float value, SchemaType acutalType, Collection
+> errors)
+> 
+> (4) Write a value out to characters
+> String printFloat(float value)
+> 
+> In the fastest unmarshalling path, we'd just use (1); but full validators
+> would also use (2) and (3).
+
+Those four methods sound good.  I am a little nervous about the
+untyped collection for errors but I guess I can live with it.
+
+> I _think_ the whitespace customization issue is unique to xs:string's
+> subtypes - can whitespace rules be customized for any other schema types?
+
+I just checked the spec -- you're correct, only for xsd:string and subtypes.
+
+> I think we should probably parse using input from CharSequence rather than
+> String so that we can avoid String allocation where possible.  Strings are
+> CharSequences anyway, so should be no loss in power. Seem right?
+
+In theory yes, but I have two comments:
+
+1.  I think we should guarantee that we will not hold a ref to the
+passed in CharSequence so that callers can reuse a CharSequence object
+and not have to create one for each invoke of these methods.
+
+2. Methods like java.lang.Float.parseFloat take a String, not a
+CharSequence.  I really do not want to rewrite that method -- look at
+the jdk source and I think you'll agree.
+
+> A question: is there a similar strategy that can be done for the printing
+> side of things so we can avoid String allocation for data that is just on
+> its way into a character array (or even a byte array) anyway?
+
+I think this is the same problem as I mentioned above.  We'd have to
+get into the business of writing float -> char[] methods which
+personally I'd rather leave to the jdk (or some other project).
+
+> The parsing for the seven schema date types is currently consolidated in
+> GDate (and we probalby want to continue doing so), although we might
+> eventually consider parsing directly into a Calendar subclass instead of our
+> GDate waypoint (any volunteers?)
+> 
+> I'd be happy if we consolidated all these primitive lexing/validating
+> functions on one big class of static functions; or if there were one class
+> for each primitive, or one class for lexing and another for validating.  Any
+> form of cleanup there would be welcome.
+
+I think I'm leaning toward one class per primitive, but I could be
+talked into something else.
+
+> In asking the Q, does this mean you're going to rationalize this stuff
+> Scott?  (Please do if you want to.)
+
+Sure I'll do it, unless someone else wants to :)
+
+--Scott
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

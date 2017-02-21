@@ -1,0 +1,160 @@
+Return-Path: <xmlbeans-user-return-13-smith=stanford.edu@xml.apache.org>
+Received: from leland4.Stanford.EDU (leland4.Stanford.EDU [171.64.14.29])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h91LLt5a001760
+	for <smith@popserver1.stanford.edu>; Wed, 1 Oct 2003 14:21:55 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland4.Stanford.EDU (8.12.10/8.12.10) with SMTP id h91LLjoS015681 for
+	<smith@stanford.edu>; Wed, 1 Oct 2003 14:21:46 -0700 (PDT)
+Received: (qmail 62295 invoked by uid 500); 1 Oct 2003 21:21:38 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 62282 invoked from network); 1 Oct 2003 21:21:38 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: problems with inheritance while saving XML
+Date: Wed, 1 Oct 2003 14:21:43 -0700
+X-Zimbra-Received: Wed, 1 Oct 2003 14:21:43 -0700
+Message-ID: <4B2B4C417991364996F035E1EE39E2E108507A@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: problems with inheritance while saving XML
+Thread-Index: AcOIOlM+sKLv+KFdRhaSNzMSIz1FpAAJu9hw
+From: "David Remy" <dremy@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+X-OriginalArrivalTime: 01 Oct 2003 21:21:44.0738 (UTC)
+	FILETIME=[03BCC020:01C38862]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000008d-0010
+
+Hi Carl,
+I *think* what you are looking for is the changeType method which, when com=
+bined with a cast will allow you to get a MSIDTO.  Here is an example that =
+worked for me which I *think* matches your use case ...  Hope this helps.  =
+If not we can keep on trying ...
+
+// I gave the schema a targetnamespace of foo.com
+import com.foo.dto.DTO;
+import com.foo.dto.DTOCollectionDocument;
+import com.foo.dto.DTOCollectionDocument.DTOCollection;
+import com.foo.dto.MSIDTO;
+
+public class Untitled=20
+{=20
+    public long getSecondMSID() {
+
+        DTOCollectionDocument doc =3D populateDTOCollectionDoc();
+        DTOCollection dTOCollection =3D doc.getDTOCollection();
+       =20
+        // This line gets the second dto array elem and changes its type to=
+ msidto
+        MSIDTO secondMSIDTO =3D (MSIDTO) dTOCollection.getDTOArray(1).chang=
+eType(MSIDTO.type);
+        return secondMSIDTO.getId();
+       =20
+    }
+   =20
+    // one way to populate an xmlbean
+    private DTOCollectionDocument populateDTOCollectionDoc()
+    {
+        DTOCollectionDocument doc =3D DTOCollectionDocument.Factory.newInst=
+ance();
+        DTOCollection dTOCollection =3D doc.addNewDTOCollection();
+       =20
+        DTO dto1 =3D dTOCollection.addNewDTO();
+        DTO dto2 =3D dTOCollection.addNewDTO();
+       =20
+        MSIDTO msi1 =3D MSIDTO.Factory.newInstance();
+        msi1.setId(1111);
+        MSIDTO msi2 =3D MSIDTO.Factory.newInstance();
+        msi2.setId(2222);
+                       =20
+        dto1.set(msi1);               =20
+        dto2.set(msi2);
+       =20
+        return doc;       =20
+       =20
+    }
+}=20
+
+-----Original Message-----
+From: Carl_Elkin@vrtx.com [mailto:Carl_Elkin@vrtx.com]
+Sent: Wednesday, October 01, 2003 9:37 AM
+To: xmlbeans-user@xml.apache.org
+Subject: problems with inheritance while saving XML
+
+
+
+Hi all,=20
+
+Sorry if this is a dupe.  I am finding that when an object is written out t=
+o an XML file, the wrong class name is used.   Specifically, I have a class=
+ MSIDTO that inherits from DTO. Another class, DTOCollection, can contain D=
+TOs.   I want to be able to add MSIDTOs to my DTOCollection, save the colle=
+ction to disk, read it back in again, and get back my original MSIDTOs. But=
+ when I do this, they are written (and hence read back) as DTOs.=20
+
+Here is my schema:=20
+
+<xs:element name=3D"DTOCollection">=20
+     <xs:complexType>=20
+          <xs:sequence>=20
+                 <xs:element name=3D"DTO" type=3D"dto:DTO" minOccurs=3D"0" =
+maxOccurs=3D"unbounded"/>=20
+          </xs:sequence>=20
+     </xs:complexType>=20
+</xs:element>=20
+
+<xs:complexType name=3D"DTO"/>=20
+
+<xs:complexType name=3D"MSIDTO">=20
+   <xs:complexContent>=20
+      <xs:extension base=3D"dto:DTO">=20
+              <xs:sequence>=20
+                     <xs:element name=3D"id" type=3D"xs:long"/>=20
+              </xs:sequence>=20
+      </xs:extension>=20
+    </xs:complexContent>=20
+</xs:complexType>=20
+
+I write out this schema with the following code:=20
+
+
+XmlDTOBean[] dtoArray =3D new XmlDTOBean [towrite.size()]; .... //populate =
+array with MSIDTOs ... XmlDTOCollectionDocumentBean.DTOCollection collect =
+=3D dtos.addNewDTOCollection(); collect.setDTOArray(dtoArray); //save array=
+ dtos.save(new File ("c:/temp/problem.txt"));=20
+
+I would expect that the resulting XML file should contain MSIDTOs, since th=
+e objects in the array are actually MSIDTOs. However, the elements are actu=
+ally DTOs. (They nonetheless have an ID, even though only MSIDTO has this a=
+ttribute)=20
+
+<DTO> <id>2</id> </DTO> <DTO> <id>3</id> </DTO>=20
+
+
+Apparently, they are DTOs because dtoArray is declared to be an array of XM=
+LDTOBean.=20
+
+How can I force the file to contain the actual object type, not the type of=
+ the containing array? (I can't simply change the type of the containing ar=
+ray, because DTO will later have many subclasses.)=20
+
+Thanks in advance,=20
+Carl=20
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

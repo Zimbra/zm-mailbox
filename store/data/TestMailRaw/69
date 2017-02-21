@@ -1,0 +1,149 @@
+Return-Path: <xmlbeans-dev-return-405-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.67.16.118])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hAIIMPoB009100
+	for <smith@popserver1.stanford.edu>; Tue, 18 Nov 2003 10:22:25 -0800
+	(PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id hAIIMOB0026037 for
+	<smith@stanford.edu>; Tue, 18 Nov 2003 10:22:24 -0800
+Received: (qmail 74726 invoked by uid 500); 18 Nov 2003 18:22:17 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 74699 invoked from network); 18 Nov 2003 18:22:17 -0000
+Message-ID: <3FBA62DF.4080803@cspowers.com>
+Date: Tue, 18 Nov 2003 10:20:15 -0800
+X-Zimbra-Received: Tue, 18 Nov 2003 10:20:15 -0800
+From: Calvin Powers <calvin@cspowers.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.5b)
+	Gecko/20030901 Thunderbird/0.2
+X-Accept-Language: en-us, en
+MIME-Version: 1.0
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: Failed to build with "network downloads disabled" error
+	message.
+References: <3FB9C683.8010503@cspowers.com>
+In-Reply-To: <3FB9C683.8010503@cspowers.com>
+Content-Transfer-Encoding: 7bit
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=ISO-8859-1; FORMAT=flowed
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000045-0010
+
+Hmmm,
+
+Just on a  lark, I wondered if maybe my long file path to the code tree 
+might be a problem, so I moved the code tree to the root directory of my 
+drive and re-tried the build. Lo and Behold, the build worked just 
+fine.  So then I dragged the exactsame directory back to its original 
+location and retried the build. It failed with the same error as before. 
+So I'm not sure why, but  my problem seemed to be related to the 
+location of the tree. Possibly it's due to the very long path, possible 
+it's due to spaces in the path?
+
+Anyway, past my build problem. Woo Hoo!
+
+--cp
+
+
+Calvin Powers wrote:
+
+> Howdy,
+>
+> I saw David Bau's presentation on XML Beans at ApacheCon today and have
+> been trying to build the code tonight.
+>
+> When I run the ant build with the default target, I get the following:
+>
+> ===begin build messages===
+> xsdschema.classes:
+>     [java] C:\Documents and Settings\powers\My
+> Documents\IBM\wsappdev51\workspa
+> ce\sandbox\xml-xmlbeans\v1\src\xsdschema\schema\XMLSchema.xsd:0: error:
+> Could no
+> t load resource "http://www.w3.org/2001/xml.xsd" (network downloads
+> disabled).
+>     [java] C:\Documents and Settings\powers\My
+> Documents\IBM\wsappdev51\workspa
+> ce\sandbox\xml-xmlbeans\v1\src\xsdschema\schema\XMLSchema.xsd:0:
+> warning: Schema
+> <notation> is not yet supported for this release.
+>     [java] C:\Documents and Settings\powers\My
+> Documents\IBM\wsappdev51\workspa
+> ce\sandbox\xml-xmlbeans\v1\src\xsdschema\schema\XMLSchema.xsd:0: error:
+> Attribut
+> e lang@http://www.w3.org/XML/1998/namespace not found.
+>     [java] C:\Documents and Settings\powers\My
+> Documents\IBM\wsappdev51\workspa
+> ce\sandbox\xml-xmlbeans\v1\src\xsdschema\schema\XMLSchema.xsd:0: error:
+> Attribut
+> e lang@http://www.w3.org/XML/1998/namespace not found.
+>     [java] Time to build schema type system: 3.705 seconds
+>     [java] BUILD FAILED
+>
+>
+>
+> BUILD FAILED
+> C:\Documents and Settings\powers\My
+> Documents\IBM\wsappdev51\workspace\sandbox\x
+> ml-xmlbeans\v1\build.xml:690: Java returned: 1
+> ====end build messages =====
+>
+> I dug through the version 1 source, and tracked this down to
+> StscImporter.java, which is printing this message out in response to a
+> method in StscState called shouldDownLoadURI
+>
+> There's several things going on in shouldDownLoadURI, but the one that
+> seems relevant is a check against a private variable called
+> _doingDownloads.
+>
+> This is set in setOptions of the same class, apparently in response to
+> an COMPILE_DOWNLOAD_URLS entry in a class called  XmlOptions. I
+> backtracked this setting to two java files that appear to me to be some
+> of the command line tools (InstanceValidator and SchemaCompiler) but I
+> don't think I'm far enough into the build to be invoking these yet. (As
+> far as I can tell, I'm still just doing plain java compiles.
+>
+> The other way this option can be set is if a system property called
+> xmlbean.downloadurls is set to true. I tried half a dozen different ways
+> to try to get this property set on the right javac invocation but could
+> never quite seem to get it to work.
+>
+> I verified that I could download the http://www.w3.org/2001/xml.xsd from
+> the web by pasting the URL into a browser.
+>
+> So I figure I've got some sort of set up problem where the
+> xmlbean.downloadurls property is not being set.
+>
+> The other thing that puzzles me is that I see XMLScheme.xsd in the
+> source tree, so I'm wondering if maybe something else is preventing the
+> build from finding this file locally.
+>
+> Anyone have any advice?
+>
+> Thanks!
+> Calvin Powers
+>
+>
+>
+>
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+>
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

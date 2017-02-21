@@ -1,0 +1,49 @@
+Return-Path: <xmlbeans-dev-return-360-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9AMvaLB024024 for
+	<smith@popserver1.stanford.edu>; Fri, 10 Oct 2003 15:57:37 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9AMvUKJ018657 for
+	<smith@stanford.edu>; Fri, 10 Oct 2003 15:57:31 -0700 (PDT)
+Received: (qmail 54267 invoked by uid 500); 10 Oct 2003 22:57:22 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 54254 invoked from network); 10 Oct 2003 22:57:21 -0000
+Subject: Re: bts notes
+From: Scott Ziegler <zieg@bea.com>
+To: xmlbeans-dev@xml.apache.org
+In-Reply-To: <035601c38f45$75309760$0fa8a8c0@lightbox>
+References: <5.2.1.1.0.20031009120354.03384fe8@san-francisco.beasys.com>
+	 <030c01c38eae$78d032f0$0fa8a8c0@lightbox> <1065748890.15848.28.camel@zieg>
+	 <035601c38f45$75309760$0fa8a8c0@lightbox>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Message-Id: <1065826648.15277.12.camel@zieg>
+Mime-Version: 1.0
+X-Mailer: Ximian Evolution 1.4.5 
+Date: Fri, 10 Oct 2003 15:57:29 -0700
+X-Zimbra-Received: Fri, 10 Oct 2003 15:57:29 -0700
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000006e-0010
+
+David,
+
+I think you forgot to update BindingTests to reflect the new package
+name so the default ant target is no longer working (for me at least). 
+Thanks,
+
+--Scott 
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

@@ -1,0 +1,219 @@
+Setup Development Environment for Ubuntu
+================================================================================
+Step 0: make sure you have sudo privileges. If you don't login as root and add yourself to "admin" group.  
+
+1. Download Perforce - P4 Command-Line Client
+2. $ sudo mv p4 /usr/local/bin    (may need to create local/bin)
+3. $ chmod +x /usr/local/bin/p4
+
+4. set up your environment variables (may be different depending on your office location and SSH set up)
+
+$ vi ~/.profile
+
+  export P4PORT=1066
+  export P4HOST=p4proxy.eng.zimbra.com
+  export P4USER={your p4 username}
+  export P4CONFIG=.p4config
+  export P4EDITOR=/usr/bin/vi
+  export PATH=$PATH:/opt/zimbra/bin:$HOME/bin
+  export ZIMBRA_HOSTNAME={your computer name}.local
+  alias ssh_p4='ssh -f -N p4'
+  
+$vi $HOME/.ssh/config
+
+Host *
+    User {your fence username}
+    IdentityFile ~/.ssh/id_rsa
+    ForwardAgent yes
+    ServerAliveInterval 30
+    ServerAliveCountMax 120
+    
+Host p4
+   Hostname fence-new.zimbra.com
+   LocalForward 1066 perforce.zimbra.com:1066
+
+
+5. load new environment settings and start SSH tunnel to perforce:
+
+$ source ~/.profile
+$ p4_ssh
+
+6. $ sudo mkdir -p /opt/zimbra
+
+7. Create workspace folder for "main" branch:
+
+$ mkdir -p ~/p4/main 
+$ cd ~/p4/main
+
+8. Log in to perforce
+
+$ p4 login
+  * enter your password (after setting up SSH tunnel)
+  
+9. Set up your perforce client (http://www.perforce.com/perforce/r11.1/manuals/p4web/help/editclient.html) view
+
+$ p4 client
+
+  View:
+      //depot/zimbra/main/ant-global.xml //{workspace}/main/ant-global.xml
+        //depot/zimbra/main/ThirdParty/... //{workspace}/main/ThirdParty/...
+        //depot/zimbra/main/ThirdPartyBuilds/... //{workspace}/main/ThirdPartyBuilds/...
+        -//depot/zimbra/main/ThirdPartyBuilds/RHEL6_64/... //{workspace}/main/ThirdPartyBuilds/RHEL6_64/...
+        -//depot/zimbra/main/ThirdPartyBuilds/RHEL7_64/... //{workspace}/main/ThirdPartyBuilds/RHEL7_64/...
+        -//depot/zimbra/main/ThirdPartyBuilds/MACOSXx86_10.6/... //{workspace}/main/ThirdPartyBuilds/MACOSXx86_10.7/...
+        -//depot/zimbra/main/ThirdPartyBuilds/OSXx86_64/... //{workspace}/main/ThirdPartyBuilds/OSXx86_64/...
+        -//depot/zimbra/main/ThirdPartyBuilds/wndows/... //{workspace}/main/ThirdPartyBuilds/windows/...
+        -//depot/zimbra/main/ThirdPartyBuilds/SLES11_64/... //{workspace}/main/ThirdPartyBuilds/SLES11_64/...
+        -//depot/zimbra/main/ThirdPartyBuilds/UBUNTU14_64/... //{workspace}/main/ThirdPartyBuilds/UBUNTU14_64/...
+        -//depot/zimbra/main/ThirdPartyBuilds/UBUNTU10_64/... //{workspace}/main/ThirdPartyBuilds/UBUNTU10_64/...
+        -//depot/zimbra/main/ZimbraAppliance/... //{workspace}/main/ZimbraAppliance/...
+        //depot/zimbra/main/ZimbraServer/... //{workspace}/main/ZimbraServer/...
+        //depot/zimbra/main/ZimbraPerf/... //{workspace}/main/ZimbraPerf/...
+        -//depot/zimbra/main/ZimbraPerf/data/... //{workspace}/main/ZimbraPerf/data/...
+        //depot/zimbra/main/ZimbraXMbxSearch/... //{workspace}/main/ZimbraXMbxSearch/...
+        //depot/zimbra/main/ZimbraCommon/... //{workspace}/main/ZimbraCommon/...
+        //depot/zimbra/main/ZimbraClient/... //{workspace}/main/ZimbraClient/...
+        //depot/zimbra/main/ZimbraCluster/... //{workspace}/main/ZimbraCluster/...
+        //depot/zimbra/main/ZimbraBackup/... //{workspace}/main/ZimbraBackup/...
+        //depot/zimbra/main/ZimbraBuild/... //{workspace}/main/ZimbraBuild/...
+        //depot/zimbra/main/ZimbraArchive/... //{workspace}/main/ZimbraArchive/...
+        //depot/zimbra/main/ZimbraAdminExt/... //{workspace}/main/ZimbraAdminExt/...
+        //depot/zimbra/main/ZimbraConvertd/... //{workspace}/main/ZimbraConvertd/...
+        //depot/zimbra/main/ZimbraEvolution/... //{workspace}/main/ZimbraEvolution/...
+        //depot/zimbra/main/ZimbraNative/... //{workspace}/main/ZimbraNative/...
+        //depot/zimbra/main/ZimbraNetwork/... //{workspace}/main/ZimbraNetwork/...
+        //depot/zimbra/main/ZimbraOffline/... //{workspace}/main/ZimbraOffline/...
+        //depot/zimbra/main/ZimbraOfflineExt/... //{workspace}/main/ZimbraOfflineExt/...
+        //depot/zimbra/main/ZimbraSoap/... //{workspace}/main/ZimbraSoap/...
+        //depot/zimbra/main/ZimbraSync/... //{workspace}/main/ZimbraSync/...
+        //depot/zimbra/main/ZimbraSyncClient/... //{workspace}/main/ZimbraSyncClient/...
+        //depot/zimbra/main/ZimbraSyncCommon/... //{workspace}/main/ZimbraSyncCommon/...
+        //depot/zimbra/main/ZimbraTagLib/... //{workspace}/main/ZimbraTagLib/...
+        //depot/zimbra/main/ZimbraWebClient/... //{workspace}/main/ZimbraWebClient/...
+        //depot/zimbra/main/Zimlet/... //{workspace}/main/Zimlet/...
+        //depot/zimbra/main/ZimbraSyncPerf/... //{workspace}/main/ZimbraSyncPerf/...
+        //depot/zimbra/main/ZimbraSyncTools/... //{workspace}/main/ZimbraSyncTools/...
+        //depot/zimbra/main/ZimbraSync4j/... //{workspace}/main/ZimbraSync4j/...
+        //depot/zimbra/main/ZimbraVoice/... //{workspace}/main/ZimbraVoice/...
+        //depot/zimbra/main/ZimbraSyncPerf/... //{workspace}/main/ZimbraSyncPerf/...
+        //depot/zimbra/main/ZimbraLogger/... //{workspace}/main/ZimbraLogger/...
+        //depot/zimbra/main/ZimbraSync4j/... //{workspace}/main/ZimbraSync4j/...
+        //depot/zimbra/main/ZimbraQA/... //{workspace}/main/ZimbraQA/...
+        -//depot/zimbra/main/ZimbraQA/ThirdParty/... //{workspace}/main/ZimbraQA/ThirdParty/...
+
+
+
+   That view may have a lot more than you need, so you may want to consider explicitly listing
+   only what you need. Take a look at the clients of others in your group for examples.
+
+10. $ cd ~/p4/main
+11. $ p4 sync
+
+12. install mysql using apt: 
+$ sudo apt-get install mysql-server
+
+when MySQL installer prompts for mysql admin password enter "zimbra"
+
+13. sudo mkdir -p /opt/zimbra/mysql/data
+
+14. edit /etc/mysql/my.cnf (sudo vi /etc/mysql/my.cnf)
+change port from 3306 to 7306
+change datadir from /var/lib/mysql to /opt/zimbra/mysql/data
+
+15. copy contents of /var/lib/mysql to /opt/zimbra/mysql/data
+$ sudo su -
+$ cp -r /var/lib/mysql/* /opt/zimbra/mysql/data/
+
+16. chown new mysql data dir to mysql user and group
+$ chown -R mysql:mysql /opt/zimbra/mysql/data
+
+17. edit /etc/apparmor.d/usr.sbin.mysqld and add the following two lines:
+
+  /opt/zimbra/mysql/data/ r,
+  /opt/zimbra/mysql/data/** rwk,
+  
+  after this line:
+  
+  /run/mysqld/mysqld.sock w,
+  
+18. create a link to mysql sock file
+
+$ ln -s /var/run/mysqld/mysqld.sock /opt/zimbra/mysql/data/mysqld.sock
+
+
+19. restart mysql:
+
+$ service mysql restart
+
+if it fails to start - trouble shoot :)
+Once mysql has started, go back to using your user account and not root (type "exit")
+
+16. Install the JDK 1.7 from Oracle if not already present on your system. add $JAVA_HOME to your environment and $JAVA_HOME/bin to your $PATH. 
+
+E.g. add this to your $HOME/.profile file if you have downloaded jdk1.7.0_51 and unpacked it in your $HOME folder:
+
+export JAVA_HOME=$HOME/jdk1.7.0_51
+export PATH=$JAVA_HOME/bin:$PATH
+
+17. install ant
+
+$ sudo apt-get install ant
+
+18. $ sudo visudo
+
+  {username} ALL=NOPASSWD:/opt/zimbra/libexec/zmslapd
+
+  * {username} is your local username and be sure to insert a [TAB] between {username} and "ALL".
+
+19. $ cd ~/p4/main/ZimbraServer
+20. $sudo chown gsolovyev /opt/zimbra
+22. $ ant reset-all
+
+  * $ ant -p
+  Buildfile: build.xml
+
+  Main targets:
+
+   build-init              Creates directories required for compiling
+   clean                   Deletes classes from build directories
+   clean-opt-zimbra        Deletes deployed jars, classes, and zimlets
+   dev-dist                Initializes build/dist
+   dir-init                Creates directories in /opt/zimbra
+   init-opt-zimbra         Copies build/dist to /opt/zimbra
+   reset-all               Reset the world plus jetty and OpenLDAP
+   reset-jetty             Resets jetty
+   reset-open-ldap         Resets OpenLDAP
+   reset-the-world         Reset the world
+   reset-the-world-stage1  Cleans deployed files, compiles, and initializes /opt/zimbra.
+   reset-the-world-stage2  Run when web server is running.
+   service-deploy          Not just war file deployment, but a /opt/zimbra refresh as well!
+   stop-webserver          Stops Jetty.  If Jetty is not installed, does nothing.
+   test                    Run unit tests
+  Default target: jar
+
+23. open http://localhost:7070/zimbra
+
+  Username: user1 / Password: test123
+
+ * Admin console - https://localhost:7071/zimbraAdmin
+
+  Username: admin / Password: test123
+
+
+NETWORK EDITION DEPLOYMENT
+================================================================================
+
+1. $ cd ~/p4/main/ZimbraServer
+2. $ ant reset-all
+ 
+3. $ cd ~/p4/main/ZimbraLicenseExtension
+4. $ ant deploy-dev
+ 
+5. $ cd ~/p4/main/ZimbraNetwork
+6. $ ant dev-deploy
+
+Many of the admin functions require that you deploy admin extensions.  These may require additional paths in your P4 workspace and additional services be deployed for those extensions to function correctly. ymmv.
+
+Example for deploying an individual admin extension (ex. delegated admin extension)
+1. $ cd ~p4/main/ZimbraNetwork/ZimbraAdminExt
+2. $ ant -Dext.name=com_zimbra_delegatedadmin -Dext.dir=DelegatedAdmin deploy-zimlet

@@ -1,0 +1,82 @@
+ZimbraServer/build.xml now does most steps instructed here.
+
+On windows make sure (a) you have installed OpenLDAP to
+\opt\zimbra\openldap and (b) installed it as a service 
+   C:\opt\zimbra\openldap> slapd.exe install
+
+On unix make sure you have /opt/zimbra/bin/ldap {start|stop} script
+handy.
+
+Use the rest of this document as a reference for how to manually
+handle an LDAP installation.
+
+=======================================================================
+Manual Instructions for Unix
+======================================================================= 
+
+We keep only the windows instructions here.  Unix instructions will
+only be different in where you get binaries and where you stick conf
+files (which is very different, but obvious).
+
+=======================================================================
+Manual Instructions for Windows
+======================================================================= 
+
+1. Run the OpenLDAP installer 
+
+        \\KENNY\public\software\windows\openldap-2_2_15-1-win32.exe
+
+   Make sure to set your install directory to C:\opt\zimbra\openldap
+
+2. Copy ZimbraServer\conf\ldap\slapd.win.conf to C:\opt\zimbra\openldap\slapd.conf   [<== NOTE: RENAMING FILE]
+   Copy ZimbraServer\conf\ldap\zimbra.schema  to C:\opt\zimbra\openldap\etc\schema\zimbra.schema
+
+3. Start the slapd server from C:\opt\zimbra\openldap\slapd (use 
+   "-d 10" to see debug output if you have problems).
+
+   (If all goes well, nothing will seem to happen.  Empty window, no
+   prompt.)
+
+   If prompted, tell the XP firewall to allow OpenLDAP to do whatever
+   it wants to do.
+
+4. Run ldapmodify as shown below (slightly different from the Linux
+   version because Windows dislikes quotes):
+
+        cd <path-to-your-workspace>  (e.g. "cd C:\Workspace")
+        C:\opt\zimbra\openldap\ldapmodify -a -c -w zimbra -D uid=zimbra,cn=accounts,cn=zimbra -x -f ZimbraServer/conf/ldap/zimbra.ldif
+
+5. If you'd like, stop slapd and install it as a Windows service
+   instead.
+        C:\opt\zimbra\openldap\slapd install
+        NET START "OpenLDAP Directory Service"
+        
+   Open the "Services" Control Panel (in the "Administrative Tools"
+   section).
+
+   Double-click on "OpenLDAP Directory Service" to bring up the
+   "OpenLDAP Service Properties" dialog.
+
+   Set the Startup type to "Automatic" and press the "Start" button
+   (if needed).
+
+6. Stop Tomcat.
+   Run "reset-the-world" from Eclipse.
+   Restart Tomcat.
+
+7. Log out of the web front end.
+   Log back into the web front end (password is now "test123").
+
+8. Run the JXplorer installer
+   \\KENNY\public\software\windows\JXv3.0_Windows_install.exe
+
+9. To browse the LDAP directory:
+
+   Start JXplorer.
+   File -> Connect brings up the "Open LDAP/DSML Connection" dialog.
+   Fill in the following values:
+                Level: User + Password
+                User DN: uid=zimbra,cn=accounts,cn=zimbra
+                Password: zimbra
+   Press the "Save" button.
+   Press the "OK" button.

@@ -1,0 +1,1463 @@
+Return-Path: MiracleChannel-yhyhhlt1njhtthdh1j@cmail2.com
+Received: from epost.telsys.no (LHLO epost.telsys.no) (213.188.12.35) by
+ ms2.telsys.no with LMTP; Mon, 29 Oct 2012 16:59:18 +0100 (CET)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+    by epost.telsys.no (Postfix) with ESMTP id BC15F4021ED
+    for <kenneth@tbve.no>; Mon, 29 Oct 2012 16:59:18 +0100 (CET)
+X-Virus-Scanned: amavisd-new at epost.telsys.no
+X-Spam-Flag: NO
+X-Spam-Score: 0.423
+X-Spam-Level: 
+X-Spam-Status: No, score=0.423 tagged_above=-10 required=2.8
+    tests=[BAYES_40=-0.001, DKIM_SIGNED=0.1, DKIM_VALID=-0.1,
+    HTML_MESSAGE=0.001, RCVD_IN_DNSWL_NONE=-0.0001, SPF_PASS=-0.001,
+    URIBL_GREY=0.424] autolearn=no
+Authentication-Results: epost.telsys.no (amavisd-new); dkim=pass
+    header.i=news=miraclechannel.com@cmail2.com
+Authentication-Results: epost.telsys.no (amavisd-new); domainkeys=pass
+    header.sender=news=miraclechannel.com@cmail2.com
+Received: from epost.telsys.no ([127.0.0.1])
+    by localhost (epost.telsys.no [127.0.0.1]) (amavisd-new, port 10024)
+    with ESMTP id upApprRZKjrE for <kenneth@tbve.no>;
+    Mon, 29 Oct 2012 16:59:14 +0100 (CET)
+Received: from mx120.d.outbound.createsend.com (mx120.d.outbound.createsend.com [27.126.148.120])
+    by epost.telsys.no (Postfix) with ESMTP id 787814021E8
+    for <kenneth@tbve.no>; Mon, 29 Oct 2012 16:59:13 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; s=cm; d=cmail2.com;
+ h=From:To:Reply-To:Date:Subject:MIME-Version:Content-Type:List-Unsubscribe:Sender:Message-ID; i=news=3Dmiraclechannel.com@cmail2.com;
+ bh=MkOuDAE40U6jq1H9+QdNCYjSdGE=;
+ b=U1JKIHaBfCF7XhAYkNm/COqA6Xwc5+vRV+5GBp2fr7F3408bOAwSreKVF01JToeWpAZhmfcuMLQP
+   7TmEkDJ0bmB8/nhLuwHf+jX9IdjxHsHYrqPs6ywr4FeYNtqiIyiA
+DomainKey-Signature: a=rsa-sha1; c=nofws; q=dns; s=cm; d=cmail2.com;
+ b=n70eaisROYJh9zarIN5SkXhzBiHVAeJhzPlMhAhAOwD2TLJBEeCAyryVBPEtootEXzqNbOTznvcB
+   qyuT9As8vxYSrTh4MQHQ5IzOjc8IP59NrW42hH3aTuCZ7x2iqSel;
+Received: by mx120.d.outbound.createsend.com id hhqjt21hlt0e for <kenneth@tbve.no>; Tue, 30 Oct 2012 02:58:43 +1100 (envelope-from <MiracleChannel-yhyhhlt1njhtthdh1j@cmail2.com>)
+From: "Miracle Channel" <news@miraclechannel.com> 
+To: "=?utf-8?Q?Kenneth_Tol=c3=a5s?=" <kenneth@tbve.no>
+Reply-To: news@miraclechannel.com
+Date: Tue, 30 Oct 2012 02:57:46 +1100
+Subject: Bringing faith and hope to Arab women
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+    boundary="_=aspNetEmail=_7e5d17db20a844819c53f39b72d8bb11"
+X-Mailer: Create Send
+X-Complaints-To: abuse@cmail2.com
+List-Unsubscribe: <http://unsub.cmail2.com/t/j-u-yhyhhlt-njhtthdh/>
+Sender: "Miracle Channel" <news=miraclechannel.com@cmail2.com>
+Received: from [24.72.116.87] by cmail2.com via HTTP; Tue, 30 Oct 2012
+ 02:57:46 +1100
+Message-ID: <cm.025746.yhyhhlt.njhtthdh.j@cmail2.com>
+
+--_=aspNetEmail=_7e5d17db20a844819c53f39b72d8bb11
+Content-Type: text/plain;
+    charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Web version http://miraclechannel.cmail2.com=
+/t/j-e-yhyhhlt-=
+njhtthdh=
+-n/=C2=A0=C2=A0|=C2=A0  Update prefere=
+nces http://miraclechannel.updatemyprofile.com/j-yhyhhlt-=
+=
+2AE248AD-njhtthdh=
+-p=C2=A0=C2=A0|=C2=A0  Unsubscrib=
+e http://miraclechannel.cmail2.com=
+/t/j-u-yhyhhlt-=
+=
+njhtthdh=
+-x/               http://miraclechannel.=
+cmail2.com=
+/t/j-fb-yhyhhlt-=
+njhtthdh=
+-m/   =
+Like http://miraclechannel.cmail2.com=
+/t/j-fb-yhyhhlt-=
+njhtthdh=
+-c/     http://miraclechannel.cmail2.com=
+=
+/t/j-tw-yhyhhlt-=
+njhtthdh=
+-q/   Tweet =
+http://miraclechannel.cmail2.com=
+/t/j-tw-yhyhhlt-=
+=
+njhtthdh=
+-a/      Forward http://miraclechannel.forwardtom=
+yfriend.com/j-=
+njhtthdh-2AE248AD=
+-yh=
+yhhlt-l-f
+
+Quick links:
+
+History [http://miraclechannel.net/index.php?option=3Dcom_content&view=3D=
+article&id=3D54&Itemid=3D59&lang=3Den]
+
+Vision & Mission [http://miraclechannel.net/index.php?option=3Dcom_conte=
+nt&view=3Darticle&id=3D56&Itemid=3D58&lang=3Den]
+
+Core values [http://miraclechannel.net/index.php?option=3Dcom_content&vi=
+ew=3Darticle&id=3D58&Itemid=3D63&lang=3Den]
+
+Significant Impact [http://miraclechannel.net/index.php?option=3Dcom_con=
+tent&view=3Darticle&id=3D59&Itemid=3D61&lang=3Den]
+
+Strategic Opportunity [http://miraclechannel.net/index.php?option=3Dcom_=
+content&view=3Darticle&id=3D57&Itemid=3D60&lang=3Den]
+
+Strategic Focus [http://miraclechannel.net/index.php?option=3Dcom_conten=
+t&view=3Darticle&id=3D75&Itemid=3D65&lang=3Den]
+
+Join us [http://miraclechannel.net/index.php?option=3Dcom_content&view=3D=
+article&id=3D48&Itemid=3D54&lang=3Den]
+
+
+
+Miracle promo:
+
+Dalia, Turkey:
+
+"I am a regular viewer of your program. I come from Iraq but live in Turk=
+ey. I cannot find myself in my religion. I remember my mother, who was a =
+Christian, who always told us about her faith. Here I find the answers my=
+ religion doesn't give. I hope you understand I am sincere in my search a=
+nd that you will answer my letter because I really need some=C2=A0guidanc=
+e."
+
+Miryam from Algeria:
+
+"I am a 15-year-old girl. The problems in my home get greater every day a=
+nd perhaps my parents will divorce. I wish that you would pray for me and=
+ for my family, that Jesus can bring love and peace into our home. I alwa=
+ys feel sad and depressed because of what is happening around me. Could y=
+ou also send me a book about the life of Jesus?"
+
+Fawzeya from Spain:
+
+"I must learn more about Jesus. Thank you for your TV programs on satelli=
+te. They light up my life, and I feel Jesus Christ is close to me. Thank =
+you for your teaching people about Jesus."
+
+Hawa from England:
+
+"I have been deeply touched after watching your programs on satellite, ho=
+w people's lives have changed when they became Christians. I hope=C2=A0 I=
+ can experience the same change in my own life. Please help me so I can c=
+hange. Please send me the information in Arabic."
+
+From Casablanca, Morocco:
+
+"I would like to take this opportunity to thank you. Through your Miracle=
+ programs you have introduced several topics that have made me think. I a=
+lso heard about the freedom in Christ and how this motivates one to be op=
+en and honest and not step on the rights of other people. I would like to=
+ learn more about this religion, so please send me some information."
+
+Your donation will help the people of the Middle East, North Africa and t=
+he Gulf region discover how Jesus Christ can give them a new and better l=
+ife.
+
+Bringing faith and hope to Arab women
+
+-I am calling from the city that is burning every day, says Taleen from A=
+leppo in Syria. She is one of thousands of Arab women seeking refuge in t=
+he promises of the gospel. Despite dire circumstances they cling to the e=
+ternal promises of redemption and hope.
+
+Miracle Channel launched a new television program in September made by an=
+d for women in North Africa. Barty Shokralla, the CEO of Miracle Channel,=
+ explains that it is rare to see North African women given the opportunit=
+y on air to address their own cultural, religious and political challenge=
+s.
+
+-These are women of faith who know the issues that women in North Africa =
+deal with on a daily basis. We are greatly impressed by the courage of lo=
+cal North African women who share their testimonies of faith in Jesus and=
+ how it influences their lives.
+
+Inferior lives
+
+The Arab Human Development Report published by a group of Arab researcher=
+s from the UN Development Program says that out of the seven regions of t=
+he world, Arab countries had the lowest freedom score. They also had the =
+lowest ranking for "voice and accountability," a measure of various aspec=
+ts of the political process, civil liberties, political rights and indepe=
+ndence of the media.
+
+In most Arab countries, the Shari'a, or Islamic law, defines the rules of=
+ traditional social behavior. Under the law, women are inferior to that o=
+f men, and are therefore discriminated against with regard to personal ri=
+ghts and freedoms.
+
+Furthermore, laws that restrict women's rights remain in force in almost =
+all Arab countries. In Syria, a husband can prevent his wife from leaving=
+ the country. In several Arab countries, married women must have their hu=
+sbands' written permission to travel abroad, and they may be prevented fr=
+om doing so for any reason. In Saudi Arabia, women must obtain written pe=
+rmission from their closest male relative to leave the country or travel =
+on public transportation between different parts of the kingdom.
+
+According to the UN, "utilization of Arab women's capabilities through po=
+litical and economic participation remains the lowest in the world. In so=
+me countries with elected national assemblies, women are still denied the=
+ right to vote or hold office. And one in every two Arab women can neithe=
+r read nor write."
+
+Giving hope
+
+For most Arab women, illiterate or not, television is the number one sour=
+ce of information. Through a variety of television programs on issues suc=
+h as child rearing, nutrition, relationships and female health, Miracle C=
+hannel is filling a great need to educate Arab women on basic issues that=
+ will greatly improve their quality of life.=C2=A0 By addressing these is=
+sues from a biblical view, Miracle Channel gives Arab women an understand=
+ing of their true value and encourages them to use their gifts and talent=
+s.=C2=A0 Even if their circumstances do not change, several of our female=
+ viewers have said simply knowing that God loves them gives them hope and=
+ courage to face each new day.
+
+Three strong women
+
+Nadja* from Libya is one of the women who draws courage from our televisi=
+on programs.=C2=A0 She had an encounter with God about two years ago, and=
+ now she follows our programs on a daily basis.=C2=A0 She confides that s=
+he is scared and watches our channel in secrecy. She doesn't know any oth=
+er believers and has never had an opportunity to talk about her new faith=
+ with anyone else.
+
+- I feel lonely and vulnerable, but your programs keep me encouraged and =
+motivated. It was a great comfort and relief to contact you in person on =
+Skype, Nadja told us on the phone.
+
+Taleen is another friend=C2=A0who recently called us from Syria. Not only=
+ is her life in great danger as her city is attacked, she belongs to the =
+Christian minority who suffered persecution long before the uprising agai=
+nst Assad's regime started.
+
+-Thank you Miracle Channel for your encouraging programs, especially for =
+me in Syria in this difficult time, Taleen tells us. - I am from Aleppo =E2=
+=80=93the city that is burning every day. I'm a Christian, but we are liv=
+ing under very hard circumstances. Please pray for us, she pleads fervent=
+ly.
+
+Fatma in Morocco faces different challenges. As a new believer in Christ =
+who was raised as a Muslim, she now fears for her life. The gospel that i=
+s the cause of her persecution is also what gives her courage to face pos=
+sible death.
+
+-Eight months ago I started watching your channel, but I didn't like it. =
+Yet a voice in my heart said that I needed to continue watching because b=
+ig things were going to change in my life. I learned to love Jesus and I =
+believe He is the truth and that all those who believe in him will have e=
+ternal life. I follow you online and on Skype and I started reading the b=
+ible until I was discovered by my brother. I got a serious warning that I=
+ would die if he caught me reading the bible again, and the warning would=
+ not be repeated. I am very scared, please pray for me, asks Fatma.
+
+*all names are changed
+
+Please help us pray for:
+
+-Equality and justice for women in the Arab world
+
+-Protection for our viewers who come to faith
+
+-Funds for more womens programming
+
+Miracle Channel is in need of more funds for programming. By helping Mira=
+cle Channel with a financial gift, you are helping us reach women like Ta=
+leen, Nadja and Fatma with the gospel of Jesus Christ.
+
+You are receiving this because you have been in contact with Miracle Chan=
+nel.
+
+Edit your subscription http://miraclechannel.updatemyprofile.com/j-yhyhhl=
+t-=
+2AE248AD-njhtthdh=
+-z |  Unsubscri=
+be instantly http://miraclechannel.cmail2.com=
+/t/j-u-yhyhhlt-=
+=
+njhtthdh=
+-v/
+
+miraclechannel.net news@miraclechannel.com Post address: Box 5156 12118 J=
+ohanneshov - Sweden
+
+--_=aspNetEmail=_7e5d17db20a844819c53f39b72d8bb11
+Content-Type: text/html;
+    charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://w=
+ww.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html style=3D"backgroun=
+d-color:#424242;margin-top:0;margin-bottom:0;margin-right:0;margin-left:0=
+;padding-top:0;padding-bottom:0;padding-right:0;padding-left:0;" ><head><=
+title></title><meta http-equiv=3D"Content-Type" content=3D"text/html; cha=
+rset=3Dutf-8" /><style type=3D"text/css">
+@media only screen and (max-device-width: 480px) {=20
+table[class=3Dw0], td[class=3Dw0] { width: 0 !important; }
+table[class=3Dw10], td[class=3Dw10], img[class=3Dw10] { width:10px !im=
+portant; }
+table[class=3Dw15], td[class=3Dw15], img[class=3Dw15] { width:5px !imp=
+ortant; }
+table[class=3Dw30], td[class=3Dw30], img[class=3Dw30] { width:10px !im=
+portant; }
+table[class=3Dw60], td[class=3Dw60], img[class=3Dw60] { width:10px !im=
+portant; }
+table[class=3Dw125], td[class=3Dw125], img[class=3Dw125] { width:80px =
+!important; }
+table[class=3Dw130], td[class=3Dw130], img[class=3Dw130] { width:55px =
+!important; }
+table[class=3Dw140], td[class=3Dw140], img[class=3Dw140] { width:90px =
+!important; }
+table[class=3Dw160], td[class=3Dw160], img[class=3Dw160] { width:180px=
+ !important; }
+table[class=3Dw170], td[class=3Dw170], img[class=3Dw170] { width:100px=
+ !important; }
+table[class=3Dw180], td[class=3Dw180], img[class=3Dw180] { width:80px =
+!important; }
+table[class=3Dw195], td[class=3Dw195], img[class=3Dw195] { width:80px =
+!important; }
+table[class=3Dw220], td[class=3Dw220], img[class=3Dw220] { width:80px =
+!important; }
+table[class=3Dw240], td[class=3Dw240], img[class=3Dw240] { width:180px=
+ !important; }
+table[class=3Dw255], td[class=3Dw255], img[class=3Dw255] { width:185px=
+ !important; }
+table[class=3Dw275], td[class=3Dw275], img[class=3Dw275] { width:135px=
+ !important; }
+table[class=3Dw280], td[class=3Dw280], img[class=3Dw280] { width:135px=
+ !important; }
+table[class=3Dw300], td[class=3Dw300], img[class=3Dw300] { width:140px=
+ !important; }
+table[class=3Dw325], td[class=3Dw325], img[class=3Dw325] { width:95px =
+!important; }
+table[class=3Dw360], td[class=3Dw360], img[class=3Dw360] { width:140px=
+ !important; }
+table[class=3Dw410], td[class=3Dw410], img[class=3Dw410] { width:180px=
+ !important; }
+table[class=3Dw470], td[class=3Dw470], img[class=3Dw470] { width:200px=
+ !important; }
+table[class=3Dw580], td[class=3Dw580], img[class=3Dw580] { width:280px=
+ !important; }
+table[class=3Dw640], td[class=3Dw640], img[class=3Dw640] { width:300px=
+ !important; }
+table[class=3Dhide], td[class=3Dhide], img[class=3Dhide], p[class=3Dh=
+ide], span[class=3Dhide], .hide { display:none !important; }
+table[class=3Dh0], td[class=3Dh0] { height: 0 !important; }
+p[class=3Dfooter-content-left] { text-align: center !important; }
+#headline p { font-size: 30px !important; }
+ }=20
+#outlook a { padding: 0; }=09
+body { width: 100% !important; }
+.ReadMsgBody { width: 100%; }
+.ExternalClass { width: 100%; display:block !important; }=20
+html, body { background-color: #424242; margin: 0; padding: 0; }
+img { height: auto; line-height: 100%; outline: none; text-decoration: no=
+ne; display: block;}
+br, strong br, b br, em br, i br { line-height:100%; }
+h1, h2, h3, h4, h5, h6 { line-height: 100% !important; -webkit-font-smoot=
+hing: antialiased; }
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { color: blue !important; }
+h1 a:active, h2 a:active,  h3 a:active, h4 a:active, h5 a:active, h6 a:ac=
+tive {  color: red !important; }
+h1 a:visited, h2 a:visited,  h3 a:visited, h4 a:visited, h5 a:visited, h6=
+ a:visited { color: purple !important; }
+ =20
+table td, table tr { border-collapse: collapse; }
+.yshortcuts, .yshortcuts a, .yshortcuts a:link,.yshortcuts a:visited, .ys=
+hortcuts a:hover, .yshortcuts a span {
+color: black; text-decoration: none !important; border-bottom: none !impo=
+rtant; background: none !important;
+}=09
+code {
+  white-space: normal;
+  word-break: break-all;
+}
+#background-table { background-color: #424242; }
+#top-bar { border-radius:6px 6px 0px 0px; -moz-border-radius: 6px 6px 0px=
+ 0px; -webkit-border-radius:6px 6px 0px 0px; -webkit-font-smoothing: anti=
+aliased; background-color: #2E2E2E; color: #888888; }
+#top-bar a { font-weight: bold; color: #eeeeee; text-decoration: none;}
+#footer { border-radius:0px 0px 6px 6px; -moz-border-radius: 0px 0px 6px =
+6px; -webkit-border-radius:0px 0px 6px 6px; -webkit-font-smoothing: antia=
+liased; }
+body { font-family: Helvetica Neue, Arial, Helvetica, Geneva, sans-serif;=
+ }
+.header-content, .footer-content-left, .footer-content-right { -webkit-te=
+xt-size-adjust: none; -ms-text-size-adjust: none; }
+.header-content { font-size: 12px; color: #888888; }
+.header-content a { font-weight: bold; color: #eeeeee; text-decoration: n=
+one; }
+#headline p { color: #eeeeee; font-family: Helvetica Neue, Arial, Helveti=
+ca, Geneva, sans-serif; font-size: 36px; text-align: center; margin-top:0=
+px; margin-bottom:30px; }
+#headline p a { color: #eeeeee; text-decoration: none; }
+#left-sidebar .toc-item { font-family: Helvetica Neue, Arial, Helvetica, =
+Geneva, sans-serif; font-size: 12px; line-height: 16px; color: #2f82de; m=
+argin-top: 0px; margin-bottom: 6px; }
+#left-sidebar .toc-item a { color: #2f82de; text-decoration: none; }
+#left-sidebar .toc-heading { font-family: Helvetica Neue, Arial, Helvetic=
+a, Geneva, sans-serif; font-size: 11px; line-height: 15px; color:#777777;=
+ font-weight:bold; }
+#left-sidebar .toc-heading a { color: #777777; text-decoration: none; }
+#left-sidebar .left-column-heading { font-family: Helvetica Neue, Arial, =
+Helvetica, Geneva, sans-serif; font-size: 11px; line-height:15px; color: =
+#777777; font-weight:bold; }
+#left-sidebar .left-column-heading a { color: #777777; text-decoration:no=
+ne; }
+#left-sidebar .left-column-subhead { font-family: Helvetica Neue, Arial, =
+Helvetica, Geneva, sans-serif; font-size: 13px; line-height: 16px; color:=
+ #444444; font-weight: bold; margin-top: 0px; margin-bottom: 16px; }
+#left-sidebar .left-column-subhead a { color: #444444; text-decoration:no=
+ne; }
+#left-sidebar .left-column-content { font-family: Helvetica Neue, Arial, =
+Helvetica, Geneva, sans-serif; font-size: 12px; line-height: 16px; color:=
+ #444444; margin-top: 0px; margin-bottom: 16px; }
+#left-sidebar .left-column-content a { color: #2f82de; text-decoration: n=
+one; }
+.article-title { font-size: 18px; line-height:24px; color: #444444; font-=
+weight:bold; margin-top:0px; margin-bottom:18px; font-family: Helvetica N=
+eue, Arial, Helvetica, Geneva, sans-serif; }
+.article-title a { color: #444444; text-decoration: none; }
+.article-title.with-meta {margin-bottom: 0;}
+.article-meta { font-size: 13px; line-height: 20px; color: #ccc; font-wei=
+ght: bold; margin-top: 0;}
+.article-content { font-size: 13px; line-height: 18px; color: #444444; ma=
+rgin-top: 0px; margin-bottom: 18px; font-family: Helvetica Neue, Arial, H=
+elvetica, Geneva, sans-serif; }
+.article-content a { color: #2f82de; font-weight:bold; text-decoration:no=
+ne; }
+.article-content img { max-width: 100% }
+.article-content ol, .article-content ul { margin-top:0px; margin-bottom:=
+18px; margin-left:19px; padding:0; }
+.article-content li { font-size: 13px; line-height: 18px; color: #444444;=
+ }
+.article-content li a { color: #2f82de; text-decoration:underline; }
+.article-content p {margin-bottom: 15px;}
+.footer-content-left { font-size: 12px; line-height: 15px; color: #888888=
+; margin-top: 0px; margin-bottom: 15px; }
+.footer-content-left a { color: #888888; font-weight: bold; text-decorati=
+on: none; }
+.footer-content-right { font-size: 11px; line-height: 16px; color: #88888=
+8; margin-top: 0px; margin-bottom: 15px; }
+.footer-content-right a { color: #888888; font-weight: bold; text-decorat=
+ion: none; }
+#footer { background-color: #171717; color: #888888; }
+#footer a { color: #888888; text-decoration: none; font-weight: bold; }
+#permission-reminder { white-space: pre-wrap; }
+#street-address { color: #888888; white-space: pre-wrap; }
+</style>
+<!--[if gte mso 9]>
+<style _tmplitem=3D"4890" >
+.article-content ol, .article-content ul {
+   margin: 0 0 0 24px !important;
+   padding: 0 !important;
+   list-style-position: inside !important;
+}
+</style>
+<![endif]--></head><body style=3D"width:100% !important;background-color=
+:#424242;margin-top:0;margin-bottom:0;margin-right:0;margin-left:0;paddin=
+g-top:0;padding-bottom:0;padding-right:0;padding-left:0;font-family:Helve=
+tica Neue, Arial, Helvetica, Geneva, sans-serif;" ><table id=3D"backgroun=
+d-table" width=3D"100%" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" =
+style=3D"background-color:#424242;" >
+    <tbody><tr style=3D"border-collapse:collapse;" >
+        <td align=3D"center" bgcolor=3D"#424242" style=3D"border-collapse:colla=
+pse;" >
+            <table class=3D"w640" width=3D"640" border=3D"0" cellpadding=3D"=
+0" cellspacing=3D"0">
+                <tbody><tr style=3D"border-collapse:collapse;" ><td class=3D=
+"w640" width=3D"640" height=3D"20" style=3D"border-collapse:collapse;" ><=
+/td></tr>
+               =20
+                <tr style=3D"border-collapse:collapse;" >
+                    <td class=3D"w640" width=3D"640" style=3D"border-collaps=
+e:collapse;" >
+                        <table id=3D"top-bar" class=3D"w640" width=3D"640=
+" bgcolor=3D"#000000" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" st=
+yle=3D"border-radius:6px 6px 0px 0px;-moz-border-radius:6px 6px 0px 0px;-=
+webkit-border-radius:6px 6px 0px 0px;-webkit-font-smoothing:antialiased;b=
+ackground-color:#2E2E2E;color:#888888;" >
+    <tbody><tr style=3D"border-collapse:collapse;" >
+        <td class=3D"w15" width=3D"15" style=3D"border-collapse:collapse;=
+" ></td>
+        <td class=3D"w325" valign=3D"middle" width=3D"350" align=3D"left"=
+ style=3D"border-collapse:collapse;" >
+            <table class=3D"w325" width=3D"350" border=3D"0" cellpadding=3D=
+"0" cellspacing=3D"0">
+                <tbody><tr style=3D"border-collapse:collapse;" ><td class=
+=3D"w325" width=3D"350" height=3D"8" style=3D"border-collapse:collapse;" =
+></td></tr>
+            </tbody></table>
+            <div class=3D"header-content" style=3D"-webkit-text-size-adju=
+st:none;-ms-text-size-adjust:none;font-size:12px;color:#888888;" ><a href=
+=3D"http://miraclechannel.cmail2.com=
+/t/j-e-yhyhhlt-=
+=
+njhtthdh=
+-r/" style=3D"font-weight:bold;color:#eeeeee;t=
+ext-decoration:none;" >Web version</a><span class=3D"hide">&nbsp;&nbsp;|&=
+nbsp; <a href=3D"http://miraclechannel.updatemyprofile.com/j-yhyhhlt-=
+2AE248AD-njhtthdh=
+-y" style=3D"font-wei=
+ght:bold;color:#eeeeee;text-decoration:none;" >Update preferences</a>&nbs=
+p;&nbsp;|&nbsp; <a href=3D"http://miraclechannel.cmail2.com=
+/=
+t/j-u-yhyhhlt-=
+njhtthdh=
+-j/" style=3D"font-weig=
+ht:bold;color:#eeeeee;text-decoration:none;" >Unsubscribe</a></span></div=
+>
+            <table class=3D"w325" width=3D"350" border=3D"0" cellpadding=3D=
+"0" cellspacing=3D"0">
+                <tbody><tr style=3D"border-collapse:collapse;" ><td class=
+=3D"w325" width=3D"350" height=3D"8" style=3D"border-collapse:collapse;" =
+></td></tr>
+            </tbody></table>
+        </td>
+        <td class=3D"w30" width=3D"30" style=3D"border-collapse:collapse;=
+" ></td>
+        <td class=3D"w255" valign=3D"middle" width=3D"255" align=3D"right=
+" style=3D"border-collapse:collapse;" >
+            <table class=3D"w255" width=3D"255" border=3D"0" cellpadding=3D=
+"0" cellspacing=3D"0">
+                <tbody><tr style=3D"border-collapse:collapse;" ><td class=
+=3D"w255" width=3D"255" height=3D"8" style=3D"border-collapse:collapse;" =
+></td></tr>
+            </tbody></table>
+            <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0">
+    <tbody><tr style=3D"border-collapse:collapse;" >
+       =20
+        <td valign=3D"middle" style=3D"border-collapse:collapse;" ><a hre=
+f=3D"http://miraclechannel.cmail2.com=
+/t/j-fb-yhyhhlt-=
+njhtthdh=
+-t/" rel=3D"cs_facebox" style=3D"font-weight=
+:bold;color:#eeeeee;text-decoration:none;" ><img src=3D"http=
+://i1.cmail2.com=
+/ti/j/D6/A6E/01B/125148/csimport/lik=
+e-glyph_0.png" alt=3D"Facebook icon" =3D"" width=3D"8" border=3D"0" heigh=
+t=3D"14" style=3D"height:auto;line-height:100%;outline-style:none;text-de=
+coration:none;display:block;" /></a></td>
+        <td width=3D"3" style=3D"border-collapse:collapse;" ></td>
+        <td valign=3D"middle" style=3D"border-collapse:collapse;" ><div c=
+lass=3D"header-content" style=3D"-webkit-text-size-adjust:none;-ms-text-s=
+ize-adjust:none;font-size:12px;color:#888888;" ><a href=3D"http://miracle=
+channel.cmail2.com=
+/t/j-fb-yhyhhlt-=
+=
+njhtthdh=
+-i/" rel=3D"cs_facebox" style=3D"font-weight:bold;color:#eeeeee=
+;text-decoration:none;" >Like</a></div></td>
+       =20
+       =20
+        <td class=3D"w10" width=3D"10" style=3D"border-collapse:collapse;=
+" ></td>
+        <td valign=3D"middle" style=3D"border-collapse:collapse;" ><a hre=
+f=3D"http://miraclechannel.cmail2.com=
+/t/j-tw-yhyhhlt-=
+njhtthdh=
+-d/" style=3D"font-weight:bold;color:#eeeeee=
+;text-decoration:none;" ><img src=3D"http=
+://i2.=
+cmail2.com=
+/ti/j/D6/A6E/01B/125148/csimport/tweet-glyph_1.png" alt=
+=3D"Twitter icon" =3D"" width=3D"17" border=3D"0" height=3D"13" style=3D"=
+height:auto;line-height:100%;outline-style:none;text-decoration:none;disp=
+lay:block;" /></a></td>
+        <td width=3D"3" style=3D"border-collapse:collapse;" ></td>
+        <td valign=3D"middle" style=3D"border-collapse:collapse;" ><div c=
+lass=3D"header-content" style=3D"-webkit-text-size-adjust:none;-ms-text-s=
+ize-adjust:none;font-size:12px;color:#888888;" ><a href=3D"http://miracle=
+channel.cmail2.com=
+/t/j-tw-yhyhhlt-=
+=
+njhtthdh=
+-h/" style=3D"font-weight:bold;color:#eeeeee;text-decoration:no=
+ne;" >Tweet</a></div></td>
+       =20
+       =20
+        <td class=3D"w10" width=3D"10" style=3D"border-collapse:collapse;=
+" ></td>
+        <td valign=3D"middle" style=3D"border-collapse:collapse;" ><a hre=
+f=3D"http://miraclechannel.forwardtomyfriend.com/j-=
+=
+njhtthdh-2AE248AD=
+-yhyhhlt-l-k" style=3D"font-weight:bold=
+;color:#eeeeee;text-decoration:none;" ><img src=3D"http=
+://i3.cmail2.com=
+/ti/j/D6/A6E/01B/125148/csimport/forward-=
+glyph_2.png" alt=3D"Forward icon" =3D"" width=3D"19" border=3D"0" height=3D=
+"14" style=3D"height:auto;line-height:100%;outline-style:none;text-decora=
+tion:none;display:block;" /></a></td>
+        <td width=3D"3" style=3D"border-collapse:collapse;" ></td>
+        <td valign=3D"middle" style=3D"border-collapse:collapse;" ><div c=
+lass=3D"header-content" style=3D"-webkit-text-size-adjust:none;-ms-text-s=
+ize-adjust:none;font-size:12px;color:#888888;" ><a href=3D"http://miracle=
+channel.forwardtomyfriend.com/j-=
+njhtthdh-=
+2AE248AD=
+-yhyhhlt-l-u" style=3D"font-weight:bold;color:#eeeeee;text=
+-decoration:none;" >Forward</a></div></td>
+       =20
+    </tr>
+</tbody></table>
+            <table class=3D"w255" width=3D"255" border=3D"0" cellpadding=3D=
+"0" cellspacing=3D"0">
+                <tbody><tr style=3D"border-collapse:collapse;" ><td class=
+=3D"w255" width=3D"255" height=3D"8" style=3D"border-collapse:collapse;" =
+></td></tr>
+            </tbody></table>
+        </td>
+        <td class=3D"w15" width=3D"15" style=3D"border-collapse:collapse;=
+" ></td>
+    </tr>
+</tbody></table>
+                       =20
+                    </td>
+                </tr>
+                <tr style=3D"border-collapse:collapse;" >
+                <td id=3D"header" class=3D"w640" width=3D"640" align=3D"c=
+enter" bgcolor=3D"#000000" style=3D"border-collapse:collapse;" >
+   =20
+    <div  align=3D"center" style=3D"text-align:center;" ><img id=3D"custo=
+mHeaderImage" src=3D"http=
+://i5.cmail2.com=
+/ti/j/D6/A6E/01B/125148/images/topplogo_feb2012.103900.jpg" class=3D"w6=
+40"  align=3D"top" border=3D"0" style=3D"display:inline;height:auto;line-=
+height:100%;outline-style:none;text-decoration:none;" /></div>
+   =20
+   =20
+</td>
+                </tr>
+               =20
+                <tr id=3D"twocolumn-content-row" style=3D"border-collapse=
+:collapse;" ><td class=3D"w640" width=3D"640" style=3D"border-collapse:co=
+llapse;" ><table class=3D"w640" width=3D"640" border=3D"0" cellpadding=3D=
+"0" cellspacing=3D"0">
+    <tbody><tr style=3D"border-collapse:collapse;" >
+        <td class=3D"w15" width=3D"15" bgcolor=3D"#f0f0f0" style=3D"borde=
+r-collapse:collapse;" ></td>
+        <td id=3D"left-sidebar" class=3D"w140" valign=3D"top" width=3D"14=
+0" align=3D"left" bgcolor=3D"#f0f0f0" style=3D"border-collapse:collapse;"=
+ >
+           =20
+           =20
+            <table class=3D"w140" width=3D"140" border=3D"0" cellpadding=3D=
+"0" cellspacing=3D"0">
+                <tbody><tr style=3D"border-collapse:collapse;" ><td class=
+=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:collapse;"=
+ ></td></tr>
+                <tr style=3D"border-collapse:collapse;" >
+                    <td class=3D"w140" width=3D"140" style=3D"border-coll=
+apse:collapse;" >
+                        <div class=3D"left-column-heading" align=3D"left"=
+ style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-seri=
+f;font-size:11px;line-height:15px;color:#777777;font-weight:bold;" ></div=
+>
+                    </td>
+                </tr>
+            </tbody></table>
+                               =20
+        =09
+                    <table class=3D"w140" width=3D"140" border=3D"0" cell=
+padding=3D"0" cellspacing=3D"0">
+                        <tbody><tr style=3D"border-collapse:collapse;" ><=
+td class=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:co=
+llapse;" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><p class=3D"left-column-subhead" align=3D"left" =
+style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-serif=
+;font-size:13px;line-height:16px;color:#444444;font-weight:bold;margin-to=
+p:0px;margin-bottom:16px;" ></p></td>
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><a href=3D"http://miraclechannel.cmail2.com=
+/t/j-l-yhyhhlt-=
+njhtthdh=
+-e/"><img labe=
+l=3D"Image" class=3D"w140" width=3D"140" border=3D"0" src=3D"=
+http=
+://i1.cmail2.com=
+/ei/j/0D/732/0A9/csimport/Watch=
+Miracle.120204.jpg" height=3D"70" style=3D"height:auto;line-height:100%;o=
+utline-style:none;text-decoration:none;display:block;" /></a></td>
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" ><td clas=
+s=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:collapse;=
+" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><div class=3D"left-column-content" align=3D"left=
+" style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-ser=
+if;font-size:12px;line-height:16px;color:#444444;margin-top:0px;margin-bo=
+ttom:16px;" ></div></td>
+                        </tr>
+                    </tbody></table>
+               =20
+                    <table class=3D"w140" width=3D"140" border=3D"0" cell=
+padding=3D"0" cellspacing=3D"0">
+                        <tbody><tr style=3D"border-collapse:collapse;" ><=
+td class=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:co=
+llapse;" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" >
+                                <p class=3D"left-column-subhead" align=3D=
+"left" style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, san=
+s-serif;font-size:13px;line-height:16px;color:#444444;font-weight:bold;ma=
+rgin-top:0px;margin-bottom:16px;" >Quick links:</p>
+                                <div class=3D"left-column-content" align=3D=
+"left" style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, san=
+s-serif;font-size:12px;line-height:16px;color:#444444;margin-top:0px;marg=
+in-bottom:16px;" ><p>
+    <a href=3D"http://miraclechannel.cmail2.com=
+/t/j-l-yhyhhlt-=
+njhtthdh=
+-s/" style=3D"color:#2f82de;text-decor=
+ation:none;" >History</a><br style=3D"line-height:100%;" />
+    <br style=3D"line-height:100%;" />
+    <a href=3D"http://miraclechannel.cmail2.com=
+/t/j-l-yhyhhlt-=
+njhtthdh=
+-g/" style=3D"color:#2f82de;text-decor=
+ation:none;" >Vision &amp; Mission</a><br style=3D"line-height:100%;" />
+    <br style=3D"line-height:100%;" />
+    <a href=3D"http://miraclechannel.cmail2.com=
+/t/j-l-yhyhhlt-=
+njhtthdh=
+-w/" style=3D"color:#2f82de;text-decor=
+ation:none;" >Core values</a><br style=3D"line-height:100%;" />
+    <br style=3D"line-height:100%;" />
+    <a href=3D"http://miraclechannel.cmail2.com=
+/t/j-l-yhyhhlt-=
+njhtthdh=
+-yd/" style=3D"color:#2f82de;text-deco=
+ration:none;" >Significant Impact</a><br style=3D"line-height:100%;" />
+    <br style=3D"line-height:100%;" />
+    <a href=3D"http://miraclechannel.cmail2.com=
+/t/j-l-yhyhhlt-=
+njhtthdh=
+-yh/" style=3D"color:#2f82de;text-deco=
+ration:none;" >Strategic Opportunity</a><br style=3D"line-height:100%;" /=
+>
+    <br style=3D"line-height:100%;" />
+    <a href=3D"http://miraclechannel.cmail2.com=
+/t/j-l-yhyhhlt-=
+njhtthdh=
+-yk/" style=3D"color:#2f82de;text-deco=
+ration:none;" >Strategic Focus</a><br style=3D"line-height:100%;" />
+    <br style=3D"line-height:100%;" />
+    <a href=3D"http://miraclechannel.cmail2.com=
+/t/j-l-yhyhhlt-=
+njhtthdh=
+-yu/" style=3D"color:#2f82de;text-deco=
+ration:none;" >Join us</a><br style=3D"line-height:100%;" />
+    &nbsp;</p>
+</div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+               =20
+                    <table class=3D"w140" width=3D"140" border=3D"0" cell=
+padding=3D"0" cellspacing=3D"0">
+                        <tbody><tr style=3D"border-collapse:collapse;" ><=
+td class=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:co=
+llapse;" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><p class=3D"left-column-subhead" align=3D"left" =
+style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-serif=
+;font-size:13px;line-height:16px;color:#444444;font-weight:bold;margin-to=
+p:0px;margin-bottom:16px;" >Miracle promo:</p></td>
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><a href=3D"http://miraclechannel.cmail2.com=
+/t/j-l-yhyhhlt-=
+njhtthdh=
+-jl/"><img lab=
+el=3D"Image" class=3D"w140" width=3D"140" border=3D"0" src=3D"=
+http=
+://i2.cmail2.com=
+/ei/j/0D/732/0A9/csimport/prom=
+ovideo-logo.111704.jpg" height=3D"77" style=3D"height:auto;line-height:10=
+0%;outline-style:none;text-decoration:none;display:block;" /></a></td>
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" ><td clas=
+s=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:collapse;=
+" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><div class=3D"left-column-content" align=3D"left=
+" style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-ser=
+if;font-size:12px;line-height:16px;color:#444444;margin-top:0px;margin-bo=
+ttom:16px;" ></div></td>
+                        </tr>
+                    </tbody></table>
+               =20
+                    <table class=3D"w140" width=3D"140" border=3D"0" cell=
+padding=3D"0" cellspacing=3D"0">
+                        <tbody><tr style=3D"border-collapse:collapse;" ><=
+td class=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:co=
+llapse;" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" >
+                                <p class=3D"left-column-subhead" align=3D=
+"left" style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, san=
+s-serif;font-size:13px;line-height:16px;color:#444444;font-weight:bold;ma=
+rgin-top:0px;margin-bottom:16px;" ></p>
+                                <div class=3D"left-column-content" align=3D=
+"left" style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, san=
+s-serif;font-size:12px;line-height:16px;color:#444444;margin-top:0px;marg=
+in-bottom:16px;" ><p>
+    <strong>Dalia, Turkey:</strong><br style=3D"line-height:100%;" />
+    "I am a regular viewer of your program. I come from Iraq but live in Tur=
+key. I cannot find myself in my religion. I remember my mother, who was a=
+ Christian, who always told us about her faith. Here I find the answers m=
+y religion doesn&rsquo;t give. I hope you understand I am sincere in my s=
+earch and that you will answer my letter because I really need some&nbsp;=
+guidance."</p>
+</div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+               =20
+                    <table class=3D"w140" width=3D"140" border=3D"0" cell=
+padding=3D"0" cellspacing=3D"0">
+                        <tbody><tr style=3D"border-collapse:collapse;" ><=
+td class=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:co=
+llapse;" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><p class=3D"left-column-subhead" align=3D"left" =
+style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-serif=
+;font-size:13px;line-height:16px;color:#444444;font-weight:bold;margin-to=
+p:0px;margin-bottom:16px;" ></p></td>
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><img label=3D"Image" class=3D"w140" width=3D"140=
+" border=3D"0" src=3D"http=
+://i3.cmail2.com=
+/ei/j/0D/732/0A9/csimport/regilarge.223943.jpg" height=3D"93" style=3D=
+"height:auto;line-height:100%;outline-style:none;text-decoration:none;dis=
+play:block;" /></td>
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" ><td clas=
+s=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:collapse;=
+" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><div class=3D"left-column-content" align=3D"left=
+" style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-ser=
+if;font-size:12px;line-height:16px;color:#444444;margin-top:0px;margin-bo=
+ttom:16px;" ><p>
+    <strong>Miryam from Algeria:</strong><br style=3D"line-height:100%;" />
+    "I am a 15-year-old girl. The problems in my home get greater every day =
+and perhaps my parents will divorce. I wish that you would pray for me an=
+d for my family, that Jesus can bring love and peace into our home. I alw=
+ays feel sad and depressed because of what is happening around me. Could =
+you also send me a book about the life of Jesus?"</p>
+</div></td>
+                        </tr>
+                    </tbody></table>
+               =20
+                    <table class=3D"w140" width=3D"140" border=3D"0" cell=
+padding=3D"0" cellspacing=3D"0">
+                        <tbody><tr style=3D"border-collapse:collapse;" ><=
+td class=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:co=
+llapse;" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><p class=3D"left-column-subhead" align=3D"left" =
+style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-serif=
+;font-size:13px;line-height:16px;color:#444444;font-weight:bold;margin-to=
+p:0px;margin-bottom:16px;" ></p></td>
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><img label=3D"Image" class=3D"w140" width=3D"140=
+" border=3D"0" src=3D"http=
+://i4.cmail2.com=
+/ei/j/0D/732/0A9/csimport/LBY20110327BenghaziFreedomSquare556.222812.j=
+pg" height=3D"93" style=3D"height:auto;line-height:100%;outline-style:non=
+e;text-decoration:none;display:block;" /></td>
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" ><td clas=
+s=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:collapse;=
+" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><div class=3D"left-column-content" align=3D"left=
+" style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-ser=
+if;font-size:12px;line-height:16px;color:#444444;margin-top:0px;margin-bo=
+ttom:16px;" ><p>
+    <strong>Fawzeya from Spain:</strong><br style=3D"line-height:100%;" />
+    "I must learn more about Jesus. Thank you for your TV programs on satell=
+ite. They light up my life, and I feel Jesus Christ is close to me. Thank=
+ you for your teaching people about Jesus."</p>
+<p>
+    <strong>Hawa from England:</strong><br style=3D"line-height:100%;" />
+    "I have been deeply touched after watching your programs on satellite, h=
+ow people&rsquo;s lives have changed when they became Christians. I hope&=
+nbsp; I can experience the same change in my own life. Please help me so =
+I can change. Please send me the information in Arabic."</p>
+</div></td>
+                        </tr>
+                    </tbody></table>
+               =20
+                    <table class=3D"w140" width=3D"140" border=3D"0" cell=
+padding=3D"0" cellspacing=3D"0">
+                        <tbody><tr style=3D"border-collapse:collapse;" ><=
+td class=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:co=
+llapse;" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><p class=3D"left-column-subhead" align=3D"left" =
+style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-serif=
+;font-size:13px;line-height:16px;color:#444444;font-weight:bold;margin-to=
+p:0px;margin-bottom:16px;" ></p></td>
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><img label=3D"Image" class=3D"w140" width=3D"140=
+" border=3D"0" src=3D"http=
+://i5.cmail2.com=
+/ei/j/0D/732/0A9/csimport/womanhijab.223619.jpg" height=3D"321" style=3D=
+"height:auto;line-height:100%;outline-style:none;text-decoration:none;dis=
+play:block;" /></td>
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" ><td clas=
+s=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:collapse;=
+" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><div class=3D"left-column-content" align=3D"left=
+" style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-ser=
+if;font-size:12px;line-height:16px;color:#444444;margin-top:0px;margin-bo=
+ttom:16px;" ><p>
+    <strong>From Casablanca, Morocco:</strong><br style=3D"line-height:100%;=
+" />
+    "I would like to take this opportunity to thank you. Through your Miracl=
+e programs you have introduced several topics that have made me think. I =
+also heard about the freedom in Christ and how this motivates one to be o=
+pen and honest and not step on the rights of other people. I would like t=
+o learn more about this religion, so please send me some information."</p=
+>
+</div></td>
+                        </tr>
+                    </tbody></table>
+               =20
+                    <table class=3D"w140" width=3D"140" border=3D"0" cell=
+padding=3D"0" cellspacing=3D"0">
+                        <tbody><tr style=3D"border-collapse:collapse;" ><=
+td class=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:co=
+llapse;" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><p class=3D"left-column-subhead" align=3D"left" =
+style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-serif=
+;font-size:13px;line-height:16px;color:#444444;font-weight:bold;margin-to=
+p:0px;margin-bottom:16px;" ></p></td>
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><a href=3D"http://miraclechannel.cmail2.com=
+/t/j-l-yhyhhlt-=
+njhtthdh=
+-jr/"><img lab=
+el=3D"Image" class=3D"w140" width=3D"140" border=3D"0" src=3D"=
+http=
+://i6.cmail2.com=
+/ei/j/0D/732/0A9/csimport/dona=
+te-button-blue.111446.jpg" height=3D"69" style=3D"height:auto;line-height=
+:100%;outline-style:none;text-decoration:none;display:block;" /></a></td>=
+
+                        </tr>
+                        <tr style=3D"border-collapse:collapse;" ><td clas=
+s=3D"w140" width=3D"140" height=3D"15" style=3D"border-collapse:collapse;=
+" ></td></tr>
+                        <tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w140" width=3D"140" style=3D"bor=
+der-collapse:collapse;" ><div class=3D"left-column-content" align=3D"left=
+" style=3D"font-family:Helvetica Neue, Arial, Helvetica, Geneva, sans-ser=
+if;font-size:12px;line-height:16px;color:#444444;margin-top:0px;margin-bo=
+ttom:16px;" ><p>
+    <strong>Your donation will help the people of the Middle East, North Afr=
+ica and the Gulf region discover how Jesus Christ can give them a new and=
+ better life.</strong></p>
+</div></td>
+                        </tr>
+                    </tbody></table>
+               =20
+           =20
+        </td>
+        <td class=3D"w15" width=3D"15" bgcolor=3D"#f0f0f0" style=3D"borde=
+r-collapse:collapse;" ></td>
+        <td class=3D"w470" valign=3D"top" width=3D"470" bgcolor=3D"#fffff=
+f" style=3D"border-collapse:collapse;" >
+            <table class=3D"w470" width=3D"470" border=3D"0" cellpadding=3D=
+"0" cellspacing=3D"0">
+                <tbody><tr style=3D"border-collapse:collapse;" ><td class=
+=3D"w470" width=3D"470" height=3D"30" style=3D"border-collapse:collapse;"=
+ ></td></tr>
+            </tbody></table>
+            <table class=3D"w470" width=3D"470" border=3D"0" cellpadding=3D=
+"0" cellspacing=3D"0">
+                <tbody><tr style=3D"border-collapse:collapse;" >
+                    <td class=3D"w30" width=3D"30" style=3D"border-collap=
+se:collapse;" ></td>
+                    <td class=3D"w410" width=3D"410" style=3D"border-coll=
+apse:collapse;" >
+                        <a name=3D"toc_item_0"></a>
+                                <table class=3D"w410" width=3D"410" borde=
+r=3D"0" cellpadding=3D"0" cellspacing=3D"0">
+                                    <tbody><tr style=3D"border-collapse:c=
+ollapse;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" >
+                                            <p class=3D"article-title" al=
+ign=3D"left" style=3D"font-size:18px;line-height:24px;color:#444444;font-=
+weight:bold;margin-top:0px;margin-bottom:18px;font-family:Helvetica Neue,=
+ Arial, Helvetica, Geneva, sans-serif;" >                                =
+                                                       Bringing faith and=
+ hope to Arab women</p>
+                                            <div class=3D"article-content=
+" align=3D"left" style=3D"font-size:13px;line-height:18px;color:#444444;m=
+argin-top:0px;margin-bottom:18px;font-family:Helvetica Neue, Arial, Helve=
+tica, Geneva, sans-serif;" ><p style=3D"margin-bottom:15px;" >
+    <strong>-I am calling from the city that is burning every day, says Tale=
+en from Aleppo in Syria. She is one of thousands of Arab women seeking re=
+fuge in the promises of the gospel. Despite dire circumstances they cling=
+ to the eternal promises of redemption and hope.</strong></p>
+</div>
+                                        </td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" ><td class=3D"w410" width=3D"410" height=3D"10" style=3D"border-collap=
+se:collapse;" ></td></tr>
+                                </tbody></table>
+                            <a name=3D"toc_item_1"></a>
+                                <table class=3D"w410" width=3D"410" borde=
+r=3D"0" cellpadding=3D"0" cellspacing=3D"0">
+                                    <tbody><tr style=3D"border-collapse:c=
+ollapse;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" >
+                                            <p class=3D"article-title" al=
+ign=3D"left" style=3D"font-size:18px;line-height:24px;color:#444444;font-=
+weight:bold;margin-top:0px;margin-bottom:18px;font-family:Helvetica Neue,=
+ Arial, Helvetica, Geneva, sans-serif;" ></p>
+                                            <table align=3D"right" border=
+=3D"0" cellpadding=3D"0" cellspacing=3D"0">
+                                                <tbody><tr style=3D"borde=
+r-collapse:collapse;" >
+                                                    <td class=3D"w30" wid=
+th=3D"15" style=3D"border-collapse:collapse;" ></td>
+                                                    <td style=3D"border-c=
+ollapse:collapse;" ><img label=3D"Image" class=3D"w220" width=3D"220" bor=
+der=3D"0" src=3D"http=
+://i7.cmail2.com=
+/e=
+i/j/0D/732/0A9/csimport/Tunispicture1.054449.png" height=3D"198" style=3D=
+"height:auto;line-height:100%;outline-style:none;text-decoration:none;dis=
+play:block;" /></td>
+                                                </tr>
+                                                <tr style=3D"border-colla=
+pse:collapse;" ><td class=3D"w30" width=3D"15" height=3D"5" style=3D"bord=
+er-collapse:collapse;" ></td><td style=3D"border-collapse:collapse;" ></t=
+d></tr>
+                                            </tbody></table>
+                                            <div class=3D"article-content=
+" align=3D"left" style=3D"font-size:13px;line-height:18px;color:#444444;m=
+argin-top:0px;margin-bottom:18px;font-family:Helvetica Neue, Arial, Helve=
+tica, Geneva, sans-serif;" ><p style=3D"margin-bottom:15px;" >
+    &nbsp;Miracle Channel launched a new television program in September mad=
+e by and for women in North Africa. Barty Shokralla, the CEO of Miracle C=
+hannel, explains that it is rare to see North African women given the opp=
+ortunity on air to address their own cultural, religious and political ch=
+allenges.<br style=3D"line-height:100%;" />
+    <br style=3D"line-height:100%;" />
+    -These are women of faith who know the issues that women in North Africa=
+ deal with on a daily basis. We are greatly impressed by the courage of l=
+ocal North African women who share their testimonies of faith in Jesus an=
+d how it influences their lives.</p>
+</div>
+                                        </td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" ><td class=3D"w410" width=3D"410" height=3D"10" style=3D"border-collap=
+se:collapse;" ></td></tr>
+                                </tbody></table>
+                            <a name=3D"toc_item_2"></a>
+                                <table class=3D"w410" width=3D"410" borde=
+r=3D"0" cellpadding=3D"0" cellspacing=3D"0">
+                                    <tbody><tr style=3D"border-collapse:c=
+ollapse;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" >
+                                            <p class=3D"article-title" al=
+ign=3D"left" style=3D"font-size:18px;line-height:24px;color:#444444;font-=
+weight:bold;margin-top:0px;margin-bottom:18px;font-family:Helvetica Neue,=
+ Arial, Helvetica, Geneva, sans-serif;" > </p>
+                                        </td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" ><img label=3D"Image" class=3D"w410" =
+width=3D"410" border=3D"0" src=3D"http=
+://i8.=
+cmail2.com=
+/ei/j/0D/732/0A9/csimport/iranianwomen-Kopi.215034.jpg" he=
+ight=3D"105" style=3D"height:auto;line-height:100%;outline-style:none;tex=
+t-decoration:none;display:block;" /></td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" ><td class=3D"w410" width=3D"410" height=3D"15" style=3D"border-collap=
+se:collapse;" ></td></tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" >
+                                            <div class=3D"article-content=
+" align=3D"left" style=3D"font-size:13px;line-height:18px;color:#444444;m=
+argin-top:0px;margin-bottom:18px;font-family:Helvetica Neue, Arial, Helve=
+tica, Geneva, sans-serif;" ><p style=3D"margin-bottom:15px;" >
+    <strong>Inferior lives</strong><br style=3D"line-height:100%;" />
+    The Arab Human Development Report published by a group of Arab researche=
+rs from the UN Development Program says that out of the seven regions of =
+the world, Arab countries had the lowest freedom score. They also had the=
+ lowest ranking for "voice and accountability," a measure of various aspe=
+cts of the political process, civil liberties, political rights and indep=
+endence of the media.</p>
+<p style=3D"margin-bottom:15px;" >
+    <strong>In most Arab countries</strong>, the Shari'a, or Islamic law, de=
+fines the rules of traditional social behavior. Under the law, women are =
+inferior to that of men, and are therefore discriminated against with reg=
+ard to personal rights and freedoms.<br style=3D"line-height:100%;" />
+    Furthermore, laws that restrict women's rights remain in force in almost=
+ all Arab countries. In Syria, a husband can prevent his wife from leavin=
+g the country. In several Arab countries, married women must have their h=
+usbands' written permission to travel abroad, and they may be prevented f=
+rom doing so for any reason. In Saudi Arabia, women must obtain written p=
+ermission from their closest male relative to leave the country or travel=
+ on public transportation between different parts of the kingdom.<br styl=
+e=3D"line-height:100%;" />
+    <strong>According to the UN</strong>, "utilization of Arab women's capab=
+ilities through political and economic participation remains the lowest i=
+n the world. In some countries with elected national assemblies, women ar=
+e still denied the right to vote or hold office. And one in every two Ara=
+b women can neither read nor write."</p>
+</div>
+                                        </td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" ><td class=3D"w410" width=3D"410" height=3D"10" style=3D"border-collap=
+se:collapse;" ></td></tr>
+                                </tbody></table>
+                            <a name=3D"toc_item_3"></a>
+                                <table class=3D"w410" width=3D"410" borde=
+r=3D"0" cellpadding=3D"0" cellspacing=3D"0">
+                                    <tbody><tr style=3D"border-collapse:c=
+ollapse;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" >
+                                            <p class=3D"article-title" al=
+ign=3D"left" style=3D"font-size:18px;line-height:24px;color:#444444;font-=
+weight:bold;margin-top:0px;margin-bottom:18px;font-family:Helvetica Neue,=
+ Arial, Helvetica, Geneva, sans-serif;" ></p>
+                                            <table align=3D"right" border=
+=3D"0" cellpadding=3D"0" cellspacing=3D"0">
+                                                <tbody><tr style=3D"borde=
+r-collapse:collapse;" >
+                                                    <td class=3D"w30" wid=
+th=3D"15" style=3D"border-collapse:collapse;" ></td>
+                                                    <td style=3D"border-c=
+ollapse:collapse;" ><img label=3D"Image" class=3D"w220" width=3D"220" bor=
+der=3D"0" src=3D"http=
+://i9.cmail2.com=
+/e=
+i/j/0D/732/0A9/csimport/Prayersbeforeshooting2.213143.JPG" height=3D"146"=
+ style=3D"height:auto;line-height:100%;outline-style:none;text-decoration=
+:none;display:block;" /></td>
+                                                </tr>
+                                                <tr style=3D"border-colla=
+pse:collapse;" ><td class=3D"w30" width=3D"15" height=3D"5" style=3D"bord=
+er-collapse:collapse;" ></td><td style=3D"border-collapse:collapse;" ></t=
+d></tr>
+                                            </tbody></table>
+                                            <div class=3D"article-content=
+" align=3D"left" style=3D"font-size:13px;line-height:18px;color:#444444;m=
+argin-top:0px;margin-bottom:18px;font-family:Helvetica Neue, Arial, Helve=
+tica, Geneva, sans-serif;" ><p style=3D"margin-bottom:15px;" >
+    <strong>Giving hope</strong><br style=3D"line-height:100%;" />
+    For most Arab women, illiterate or not, television is the number one sou=
+rce of information. Through a variety of television programs on issues su=
+ch as child rearing, nutrition, relationships and female health, Miracle =
+Channel is filling a great need to educate Arab women on basic issues tha=
+t will greatly improve their quality of life.&nbsp; By addressing these i=
+ssues from a biblical view, Miracle Channel gives Arab women an understan=
+ding of their true value and encourages them to use their gifts and talen=
+ts.&nbsp; Even if their circumstances do not change, several of our femal=
+e viewers have said simply knowing that God loves them gives them hope an=
+d courage to face each new day.</p>
+</div>
+                                        </td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" ><td class=3D"w410" width=3D"410" height=3D"10" style=3D"border-collap=
+se:collapse;" ></td></tr>
+                                </tbody></table>
+                            <a name=3D"toc_item_4"></a>
+                                <table class=3D"w410" width=3D"410" borde=
+r=3D"0" cellpadding=3D"0" cellspacing=3D"0">
+                                    <tbody><tr style=3D"border-collapse:c=
+ollapse;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" >
+                                            <p class=3D"article-title" al=
+ign=3D"left" style=3D"font-size:18px;line-height:24px;color:#444444;font-=
+weight:bold;margin-top:0px;margin-bottom:18px;font-family:Helvetica Neue,=
+ Arial, Helvetica, Geneva, sans-serif;" ></p>
+                                        </td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" ><img label=3D"Image" class=3D"w410" =
+width=3D"410" border=3D"0" src=3D"http=
+://i10.=
+cmail2.com=
+/ei/j/0D/732/0A9/csimport/arabwomanphonelong.214242.jpg" =
+height=3D"187" style=3D"height:auto;line-height:100%;outline-style:none;t=
+ext-decoration:none;display:block;" /></td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" ><td class=3D"w410" width=3D"410" height=3D"15" style=3D"border-collap=
+se:collapse;" ></td></tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" >
+                                            <div class=3D"article-content=
+" align=3D"left" style=3D"font-size:13px;line-height:18px;color:#444444;m=
+argin-top:0px;margin-bottom:18px;font-family:Helvetica Neue, Arial, Helve=
+tica, Geneva, sans-serif;" ><p style=3D"margin-bottom:15px;" >
+    <strong>Three strong women</strong><br style=3D"line-height:100%;" />
+    Nadja* from Libya is one of the women who draws courage from our televis=
+ion programs.&nbsp; She had an encounter with God about two years ago, an=
+d now she follows our programs on a daily basis.&nbsp; She confides that =
+she is scared and watches our channel in secrecy. She doesn&rsquo;t know =
+any other believers and has never had an opportunity to talk about her ne=
+w faith with anyone else.</p>
+<p style=3D"margin-bottom:15px;" >
+    <strong>- I feel lonely and vulnerable</strong>, but your programs keep =
+me encouraged and motivated. It was a great comfort and relief to contact=
+ you in person on Skype, Nadja told us on the phone.</p>
+<p style=3D"margin-bottom:15px;" >
+    <strong>Taleen is another friend&nbsp;</strong>who recently called us fr=
+om Syria. Not only is her life in great danger as her city is attacked, s=
+he belongs to the Christian minority who suffered persecution long before=
+ the uprising against Assad&rsquo;s regime started.<br style=3D"line-heig=
+ht:100%;" />
+    -Thank you Miracle Channel for your encouraging programs, especially for=
+ me in Syria in this difficult time, Taleen tells us. - I am from Aleppo =
+=E2=80=93the city that is burning every day. I&rsquo;m a Christian, but w=
+e are living under very hard circumstances. Please pray for us, she plead=
+s fervently.</p>
+<p style=3D"margin-bottom:15px;" >
+    <strong>Fatma in Morocco faces different challenges</strong>. As a new b=
+eliever in Christ who was raised as a Muslim, she now fears for her life.=
+ The gospel that is the cause of her persecution is also what gives her c=
+ourage to face possible death.<br style=3D"line-height:100%;" />
+    -Eight months ago I started watching your channel, but I didn&rsquo;t li=
+ke it. Yet a voice in my heart said that I needed to continue watching be=
+cause big things were going to change in my life. I learned to love Jesus=
+ and I believe He is the truth and that all those who believe in him will=
+ have eternal life. I follow you online and on Skype and I started readin=
+g the bible until I was discovered by my brother. I got a serious warning=
+ that I would die if he caught me reading the bible again, and the warnin=
+g would not be repeated. I am very scared, please pray for me, asks Fatma=
+.</p>
+<p style=3D"margin-bottom:15px;" >
+    <span style=3D"font-size:9px;" ><strong>*all names are changed</strong><=
+/span></p>
+<p style=3D"margin-bottom:15px;" >
+    <strong>Please help us pray for:</strong></p>
+<p style=3D"margin-bottom:15px;" >
+    <em><strong>-Equality and justice for women in the Arab world<br style=3D=
+"line-height:100%;" />
+    -Protection for our viewers who come to faith<br style=3D"line-height:10=
+0%;" />
+    -Funds for more womens programming</strong></em></p>
+<p style=3D"margin-bottom:15px;" >
+    <br style=3D"line-height:100%;" />
+    <span style=3D"font-size:14px;" ><strong>Miracle Channel is in need of m=
+ore funds for programming. By helping Miracle Channel with a financial gi=
+ft, you are helping us reach women like Taleen, Nadja and Fatma with the =
+gospel of Jesus Christ.&nbsp;</strong></span></p>
+</div>
+                                        </td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" ><td class=3D"w410" width=3D"410" height=3D"10" style=3D"border-collap=
+se:collapse;" ></td></tr>
+                                </tbody></table>
+                            <a name=3D"toc_item_5"></a>
+                                <table class=3D"w410" width=3D"410" borde=
+r=3D"0" cellpadding=3D"0" cellspacing=3D"0">
+                                    <tbody><tr style=3D"border-collapse:c=
+ollapse;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" >
+                                            <p class=3D"article-title" al=
+ign=3D"left" style=3D"font-size:18px;line-height:24px;color:#444444;font-=
+weight:bold;margin-top:0px;margin-bottom:18px;font-family:Helvetica Neue,=
+ Arial, Helvetica, Geneva, sans-serif;" ></p>
+                                        </td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" ><img label=3D"Image" class=3D"w410" =
+width=3D"410" border=3D"0" src=3D"http=
+://i1.=
+cmail2.com=
+/ei/j/0D/732/0A9/csimport/LBY20110325BenghaziPeoplePrayer.=
+215103.jpg" height=3D"193" style=3D"height:auto;line-height:100%;outline-=
+style:none;text-decoration:none;display:block;" /></td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" ><td class=3D"w410" width=3D"410" height=3D"15" style=3D"border-collap=
+se:collapse;" ></td></tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" >
+                                        <td class=3D"w410" width=3D"410" =
+style=3D"border-collapse:collapse;" >
+                                            <div class=3D"article-content=
+" align=3D"left" style=3D"font-size:13px;line-height:18px;color:#444444;m=
+argin-top:0px;margin-bottom:18px;font-family:Helvetica Neue, Arial, Helve=
+tica, Geneva, sans-serif;" ></div>
+                                        </td>
+                                    </tr>
+                                    <tr style=3D"border-collapse:collapse=
+;" ><td class=3D"w410" width=3D"410" height=3D"10" style=3D"border-collap=
+se:collapse;" ></td></tr>
+                                </tbody></table>
+                           =20
+                    </td>
+                    <td class=3D"w30" width=3D"30" style=3D"border-collap=
+se:collapse;" ></td>
+                </tr>
+            </tbody></table>
+        </td>
+    </tr>
+</tbody></table>
+</td></tr>
+                <tr style=3D"border-collapse:collapse;" >
+                    <td class=3D"w640" width=3D"640" style=3D"border-collaps=
+e:collapse;" ><table class=3D"w640" width=3D"640" border=3D"0" cellpaddin=
+g=3D"0" cellspacing=3D"0">
+                        <tbody><tr style=3D"border-collapse:collapse;" >
+                            <td class=3D"w170" width=3D"170" bgcolor=3D"#=
+f0f0f0" height=3D"15" style=3D"border-collapse:collapse;" ></td>
+                            <td class=3D"w470" width=3D"470" bgcolor=3D"#=
+ffffff" height=3D"15" style=3D"border-collapse:collapse;" ></td>
+                        </tr>
+                    </tbody></table></td>
+                </tr>
+               =20
+                <tr style=3D"border-collapse:collapse;" >
+                <td class=3D"w640" width=3D"640" style=3D"border-collapse=
+:collapse;" >
+    <table id=3D"footer" class=3D"w640" width=3D"640" bgcolor=3D"#171717"=
+ border=3D"0" cellpadding=3D"0" cellspacing=3D"0" style=3D"border-radius:=
+0px 0px 6px 6px;-moz-border-radius:0px 0px 6px 6px;-webkit-border-radius:=
+0px 0px 6px 6px;-webkit-font-smoothing:antialiased;background-color:#1717=
+17;color:#888888;" >
+    <tbody><tr style=3D"border-collapse:collapse;" ><td class=3D"w30" wid=
+th=3D"30" style=3D"border-collapse:collapse;" ></td><td class=3D"w580 h0"=
+ width=3D"360" height=3D"30" style=3D"border-collapse:collapse;" ></td><t=
+d class=3D"w0" width=3D"60" style=3D"border-collapse:collapse;" ></td><td=
+ class=3D"w0" width=3D"160" style=3D"border-collapse:collapse;" ></td><td=
+ class=3D"w30" width=3D"30" style=3D"border-collapse:collapse;" ></td></t=
+r>
+        <tr style=3D"border-collapse:collapse;" >
+            <td class=3D"w30" width=3D"30" style=3D"border-collapse:colla=
+pse;" ></td>
+            <td class=3D"w580" valign=3D"top" width=3D"360" style=3D"bord=
+er-collapse:collapse;" >
+            <span class=3D"hide"><p id=3D"permission-reminder" class=3D"f=
+ooter-content-left" align=3D"left" style=3D"-webkit-text-size-adjust:none=
+;-ms-text-size-adjust:none;font-size:12px;line-height:15px;color:#888888;=
+margin-top:0px;margin-bottom:15px;white-space:pre-wrap;" >You are receivi=
+ng this because you have been in contact with Miracle Channel.</p></span>=
+
+            <p class=3D"footer-content-left" align=3D"left" style=3D"-web=
+kit-text-size-adjust:none;-ms-text-size-adjust:none;font-size:12px;line-h=
+eight:15px;color:#888888;margin-top:0px;margin-bottom:15px;" ><a href=3D"=
+http://miraclechannel.updatemyprofile.com/j-yhyhhlt-=
+=
+2AE248AD-njhtthdh=
+-o" style=3D"color:#888888;text-decora=
+tion:none;font-weight:bold;" >Edit your subscription</a> | <a href=3D"htt=
+p://miraclechannel.cmail2.com=
+/t/j-u-yhyhhlt-=
+=
+njhtthdh=
+-b/" style=3D"color:#888888;text-decoration:none;font=
+-weight:bold;" >Unsubscribe instantly</a></p>
+            </td>
+            <td class=3D"hide w0" width=3D"60" style=3D"border-collapse:c=
+ollapse;" ></td>
+            <td class=3D"hide w0" valign=3D"top" width=3D"160" style=3D"b=
+order-collapse:collapse;" >
+            <p id=3D"street-address" class=3D"footer-content-right" align=
+=3D"right" style=3D"-webkit-text-size-adjust:none;-ms-text-size-adjust:no=
+ne;font-size:11px;line-height:16px;margin-top:0px;margin-bottom:15px;colo=
+r:#888888;white-space:pre-wrap;" >miraclechannel.net
+news@miraclechannel.com
+Post address: Box 5156
+12118 Johanneshov - Sweden</p>
+            </td>
+            <td class=3D"w30" width=3D"30" style=3D"border-collapse:colla=
+pse;" ></td>
+        </tr>
+        <tr style=3D"border-collapse:collapse;" ><td class=3D"w30" width=3D=
+"30" style=3D"border-collapse:collapse;" ></td><td class=3D"w580 h0" widt=
+h=3D"360" height=3D"15" style=3D"border-collapse:collapse;" ></td><td cla=
+ss=3D"w0" width=3D"60" style=3D"border-collapse:collapse;" ></td><td clas=
+s=3D"w0" width=3D"160" style=3D"border-collapse:collapse;" ></td><td clas=
+s=3D"w30" width=3D"30" style=3D"border-collapse:collapse;" ></td></tr>
+    </tbody></table>
+</td>
+                </tr>
+                <tr style=3D"border-collapse:collapse;" ><td class=3D"w64=
+0" width=3D"640" height=3D"60" style=3D"border-collapse:collapse;" ></td>=
+</tr>
+            </tbody></table>
+        </td>
+    </tr>
+</tbody></table><img src=3D"https://cmail2.com=
+/t/j-o-yhyhhlt=
+-=
+njhtthdh=
+/o.gif"  width=3D"1" height=3D"1" bo=
+rder=3D"0" style=3D"height:1px !important;width:1px !important;border-wid=
+th:0 !important;margin-top:0 !important;margin-bottom:0 !important;margin=
+-right:0 !important;margin-left:0 !important;padding-top:0 !important;pad=
+ding-bottom:0 !important;padding-right:0 !important;padding-left:0 !impor=
+tant;line-height:100%;outline-style:none;text-decoration:none;display:blo=
+ck;" /></body></html>=
+
+
+
+
+--_=aspNetEmail=_7e5d17db20a844819c53f39b72d8bb11--

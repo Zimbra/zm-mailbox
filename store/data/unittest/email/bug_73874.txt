@@ -1,0 +1,352 @@
+Return-Path: confluence@tomsawyer.com
+Received: from zimbra.tomsawyer.com (LHLO zimbra.tomsawyer.com)
+ (10.22.130.87) by zimbra.tomsawyer.com with LMTP; Wed, 2 May 2012 23:07:37
+ -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+    by zimbra.tomsawyer.com (Postfix) with ESMTP id EEE58740001;
+    Wed,  2 May 2012 23:07:37 -0700 (PDT)
+X-Virus-Scanned: amavisd-new at zimbra.tomsawyer.com
+X-Spam-Flag: NO
+X-Spam-Score: -2.186
+X-Spam-Level: 
+X-Spam-Status: No, score=-2.186 tagged_above=-10 required=3
+    tests=[ALL_TRUSTED=-1, BAYES_00=-1.9, HTML_MESSAGE=0.001,
+    MIME_HTML_ONLY=0.723, T_RP_MATCHES_RCVD=-0.01] autolearn=no
+Received: from zimbra.tomsawyer.com ([127.0.0.1])
+    by localhost (zimbra.tomsawyer.com [127.0.0.1]) (amavisd-new, port 10024)
+    with ESMTP id Ru3GgxffMACx; Wed,  2 May 2012 23:07:12 -0700 (PDT)
+Received: from oak-svm-lin27 (oak-svm-lin27.tomsawyer.com [10.22.130.74])
+    by zimbra.tomsawyer.com (Postfix) with ESMTP id B709E740002
+    for <apolis@tomsawyer.com>; Wed,  2 May 2012 23:07:12 -0700 (PDT)
+Date: Thu, 3 May 2012 06:07:00 +0000 (UTC)
+From: "admin (Confluence)" <confluence@tomsawyer.com>
+To: apolis@tomsawyer.com
+Message-ID: <1711674147.581.1336025220019.JavaMail.root@oak-svm-lin27>
+Subject: [confluence] admin > tests
+MIME-Version: 1.0
+Content-Type: multipart/related; 
+    boundary="----=_Part_580_1682159824.1336025220019"
+Precedence: bulk
+Auto-Submitted: auto-generated
+
+------=_Part_580_1682159824.1336025220019
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+<html>
+    <head>
+        <meta name=3D"viewport" content=3D"width=3Ddevice-width" />
+        <base href=3D"https://wiki.tomsawyer.com" />
+        <style type=3D"text/css">
+        body, #email-content, #email-content-inner { font-family: Arial,Fre=
+eSans,Helvetica,sans-serif; }
+        body, p, blockquote, pre, code, td, th, li, dt, dd { font-size: 13p=
+x; }
+        small { font-size: 11px; }
+
+        body { width:100% !important; -webkit-font-smoothing: antialiased; =
+}
+
+        body,
+        #email-wrapper { background-color: #f0f0f0; }
+        #email-wrapper-inner { padding: 20px; text-align: center; }
+        #email-content-inner { background-color: #fff; border: 1px solid #b=
+bb; color: $menuTxtColour; padding:20px; text-align:left; }
+        #email-footer { padding: 0 16px 32px 16px; margin: 0; }
+
+        .email-indent { margin: 8px 0 16px 0; }
+        .email-comment { margin: 0 0 0 56px; }
+
+        #email-title-avatar { text-align: left; vertical-align: top; width:=
+ 56px; }
+        #email-title-flavor { margin: 0; padding: 0 0 4px 0; }
+        #email-title-heading { font-size: 16px; line-height: 20px; min-heig=
+ht: 20px; margin: 0; padding: 0; }
+        #email-title .icon { border: 0; padding: 0 2px 0 0; text-align: lef=
+t; }
+
+        #email-actions { border-top: 1px solid #bbb; color: #505050; margin=
+: 8px 0 0 0; padding: 0; }
+        #email-actions td { padding-top: 8px; }
+        #email-actions .left { max-width: 45%; text-align: left; }
+        #email-actions .right { text-align: right; }
+        .email-reply-divider { border-top: 1px solid #bbb; color: #505050; =
+margin: 32px 0 8px 0; padding: 8px 0; }
+        .email-section-title { border-bottom: 1px solid #bbb; margin: 8px 0=
+; padding: 8px 0 0 0; }
+
+        .email-metadata { color: #505050; }
+
+        a { color: #326ca6; text-decoration: none; }
+        a:hover { color: #336ca6; text-decoration: underline; }
+        a:active {color: #326ca6; }
+
+        a.email-footer-link { color: #505050; font-size: 11px; }
+
+        .email-item-list { list-style: none; margin: 4px 0; padding-left: 0=
+; }
+        .email-item-list li { list-style: none; margin: 0; padding: 4px 0; =
+}
+        .email-list-divider { color: #505050; padding: 0 0.35em; }
+
+        .avatar { -ms-interpolation-mode: bicubic; }
+        .avatar-link { margin: 2px; }
+
+        .tableview th { border-bottom: 1px solid #69C; font-weight: bold; t=
+ext-align: left; }
+        .tableview td { border-bottom: 1px solid #bbbbbb; text-align: left;=
+ padding: 4px 16px 4px 0; }
+
+        .aui-message {  margin: 1em 0; padding: 8px; }
+        .aui-message.info { background-color: #e0f0ff; border: 1px solid #9=
+eb6d4; }
+        .aui-message.success { background-color: #ddfade; border: 1px solid=
+ #93c49f; }
+        .aui-message.error,
+        .aui-message.removed { background-color: #ffe7e7; border: 1px solid=
+ #df9898; color: #000; }
+
+                        @media handheld, only screen and (max-device-width:=
+ 480px) {
+            div, a, p, td, th, li, dt, dd { -webkit-text-size-adjust: auto;=
+ }
+            small, small a { -webkit-text-size-adjust: 90%; }
+
+            td[id=3Demail-wrapper-inner] { padding: 2px !important; }
+            td[id=3Demail-content-inner] { padding: 8px !important; }
+            td[id=3Demail-footer] { padding: 8px 12px !important; }
+            div[class=3Demail-indent] { margin: 8px 0px !important; }
+            div[class=3Demail-comment] { margin: 0 !important; }
+
+            p[id=3Demail-title-flavor] a { display: block; } /* puts the us=
+ername and the action on separate lines */
+            p[id=3Demail-permalink] { padding: 4px 0 0 0 !important; }
+
+            table[id=3Demail-actions] td { padding-top: 0 !important; }
+            table[id=3Demail-actions] td.right { text-align: right !importa=
+nt; }
+            table[id=3Demail-actions] .email-list-item { display: block; ma=
+rgin: 1em 0 !important; word-wrap: normal !important; }
+            span[class=3Demail-list-divider] { display: none; }
+        }
+        =E2=80=8B
+
+        </style>
+    </head>
+    <body style=3D"font-family: Arial, FreeSans, Helvetica, sans-serif; fon=
+t-size: 13px; width: 100%; -webkit-font-smoothing: antialiased; background-=
+color: #f0f0f0">
+        <table id=3D"email-wrapper" width=3D"100%" cellspacing=3D"0" cellpa=
+dding=3D"0" border=3D"0" style=3D"background-color: #f0f0f0">
+            <tbody>
+                <tr valign=3D"middle">
+                    <td id=3D"email-wrapper-inner" style=3D"font-size: 13px=
+; padding: 20px; text-align: center">
+                        <table id=3D"email-content" width=3D"100%" cellspac=
+ing=3D"0" cellpadding=3D"0" border=3D"0" style=3D"font-family: Arial, FreeS=
+ans, Helvetica, sans-serif">
+                            <tbody>
+                                <tr valign=3D"top">
+                                    <td id=3D"email-content-inner" width=3D=
+"100%" style=3D"font-family: Arial, FreeSans, Helvetica, sans-serif; font-s=
+ize: 13px; background-color: #fff; border: 1px solid #bbb; padding: 20px; t=
+ext-align: left">
+                                        <table id=3D"email-title" cellpaddi=
+ng=3D"0" cellspacing=3D"0" border=3D"0" width=3D"100%">
+                                            <tbody>
+                                                <tr>
+                                                    <td id=3D"email-title-a=
+vatar" rowspan=3D"2" style=3D"font-size: 13px; text-align: left; vertical-a=
+lign: top; width: 56px"> <img class=3D"avatar" src=3D"cid:avatar_ef26e5cb84=
+eb4b019fea2c5105ca29c7" border=3D"0" height=3D"48" width=3D"48" style=3D"-m=
+s-interpolation-mode: bicubic" /> </td>
+                                                    <td valign=3D"top" styl=
+e=3D"font-size: 13px">
+                                                        <div id=3D"email-ti=
+tle-flavor" class=3D"email-metadata" style=3D"margin: 0; padding: 0 0 4px 0=
+; color: #505050">
+                                                            <a href=3D"http=
+s://wiki.tomsawyer.com/display/~admin" style=3D"color:#326ca6;text-decorati=
+on:none;; color: #326ca6; text-decoration: none">admin</a> edited the blog =
+post:
+                                                        </div> </td>
+                                                </tr>
+                                                <tr>
+                                                    <td valign=3D"top" styl=
+e=3D"font-size: 13px"> <h2 id=3D"email-title-heading" style=3D"font-size: 1=
+6px; line-height: 20px; min-height: 20px; margin: 0; padding: 0"> <a href=
+=3D"https://wiki.tomsawyer.com/display/~admin/2012/04/23/tests" style=3D"co=
+lor: #326ca6; text-decoration: none"> <img class=3D"icon" src=3D"cid:blogpo=
+st-icon" alt=3D"" style=3D"border: 0; padding: 0 2px 0 0; text-align: left"=
+ /> <strong style=3D"font-size:16px;line-height:20px;vertical-align:top;">t=
+ests</strong> </a> </h2> </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div class=3D"email-indent" style=
+=3D"margin: 8px 0 16px 0">
+                                            <div class=3D"email-diff">
+                                                <div id=3D"page-diffs" clas=
+s=3D"wiki-content">
+                                                    <p class=3D"diff-block-=
+target" style=3D"font-size: 13px"> <span class=3D"diff-html-added diff-html=
+-image-container" id=3D"added-diff-0" data-daisydiff-previous=3D"first-diff=
+" data-daisydiff-change-id=3D"added-diff-0" data-daisydiff-next=3D"last-dif=
+f" style=3D"background-color: #ddfade;display: inline-block;position: relat=
+ive;text-align: center;"><img class=3D"confluence-embedded-image confluence=
+-thumbnail" width=3D"100" src=3D"/download/thumbnails/27132023/Screen+Shot+=
+2012-05-02+at+08.08.12+AM.png?version=3D1&amp;modificationDate=3D1335967057=
+000" data-image-src=3D"/download/attachments/27132023/Screen+Shot+2012-05-0=
+2+at+08.08.12+AM.png?version=3D1&amp;modificationDate=3D1335967057000" data=
+-daisydiff-change-type=3D"added" /><span class=3D"diff-image-overlay diff-a=
+dded-image" style=3D"color: #535353;display: block;padding: 4px 4px 8px 4px=
+;text-decoration: none;">Image Added</span></span><img class=3D"confluence-=
+embedded-image confluence-thumbnail" width=3D"300" src=3D"/download/thumbna=
+ils/27132023/2.png?version=3D1&amp;modificationDate=3D1335169959000" data-i=
+mage-src=3D"/download/attachments/27132023/2.png?version=3D1&amp;modificati=
+onDate=3D1335169959000" /><img class=3D"confluence-embedded-image confluenc=
+e-thumbnail" width=3D"300" src=3D"/download/thumbnails/27132023/1.png?versi=
+on=3D1&amp;modificationDate=3D1335169894000" data-image-src=3D"/download/at=
+tachments/27132023/1.png?version=3D1&amp;modificationDate=3D1335169894000" =
+/></p>
+                                                    <p class=3D"diff-block-=
+context" style=3D"font-size: 13px">&nbsp;</p>
+                                                    <p class=3D"diff-block-=
+context" style=3D"font-size: 13px"> <img class=3D"confluence-embedded-image=
+ confluence-thumbnail" width=3D"300" src=3D"/download/thumbnails/27132023/S=
+creen+Shot+2012-05-02+at+08.08.12+AM.png?version=3D1&amp;modificationDate=
+=3D1335967057000" data-image-src=3D"/download/attachments/27132023/Screen+S=
+hot+2012-05-02+at+08.08.12+AM.png?version=3D1&amp;modificationDate=3D133596=
+7057000" /></p>
+                                                    <p class=3D"diff-block-=
+context" style=3D"font-size: 13px">&nbsp;</p>
+                                                    <p class=3D"diff-block-=
+context" style=3D"font-size: 13px">asasasas</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <table id=3D"email-actions" class=
+=3D"email-metadata" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" width=
+=3D"100%" style=3D"border-top: 1px solid #bbb; color: #505050; margin: 8px =
+0 0 0; padding: 0; color: #505050">
+                                            <tbody>
+                                                <tr>
+                                                    <td class=3D"left" vali=
+gn=3D"top" style=3D"font-size: 13px; padding-top: 8px; max-width: 45%; text=
+-align: left"> <span class=3D"email-list-item"><a href=3D"https://wiki.toms=
+awyer.com/display/~admin/2012/04/23/tests" style=3D"color: #326ca6; text-de=
+coration: none">View Online</a> </span> <span class=3D"email-list-divider" =
+style=3D"color: #505050; padding: 0 0.350em">&middot;</span> <span class=3D=
+"email-list-item"><a href=3D"https://wiki.tomsawyer.com/pages/diffpagesbyve=
+rsion.action?pageId=3D27132023&amp;revisedVersion=3D5&amp;originalVersion=
+=3D4" style=3D"color: #326ca6; text-decoration: none">View Changes</a> </sp=
+an> <span class=3D"email-list-divider" style=3D"color: #505050; padding: 0 =
+0.350em">&middot;</span> <span class=3D"email-list-item"><a href=3D"https:/=
+/wiki.tomsawyer.com/display/~admin/2012/04/23/tests?showComments=3Dtrue&amp=
+;showCommentArea=3Dtrue#addcomment" style=3D"color: #326ca6; text-decoratio=
+n: none">Add Comment</a> </span> </td>
+                                                    <td class=3D"right" wid=
+th=3D"50%" valign=3D"top" style=3D"font-size: 13px; padding-top: 8px; text-=
+align: right"> <span class=3D"email-list-item"><a href=3D"https://wiki.toms=
+awyer.com/users/editmyemailsettings.action" style=3D"color: #326ca6; text-d=
+ecoration: none">Manage Notifications</a> </span> <span class=3D"email-list=
+-divider" style=3D"color: #505050; padding: 0 0.350em">&middot;</span> <spa=
+n class=3D"email-list-item"><a href=3D"https://wiki.tomsawyer.com/users/rem=
+ovepagenotification.action?pageId=3D27132023" style=3D"color: #326ca6; text=
+-decoration: none">Stop watching page</a> </span> </td>
+                                                </tr>
+                                            </tbody>
+                                        </table> </td>
+                                </tr>
+                            </tbody>
+                        </table> </td>
+                </tr>
+                <tr>
+                    <td id=3D"email-footer" align=3D"center" style=3D"font-=
+size: 13px; padding: 0 16px 32px 16px; margin: 0"> <small style=3D"font-siz=
+e: 11px"> This message was sent by <a class=3D"email-footer-link" style=3D"=
+color:#505050;font-size:11px;text-decoration:none;; color: #326ca6; text-de=
+coration: none; color: #505050; font-size: 11px" href=3D"http://www.atlassi=
+an.com/software/confluence">Atlassian Confluence</a> 4.2, the <a class=3D"e=
+mail-footer-link" style=3D"color:#505050;font-size:11px;text-decoration:non=
+e;; color: #326ca6; text-decoration: none; color: #505050; font-size: 11px"=
+ href=3D"http://www.atlassian.com/software/confluence/tour/enterprise-wiki.=
+jsp">Enterprise Wiki</a> </small> </td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>
+------=_Part_580_1682159824.1336025220019
+Content-Type: image/png; name=blogpost-icon
+Content-Transfer-Encoding: base64
+Content-ID: <blogpost-icon>
+Content-Disposition: attachment; filename=blogpost-icon
+
+iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJ
+bWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdp
+bj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6
+eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0
+MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJo
+dHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlw
+dGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAv
+IiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RS
+ZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpD
+cmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIE1hY2ludG9zaCIgeG1wTU06SW5zdGFu
+Y2VJRD0ieG1wLmlpZDpFQTcyOEJFOTBFN0ExMUUxODI5MDg1RjQ1MDkzN0Q0MiIgeG1wTU06RG9j
+dW1lbnRJRD0ieG1wLmRpZDpFQTcyOEJFQTBFN0ExMUUxODI5MDg1RjQ1MDkzN0Q0MiI+IDx4bXBN
+TTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkVBNzI4QkU3MEU3QTExRTE4
+MjkwODVGNDUwOTM3RDQyIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkVBNzI4QkU4MEU3QTEx
+RTE4MjkwODVGNDUwOTM3RDQyIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4
+bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+lFbAzwAAAnJJREFUeNp0U0toU0EUPTPvE/JpSlJQ
+GynxQy2KjVbspmoVFDdWrSKCC3EVF2oV8bMRBXGjFREEEd3ahVIqKoqKoharFCWxUinSUu0Pi21S
+TS1Nk7z3xnkz6YumeGGYO/dz5tw7dwhjDLY0nn/MbN0wTZhZA4QACgUsfraYBXBfZPE8NNRVeh+9
+65tuPrRZ5MFOslfD2Qfsf2Lx9TI2yPpHEmz/hTbW/nHAf+r6C5GnIi9EEkF6xkBqKjtrRiY3g8np
+DEbGk9gQCeHk3rW4fCeWiu6sKeXuSepEMkNsikLg0qmzPLobAb8XmqZCVVVUheej+WA9Wp93p+x4
+tQBgSQBqJ2rSJAANaKYOXVVw/80X6JqCEp8b6ZyML5SQ3/tGU7hyr0voK8NB7KtfBr9HQe3yCpg5
+A+lsVgCMTSSLAZi4MuhzQVMpcoaFz4MTOHO7E+tXlOPAlqpCXzImjydFAFRS8nt0nNi1GkvL/Wjv
+/o6WV73o6BnF73QWR7ZX52MpT5Ttc5pI7euJheHEFC62xhG99ho9Qz9x43C98H/6lkTb268SgD+Z
+opr/AuhUHheWebGtNiwIxvvHca7lgwPyNDaUByBQCIoYUGnxuFRsXVOBW0c3IbKoDOOpNJ7wxI3V
+IeF/Fh/mL0VAyZwSpPz4NY1jNztECU07ZM0POwewu26J0N/3jokHnsNAoXIUTYvhbwmWuBxmtiQ4
+I9F9WvQKs4ZQ0Iur0XXwueUwHW9chal0Tuin99QIINGD/NUOgFaYSSfZlgUBDxCQemWo1LETpZgB
+R226dJd/XQLDMnhtpDDivCr+qXnj+PgwU4ytQqT/jwADAKeP9BaLZbQQAAAAAElFTkSuQmCC
+------=_Part_580_1682159824.1336025220019
+Content-Type: image/gif; name=avatar_ef26e5cb84eb4b019fea2c5105ca29c7
+Content-Transfer-Encoding: base64
+Content-ID: <avatar_ef26e5cb84eb4b019fea2c5105ca29c7>
+Content-Disposition: attachment; 
+    filename=avatar_ef26e5cb84eb4b019fea2c5105ca29c7
+
+R0lGODlhMAAwAOffAB1clh9dlyBemCNeniJfmRdjoiVhmxlkoy9flSZinClhohtlpChjnTFhlx1m
+pilknjNimB9npytlnzRjmSxloCFoqDVkmi1moSNpqTZlmy9noiRqqjdmnDBooyZrqzFppDponihs
+rDNqpSltrTRrpzVsqDZtqTZvpDhuqjlvqzpwrDB0rjJ0rzN1sEJ5r0N6sEZ8skd9s0h+tE59rk9+
+r0qAtlWDtFyDsFGJuVqIuVOLu1uJulyKvGSKt1yNuGWLuF+PumCQu2GRvGKSvWOTvmSUwG2UwW2X
+vW6YvnOdxHWfxnugwXyhwn2iw4KmyIOnyYSoyompxYaqzIqqxourx4ysyImuz4+uy5OuxZCvzJGw
+zZKxzpizypS00JW10Za20pi41Jy4z5m51p250J660am5zKG91Ky7zqK+1a28z6S/1qbB2azA2bLB
+1azD1a3E1rbC0LTE17nE0rXF2LDH2bbG2bvH1b/H0LjI3LzI1rPL3b3J177K2LXN37/L2cLL073M
+4MHN28fP18jQ2MzR1MfT4cvT3MnV48rW5M3W3tHX2dXX1NLY2tbY1dTZ287a6Nja1t7Z2Nbb3dnb
+19Dd69rc2dXd5tvd2tLe7Nne4eLc29ze29rf4uPd3N3f3N7g3d/h3tni6tzi5OXg3uDi39rj6+bh
+3+Hk4N/k5ujj4uDl6OPl4erk4+Tm4+vl5OXn5Ozm5ebo5eDp8e3n5ufp5u7o5+jq5+nr6PLp4u/q
+6Ors6fDr6evu6vPt7O3v6/Tu7e7w7ezx9PXv7u/x7u3y9fbw7/Dy7+7z9vfx8PHz8PL08fjz8fP1
+8vn08vr18/L3+fz29fb49P339vf59v749/j69//5+Pn7+P/6+fr8+ff9//v9+v/8+vz/+/7//P//
+////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////yH5BAEKAP8ALAAAAAAwADAA
+AAj+AP8hGEiwoMGDCBMqRPCvgcOHECNKnEix4kMIGDNq3MgRAsSOIDtOGEmypEmSEAgACGDAgoUG
+AVZCOEnTpMubOHNayGAhAAMaU/Q8ClUKEyAtN3ru1MnUZYanUKNKpUCgxyFt3rJq1YoJSQIGUsNG
+1UC2rFmzFBh82cqW7RwQFM7KLduhrt27djUkCJN1m9+/gP1m7UPhAt7DiBMzEJI1m+PHkCFv8+bE
+QOLLly8g8nats+fPoK95k3VCA+a6IlKrXp36woxn1kLL/uxNyAPWuHPjdmCE8+zZ1bxJKaB7NYnj
+yJMfPwDF27Rq0KNLnw7dG5gDyrNrz37givNp4MP+ix8P3psaB9vTaz9gxVu09/Djy4dvHr16EiXy
+699fgsSAJ94wI+CABBY4oDdjDIAffww2mB8JKPgAhjUGVligNWoAwcKCDprg4YcgOqCEN8Qco8yJ
+KKaoYorBeOOFAyDGKGOMFbhhjTLJ5KjjjjzyqIw1hYgw45AxYkAHNT0mqWQy0BxCApEmoCDllFQ6
+0AU1wxij5ZZcdumlNHVgQOWYZI6JARDOJDPMmmy26aabxljTRAVl1jmmCR5skUwzwPTp55+A+rmM
+M2ygUIKdiEppwgY21KGML5BGKumkvixzyA74JaopCg7oUIwvvIQq6qikOpOEAlFumqgJJQSCjC7+
+sMYqq6zCWMLCoapqisEQv+xyy6/ABgvsMnPmquoGaghjy7LMNrtsMX6UkKqxiYYQgyq30KLtttzq
+YgkMIVC76QgviJItt+j+8gad4mpKggyo1IIuur20sUG7mnpQgyqzxOLvvwDzEge7+JI5wgYYbFCE
+K64A7HAstRgCgwcJj4BvCQiXAMMRWeQhCiurhCzyyCHHwkkcVRThAgkYeDAtootu0MIPWvCRyS27
+1ELyziNDvIstkthBRQ4sJIyoByoIQQYjseRCyyqnRC311FRXfcoqs+TCSiJc+GBCCCmQGcIOgsAy
+yyqmWK322lObwkotruxRQ7hUmpDCILWAovfB3nz37fffgOMih8VUbhDEKp8krvjijDfu+OOfgPLJ
+3FRiUIUrkGeu+eOsLCHmlCXAcYonpJdu+umop6466ayU4cGUI7igyCeb1G777bjnrvvutZvyRwqp
+eoCDJ5tMYvzxyCev/PLMG++JIzFAiMIGSJjS/PXYXw+KEK+jgEEU1mcv/vijMPF5CGl0Asn67Lfv
+/vvwx9/+KFjca4IKd0wi//7876/JGeH6hwsIAYlFGPCACEygAhfIQARG4g4q+EdAAAA7
+------=_Part_580_1682159824.1336025220019--

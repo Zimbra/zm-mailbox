@@ -1,0 +1,92 @@
+Return-Path: <xmlbeans-dev-return-113-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.64.14.58])
+	by popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8GDT9Yv006689 for
+	<smith@popserver1.stanford.edu>; Tue, 16 Sep 2003 06:29:10 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8GDT3rM015435 for
+	<smith@stanford.edu>; Tue, 16 Sep 2003 06:29:04 -0700 (PDT)
+Received: (qmail 46064 invoked by uid 500); 16 Sep 2003 13:29:01 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 46051 invoked from network); 16 Sep 2003 13:29:00 -0000
+Message-Id: <sf66d7de.097@corp-gw.mantech.com>
+X-Mailer: Novell GroupWise Internet Agent 5.5.6.1
+Date: Tue, 16 Sep 2003 09:28:40 -0400
+X-Zimbra-Received: Tue, 16 Sep 2003 09:28:40 -0400
+From: "Darrell Teague" <darrell.teague@mantech.com>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: Re: XmlBeans source code has been checked in ...
+Mime-Version: 1.0
+Content-Type: multipart/alternative; boundary="=_2E707B0E.8AEB5BE4"
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000040-0010
+
+
+--=_2E707B0E.8AEB5BE4
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+A suggestion:
+
+Someone should update the source/doc/binary link (and remove the "should be=
+ available in August" message) on http://xml.apache.org/xmlbeans/.  I assum=
+e it should point to http://cvs.apache.org/viewcvs.cgi/xml-xmlbeans/.
+
+
+>>> ericvas@bea.com 09/15/03 05:07PM >>>
+
+The source code for XmlBeans v1 has been checked in to xml-xmlbeans at cvs.=
+apache.org.
+
+To build it, do "ant deploy".  To run the drt (Developer Regression Test) d=
+o "ant drt".
+
+- Eric
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: xmlbeans-cvs-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-cvs-help@xml.apache.org
+
+--=_2E707B0E.8AEB5BE4
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD>
+<META http-equiv=3DContent-Type content=3D"text/html; charset=3Diso-8859-1"=
+>
+<META content=3D"MSHTML 6.00.2800.1226" name=3DGENERATOR></HEAD>
+<BODY style=3D"MARGIN-TOP: 2px; FONT: 8pt Tahoma; MARGIN-LEFT: 2px">
+<DIV><FONT face=3D"Comic Sans MS" size=3D2>A suggestion:</FONT></DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2></FONT>&nbsp;</DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2>Someone should update the=20
+source/doc/binary link (and remove the "should be available in August" mess=
+age)=20
+on <A=20
+href=3D"http://xml.apache.org/xmlbeans/">http://xml.apache.org/xmlbeans/</A=
+>.&nbsp;=20
+I assume it should point to <A=20
+href=3D"http://cvs.apache.org/viewcvs.cgi/xml-xmlbeans/">http://cvs.apache.=
+org/viewcvs.cgi/xml-xmlbeans/</A>.</FONT></DIV>
+<DIV><BR><BR>&gt;&gt;&gt; ericvas@bea.com 09/15/03 05:07PM=20
+&gt;&gt;&gt;<BR><BR>The source code for XmlBeans v1 has been checked in to=20
+xml-xmlbeans at cvs.apache.org.<BR><BR>To build it, do "ant deploy".&nbsp; =
+To=20
+run the drt (Developer Regression Test) do "ant drt".<BR><BR>-=20
+Eric<BR><BR>---------------------------------------------------------------=
+------<BR>To=20
+unsubscribe, e-mail: xmlbeans-cvs-unsubscribe@xml.apache.org<BR>For additio=
+nal=20
+commands, e-mail: xmlbeans-cvs-help@xml.apache.org<BR><BR></DIV></BODY></HT=
+ML>
+
+--=_2E707B0E.8AEB5BE4--
+

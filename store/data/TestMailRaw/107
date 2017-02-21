@@ -1,0 +1,71 @@
+Return-Path: <xmlbeans-dev-return-371-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9LE4ZtB019242
+	for <smith@popserver1.stanford.edu>; Tue, 21 Oct 2003 07:04:35 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9LE4SQc025098 for
+	<smith@stanford.edu>; Tue, 21 Oct 2003 07:04:28 -0700 (PDT)
+Received: (qmail 20435 invoked by uid 500); 21 Oct 2003 14:04:17 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 20347 invoked from network); 21 Oct 2003 14:04:16 -0000
+X-MIMEOLE: Produced By Microsoft Exchange V6.0.6487.1
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Subject: Feature Request: Serialization
+Date: Tue, 21 Oct 2003 15:04:17 +0100
+X-Zimbra-Received: Tue, 21 Oct 2003 15:04:17 +0100
+Message-ID: <1924BF350FC96B46A56BB38087B9B86E6A63BF@srvcorreio.primavera.local>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: Feature Request: Serialization
+Thread-Index: AcOX3DaMdeJu7QfRRzej3kBn8sL3zQ==
+From: "Jochen Rebhan" <jochen.rebhan@primaverasoft.pt>
+To: <xmlbeans-dev@xml.apache.org>
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000006b-0010
+
+Hallo Developers !
+
+Form my application I am developing now it would be very useful not to Tag =
+every document class  with the "java.io.Serializable" tag.=20
+
+I need to do this because I use the Prevayler Persistence Framework to seri=
+alize my Objects to disk. Another possible use would be if someone wants=20
+To serialize his objects over a network.
+
+It would be more convenient for me if a low level class of the xmlbeans Fra=
+mework (XmlObject maybe ?) would implement the "java.io.Serializable" Inter=
+face.
+
+This is done for example in "jdom" Document Classes, but not in "dom4j" Doc=
+ument interfaces.=20
+
+
+Have you ever thougt about that ?
+
+
+Btw.: XmlBeans is great ! Thank you !
+
+
+j.rebhan@web.de
+
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

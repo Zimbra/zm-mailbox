@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<ivy-module version="2.0"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+ <info organisation="zimbra" module="zm-soap" status="integration" />
+ <dependencies>
+  <dependency org="log4j" name="log4j" rev="1.2.16" />
+  <dependency org="dom4j" name="dom4j" rev="1.5.2" />
+  <dependency org="org.codehaus.jackson" name="jackson-core-asl" rev="1.9.2" />
+  <dependency org="org.codehaus.jackson" name="jackson-mapper-asl" rev="1.9.2" />
+  <dependency org="org.codehaus.jackson" name="jackson-xc" rev="1.9.2" />
+  <dependency org="com.google.guava" name="guava" rev="13.0.1"/>
+  <dependency org="commons-lang" name="commons-lang" rev="2.6"/>
+  <dependency org="org.freemarker" name="freemarker" rev="2.3.19"/>
+  <dependency org="zimbra" name="zm-common" rev="latest.integration" />
+ </dependencies>
+</ivy-module>

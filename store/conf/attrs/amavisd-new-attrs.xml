@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- NOTE: we do not generate schema for these attrs.  This file is
+     only for the runtime use of the server and tools for verifying
+     attr values. -->
+
+<attrs>
+
+<attr name="amavisVirusLover" type="boolean"/>
+
+<attr name="amavisBannedFilesLover" type="boolean"/>
+
+<attr name="amavisBypassVirusChecks" type="boolean"/>
+
+<attr name="amavisBypassSpamChecks" type="boolean"/>
+
+<attr name="amavisSpamTagLevel" type="astring" max="256"/>
+
+<attr name="amavisSpamTag2Level" type="astring" max="256"/>
+
+<attr name="amavisSpamKillLevel" type="astring" max="256"/>
+
+<attr name="amavisSpamModifiesSubj" type="boolean"/>
+
+<attr name="amavisWhitelistSender" type="astring" max="256" callback="WhiteBlackList"/>
+
+<attr name="amavisBlacklistSender" type="astring" max="256" callback="WhiteBlackList"/>
+
+<attr name="amavisSpamQuarantineTo" type="astring" max="256"/>
+
+<attr name="amavisSpamLover" type="boolean"/>
+
+<attr name="amavisBadHeaderLover" type="boolean"/>
+
+<attr name="amavisBypassBannedChecks" type="boolean"/>
+
+<attr name="amavisBypassHeaderChecks" type="boolean"/>
+
+<attr name="amavisVirusQuarantineTo" type="astring" max="256"/>
+
+<attr name="amavisBannedQuarantineTo" type="astring" max="256"/>
+
+<attr name="amavisBadHeaderQuarantineTo" type="astring" max="256"/>
+
+<attr name="amavisLocal" type="boolean"/>
+
+<attr name="amavisMessageSizeLimit" type="astring" max="256"/>
+
+<attr name="amavisWarnVirusRecip" type="boolean"/>
+
+<attr name="amavisWarnBannedRecip" type="boolean"/>
+
+<attr name="amavisWarnBadHeaderRecip" type="boolean"/>
+
+<attr name="amavisVirusAdmin" type="astring" max="256"/>
+
+<attr name="amavisNewVirusAdmin" type="astring" max="256"/>
+
+<attr name="amavisSpamAdmin" type="astring" max="256"/>
+
+<attr name="amavisBannedAdmin" type="astring" max="256"/>
+
+<attr name="amavisBadHeaderAdmin" type="astring" max="256"/>
+
+<attr name="amavisBannedRuleNames" type="astring" max="256"/>
+
+<attr name="amavisSpamDsnCutoffLevel" type="astring" max="256"/>
+
+<attr name="amavisSpamQuarantineCutoffLevel" type="astring" max="256"/>
+
+<attr name="amavisSpamSubjectTag" type="astring" max="256"/>
+
+<attr name="amavisSpamSubjectTag2" type="astring" max="256"/>
+
+<attr name="amavisArchiveQuarantineTo" type="astring" max="256"/>
+
+<attr name="amavisAddrExtensionVirus" type="astring" max="256"/>
+
+<attr name="amavisAddrExtensionSpam" type="astring" max="256"/>
+
+<attr name="amavisAddrExtensionBanned" type="astring" max="256"/>
+
+<attr name="amavisAddrExtensionBadHeader" type="astring" max="256"/>
+
+<attr name="amavisSpamTag3Level" type="astring" max="256"/>
+
+<attr name="amavisSpamSubjectTag3" type="astring" max="256"/>
+
+<attr name="amavisUncheckedQuarantineTo" type="astring" max="256"/>
+
+<attr name="amavisCleanQuarantineTo" type="astring" max="256"/>
+
+<attr name="amavisUncheckedLover" type="astring" max="256"/>
+
+<attr name="amavisForwardMethod" type="astring" max="256"/>
+
+<attr name="amavisSaUserConf" type="astring" max="256"/>
+
+<attr name="amavisSaUserName" type="astring" max="256"/>
+
+<attr name="amavisDisclaimerOptions" type="astring" max="256"/>
+
+</attrs>

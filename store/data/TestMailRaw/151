@@ -1,0 +1,113 @@
+Return-Path: <xmlbeans-user-return-50-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9AK8KLB017731 for
+	<smith@popserver1.stanford.edu>; Fri, 10 Oct 2003 13:08:20 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9AK8AKJ005710 for
+	<smith@stanford.edu>; Fri, 10 Oct 2003 13:08:11 -0700 (PDT)
+Received: (qmail 55567 invoked by uid 500); 10 Oct 2003 20:08:04 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 55551 invoked from network); 10 Oct 2003 20:08:04 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: noNamespace package alternatives
+Date: Fri, 10 Oct 2003 13:07:52 -0700
+X-Zimbra-Received: Fri, 10 Oct 2003 13:07:52 -0700
+Message-ID: <4B2B4C417991364996F035E1EE39E2E11E9DBE@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: noNamespace package alternatives
+Thread-Index: AcOPaRo65/vubJPgTL20VBqtEGJ00gAAAmlgAAA82jA=
+From: "Eric Vasilik" <ericvas@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+X-OriginalArrivalTime: 10 Oct 2003 20:07:53.0660 (UTC)
+	FILETIME=[3053A7C0:01C38F6A]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000097-0010
+
+You want to use a .xsdconfig file:
+
+http://nagoya.apache.org/eyebrowse/ReadMsg?listName=3Dxmlbeans-dev@xml.apac=
+he.org&msgId=3D1035917
+
+-----Original Message-----
+From: Breese, Dustin [mailto:dustin.breese@qwest.com]
+Sent: Friday, October 10, 2003 1:01 PM
+To: xmlbeans-user@xml.apache.org
+Subject: RE: noNamespace package alternatives
+
+
+Correct, I am trying to change the package that the schema is compiling
+to.  Instead of compiling to noNamespace, I would like to have it
+compile to, say, com.dustin.
+
+Thanks,
+Dustin
+
+-----Original Message-----
+From: Eric Vasilik [mailto:ericvas@bea.com]=20
+Sent: Friday, October 10, 2003 1:53 PM
+To: xmlbeans-user@xml.apache.org
+Subject: RE: noNamespace package alternatives
+
+The -repackage option exists for the purposes of building the XmlBeans
+sources into a different package hierarchy.  It is not mean for users of
+XmlBeans.
+
+Are you trying to change the packages that a schema compiles to?
+
+- Eric
+
+-----Original Message-----
+From: Breese, Dustin [mailto:dustin.breese@qwest.com]
+Sent: Friday, October 10, 2003 12:42 PM
+To: xmlbeans-user@xml.apache.org
+Subject: noNamespace package alternatives
+
+
+I'm using XmlBeans release 1 and have found the hidden -repackage
+"from:to" option using scomp.  However, when trying to parse() my xml
+and bind to it, it is throwing a class cast exception.  The only way I
+can figure out how to get it to work is to leave all of my generated
+sources in the "noNamespace" java package.
+
+Is there any way around this or am I doing something wrong?
+
+Thanks in advance,
+Dustin
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

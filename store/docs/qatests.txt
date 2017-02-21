@@ -1,0 +1,32 @@
+Running QA Test Suite in Eclipse
+--------------------------------
+
+Developers can run QA test suite in Eclipse before check ins.  After building
+ZimbraServer project, check out ZimbraQA project and run the test targets in
+build.xml.  There are two targets defined, "Dev Pre-Checkin Sanity Check" and
+"Run All Tests".  The first one is a minimal set of tests that used to exist
+in ZimbraServer project.  It has been moved into ZimbraQA.
+
+The second test is nearly identical to the test run by build machine after
+each build and includes all tests created by QA team.  It may take a while to
+run through the test, and execution time will grow as QA team adds more tests,
+but it's a good thing to run it to avoid introducing bugs.
+
+Run All Tests target executes all *.xml test input files under
+ZimbraQA/data/soapvalidator directory and its subdirectories.  Any new files
+added will be processed automatically.
+
+Some of the tests create many test accounts.  These accounts have names that
+include timestamp to avoid collision with repeated test execution.  The
+accounts are not cleaned up by the tests.  Run ZimbraServer reset-the-world
+to remove them.
+
+Currently (3/30/2005) all tests can be repeated successfully without requiring
+reset-the-world between each execution.  But this is not a requirement for the
+test cases.  They are guaranteed to pass only after a reset-the-world.  If the
+tests fail for you, try rerunning it after reset-the-world.
+
+The test driver class is SoapTestCore.  This is what build.xml targets invoke.
+SoapTestCore depends on classes from ZimbraServer project.  So make sure to
+build ZimbraServer project before running test targets.  More specifically,
+zimbrastore.jar file must be built (jar target in ZimbraServer/build.xml).

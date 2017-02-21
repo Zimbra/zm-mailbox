@@ -1,0 +1,81 @@
+Return-Path: <xmlbeans-dev-return-177-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.64.14.58])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8MN9YTZ017842
+	for <smith@popserver1.stanford.edu>; Mon, 22 Sep 2003 16:09:34 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8MN9Qlh002938 for
+	<smith@stanford.edu>; Mon, 22 Sep 2003 16:09:27 -0700 (PDT)
+Received: (qmail 50790 invoked by uid 500); 22 Sep 2003 23:09:18 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 50774 invoked from network); 22 Sep 2003 23:09:17 -0000
+Date: Tue, 23 Sep 2003 08:14:08 +0900
+X-Zimbra-Received: Tue, 23 Sep 2003 08:14:08 +0900
+From: Tetsuya Kitahata <tetsuya@apache.org>
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: Getting the distribution onto a download site somewhere ...
+In-Reply-To: <3F6F755F.7030105@sauria.com>
+References: <3F6F5565.3000506@outerthought.org>
+	 <3F6F755F.7030105@sauria.com>
+Message-Id: <20030923075533.A498.TETSUYA@apache.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Becky! ver. 2.06.02
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000007c-0010
+
+
+On Mon, 22 Sep 2003 15:19:11 -0700
+Ted Leung <twleung@sauria.com> wrote:
+
+> That was my concern, but the folks in the incubator are being difficult 
+> on this.  I think we should work to minimize disputes and work to try to 
+> get us out of incubation ASAP.  
+
+> What do others think?  Do you want me to go push back some more?
+
+This could be simple. Announce at announce@apache.org and
+announce(ments)@(xml|ws|jakarta).apache.org
+about the release and put the *note*
+"We are now under incubation .. http://incubator.apache.org" ...
+That's all.
+(I am willing to put the news at jakarta.apache.org top page)
+
+In such an announcement, please note that the you should tell people the
+existence of "xmlbeans-user@xml.apache.org" mailing list
+for building the powerful users' community.
+
+--
+
+Without users' community and release build, why can you build
+"healthy" community and solicit other independent committers?
+Incubator folks seem to lack these kind of vision. Chichen an' Egg ...
+That's all. :-)
+
+Anyway, foundation-wide announcement would be necessary (needless to say,
+please put the 3-5 lines blurb of xmlbeans) for xmlbeans project
+to grow up more. This would encourage and hurry up the "escape from
+incubator project" from my point of view:
+http://www.apache.org/foundation/mailinglists.html#foundation-announce
+
+Thank you.
+
+__ Tetsuya <tetsuya@apache.org> __
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

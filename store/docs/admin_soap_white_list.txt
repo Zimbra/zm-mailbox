@@ -1,0 +1,63 @@
+For the purpose of locking down security on a Zimbra server, it is possible to limit the list of administrative SOAP commands that a server will accept In order to limit the list of administrative SOAP commands, you need to add "admin_soap_white_list" configuration key to ZCS local config. This can be done either by running zmlocalconfig command or by editing /opt/zimbra/conf/localconfig.xml file. If the "admin_soap_white_list" key is not present in the local config, than all administrative SOAP handlers will be loaded.  "admin_soap_white_list" key contains coma-separated list of full names of SOAP handlers (including the namespace).
+
+The following is a zmlocalconfig command that locks down Zimbra server to allow access only on "Domain Admin" level:
+
+zmlocalconfig -e admin_soap_white_list=urn:zimbraAdmin::AddAccountAliasRequest,urn:zimbraAdmin::AddDistributionListAliasRequest,urn:zimbraAdmin::AddDistributionListMemberRequest,urn:zimbraAdmin::AuthRequest,urn:zimbraAdmin::AutoCompleteGalRequest,urn:zimbraAdmin::CheckPasswordStrengthRequest,urn:zimbraAdmin::CreateAccountRequest,urn:zimbraAdmin::CreateCalendarResourceRequest,urn:zimbraAdmin::CreateDataSourceRequest,urn:zimbraAdmin::CreateDistributionListRequest,urn:zimbraAdmin::DelegateAuthRequest,urn:zimbraAdmin::DeleteAccountRequest,urn:zimbraAdmin::DeleteCalendarResourceRequest,urn:zimbraAdmin::DeleteDataSourceRequest,urn:zimbraAdmin::DeleteDistributionListRequest,urn:zimbraAdmin::DeleteMailboxRequest,urn:zimbraAdmin::GetAccountRequest,urn:zimbraAdmin::GetAccountInfoRequest,urn:zimbraAdmin::GetAccountMembershipRequest,urn:zimbraAdmin::GetAdminExtensionZimletsRequest,urn:zimbraAdmin::GetAdminSavedSearchesRequest,urn:zimbraAdmin::GetAllAccountsRequest,urn:zimbraAdmin::GetAllDistributionListsRequest,urn:zimbraAdmin::GetCalendarResourceRequest,urn:zimbraAdmin::GetDataSourcesRequest,urn:zimbraAdmin::GetDistributionListRequest,urn:zimbraAdmin::GetDistributionListMembershipRequest,urn:zimbraAdmin::GetDomainRequest,urn:zimbraAdmin::GetDomainInfoRequest,urn:zimbraAdmin::GetCosRequest,urn:zimbraAdmin::GetMailboxRequest,urn:zimbraAdmin::GetVersionInfoRequest,urn:zimbraAdmin::ModifyAccountRequest,urn:zimbraAdmin::ModifyAdminSavedSearchesRequest,urn:zimbraAdmin::ModifyCalendarResourceRequest,urn:zimbraAdmin::ModifyDataSourceRequest,urn:zimbraAdmin::ModifyDistributionListRequest,urn:zimbraAdmin::ModifyDomainRequest,urn:zimbraAdmin::ReIndexRequest,urn:zimbraAdmin::RemoveAccountAliasRequest,urn:zimbraAdmin::RemoveDistributionListAliasRequest,urn:zimbraAdmin::RemoveDistributionListMemberRequest,urn:zimbraAdmin::RenameAccountRequest,urn:zimbraAdmin::RenameCalendarResourceRequest,urn:zimbraAdmin::RenameDistributionListRequest,urn:zimbraAdmin::SearchAccountsRequest,urn:zimbraAdmin::SearchCalendarResourcesRequest,urn:zimbraAdmin::SearchDirectoryRequest,urn:zimbraAdmin::SearchGalRequest,urn:zimbraAdmin::SetPasswordRequest
+
+The same can be achieved by adding the following lines to /opt/zimbra/conf/localconfig.xml:
+
+<key name="admin_soap_white_list">
+<value>
+urn:zimbraAdmin::AddAccountAliasRequest,
+urn:zimbraAdmin::AddDistributionListAliasRequest,
+urn:zimbraAdmin::AddDistributionListMemberRequest,
+urn:zimbraAdmin::AuthRequest,
+urn:zimbraAdmin::AutoCompleteGalRequest,
+urn:zimbraAdmin::CheckPasswordStrengthRequest,
+urn:zimbraAdmin::CreateAccountRequest,
+urn:zimbraAdmin::CreateCalendarResourceRequest,
+urn:zimbraAdmin::CreateDataSourceRequest,
+urn:zimbraAdmin::CreateDistributionListRequest,
+urn:zimbraAdmin::DelegateAuthRequest,
+urn:zimbraAdmin::DeleteAccountRequest,
+urn:zimbraAdmin::DeleteCalendarResourceRequest,
+urn:zimbraAdmin::DeleteDataSourceRequest,
+urn:zimbraAdmin::DeleteDistributionListRequest,
+urn:zimbraAdmin::DeleteMailboxRequest,
+urn:zimbraAdmin::GetAccountRequest,
+urn:zimbraAdmin::GetAccountInfoRequest,
+urn:zimbraAdmin::GetAccountMembershipRequest,
+urn:zimbraAdmin::GetAdminExtensionZimletsRequest,
+urn:zimbraAdmin::GetAdminSavedSearchesRequest,
+urn:zimbraAdmin::GetAllAccountsRequest,
+urn:zimbraAdmin::GetAllDistributionListsRequest,
+urn:zimbraAdmin::GetCalendarResourceRequest,
+urn:zimbraAdmin::GetDataSourcesRequest,
+urn:zimbraAdmin::GetDistributionListRequest,
+urn:zimbraAdmin::GetDistributionListMembershipRequest,
+urn:zimbraAdmin::GetDomainRequest,
+urn:zimbraAdmin::GetDomainInfoRequest,
+urn:zimbraAdmin::GetCosRequest,
+urn:zimbraAdmin::GetMailboxRequest,
+urn:zimbraAdmin::GetVersionInfoRequest,
+urn:zimbraAdmin::ModifyAccountRequest,
+urn:zimbraAdmin::ModifyAdminSavedSearchesRequest,
+urn:zimbraAdmin::ModifyCalendarResourceRequest,
+urn:zimbraAdmin::ModifyDataSourceRequest,
+urn:zimbraAdmin::ModifyDistributionListRequest,
+urn:zimbraAdmin::ModifyDomainRequest,
+urn:zimbraAdmin::ReIndexRequest,
+urn:zimbraAdmin::RemoveAccountAliasRequest,
+urn:zimbraAdmin::RemoveDistributionListAliasRequest,
+urn:zimbraAdmin::RemoveDistributionListMemberRequest,
+urn:zimbraAdmin::RenameAccountRequest,
+urn:zimbraAdmin::RenameCalendarResourceRequest,
+urn:zimbraAdmin::RenameDistributionListRequest,
+urn:zimbraAdmin::SearchAccountsRequest,
+urn:zimbraAdmin::SearchCalendarResourcesRequest,
+urn:zimbraAdmin::SearchDirectoryRequest,
+urn:zimbraAdmin::SearchGalRequest,
+urn:zimbraAdmin::SetPasswordRequest
+</value>
+
+You need to restart the server after running zmlocalconfig or editing localconfig.xml in order to load the configuration changes.

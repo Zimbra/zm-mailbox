@@ -1,0 +1,131 @@
+Return-Path: <xmlbeans-dev-return-144-smith=stanford.edu@xml.apache.org>
+Received: from leland9.Stanford.EDU (leland9.Stanford.EDU [171.67.16.83])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8INAscA002200
+	for <smith@popserver1.stanford.edu>; Thu, 18 Sep 2005 16:10:54 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland9.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8INAgJn016392 for
+	<smith@stanford.edu>; Thu, 18 Sep 2005 16:10:43 -0700 (PDT)
+Received: (qmail 87321 invoked by uid 500); 18 Sep 2005 23:10:34 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 87307 invoked from network); 18 Sep 2005 23:10:34 -0000
+Message-ID: <014501c37e3a$0ef13e80$d41e11ac@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>, <cmaeda@alum.mit.edu>
+References: <002201c37e22$9ded0550$0363050a@madcat>
+Subject: Re: Future XMLBeans feature work?
+Date: Thu, 18 Sep 2005 19:10:31 -0400
+X-Zimbra-Received: Thu, 18 Sep 2005 19:10:31 -0400
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000051-0010
+
+Hi Chris,
+
+Yes; unfortunately there is no open-source XQuery implementation I'm aware
+of.  The one we're using from BEA was developed in a different part of the
+organization from where I sit; i.e., I don't have any say over their code.
+
+I think it would be a very reasonable and useful thing to for us here to
+expand the xpath support that is built-into XMLBeans (I'm noting it on the
+wiki).  Later, if or when an open-source XQuery implementation becomes
+available (e.g., if people rally together and build one), we can revisit the
+entire spec there.
+
+
+On the fast-and-lossy binding and start-from-java, the value I see we can
+bring is in unifying the models.
+
+What I'm after is this:  Sometimes people like binding one way; sometimes
+people like binding another way, for valid reasons.  It should be possible
+to have chosen one or the other or both in the same application without
+regretting it.  The various binding styles should be able to coexist and
+interrelate to each other in a seamless way.
+
+E.g., we have folks who are dealing with both pojo binding and XMLBeans
+binding for the same schema types, and getting confused that the Java is not
+the same even though the schema is.  There should be just one Java type.
+Elsewhere we have folks who have been asking "can I change the Java code
+corresponding to my schema?" (e.g., they sort of want to "start from both
+Java and schema") as well as "can I use my XMLBean within a 101 service" or
+"101 types within an XMLBean".  And also... "can I do 101-style binding
+while also maintaining full fidelity?" (somehow!)
+
+There is some indication that I'm not the only one seeing these kinds of
+issues, since JAX-RPC 2.0 and JAXB 2.0 are both proposing that JAX-RPC
+binding be done using JAXB 2.0 and that JAXB 2.0 somehow incorporate the
+start-from-Java case.
+
+I actually do believe that if we do things right, we can answer "yes, yes,
+and yes" to the questions in that previous paragraph, which is something you
+cannot say currently in XMLBeans v1, Axis, Castor, or JAXB 1.
+
+Specifically:
+
+(1) Fast-and-lossy vs full-fidelity does not need to correlate with
+start-from-java vs start-from-schema.  It is very useful - and quite
+possible - to implement all four grid squares.  (Lossy/Java, Lossy/Schema,
+Fidelity/Java, Fidelity/Schema).
+
+(2) The choice between fast-lossy and full-fidelity does not need to be a
+compiletime decision. It is possible and desirable to make it a runtime
+decision.
+
+In other words, you should be able to use the same Java type to bind to a
+specific schema type no matter what your performance/fidelity tradeoff is.
+When you are writing an instance editing tool, you can load it with a "full
+fidelity" option; and when you're writing a high-throughput processor you
+can load it with the "fast and lossy" option.  Both tools can use common
+utility classes that deal with your bound data once via a single API, rather
+than twice, once for a "fast" binding and one for a "full" binding.
+
+The idea is that if there is a unified binding approach, you don't need to
+write your app twice just because sometimes you want different performance
+or round-tripping characteristics.
+
+(3) The choice between start-from-schema and start-from-java should not be a
+global black-and-white decision.  You should be able to mix and nest
+start-from-schema types and start-from-java types.  There should be a
+mechanism for starting-from-schema and customizing the Java, or starting
+from the Java and customizing the schema.
+
+
+Make any sense?  The value I'm looking for is not in the ability to do
+start-from-Java binding itself, but in having it unified with all the other
+kinds of bindings that you can do.
+
+David
+
+
+
+
+
+----- Original Message ----- 
+From: "Chris Maeda" <chrismaeda@comcast.net>
+
+
+I would most interested in seeing XQuery support
+added / restored to XMLBeans V2.
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

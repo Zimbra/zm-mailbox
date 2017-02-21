@@ -1,0 +1,83 @@
+Return-Path: <xmlbeans-user-return-54-smith=stanford.edu@xml.apache.org>
+Received: from leland6.Stanford.EDU (leland6.Stanford.EDU [171.67.16.60])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9ELn5Ju027710
+	for <smith@popserver1.stanford.edu>; Tue, 14 Oct 2003 14:49:05 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland6.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9ELmuGF005053 for
+	<smith@stanford.edu>; Tue, 14 Oct 2003 14:48:57 -0700 (PDT)
+Received: (qmail 9659 invoked by uid 500); 14 Oct 2003 21:48:48 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 9632 invoked from network); 14 Oct 2003 21:48:48 -0000
+Date: Tue, 14 Oct 2003 17:48:52 -0400
+X-Zimbra-Received: Tue, 14 Oct 2003 17:48:52 -0400
+Subject: Re: XMLBeans/Java Web Start Issues
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Mime-Version: 1.0 (Apple Message framework v552)
+From: Tom Condon <tom_condon@vrtx.com>
+To: xmlbeans-user@xml.apache.org
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <D44A54C298394F4E967EC8538B1E00F10248C932@lgchexch002.lgc.com>
+Message-Id: <33833A1C-FE90-11D7-BDED-000393D5A006@vrtx.com>
+X-Mailer: Apple Mail (2.552)
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000009a-0010
+
+Just to let everybody know, XMLBeans works fine with Java Web Start.  
+It was a problem with my JNLP file.  Thanks for the help anyway.  It 
+still has problems with JavaSpaces, though.
+
+
+On Friday, October 10, 2003, at 05:02 PM, Dominique Devienne wrote:
+
+>> -----Original Message-----
+>> From: David Bau [mailto:david.bau@bea.com]
+>>
+>> We assume that the classloader that was used to load the 
+>> TypeSystemHolder
+>> class for each compiled schema also has access to the .xsb files that 
+>> are
+>> JARed up together with the TypeSystemHolder.class file.  Perhaps this 
+>> is
+>> the
+>> wrong assumption?  But then in that case I'm not sure which 
+>> classloader we
+>> should be using which would have access to classloader resources 
+>> instead.
+>
+> Might be... Because of ClassLoader delegation, a CL lower in the CL
+> hierarchy might have loaded TypeSystemHolder.class, so wouldn't know of
+> classes in JARs/dirs controlled by CLs higher in the hierarchy, where 
+> the
+> .xsb files might be living!?!?
+>
+> Maybe the context class loader should be used. Then it's the 
+> reponsability
+> of the client code to set it up correctly, which usually a framework 
+> does
+> for you (like the servlet container for example). Or you could try your
+> current method, then the context loader, then ...
+>
+> I'm no class loader expert though. --DD
+>
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

@@ -1,0 +1,156 @@
+Return-Path: <xmlbeans-user-return-64-smith=stanford.edu@xml.apache.org>
+Received: from leland7.Stanford.EDU (leland7.Stanford.EDU [171.67.16.66])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9MNWIdX022610
+	for <smith@popserver1.stanford.edu>; Wed, 22 Oct 2003 16:32:18 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland7.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9MNWBIM012919 for
+	<smith@stanford.edu>; Wed, 22 Oct 2003 16:32:12 -0700 (PDT)
+Received: (qmail 54047 invoked by uid 500); 22 Oct 2003 23:32:02 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 54002 invoked from network); 22 Oct 2003 23:32:01 -0000
+Sensitivity: 
+Subject: RE: deep equals implementation?
+To: xmlbeans-user@xml.apache.org
+X-Mailer: Lotus Notes Release 5.0.8  June 18, 2001
+Message-ID: <OF27BE0517.D02F021E-ONCA256DC7.008108C4@tmca.com.au>
+From: Dmitri.Colebatch@toyota.com.au
+Date: Thu, 23 Oct 2004 09:31:41 +1000
+X-Zimbra-Received: Thu, 23 Oct 2004 09:31:41 +1000
+X-MIMETrack: Serialize by Router on SHM_ISD_A2_80/TMCA(Release 5.0.12 
+	|February 13, 2003) at 23/10/2003 09:33:02
+MIME-Version: 1.0
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=us-ascii
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000004d-0010
+
+
+Eric,
+
+Firstly, thanks for your response.  I did try walking the trees with
+cursor, but found that equivalent trees with different namspace
+declarations generated different tokens, understandably... I'm not sure
+that is clear, what I mean is:
+
+<foo xmlns="http://foo" />
+
+is different to
+
+<foo:foo xmlns:foo="http://foo" />
+
+in terms of the cursor walk.... but I want them to be the equal.
+
+Any advice on getting past that would be appreciated, I had trouble trying
+to see how to easily get past this in XmlCursor.... probably my lack of sax
+parsing isn't helping (o:
+
+cheers
+dim
+
+
+
+
+
+"Eric Vasilik" <ericvas@bea.com> on 23/10/2003 02:31:52 AM
+
+Please respond to xmlbeans-user@xml.apache.org
+
+To:    <xmlbeans-user@xml.apache.org>
+cc:
+Subject:    RE: deep equals implementation?
+
+This a known limitation.  We have not yet implemented any type of deep
+compare.  You can compare leaf values.  If you want to compare two trees
+sans schema, it is not too difficult to walk both trees with XmlCursor
+comparing tokens.  I can provide assistance with this if it meets your
+needs.
+
+- Eric
+
+-----Original Message-----
+From: Dmitri.Colebatch@toyota.com.au
+[mailto:Dmitri.Colebatch@toyota.com.au]
+Sent: Tuesday, October 21, 2003 10:30 PM
+To: xmlbeans-user@xml.apache.org
+Subject: deep equals implementation?
+
+
+Hey all,
+
+I'm trying to find a deep equals implementation.  I have two XmlObjects,
+and equals() isn't comparing the child nodes.  I'm running off the version
+1.0 released by BEA, and am currently checking out the apache src, which I
+assume is largely unchanged.
+
+On my copy, the com.bea.xbean.values.XmlComplexContentImpl.equal_to() seems
+to be the method I'm after.... but its not imlpemented - well, not beyond
+basic checking the schema type.   My cvs checkout is taking forever (I
+imagine due to our network), can someone tell me if this is a known issue,
+or provide some advice?
+
+What I'm actually trying to do is write a unit test for something that
+returns an XmlObject.  Any other suggestions would be welcome.
+
+cheers
+dim
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                               DISCLAIMER
+* This email and any attachment may contain confidential information.
+  If you are not the intended recipient you are not authorised to copy
+  or disclose all or any part of it without the prior written consent
+  of Toyota.
+* Opinions expressed in this email and any attachment are those of the
+  sender and not necessarily the opinions of Toyota.
+* Please scan this email and any attachment for viruses.  Toyota does
+  not accept any responsibility for problems caused by viruses, whether
+  it is Toyota's fault or not.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+
+
+
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                               DISCLAIMER
+* This email and any attachment may contain confidential information.
+  If you are not the intended recipient you are not authorised to copy
+  or disclose all or any part of it without the prior written consent
+  of Toyota.
+* Opinions expressed in this email and any attachment are those of the
+  sender and not necessarily the opinions of Toyota.
+* Please scan this email and any attachment for viruses.  Toyota does
+  not accept any responsibility for problems caused by viruses, whether
+  it is Toyota's fault or not.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

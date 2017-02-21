@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<!-- 
+========================================================
+     combo rights
+========================================================
+-->
+
+<rights>
+
+<include file="zimbra-rights.xml"/>
+
+<right type="combo" name="crossMailboxSearchRights">
+  <desc>rights for managing cross mailbox search tasks in admin console</desc>
+  <rights>
+    <r n="manageCrossMailboxSearchTask"/>
+    <r n="listServer"/>
+    <r n="get.server.description"/>
+    <r n="get.server.zimbraServiceEnabled"/>
+    <r n="get.server.zimbraServiceInstalled"/>
+    <r n="get.server.zimbraServiceHostname"/>
+    <r n="get.server.zimbraId"/>
+  </rights>
+</right>
+      
+<right type="combo" name="mailQueueRights">
+  <desc>rights for managing Mail Queue in admin console</desc>
+  <rights>
+    <r n="manageMailQueue"/>
+    <r n="listServer"/>
+    <r n="get.server.description"/>
+    <r n="get.server.zimbraServiceEnabled"/>
+    <r n="get.server.zimbraServiceInstalled"/>
+    <r n="get.server.zimbraServiceHostname"/>
+    <r n="get.server.zimbraId"/>
+  </rights>
+</right>
+
+
+<!-- 
+    ======================
+    migration admin rights
+    ======================
+ -->
+<help name="migrationAdminHelp">
+  <desc>Instruction on granting rights for running the migration wizard</desc>
+  <item>
+    Grant migrationAdminDomainRights right on each domain the admin needs to run the migration wizard for.
+    e.g. if a delegated admin needs to run the wizard for domain1.com and domain2.com
+         zmprov grr domain domain1.com usr ma@test.com migrationAdminDomainRights
+         zmprov grr domain domain2.com usr ma@test.com migrationAdminDomainRights
+  </item>
+  <item>
+    Grant migrationAdminCosRights right on each cos the admin needs to access.
+    e.g. if a delegated admin needs to access cos1 and cos2
+         zmprov grr cos cos1 usr ma@test.com migrationAdminCosRights
+         zmprov grr cos cos2 usr ma@test.com migrationAdminCosRights
+  </item>
+</help>
+
+<right type="combo" name="migrationAdminDomainRights">
+  <desc>rights targeted on domain-ed entries for running the migration wizard</desc>
+  <help name="migrationAdminHelp"/>
+  <rights>
+    <r n="listDomain"/>
+    <r n="createAccount"/>
+    <r n="modifyAccount"/>
+    <r n="createAlias"/>
+    <r n="addAccountAlias"/>
+    <r n="getAccountInfo"/>
+    <r n="adminLoginAs"/>
+  </rights>
+</right>
+
+<right type="combo" name="migrationAdminCosRights">
+  <desc>cos rights for running the migration wizard</desc>
+  <help name="migrationAdminHelp"/>
+  <rights>
+    <r n="assignCos"/>
+    <r n="listCos"/>
+  </rights>
+</right>
+
+
+
+<!-- 
+    =================
+    BES admin rights
+    =================
+ -->
+<help name="besAdminHelp">
+  <desc>Instruction on granting rights to a BES admin</desc>
+  <item>Grant besAdminDomainRights right on each domain the admin needs to access.</item>
+  <item>Grant besAdminServerRights right on each server the admin needs to access.</item>
+</help>
+
+<right type="combo" name="besAdminDomainRights">
+  <desc>rights targeted on domain-ed entries for BES admin</desc>
+  <help name="besAdminHelp"/>
+  <rights>
+    <r n="adminLoginAs"/>
+  </rights>
+</right>
+
+<right type="combo" name="besAdminServerRights">
+  <desc>server rights for BES admin</desc>
+  <help name="besAdminHelp"/>
+  <rights>
+    <r n="getServer"/>
+  </rights>
+</right>
+
+</rights>

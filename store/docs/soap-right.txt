@@ -1,0 +1,806 @@
+-----------------------------
+ urn:zimbraAdmin
+-----------------------------
+
+----------------------------------------------------------
+Grant a right on a target to an individual or group grantee.
+    
+<GrantRightRequest>
+  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+  <grantee type={grantee-type} by="{grantee-by}" [secret="{secret}"]>{grantee-name-or-id}</grantee>
+  <right [deny="${deny}"] [canDelegate="${canDelegate}"] 
+         [disinheritSubGroups="${disinheritSubGroups}"] [subDomain="${subDomain}"]>
+      {right}
+  </right>
+</GrantRightRequest>    
+
+{target-type} = account | calresource | dl | domain | cos | server | xmppcomponent | zimlet | config | global 
+
+{target-by}   = name | id
+  
+{grantee-type} = usr | grp | all | dom | gst | key | pub
+                 all: user right only 
+                 dom: user right only unless the right is crossDomainAdmin
+                 gst: user right only 
+                 key: user right only 
+                 pub: user right only 
+  
+{grantee-by}   = name | id
+
+{secret} : for user right only
+           password for guest grantee or the access key for key grantee
+
+{deny} = 1 | 0(default)
+
+{canDelegate}  = 1 | 0(default)
+
+{disinheritSubGroups}  = 1 | 0(default)
+
+{subDomain} = 1 | 0(default)
+
+{right} = {right-name} | {inline-right}
+
+{right-name} = a system defined right name
+
+{inline-right} = {op}.{target-type}.{attr-name}
+
+{op} = set | get
+
+{attr-name} = a valid attribute name on the specified target type
+
+  
+  
+<GrantRightResponse/>
+
+
+----------------------------------------------------------
+Revoke a right from a target that was previously granted to 
+an individual or group grantee.
+
+ 
+<RevokeRightRequest>
+  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+  <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
+  <right [deny="${deny}"] [canDelegate="${canDelegate}"] 
+         [disinheritSubGroups="${disinheritSubGroups}"] [subDomain="${subDomain}"]>
+      {right-name}
+  </right>
+</RevokeRightRequest>    
+
+<RevokeRightResponse/>
+
+----------------------------------------------------------
+Check if a principal has the specified right on target.
+
+
+<CheckRightRequest>
+  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+  <grantee by="{grantee-by}">{grantee-name-or-id}</grantee>
+  <right>{right-name}</right>
+  [<attrs>
+     <a n="...">...</a>+
+   </attrs>]
+</CheckPermissionRequest>
+
+{right-name}: right name
+              must be a preset, getAttrs, or setAttrs right, it cannot be a combo right.
+                
+              If right is a setAttrs right, an attr/value map can be provided 
+              in <attrs>, which contains the attrs/values that are attempted to
+              be modified.   If one of the values to be modified violates one of 
+              the constraint for the the attributes, the result in CheckRightResponse
+              will be allow="0".  If attr/value map is not provided, system will just 
+              check if all attributes defined by the setAttrs right are allowed, 
+              without taking into account any constraint. 
+               
+              
+
+<CheckRightResponse allow="{1|0}">
+  [<via>
+    <target type={target-type}>{target-name-or-id}</target>
+    <grantee type={grantee-type}>{grantee-name-or-id}</grantee>
+    <right [deny="${deny}"]>{right-name}</right>
+  <via>]
+</CheckRightResponse>  
+
+    A successful return means the principal specified by the <grantee> is allowed
+    for the specified right on the target object.  
+    If PERM_DENIED is thrown, it means the authed user does not have privilege
+    to run this SOAP command(has to be an admin because this command is in admin namespace).
+    Result of CheckRightRequest is in the allow="1|0" attribute in CheckRightResponse.
+    <via> in the CheckRightResponse is the grant that decisively
+    lead to the result.  
+    
+    e.g. if a combo right C containing renameAccount is granted to group G on domain D, and
+         admin A is in group G, then
+              <CheckRightRequest>
+                 <target type="account"> by="name">user1@D</target>
+                 <grantee by="name">admin@D</grantee>
+                 <right>renameAccount</right>
+              </CheckRightRequest>
+          
+         will return:
+              <CheckRightResponse hasRight="1">
+                 <via>
+                   <target type=domain>D</target>
+                   <grantee type=grp>G</grantee>
+                   <right>C</right>
+                 </via>
+              </CheckRightResponse>
+      
+         Note, <via> is optional.  If the right of interest is not granted at all, there will be no <via>
+         in the response.     Also, <via> will probably be hairy for rights that modify/get
+         selective attrs, it may not be returned for those rights.  TDB...
+
+    e.g. 
+         <CheckRightRequest>
+             <target type="account"> by="name">user1@D</target>
+             <grantee by="name">admin@D</grantee>
+             <right>configureQuota</right>
+             <attrs>
+                 <a n="zimbraMailQuota">100000</a>
+                 <a n="zimbraQuotaWarnPercent">80</a>
+             <attrs>    
+         </CheckRightRequest>
+              
+         <CheckRightResponse hasRight="0">     
+         
+         
+----------------------------------------------------------
+Returns all grants on the specified target entry, or all grants
+granted to the specified grantee entry.
+The authenticated admin must have an effective "viewGrants" (TBD) system 
+right on the specified target/grantee.
+
+At least one of <target> or <grantee> must be specified.  
+If both <target> and <grantee> are specified, only grants that are granted 
+on the target to the grantee are returned.
+
+
+<GetGrantsRequest>
+  [<target type={target-type} by="{target-by}">{target-name-or-id}</target>]
+  [<grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id} all={0|1(default)}</grantee>]
+</GetGrantsRequest>
+
+
+all = whether to include grants granted to groups the specified grantee belongs to.
+      1: include (default)
+      0: do not include
+
+<GetGrantsResponse>
+  <grant>
+    <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+    <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
+    <right [deny="${deny}"] [canDelegate="${canDelegate}"] 
+           [disinheritSubGroups="${disinheritSubGroups}"] [subDomain="${subDomain}"]>
+        {right}
+    </right>
+  </grant>+
+</GetGrantsResponse>  
+
+         
+----------------------------------------------------------
+Returns *effective* *admin* rights the authenticated admin has on the specified target entry.
+        
+Effective rights are the rights the admin is actually allowed.  It is the net result of 
+applying ACL checking rules given the target and grantee.  Specifically denied rights 
+will *not* be returned.
+        
+The result can help the admin console decide on what tabs to display after a target 
+is selected.  For example, after user1 is selected, if the admin does not have right 
+to setPassword, it should probably hide or gray out the setPassword tab.
+
+    
+<GetEffectiveRightsRequest expandAllAttrs="{expand-all-attrs}">
+  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+  [<grantee by="{grantee-by}">{grantee-name-or-id}</grantee>]
+</GetEffectiveRightsRequest>
+
+if <grantee> is omitted, it means the account identified by the auth token.
+
+{expand-all-attrs} : whether to include all attribute names in the <getAttrs>/<setAttrs> elements in 
+                     GetEffectiveRightsResponse if all attributes of the target are gettable/settable
+                     
+                     comma separated values of "getAttrs", "setAttrs"
+                     
+                     e.g. getAttrs           - expand attrs in getAttrs in GetEffectiveRightsResponse
+                          setAttrs           - expand attrs in setAttrs in GetEffectiveRightsResponse
+                          getAttrs,setAttrs  - expand attrs in both getAttrs and setAttrs in GetEffectiveRightsResponse
+                                     
+                     - when all="1" in setAttrs/getAttrs in GetEffectiveRightsResponse: 
+                           0: do not expand attributes
+                           1: expand all attributes
+                     - when all is not present or is 0 in setAttrs/getAttrs in GetEffectiveRightsResponse: 
+                           value of {whether-to-expand-all-attrs} does not apply.  Allowed attributes are always 
+                           returned in setAttrs/getAttrs in GetEffectiveRightsResponse.  
+    
+<GetEffectiveRightsResponse>    
+  <grantee id="{grantee-id}" name="{grantee-name}">
+  <target type="{target-type}" [id"{target-id}"] [name="{target-name}"]>
+      <right n="{right-name}"/>+
+      <setAttrs [all="{all}"]>
+          <a n="...">
+              [<default>
+                   <v>...</v>+
+               </default>]
+              [<constraint>
+                   [<min>{min}</min>]
+                   [<max>{max}</max>]
+                   [<values>
+                       <v>...</v>+
+                    </values>]
+               </constraint>]       
+          </a>+
+      </setAttrs>
+      <getAttrs [all="{all}"]>
+        <a n="...">
+              [<default>
+                   <v>...</v>+
+               </default>]
+          </a>+
+      </getAttrs>
+  </target>
+</GetEffectiveRightsResponse>   
+
+    <right>       : all effective system rights
+                    - getAttrs/setAttrs rights will not appear in the list because they will be 
+                      expanded to a list of attributes that can be get/set, which appear in the 
+                      <getAttrs> and <setAttrs> elements in the response.
+                    - Combo rights will not appear in the list because they will be expanded to 
+                      system rights and/or a set of attributes that can be get/set.
+    <setAttrs>    : all attrs can be set
+    <getAttrs>    : all attrs can be get
+    
+    {all} : 0(default) | 1
+            1 - all attributes on the target entry are accessible
+                if 1, no <a> elements will appear under the <setAttrs>/<getAttrs>
+                
+    <default> : inherited default value(or values if the attribute is multl-valued)
+    
+    e.g. 
+    <GetEffectiveRightsRequest>
+      <target type="account" by="id">bba95d7d-0b13-401f-a343-03a8f5a96f7c"/>
+      <grantee by="name">admin@test.com</grantee>
+    </GetEffectiveRightsRequest>
+    
+    <GetEffectiveRightsResponse>
+      <grantee name="admin@test.com</grantee" id=""/>
+      <target type="account" name="user1@test.com" id="bba95d7d-0b13-401f-a343-03a8f5a96f7c">
+        <right n="setPassword"/>
+        <right n="renameAccount"/>
+        <right n="deleteAccount"/>
+        <setAttrs>
+          <a n="zimbraMailQuota" min="100000000"/>
+          <a n="zimbraMailStatus"/>
+          <a n="zimbraFeatureMailEnabled" values="TRUE,FALSE"/>
+          ...
+        </setAttrs>
+        <getAttrs>
+          <a n="..."/>
+          <a n="..."/>
+          ...
+        </getAttrs>
+      </target>
+    </GetEffectiveRightsRequest>
+
+         
+----------------------------------------------------------
+Returns attributes, with defaults and constraints if any,  that can be set by the authed admin when an 
+object is created.
+      
+GetCreateObjectAttrsRequest returns the equivalent of setAttrs portion of GetEffectiveRightsResponse.
+GetCreateObjectAttrsRequest is needed becasue GetEffectiveRightsRequest requires a target, but when we are 
+creating a object, the target object does not exist yet.
+      
+The result can help the admin console decide on what tabs/attributes to display for creating objects.
+    
+
+<GetCreateObjectAttrsRequest>
+    <target type="{target-type}">
+    [<domain by="{domain-by}">...</domain>]
+    [<cos by="{cos-by}">...</cos>]
+</GetCreateObjectAttrsRequest>    
+
+<domain> : required if {target-type} is account/calresource/dl/domain, ignored otherwise
+           - if {target-type} is account/calresource/dl: this is the domain in whcih the object will be in.
+             the domain can be speciffied by id or by name
+           - if {target-type} is domain, it is the domain name to be created.
+             e.g. to create a subdomain named foo.bar.test.com, should pass in <domain by="name">foo.bar.test.com</domain>.
+
+          
+<cos>    : optional if {target-type} is account/calresource, ignored otherwise
+           if missing, default cos of the domain will be used
+          
+e.g. 1  creating an account:
+
+<GetCreateObjectAttrsRequest>
+  <target type="account"/>  
+  <domain by="name">test.com</domain>
+  <cos by="name">standard</cos>
+</GetCreateObjectAttrsRequest>
+
+<GetCreateObjectAttrsResponse>
+    <setAttrs>
+          <a n="zimbraMailQuota"/>
+              <constraint>
+                  <min>1</min>
+                  <max>3</max>
+              </constraint>
+              <default>
+                  <v>2</v>
+              </default>
+          <a n="zimbraMailStatus"/>
+          <a n="zimbraFeatureCalendarEnabled"/>
+          ...
+    </setAttrs>
+</GetCreateObjectAttrsResponse>
+
+
+e.g. 2 creating a server:
+
+<GetCreateObjectAttrsRequest>
+  <target type="server"/>  
+</GetCreateObjectAttrsRequest>
+
+<GetCreateObjectAttrsResponse>
+    <target type="server"/>
+    <setAttrs>
+          <a n="zimbraLmtpExposeVersionOnBanner"/>
+          <a n="zimbraXMPPServerDialbackKey"/>
+          <a n="zimbraReverseProxyImapEnabledCapability"/>
+              <constraint>
+                  <values>
+                      <v>IMAP4rev1</v>
+                      <v>BINARY</v>
+                  </values>
+              </constraint>    
+          ...
+    </setAttrs>
+</GetCreateObjectAttrsResponse>
+    
+----------------------------------------------------------
+Get all effective *admin* rights.
+
+      
+<GetAllEffectiveRightsRequest>
+  <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
+</GetAllEffectiveRightsRequest> 
+
+       
+<GetAllEffectiveRightsResponse>
+  <grantee id="{grantee-id}" name="{grantee-name}">
+  <target type="{target-type}">
+    {right-specifiers}
+  </target>+
+</GetAllEffectiveRightsResponse>  
+  
+{right-specifiers} = 
+    - if target type is account, calresource, dl: {domained-entries-right-specifiers}
+    - otherwise: {non-domained-entries-right-specifiers}
+  
+{domained-entries-right-specifiers} = 
+    <all>
+      {effective-rights}
+    </all>
+    [<inDomains>
+       <domain name="{domain-name}">+
+        {effective-rights}
+     <inDomains>]+
+    [<entries>
+       <entry name="{name}">+
+       {effective-rights}
+     </entries>]+
+     
+{non-domained-entries-right-specifiers} = 
+    <all>
+      {effective-rights}
+    </all>
+    [<entries>
+       <entry name="{name}">+
+       {effective-rights}
+     </entries>]+     
+       
+{effective-rights} = 
+    <rights>
+        <right n="..."/>+
+        <setAttrs>
+            <a n="..."/>+
+        </setAttrs>
+        <getAttrs>
+            <a n="..."/>+
+        </getAttrs>
+    </rights>
+
+    
+e.g.
+
+    <GetAllEffectiveRightsRequest xmlns="urn:zimbraAdmin">
+      <grantee type="usr" by="name">admin1@test.com</grantee>
+    </GetAllEffectiveRightsRequest>
+    
+    <GetAllEffectiveRightsResponse xmlns="urn:zimbraAdmin">
+      <grantee name="admin1@test.com" id="a13b4659-ea6a-4050-bb58-65a9559138d1"/>
+      <target type="cos">
+        <entries>
+          <entry name="cos2"/>
+          <entry name="cos1"/>
+          <rights>
+            <right n="assignCos"/>
+            <right n="listCos"/>
+            <setAttrs/>
+            <getAttrs all="1"/>
+          </rights>
+        </entries>
+        <entries>
+          <entry name="cos3"/>
+          <entry name="cos4"/>
+          <rights>
+            <right n="deleteCos"/>
+            <setAttrs all="1"/>
+          </rights>
+        </entries>
+      </target>
+      <target type="zimlet">
+        <all>
+          <right n="listZimlet"/>
+          <setAttrs/>
+          <getAttrs all="1"/>
+        </all>
+      </target>
+      <target type="account">
+        <inDomains>
+          <domain name="domain1.com"/>
+          <domain name="domain2.com"/>
+          <rights>
+            <right n="addAccountAlias"/>
+            <right n="adminLoginAs"/>
+            <setAttrs>
+              <a n="c"/>
+              ...
+              <a n="zimbraAccountCalendarUserType"/>
+              <a n="zimbraAccountStatus"/>
+              <a n="zimbraAdminAuthTokenLifetime">
+                <default>
+                  <v>12h</v>
+                </default>
+              </a>
+              <a n="zimbraAdminSavedSearches"/>
+              ...
+              <a n="zimbraZimletAvailableZimlets">
+                <default>
+                  <v>com_zimbra_ymemoticons</v>
+                  <v>com_zimbra_local</v>
+                </default>
+              </a>
+              ...
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </inDomains>
+        <inDomains>
+          <domain name="domain3.com"/>
+          <domain name="domain4.com"/>
+          <rights>
+            <right n="renameAccount"/>
+            <right n="adminLoginAs"/>
+            <setAttrs>
+              <a n="zimbraAccountCalendarUserType"/>
+              <a n="zimbraAccountStatus"/>
+              ...
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </inDomains>
+        <entries>
+          <entry name="user1@domain1.com"/>
+          <entry name="user2@domain1.com"/>
+          <rights>
+            <right n="renameAccount"/>
+            <setAttrs>
+              <a n="zimbraAccountStatus"/>
+              ...
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </entries>
+        <entries>
+          <entry name="user3@domain1.com"/>
+          <entry name="user4@domain1.com"/>
+          <rights>
+            <right n="addAccountAlias"/>
+            <right n="removeAccountAlias"/>
+            <right n="setAccountPassword"/>
+            <setAttrs>
+            </setAttrs>
+            <getAttrs/>
+          </rights>
+        </entries>
+      </target>
+      <target type="calresource">
+        <inDomains>
+          <domain name="domain1.com"/>
+          <domain name="domain2.com"/>
+          <rights>
+            <right n="addCalendarResourceAlias"/>
+            <right n="deleteCalendarResource"/>
+            <right n="listCalendarResource"/>
+            <right n="purgeCalendarResourceCalendarCache"/>
+            <right n="removeCalendarResourceAlias"/>
+            <right n="renameCalendarResource"/>
+            <right n="setCalendarResourcePassword"/>
+            <setAttrs>
+              <a n="c"/>
+              ...
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </inDomains>
+      </target>
+      <target type="xmppcomponent"/>
+      <target type="server"/>
+      <target type="config"/>
+      <target type="global"/>
+      <target type="domain">
+        <entries>
+          <entry name="domain1.com"/>
+          <entry name="domain2.com"/>
+          <rights>
+            <right n="accessGAL"/>
+            <right n="checkDomainMXRecord"/>
+            <right n="countAccount"/>
+            <right n="createAccount"/>
+            <right n="createAlias"/>
+            <right n="createCalendarResource"/>
+            <right n="createDistributionList"/>
+            <right n="deleteAlias"/>
+            <right n="listDomain"/>
+            <setAttrs>
+              <a n="description"/>
+              <a n="zimbraAdminConsoleLoginURL"/>
+              ...
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </entries>
+      </target>
+      <target type="dl">
+        <inDomains>
+          <domain name="domain1.com"/>
+          <domain name="domain2.com"/>
+          <rights>
+            <right n="addDistributionListAlias"/>
+            <right n="addDistributionListMember"/>
+            <right n="deleteDistributionList"/>
+            <right n="getDistributionListMembership"/>
+            <right n="getDistributionListShareInfo"/>
+            <right n="listDistributionList"/>
+            <right n="publishDistributionListShareInfo"/>
+            <right n="removeDistributionListAlias"/>
+            <right n="removeDistributionListMember"/>
+            <right n="renameDistributionList"/>
+            <right n="viewDistributionListAdminUI"/>
+            <setAttrs>
+              <a n="cn"/>
+              <a n="description"/>
+              <a n="displayName"/>
+              <a n="zimbraHideInGal"/>
+              <a n="zimbraLocale"/>
+              <a n="zimbraMailCanonicalAddress"/>
+              <a n="zimbraMailForwardingAddress"/>
+              <a n="zimbraMailStatus"/>
+              <a n="zimbraNotes"/>
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </inDomains>
+        <inDomains>
+          <domain name="domain3.com"/>
+          <rights>
+            <right n="publishDistributionListShareInfo"/>
+            <setAttrs>
+              <a n="zimbraMailCanonicalAddress"/>
+              <a n="zimbraMailForwardingAddress"/>
+              <a n="zimbraMailStatus"/>
+              <a n="zimbraNotes"/>
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </inDomains>
+        <entries>
+          <entry name="dl1@domain1.com"/>
+          <entry name="dl2@domain1.com"/>
+          <rights>
+            <right n="addDistributionListAlias"/>
+            <right n="addDistributionListMember"/>
+            <setAttrs>
+              <a n="zimbraMailCanonicalAddress"/>
+              <a n="zimbraMailForwardingAddress"/>
+              <a n="zimbraMailStatus"/>
+              <a n="zimbraNotes"/>
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </entries>
+        <entries>
+          <entry name="dl3@domain1.com"/>
+          <entry name="dl4@domain1.com"/>
+          <rights>
+            <setAttrs>
+              <a n="zimbraMailCanonicalAddress"/>
+              <a n="zimbraMailForwardingAddress"/>
+              <a n="zimbraMailStatus"/>
+              <a n="zimbraNotes"/>
+            </setAttrs>
+            <getAttrs all="1"/>
+          </rights>
+        </entries>
+      </target>
+    </GetAllEffectiveRightsResponse>
+
+    
+----------------------------------------------------------
+Returns the union of the zimbraAdminConsoleUIComponents values on the 
+specified account/dl entry and that on all admin groups the entry
+belongs.
+              
+                    
+<GetAdminConsoleUICompRequest>
+    [<account by="id|name">...</account>]
+    [<dl by="id|name">...</dl>]
+</GetAdminConsoleUICompRequest>
+
+Note: if neither account nor dl is specified, the authed admin account will 
+      be used as the perspective entry.  
+
+<GetAdminConsoleUICompResponse>
+  <a inherited="{inherited}">...</a>+
+</GetAdminConsoleUICompResponse>
+
+{inherited} = 0 | 1
+              0: set directly on the entry
+              1: inherited from a group
+        
+----------------------------------------------------------
+Get definition of a right.
+
+    
+<GetRightRequest [expandAllAttrs="{expand-all-attrs}"]>
+  <right>{right-name}</right>
+</GetRightRequest>
+
+{expand-all-attrs} : whether to include all attribute names in the <attrs> elements in 
+                     GetRightResponse if the right is meant for all attributes 
+                     0: default, do not include all attribute names in the <attrs> elements
+                     1: include all attribute names in the <attrs> elements
+
+<GetRightResponse>
+  <right name="{right-name}" type="{right-type}" rightClass="{right-class} [targetType="{target-type}"]>
+    <desc>{right-description}</desc>
+    [<attrs [all="1"]>
+       [<a n="{attr-name}"/>+]
+     </attrs>]
+    [<rights>
+       <r n="{right-name}" type="{right-type}" [targetType="{target-type}"]/>+
+     </rights>]
+  </right>
+</GetRightResponse>
+
+{right-name}: right name
+
+{right-type}: getAttrs | setAttrs | combo | preset
+
+{target-type}: if {right-type} is:
+               - preset: always present (exactly target type)
+               - getAttrs/setAtrts: always present (comma-separated target types)
+               - combo: always not present
+
+right-class: right class
+             ADMIN: admin right
+             USER: user right
+
+----------------------------------------------------------
+Get all system defined rights.
+
+      
+<GetAllRightsRequest [targetType="{target-type}"] [expandAllAttrs="{expand-all-attrs}"] [rightClass={right-class}]/>
+
+{target-type} : target type on which a right is grantable
+                e.g. createAccount right is only grantable on domain entries and the globalgrant 
+                     entry.
+                Don't confuse this with "whether a right is executable on a target type".
+                e.g. the renameAccount right is "executable" on account entries, but it is "grantable" 
+                     on account, distribuiton list, domain, and globalgrant entries.
+     
+{expand-all-attrs} : whether to include all attribute names in the <attrs> elements in 
+                     GetRightResponse if the right is meant for all attributes 
+                     0: default, do not include all attribute names in the <attrs> elements
+                     1: include all attribute names in the <attrs> elements
+                  
+{right-class} : right class
+                ADMIN: return admin rights only
+                USER: return user rights only
+                ALL: return oth admin rights and user rights
+
+
+                     
+<GetAllRightsResponse>
+  <right name="{right-name}" type="{right-type}" rightClass="{right-class} [targetType="{target-type}"]">
+    <desc>{right-description}</desc>
+    [<attrs all="1">
+       [<a n="{attr-name}"/>+]
+     </attrs>]
+    [<rights>
+       <r n="{right-name}"/>+
+     </rights>]
+  </right>+
+</GetAllRightsResponse>
+
+right-class: right class
+             ADMIN: admin right
+             USER: user right
+                 
+See <GetRightResponse> for description of each <right> in the response. 
+
+----------------------------------------------------------
+Get constraints (zimbraConstraint) for delegated admin on global config or a cos
+
+<GetDelegatedAdminConstraintsRequest type="config|cos" [id="..."] [name="..."]>
+  [<a name="{attr-name}">+]
+</GetDelegatedAdminConstraintsRequest>
+
+type: - if set to config, id and name is ignored
+        will retrieve constraints on global config 
+      - if set to cos, either id or name has to be specified to identify the cos
+      
+none or several attributes can be specified for which constraints are to be returned.
+If no attribute is specified, all constraints on the global config/cos will be returned.
+
+If there is no constraint for a requested attribute, <a> element for the attribute 
+will not appear in the response.
+  
+<GetDelegatedAdminConstraintsResponse type="config|cos" [id="..."] [name="..."]>  
+  [<a n="...">
+    <constraint>
+      [<min>{min}</min>]
+      [<max>{max}</max>]
+      [<values>
+         <v>...</v>+
+      </values>]
+    </constraint>   
+  </a>+]
+</GetDelegatedAdminConstraintsResponse>
+
+e.g.
+
+<GetDelegatedAdminConstraintsRequest type="cos" name="cos1">
+  <a name="zimbraMailQuota">
+</GetDelegatedAdminConstraintsRequest> 
+  
+<GetDelegatedAdminConstraintsResponse type="cos" id="e00428a1-0c00-11d9-836a-000d93afea2a" name="cos1">  
+  <a n="zimbraMailQuota">
+    <constraint>
+      <max>524288000</max>
+      <min>20971520</min>
+    </constraint>      
+  </a>
+</GetDelegatedAdminConstraintsResponse>
+
+----------------------------------------------------------
+Modify constraint (zimbraConstraint) for delegated admin on global config or a cos
+
+<ModifyDelegatedAdminConstraintsRequest type="config|cos" [id="..."] [name="..."]>
+  <a name="{attr-name}">
+    <constraint>
+      [<min>{min}</min>]
+      [<max>{max}</max>]
+      [<values>
+         <v>...</v>+
+      </values>]
+    </constraint>]  
+  </a>    
+</ModifyDelegatedAdminConstraintsRequest>
+
+If constraints for an attribute already exists, it will be replaced by the new constraints.
+If <constraint> is an empty element, constraints for the attribute will be removed.
+
+<ModifyDelegatedAdminConstraintsResponse/>

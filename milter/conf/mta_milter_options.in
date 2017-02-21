@@ -1,0 +1,3 @@
+zimbraMilterServerEnabled=%%zimbraMilterServerEnabled%%
+zimbraMilterBindAddress=%%zimbraMilterBindAddress%%
+zimbraMilterBindPort=%%zimbraMilterBindPort%%

@@ -1,0 +1,61 @@
+Return-Path: <xmlbeans-dev-return-137-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8IJVUcA017290
+	for <smith@popserver1.stanford.edu>; Thu, 18 Sep 2005 12:31:30 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8IJVMLH026977 for
+	<smith@stanford.edu>; Thu, 18 Sep 2005 12:31:23 -0700 (PDT)
+Received: (qmail 23705 invoked by uid 500); 18 Sep 2005 19:31:16 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 23692 invoked from network); 18 Sep 2005 19:31:16 -0000
+Message-ID: <3F6A0808.7020901@sauria.com>
+Date: Thu, 18 Sep 2005 12:31:20 -0700
+X-Zimbra-Received: Thu, 18 Sep 2005 12:31:20 -0700
+From: Ted Leung <twleung@sauria.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.5b)
+	Gecko/20030901 Thunderbird/0.2
+X-Accept-Language: en-us, en
+MIME-Version: 1.0
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: Future XMLBeans feature work?
+References: <012801c37e19$9ef367e0$d41e11ac@lightbox>
+In-Reply-To: <012801c37e19$9ef367e0$d41e11ac@lightbox>
+X-Enigmail-Version: 0.81.6.0
+X-Enigmail-Supports: pgp-inline, pgp-mime
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000090-0010
+
+
+
+On 9/18/2005 12:18 PM, David Bau wrote:
+
+>I'm not sure if like or don't like using the wiki; should I post the text of
+>it here on this list?
+>
+>
+>  
+>
+I think that it would be good to post the wiki text here periodically.  
+If you want a record of who proposed what and so on, then we should 
+probably do this via e-mail.
+
+Ted
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

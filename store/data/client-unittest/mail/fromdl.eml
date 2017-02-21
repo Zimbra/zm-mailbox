@@ -1,0 +1,69 @@
+Return-Path: all1@cdamon-mbpro.local
+Received: from mta02.zimbra.com (LHLO mta02.zimbra.com) (207.126.229.144) by
+ catfood.zimbra.com with LMTP; Thu, 10 Dec 2009 22:36:15 -0800 (PST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mta02.zimbra.com (Postfix) with ESMTP id 91D40C78120;
+	Thu, 10 Dec 2009 22:36:15 -0800 (PST)
+X-DSPAM-Result: Whitelisted
+X-DSPAM-Confidence: 0.9899
+X-DSPAM-Probability: 0.0000
+X-DSPAM-Signature: 4b21e85b21281783211256
+X-DSPAM-Factors: 27,
+X-Virus-Scanned: amavisd-new at zimbra.com
+X-Spam-Flag: NO
+X-Spam-Score: -2.482
+X-Spam-Level: 
+X-Spam-Status: No, score=-2.482 tagged_above=-10 required=3 tests=[AWL=0.617,
+	BARRACUDA_HAM=-0.5, BAYES_00=-2.599] autolearn=ham
+Received: from mta02.zimbra.com ([127.0.0.1])
+	by localhost (mta02.zimbra.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id s+d4d8m5Y2Fl; Thu, 10 Dec 2009 22:36:11 -0800 (PST)
+Received: from mta01.zimbra.com (mta01.zimbra.com [207.126.229.143])
+	by mta02.zimbra.com (Postfix) with ESMTP id 22BAFC7808F;
+	Thu, 10 Dec 2009 22:36:11 -0800 (PST)
+X-ASG-Debug-ID: 1260513369-263800c90000-M58f4p
+X-Barracuda-URL: http://207.126.229.143:8000/cgi-bin/mark.cgi
+Received: from mrout1-b.corp.re1.yahoo.com (localhost [127.0.0.1])
+	by mta01.zimbra.com (Spam Firewall) with ESMTP
+	id 6F815157381; Thu, 10 Dec 2009 22:36:09 -0800 (PST)
+Received: from mrout1-b.corp.re1.yahoo.com (mrout1-b.corp.re1.yahoo.com [69.147.107.20]) by mta01.zimbra.com with ESMTP id OPV4u0SH8GiSKwRg; Thu, 10 Dec 2009 22:36:09 -0800 (PST)
+X-Barracuda-Envelope-From: sympa@yahoo-inc.com
+Received: from ilist.yahoo.com (ilist.yahoo.com [216.145.54.177])
+	by mrout1-b.corp.re1.yahoo.com (8.13.8/8.13.8/y.out) with ESMTP id nBB6ZvKV064218;
+	Thu, 10 Dec 2009 22:35:57 -0800 (PST)
+Received: (from root@localhost)
+	by ilist.yahoo.com (8.13.8/8.13.8/ilist) id nBB6ZuLK068922;
+	Thu, 10 Dec 2009 22:35:56 -0800 (PST)
+X-Barracuda-BBL-IP: 216.145.54.177
+X-Barracuda-RBL-IP: 216.145.54.177
+Date: Thu, 10 Dec 2009 22:35:56 -0800 (PST)
+Message-Id: <300912110635.nBB6ZuLK068922@ilist.yahoo.com>
+To: Owners of list cal-fe-triage <cal-fe-triage-request@yahoo-inc.com>
+From: all1@cdamon-mbpro.local
+Cc: all@cdamon-mbpro.local
+X-ASG-Orig-Subj: Subscription request to list cal-fe-triage
+Subject: Subscription request to list cal-fe-triage
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Barracuda-Connect: mrout1-b.corp.re1.yahoo.com[69.147.107.20]
+X-Barracuda-Start-Time: 1260513370
+X-Barracuda-Virus-Scanned: by Barracuda Spam Firewall at zimbra.com
+X-Barracuda-Spam-Score: 0.01
+X-Barracuda-Spam-Status: No, SCORE=0.01 using global scores of TAG_LEVEL=2.8 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=4.5 tests=BSF_SC0_SA_TO_FROM_DOMAIN_MATCH
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.2.11254
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
+	0.01 BSF_SC0_SA_TO_FROM_DOMAIN_MATCH Sender Domain Matches Recipient
+	                           Domain
+
+Dear owner of list cal-fe-triage,
+
+A user asked to be added as a subscriber to your list. Shall this be fine
+with you, you should click the following URL :
+
+mailto:sympa@yahoo-inc.com?subject=auth%20116de257%20ADD%20cal-fe-triage%20aparnami@yahoo-inc.com%20Ashish%20Parnami
+
+or send an email to sympa@yahoo-inc.com with the following subject :
+AUTH 116de257 ADD cal-fe-triage aparnami@yahoo-inc.com Ashish Parnami

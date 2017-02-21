@@ -1,0 +1,118 @@
+FileUploadServlet is used to transfer content from a client to the server.  Uses include:
+
+   * Uploading attachments (dhtml app)
+   * SendMsg (mapi connector)
+   * AddMsg (migration wizard)
+
+The file upload servlet is an http client that supports RFC 1867, form-based file upload in html.
+The RFC is available here: http://www.ietf.org/rfc/rfc1867.txt
+
+The default url to the file upload servlet is http://server:port/service/upload.
+By default this url maps to com.zimbra.cs.service.FileUploadServlet (see web.xml
+in the tomcat WEB-INF directory for your URL/servlet mapping).
+
+For authentication, you must specify your auth token in a cookie.  Normally, the servlet reads
+the token from cookie "ZM_AUTH_TOKEN"; but if "?admin=1" is specified as a URI query parameter
+the servlet will look at cookie "ZM_ADMIN_AUTH_TOKEN".
+
+If you were to submit an html form to upload to the zimbra server, it would look like this:
+
+	<html>
+	<body>
+	<form method=POST ENCTYPE="multipart/form-data" ACTION="http://localhost:7070/service/upload" METHOD=POST>
+	<input type="file" name="call_it_whatever" />
+	<input type="hidden" name="requestId" value="client_token" />
+	<input type="submit" value="ship it" />
+	</form>
+	</body>
+
+
+The name of the file parameter is of no consequence.  The requestId is an client token
+which the server will echo back with the response.  The response will map the client token
+to a server token. Note, requestId is limited to the [a-zA-Z0-9_.-] character class.
+
+The response looks something like this:
+
+	<html><head></head><body onload="window.parent._uploadManager.loaded(200,'client_token','server_token');"></body></html>
+
+Future requests referring to the contents of the upload must refer to the server token.
+For example, the client can use the server token as an attachment-id in a call to SendMsg.
+
+You can instruct the server to send back non html/javascript by adding fmt=raw to the target url.
+The raw output looks like this:
+
+	200,'client_token','server_token'
+
+You can also instruct the server to send back detailed structured javascript by adding fmt=extended to the target url.
+The extended output looks like this:
+
+	<html><head></head><body onload="window.parent._uploadManager.loaded(200,'client_token',[{"aid":"server_token","filename":"image.jpeg","ct":"image/jpeg"}]);"></body></html>
+
+You can combine these options (fmt=raw,extended) and get the structured JS data without the surrounding HTML.
+The raw,extended output looks like this:
+
+    200,'client_token',[{"aid":"server_token","filename":"image.jpeg","ct":"image/jpeg"}]
+
+
+To see the different responses, cut and paste this html and give it a shot:
+
+	<html>
+	<body>
+	Get Raw Results:
+	<form method=POST ENCTYPE="multipart/form-data" ACTION="http://localhost:7070/service/upload?fmt=raw" METHOD=POST>
+	<input type="file" name="the_attachment" />
+	<input type="hidden" name="requestId" value="my_first_attachment" />
+	<input type="submit" value="ship it" />
+	</form>
+	<p>
+	Get Html/Javascript Results:
+	<form method=POST ENCTYPE="multipart/form-data" ACTION="http://localhost:7070/service/upload" METHOD=POST>
+	<input type="file" name="the_attachment" />
+	<input type="hidden" name="requestId" value="my_first_attachment" />
+	<input type="submit" value="ship it" />
+	</form>
+	<p>
+	Get Extended Javascript Results:
+	<form method=POST ENCTYPE="multipart/form-data" ACTION="http://localhost:7070/service/upload?fmt=extended" METHOD=POST>
+	<input type="file" name="the_attachment" />
+	<input type="hidden" name="requestId" value="my_first_attachment" />
+	<input type="submit" value="ship it" />
+	</form>
+	</body>
+
+
+
+A request at the http level looks something like this:
+
+
+POST /service/upload HTTP/1.1 
+Cookie: ZM_AUTH_TOKEN=0_6029... 
+Content-Type: multipart/form-data; boundary=SKhAvar1nat0rt3mp 
+Host: localhost:7070 
+Content-Length: 338 
+Connection: Keep-Alive 
+Cache-Control: no-cache
+Pragma: no-cache 
+
+--SKhAvar1nat0rt3mp 
+Content-Disposition: form-data; name="requestId"
+
+lsrpc32-client-id 
+--SKhAvar1nat0rt3mp 
+Content-Disposition: form-data; name="lsms32uc"; filename="bla.bla" 
+Content-Type: application/octet-stream 
+Content-Transfer-Encoding: binary 
+
+...binary stuff goes here...
+--SKhAvar1nat0rt3mp-- 
+
+
+And the response looks like this:
+
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+Content-Length: 153
+Date: Wed, 22 Jun 2005 01:35:08 GMT
+Server: Apache-Coyote/1.1 
+
+<html><head></head><body onload="window.parent._uploadManager.loaded(200,'lsrpc32-client-id','ddca28ef-e2bd-11d9-a5e5-c7a05d86b154');"> 

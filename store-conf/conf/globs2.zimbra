@@ -1,0 +1,8 @@
+# zimbra override for globs
+60:application/vnd.ms-project:*.mpp
+60:application/vnd.sealed.mht:*.mht
+60:application/vnd.android.package-archive:*.apk
+60:application/vnd.ms-excel.sheet.macroEnabled.12:*.xlsm
+60:application/vnd.ms-word.document.macroEnabled.12:*.docm
+60:application/vnd.ms-powerpoint.presentation.macroEnabled.12:*.pptm
+

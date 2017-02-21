@@ -1,0 +1,62 @@
+Return-Path: <xmlbeans-user-return-4-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8J0CFcA003051
+	for <smith@popserver1.stanford.edu>; Thu, 18 Sep 2005 17:12:15 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8J0B0q4011660 for
+	<smith@stanford.edu>; Thu, 18 Sep 2005 17:12:08 -0700 (PDT)
+Received: (qmail 54937 invoked by uid 500); 19 Sep 2005 00:10:50 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 54839 invoked from network); 19 Sep 2005 00:10:49 -0000
+Message-ID: <017601c37e42$7a7b2d20$d41e11ac@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+Cc: <xmlbeans-dev@xml.apache.org>
+References: <012801c37e19$9ef367e0$d41e11ac@lightbox>
+	 <1063914139.11628.10.camel@slapshot.stanford.edu>
+Subject: Re: Future XMLBeans feature work?
+Date: Thu, 18 Sep 2005 20:10:48 -0400
+X-Zimbra-Received: Thu, 18 Sep 2005 20:10:48 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000064-0010
+
+Hello Roland, nope, there's no way of modifying the javadocs that are
+generated along with the XMLBeans interfaces.  Might be nice.  Or it might
+be nice to take the description from the schema type and paste it in to the
+javadocs.  I'll add it to the feature wiki.
+
+David
+----- Original Message ----- 
+From: "Roland Smith" <smith@stanford.edu>
+
+
+> I was
+> wondering if there was a way to control and/or augment the javadocs that
+> get generated along with the beans/interfaces. I tried adding
+> annotation/documentation to the schema to see if it would show up, but
+> it didn't. I was about to poke through the schema compiler to see, but
+> thought I'd ask/suggest it here.
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

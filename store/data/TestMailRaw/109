@@ -1,0 +1,188 @@
+Return-Path: <xmlbeans-cvs-return-158-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.9/8.12.9) with ESMTP id h8GJw0Yv000036 for
+	<smith@popserver1.stanford.edu>; Tue, 16 Sep 2003 12:58:00 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.9/8.12.9) with SMTP id h8GJvsGH017259 for
+	<smith@stanford.edu>; Tue, 16 Sep 2003 12:57:55 -0700 (PDT)
+Received: (qmail 95602 invoked by uid 500); 16 Sep 2003 19:57:48 -0000
+Mailing-List: contact xmlbeans-cvs-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-cvs@xml.apache.org>
+List-Help: <mailto:xmlbeans-cvs-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-cvs-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-cvs-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-cvs@xml.apache.org
+Received: (qmail 95589 invoked from network); 16 Sep 2003 19:57:48 -0000
+Received: from unknown (HELO minotaur.apache.org) (209.237.227.194) by
+	daedalus.apache.org with SMTP; 16 Sep 2003 19:57:48 -0000
+Received: (qmail 90403 invoked by uid 1739); 16 Sep 2003 19:57:59 -0000
+Date: 16 Sep 2003 19:57:59 -0000
+X-Zimbra-Received: 16 Sep 2003 19:57:59 -0000
+Message-ID: <20030916195759.90402.qmail@minotaur.apache.org>
+From: ericvas@apache.org
+To: xml-xmlbeans-cvs@apache.org
+Subject: cvs commit:
+	xml-xmlbeans/v1/src/xmlcomp/org/apache/xmlbeans/impl/tool CodeGenUtil.java
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+Content-Type: text/plain; CHARSET=us-ascii
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000006d-0010
+
+ericvas     2003/09/16 12:57:59
+
+  Modified:    v1       README.txt build.xml
+               v1/src/typeimpl/org/apache/xmlbeans/impl/regex
+                        RegularExpression.java
+               v1/src/xmlcomp/org/apache/xmlbeans/impl/tool
+                        CodeGenUtil.java
+  Log:
+  - Updated readme
+  - Added license to jar
+  - fixed unicode char build problem
+  - Search ../bin for javac
+  
+  Revision  Changes    Path
+  1.3       +3 -3      xml-xmlbeans/v1/README.txt
+  
+  Index: README.txt
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v1/README.txt,v
+  retrieving revision 1.2
+  retrieving revision 1.3
+  diff -u -r1.2 -r1.3
+  --- README.txt	16 Sep 2003 17:08:59 -0000	1.2
+  +++ README.txt	16 Sep 2003 19:57:58 -0000	1.3
+  @@ -17,9 +17,9 @@
+   Not a lot is doc'ed yet, so you may want to check out the samples
+   to learn more - we really need a little tutorial.
+   
+  -In the meantime, if you've got more questions, ask davidbau@bea.com or
+  -eric.vasilik@bea.com.
+  -
+  +In the mean time, if you've got more questions, please post your questions
+  +to xmlbeans-user@xml.apache.org (you need to subscribe prior to posting,
+  +by sending a blank mail to xmlbeans-user-subscribe@xml.apache.org).
+   
+   
+   
+  
+  
+  
+  1.3       +1 -0      xml-xmlbeans/v1/build.xml
+  
+  Index: build.xml
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v1/build.xml,v
+  retrieving revision 1.2
+  retrieving revision 1.3
+  diff -u -r1.2 -r1.3
+  --- build.xml	15 Sep 2003 21:06:57 -0000	1.2
+  +++ build.xml	16 Sep 2003 19:57:58 -0000	1.3
+  @@ -467,6 +467,7 @@
+         <fileset dir="build/classes/jax-qname"/>
+         <fileset dir="build/classes/jaxb"/>
+         <fileset dir="build/classes/repackage"/>
+  +      <fileset dir="src/license"/>
+       </jar>
+     </target>
+   
+  
+  
+  
+  1.2       +5 -4      xml-xmlbeans/v1/src/typeimpl/org/apache/xmlbeans/impl/regex/RegularExpression.java
+  
+  Index: RegularExpression.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v1/src/typeimpl/org/apache/xmlbeans/impl/regex/RegularExpression.java,v
+  retrieving revision 1.1
+  retrieving revision 1.2
+  diff -u -r1.1 -r1.2
+  --- RegularExpression.java	15 Sep 2003 18:20:28 -0000	1.1
+  +++ RegularExpression.java	16 Sep 2003 19:57:59 -0000	1.2
+  @@ -134,7 +134,7 @@
+    *      <li>Supports subtraction, union, and intersection operations for character classes.
+    *      <li>Not supported: <kbd>\</kbd><var>ooo</var> (Octal character representations),
+    *          <Kbd>\G</kbd>, <kbd>\C</kbd>, <kbd>\l</kbd><var>c</var>,
+  - *          <kbd>\u005cu</kbd><var>c</var>, <kbd>\L</kbd>, <kbd>\U</kbd>,
+  + *          <kbd>\u005c u</kbd><var>c</var>, <kbd>\L</kbd>, <kbd>\U</kbd>,
+    *          <kbd>\E</kbd>, <kbd>\Q</kbd>, <kbd>\N{</kbd><var>name</var><kbd>}</kbd>,
+    *          <Kbd>(?{<kbd><var>code</var><kbd>})</kbd>, <Kbd>(??{<kbd><var>code</var><kbd>})</kbd>
+    *     </ul>
+  @@ -179,7 +179,7 @@
+    *           variable length digits for <kbd>\u005cx{</kbd><var>HHHH</var><kbd>}</kbd>.
+    *
+    *       <!--
+  - *       <dt class="REGEX"><kbd>\u005cu</kbd><var>HHHH</var>
+  + *       <dt class="REGEX"><kbd>\u005c u</kbd><var>HHHH</var>
+    *       <dd>Matches a character of which code point is <var>HHHH</var> (Hexadecimal) in Unicode.
+    *       -->
+    *
+  @@ -203,7 +203,7 @@
+    *       <dd>Positive character class.  It matches a character in ranges.
+    *       <dd><var>R<sub>n</sub></var>:
+    *       <ul>
+  - *         <li class="REGEX">A character (including <Kbd>\e \f \n \r \t</kbd> <kbd>\u005cx</kbd><var>HH</var> <kbd>\u005cx{</kbd><var>HHHH</var><kbd>}</kbd> <!--kbd>\u005cu</kbd><var>HHHH</var--> <kbd>\u005cv</kbd><var>HHHHHH</var>)
+  + *         <li class="REGEX">A character (including <Kbd>\e \f \n \r \t</kbd> <kbd>\u005cx</kbd><var>HH</var> <kbd>\u005cx{</kbd><var>HHHH</var><kbd>}</kbd> <!--kbd>\u005c u</kbd><var>HHHH</var--> <kbd>\u005cv</kbd><var>HHHHHH</var>)
+    *             <p>This range matches the character.
+    *         <li class="REGEX"><var>C<sub>1</sub></var><kbd>-</kbd><var>C<sub>2</sub></var>
+    *             <p>This range matches a character which has a code point that is >= <var>C<sub>1</sub></var>'s code point and &lt;= <var>C<sub>2</sub></var>'s code point.
+  @@ -496,7 +496,7 @@
+    * range-char ::= '\[' | '\]' | '\\' | '\' [,-efnrtv] | code-point | character-2
+    * code-point ::= '\x' hex-char hex-char
+    *                | '\x{' hex-char+ '}'
+  - * <!--               | '\u005cu' hex-char hex-char hex-char hex-char
+  + * <!--               | '\u005c u' hex-char hex-char hex-char hex-char
+    * -->               | '\v' hex-char hex-char hex-char hex-char hex-char hex-char
+    * hex-char ::= [0-9a-fA-F]
+    * character-2 ::= (any character except \[]-,)
+  @@ -516,6 +516,7 @@
+    * <hr width="50%">
+    *
+    * @author TAMURA Kent &lt;kent@trl.ibm.co.jp&gt;
+  + * @version $Id$
+    */
+   public class RegularExpression implements java.io.Serializable {
+       static final boolean DEBUG = false;
+  
+  
+  
+  1.2       +10 -0     xml-xmlbeans/v1/src/xmlcomp/org/apache/xmlbeans/impl/tool/CodeGenUtil.java
+  
+  Index: CodeGenUtil.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v1/src/xmlcomp/org/apache/xmlbeans/impl/tool/CodeGenUtil.java,v
+  retrieving revision 1.1
+  retrieving revision 1.2
+  diff -u -r1.1 -r1.2
+  --- CodeGenUtil.java	15 Sep 2003 18:20:33 -0000	1.1
+  +++ CodeGenUtil.java	16 Sep 2003 19:57:59 -0000	1.2
+  @@ -401,6 +401,16 @@
+               return result;
+           }
+   
+  +        result = new File(home + sep + "bin", tool);
+  +        if (result.isFile()) {
+  +            return result;
+  +        }
+  +
+  +        result = new File(result.getPath() + ".exe");
+  +        if (result.isFile()) {
+  +            return result;
+  +        }
+  +
+           // just return the original toolFile and hope that it is on the PATH.
+           return toolFile;
+       }
+  
+  
+  
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: xmlbeans-cvs-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-cvs-help@xml.apache.org
+

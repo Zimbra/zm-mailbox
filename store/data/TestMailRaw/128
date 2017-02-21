@@ -1,0 +1,375 @@
+Return-Path: <xmlbeans-dev-return-321-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h92ESkLB024314
+	for <smith@popserver1.stanford.edu>; Thu, 2 Oct 2003 07:28:47 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h92ESdd1003453 for
+	<smith@stanford.edu>; Thu, 2 Oct 2003 07:28:40 -0700 (PDT)
+Received: (qmail 69113 invoked by uid 500); 2 Oct 2003 14:28:36 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 69096 invoked from network); 2 Oct 2003 14:28:35 -0000
+Message-Id: <sf7bfdd5.032@corp-gw.mantech.com>
+X-Mailer: Novell GroupWise Internet Agent 5.5.6.1
+Date: Thu, 02 Oct 2003 10:28:33 -0400
+X-Zimbra-Received: Thu, 02 Oct 2003 10:28:33 -0400
+From: "Darrell Teague" <darrell.teague@mantech.com>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: RE: Finalizers
+Mime-Version: 1.0
+Content-Type: multipart/alternative; boundary="=_18465605.4B2AA21F"
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000080-0010
+
+
+--=_18465605.4B2AA21F
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+Excellent point.
+
+Here is some reference info to save folks time:
+
+<snip>
+
+Objects referred to by Weak references will always be reclaimed by the
+GC when it comes to consider them:
+
+  http://www.javasoft.com/docs/books/tutorial/refobjs/about/weak.html:
+
+  The only real difference between a soft reference and a weak
+  reference is that the garbage collector uses algorithms to decide
+  whether or not to reclaim a softly reachable object, but always
+  reclaims a weakly reachable object.
+
+There is plenty of documentation on the subject at
+
+  http://www.javasoft.com/docs/books/tutorial/refobjs/
+
+-- Alex (www.cygnus.com/~apbianco, apbianco@cygnus.com)
+
+</snip>
+
+>>> cmaeda@granitehealth.com 10/02/03 10:13AM >>>
+Have you looked at using weak references for the XML->Cursor references?
+
+-----Original Message-----
+From: Eric Vasilik [mailto:ericvas@bea.com]=20
+Sent: Wednesday, October 01, 2003 1:14 PM
+To: xmlbeans-dev@xml.apache.org
+Subject: RE: Finalizers
+
+
+My plans for the next version of the store are to remove finalizing
+XmlCursor.  Finalizing them in V1, was indeed, a "last-ditch clean-up
+effort".   =20
+
+Let me describe a bit why this situation came about.
+
+The V1 XML store creates fewer objects than the XmlCursor can address.  Whe=
+n
+XML content is manipulated, say, moved from one place to another, cursors
+within that content need to be moved with it.  This requires the store to
+search for these cursors which requires that the XML have a list of cursors
+in the vicinity of the XML being manipulated.  Basically, the cursors point
+to the XML and the XML points back to the cursors. (note: cursors are
+actually implemented with two objects)
+
+This means that if cursors are not closed (we have a dispose method on
+cursor which performs this), then the XML will continue to point to the
+cursors, not allowing them to be garbage collected.
+
+If users creates and forget cursors many times on the same XML document
+without disposing them, you can get into a situation where you run out of
+memory.  Cursors do not seem like a resource (like sockets or database
+connections), and users can easily not assume they do not need to be
+disposed (closed).
+
+Thus, we added a finalizer.  If the user called dispose, the finalizer woul=
+d
+do nothing.
+
+Ironically, recently I looked into a bug where I discovered that the rate o=
+f
+the creation of cursors (which were properly being disposed) was greater
+than the rate that they were being finalized.  This, effective, starvation
+caused an out of memory exception!
+
+I've learned my lesson, finalizers bad.  What I would have liked to have
+seen was a way for an object to unregister itself for finalization.  With
+this, when a cursor was disposed, I could have notified the VM that a
+particular object no longer needed finalization.  Does such a thing exist?
+
+- Eric
+
+-----Original Message-----
+From: Darrell Teague [mailto:darrell.teague@mantech.com]
+Sent: Wednesday, October 01, 2003 8:49 AM
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: Finalizers
+
+
+Two more cents on this topic...
+
+Joshua Bloch of Sun and many others (myself included) have argued that
+reliance on finalizers for anything other than a last-ditch clean-up effort
+is not recommended.  Instead, it is recommended that any resource consuming
+classes (i.e., that open socket, file, database connection, whatever)
+provide some type of "close" method that should (in practice) be called by
+the client.  Granted, there is no way to ensure the client will call such a
+method but the finalize() method is not guaranteed to happen, in the
+sequence expected, etc either.  At least with a declared public method,
+clients can be guaranteed a tidy clean-up process (if they call it) whereas
+reliance on finalizers may be non-deterministic since the JVM implementatio=
+n
+and other factors beyond the developers control determine the sequence,
+behavior, priority, etc of the call to finalize().=20
+
+>>> don@bea.com 09/30/03 01:12PM >>>
+As you may already know, finalizers must be used with extreme caution. =20
+Because they are run by in the GC thread (when all other threads are=20
+paused) if a finalizer deadlocks, the entire VM will be frozen.  This=20
+makes using synchronization in a finalizer particularly dangerous. =20
+There are also problems around any operations that allocate memory in a=20
+finalizer.
+
+(Note: my information may be out of date).
+
+    -Don
+
+David Bau wrote:
+
+>Eric, was thinking about the threading/object creation etc issues over the
+>weekend.
+>
+>Another interesting issue: currently we use a finalizer on cursors, but
+>finalizers seem to be fairly expensive, so apps that spew out lots and lot=
+s
+>of cursors have issues.  I wonder what problems we'd have to deal with in
+>order to eliminate the finalizer, and whether or not that would be
+possible,
+>or if it would come into conflict with some of the other parameters of the
+>problem just like synchronization?
+>
+>David
+>
+>
+>- ---------------------------------------------------------------------
+>To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+>For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+>Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+>
+>
+> =20
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+--=_18465605.4B2AA21F
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD>
+<META http-equiv=3DContent-Type content=3D"text/html; charset=3Diso-8859-1"=
+>
+<META content=3D"MSHTML 6.00.2800.1226" name=3DGENERATOR></HEAD>
+<BODY style=3D"MARGIN-TOP: 2px; FONT: 8pt Tahoma; MARGIN-LEFT: 2px">
+<DIV><FONT face=3D"Comic Sans MS" size=3D2>Excellent point.</FONT></DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2></FONT>&nbsp;</DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2>Here is some reference info to s=
+ave folks=20
+time:</FONT></DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2></FONT>&nbsp;</DIV>
+<DIV>&lt;snip&gt;</DIV>
+<DIV>&nbsp;</DIV>
+<DIV>Objects referred to by Weak references will always be reclaimed by=20
+the<BR>GC when it comes to consider them:<BR><BR>&nbsp; <A=20
+href=3D"http://www.javasoft.com/docs/books/tutorial/refobjs/about/weak.html=
+:">http://www.javasoft.com/docs/books/tutorial/refobjs/about/weak.html:</A>=
+<BR><BR>&nbsp;=20
+The only real difference between a soft reference and a weak<BR>&nbsp; refe=
+rence=20
+is that the garbage collector uses algorithms to decide<BR>&nbsp; whether o=
+r not=20
+to reclaim a softly reachable object, but always<BR>&nbsp; reclaims a weakl=
+y=20
+reachable object.<BR><BR>There is plenty of documentation on the subject=20
+at<BR><BR>&nbsp; <A=20
+href=3D"http://www.javasoft.com/docs/books/tutorial/refobjs/">http://www.ja=
+vasoft.com/docs/books/tutorial/refobjs/</A><BR><BR>--=20
+Alex (www.cygnus.com/~apbianco, <A=20
+href=3D"mailto:apbianco@cygnus.com">apbianco@cygnus.com</A>)<BR></DIV>
+<DIV>&lt;/snip&gt;<BR><BR>&gt;&gt;&gt; cmaeda@granitehealth.com 10/02/03 10=
+:13AM=20
+&gt;&gt;&gt;<BR>Have you looked at using weak references for the XML-&gt;Cu=
+rsor=20
+references?<BR><BR>-----Original Message-----<BR>From: Eric Vasilik [<A=20
+href=3D"mailto:ericvas@bea.com]">mailto:ericvas@bea.com]</A> <BR>Sent: Wedn=
+esday,=20
+October 01, 2003 1:14 PM<BR>To: xmlbeans-dev@xml.apache.org<BR>Subject: RE:=
+=20
+Finalizers<BR><BR><BR>My plans for the next version of the store are to rem=
+ove=20
+finalizing<BR>XmlCursor.&nbsp; Finalizing them in V1, was indeed, a "last-d=
+itch=20
+clean-up<BR>effort".&nbsp;&nbsp;&nbsp; <BR><BR>Let me describe a bit why th=
+is=20
+situation came about.<BR><BR>The V1 XML store creates fewer objects than th=
+e=20
+XmlCursor can address.&nbsp; When<BR>XML content is manipulated, say, moved=
+ from=20
+one place to another, cursors<BR>within that content need to be moved with=20
+it.&nbsp; This requires the store to<BR>search for these cursors which requ=
+ires=20
+that the XML have a list of cursors<BR>in the vicinity of the XML being=20
+manipulated.&nbsp; Basically, the cursors point<BR>to the XML and the XML p=
+oints=20
+back to the cursors. (note: cursors are<BR>actually implemented with two=20
+objects)<BR><BR>This means that if cursors are not closed (we have a dispos=
+e=20
+method on<BR>cursor which performs this), then the XML will continue to poi=
+nt to=20
+the<BR>cursors, not allowing them to be garbage collected.<BR><BR>If users=20
+creates and forget cursors many times on the same XML document<BR>without=20
+disposing them, you can get into a situation where you run out=20
+of<BR>memory.&nbsp; Cursors do not seem like a resource (like sockets or=20
+database<BR>connections), and users can easily not assume they do not need =
+to=20
+be<BR>disposed (closed).<BR><BR>Thus, we added a finalizer.&nbsp; If the us=
+er=20
+called dispose, the finalizer would<BR>do nothing.<BR><BR>Ironically, recen=
+tly I=20
+looked into a bug where I discovered that the rate of<BR>the creation of cu=
+rsors=20
+(which were properly being disposed) was greater<BR>than the rate that they=
+ were=20
+being finalized.&nbsp; This, effective, starvation<BR>caused an out of memo=
+ry=20
+exception!<BR><BR>I've learned my lesson, finalizers bad.&nbsp; What I woul=
+d=20
+have liked to have<BR>seen was a way for an object to unregister itself for=
+=20
+finalization.&nbsp; With<BR>this, when a cursor was disposed, I could have=20
+notified the VM that a<BR>particular object no longer needed finalization.&=
+nbsp;=20
+Does such a thing exist?<BR><BR>- Eric<BR><BR>-----Original=20
+Message-----<BR>From: Darrell Teague [<A=20
+href=3D"mailto:darrell.teague@mantech.com]">mailto:darrell.teague@mantech.c=
+om]</A><BR>Sent:=20
+Wednesday, October 01, 2003 8:49 AM<BR>To:=20
+xmlbeans-dev@xml.apache.org<BR>Subject: Re: Finalizers<BR><BR><BR>Two more =
+cents=20
+on this topic...<BR><BR>Joshua Bloch of Sun and many others (myself include=
+d)=20
+have argued that<BR>reliance on finalizers for anything other than a last-d=
+itch=20
+clean-up effort<BR>is not recommended.&nbsp; Instead, it is recommended tha=
+t any=20
+resource consuming<BR>classes (i.e., that open socket, file, database=20
+connection, whatever)<BR>provide some type of "close" method that should (i=
+n=20
+practice) be called by<BR>the client.&nbsp; Granted, there is no way to ens=
+ure=20
+the client will call such a<BR>method but the finalize() method is not=20
+guaranteed to happen, in the<BR>sequence expected, etc either.&nbsp; At lea=
+st=20
+with a declared public method,<BR>clients can be guaranteed a tidy clean-up=
+=20
+process (if they call it) whereas<BR>reliance on finalizers may be=20
+non-deterministic since the JVM implementation<BR>and other factors beyond =
+the=20
+developers control determine the sequence,<BR>behavior, priority, etc of th=
+e=20
+call to finalize(). <BR><BR>&gt;&gt;&gt; don@bea.com 09/30/03 01:12PM=20
+&gt;&gt;&gt;<BR>As you may already know, finalizers must be used with extre=
+me=20
+caution.&nbsp; <BR>Because they are run by in the GC thread (when all other=
+=20
+threads are <BR>paused) if a finalizer deadlocks, the entire VM will be=20
+frozen.&nbsp; This <BR>makes using synchronization in a finalizer particula=
+rly=20
+dangerous.&nbsp; <BR>There are also problems around any operations that all=
+ocate=20
+memory in a <BR>finalizer.<BR><BR>(Note: my information may be out of=20
+date).<BR><BR>&nbsp;&nbsp;&nbsp; -Don<BR><BR>David Bau wrote:<BR><BR>&gt;Er=
+ic,=20
+was thinking about the threading/object creation etc issues over=20
+the<BR>&gt;weekend.<BR>&gt;<BR>&gt;Another interesting issue: currently we =
+use a=20
+finalizer on cursors, but<BR>&gt;finalizers seem to be fairly expensive, so=
+ apps=20
+that spew out lots and lots<BR>&gt;of cursors have issues.&nbsp; I wonder w=
+hat=20
+problems we'd have to deal with in<BR>&gt;order to eliminate the finalizer,=
+ and=20
+whether or not that would be<BR>possible,<BR>&gt;or if it would come into=20
+conflict with some of the other parameters of the<BR>&gt;problem just like=20
+synchronization?<BR>&gt;<BR>&gt;David<BR>&gt;<BR>&gt;<BR>&gt;-=20
+---------------------------------------------------------------------<BR>&g=
+t;To=20
+unsubscribe, e-mail:&nbsp;&nbsp;=20
+xmlbeans-dev-unsubscribe@xml.apache.org<BR>&gt;For additional commands, e-m=
+ail:=20
+xmlbeans-dev-help@xml.apache.org<BR>&gt;Apache XMLBeans Project -- URL: <A=20
+href=3D"http://xml.apache.org/xmlbeans/">http://xml.apache.org/xmlbeans/</A=
+><BR>&gt;<BR>&gt;<BR>&gt;<BR>&gt;&nbsp;=20
+<BR>&gt;<BR><BR><BR>-=20
+---------------------------------------------------------------------<BR>To=
+=20
+unsubscribe, e-mail:&nbsp;&nbsp; xmlbeans-dev-unsubscribe@xml.apache.org<BR=
+>For=20
+additional commands, e-mail: xmlbeans-dev-help@xml.apache.org<BR>Apache XML=
+Beans=20
+Project -- URL: <A=20
+href=3D"http://xml.apache.org/xmlbeans/">http://xml.apache.org/xmlbeans/</A=
+><BR><BR>-=20
+---------------------------------------------------------------------<BR>To=
+=20
+unsubscribe, e-mail:&nbsp;&nbsp; xmlbeans-dev-unsubscribe@xml.apache.org<BR=
+>For=20
+additional commands, e-mail: xmlbeans-dev-help@xml.apache.org<BR>Apache XML=
+Beans=20
+Project -- URL: <A=20
+href=3D"http://xml.apache.org/xmlbeans/">http://xml.apache.org/xmlbeans/</A=
+><BR><BR><BR><BR><BR><BR><BR>-=20
+---------------------------------------------------------------------<BR>To=
+=20
+unsubscribe, e-mail:&nbsp;&nbsp; xmlbeans-dev-unsubscribe@xml.apache.org<BR=
+>For=20
+additional commands, e-mail: xmlbeans-dev-help@xml.apache.org<BR>Apache XML=
+Beans=20
+Project -- URL: <A=20
+href=3D"http://xml.apache.org/xmlbeans/">http://xml.apache.org/xmlbeans/</A=
+><BR><BR></DIV></BODY></HTML>
+
+--=_18465605.4B2AA21F--
+

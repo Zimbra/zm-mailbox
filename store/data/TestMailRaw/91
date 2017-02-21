@@ -1,0 +1,52 @@
+Return-Path: <xmlbeans-dev-return-369-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9GLjt7p020781
+	for <smith@popserver1.stanford.edu>; Thu, 16 Oct 2003 14:45:55 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9GLjnUA027956 for
+	<smith@stanford.edu>; Thu, 16 Oct 2003 14:45:49 -0700 (PDT)
+Received: (qmail 18581 invoked by uid 500); 16 Oct 2003 21:45:30 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 18550 invoked from network); 16 Oct 2003 21:45:30 -0000
+X-Sent: 16 Oct 2003 21:45:35 GMT
+Date: Thu, 16 Oct 2003 22:48:00 +0100
+X-Zimbra-Received: Thu, 16 Oct 2003 22:48:00 +0100
+Mime-Version: 1.0 (Apple Message framework v482)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Subject: xml-bean v1 now builds on gump
+From: robert burrell donkin <rdonkin@apache.org>
+To: <xmlbeans-dev@xml.apache.org>
+Content-Transfer-Encoding: 7bit
+Message-Id: <69B5D628-0022-11D8-B8F7-003065DC754C@apache.org>
+X-Mailer: Apple Mail (2.482)
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000005b-0010
+
+FYI
+
+xml-beans now builds on gump (http://gump.covalent.net/log/index.html).  
+unfortunately, the main gump is not currently running (hopefully sam will 
+find time to fix it soon).
+
+i've done some research about nightly builds. the situation is a little 
+complex so it might take me a little time to work out the right thing to 
+do.
+
+- robert
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

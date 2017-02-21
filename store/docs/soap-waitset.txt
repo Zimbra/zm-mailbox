@@ -1,0 +1,350 @@
+WaitSet: scalable mechanism for listening for changes to one or more accounts
+--------------------------------------------------------------------------------
+
+Non-admin versions in the 'zimbraMail' Namespace:
+-------------------------------------------------
+<CreateWaitSetRequest>
+<CreateWaitSetResponse>
+<WaitSetRequest>
+<WaitSetResponse>
+<DestroyWaitSet>
+<DestroyWaitSetResponse>
+
+
+Admin versions in the 'zimbraAdmin' Namespace:
+-------------------------------------------------
+<AdminCreateWaitSetRequest>
+<AdminCreateWaitSetResponse>
+<AdminWaitSetRequest>
+<AdminWaitSetResponse>
+<AdminDestroyWaitSet>
+<AdminDestroyWaitSetResponse>
+<QueryWaitSetRequest>
+<QueryWaitSetResponse>
+
+note that the admin versions of the APIs are identical in any way,
+except that they can be used to wait on non-owner accounts and can be
+used to wait on "all accounts".
+
+
+*************************************
+
+
+
+INTEREST_TYPES: comma-separated list.  Currently:
+   f: folders
+   m: messages
+   c: contacts
+   a: appointments
+   t: tasks
+   d: documents
+   all: all types (equiv to "f,m,c,a,t,d")
+
+
+*************************************
+CreateWaitSet/AdminCreateWaitSet: must be called once to initialize
+the WaitSet and to set its "default interest types"
+
+- Non-Admin requests may only specify their own account ID.
+
+- Non-Admin accounts are restricted to a max of 5 (default,
+  overridable via LocalConfig) WaitSets.  Creating more than the max
+  will cause the least-recently-used WaitSet to be destroyed
+
+- If "allAccounts" is set, then all mailboxes on the system will be
+listened to, including any mailboxes which are created on the system
+while the WaitSet is in existence.  Additionally: 
+      -- <add>, <remove> and <update> tags are IGNORED
+      -- The requesting authtoken must be an admin token
+
+- AllAccounts WaitSets are *semi-persistent*, that is, even if the
+server restarts, it is OK to call <WaitSetRequest> passing in your
+previous sequence number.  The server will attempt to resynchronize
+the waitset using the sequence number you provide (the server's
+ability to do this is limited by the RedoLogs that are available)
+================
+<[Admin]CreateWaitSetRequest defTypes="DEFAULT INTEREST_TYPES" [allAccounts=1]>
+  [ <add>
+      [<a id="ACCTID" [token="lastKnownSyncToken"] [types="if_not_default"]/>]+
+    </add> ]
+</[Admin]CreateWaitSetRequest>
+
+<[Admin]CreateWaitSetResponse waitSet="setId" defTypes="types" seq="0">
+  [ <error id="AccountId" t="ERROR_CODE"/>]*
+</[Admin]CreateWaitSetResponse>
+
+
+ERROR_CODEs:
+        // RUNTIME errors:
+        MAILBOX_DELETED: the mailbox has been deleted, it is no longer in the waitset
+
+        // ADD errors:
+        ALREADY_IN_SET_DURING_ADD: the account was not added, it was already there
+        ERROR_LOADING_MAILBOX: exception while trying to fetch the mailbox, not added
+        MAINTENANCE_MODE: mailbox currently in Maintenance Mode.  Try to add it again later.
+        NO_SUCH_ACCOUNT: unknown account, not added
+        WRONG_HOST_FOR_ACCOUNT: that account's mailbox is on another host.  Add it there.
+
+        // REMOVE/UPDATE errors
+        NOT_IN_SET_DURING_REMOVE
+        NOT_IN_SET_DURING_UPDATE
+        
+
+***IMPORTANT: Note that the seq number is **NOT** guaranteed to be an
+integer.  Clients MUST treat this value as an opaque string.***
+
+
+
+
+************************************
+WaitSetRequest/AdminWaitSetRequest: optionally modifies the wait set
+and checks for any notifications.  If block=1 and there are no
+notifications, then this API will BLOCK until there is data.
+
+Client should always set 'seq' to be the highest known value it has
+received from the server.  The server will use this information to
+retransmit lost data.
+
+If the client sends a last known sync token then the notification is
+calculated by comparing the accounts current token with the client's
+last known.
+
+If the client does not send a last known sync token, then notification
+is based on change since last Wait (or change since <add> if this
+is the first time Wait has been called with the account)
+
+The client may specify a custom timeout-length for their request if
+they know something about the particular underlying network.  The
+server may or may not honor this request (depending on server
+configured max/min values).  The server will allow a wider range of
+requested timeouts from admin auth tokens. See LocalConfig values:
+zimbra_waitset_default_request_timeout,
+zimbra_waitset_min_request_timeout, 
+zimbra_waitset_max_request_timeout,
+zimbra_admin_waitset_default_request_timeout,
+zimbra_admin_waitset_min_request_timeout, and
+zimbra_admin_waitset_max_request_timeout
+
+
+================
+<[Admin]WaitSetRequest waitSet="setId" defTypes="DEFAULT INTEREST TYPES"
+                seq="highestSeqKnown" [block="1"] [timeout="timeout"]>
+  [ <add>
+      [<a id="ACCTID" [token="lastKnownSyncToken"] [types]/>]+
+    </add> ]
+  [ <update>
+      [<a id="ACCTID" [token="lastKnownSyncToken"] [types]/>]+
+    </update> ]  
+  [ <remove>
+      [<a id="ACCTID"/>]+
+    </remove> ]  
+</[Admin]WaitSetRequest>
+
+<[Admin]WaitSetResponse waitSet="setId" [seq="seqNo" OR canceled="1"]>
+  [ <n id="ACCTID"/>]*
+  [ <error id="AccountId" t="ERROR_CODE"/>]*
+</[Admin]WaitSetResponse>
+
+If the specified wait set does not exist, the server will throw an
+admin.NO_SUCH_WAITSET exception.
+
+NOTE: an empty response to a blocking request *is* possible: it would
+happen if the server timed-out the waiting.  The server does this
+occasionally just so that requests don't get "stuck".  The client
+should re-submit the original request if this happens.
+
+If a second WaitMultiple request arrives at the server while one is
+already waiting, the first request will be immediately completed and
+will return with the "canceled" flag set.
+
+ERROR_CODEs:
+        // RUNTIME errors:
+        MAILBOX_DELETED: the mailbox has been deleted, it is no longer in the waitset
+
+        // ADD errors:
+        ALREADY_IN_SET_DURING_ADD: the account was not added, it was already there
+        ERROR_LOADING_MAILBOX: exception while trying to fetch the mailbox, not added
+        MAINTENANCE_MODE: mailbox currently in Maintenance Mode.  Try to add it again later.
+        NO_SUCH_ACCOUNT: unknown account, not added
+        WRONG_HOST_FOR_ACCOUNT: that account's mailbox is on another host.  Add it there.
+
+        // REMOVE/UPDATE errors
+        NOT_IN_SET_DURING_REMOVE
+        NOT_IN_SET_DURING_UPDATE
+
+
+
+
+*************************************
+DestroyWaitSet/AdminDestroyWaitSet: Use this to close out the wait
+set.  Note that the server will automatically time out a wait set if
+there is no reference to it for (default of) 20 minutes.
+*************************************
+<[Admin]DestroyWaitSetRequest waitSet="setId"/>
+
+<[Admin]DestroyWaitSetResponse waitSet="setId"/>
+
+
+
+
+**********************************************************************
+There are three basic use cases for WaitSets:
+**********************************************************************
+1) wait on a single account:
+<CreateWaitSetRequest defTypes="TYPES"/>
+   <add>
+      <a id="ACCTID"/>
+   </add>
+</CreateWaitSetRequest>
+
+<WaitSetsRequest waitSet="id" seq="seqno">
+   <update>
+      <a id="ACCTID" token="lastKnownSyncToken"/>
+   </update>
+</WaitSetRequest>
+
+<DestroyWaitSetRequest waitSet="id"/>
+
+
+2) Wait on many accounts (admin-only -- Remember to use the
+   zimbraAdmin namespace):
+<AdminCreateWaitSetRequest defTypes="TYPES"/>
+   <add>
+      <a id="ACCTID" [token="lastKnownSyncToken"]/>
+      <a id="ACCTID" [token="lastKnownSyncToken"]/>
+   </add>
+</AdminCreateWaitSetRequest>
+
+<AdminWaitSetRequest defTypes="TYPES" waitSet="id" seq="seqno">
+   <update>
+      <a id="ACCTID" [token="lastKnownSyncToken"]/>
+   </update>
+   <remove>
+      <a id="ACCTID"/>
+   </update>
+   <add>
+      <a id="ACCTID" [token="lastKnownSyncToken"]/>
+   </update>
+</AdminWaitSetRequest>
+
+<AdminDestroyWaitSetRequest waitSet="id"/>
+
+
+3) Wait on ALL accounts (admin-only):
+<AdminCreateWaitSetRequest defTypes="TYPES" allAccounts="1"/>
+
+<AdminWaitSetRequest waitSet="id" seq="seqno" defTypes="TYPES"/>
+...
+// SERVER RESTARTS!
+...
+<AdminWaitSetRequest waitSet="id" seq="seqno" defTypes="TYPES"/> // server will re-sync using RedoLogs
+
+<AdminDestroyWaitSetRequest waitSet="id"/>
+
+
+
+
+**********************************************************************
+A Detailed Example:
+**********************************************************************
+<AdminCreateWaitSetRequest defTypes="c">
+  <add>
+    <a id="a1"/>
+  </add>  
+</AdminCreateWaitSetRequest>
+<!-- a1 receives a contact update -->
+<AdminCreateWaitSetResponse waitSet="foo" defTypes="c" seq="0"/>
+
+<!--client syncs to a1 state AFTER added to WaitSet (not using sync token) -->
+<!-- a3 receives a contact update (token goes to 100)-->
+<!--client syncs to a3 BEFORE adding to WaitSet (client has token 100) -->
+
+<AdminWaitSetRequest waitSet="foo" seq="0" block="1">
+  <add>
+    <a id="a3" token="100"/>
+  </add>
+</AdminWaitSetRequest>
+<!-- Will return *immediately* b/c a1 has changed since the <add> -->
+<AdminWaitSetResponse waitSet="foo" seq="1">
+  <n id="a1"/>
+</AdminWaitSetResponse>
+
+<!-- At this point, client *must* sync with a1, even though the a1 update might have
+     happened before we synched with a1 there is no way to know.  a3 is not notified
+     and does not have to sync, because it is using sync tokens.  -->
+
+<AdminWaitSetRequest waitSet="foo" seq="1" block="1">
+  <add>
+    <a id="a2"/>
+  </add>
+</AdminWaitSetRequest>
+<!-- the client must sync with a2 state AFTER setting a2 wait, however because
+     block="1" the wait will not return until some account has new data: therefore
+     the client MUST sync a2 using another thread here.  The client cannot sync
+     before doing the <add> because of race conditions.  If the client is not
+     multi-threaded, then it should issue the <add> as block="0" in this case -->
+<!-- ...BLOCKS until... -->
+<!-- a3 receives a contact update (sync token goes to 107) -->
+<AdminWaitSetResponse waitSet="foo" seq="2">
+  <n id="a3"/>
+</AdminWaitSetResponse>
+
+<!-- client syncs to a3 -->
+
+<AdminWaitSetRequest waitSet="foo" seq="2" block="1">
+  <update>
+    <a id="a3" token="107"/>
+  </update>  
+</AdminWaitSetRequest>
+  
+<!-- Client is up to date, server  blocks until there is new data 
+     on a1,a2 or a3 -->
+  
+
+
+*************************************
+QueryWaitSet
+   This API dumps the internal state of all active waitsets.  It is
+   intended for debugging use only and should not be used for
+   production uses.  This API is not guaranteed to be stable between
+   releases in any way and might be removed without warning.
+*************************************
+
+<QueryWaitSetRequest waitset="WAITSETID">
+
+<QueryWaitSetResponse>
+
+SomeAccountsWaitSet:
+----------------------
+<QueryWaitSetResponse id="WAITSETID"
+                      defTypes="DEFAULT_TYPES"
+                      owner="WAITSET_OWNER_ACCOUNT_ID"
+                      ld="LAST_ACCESS_DATE"                      
+                      cbSeqNo="SEQNO_OF_CB"
+                      currentSeqNo="CURRENT_SEQUENCE_NUMBER">
+  [<ready accounts="comma-separated list of account IDs"/>]?
+  [<session types="TYPES" account="ACCOUNT_ID">
+     [
+     <WaitSetSession interestMask="BITMASK" highestChangeId="MBOX_CHANGE_ID"
+                     lastAccessTime="LAST_ACCESS_TIME"
+                     creationTime="CREATION_TIME"/>
+     ]?
+   </session>]*
+</QueryWaitSetResponse>
+
+
+AllAccountsWaitSet:
+-------------------
+<QueryWaitSetResponse id="WAITSETID"
+                      defTypes="DEFAULT_TYPES"
+                      owner="WAITSET_OWNER_ACCOUNT_ID"
+                      ld="LAST_ACCESS_DATE"                      
+                      nextSeqNo="NEXT_SEQNO"
+                      cbSeqNo="CB_SEQNO"
+                      currentSeqNo="CURRENT_SEQNO"
+                      >
+  [<buffered>
+     [<commit aid="ACCOUNT_ID" cid="COMMIT_ID"/>]* // only during WS creation before first WaitSetRequest
+  ]?
+  [<ready accounts="comma-separated list of account IDs"/>]?
+</QueryWaitSetResponse>

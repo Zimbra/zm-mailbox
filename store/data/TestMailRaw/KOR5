@@ -1,0 +1,12 @@
+Message-ID: <16696750.1118775005343.JavaMail.zimbra@dogfood.example.zimbra.com>
+Date: Thu, 24 Jun 2004 11:35:08 -0700
+X-Zimbra-Received: Thu, 24 Jun 2004 11:35:08 -0700
+From: user1@example.zimbra.com
+To: =?UTF-8?B?7ZWc6rWt7Ja0IOyImOyLoOyekA==?= <someone@yahoo.com>
+Subject: i18n test - RFC2047-encoded display name in recipient
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+X-OriginalArrivalTime: 14 Jun 2005 18:53:00.0289 (UTC) FILETIME=[494A6710:01C57112]
+
+The display name of the recipient in this message is in Korean.

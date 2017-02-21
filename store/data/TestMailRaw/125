@@ -1,0 +1,111 @@
+Return-Path: <xmlbeans-user-return-100-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.67.16.118])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hAILa5oB015213
+	for <smith@popserver1.stanford.edu>; Tue, 18 Nov 2003 13:36:05 -0800
+	(PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id hAILa2B0005853 for
+	<smith@stanford.edu>; Tue, 18 Nov 2003 13:36:02 -0800
+Received: (qmail 76446 invoked by uid 500); 18 Nov 2003 21:35:55 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 76433 invoked from network); 18 Nov 2003 21:35:55 -0000
+Message-ID: <001e01c3ae1b$eb42a7f0$900210ac@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+References: <3FBA4748.4010302@tzi.de>
+Subject: Re:problem with SchemaTypeLoaders and xsi:type attributes
+Date: Tue, 18 Nov 2003 16:34:02 -0500
+X-Zimbra-Received: Tue, 18 Nov 2003 16:34:02 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000007d-0010
+
+Yes.  By default, you use the thread's context typeloader, which by default
+uses the context classloader to load types only from the JARs on your
+classpath.
+
+Instead, you'll want to use your own schematypeloader and create instances
+from that.  You'll want to:
+
+1. build a schematypeloader that includes your schematypesystem.  (e.g., use
+XmlBeans.typeLoaderUnion to put it together with iether the builtin or
+context typeloader, or use loadXsd instead of copmileXsd, which does that
+for you).  You just need to make sure your schematypeloader is
+self-consistent, i.e., it has all the builtin types etc.
+
+2. use the .parse(..) methods that appear on SchemaTypeLoader instead of the
+*.Factory.parse methods.  The only difference is that the *.Factory.parse
+methods use the context typeloader all the time, which loads schema types
+only off of the JARs on your classpath.
+
+That's it!
+
+David
+
+----- Original Message ----- 
+From: "Arne Jacobs" <jarne@tzi.de>
+To: <xmlbeans-user@xml.apache.org>
+Sent: Tuesday, November 18, 2003 11:22 AM
+Subject: [xmlbeans-dev] problem with SchemaTypeLoaders and xsi:type
+attributes
+
+
+> i'm using the XmlBeans.compileXsd() method to compile an XML schema at
+> runtime (i don't create a hierarchy of java classes).
+>
+> if i now use the resulting SchemaTypeSystem to construct an xml document
+> at runtime (with the help of the XmlCursor class), i find that
+> everything works fine, except in the case where derived types should be
+> used with the xsi:type (from the xml instance schema) attribute.
+>
+> the problem seems to be that, when resolving the given derived type in
+> the XmlObject.set() or the XmlObject.validate() methods, the only
+> SchemaTypeLoader which is searched for that type, is the built in type
+> system. XmlBeans also searches the file system for .xsb files, which i
+> do not have (compiled at runtime...).
+>
+> when parsing the result of the xmlText() method of the said xml document
+> using a "typeloaderunion" of my compiled SchemaTypeSystem and the built
+> in type system, the document is found valid. in this case, both type
+> systems are search for the derived type and this found in my
+> runtime-compiled SchemaTypeSystem.
+>
+> i know wonder how i can get the XmlBeans to search my own
+> SchemaTypeSystem when constructing the xml document at runtime, too.
+>
+> i don't want to have to compile the java classes and .xsb-files each
+> time i use another schema...
+>
+> hoping that you can help me,
+>
+> jarne
+>
+>
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

@@ -1,0 +1,264 @@
+REQUIREMENTS
+============
+In the short term, we need to be able to support delegated access to
+calendar.  This involves registering some kind of link to another user's
+calendar in a user's mailbox, being able to view the appointments in that
+calendar, being able to accept or reject those remote appointments, and
+being able to create new appointments in the other calendar.
+
+In the slightly longer term, we need to be able to support public folders
+and sharing the contents (messages, contacts, etc.) of personal folders.
+And then there's the possibility of sharing tags...
+
+The latter set of requirements is going to require access control at a
+folder/tag and possibly even item level.  It'd be simpler codewise as well
+as easier on the implementor if we could implement calendar delegation
+with largely the same mechanism.
+
+RIGHTS
+======
+With an eye towards not reinventing the wheel, we should probably look to
+existing ACL models when designing ours.  A crappy one is the simple UNIX
+read/write/execute and user/group/others model.  A more full-featured one
+is AFS's; the set of AFS rights are read, write, list, insert, delete,
+lock, and administer, and any combination of these rights can be granted
+to any user, group, or well-known symbolic name (like "all" or
+"authuser").
+
+With that in mind, the set of rights we want to support will probably run
+along these lines:
+
+    read       - search, view overviews and items
+    write      - edit drafts/contacts/notes, set flags
+    action     - workflow actions, like accepting appointments
+    insert     - copy/add to directory, create subfolders
+    delete     - delete items and subfolders, set \Deleted flag?
+    administer - delegate admin and change permissions
+    freebusy   - view free/busy on a calendar folder
+
+(We might want to break "set flags" out from "write", or combine "action"
+and "write", but that's the general gist of things.)
+
+So, for example, to move a message would require "delete" rights on the
+old folder and "insert" on the new folder.  To mark it as unread would
+require "write" permission on the item.  To copy it would require "read"
+on the message and "insert" rights on the target folder.  To view a
+person's calendar would require "read" on the remote calendar folder,
+while accepting an appointment in that calendar would require both "read"
+and "action" on the appointment.
+
+GRANTEES
+========
+To avoid support calls, it's probably best to always grant a user full,
+irrevocable rights to their own mailbox.  Similarly, until we have a
+full-featured delegated admin model, it's probably best to grant
+administrators full access to everything on the system.
+
+But we still need to be able to grant rights to other principals.  We'll
+be able to derive the Account of the caller from their auth token, so the
+easiest grantees for a set of rights will be zimbraIds fetchable from the
+Account object, as that can be done using Account attribute comparisons
+with no further trips to LDAP.  Fortunately, that gives us a pretty rich
+set of possible grantees right off the bat:
+
+    user   - compare grantee ID with Account's zimbraId
+    group  - compare grantee ID with Account's zimbraMemberOf values
+    domain - compare grantee ID with ID of Account's derived domain
+    COS    - compare grantee ID with Account's zimbraCOSId
+    all    - the caller needs to present a valid Zimbra credential
+    guest  - the caller needs to present a non-Zimbra email address and password
+    key    - the caller needs to present an access key
+    pub    - always succeeds
+
+(Domain grantees may require another LDAP query, but it's likely that
+they'll already be in the LdapProvisioning cache.)
+
+This should be enough to cover almost all needs for Birdseye and Cray.
+Other possible grantees might be address book groups (not yet implemented,
+and would probably require an expensive database fetch in order to do the
+access check).
+
+INHERITANCE
+===========
+In a mail application, you'll usually want to grant access to a folder and
+all its subfolders, like in the standard "public folders" model.  More
+rarely, you'll just want to share a folder but not one or more of its
+children, like when you want to share your Calendar folder but not its
+Calendar/Personal subfolder.  We'll want to support both options.
+
+One result of privilege inheritance is that newly-created subfolders
+automatically inherit granted rights as appropriate.  Existing folders
+moved to a different point in the folder hierarchy will also reinterpret
+their inherited permissions in the context of their new location.  This is
+probably the behavior that the user would expect.
+
+The set of rights that apply to a given folder is derived by starting at
+that folder and going up the folder hierarchy.  If we hit a folder that
+has a set of rights explicitly set on it, we stop and use those.  If we
+hit a folder that doesn't inherit privileges from its parent, we stop and
+treat it as if no rights are granted on the target folder.  In other
+words, take the *first* (and only the first) of the following that exists,
+stopping at "do not inherit" folders:
+
+  - the set of rights granted on the folder directly
+  - the set of rights granted on the folder's parent
+  - the set of rights granted on the folder's grandparent
+    ...
+  - the set of rights granted on the mailbox's root folder
+  - no rights at all
+
+So if the folder hierarchy looks like this:
+
+       root  <- "read+write" granted to user A
+       /  \
+      V    W  <- "read" granted to users A and B
+     /    / \
+    X    Y   Z
+
+then user A has "write" rights on folders V and X, but not W, Y, and Z,
+B has "read" rights on folders W, Y, and Z but not V or X.
+
+If the folder hierarchy looks like this:
+
+       root  <- "read+write" granted to user A
+       /  \
+      V    W  <- "do not inherit" flag set
+     /    / \
+    X    Y   Z  <- "read" granted to users A and B
+
+then user A has "write" rights on folders V and X, but not W, Y, and Z,
+user A has "read" rights on folders V, X, and Z but not W or Y, and
+user B has "read" rights on folder Z but not V, X, W, or Y.
+
+COMBINING RIGHTS
+================
+Rights combine.  When checking to see if a user has privileges to perform
+an operation, we combine all the granted rights on the folder.
+
+For instance, if a folder grants "read" privileges to user A and "action"
+privileges to a group of which user A is a member, user A will have *both*
+rights on items in that folder and will be able to accept the folder's
+appointments, etc.
+
+Once we support granting rights on a tag (timeframe for this feature is
+not yet set), those rights will combine with folder rights.  So if the
+user had only "read" rights on the folder containing an appointment and
+had only "action" rights on one of the appointment's tags, the two would
+combine on that appointment and the user could still accept it, etc.
+
+NEGATIVE RIGHTS
+===============
+In a future release (timeframe for this feature not yet set), we may begin
+supporting negative rights.  Negative rights are exactly what you'd
+expect: they deny certain privileges to the "grantee".  Negative rights
+will take precedence over positive rights.
+
+For example, if you granted "no read" on a folder to user A, the user
+would not be able to read items in the folder, period.  Regardless of what
+other rights are granted to them (or to their domain, or COS, etc.) on
+tags or folders, negative rights would override positive rights.
+
+MOUNTPOINTS
+===========
+The counterpoint of granting access is surfacing the granted items in the
+grantees' mailboxes and views.  We can't automatically display all
+available shares in the user's folder list, as that would entail huge
+startup overhead, crowded folder lists, and intractable notification/sync
+issues.  Instead, we'll want to allow the user to choose to surface or
+remove selected shared items in the UI.
+
+The shared folder or tag may be located on a different server from the
+grantee's mailbox, so we can't rely on directly surfacing a single mailbox
+item in two places.  We need something that's more like a pointer to a
+remote item.
+
+A good model for this is a UNIX softlink.  In our system, a softlink would
+be implemented as a type of folder with "target mailbox" and "target item"
+attributes.  Since the softlink is an entry in the *grantee's* mailbox, it
+is detached from the grantor's and thus the grantee can do with it as they
+wish without affecting the shared item.  They can place the softlink in
+any folder in their mailbox, rename it arbitrarily, and set their own
+metadata (e.g. color, IMAP subscription status) on it.
+
+PROXYING
+========
+Since the user will be able to fetch and act on items in other mailboxes,
+they'll have to be denoted as such when returned to the client.  (If we
+just returned the item id, it'd be interpreted in the context of the local
+mailbox.)  It's probably easiest to encode the mailbox in the item ID
+itself, as that leaves item ids as opaque tokens for the client and also
+allows the client to act on items in multiple mailboxes with the same SOAP
+command.
+
+JavaScript's constraints force the web client to communicate only with the
+server that launched the application.  Thus, when items displayed in the
+web UI live on different servers from the user's home server, it must be
+the application server which internally proxies the requests.  The system
+currently supports proxying for admin commands; the client must specify
+the proxy target.  We'll need to relax the admin requirement for proxying,
+and we may also want the server to derive the proxy target from the item
+ids rather than requiring the client to understand the mailbox/item
+relationship and partition the requests accordingly.
+
+NOTIFICATION
+============
+With displayed items potentially spanning servers, notification becomes
+significantly more complex.  We'd like to avoid proxying NOOP requests
+around the system on every client request due to overhead.  That implies
+that remote sessions are referenced indirectly through the user's primary
+session and not directly in the client's SOAP request header.
+
+One possible solution might be to keep a timer and proxy NOOPs only on
+client requests after timer expiration.  Another might be to proxy NOOPs
+independent of client requests and cache the results in the client's
+primary session.  Neither option seems attractive; the former is a bit
+simpler to implement and manage.
+
+ACL STORAGE
+===========
+ACLs are generally associated with a single object in a user's Mailbox,
+either a folder or a tag.  As such, the ACLs should probably be persisted
+in the user's database; we've always shied away from allowing LDAP entries
+to refer directly to Mailbox items because of the complexities in keeping
+the two stores in sync.  Also, reducing writes to LDAP is usually
+advisable because of the limited write throughput on the master.
+
+In the mailbox, the METADATA column on the MAIL_ITEM row for the folder or
+tag seems like the right place to serialize ACL data.  We automatically
+load that data when the folders and tags are loaded, so it won't require
+either extra joins or extra fetches during the folder/tag preload.  Those
+folder and tag objects are kept cached for the lifetime of the Mailbox, so
+it also won't require subsequent database accesses when checking item
+permissions.  And the METADATA contents are automatically deleted when the
+folder or tag's row is deleted, so cleanup is trivial.
+
+DISCOVERY
+=========
+Given an authenticated user and a remote mailbox, it's trivial to discover
+which folders and tags are visible.  But there is no centralized source to
+query to determine the full set of items across *all* mailboxes on which a
+user has been granted access.  This is an unfortunate drawback to putting
+ACL information in the database rather than in LDAP.
+
+If installation-wide discovery is a necessary feature, we can go down the
+path of the Windows share discovery model, where the user selects a
+mailbox name from a list and the client then queries the server to
+discover the actually-shared items available.  At its simplest, this list
+of principals can just be the list of all users from the GAL.  If we need
+to limit this list to only the users who are actually sharing items with
+the user, we could publish every user's complete set of grantees to LDAP
+with no reference to the shared objects; this would reintroduce the LDAP
+write throughput issue, however.
+
+RESOLVING ADMIN RIGHTS
+======================
+Admin users may have multiple grants on multiple targets making it hard to understand the resulting permissions. 
+To an administrator who is configuring permissions for delegated admin users it is not always obvious whether a 
+particular delegated admin user has a right to perform a  specific ation on a specific target. This is how the 
+logic of checking permissions works on the server:
+
+    Step 1 ($currentTarget): Is there a negative grant on $currentTarget
+               /               \
+            Yes=deny           No = Step 2 ($currentTarget). Is there a positive grant on $currentTarget?
+                                               /            \
+                                          Yes = allow      No = Step1($currentTarget.parent)

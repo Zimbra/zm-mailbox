@@ -1,0 +1,114 @@
+Return-Path: <xmlbeans-dev-return-201-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.64.14.58])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8O7vt27005582
+	for <smith@popserver1.stanford.edu>; Wed, 24 Sep 2003 00:57:56 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8O7vmlh004227 for
+	<smith@stanford.edu>; Wed, 24 Sep 2003 00:57:48 -0700 (PDT)
+Received: (qmail 19148 invoked by uid 500); 24 Sep 2003 07:57:34 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 19135 invoked from network); 24 Sep 2003 07:57:34 -0000
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-2022-jp"
+Subject: FW: Advert police strikes again
+Content-Transfer-Encoding: 7bit
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+Date: Wed, 24 Sep 2003 00:57:46 -0700
+X-Zimbra-Received: Wed, 24 Sep 2003 00:57:46 -0700
+Message-ID: <4C2F1577F2EF2840A9AE9EC61860C88114D44E@usseex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: Advert police strikes again
+Thread-Index: AcOCbnPFx9A84QGPQZejBD6rwwL2MAAAVrXw
+From: "Cliff Schmidt" <cliff@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+X-OriginalArrivalTime: 24 Sep 2003 07:57:47.0348 (UTC)
+	FILETIME=[8B1EE940:01C38271]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000007b-0010
+
+Dave (Remy),
+
+You're doing some work on the web site right now, right? Would 
+you mind adding an advertisement for ApacheCon 2003 on the site 
+somewhere - either in an Announcements section or in the left
+navigation bar (see example below)?
+
+Aside from the fact that there will be a talk on XMLBeans at 
+ApacheCon (which might be a good thing to specifically mention
+in the announcement), it is important to the ASF to make as many
+people aware of the conference as possible.  Here are a few 
+examples:
+
+http://xml.apache.org/commons/
+http://cocoon.apache.org/
+http://ws.apache.org/
+
+See Tetsuya's post below (from the community list) for an over-
+the-top example; but he's also been kind enough to include a code 
+snippet that might be helpful.
+
+Thanks,
+Cliff
+
+
+On Wednesday, September 24, 2003 12:40 AM, Tetsuya Kitahata wrote:
+
+> On Tue, 23 Sep 2003 12:19:52 +0200
+> Ceki G|lc| <ceki@qos.ch> wrote:
+> 
+>> Hello all,
+>> 
+>> According to the latest report from the Apache Advert Police (AAP),
+>> many of top level projects as well as subprojects have added an
+>> advert icon linking to ApacheCon US 2003. Thanks everyone.
+> 
+> Dear Police,
+> 
+> http://ws.apache.org/jaxme/
+> 
+> ... Please honor with a testimonial and
+> give the certificate of commendation to
+> this good-natured, honest boy.
+> ... Really good boy.
+> 
+> "ApacheCon", "ApacheCon", everywhere "ApacheCon"... :-)
+> 
+> __ Tetsuya <tetsuya@apache.org> __
+> 
+> P.S.
+> (Sub)projects using Apache Forrest ant Ant Build can make use of this
+> script (lines) to patch to build.xml shown below:
+> --------------------------------------------------------------------
+>     <replace dir="${build.site}" value="&lt;!--=================
+>       start Menu items ==================--&gt;&lt;A
+>      
+>    
+> HREF=&quot;http://apachecon.com/2003/US/index.html&quot;&gt;&lt;img
+> border=&quot;0&quot;
+> src=&quot;http://jakarta.apache.org/images/logos/ac2003-150.gif&quot;/&gt;&lt;/A&gt;">
+> <include name="**/*.html"/> <replacetoken>&lt;!--=================
+> start Menu items ==================--&gt;</replacetoken> </replace>  
+> --------------------------------------------------------------------
+> 
+> 
+> ---------------------------------------------------------------------
+> To unsubscribe, e-mail: community-unsubscribe@apache.org
+> For additional commands, e-mail: community-help@apache.org
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

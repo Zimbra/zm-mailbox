@@ -1,0 +1,97 @@
+Return-Path: <xmlbeans-dev-return-372-smith=stanford.edu@xml.apache.org>
+Received: from leland6.Stanford.EDU (leland6.Stanford.EDU [171.67.16.60])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9LFQetB022656
+	for <smith@popserver1.stanford.edu>; Tue, 21 Oct 2003 08:26:40 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland6.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9LFQXMg013570 for
+	<smith@stanford.edu>; Tue, 21 Oct 2003 08:26:34 -0700 (PDT)
+Received: (qmail 26758 invoked by uid 500); 21 Oct 2003 15:26:30 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 26744 invoked from network); 21 Oct 2003 15:26:30 -0000
+Message-ID: <013701c397e7$af16c350$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+References:
+	 <1924BF350FC96B46A56BB38087B9B86E6A63BF@srvcorreio.primavera.local>
+Subject: Re: Feature Request: Serialization
+Date: Tue, 21 Oct 2003 11:26:20 -0400
+X-Zimbra-Received: Tue, 21 Oct 2003 11:26:20 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000087-0010
+
+Hi Jochen -
+
+Currently, none of the XMLBeans interfaces are marked as Serializable (and
+they implement serialization), but all of the XMLBeans instance classes are
+Serializable.  This is just like the way java.util.Collection interfaces are
+not marked Serializable, but all the implementation classes are.
+
+Is that already good enough for what you're doing, or do you need something
+different?
+
+David
+
+
+----- Original Message ----- 
+From: "Jochen Rebhan" <jochen.rebhan@primaverasoft.pt>
+To: <xmlbeans-dev@xml.apache.org>
+Sent: Tuesday, October 21, 2003 10:04 AM
+Subject: [xmlbeans-dev] Feature Request: Serialization
+
+
+Hallo Developers !
+
+Form my application I am developing now it would be very useful not to Tag
+every document class  with the "java.io.Serializable" tag.
+
+I need to do this because I use the Prevayler Persistence Framework to
+serialize my Objects to disk. Another possible use would be if someone wants
+To serialize his objects over a network.
+
+It would be more convenient for me if a low level class of the xmlbeans
+Framework (XmlObject maybe ?) would implement the "java.io.Serializable"
+Interface.
+
+This is done for example in "jdom" Document Classes, but not in "dom4j"
+Document interfaces.
+
+
+Have you ever thougt about that ?
+
+
+Btw.: XmlBeans is great ! Thank you !
+
+
+j.rebhan@web.de
+
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

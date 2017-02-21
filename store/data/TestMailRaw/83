@@ -1,0 +1,369 @@
+Return-Path: <xmlbeans-dev-return-317-smith=stanford.edu@xml.apache.org>
+Received: from leland5.Stanford.EDU (leland5.Stanford.EDU [171.64.14.121])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h91I0I5a014114
+	for <smith@popserver1.stanford.edu>; Wed, 1 Oct 2003 11:00:46 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland5.Stanford.EDU (8.12.10/8.12.10) with SMTP id h91I051W014758 for
+	<smith@stanford.edu>; Wed, 1 Oct 2003 11:00:07 -0700 (PDT)
+Received: (qmail 64050 invoked by uid 500); 1 Oct 2003 18:00:00 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 64033 invoked from network); 1 Oct 2003 17:59:59 -0000
+Message-Id: <sf7adde3.097@corp-gw.mantech.com>
+X-Mailer: Novell GroupWise Internet Agent 5.5.6.1
+Date: Wed, 01 Oct 2003 13:59:38 -0400
+X-Zimbra-Received: Wed, 01 Oct 2003 13:59:38 -0400
+From: "Darrell Teague" <darrell.teague@mantech.com>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: RE: Finalizers
+Mime-Version: 1.0
+Content-Type: multipart/alternative; boundary="=_09574033.0061E9C7"
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000053-0010
+
+
+--=_09574033.0061E9C7
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+I am not aware of any platform or JVM-independent means by which to interac=
+t with the JVM in such a way.  Indeed, it is hard enough to "tickle" to JVM=
+ to perform finalization or GC, much less tell it not to finalize an object=
+ that is in the GC-eligible stack.
+
+I think I understand the reasons behind the finalization effort.  Overall, =
+it is difficult to write a framework (of any kind) such that clients will p=
+roperly clean-up cursors or any other resources (that otherwise would not g=
+et GC'd due to dangling references) that might have been (implicitly) alloc=
+ated.  Unfortunately, as much as I *love* Java and the JVM, I find object d=
+ereferencing and finalization to be one of the major weak points.  Given th=
+at we must live with this for a while (I hope not too long), the only help =
+I can offer is a recommendation to step back and reconsider the framework d=
+esign from a resource allocation/deallocation standpoint.  Try to avoid imp=
+licit allocation that then requires explicit deallocation (e.g., allocating=
+ objects associated with a double-linked-list metaphor that must be dealloc=
+ated to prevent a client-induced memory leak).  I realize this is easier sa=
+id than done but there are some possible techniques and design patterns tha=
+t may prove useful.  I would love to become a contributor but as this is th=
+e first open-source project I have been involved in (largely as a lurker an=
+d pundit up until now), I am not sure what I need to do to get the proverbi=
+al ball rolling.  I have made the offer to a few people but it was probably=
+ premature at the time (v1 had not even been checked into CVS).  Perhaps so=
+meone reading this can let me know what steps I need to take to get in the =
+game.
+
+Hope this thread has been more than just a pedagogical exercise and that I =
+can pitch in and help at some point...
+
+
+>>> ericvas@bea.com 10/01/03 01:14PM >>>
+
+My plans for the next version of the store are to remove finalizing XmlCurs=
+or.  Finalizing them in V1, was indeed, a "last-ditch clean-up effort".   =20
+
+Let me describe a bit why this situation came about.
+
+The V1 XML store creates fewer objects than the XmlCursor can address.  Whe=
+n XML content is manipulated, say, moved from one place to another, cursors=
+ within that content need to be moved with it.  This requires the store to =
+search for these cursors which requires that the XML have a list of cursors=
+ in the vicinity of the XML being manipulated.  Basically, the cursors poin=
+t to the XML and the XML points back to the cursors. (note: cursors are act=
+ually implemented with two objects)
+
+This means that if cursors are not closed (we have a dispose method on curs=
+or which performs this), then the XML will continue to point to the cursors=
+, not allowing them to be garbage collected.
+
+If users creates and forget cursors many times on the same XML document wit=
+hout disposing them, you can get into a situation where you run out of memo=
+ry.  Cursors do not seem like a resource (like sockets or database connecti=
+ons), and users can easily not assume they do not need to be disposed (clos=
+ed).
+
+Thus, we added a finalizer.  If the user called dispose, the finalizer woul=
+d do nothing.
+
+Ironically, recently I looked into a bug where I discovered that the rate o=
+f the creation of cursors (which were properly being disposed) was greater =
+than the rate that they were being finalized.  This, effective, starvation =
+caused an out of memory exception!
+
+I've learned my lesson, finalizers bad.  What I would have liked to have se=
+en was a way for an object to unregister itself for finalization.  With thi=
+s, when a cursor was disposed, I could have notified the VM that a particul=
+ar object no longer needed finalization.  Does such a thing exist?
+
+- Eric
+
+-----Original Message-----
+From: Darrell Teague [mailto:darrell.teague@mantech.com]
+Sent: Wednesday, October 01, 2003 8:49 AM
+To: xmlbeans-dev@xml.apache.org
+Subject: Re: Finalizers
+
+
+Two more cents on this topic...
+
+Joshua Bloch of Sun and many others (myself included) have argued that reli=
+ance on finalizers for anything other than a last-ditch clean-up effort is =
+not recommended.  Instead, it is recommended that any resource consuming cl=
+asses (i.e., that open socket, file, database connection, whatever) provide=
+ some type of "close" method that should (in practice) be called by the cli=
+ent.  Granted, there is no way to ensure the client will call such a method=
+ but the finalize() method is not guaranteed to happen, in the sequence exp=
+ected, etc either.  At least with a declared public method, clients can be =
+guaranteed a tidy clean-up process (if they call it) whereas reliance on fi=
+nalizers may be non-deterministic since the JVM implementation and other fa=
+ctors beyond the developers control determine the sequence, behavior, prior=
+ity, etc of the call to finalize().=20
+
+>>> don@bea.com 09/30/03 01:12PM >>>
+As you may already know, finalizers must be used with extreme caution. =20
+Because they are run by in the GC thread (when all other threads are=20
+paused) if a finalizer deadlocks, the entire VM will be frozen.  This=20
+makes using synchronization in a finalizer particularly dangerous. =20
+There are also problems around any operations that allocate memory in a=20
+finalizer.
+
+(Note: my information may be out of date).
+
+    -Don
+
+David Bau wrote:
+
+>Eric, was thinking about the threading/object creation etc issues over the
+>weekend.
+>
+>Another interesting issue: currently we use a finalizer on cursors, but
+>finalizers seem to be fairly expensive, so apps that spew out lots and lot=
+s
+>of cursors have issues.  I wonder what problems we'd have to deal with in
+>order to eliminate the finalizer, and whether or not that would be possibl=
+e,
+>or if it would come into conflict with some of the other parameters of the
+>problem just like synchronization?
+>
+>David
+>
+>
+>- ---------------------------------------------------------------------
+>To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+>For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+>Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+>
+>
+> =20
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+--=_09574033.0061E9C7
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD>
+<META http-equiv=3DContent-Type content=3D"text/html; charset=3Diso-8859-1"=
+>
+<META content=3D"MSHTML 6.00.2800.1226" name=3DGENERATOR></HEAD>
+<BODY style=3D"MARGIN-TOP: 2px; FONT: 8pt Tahoma; MARGIN-LEFT: 2px">
+<DIV><FONT face=3D"Comic Sans MS" size=3D2>I am not aware of any platform o=
+r=20
+JVM-independent means by which to interact with the JVM in such a way.&nbsp=
+;=20
+Indeed, it is hard enough to "tickle" to JVM to perform finalization or GC,=
+ much=20
+less tell it not to finalize an object that is in the GC-eligible=20
+stack.</FONT></DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2></FONT>&nbsp;</DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2>I think I understand the reasons=
+ behind=20
+the finalization effort.&nbsp; Overall, it is difficult to write a framewor=
+k (of=20
+any kind) such that clients will properly clean-up cursors or any other=20
+resources (that otherwise would not get GC'd due to dangling references) th=
+at=20
+might have been (implicitly) allocated.&nbsp; Unfortunately, as much as I *=
+love*=20
+Java and the JVM, I find object dereferencing and finalization&nbsp;to=20
+be&nbsp;one of the major&nbsp;weak points.&nbsp; Given that we must live wi=
+th=20
+this for a while (I hope not too long), the only help I can offer is a=20
+recommendation to step back and reconsider the framework design from a reso=
+urce=20
+allocation/deallocation standpoint.&nbsp; Try to avoid implicit allocation =
+that=20
+then requires explicit deallocation (e.g., allocating objects associated wi=
+th a=20
+double-linked-list metaphor that must be deallocated to prevent a client-in=
+duced=20
+memory leak).&nbsp; I realize this is easier said than done but there are s=
+ome=20
+possible techniques and design patterns that may prove useful.&nbsp; I woul=
+d=20
+love to become a contributor but as this is the first open-source project I=
+ have=20
+been involved in (largely as a lurker and pundit up until now), I am not su=
+re=20
+what I need to do to get the proverbial ball rolling.&nbsp; I have made the=
+=20
+offer to a few people but it was probably premature at the time (v1 had not=
+ even=20
+been checked into CVS).&nbsp; Perhaps someone reading this can let me know =
+what=20
+steps I need to take to get in the game.</FONT></DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2></FONT>&nbsp;</DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2>Hope this thread has been more t=
+han just=20
+a pedagogical exercise and that I can pitch in and help at some=20
+point...</FONT></DIV>
+<DIV><BR><BR>&gt;&gt;&gt; ericvas@bea.com 10/01/03 01:14PM=20
+&gt;&gt;&gt;<BR><BR>My plans for the next version of the store are to remov=
+e=20
+finalizing XmlCursor.&nbsp; Finalizing them in V1, was indeed, a "last-ditc=
+h=20
+clean-up effort".&nbsp;&nbsp;&nbsp; <BR><BR>Let me describe a bit why this=20
+situation came about.<BR><BR>The V1 XML store creates fewer objects than th=
+e=20
+XmlCursor can address.&nbsp; When XML content is manipulated, say, moved fr=
+om=20
+one place to another, cursors within that content need to be moved with=20
+it.&nbsp; This requires the store to search for these cursors which require=
+s=20
+that the XML have a list of cursors in the vicinity of the XML being=20
+manipulated.&nbsp; Basically, the cursors point to the XML and the XML poin=
+ts=20
+back to the cursors. (note: cursors are actually implemented with two=20
+objects)<BR><BR>This means that if cursors are not closed (we have a dispos=
+e=20
+method on cursor which performs this), then the XML will continue to point =
+to=20
+the cursors, not allowing them to be garbage collected.<BR><BR>If users cre=
+ates=20
+and forget cursors many times on the same XML document without disposing th=
+em,=20
+you can get into a situation where you run out of memory.&nbsp; Cursors do =
+not=20
+seem like a resource (like sockets or database connections), and users can=20
+easily not assume they do not need to be disposed (closed).<BR><BR>Thus, we=
+=20
+added a finalizer.&nbsp; If the user called dispose, the finalizer would do=
+=20
+nothing.<BR><BR>Ironically, recently I looked into a bug where I discovered=
+ that=20
+the rate of the creation of cursors (which were properly being disposed) wa=
+s=20
+greater than the rate that they were being finalized.&nbsp; This, effective=
+,=20
+starvation caused an out of memory exception!<BR><BR>I've learned my lesson=
+,=20
+finalizers bad.&nbsp; What I would have liked to have seen was a way for an=
+=20
+object to unregister itself for finalization.&nbsp; With this, when a curso=
+r was=20
+disposed, I could have notified the VM that a particular object no longer n=
+eeded=20
+finalization.&nbsp; Does such a thing exist?<BR><BR>- Eric<BR><BR>-----Orig=
+inal=20
+Message-----<BR>From: Darrell Teague [<A=20
+href=3D"mailto:darrell.teague@mantech.com]">mailto:darrell.teague@mantech.c=
+om]</A><BR>Sent:=20
+Wednesday, October 01, 2003 8:49 AM<BR>To:=20
+xmlbeans-dev@xml.apache.org<BR>Subject: Re: Finalizers<BR><BR><BR>Two more =
+cents=20
+on this topic...<BR><BR>Joshua Bloch of Sun and many others (myself include=
+d)=20
+have argued that reliance on finalizers for anything other than a last-ditc=
+h=20
+clean-up effort is not recommended.&nbsp; Instead, it is recommended that a=
+ny=20
+resource consuming classes (i.e., that open socket, file, database connecti=
+on,=20
+whatever) provide some type of "close" method that should (in practice) be=20
+called by the client.&nbsp; Granted, there is no way to ensure the client w=
+ill=20
+call such a method but the finalize() method is not guaranteed to happen, i=
+n the=20
+sequence expected, etc either.&nbsp; At least with a declared public method=
+,=20
+clients can be guaranteed a tidy clean-up process (if they call it) whereas=
+=20
+reliance on finalizers may be non-deterministic since the JVM implementatio=
+n and=20
+other factors beyond the developers control determine the sequence, behavio=
+r,=20
+priority, etc of the call to finalize(). <BR><BR>&gt;&gt;&gt; don@bea.com=20
+09/30/03 01:12PM &gt;&gt;&gt;<BR>As you may already know, finalizers must b=
+e=20
+used with extreme caution.&nbsp; <BR>Because they are run by in the GC thre=
+ad=20
+(when all other threads are <BR>paused) if a finalizer deadlocks, the entir=
+e VM=20
+will be frozen.&nbsp; This <BR>makes using synchronization in a finalizer=20
+particularly dangerous.&nbsp; <BR>There are also problems around any operat=
+ions=20
+that allocate memory in a <BR>finalizer.<BR><BR>(Note: my information may b=
+e out=20
+of date).<BR><BR>&nbsp;&nbsp;&nbsp; -Don<BR><BR>David Bau=20
+wrote:<BR><BR>&gt;Eric, was thinking about the threading/object creation et=
+c=20
+issues over the<BR>&gt;weekend.<BR>&gt;<BR>&gt;Another interesting issue:=20
+currently we use a finalizer on cursors, but<BR>&gt;finalizers seem to be f=
+airly=20
+expensive, so apps that spew out lots and lots<BR>&gt;of cursors have=20
+issues.&nbsp; I wonder what problems we'd have to deal with in<BR>&gt;order=
+ to=20
+eliminate the finalizer, and whether or not that would be possible,<BR>&gt;=
+or if=20
+it would come into conflict with some of the other parameters of=20
+the<BR>&gt;problem just like=20
+synchronization?<BR>&gt;<BR>&gt;David<BR>&gt;<BR>&gt;<BR>&gt;-=20
+---------------------------------------------------------------------<BR>&g=
+t;To=20
+unsubscribe, e-mail:&nbsp;&nbsp;=20
+xmlbeans-dev-unsubscribe@xml.apache.org<BR>&gt;For additional commands, e-m=
+ail:=20
+xmlbeans-dev-help@xml.apache.org<BR>&gt;Apache XMLBeans Project -- URL: <A=20
+href=3D"http://xml.apache.org/xmlbeans/">http://xml.apache.org/xmlbeans/</A=
+><BR>&gt;<BR>&gt;<BR>&gt;<BR>&gt;&nbsp;=20
+<BR>&gt;<BR><BR><BR>-=20
+---------------------------------------------------------------------<BR>To=
+=20
+unsubscribe, e-mail:&nbsp;&nbsp; xmlbeans-dev-unsubscribe@xml.apache.org<BR=
+>For=20
+additional commands, e-mail: xmlbeans-dev-help@xml.apache.org<BR>Apache XML=
+Beans=20
+Project -- URL: <A=20
+href=3D"http://xml.apache.org/xmlbeans/">http://xml.apache.org/xmlbeans/</A=
+><BR><BR>-=20
+---------------------------------------------------------------------<BR>To=
+=20
+unsubscribe, e-mail:&nbsp;&nbsp; xmlbeans-dev-unsubscribe@xml.apache.org<BR=
+>For=20
+additional commands, e-mail: xmlbeans-dev-help@xml.apache.org<BR>Apache XML=
+Beans=20
+Project -- URL: <A=20
+href=3D"http://xml.apache.org/xmlbeans/">http://xml.apache.org/xmlbeans/</A=
+><BR><BR></DIV></BODY></HTML>
+
+--=_09574033.0061E9C7--
+

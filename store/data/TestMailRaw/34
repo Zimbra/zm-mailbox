@@ -1,0 +1,87 @@
+Return-Path: <xmlbeans-user-return-40-smith=stanford.edu@xml.apache.org>
+Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9A2oiLB022265
+	for <smith@popserver1.stanford.edu>; Thu, 9 Oct 2003 19:50:44 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland8.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9A2obCa024431 for
+	<smith@stanford.edu>; Thu, 9 Oct 2003 19:50:38 -0700 (PDT)
+Received: (qmail 33180 invoked by uid 500); 10 Oct 2003 02:50:26 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 33167 invoked from network); 10 Oct 2003 02:50:26 -0000
+X-Authentication-Warning: www.princetongames.org: ammulder owned process
+	doing -bs
+Date: Thu, 9 Oct 2003 22:53:17 -0400 (EDT)
+X-Zimbra-Received: Thu, 9 Oct 2003 22:53:17 -0400 (EDT)
+From: Aaron Mulder <ammulder@alumni.princeton.edu>
+X-X-Sender: ammulder@www.princetongames.org
+To: xmlbeans-user@xml.apache.org
+Subject: Parallel Extension Question
+Message-ID: <Pine.LNX.4.44.0310092239240.24519-100000@www.princetongames.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000022-0010
+
+	I wonder if I can construct something like this in a schema and
+get XMLBeans to generate corresponding Java classes:
+
+element "engine"
+element "car" contains an "engine"
+element "ford-engine" is an extension of "engine"
+element "ford" is an restriction of "car" where the "engine" child element 
+  must be an instance of "ford-engine"
+the "ford*" elements are in a different namespace than the others
+
+so this would be legitimate:
+
+<a:car>
+  <a:engine>
+</a:car>
+
+and this would be legitimate:
+
+<b:ford>
+  <b:ford-engine>
+</b:ford>
+
+but this would not:
+
+<b:ford>
+  <a:engine>
+</b:ford>
+
+	I'm not sure exactly how the "Ford" would be generated into a
+JavaBean.  It would extend the "Car" bean.  Perhaps it would override the
+"setEngine" method from "Car", but then have an assertion inside that that
+"Engine" you passed in was really an "instanceof FordEngine".
+
+	I've tried to construct this in XSD, but I'm stymied by the part
+where "ford" restricts "car" to limit the type of engine passed in -- I
+keep getting the following message, and it doesn't really give me enough
+information to determine whether my syntax is wrong or the whole idea is
+wrong or what.  Is this really supposed to be possible?
+
+Thanks,
+	Aaron
+
+error: Invalid Restriction.  The derived (restricted) content model must 
+match the base content model unless the part of the base content model 
+that does not match is optional.  A mismatch found between a base 
+<sequence> and a derived <sequence>.  Found derived particles that are not 
+matched in the base content model.
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

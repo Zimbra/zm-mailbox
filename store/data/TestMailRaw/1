@@ -1,0 +1,71 @@
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.67.16.118])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id i1RNPFrW011464;
+	Fri, 27 Feb 2004 15:25:15 -0800 (PST)
+Received: from mailman.u.washington.edu (mailman.u.washington.edu
+	[140.142.17.227]) by leland2.Stanford.EDU (8.12.10/8.12.10) with ESMTP id
+	i1RNPEuY021357; Fri, 27 Feb 2004 15:25:14 -0800
+Received: from mailman.u.washington.edu (localhost.localdomain [127.0.0.1])
+	by mailman.u.washington.edu (8.12.11+UW04.02/8.12.11+UW04.02) with ESMTP id
+	i1RNOlgb013415; Fri, 27 Feb 2004 15:24:47 -0800
+Received: from mxu8.u.washington.edu (mxu8.u.washington.edu
+	[140.142.32.142]) ESMTP id i1RNOjNv013410	for
+	<pubcookie-dev@mailman.u.washington.edu>; Fri, 27 Feb 2004 15:24:45 -0800
+Received: from mxout5.cac.washington.edu (mxout5.cac.washington.edu
+	[140.142.32.135])id i1RNOii5004375 for <pubcookie-dev@u.washington.edu>;
+	Fri, 27 Feb 2004 15:24:44 -0800
+Received: from red0.cac.washington.edu (red0.cac.washington.edu
+	[140.142.10.68])ESMTP id i1RNOhR6025700; Fri, 27 Feb 2004 15:24:43 -0800
+Received: from localhost (dors@localhost)ESMTP id i1RNOhSX009487; Fri, 27
+	Feb 2004 15:24:43 -0800
+Date: Fri, 27 Feb 2004 15:24:43 -0800 (PST)
+X-Zimbra-Received: Fri, 27 Feb 2005 15:24:43 -0800 (PST)
+From: =?iso-8859-2?Q?Andrzej_K=B1kol?=  <dors@cac.washington.edu>
+To: Jim Fox <fox@dmd.washington.edu>
+Subject: Test Phone Number Formats
+
+
+When international phone numbers appear in text, they are not recognized. I
+think this would be pre-GA enhancement that we need in general, but I think it's
+a bug that the last 10 digits in the following text are recognized as U.S.
+numbers (i.e., that the +91 gets dropped). My $.02. -S
+
+
++91-805-123-6738 (home)
++91-988-019-3964 (cell)
+
+The following number:
+
++91-805-123-6738
+
+is recognized as "805-123-6738" and attempts to call +1805-123-6738.
+
++1-800-555-1212 (prefered) (US)
++1.800.555.1212 (allowed) (US)
++18005551212 (allowed) (US)
++41-22-730-5989 (Switzerland)
+
+800-555-1212
+(800) 555-1212
+555-1212
++1 800 555 1212 (allowed, but not searchable) 
+
+adfasdf as +1-800-555-1212 (prefered) (US)
+f fadf a +1.800.555.1212 (allowed) (US)
+dfsadf as asd +18005551212 (allowed) (US)
+dfasd  +41-22-730-5989 (Switzerland)
+sd
+df sdaf 800-555-1212
+sdf asdf (800) 555-1212
+dsf asdf 555-1212
+dfs +1 800 555 1212 (allowed, but not searchable) 
+
+el: 740-576-4230
+fax: 770-556-4200 
+
+[Wikipedia: Zimbra]
+
+ 1Z68122W0313163808 (UPS)
+
+ 792806493888 (FedEx)
+
+Phone numbers are to be expressed in ITU E.123 compliant format: +1-800-555-1212 Where +1 in this example is the country code for the US.

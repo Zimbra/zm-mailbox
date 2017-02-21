@@ -1,0 +1,587 @@
+Return-Path: <xmlbeans-cvs-return-354-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.64.14.90])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8UNIH5a008515
+	for <smith@popserver1.stanford.edu>; Tue, 30 Sep 2003 16:18:17 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8UNI9d1014509 for
+	<smith@stanford.edu>; Tue, 30 Sep 2003 16:18:10 -0700 (PDT)
+Received: (qmail 65005 invoked by uid 500); 30 Sep 2003 23:18:01 -0000
+Mailing-List: contact xmlbeans-cvs-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-cvs@xml.apache.org>
+List-Help: <mailto:xmlbeans-cvs-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-cvs-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-cvs-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-cvs@xml.apache.org
+Received: (qmail 64992 invoked from network); 30 Sep 2003 23:18:01 -0000
+Received: from unknown (HELO minotaur.apache.org) (209.237.227.194) by
+	daedalus.apache.org with SMTP; 30 Sep 2003 23:18:01 -0000
+Received: (qmail 53235 invoked by uid 1739); 30 Sep 2003 23:18:15 -0000
+Date: 30 Sep 2003 23:18:15 -0000
+X-Zimbra-Received: 30 Sep 2003 23:18:15 -0000
+Message-ID: <20030930231815.53234.qmail@minotaur.apache.org>
+From: ericvas@apache.org
+To: xml-xmlbeans-cvs@apache.org
+Subject: cvs commit: xml-xmlbeans/v2/test/src/erictest EricTest.java
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=us-ascii
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+Mime-Version: 1.0
+X-Evolution: 00000055-0010
+
+ericvas     2003/09/30 16:18:15
+
+  Modified:    v1/src/typeimpl/org/apache/xmlbeans/impl/values
+                        XmlObjectBase.java
+               v1/src/xmlpublic/org/apache/xmlbeans XmlTokenSource.java
+               v1/src/xmlstore/org/apache/xmlbeans/impl/store Cursor.java
+                        Root.java
+               v1/test/src/erictest EricTest.java
+               v2/src/typeimpl/org/apache/xmlbeans/impl/values
+                        XmlObjectBase.java
+               v2/src/xmlpublic/org/apache/xmlbeans XmlTokenSource.java
+               v2/src/xmlstore/org/apache/xmlbeans/impl/store Cursor.java
+                        Root.java
+               v2/test/src/erictest EricTest.java
+  Removed:     v1/src/xmlpublic/javax/xml/stream Location.java
+                        XMLStreamConstants.java XMLStreamException.java
+                        XMLStreamReader.java
+               v1/src/xmlstore/org/apache/xmlbeans/impl/store
+                        XMLStreamReaderImpl.java
+               v2/src/xmlpublic/javax/xml/stream Location.java
+                        XMLStreamConstants.java XMLStreamException.java
+                        XMLStreamReader.java
+               v2/src/xmlstore/org/apache/xmlbeans/impl/store
+                        XMLStreamReaderImpl.java
+  Log:
+  Removed JSR173 streaming interfaces.  Code Review: David Bau, DRT: Passed
+  
+  Revision  Changes    Path
+  1.4       +0 -8      xml-xmlbeans/v1/src/typeimpl/org/apache/xmlbeans/impl/values/XmlObjectBase.java
+  
+  Index: XmlObjectBase.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v1/src/typeimpl/org/apache/xmlbeans/impl/values/XmlObjectBase.java,v
+  retrieving revision 1.3
+  retrieving revision 1.4
+  diff -u -r1.3 -r1.4
+  --- XmlObjectBase.java	24 Sep 2003 23:31:08 -0000	1.3
+  +++ XmlObjectBase.java	30 Sep 2003 23:18:15 -0000	1.4
+  @@ -59,8 +59,6 @@
+   import javax.xml.namespace.QName;
+   import weblogic.xml.stream.XMLInputStream;
+   
+  -import javax.xml.stream.XMLStreamReader;
+  -
+   import java.math.BigInteger;
+   import java.math.BigDecimal;
+   import java.io.Serializable;
+  @@ -177,12 +175,6 @@
+   
+       public Node newDomNode(XmlOptions options)
+           { XmlCursor cur = newCursorForce(); try { return cur.newDomNode(makeInnerOptions(options)); } finally { cur.dispose(); } }
+  -
+  -//    public Node getDomNode()
+  -//        { XmlCursor cur = newCursorForce(); try { return cur.getDomNode(); } finally { cur.dispose(); } }
+  -
+  -//    public XMLStreamReader newXMLStreamReader ( )
+  -//        { XmlCursor cur = newCursorForce(); try { return cur.newXMLStreamReader(); } finally { cur.dispose(); } }
+   
+       public void save(ContentHandler ch, LexicalHandler lh, XmlOptions options) throws SAXException
+           { XmlCursor cur = newCursorForce(); try { cur.save(ch, lh, makeInnerOptions(options)); } finally { cur.dispose(); } }
+  
+  
+  
+  1.3       +0 -8      xml-xmlbeans/v1/src/xmlpublic/org/apache/xmlbeans/XmlTokenSource.java
+  
+  Index: XmlTokenSource.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v1/src/xmlpublic/org/apache/xmlbeans/XmlTokenSource.java,v
+  retrieving revision 1.2
+  retrieving revision 1.3
+  diff -u -r1.2 -r1.3
+  --- XmlTokenSource.java	24 Sep 2003 23:31:13 -0000	1.2
+  +++ XmlTokenSource.java	30 Sep 2003 23:18:15 -0000	1.3
+  @@ -65,8 +65,6 @@
+   import java.io.File;
+   import java.io.IOException;
+   
+  -// import javax.xml.stream.XMLStreamReader;
+  -
+   import org.w3c.dom.Node;
+   
+   import org.xml.sax.ContentHandler;
+  @@ -129,12 +127,6 @@
+        */
+       XMLInputStream newXMLInputStream();
+       
+  -//    /**
+  -//     * Returns a new XMLStreamReader.
+  -//     *
+  -//     */
+  -//    XMLStreamReader newXMLStreamReader();
+  -
+       /**
+        * Returns standard XML text.
+        *
+  
+  
+  
+  1.3       +0 -12     xml-xmlbeans/v1/src/xmlstore/org/apache/xmlbeans/impl/store/Cursor.java
+  
+  Index: Cursor.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v1/src/xmlstore/org/apache/xmlbeans/impl/store/Cursor.java,v
+  retrieving revision 1.2
+  retrieving revision 1.3
+  diff -u -r1.2 -r1.3
+  --- Cursor.java	24 Sep 2003 23:31:16 -0000	1.2
+  +++ Cursor.java	30 Sep 2003 23:18:15 -0000	1.3
+  @@ -92,8 +92,6 @@
+   import org.xml.sax.SAXException;
+   import weblogic.xml.stream.XMLInputStream;
+   
+  -import javax.xml.stream.XMLStreamReader;
+  -
+   public final class Cursor implements XmlCursor, ChangeListener
+   {
+       Cursor ( Root r, Splay s )        { assert s != null; _goober = new CursorGoober( r ); set( s ); }
+  @@ -3015,16 +3013,6 @@
+               
+               throw new RuntimeException( e.getMessage(), e );
+           }
+  -    }
+  -    
+  -//    public Node getDomNode (  )
+  -//    {
+  -//        return org.apache.xmlbeans.impl.dom.Dom.getDomNode( (XmlCursor) this );
+  -//    }
+  -
+  -    public XMLStreamReader newXMLStreamReader ( )
+  -    {
+  -        return new XMLStreamReaderImpl( newCursor() );
+       }
+       
+       private boolean isFragment()
+  
+  
+  
+  1.4       +0 -103    xml-xmlbeans/v1/src/xmlstore/org/apache/xmlbeans/impl/store/Root.java
+  
+  Index: Root.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v1/src/xmlstore/org/apache/xmlbeans/impl/store/Root.java,v
+  retrieving revision 1.3
+  retrieving revision 1.4
+  diff -u -r1.3 -r1.4
+  --- Root.java	25 Sep 2003 22:40:12 -0000	1.3
+  +++ Root.java	30 Sep 2003 23:18:15 -0000	1.4
+  @@ -108,7 +108,6 @@
+   import javax.xml.namespace.QName;
+   import javax.xml.parsers.SAXParserFactory;
+   import javax.xml.parsers.SAXParser;
+  -import javax.xml.stream.XMLStreamReader;
+   import java.io.File;
+   import java.io.FileOutputStream;
+   import java.io.IOException;
+  @@ -1747,108 +1746,6 @@
+           private Map        _additionalNamespaces;
+           private QNameCache _qnameCache;
+           private XmlOptions _options;
+  -    }
+  -
+  -    public XmlObject loadXml (
+  -        XMLStreamReader xmlStreamReader, SchemaType type, XmlOptions options )
+  -            throws
+  -                IOException, XmlException, javax.xml.stream.XMLStreamException
+  -    {
+  -        LoadContext context = new LoadContext( this, options );
+  -
+  -        assert xmlStreamReader.getEventType() == XMLStreamReader.START_DOCUMENT;
+  -
+  -        loop:
+  -        for ( ; ; )
+  -        {
+  -            switch ( xmlStreamReader.next() )
+  -            {
+  -            case XMLStreamReader.START_ELEMENT :
+  -            {
+  -                context.begin( xmlStreamReader.getName() );
+  -                break;
+  -            }
+  -
+  -            case XMLStreamReader.END_ELEMENT :
+  -            {
+  -                context.end();
+  -                break;
+  -            }
+  -
+  -            case XMLStreamReader.CHARACTERS :
+  -            {
+  -                Text text   = context.getRoot()._text;
+  -                int cpStart = context.preText();
+  -                int cp      = cpStart;
+  -                int total   = 0;
+  -
+  -                for ( ; ; )
+  -                {
+  -                    if (text._gapLen <= 0)
+  -                        text.resize( 1 );
+  -
+  -                    text.moveGap( cp );
+  -
+  -                    int n =
+  -                        xmlStreamReader.getTextCharacters(
+  -                            text._buf, cp, text._gapLen );
+  -
+  -                    assert n >= 0;
+  -
+  -                    total += n;
+  -
+  -                    text._gap += n;
+  -                    text._gapLen -= n;
+  -
+  -                    if (text._gapLen > 0)
+  -                        break;
+  -
+  -                    cp += n;
+  -                }
+  -
+  -                context.postText( cpStart, total );
+  -
+  -                break;
+  -            }
+  -
+  -            case XMLStreamReader.END_DOCUMENT :
+  -            {
+  -                break loop;
+  -            }
+  -
+  -            case XMLStreamReader.PROCESSING_INSTRUCTION :
+  -            {
+  -                throw new RuntimeException( "Not implemented" );
+  -            }
+  -
+  -            case XMLStreamReader.COMMENT :
+  -            {
+  -                throw new RuntimeException( "Not implemented" );
+  -            }
+  -
+  -            case XMLStreamReader.CDATA :
+  -            {
+  -                throw new RuntimeException( "Not implemented" );
+  -            }
+  -
+  -            case XMLStreamReader.SPACE :
+  -            case XMLStreamReader.ENTITY_REFERENCE :
+  -            case XMLStreamReader.ATTRIBUTE :
+  -            case XMLStreamReader.DTD :
+  -            case XMLStreamReader.NAMESPACE :
+  -            case XMLStreamReader.START_ENTITY :
+  -            case XMLStreamReader.END_ENTITY :
+  -            case XMLStreamReader.NOTATION_DECLARATION :
+  -            case XMLStreamReader.ENTITY_DECLARATION :
+  -            case XMLStreamReader.START_DOCUMENT :
+  -                throw new RuntimeException( "Unexpected event" );
+  -
+  -            default :
+  -                throw new RuntimeException( "Unknown event" );
+  -            }
+  -        }
+  -
+  -        return autoTypedDocument( type, options );
+       }
+   
+       private void loadNodeChildren ( Node n, LoadContext context )
+  
+  
+  
+  1.4       +0 -1      xml-xmlbeans/v1/test/src/erictest/EricTest.java
+  
+  Index: EricTest.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v1/test/src/erictest/EricTest.java,v
+  retrieving revision 1.3
+  retrieving revision 1.4
+  diff -u -r1.3 -r1.4
+  --- EricTest.java	25 Sep 2003 22:40:12 -0000	1.3
+  +++ EricTest.java	30 Sep 2003 23:18:15 -0000	1.4
+  @@ -110,7 +110,6 @@
+   import javax.xml.namespace.QName;
+   import javax.xml.parsers.SAXParser;
+   import javax.xml.parsers.SAXParserFactory;
+  -import javax.xml.stream.XMLStreamReader;
+   import org.w3.x2001.xmlSchema.*;
+   import org.xml.sax.InputSource;
+   import org.xml.sax.XMLReader;
+  
+  
+  
+  1.2       +0 -8      xml-xmlbeans/v2/src/typeimpl/org/apache/xmlbeans/impl/values/XmlObjectBase.java
+  
+  Index: XmlObjectBase.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v2/src/typeimpl/org/apache/xmlbeans/impl/values/XmlObjectBase.java,v
+  retrieving revision 1.1
+  retrieving revision 1.2
+  diff -u -r1.1 -r1.2
+  --- XmlObjectBase.java	26 Sep 2003 21:23:30 -0000	1.1
+  +++ XmlObjectBase.java	30 Sep 2003 23:18:15 -0000	1.2
+  @@ -59,8 +59,6 @@
+   import javax.xml.namespace.QName;
+   import weblogic.xml.stream.XMLInputStream;
+   
+  -import javax.xml.stream.XMLStreamReader;
+  -
+   import java.math.BigInteger;
+   import java.math.BigDecimal;
+   import java.io.Serializable;
+  @@ -177,12 +175,6 @@
+   
+       public Node newDomNode(XmlOptions options)
+           { XmlCursor cur = newCursorForce(); try { return cur.newDomNode(makeInnerOptions(options)); } finally { cur.dispose(); } }
+  -
+  -//    public Node getDomNode()
+  -//        { XmlCursor cur = newCursorForce(); try { return cur.getDomNode(); } finally { cur.dispose(); } }
+  -
+  -//    public XMLStreamReader newXMLStreamReader ( )
+  -//        { XmlCursor cur = newCursorForce(); try { return cur.newXMLStreamReader(); } finally { cur.dispose(); } }
+   
+       public void save(ContentHandler ch, LexicalHandler lh, XmlOptions options) throws SAXException
+           { XmlCursor cur = newCursorForce(); try { cur.save(ch, lh, makeInnerOptions(options)); } finally { cur.dispose(); } }
+  
+  
+  
+  1.2       +0 -8      xml-xmlbeans/v2/src/xmlpublic/org/apache/xmlbeans/XmlTokenSource.java
+  
+  Index: XmlTokenSource.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v2/src/xmlpublic/org/apache/xmlbeans/XmlTokenSource.java,v
+  retrieving revision 1.1
+  retrieving revision 1.2
+  diff -u -r1.1 -r1.2
+  --- XmlTokenSource.java	26 Sep 2003 21:23:34 -0000	1.1
+  +++ XmlTokenSource.java	30 Sep 2003 23:18:15 -0000	1.2
+  @@ -65,8 +65,6 @@
+   import java.io.File;
+   import java.io.IOException;
+   
+  -// import javax.xml.stream.XMLStreamReader;
+  -
+   import org.w3c.dom.Node;
+   
+   import org.xml.sax.ContentHandler;
+  @@ -129,12 +127,6 @@
+        */
+       XMLInputStream newXMLInputStream();
+       
+  -//    /**
+  -//     * Returns a new XMLStreamReader.
+  -//     *
+  -//     */
+  -//    XMLStreamReader newXMLStreamReader();
+  -
+       /**
+        * Returns standard XML text.
+        *
+  
+  
+  
+  1.2       +0 -12     xml-xmlbeans/v2/src/xmlstore/org/apache/xmlbeans/impl/store/Cursor.java
+  
+  Index: Cursor.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v2/src/xmlstore/org/apache/xmlbeans/impl/store/Cursor.java,v
+  retrieving revision 1.1
+  retrieving revision 1.2
+  diff -u -r1.1 -r1.2
+  --- Cursor.java	26 Sep 2003 21:23:37 -0000	1.1
+  +++ Cursor.java	30 Sep 2003 23:18:15 -0000	1.2
+  @@ -92,8 +92,6 @@
+   import org.xml.sax.SAXException;
+   import weblogic.xml.stream.XMLInputStream;
+   
+  -import javax.xml.stream.XMLStreamReader;
+  -
+   public final class Cursor implements XmlCursor, ChangeListener
+   {
+       Cursor ( Root r, Splay s )        { assert s != null; _goober = new CursorGoober( r ); set( s ); }
+  @@ -3015,16 +3013,6 @@
+               
+               throw new RuntimeException( e.getMessage(), e );
+           }
+  -    }
+  -    
+  -//    public Node getDomNode (  )
+  -//    {
+  -//        return org.apache.xmlbeans.impl.dom.Dom.getDomNode( (XmlCursor) this );
+  -//    }
+  -
+  -    public XMLStreamReader newXMLStreamReader ( )
+  -    {
+  -        return new XMLStreamReaderImpl( newCursor() );
+       }
+       
+       private boolean isFragment()
+  
+  
+  
+  1.2       +0 -103    xml-xmlbeans/v2/src/xmlstore/org/apache/xmlbeans/impl/store/Root.java
+  
+  Index: Root.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v2/src/xmlstore/org/apache/xmlbeans/impl/store/Root.java,v
+  retrieving revision 1.1
+  retrieving revision 1.2
+  diff -u -r1.1 -r1.2
+  --- Root.java	26 Sep 2003 21:23:37 -0000	1.1
+  +++ Root.java	30 Sep 2003 23:18:15 -0000	1.2
+  @@ -108,7 +108,6 @@
+   import javax.xml.namespace.QName;
+   import javax.xml.parsers.SAXParserFactory;
+   import javax.xml.parsers.SAXParser;
+  -import javax.xml.stream.XMLStreamReader;
+   import java.io.File;
+   import java.io.FileOutputStream;
+   import java.io.IOException;
+  @@ -1747,108 +1746,6 @@
+           private Map        _additionalNamespaces;
+           private QNameCache _qnameCache;
+           private XmlOptions _options;
+  -    }
+  -
+  -    public XmlObject loadXml (
+  -        XMLStreamReader xmlStreamReader, SchemaType type, XmlOptions options )
+  -            throws
+  -                IOException, XmlException, javax.xml.stream.XMLStreamException
+  -    {
+  -        LoadContext context = new LoadContext( this, options );
+  -
+  -        assert xmlStreamReader.getEventType() == XMLStreamReader.START_DOCUMENT;
+  -
+  -        loop:
+  -        for ( ; ; )
+  -        {
+  -            switch ( xmlStreamReader.next() )
+  -            {
+  -            case XMLStreamReader.START_ELEMENT :
+  -            {
+  -                context.begin( xmlStreamReader.getName() );
+  -                break;
+  -            }
+  -
+  -            case XMLStreamReader.END_ELEMENT :
+  -            {
+  -                context.end();
+  -                break;
+  -            }
+  -
+  -            case XMLStreamReader.CHARACTERS :
+  -            {
+  -                Text text   = context.getRoot()._text;
+  -                int cpStart = context.preText();
+  -                int cp      = cpStart;
+  -                int total   = 0;
+  -
+  -                for ( ; ; )
+  -                {
+  -                    if (text._gapLen <= 0)
+  -                        text.resize( 1 );
+  -
+  -                    text.moveGap( cp );
+  -
+  -                    int n =
+  -                        xmlStreamReader.getTextCharacters(
+  -                            text._buf, cp, text._gapLen );
+  -
+  -                    assert n >= 0;
+  -
+  -                    total += n;
+  -
+  -                    text._gap += n;
+  -                    text._gapLen -= n;
+  -
+  -                    if (text._gapLen > 0)
+  -                        break;
+  -
+  -                    cp += n;
+  -                }
+  -
+  -                context.postText( cpStart, total );
+  -
+  -                break;
+  -            }
+  -
+  -            case XMLStreamReader.END_DOCUMENT :
+  -            {
+  -                break loop;
+  -            }
+  -
+  -            case XMLStreamReader.PROCESSING_INSTRUCTION :
+  -            {
+  -                throw new RuntimeException( "Not implemented" );
+  -            }
+  -
+  -            case XMLStreamReader.COMMENT :
+  -            {
+  -                throw new RuntimeException( "Not implemented" );
+  -            }
+  -
+  -            case XMLStreamReader.CDATA :
+  -            {
+  -                throw new RuntimeException( "Not implemented" );
+  -            }
+  -
+  -            case XMLStreamReader.SPACE :
+  -            case XMLStreamReader.ENTITY_REFERENCE :
+  -            case XMLStreamReader.ATTRIBUTE :
+  -            case XMLStreamReader.DTD :
+  -            case XMLStreamReader.NAMESPACE :
+  -            case XMLStreamReader.START_ENTITY :
+  -            case XMLStreamReader.END_ENTITY :
+  -            case XMLStreamReader.NOTATION_DECLARATION :
+  -            case XMLStreamReader.ENTITY_DECLARATION :
+  -            case XMLStreamReader.START_DOCUMENT :
+  -                throw new RuntimeException( "Unexpected event" );
+  -
+  -            default :
+  -                throw new RuntimeException( "Unknown event" );
+  -            }
+  -        }
+  -
+  -        return autoTypedDocument( type, options );
+       }
+   
+       private void loadNodeChildren ( Node n, LoadContext context )
+  
+  
+  
+  1.2       +0 -1      xml-xmlbeans/v2/test/src/erictest/EricTest.java
+  
+  Index: EricTest.java
+  ===================================================================
+  RCS file: /home/cvs/xml-xmlbeans/v2/test/src/erictest/EricTest.java,v
+  retrieving revision 1.1
+  retrieving revision 1.2
+  diff -u -r1.1 -r1.2
+  --- EricTest.java	26 Sep 2003 21:23:41 -0000	1.1
+  +++ EricTest.java	30 Sep 2003 23:18:15 -0000	1.2
+  @@ -110,7 +110,6 @@
+   import javax.xml.namespace.QName;
+   import javax.xml.parsers.SAXParser;
+   import javax.xml.parsers.SAXParserFactory;
+  -import javax.xml.stream.XMLStreamReader;
+   import org.w3.x2001.xmlSchema.*;
+   import org.xml.sax.InputSource;
+   import org.xml.sax.XMLReader;
+  
+  
+  
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: xmlbeans-cvs-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-cvs-help@xml.apache.org
+

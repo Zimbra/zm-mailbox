@@ -1,0 +1,58 @@
+Context extension allows adding extended information to the soap context header.  Server applications may choose to add extensions to any soap response.  Client should take advantage of extensions it understands while ignore ones it doesn't.  In addition, client should not expect a particular extension present in every response.
+
+Each extension should be a direct child element of <context> soap header and may have a namespace different from "urn:zimbra".  For example, the following shows two extensions, extention1 and extension2, present in the FooResponse context header: 
+
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+  <soap:Header>
+     <context xmlns="urn:zimbra">
+       <sessionId id="{session-id}"/> 
+       <change token="{change-id}"/>
+       <refresh>...</refresh>
+       <notify seq="{sequence-number}">...</notify>
+       <extension1 xmlns="ext1Namespace">...</extension1>
+       <extension2 xmlns="ext2Namespace">...</extension2>
+     </context>
+   <soap:/Header>
+  <soap:Body>
+   <FooResponse>...</FooResponse>  
+  </soap:Body>
+</soap:Envelope>
+
+================
+zdsync extension
+================
+
+This extension is used by zdesktop to carry sync status information in soap responses so that web client can properly inform user of mailbox sync status.  It is only present when server is running as zdesktop backend.  zdsync usually is added to every single soap response.  It has the following structure:
+
+<zdsync xmlns="urn:zimbraOffline">
+  [(<account name="{NAME}" id="{ID}" status="{STATUS}" lastsync="{LASTSYNC}" unread="{INBOX_UNREAD_COUNT}">
+    [<error [message="{MESSAGE}"]>
+      [<exception>{EXCEPTION}</exception>]
+    </error>]
+  </account>)*]
+</zdsync>
+
+where
+
+{NAME} -- name of account (email)
+{ID} -- account ID
+
+{STATUS} -- choice of unknown|offline|online|running|authfail|error, where
+           unknown: no sync run yet since last server start
+           offline: can't reach remote server, most likely network connection is down
+           online: last sync was successful
+           running: a sync with remote server is in progress
+           authfail: authentication failed in last sync attempt
+           error: last sync encountered an error other than network or authentication problems
+
+{LASTSYNC} -- timestamp in epoch milliseconds at the end of the last successful sync which could be initial sync or delta sync. 0 means initial sync is not complete (could be running or have encountered error).
+
+{INBOX_UNREAD_COUNT} -- the number of unread messages in Inbox of the account.
+
+{MESSAGE} -- human readable error message in English.  Note, this is more a debugging aid and client is discouraged to display this directly to user.
+
+{EXCEPTION} -- exception stack trace associated with the last sync error
+
+NOTE: <error> is only present when {STATUS} is ERROR, and is cleared when {STATUS} changes to anything else such as running.  It is possible that a client may see the same <error> in multiple soap responses if no sync has been attempted between two client requests.  Client should avoid alerting the user of the same error multiple times. 
+
+NOTE: The <zdsync> block may contain status of more than one account.  If an account is not present, client should assume that account remains the previous status.

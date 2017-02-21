@@ -1,0 +1,55 @@
+Return-Path: <xmlbeans-user-return-123-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.67.16.118])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hB2NrmoB000388
+	for <smith@popserver1.stanford.edu>; Tue, 2 Dec 2003 15:53:48 -0800 (PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id hB2NrkB0014246 for
+	<smith@stanford.edu>; Tue, 2 Dec 2003 15:53:46 -0800
+Received: (qmail 42154 invoked by uid 500); 2 Dec 2003 23:53:38 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 42141 invoked from network); 2 Dec 2003 23:53:37 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.5.6944.0
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Subject: java.lang.UnsupportedOperationException: This operation requires
+	xqrl.jar
+Date: Tue, 2 Dec 2003 15:52:32 -0800
+X-Zimbra-Received: Tue, 2 Dec 2003 15:52:32 -0800
+Message-ID: <970F9C1BF72BF24C8932796D254568B716B0C2@layer7-mx0.l7tech.local>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: java.lang.UnsupportedOperationException: This operation
+	requires xqrl.jar
+Thread-Index: AcO5L1p1SbwNauYyR4+V6oufZRZEMA==
+From: "Emil Marceta" <emarceta@layer7tech.com>
+To: <xmlbeans-user@xml.apache.org>
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000015-0010
+
+	Hi All,
+
+Attempting to run the the XPath example from=20
+"Selecting XML with XPath" page, the UnsupportedOperationException
+is raised.
+
+Is it the XPath supported currently?
+If not what is the plan?
+
+Best,
+em
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

@@ -1,0 +1,31 @@
+To:	roland_smith@yahoo.com
+Subject: Test
+From: webmaster@worldtest.com
+Date: Tue, 20 Jan 2004 02:29:09 -0500 (EST)
+X-Zimbra-Received: Tue, 20 Jan 2004 02:29:09 -0500 (EST)
+X-Evolution: 0000000b-0000
+Message-Id: <1084918356.24984.4.camel@slapshot.example.zimbra.com>
+Mime-Version: 1.0
+
+> TEST 123
+Test
+> This is line one of the mail message
+> Line two be this line
+>> This be line 3. it is indented >>>> three times
+> Line four 4
+>> Line five is a double indentation
+>>> This is a 3 level indentation
+>>> More three level stuff
+>>>> Level Four indentation
+>>>> Level four indentation more of it foo@bar.com bar@foo.com
+>>>>> Now we have level five 
+>>>>> more level five
+>>>>> level level level 5 5 5 5 5 5
+>> This is a test http://www.cnn.com. It has a URL
+>> http://www.dkahdig.com
+http://www.openwave.com
+http://www.cnn.com/2004/WORLD/meast/03/08/sprj.nirq.main/index.html
+>>>>vanessa@yahoo.com
+> Last line
+The end of the indentation stuff
+The end of the message

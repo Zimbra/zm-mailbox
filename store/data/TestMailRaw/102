@@ -1,0 +1,50 @@
+Return-Path: <xmlbeans-user-return-26-smith=stanford.edu@xml.apache.org>
+Received: from leland9.Stanford.EDU (leland9.Stanford.EDU [171.67.16.83])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h98GU0LB021127
+	for <smith@popserver1.stanford.edu>; Wed, 8 Oct 2003 09:30:00 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland9.Stanford.EDU (8.12.10/8.12.10) with SMTP id h98GTmOw026746 for
+	<smith@stanford.edu>; Wed, 8 Oct 2003 09:29:54 -0700 (PDT)
+Received: (qmail 55579 invoked by uid 500); 8 Oct 2003 16:29:44 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 55545 invoked from network); 8 Oct 2003 16:29:38 -0000
+Date: Wed, 8 Oct 2003 12:29:41 -0400
+X-Zimbra-Received: Wed, 8 Oct 2003 12:29:41 -0400
+Mime-Version: 1.0 (Apple Message framework v552)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Subject: Namespace Question...
+From: Tom Condon <tom_condon@vrtx.com>
+To: xmlbeans-user@xml.apache.org
+Content-Transfer-Encoding: 7bit
+Message-Id: <9E289A90-F9AC-11D7-B5A5-000393D5A006@vrtx.com>
+X-Mailer: Apple Mail (2.552)
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000066-0011
+
+I have a schema that uses the prefix "hv:" for a namespace I have 
+defined.  I have no problem reading documents that conform to my 
+schema.  When I write a document, the prefix "ns:" is used.  I know 
+that this works in the schema world, but my document is getting read in 
+by a SAX parser that expects a specific prefix.
+
+How do you specify what prefix is used for your namespace?
+
+Thanks for any help,
+
+Tom Condon
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

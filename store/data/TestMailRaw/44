@@ -1,0 +1,2072 @@
+Return-Path: <xmlbeans-dev-return-398-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.67.16.118])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hAELWZoB010281
+	for <smith@popserver1.stanford.edu>; Fri, 14 Nov 2003 13:32:35 -0800
+	(PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id hAELWViJ025188 for
+	<smith@stanford.edu>; Fri, 14 Nov 2003 13:32:31 -0800
+Received: (qmail 87790 invoked by uid 500); 14 Nov 2003 21:32:24 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 87777 invoked from network); 14 Nov 2003 21:32:24 -0000
+Message-ID: <043701c3aaf6$c1dd2c00$0fa8a8c0@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: XMLBeans V1 binding style arch writeup
+Date: Fri, 14 Nov 2003 16:32:04 -0500
+X-Zimbra-Received: Fri, 14 Nov 2003 16:32:04 -0500
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000002c-0010
+
+When we first came into the incubator, I said "I'll write up some of the
+XMLBeans v1 architecture," but it turned out to be a lot of stuff to write
+up. Well, I've finally got part of it written up - an explanation of the
+XmlBeans v1 binding style.
+
+This doc basically lays out and explains how and why XMLBeans v1 can make
+the unique assertion of binding 100% of schema, while still providing a very
+efficient and useful binding.  I'll get this checked in somewhere.
+
+Cheers,
+
+David
+
+
+=======================================
+THE SIMPLIFIED XML SCHEMA BINDING STYLE
+=======================================
+
+The XML Schema/Java binding technology used by Apache XMLBeans
+is a carefully designed "simplified binding style" that has
+several desirable properties.
+
+  1. The binding style is capable of supporting all of XML
+schema (e.g., all types of content models, substitution,
+inheritance, and 100% of schema validation).
+
+  2. The binding style is capable of supporting a model that
+can round-trip all of XML, as well as permitting consistent
+access to the same XML infoset data using other APIs (XPath,
+DOM, etc).
+
+  3. The binding style is simple and so permits very fast
+implementations.
+
+  4. The binding style is robust to versioning of XML schemas
+as well as binding to invalid content.
+
+  5. The binding style produces Java signatures that are easy
+to understand and convenient to use.
+
+This note describes the underlying principles and the specifics
+of the simplified XML schema binding style.
+
+
+
+BASIC PRINCIPLES
+================
+
+The simplified binding style is built on two architectural
+principles:
+
+ 1. Principle of Type Correspondence.  There is a one-to-one
+correspondence betweeen Java classes and schema types, and the
+inheritance trees in Java and schema correspond to each other.
+
+ 2. Principle of Node Correspondence.  There is a one-to-one
+correspondence betwen Java instance objects and nodes for
+elements, attributes, and documents in the XML infoset, and the
+containment relationships in Java reflect the child and sibling
+relationships in the XML infoset.
+
+These two principles provide a bedrock of invariants that
+guarantee that some basic programming mechanisms work.  For
+example:
+
+ 1. Type correspondence guarantees that Java "instanceof" can
+be used to detect schema types even in the presence of
+substitution and inheritance, and that Java type substitution
+can be used wherever schema type substitution can be found.
+
+ 2. Node correspondence guarantees that XML information is
+preserved in the Java instance data, and that object identity
+can be maintained while accessing or manipulating the bound XML
+infoset using a variety of different idioms, such as DOM or
+XPath or XQuery.
+
+The two basic principles also have the advantage that they
+provide an easy and intuitive model for programmers to apply
+and understand.  Yet preserving both principles while providing
+a useful binding model presents a couple challenges.
+
+
+
+UNDERSTANDING TYPE CORRESPONDENCE
+=================================
+
+The principle of type correspondence provides a Java class for
+every schema type.  In particular, all the built-in Schema
+types must have corresponding Java classes.
+
+At first blush, one might assume, for example, that the Java
+class formally corresponding to the schema type xs:string
+should be java.lang.String.  However, since java.lang.String is
+a final class, that choice would not allow xs:token (or any
+other schema type which inherits from xs:string) to have a Java
+class that has the proper inheritance relationship, since no
+Java class can extend java.lang.String.
+
+XML Schema type     | Corresponding Java type?
+===========================================================
+xs:string           | java.lang.String?  Maybe, but...
+--------------------+--------------------------------------
+xs:token            | java.lang.String?
+                    | No, because it is not distinct from
+                    | the type bound to xs:string, so
+                    | instanceof cannot distinguish them.
+--------------------+--------------------------------------
+xs:token            | a custom XmlToken class?
+                    | No, because it is not an instanceof
+                    | java.lang.String, so the inheritance
+                    | trees do not line up.
+===========================================================
+
+On the other hand, any Java programmer would be right to demand
+the convenience of a java.lang.String for each xs:string, as
+well as a java "int" for an xs:int and so on, even though the
+"instanceof" operator has no hope of working correctly.
+Faithful type correspondence, while very important for complex
+types, seems to be different from what you want in practice for
+simple types.  And yet, since schema allows complex types to
+inherit from simple types (these are called complex types with
+simple content), if we do not establish type correspondence for
+simple types, we will not be able to establish full type
+correspondence for complex types.
+
+The solution provided by the simpified style is to provide not
+one, but two Java classes for each simple type.  There is a
+"formal" Java class which establishes full type correspondence,
+and there is a "convenience" Java type that does not need to
+play in the type correspondence world.  The "convenience" Java
+type does not need to uniquely map to or from a schema type or
+have any particular inheritance relationship with other Java
+types, and it will be provided where convenience is important.
+But the "formal" type will always be available and will
+represent the "true" data model.
+
+A table of all the built-in schema types together with their
+"formal" and "convenience" Java types is listed below.
+
+Schema type           | Formal class          | Convenience
+===========================================================
+xs:string             | XmlString             | String
+xs:boolean            | XmlBoolean            | boolean
+xs:decimal            | XmlDecimal            | BigDecimal
+xs:float              | XmlFloat              | float
+xs:double             | XmlDouble             | double
+xs:duration           | XmlDuration           | GDuration*
+xs:dateTime           | XmlDateTime           | Calendar
+xs:time               | XmlTime               | Calendar
+xs:date               | XmlDate               | Calendar
+xs:gYearMonth         | XmlGYearMonth         | Calendar
+xs:gYear              | XmlGYear              | Calendar
+xs:gMonthDay          | XmlGMonthDAy          | Calendar
+xs:gDay               | XmlGDay               | Calendar
+xs:gMonth             | XmlGMonth             | Calendar
+xs:hexBinary          | XmlHexBinary          | byte[]
+xs:base64Binary       | XmlBase64Binary       | byte[]
+xs:anyURI             | XmlAnyURI             | String
+xs:QName              | XmlQName              | QName
+xs:NOTATION           | XmlNOTATION           | String
+=============[builtin derived types below]=================
+xs:normalizedString   | XmlNormalizedString   | String
+xs:token              | XmlToken              | String
+xs:language           | XmlLanguage           | String
+xs:NMTOKEN            | XmlNMTOKEN            | String
+xs:NMTOKENS           | XmlNMTOKENS           | List
+xs:Name               | XmlName               | String
+xs:NCName             | XmlNCName             | String
+xs:ID                 | XmlID                 | String
+xs:IDREF              | XmlIDREF              | String
+xs:IDREFS             | XmlIDREFS             | List
+xs:ENTITY             | XmlENTITY             | String
+xs:ENTITIES           | XmlENTITIES           | List
+xs:integer            | XmlInteger            | BigInteger
+xs:nonPositiveInteger | XmlNonPositiveInteger | BigInteger
+xs:negativeInteger    | XmlNegativeInteger    | BigInteger
+xs:long               | XmlLong               | long
+xs:int                | XmlInt                | int
+xs:short              | XmlShort              | short
+xs:byte               | XmlByte               | byte
+xs:nonNegativeInteger | XmlNonNegativeInteger | BigInteger
+xs:unsignedLong       | XmlUnsignedLong       | BigInteger
+xs:unsignedInt        | XmlUnsignedInt        | long
+xs:unsignedShort      | XmlUnsignedShort      | int
+xs:unsignedByte       | XmlUnsignedByte       | short
+xs:positiveInteger    | XmlPositiveInteger    | BigInteger
+=============[universal base types below]==================
+xs:anyType            | XmlObject             | XmlObject**
+xs:anySimpleType      | XmlAnySimpleType      | String
+===========================================================
+* all convenience types are built-in to the JDK except
+  for GDuration.  The JDK does not have a built-in class
+  that corresponds to XML Schema's Gregorian duration type.
+** sometimes - for the non-simple types - the "convenience"
+  type is just the same as the "formal" type.
+
+The formal classes have the same inheritance relationships
+that the corresponding schema types do, for example, the
+XmlInt Java class has the following base types:
+
+Java inheritance            | XML Schema inheritance
+===========================================================
+XmlInt extends              | xs:int restricts
+XmlLong extends             | xs:long restricts
+XmlInteger extends          | xs:integer restricts
+XmlDecimal extends          | xs:decimal restricts
+XmlAnySimpleType extends    | xs:anySimpleType restricts
+XmlObject                   | xs:anyType
+===========================================================
+
+The fact that the inheritance in Java follows the inheritance
+in schema has some utility.  For example, if XmlDecimal has a
+method called "getBigDecimalValue()", then you can also call
+"getBigDecimalValue()" on any XmlInteger, XmlLong, or XmlInt.
+Even if somebody has substituted a restricted subclass in the
+XML instance such as an xs:int for an xs:decimal, the
+programmer can be assured that it is always possible to extract
+a BigDecimal value in the same way.
+
+Another consequence of the type correspondence is that every
+Java class that corresponds to a schema type inherits from the
+class that represents xs:anyType.  Here we have called this
+universal base class "XmlObject".
+
+Of course, the principle of type correspondence extends beyond
+the builtin types above to all user-defined types.  Note some
+user-defined types in XML Schema are anonymous.  In the
+simplified binding model nested anonymous schema types also
+have a corresponding nested Java class.
+
+
+
+UNDERSTANDING NODE CORRESPONDENCE
+=================================
+
+The principle of node correspondence says that there is a one-
+to-one correspondence between Java instance objects and XML
+Infoset document, element, and attribute nodes.
+
+For example, consider the following XML instance document:
+
+<account-history>
+  <open>2003-01-01</open>
+  <buy>2003-01-01</buy>
+  <sell>2003-02-05</sell>
+  <buy>2003-02-06</buy>
+  <sell note="all assets" auth="43JK">2003-03-12</sell>
+  <close>2003-03-12</close>
+</account-history>
+
+No matter the details of the XML Schema, the node
+correspondence rule guarantees that this instance corresponds
+to an object instance containment hierarchy that appears just
+like the XML structure, as follows:
+
+                  * document
+                  |
+                  * account-history
+   +----+----+----+----+-------------+
+   *    *    *    *    *             *
+ open  buy sell  buy sell--* note  close
+                           * auth
+
+The fact that the Java object containment tree corresponds
+exactly and directly to the layout of the XML infoset tree
+means that it is possible for a programmer to work with an XML
+instance document after just seeing an example of the XML,
+rather than requiring detailed knowledge of the schema.  It
+also means that the binding is very robust to schema
+development and evolution, as long as compatibility is
+maintained for the XML instance data itself.  (The W3C TAG
+finding on versioning points out very correctly that language
+evolution and versioning means maintaining compatibility
+between specific agents and a corpus of instance messages
+rather than non-concrete metadata such as schema models
+http://www.w3.org/2001/tag/doc/versioning.html.)
+
+One way to understand the node correspondence principle is to
+understand what it is not.  For example, the JAXB 1.0 model
+group binding style does not adhere to the node correspondence
+principle.  To see this, consider the following two schemas,
+both of which accept the document above.
+
+The first example schema is the one you would write if you knew
+every "buy" is followed by a "sell".  Using regular-expression-
+like notation, the content model described is:
+
+(open (buy sell)* close)
+
+Here is the schema:
+
+<xs:element name="account-history" type="history"/>
+<xs:complexType name="transaction">
+  <xs:simpleContent>
+    <xs:extension base="xs:date">
+      <xs:attribute name="note" type="xs:token"/>
+      <xs:attribute name="auth" type="xs:token"/>
+    </xs:extension>
+  </xs:simpleContent>
+</xs:complexType>
+<xs:complexType name="history">
+  <xs:sequence>
+    <xs:element name="open" type="transaction"/>
+    <xs:sequence minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="buy" type="transaction"/>
+      <xs:element name="sell" type="transaction"/>
+    </xs:sequence>
+    <xs:element name="close" type="transaction"/>
+  </xs:sequence>
+</xs:complexType>
+
+If we were to impose the model group on the instance above, the
+document would be organized as follows:
+
+<account-history>
+  (<open>2003-01-01</open>
+    (<buy>2003-01-01</buy>
+     <sell>2003-02-05</sell>)
+    (<buy>2003-02-06</buy>
+     <sell note="all assets" auth="43JK">2003-03-12</sell>)
+  <close>2003-03-12</close>)
+</account-history>
+
+The JAXB 1.0 "model group" binding style (which does not
+conform to the node correspondence principle) provides Java
+objects for the group constructs that appear when imposing the
+content model:
+
+           account-history
+                  *
+   +---------+----+------+-----------+
+   *         *           *           *
+ open    buyAndSell  buyAndSell     close
+          |     |     |     |
+         buy   sell  buy   sell
+
+When using this model, the programmer must be aware that, to
+get to a "buy" transaction, they must first navigate through a
+"buyAndSell" object, even though "buyAndSell" does not
+correspond to any node in the XML infoset instance data.  This
+is a little bit awkward to program with.
+
+The "buyAndSell" object is problematic for several reasons
+besides clumsiness.  For example, since it does not correspond
+to a DOM node, if DOM were used to manipulate the tree,
+"buyAndSell" objects would have to somehow appear and disappear
+at the "right" times.  Also, the "buyAndSell" object is not
+robust to schema evolution, because it can change or go away if
+the schema is evolved in a backward-compatible way.
+
+For example, suppose that after working with the schema above
+we realize that the schema was too restrictive for the actual
+business process at hand: every buy does not need to be
+followed by a sell, and not all account histories end with a
+"close".
+
+The following is a rewrite of the "history" schema type to
+address both issues.  In regular-expression-like notation, the
+content model here is (open (buy | sell)* close?)
+
+<xs:complexType name="history">
+  <xs:sequence>
+    <xs:element name="open" type="transaction"/>
+    <xs:choice minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="buy" type="transaction"/>
+      <xs:element name="sell" type="transaction"/>
+    </xs:sequence>
+    <xs:element name="close" type="transaction"
+                minOccurs="0"/>
+  </xs:choice>
+</xs:complexType>
+
+The simplified binding style still produces the same Java
+object containment tree regardless of the schema.  However, the
+JAXB 1.0 model group binding style provides quite a different
+tree for the same data:
+
+                  account-history
+                         *
+   +------+---------+---------+---------+-------+
+   *      *         *         *         *       *
+ open buyOrSell buyOrSell buyOrSell buyOrSell close
+          |         |         |         |
+         buy      sell       buy      sell
+
+Not
+for the same instance, but the logic and structure of how to
+navigate the same data is quite different.  By relaxing the
+schema slightly and not changing the instance data at all, the
+topology of the tree has changed.
+
+By tying containment to the shape of instance data rather than
+the shape of the schema description, the principle of node
+correspondence guarantees that even in the face of schema
+evolution, the binding results in object trees which are the
+same shape for the same data.
+
+
+
+ELEMENT ORDER AND NODE CORRESPONDENCE
+=====================================
+
+There is a tension between Java and XML data models with
+respect to element order.  In Java, named fields or methods do
+not have an inherent order in the instance data.  However, in
+XML, named elements do have a specific order that is a
+significant aspect of the instance data.
+
+Although a schema can certainly constrai
+elements are allowed to appear within a document, the specific
+order in which elements actually appear is a property of the
+XML instance document, not of the schema which describes the
+instance.  Therefore, for many XML applications, it can be
+important to access and manipulate the element order.
+
+One solution to this problem is to bind every set of children
+to an ordered collection or array in Java, fully preserving
+ordering information in the Java object.
+
+class AccountHistory
+{
+    // An ordered list of all transactions including
+    // "open", "buy", "sell", and "close"
+    Collection getElementChildren();
+}
+
+This binding model (known as the "generic content" binding
+model in JAXB 1.0) certainly maintains complete node
+correspondence, including ordering information. On the other
+hand, it is obviously inconvenient to use.  The binding
+provides little extra value over an unbound API such as the w3c
+DOM's Node.getChildNodes() method.
+
+Why is the above approach obviously missing something?  Because
+in many situations in Java applications, it is the tag name,
+not the order, which is significant!  In the example schema
+above, we can expect that a typical Java application developer
+would want to access the "<open>" transaction and the
+"<close>" transaction by name, without traversing through a
+list.  In other words, programmers want to call getOpen() and
+getClose().
+
+Sometimes it is possible to tell that element order is not
+significant for an application just by looking at the schema.
+Within model groups that constrain element order completely,
+applications cannot possibly extract any additional information
+from an instance by examining element order. For example:
+
+<xs:complexType name="simple-sequence">
+  <xs:sequence>
+    <xs:element name="first-name"/>
+    <xs:element name="middle-name" minOccurs="0"/>
+    <xs:element name="last-name"/>
+  </xs:sequence>
+</xs:complexType>
+
+The example constrains any <first-name> element to precede any
+<middle-name> element and in turn any <last-name> element. So
+valid instance data contains no interesting information
+about order at all.  Because there are no degrees of freedom in
+element ordering, applications can be expected not to care that
+<first-name> comes before <last-name> in a particular instance
+document.  Those elements must *always* come in that order.
+
+[As an aside, it is interesting and important to recognize that
+the more a schema does to constrain element order, the less
+information a particular instance's element order provides for
+an application, and the less interesting it is for an
+application to be aware of the order.  More ordering
+information in a schema can mean less ordering significance in
+the application.  However, less ordering information does not
+necessarily mean more ordering significance in the application,
+as the following example shows.]
+
+Other times, the schema does not constrain the order but the
+order is still not important to the application; in these
+situations the schema typically provides enough information to
+produce a "perfectly fine" order without forcing the Java
+developer to think about order all the time, as long as the
+application truly is insensitive to order. For example:
+
+<xs:complexType name="simple-config-set">
+  <xs:choice minOccurs="0" maxOccurs="unbounded">
+    <xs:element name="file-config"/>
+    <xs:element name="program-config"/>
+    <xs:element name="user-config"/>
+  </xs:choice>
+</xs:complexType>
+
+In the example above, XML element order is unconstrained, so
+the instance data does contain ordering information that can
+vary from instance to instance.  But a typical application
+(e.g., one that is going to manipulate a specific user's
+configuration) may not care about the order at all, and the
+challenge for a binding model is to free the Java developer
+from having to worry about order when it does not matter.
+
+However, the fact that the order is not signifiant to the
+particular application is not inherent to this kind of schema.
+Certainly you could write another application against messages
+conforming to the same "simple-config-set" schema where the
+order was very important.  For example, you could suppose that
+the order of configuration elements defined of precedence order
+for applying configuration to, say, the action of a user
+opening a file with a program.  In that case, the fact that a
+certain <user-config> might override a certain <file-config> by
+preceding it in the order could be essential to the
+application.
+
+So tension between order-significance and order-insiginficance
+is not purely a tension between different kinds of schemas: it
+is a tension between different programs that can be written
+against the same schema.
+
+And as we saw in the buy-and-sell example in the previous
+section, the tension is also between different schemas that can
+be used to describe the same corpus of messages.
+
+The solution to this solution is not to somehow figure out how
+to select either order significance or order insignificance,
+but to provide both ordered and by-name access all the time, so
+the programmer can choose between the two techniques when
+writing the program.  In other words:
+
+ 1. The primary data model is of an ordered list of elements.
+ 2. The bound API provides convenient mainpulation of elements
+by name.
+
+In concept, the bound interfaces always has methods that
+provide
+both forms of access to the same data model.  It is left up to
+the implementation to ensure that the data is maintained in an
+efficient and consistent way.
+
+class AccountHistory
+{
+    // select "*" for all element children in order,
+    // or select "buy|sell" for all buy and sell children
+    // in their interleaved order
+    XmlObject[] selectPath(String childSpecifier);
+
+    // strongly-typed bound getters are provided for
+    // all declared element names.
+    Transaction getOpen();
+    Transaction[] getBuyArray();
+    Transaction[] getSellArray();
+    Transaction getClose();
+}
+
+Providing convenient setters while not interfering with element
+order is an interesting topic.  The elegant solution provided
+by the simple binding model is discussed in the "Order and
+Setters" section below.
+
+
+
+ACHIEVING CONVENIENCE WHILE APPLYING THE TWO PRINCIPLES
+=======================================================
+
+Before going on to discuss the specific applications of these
+techniques to substitution, wildcards, and other
+idiosynchrasies of XML Schema, we should recap what we have
+covered so far.
+
+When applying the two basic principles to the simple binding
+style, it is also important to make sure that the bound APIs
+are as convenient as possible while still being formally
+correct.
+
+As we have seen, achieving convenience has two consequences:
+
+1. When preserving type correspondence, it is also important to
+be able to provide "convenience" types for certain simple
+types, so, for example, schema strings can be easily seen as
+Java Strings.  So in addition to the "formal" Java class
+corresponding to each schema type, simple types also have a
+"convenience" Java type.
+
+2. When preserving node correspondence, it is important to
+provide "convenience" access to named element children when
+element order does not matter as well as "formal" preservation
+of XML element order.  So in addition to a "formal" accessor
+API that provides children as an ordered list of objects, there
+are also "convenience" methods that allow elements to be
+manipulated by name.
+
+So both metadata and instance data can be seen in two ways:
+
+              | Formally          | Conveniently
+========================================================
+Schema type   | "formal class"    | "convenience type"
+Child nodes   | "child list"      | "named property"
+========================================================
+
+
+
+TYPE SUBSTITUTION, POLYMORPHISM, INSTANCEOF, AND REFLECTION
+===========================================================
+
+Both XML Schema and Java permit type substitution.  That is,
+they both permit the actual type of an instance to be more
+specific than the declared type of the slot holding the
+instance.
+
+In XML Schema, the xsi:type attribute is used to substitute a
+more specific type on an instance of an element. For example,
+the following two documents are valid according to the schema
+below.  The second document substitutes a "product-on-sale"
+instance for the default declared "product" type.
+
+<item>
+  <description>Red Balloon</description>
+</item>
+
+<item xsi:type="product-on-sale" xmlns:xsi="...">
+  <description>Blue Balloon</description>
+  <price>0.75</price>
+</item>
+
+For type substitution to be permitted, the "product-on-sale"
+type needs to be explicitly derived from the "product" type, as
+in the schema below.  XML Schema requires derived types to
+share enough common structure with a base type that that a
+substituted type can be "treated as" its base type.
+
+<xs:element name="item" type="product"/>
+<xs:complexType name="product">
+  <xs:sequence>
+    <xs:element name="description" type="xs:string"/>
+  </xs:sequence>
+</xs:complexType>
+<xs:complexType name="product-on-sale">
+  <xs:complexContent>
+    <xs:extension base="product"/>
+      <xs:sequence>
+        <xs:element name="price" type="xs:decimal"/>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+In Java, type substitution is similar.  It appears wherever a
+variable is declared with a given class but holds an instance
+of a more specific derived class.  Again, every derived class
+must be able to be "treated as" its base classes.
+
+Product product = itemDoc.getItem();
+System.out.println("Desc: " + product.getDescription());
+if (product instanceof ProductOnSale)
+    System.out.println("Price: " +
+        ((ProductOnSale)product).getPrice());
+else
+    System.out.println("Product is not on sale.");
+
+In the code above, Java type substitution is at work: a
+variable of type Product can hold any instance whose type is a
+subclass of Product, such as ProductOnSale.
+
+Java programmers exploit type substitution mainly through two
+techniques:
+
+ 1. Polymorphism.  A method on a base class such as
+"getDescription()" is guranteed to also be provided by dervied
+classes.  So, when working with base class methods on an
+instance that might have a substituted class, the programmer
+does not need to explicitly treat the derived class instances
+differently: the derived classes can be assumed to provide the
+same services as the base class.
+
+ 2. Instanceof and casting.  When it is necessary to explicitly
+detect and handle a more derived substituted class (or rule out
+an instance of a specific derived class as in the "else" clause
+above), the "instanceof" operator can detect a subclass, and a
+class cast operator can provide access to methods that are
+provided by that derived class.
+
+In the Java toolbox for type substitution, polymorphism is the
+artful surgeon's scalpel and "instanceof" is a prosaic kitchen
+knife.  There is a third technique in Java for working with
+type substitution, used less often, that is powerful but crude;
+it could be compared to a hacksaw:
+
+ 3. Reflection and Object.getClass().  The final and least
+elegant technique for dealing with Java type substitution is to
+explicitly reflect on the class metadata for an instance
+object.
+
+For type substitution to work as Java programmers expect, these
+techniques must work.  In particular:
+
+ 1. Polymorhpism.  Any methods provided on a base class of
+course must be present on the derived class. Moreover, the base
+methods should provide the same service and have the same
+behavior on derived classes, so that programmers using
+polymorphism do not need to use "instanceof" when calling
+methods on the base class.
+
+ 2. Instanceof and casting.  The "instanceof" operator must be
+able to be used not only to detect the presence of a needed
+subtype, but also to rule out the presence of an unwanted
+subtype.  In other words, both "instanceof" and "!instanceof"
+must work.
+
+ 3. Reflection.  Schema type metadata differs from Java class
+metadata, so getClass() cannot be expected to return all the
+relevant reflective information for a schema type.  However,
+there should be a runtime method that does return the schema
+type metadata.  In the simple binding style, this is the
+XmlObject.schemaType() method.
+
+
+
+INSTANCEOF IMPLIES DISTINCT INSTANCE CLASSES
+============================================
+
+Even though the simplified binding style binds to Java classes
+that are interfaces, so does not specify a precise
+implementation strategy for the bound classes, the correct
+behavior of "instanceof" under type substitution does require
+that implementations supply distinct implementation classes for
+distinct types such as "Product" and "ProductOnSale".
+
+Why can't an implementation "save" on code size and simply
+implement "Product" and "ProductOnSale" using a single class
+that can play both roles?  What would go wrong?
+
+class SharedImplClass implements Product, ProductOnSale {...}
+
+If all Product or ProductOnSale instances were implemented by
+the same SharedImplClass, then the test "(obj instanceof
+ProductOnSale)" would always return true!  The following line
+of code would not work, because it would appear that all
+products were ProductOnSale:
+
+if (product instanceof ProductOnSale)
+    System.out.println("Product is on sale.");
+else
+    System.out.println("Product is not on sale.");
+
+So the correct behavior of "instanceof" requires that there
+actually be a concrete Java class for each type that can be
+instantiated and tested via "instanceof".
+
+Thus, ensuring the correct bheavior of "instanceof" leads to
+the requirement that not only must there be one (abstract or
+interface) Java class for each schema type, but there also be
+at least one concrete Java class for each nonabstract schema
+type as well.
+
+It is important to be keep with this line of reasoning in mind
+in the next section, when we analyze how element substitution
+should work.
+
+
+
+ELEMENT SUBSTITUTION AS DISTINCT FROM TYPE CORRESPONDENCE
+=========================================================
+
+Type correspondence works very well for type substitution, so
+it is tempting to apply the same technique for element
+substitution, assigning a Java class for each declared element
+and aligning element inheritance with class inheritance.
+
+However, the element-class strategy does not work: if Schema
+element declarations are translated into Java classes, the
+number of classes that are required at runtime is the product
+of all schema types and substitutable element declarations.  In
+other words, using Java classes for schema elements would
+result in a huge (nonlinear) number of classes.
+
+Here is an example. Continuing our example from the previous
+section which defines a type "product-on-sale" that derives
+from "product", consider a substitution group of elements that
+can substitute for the <item> element, whose type is product:
+
+<xs:element name="item" type="product"/>
+<xs:element substitutionGroup="item"
+            name="hot-item" type="product"/>
+<xs:element substitutionGroup="item"
+            name="cool-item" type="product"/>
+
+Any bound Java class that contains a reference to the "<item>"
+element declaration will have a getItem() method that is
+declared to return an object of type Product.
+
+Here is how we would use Java classes to simulate element
+substitution, if we were to do so.  First, each declared
+element such as "item" would corespond to a Java class "Item"
+that inherited from its declared type, in this case "product".
+
+interface Item extends Product {}
+
+We might even declare getItem() to return Items rather than
+merely Products.
+
+Then since <hot-item> and <cool-item> can also substitute for
+<item> (and can be returned from getItem()), they would have to
+extend Item:
+
+interface HotItem extends Item {}
+interface CoolItem extends Item {}
+
+So far so good.  We then must think about the classes of actual
+instance objects rather than just the declared classes of
+method signatures.  When holding an instance of an <item>
+element, instanceof must correctly report that we have an Item
+and not a HotItem.
+
+if (obj instanceof Item && !(obj instanceof HotItem))
+   System.out.println("It is an item but not a hot-item.");
+
+So, just as we saw in the last section, for the correct
+instanceof behavior, any implementation must be able to supply
+at least one concrete instance class for each declared element:
+
+class ItemImpl implements Item {...}
+class HotItemImpl extends ItemImpl implements HotItem {...}
+class CoolItemImpl extends ItemImpl implements CoolItem {...}
+
+So far, so good.  But next we run into a problem.  This scheme
+explodes when we superimpose it with the same requirement for
+distinct instance classes that appears for types.  This is
+because, in addition to substituting <hot-item> for <item>, XML
+schema also permits subsitution of xsi:type="product-on-sale"
+for the declared type "product". In order for "instanceof" to
+be meaningful, we would now need six concrete classes:
+
+                     | Product only    | ProductOnSale
+=============================================================
+instanceof Item only | ItemProduct     | ItemProductOnSale
+instanceof HotItem   | HotItemProduct  | HotItemProductOnSale
+instanceof CoolItem  | CoolItemProduct | CoolItemProductOnSale
+
+All six classes are needed, because "instanceof" code in
+different combinations such as the following must be able to
+return six possible answers when testing for Item or Product
+substitutions:
+
+if ((obj instanceof HotItem) &&
+   !(obj instanceof ProductOnSale))
+   System.out.println("We have a waiting list for this item");
+
+As you can see, the number of classes needed is at least the
+product of (size of substitution group) x (number of types that
+can be substituted).  The first number is large whenever
+substitution groups are used extensivly, and second number can
+be very large, especially if the declared type of the base
+element is the default "anyType".
+
+It is acceptable for a binding solution to produce a linear
+number of generated classes (i.e., for a schema with twice as
+many components, generate twice as many classes).  However, it
+is unacceptable for a binding solution to be required to
+generate a quadratic number of classes.
+
+It is possible to defer the type explosion from compiletime to
+runtime in Java through through use of dynamic proxies.
+However that technique would also impose a layer of required
+inefficiency on the design.
+
+
+
+ELEMENT NAMES AS DATA RATHER THAN TYPES
+=======================================
+
+The discussion so far has explained why it is not feasible to
+arrange Java class inheritance in a way that permits
+"instanceof" to be used to detect substitution of elements.
+What is the correct approach?
+
+The simple binding style solution is straightfoward: since
+substituted element names cannot be treated as Java type
+metadata, they must be treated as Java instance data.
+
+1. In keeping with the intent of substitution groups as a way
+of "substituting" elements, getters corresponding to elements
+that are the head of a substitution group should return all
+elements in the substitution group.  For example, getItemArray
+() will return an array that represents all the <item>, <hot-
+item>, and <cool-itme> elements.
+
+2. In light of the discussion in the last section, the
+instances that are returned should all implement Java classes
+that correspond to the schema types of the instance data. To
+avoid a class explosion, they are not required to implement
+additional classes that correspond to the elements. The schema
+spec guarantees that when an element is substituted, the type
+is also guaranteed to be substitutable.
+
+3. Then, to make the element substitution detectable and
+accessible to the programmer, the element names used in the xml
+data are made available by a method on the associated instance
+in Java.
+
+For example:
+
+Product item = container.getItem();
+if (item.nodeQName().equals(ItemDocument.QNAME_ITEM))
+    System.out.println("An ordinary item");
+else if (item.nodeQName().equals(ItemDocument.QNAME_HOT_ITEM))
+    System.out.println("A hot item");
+else if (item.nodeQName().equals(ItemDocument.QNAME_COOL_ITEM))
+    System.out.println("A cool item");
+
+For this to be convenient, constants (such as QNAME_ITEM)
+should be generated for the relevant QNames.
+
+4. Similarly, setter methods must be available that are keyed
+off of specific element names, to permit construction of
+instances that use substitution groups.
+
+For example:
+
+container.add(ItemDocument.QNAME_HOT_ITEM, hotProduct);
+container.add(ItemDocument.QNAME_ITEM, ordinaryProduct);
+// the second line above is perfectly equivalent to:
+// container.addItem(ordinaryProduct);
+
+Although XMLBeans v1 fully supports substitution groups, does
+not provide methods as easy as the ones illustrated above.  For
+example, it does not provide "add" methods such as the ones
+above or the "nodeQName" methods - you must use XmlCursor to
+access that functionality.  But XMLBeans v2 will probably add
+these kinds of methods.
+
+The idea of using element names as instance data to
+parameterize write-access to data is also relevant when
+discussing wildcards, and we will discuss wildcard binding
+after a short discussion of binding with inheritance by
+restriction.
+
+
+
+INHERITANCE BY RESTRICTION
+==========================
+
+In Java, the only kind of inheritance is inheritance by
+extension, and it always works by adding or overriding methods
+on a class.
+
+However, in schema, there are two forms of complex type
+inheritance:
+
+ 1. Inheritance by extension, where additional data is added at
+the end of a type's content model.
+
+ 2. Inheritance by restriction, where a new content model is
+defined that is guaranteed to be a subset of the base content
+model.
+
+Here is an example of three types that are related to each
+other via inheritance by restriction:
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:tns="http://rest/" targetNamespace="http://rest/"
+    elementFormDefault="qualified">
+
+  <xs:complexType name="base">
+    <xs:sequence>
+      <xs:any namespace="##targetNamespace"
+              minOccurs="0" maxOccurs="3"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="derived1">
+    <xs:complexContent>
+      <xs:restriction base="tns:base">
+        <xs:sequence>
+          <xs:element name="first"/>
+          <xs:element name="middle" minOccurs="0"/>
+          <xs:element name="last"/>
+        </xs:sequence>
+      </xs:restriction>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="derived2">
+    <xs:complexContent>
+      <xs:restriction base="tns:derived1">
+        <xs:sequence>
+          <xs:element name="first"/>
+          <xs:element name="last"/>
+        </xs:sequence>
+      </xs:restriction>
+    </xs:complexContent>
+  </xs:complexType>
+
+</xs:schema>
+
+In words, the example above defines a type "derived2" that
+derives from "derived1", which in turn derives from "base".
+
+Type      | Definition
+==============================================================
+base      | Permits ANY zero to 3 elements in the target NS
+derived1  | Requires <first> (<middle> optional) <last>
+derived2  | Requires <first> <last>, with no <middle> allowed
+
+As you can see, derivation by restriction is a form of
+derivation by subsetting.  The set of instances permitted
+"derived1" is a subset of the set of instances permitted by
+"base", and the set of instances permitted by "derived2" is a
+subset of the set of instances permitted by "derived1".
+
+How should the two dervied types be bound in Java?  Clearly for
+type correspondence to work, they must both be bound to classes
+that inherit from the correspondeing classes for the base
+types.  But in particular, there are two natural questions:
+
+ 1. How should the <middle> element be bound, since it seems to
+disappear from derived2?
+
+ 2. How should the wildcard (the <any>) in "base" be bound,
+since it seems to disappear from derived1?
+
+Let us take a look at the <middle> element question first.
+
+It is a common misconception that inheritance by restriction
+allows derived types to "remove" elements from a base type's
+content model.  That is not a correct description of derivation
+by restriction.  A derived restriction can only impose further
+restrictions on degrees of freedom that were already present in
+the base type.  So, for example, the reason the <middle> tag is
+allowed to be "removed" when derived2 restricts derived1 is
+that it is already optional in derived1.  In contrast, an
+element such as the <first> tag cannot be "removed" because it
+is required in the base type derived1.  Notice that <middle> is
+allowed to be "added" when derived1 restricts <base>, because
+it is specializing a wildcard which already permits <middle>.
+
+What should the bound type Derived2 look like?  The answer is,
+the signature should look exactly like Derived1, but
+implementations happen to always return "null" on the getMiddle
+() call whenever the data is valid.
+
+An ordinary Java programmer working with a variable of type
+"Derived1" would want to write polymorphic code like the
+following:
+
+Derived1 derived = computeDerivedData();
+String first = derived.getFirst();
+String middle = derived.getMiddle();
+String last = derived.getLast();
+
+In particular, polymorphism should guarantee that the
+"getMiddle()" method should work correctly and return the right
+value regardless of whether the instance were actually a
+"Dervied1" as declared, or a substituted subclass such as
+"Derived2".  The only special thing about the "missing" element
+is that it is always missing for valid instances of "derived2",
+so the method can always be expected to return null.
+
+The second question when examining inheritance by restriction
+is, how should wildcards such as the <xs:any> found in the
+"base" type be bound?
+
+The answer provided by the simple binding model is "wildcards
+are not bound to any generated method at all" - because open
+element and attribute content is always accessible by generic
+accessors.  An additional method is unnecessary and not
+provided by the simple binding style.
+
+The omission is not an oversight, but a result of careful
+design.  The detailed reasons for this conscious omission are
+described in the next section.
+
+
+
+WILDCARDS
+=========
+
+A wildcard in schema, which is just schema jargon for an
+<xs:any> declaration, permits the substitution of any element
+within a given set of namespaces at a particular location in a
+content model.  Because they permit a variety of different
+elements to be substituted at the same location, wildcards
+present may of the same binding problems, and permit some of
+the same solutions, as element substitution.
+
+For example, as observed previously, use of Java classes and
+"instanceof" to mark and detect the use of particular elements
+in XML instances is problematic when considered in light of
+element and type substitution used together.  JAXB 1.0 dictated
+the use of these element-classes for wildcards, but that is why
+JAXB 1.0 is unable to support type substitution.  In my
+judgement, because of this problem it is likely that JAXB 2.0
+will have to move away from the use of element-classes and
+provide access to names as instance data instead.
+
+The simple binding style fully supports dynamic access to open
+data, including data permitted by wildcards.  It allows data to
+be accessed by name rather than by a specific method generated
+for a specific declared element, and it also allows access to
+discover the name by which specific data was tagged.
+
+However, the simple binding style does not bind wildcards to
+specially generated methods that become present when a wildcard
+is declared.  Instead, access to open content is always
+provided by the base class itself (XmlObject).  The
+XmlObject.selectPath method always provides access to both
+valid and invalid data as well as the open content data
+permitted by wildcards.
+
+For example, with the simple binding style, the following three
+calls return an element named "first"; and element in the
+namespace "imaginary", and all elements inside a structure.
+
+XmlObject[] openContent1 = xobj.selectPath("first");
+XmlObject[] openContent2 = xobj.selectPath(
+            "declare namespace i='imaginary' i:*");
+XmlObject[] openContent3 = xobj.selectPath("*");
+
+Selecting "*" returns all elements, including both elements
+that may have been permitted by an <xs:any> declaration as well
+as any other elements that may be permitted through
+<xs:element> declarations.  In particular, elements that might
+happen to be accessible by a generated property accessor such
+as getFirst() are accessible in two ways: both via the
+generated method and via the selectPath method.
+
+This design may be suprising because of what it does not do.
+It might be natural to expect, for example, for a binding to
+provide a generated method such as "getElementsMatchingAny()"
+when presented with the following schema type:
+
+<xs:complexType name="name-plus">
+  <xs:sequence>
+    <xs:element name="first" type="xs:string"/>
+    <xs:element name="last" type="xs:string"/>
+    <xs:any namespace="##other"/>
+  </xs:sequence>
+</xs:complexType>
+
+class NamePlus
+{
+   String getFirst();
+   String getLast();
+   XmlObject[] getElementsMatchingAny();
+}
+
+That design might permit, for example, the following instance
+to be bound in a way that allowed the "<ex:aka>" element to be
+easily selected:
+
+<...>
+  <first>Joe</first>
+  <last>Cool</last>
+  <ex:aka xmlns:ex="imaginary">Red Baron</ex>
+</...>
+
+XmlObject[] extensionElements = obj.getElementsMatchingAny();
+for (int i = 0; i < extensionElement.length; i++)
+  if (extensionElements[i].nodeName().equals(EX_AKA))
+     System.out.println("AKA: " + extensionElements[i];
+
+Why doesn't the simple binding style provide this kind of
+generated wildcard access method?
+
+The problem with this approach is that it breaks badly in the
+presence of type substitution, because the position and
+presence of wildcards can be changed under both restriction and
+extension.  For example, let us rewrite the type above as an
+extension of the "derived2" example type from the restriction
+section.
+
+<xs:complexType name="derived3">
+  <xs:complexContent>
+    <xs:extension base="derived2">
+      <xs:sequence>
+        <xs:any namespace="##other"/>
+      </xs:sequence>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+The type "derived3" has exactly the same structure as "name-
+plus" except that it derives from "derived2", which in turn
+derives from "derived1", and then "base".
+
+But then, the type "base" also has a wildcard, so under this
+design it would have a "getElementsMatchingAny()" method.
+
+Under this design, it would be quite reasonable, when working
+with a variable of type Base, to write code like this:
+
+Base obj = computeBaseData();
+XmlObject[] extensionElements = obj.getElementsMatchingAny();
+for (int i = 0; i < extensionElement.length; i++)
+{
+  if (extensionElements[i].nodeName().equals(FIRST_NAME))
+     System.out.println("Name: " + extensionElements[i];
+  if (extensionElements[i].nodeName().equals(EX_AKA))
+     System.out.println("AKA: " + extensionElements[i];
+}
+
+But if "getElementsMatchingAny()" returns only elements that
+match a wildcard, then when working with an instance of type
+Derived3, the set of elements would be different than when
+working with an instance of Base.  In particular, the search
+for FIRST_NAME would fail, since the <first> element is not
+permitted by the wildcard in Derived3.  The <first> element is
+permitted explicitly by an <xs:element> declaration, and only
+the <ex:aka> element matches the wildcard.
+
+In other words, the programmer should be able to expect that
+the code above would be correct, but instead the code breaks
+under the "getElementsMatchingAny" design.  A basic principle
+of object orientation, which is that methods present in the
+base class should work in the same way in the derived class, is
+broken by "getElementsMatchingAny".
+
+In short, a "getElementsMatchingAny" method might appear on the
+surface to be more convenient than a "selectPath" method, but
+in reality, it is quite a bit more inconvenient, because it
+would not be reliable in the presence of type substitution.
+
+
+PROPERTIES
+==========
+
+We are now discuss a few more of the details of the simple
+binding style solution for properties.  First, let us recap
+what we have discussed so far:
+
+ 1. The principles of type and node correspondence lead us to a
+simple binding style that provides both "formal" types and
+accessors that provide full access to schema and XML infoset,
+and "convenience" types and accessors that provide ease-of-use
+in typical Java applications.
+
+ 2. We have discussed "formal" types as well as "formal"
+accessors.  In particular, the structure of wildcards and
+element substitution suggests that "formal" Java classes must
+correspond to schema types, not schema elements, and "formal"
+accessors must be driven by the XML infoset (e.g., selectPath)
+rather than schema content model matching.
+
+ 3. The requirements of real-world order-insensitive Java
+applications, and observations about robustness in the face of
+evolution of schemas suggests that "convenience" accessors
+should be based on names, and "convenience" types should be
+allowed to differ from the "formal" types. Conveneince is is
+what properties are all about.
+
+What is a property?
+
+In the simple binding style, a property can be understood to
+represent just three things (although we will add a few details
+later) - a name, a type, and a cardinality.
+
+                 | in schema            | in Java
+==============================================================
+1. A name        | elt/attr QName       | getter/setter name
+2. A type        | elt/attr schema type | getter return type
+3. A cardinality | minOccurs, maxOccurs | array vs singleton
+
+Every complex schema type defines a set of such "schema
+properties", one for each element or attribute name.
+
+For example, in the following schema type:
+
+<xs:complexType name="name-record">
+  <xs:sequence>
+    <xs:element name="name" type="xs:string"/>
+    <xs:element name="alias" type="xs:string"
+                minOccurs="0" maxOccurs="unbounded"/>
+  </xs:sequence>
+  <xs:attribute name="id" type="xs:integer" use="optional/>
+</xs:complexType>
+
+This type has three properties:
+
+Elt/attr QName | Schema type   | Summarized cardinality
+==========================================================
+name  (elt)    | xs:string     | 1..1         (singleton)
+alias (elt)    | xs:string     | 0..unbounded (multiple)
+id    (attr)   | xs:integer    | 0..1         (optional)
+
+The corresponding Java class would have three getters:
+
+class NameRecord
+{
+    String getName();
+    String[] getAliasArray();
+    BigInteger getId(); // may be null
+    // ... setters and other methods omitted
+}
+
+An element name and an attribute name are always considered
+different, but two element declarations with the same name in
+the same content model are considered to contribute to the same
+property.
+
+It is important to understand that the concept of a property is
+a correspondence between an element or attribute _name_ and a
+type and cardinality, not a correspondence between a specific
+declaration and a type and cardinality. The thing that makes
+this simplification possible is the XML Schema "Element
+Declarations Consistent" rule, which requires that any two
+elements with the same name in a single content model must have
+excatly the same declared type.
+
+
+
+SUMMARIZED CARDINALITY OF PROPERITES
+====================================
+
+Since an element property is a "rolled up" summary of the uses
+of the element within a content model, the cardinality of the
+whole element property must summarize the cardinality of all of
+the element declarations with the same name.
+
+For example, the following three different schema types all
+bind in the same way:
+
+<xs:complexType name="names-1">
+  <xs:sequence>
+    <xs:element name="name" type="xs:string"/>
+    <xs:element name="name" type="xs:string"/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="names-2">
+  <xs:sequence minOccurs="2" maxOccurs="2">
+    <xs:element name="name" type="xs:string"/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="names-3">
+  <xs:sequence>
+    <xs:element name="name" type="xs:string"
+                minOccurs="2" maxOccurs="2"/>
+  </xs:sequence>
+</xs:complexType>
+
+In all three cases, the summarized minOccurs and maxOccurs for
+elements called "name" are both 2:
+
+Elt/attr QName | Schema type   | Summarized cardinality
+==========================================================
+name  (elt)    | xs:string     | 2..2         (multiple)
+
+The obvious advantage of this approach is that is is robust to
+schema evolution: a schema author should feel free to rewrite a
+type as any of the three equivalent forms above without
+changing the behavior of applications.
+
+Notice that the simple binding style does NOT bind the two
+separate element declarations called "name" to two different
+Java properties as in the following code:
+
+class Names1
+{
+   // this is NOT what the simplified style does!
+   String getName1();
+   String getName2(); // nope
+}
+
+The binding that DOES result always provides exactly one
+property for each element name:
+
+class Names*
+{
+   // This IS what the simplified binding style does
+   String[] getNameArray();
+}
+
+Here is the detailed rule that the simplified binding style
+uses to compute the summarized cardinality of an element called
+"name":
+
+The summarized cardinality of element "name" within a particle
+is a (minOccurs, maxOccurs) pair computed as follows, depending
+on the kind of particle:
+
+   a. If the particle is an <xs:element> or an <xs:any>, then
+it is the (minOccurs, maxOccurs) of the declaration if "name"
+matches the declaration; otherwise it is (0, 0).
+
+   b. If the particle is an <xs:all> or an <xs:sequence>, then
+it is the component-wise sum of the summarized cardinality of
+the element "name" in all the children of the group.
+Furthermore, if the group has a minOccurs or maxOccurs, then
+the result multiplies these, i.e.,
+     (group-minOccurs * sum-of-child-minOccurs,
+      group-maxOccurs * sum-of-child-maxOccurs)
+
+   c. If the particle is an <xs:choice>, then it is the
+component-wise (min, max) of the summarized cardinality of the
+element "name" in all the children of the group. Furthermore,
+if the group has a minOccurs or maxOccurs, then the result
+multiplies these, i.e.,
+     (group-minOccurs * min-of-child-minOccurs,
+      group-maxOccurs * max-of-child-maxOccurs)
+
+A contrived example that illustrates all three rules:
+
+<xs:complexType name="cardinality-ex">
+  <xs:choice>
+    <xs:sequence>
+      <xs:element name="a"/>
+      <xs:element name="c"/>
+      <xs:element name="b"/>
+      <xs:element name="c"/>
+    </xs:sequence>
+    <xs:sequence maxOccurs="2">
+      <xs:element name="b"/>
+      <xs:element name="c" minOccurs="3" maxOccurs="4"/>
+    </xs:sequence>
+  </xs:choice>
+</xs:complexType>
+
+The summarized cardinality for the three properties in this
+example are:
+
+Elt QName | Summarized cardinality
+==========================================================
+a         | 0..1  (1..1 on first choice, 0..0 on second)
+b         | 1..2  (1..1 on first choice, 2..2 on second)
+c         | 2..8  (2..2 on first choice, 6..8 on second)
+
+
+When binding to Java, the important thing about the cardinality
+of a property is that it always falls into one of the following
+three categories:
+
+Cardinality    | minOccurs, maxOccurs
+========================================================
+singleton      | if minOccurs == 1 and maxOccurs == 1
+optional       | if minOccurs == 0 and maxOccurs <= 1
+multiple       | if maxOccurs > 1
+
+(Attributes are always singleton or optional.)
+
+
+
+ORDER AND PROPERTY SETTERS
+==========================
+
+The order-insensitive binding provided by the simple name-based
+property scheme described above is excellent and completely
+unambiguous for getters.
+
+However, it leaves open the question, "how is order to be
+handled when setting data"?
+
+The simplified binding style solves this problem with a design
+that has the following properties:
+
+ 1. It is NOT always guaranteed that a content model
+constructed by calling setter or adder methods will be valid.
+
+ 2. However, IS always guaranteed that if the adders and
+setters are called in a valid left-to-right content order, the
+calling order will become the document order.
+
+ 3. And it IS always guaranteed that if the content model fully
+constrains the position of an element with a given name with
+respect to other element names, a valid set of "setter" calls
+will always construct a valid instance order.
+
+In other words, when the schema guarantees fully locks down
+element order, then element order cannot provide significant
+information to the application, and the simplified binding
+style does not force the developer to call "setters" in any
+particular order.
+
+However, when the element order might possibly provide
+significant information to the application, "setters" should be
+called in the order in which the application programmer wishes
+to seee the data appear.
+
+Here is the ordering behavior used by the simplified binding
+style, which accompishes the two goals above:
+
+ 1. No element reordering is done when replacing or removing
+elements.
+
+ 2. Insertion of an "ith element named n" is naive and is done
+adjacent to the current "ith element named n".
+
+ 3. If executing a method that adds a "new last element named
+n", then the new element is inserted at the "first good"
+location that is identified based on the name n.
+
+The trick is in the algorithm for identifying a the "first
+good" location for a new element in step #3.
+
+Here is how it works:
+
+(1) At compiletime, a set of element names is computed for each
+element property that is that "set of all element names that
+can only follow the all elements named <n> in a valid
+instance".  For a property named "n", call this set "after(n)"
+
+(2) When appending a new "n", it is placed immediately before
+the first element whose name is in after(n) that comes after
+the last existing element <n>.
+
+
+
+DEFINING AFTER(N) FOR AN ELEMENT PROPERTY NAMED N
+=================================================
+
+This section is technical, but it describes how the set "after
+(n)" can be computed at compiletime for the simple binding
+style:
+
+
+after(n):
+
+Where p is the content model for the complex type:
+
+after(n) = mayfollow(n, p) - mayprecede(n, p)
+
+
+
+Denote by "containedby(p)", the set of element names permitted
+anywhere within a given particle, i.e., the set of QNames
+permitted by any nested element or wildcard declaration under a
+particle.  Then
+
+
+mayfollow(n, p):
+
+For a given particle p, mayfollow(n, p) is the following set:
+
+ - if p has maxOccurs > 0, it is
+        containedby(p) if containedby(p) contains n
+        {} otherwise.
+
+ - if p is an element or wildcard, it is {}
+
+ - if p is a choice it is the union of mayfollow(n, c) for
+every child of the choice group
+
+ - if p is a sequence, then let "c" be the first child that
+contains "n".
+        {} if there is no such "c"
+        The union of mayfollow(n, c) and containedby(d) for
+        every d that comes after c.
+
+
+mayprecede(n, p):
+
+For a given particle p, mayprecede(n, p) is computed in exactly
+the same as mayfollow(n, p), except for the last two rules:
+
+ - if p has maxOccurs > 0, it is
+        containedby(p) if containedby(p) contains n
+        {} otherwise.
+
+ - if p is an element or wildcard, it is {}
+
+ - if p is a choice it is the union of mayprecede(n, c) for
+every child of the choice group
+
+ - if p is a sequence, then let "c" be the last child that
+contains "n".
+        {} if there is no such "c"
+        The union of mayprecede(n, c) and containedby(d) for
+        every d that comes before c.
+
+
+For example, consider the following content model
+(schematically):
+
+(a b c) | (b c d) | (c (d | e)* )
+
+after(a) = {b, c}
+after(b) = {c, d}
+after(c) = {d, e}
+after(d) = {}
+after(e) = {}
+
+So when the schema completely constrains order, it is possible
+to call setters in an arbitrary order and infer the order from
+the schema instead:
+
+setC() -> <c/>
+setB() -> <b/><c/>
+setA() -> <a/><b/><c/>
+
+On the other hand, where the schema has loops or does not
+constrain order, it is possible to control the order by calling
+setters or adders in the desired left-to-right order:
+
+addD() -> <d/>
+addE() -> <d/><e/>
+addD() -> <d/><e/><d/>
+addE() -> <d/><e/><d/><e/>
+setC() -> <c/><d/><e/><d/><e/>
+
+With this design, it is always possible to construct a valid
+instance by calling setters in the proper order, even though it
+does not guarantee that all instances that can be constructed
+are valid.
+
+
+
+BINDING PROPERTIES AND INHERITANCE
+==================================
+
+There are some details in Java and schema inheritance that
+differ.  In particular:
+
+ 1. In schema it is possible to change the type of an element
+name in a derived type's content model by using restriction.
+
+ 2. In schema it is possible to change the cardinality of an
+element name in a derived type's by using extension.
+
+Here is an example of each of the cases above:
+
+
+<xs:complexType name="base">
+  <xs:sequence>
+    <xs:element name="n" type="xs:decimal"/>
+  </xs:sequence>
+</xs:complexType>
+
+Elt/attr QName | Schema type   | Summarized cardinality
+==========================================================
+n (elt)        | xs:decimal    | 1..1 (singleton)
+
+
+<xs:complexType name="restricted">
+  <xs:complexContent>
+    <xs:restriction base="base">
+      <xs:sequence>
+        <xs:element name="n" type="xs:int"/>
+      </xs:sequence>
+    </xs:restriction>
+  </xs:complexContent>
+</xs:complexType>
+
+Elt/attr QName | Schema type   | Summarized cardinality
+==========================================================
+n (elt)        | xs:int        | 1..1 (singleton)
+
+
+<xs:complexType name="extended">
+  <xs:complexContent>
+    <xs:extension base="base">
+      <xs:element name="n" type="xs:decimal"/>
+    </xs:extension>
+  </xs:complexContent>
+</xs:complexType>
+
+Elt/attr QName | Schema type   | Summarized cardinality
+==========================================================
+n (elt)        | xs:decimal    | 2..2 (multiple)
+
+
+In Java, once a getter method is defined to return a certain
+type, it is illegal to define a method in a derived class with
+the same name and a different return value.  For example:
+
+interface Base extends XmlObject
+{
+    BigDecimal getN();
+}
+
+interface Restricted extends Base
+{
+    int getN(); // this is illegal
+}
+
+interface Extended extends Base
+{
+    BigDecimal[] getN(); // this is also illegal
+}
+
+Therefore, it is important to bind to Java methods in a way
+that follows Java inheritance rules.
+
+The rules used by the simple binding type are as follows:
+
+ 1. When determining the declared type of a Java property, the
+schema type that is consulted is the "least derived" base type
+that has a property with the corresponding name.
+
+In the example above, since "base" is the first class in which
+a property for the element name "n" appears, its type
+"xs:decimal" is the one that is used to determine the declared
+type of the Java method "getN()".
+
+ 2. When generating property names for "multiple" elements, the
+word "Array" is always appended to the property name, to avoid
+collision with a possible singleton property name in the base
+type.  Property names ending with "Array" are reserved by the
+name picking algorithm and avoided in other cases.
+
+In the example above, the "Extended" class will get an extra
+method "getNArray()" which is available in addition to the
+inherited "getN()" method.  The inherited method still works,
+as it must for polymorphism to work, and it simply returns the
+first "N" value.
+
+So the generated classes actually look like this: (Inhertied
+methods are redeclared for clarity.  Also, methods other than
+getters are omitted.)
+
+interface Base extends XmlObject
+{
+    BigDecimal getN();
+}
+
+interface Restricted extends Base
+{
+    BigDecimal getN(); // even though we know it fits in an int
+}
+
+interface Extended extends Base
+{
+    BigDecimal getN(); // just provides access to the first <n>
+    BigDecimal[] getNArray(); // provides access to all <n>
+}
+
+This last technique for avoiding collisions is the reason that
+in the simple binding style, array properties are all bound to
+methods that end in the word "Array".
+
+
+
+FORMAL CLASS BINDING FOR UNION TYPES
+====================================
+
+XML Schema, unlike Java, has a concept of a "type union" of
+simple types.  For example, a type can be defined whose
+instances are allowed to be either an xs:int or an xs:date.
+
+Since an instance may carry the data of either an int or a
+date, one might expect that the proper "formal class" binding
+for such a union type would be to a class that derives from
+both XmlInt and XmlDate:
+
+interface MyUnion extends XmlInt, XmlDate {} // nope!
+
+This is not what is done in the simple binding style, because
+the inheritance relationship goes the wrong way: it is NOT true
+that every instance in a MyUnion slot is both an XmlInt and an
+XmlDate. It IS true that every instance of an xs:int or an
+xs:date can be copied into a MyUnion slot. So it would be
+closer to the truth to say MyUnion is restricted by XmlInt and
+XmlDate, not the other way around.
+
+So the simple binding style defines the following, which
+corresponds directly to the fact that the XML schema
+specification defines the base type of a union to be the
+anySimpleType:
+
+interface MyUnion extends XmlAnySimpleType {}
+
+Then it also requires that the implementation of MyUnion
+provide the guarantee that every instance that actually
+implements MyUnion must be able to be coerced to either XmlInt
+or XmlDate.
+
+Unfortunately, in the interest of reducing a type explosion in
+the presence of nested unions, it is not feasible to allow the
+"instanceof" operator to be used to detect union instances
+which are XmlInt or XmlDates.  So an approach similar to what
+is taken for element substitution is used.  The mechanisms for
+differentiating between different member types in a formal
+instance are by runtime methods.  Every union type exposes a
+method called "instanceType()" which returns the non-union
+member type for the particular instance of the union.  This
+method can always be used to distinguish between union members
+in an instance.
+
+In addition, for simplicity of manipulating formal types, the
+simple binding style requires that every instance of a simple
+type can be coerced to an interface called "SimpleValue", which
+provides all the typed simple type accessors, including
+"getIntValue()", "getDateValue()", "getStringValue()", and so
+on.  Accessors for types which are not type-correct throw an
+exception when called.
+
+To avoid a type explosion in the presence of nested unions,
+"instanceof" cannot be used as the mechanism for distinguishing
+union types for formal classes.  However, normally a user does
+not need to work with the formal types for unions, and uses
+convenience types instead.  Here, free of the type
+correspondence rule, the simple binding style chooses
+convenience bindings that do allow "instanceof" to be used.
+
+
+
+CONVENIENCE CLASS BINDING FOR UNION TYPES
+=========================================
+
+For unions, there are two times at which a convenience type
+must be computed.
+
+ 1. At compiletime, the simple binding style defines a rule to
+determine which declared convenience type should be used for a
+given union type.  For example:
+
+  java.lang.Object getBirthdayOrAge();
+
+ 2. At runtime, the simple binding style defines a rule to
+determine which convenience type should be instantiated for a
+given instance of a union type. For example:
+
+  Object obj = x.getBirthdayOrAge();
+  if (obj instanceof Integer)
+      System.out.println("Age is " + obj);
+  else if (obj instanceof Calendar)
+      System.out.println("Birthday is " + obj);
+
+The rule for determining the convenience Java class for a union
+type works as follows:
+
+ 1. First, the Java convenience classes for all the possible
+instantiated member types of the union are collected together,
+using the boxed types java.lang.Integer for "int" and so on.
+
+ 2. Then, if all the classes are the same, then that class is
+used.  Otherwise, java.lang.Object is used.
+
+For example, the types xs:gDay, xs:gYear, xs:date, xs:time etc.
+all correspond to a convenience class "java.util.Calendar".  A
+union whose members are these types will have a convenience
+class of "Calendar", but if you throw in an xs:int as well, it
+will be declared as "Object".
+
+Once the convenience class is declared at compiletime as above,
+then at runtime, it is always possible to instantiate the
+proper convenience class corresponding to the given type of a
+union.
+
+
+
+TYPE INFERENCE AND ADDITIONAL SCHEMA TYPES
+==========================================
+
+The simplified binding style maintains one special invariant
+which is a natural fallout of applying both type correspondence
+and node correspondence at once:
+
+ Every document, element, and attribute node has a schema type.
+
+Maintaining this invariant is important, because it gives us a
+backbone on which to provide instances with proper Java classes
+that can be tested via "instanceof", and it also allows schema-
+specific services such as validation to be applied at every
+point.
+
+One problem with this invariant is that the W3C XML Schema
+specification does not define types in the following two
+situations:
+
+ 1. The schema spec does not define the type of a whole
+document, i.e., the document node itself has no schema type.
+
+ 2. The schema spec does not define the type of an invalid or
+nonvalidated node (e.g., via wildcard process="skip").
+
+Both issues are areas omitted by the spec, not contradicted.
+So the simplified binding solution solves both issues by
+defining special "schema types" that are only used within
+simplified binding.
+
+ 1. Document types are special schema types that can be
+attached to a document node.  Each document types is just a
+complex type that contains a single reference to a single
+global element definition.
+
+ 2. A special "no-type" schema type is used to attach to
+elements or attributes or documents which have unknown names or
+types, or which are skipped due to a specific "skip" rule in a
+wildcard.
+
+Armed with these two kinds of extra types, the simple binding
+style always maintains a schema type for every document,
+element, or attribute node.
+
+Simplified binding style type inference is easy and efficient,
+and works as follows:
+
+ 1. At every node except for the root (document) node, the type
+of an element or attribute is determined by examining three
+things:
+     a. the type of the containing node
+     b. the element or attribute QName
+     c. the xsi:type attribute on the element (elts only)
+
+If the containing node does not have a complex type, then any
+elements or attributes are in error, and the inferred type is
+the "no-type".
+
+Otherwise, the containing complex type must uniquely define a
+known "declared type" for a set of recognized element or
+attribute QNames.  This mapping from recognized names to
+"declared types" can be computed for every complex type at
+compiletime.  If at runtime the element or attribute's name is
+not in this recognized set, the inferred type again is "no-
+type".
+
+The xsi:type attribute on an element may override the declared
+type if it is present and names a type that inherits from the
+declared type.  If the xsi:type attribute is present but is not
+valid, then the inferred type again is the "no-type".
+
+Finally, the inferred type is either the xsi:type-specified
+type, if present, or the "declared type" if not.
+
+ 2. A the root (document) node, the type is simply specified by
+the user, or if desired, sniffed from the XML data source.
+
+For example, when writing
+
+ OrderDocument doc = OrderDocument.Factory.parse(myFile);
+
+The user is specifying that the root node's type should be the
+schema type corresponding to "OrderDocument".
+
+When loading a normal well-formed document without specifying a
+specific type, i.e., when saying XmlObject.Factory.parse, the
+document type is inferred by sniffing the XML document for the
+first element.  So, for example, if the first element is
+<order>, then the document type will be the one corresponding
+to that global element definition, and the Java object will be
+able to be coerced to "OrderDocument":
+
+ OrderDocument doc = (OrderDocument)
+       XmlObject.Factory.parse(myFile);
+
+If no type is specified or sniffed, then the type of the root
+is the "no-type".
+
+
+INVALID CONTENT AND THE NO-TYPE
+===============================
+
+The no-type plays a similar role that "null" does in Java, in
+that it can always be found as a substitute for any other type.
+
+Consider:
+
+Java             | Schema     | Role
+=============================================================
+java.lang.Object | xs:anyType | Universal base class
+                 |            | Variables can be declared
+                 |            | Always valid to use
+-------------------------------------------------------------
+null             | no-type    | Universally substitutable
+                 |            | Cannot declare vars of type
+                 |            | Never valid / NPE when using
+-------------------------------------------------------------
+
+Notice that if you find the no-type on a node, it does NOT mean
+that that the contents of the node are invalid.  It is worse!
+It means is that intended type of the node itself cannot be
+determined, possibly because the node's name or xsi:type (or
+that of a parent) was misspelled.
+
+In contrast, it is quite easy to construct instances which are
+not valid but for which all the types can be inferred.  For
+example, a document that shuffles puts the some elements in the
+wrong order can be invalid, but the intended types of each
+element can still be inferred from their names.  It is only
+when the names themselves cannot be recognized that the no-type
+is used.
+
+If strongly-typed convenience methods (i.e., generated getters)
+are used to retrieve instances that have been tagged with the
+no-type, the result is a Java "null".  When a schema type, and
+therefore a corresponding Java class, cannot be inferred, there
+is no other Java value that is guaranteed substitute for the
+declared Java type of the getter method.
+
+For example, consider the following instance:
+
+<doc>
+  <item/>
+  <item xsi:type="nonsense"/>
+  <item/>
+</doc>
+
+Item[] items = doc.getItemArray();
+
+System.out.println(items[1]); // prints "null".
+
+The reason for this is that when a schema type cannot be
+inferred, there is no universal Java class that can be
+instantiated which is guaranteed to be able to substitute for
+the declared Java type ("Item" in this case).  However, "null"
+is univerally substitutable, so it is an appropriate return
+value.
+
+
+
+NAMING AND NESTING
+==================
+
+The simplified binding style follows essentially the JAXB
+conventions for inferring names of generated types and methods,
+but it follows the additional two rules:
+
+ 1. Global elements and attributes definitions get
+corresponding Java classes which are complex "document" types
+that contain only a single reference to the global element or
+attribute, and are named as "NameDocument" or "NameAttribute".
+
+ 2. If a schema type is anonymous, then its definition must
+have been nested within another schema type definition, or
+directly within a global element or attribute definition.  So
+the generated Java class is similarly nested within the
+corresponding outer class, and the short class name is inferred
+from the directly containing element or attribute (or "Member"
+or "Base" or "Item" for anonymous types nested in union,
+restriction, or list type definitions).
+
+ 3. If there are name conflicts due to either sibling names or
+other reserved names, rather than complaining and failing by
+default, a nonconflicting name is chosen by appending the first
+available numeral, starting with "2".  This non-conflicting
+name rule allows all schemas to be compiled without
+configuration or programmer intervention.
+
+
+
+
+
+
+
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

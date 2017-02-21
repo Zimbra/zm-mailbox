@@ -1,0 +1,63 @@
+There are two primary applications using DAV with Zimbra server.
+
+- WebDAV to access mail attachments and Notebook documents in the 
+  users mailbox.
+- CalDAV to access the calendar appointments in the mailbox server 
+  using 3rd party calendar client.
+
+The main DAV URL for users mailbox is
+
+http://<server>/dav/<username>
+
+Most of modern operating system now comes with DAV support built in.  
+On Windows XP, File Explorer can be used to access DAV repository.
+
+Start -> My Network Places -> Add a network place
+
+Then Choose another network location.  Type in the main DAV URL.  
+The system will then prompt authentication dialog.  Type in 
+Zimbra username and password.
+
+On Mac OS X, Finder has built in support for WebDAV.  
+Menu -> Go -> Connect to server.  Then type in the main DAV URL, 
+click + to add.
+
+Using the WebDAV interface, users can view contents of Notebook and 
+Briefcase folders, and also copy files in and out of the folders.  
+There is a special folder named 'attachments'.  It's not a real folder, 
+but kind of like a view of the mail attachments.  The attachments can 
+be browsed based on the date the email received, content type, or by 
+the sender.
+
+The second use case is with CalDAV compliant calendar client.  There
+are several CalDAV clients available.  Currently  the most popular 
+and feature rich client is Leopard iCal.  Zimbra CalDAV has been
+tested against the release build of Leopard.  Some of the other
+calendar clients that support iCal are Mozilla Lightning, Mozilla
+Sunbird, Gnome Evolution, and OSAF Chandler.
+
+iCal supports CalDAV principal concept, and the URL to use is simply
+
+http://<server>
+
+Using the supplied username and password it can discover the user's
+calendar.
+
+For other clients, users may need to
+add "Calendar" at the end of the URL to point to the calendar
+folder.  e.g.
+
+http://<server>/dav/<username>/Calendar
+
+iCal on Tiger and older release only support ics import and export,
+not the full CalDAV.  The ics import mode is not compatible with
+CalDAV at all, and the usage is completely different.  In order
+to use ics import mode, first the user needs to export the 
+calendar folder as ics, save to a file, then import the file into 
+the target calendar application.  Using ics import mode, the 
+changes made to the 3rd party calendar is saved as a local copy, 
+and does not automatically synchronize with Zimbra server.  When
+using CalDAV client, the changes are immediately saved to the server,
+unless the client is run in the offline mode.  There is no manual
+file based synchronization needed as with ics import mode.
+

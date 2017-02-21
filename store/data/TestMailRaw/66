@@ -1,0 +1,81 @@
+Return-Path: <xmlbeans-dev-return-159-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.64.14.7]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8M1geTZ007644 for
+	<smith@popserver1.stanford.edu>; Sun, 21 Sep 2003 18:42:41 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8M1gX2m013377 for
+	<smith@stanford.edu>; Sun, 21 Sep 2003 18:42:34 -0700 (PDT)
+Received: (qmail 61870 invoked by uid 500); 22 Sep 2003 01:42:23 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 61855 invoked from network); 22 Sep 2003 01:42:23 -0000
+Message-ID: <3F6E5385.4060600@sauria.com>
+Date: Sun, 21 Sep 2003 18:42:29 -0700
+X-Zimbra-Received: Sun, 21 Sep 2003 18:42:29 -0700
+From: Ted Leung <twleung@sauria.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.5b)
+	Gecko/20030901 Thunderbird/0.2
+X-Accept-Language: en-us, en
+MIME-Version: 1.0
+To: xmlbeans-dev@xml.apache.org
+Cc: general@incubator.apache.org
+Subject: Re: Getting the distribution onto a download site somewhere ...
+References: <1A1CC0FE-EB48-11D7-BE61-003065DC754C@apache.org>
+In-Reply-To: <1A1CC0FE-EB48-11D7-BE61-003065DC754C@apache.org>
+X-Enigmail-Version: 0.81.6.0
+X-Enigmail-Supports: pgp-inline, pgp-mime
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000042-0010
+
+Copying to general@incubator for policy check.
+
+On 9/20/2003 1:54 AM, robert burrell donkin wrote:
+
+>
+> IIRC incubating projects should not create full releases (the reason 
+> being that the ASF makes a long term commitment to maintain all full 
+> releases) until the incubation process is finished (but this policy is 
+> something that should probably be checked with the incubator pmc). 
+> instead, unstable (milestone, alpha, beta, gold etc) releases should 
+> be created. these should be made available for download from the 
+> appropriate subdirectory of cvs.apache.org. (again, probably the pmc 
+> are the right people to ask about policy on whether they should be 
+> made available from an xml subdirectory download or a incubator 
+> download subdirectory.)
+
+Robert,  I understand the concern here, but if there is a version that 
+has been finished / super tested, etc, it seems a little sily not to 
+make it stable.  If incubation were to fail, and xmlbeans ended up on, 
+say, Java.net, it's not going to change the quality of the code one way 
+or another.   I sort of thought that we already went through this with 
+the lists being @xml or @incubator
+
+>
+> if you're considering releases, then this might also be a good time to 
+> consider nightlies and gump (if there are not yet sorted out). gump is 
+> a meta-builder which re-builds and tests all jakarta projects (and 
+> many other apache projects) with the latest versions of each 
+> dependency each day. nightly builds are created every day and uploaded 
+> to cvs.apache.org. i would recommend that xml beans signs up for both.
+>
++1
+
+> - robert
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

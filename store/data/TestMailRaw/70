@@ -1,0 +1,85 @@
+Return-Path: <xmlbeans-dev-return-308-smith=stanford.edu@xml.apache.org>
+Received: from leland7.Stanford.EDU (leland7.Stanford.EDU [171.67.16.66])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8UIq25a016994
+	for <smith@popserver1.stanford.edu>; Tue, 30 Sep 2003 11:52:03 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland7.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8UIptll012058 for
+	<smith@stanford.edu>; Tue, 30 Sep 2003 11:51:56 -0700 (PDT)
+Received: (qmail 13531 invoked by uid 500); 30 Sep 2003 18:51:45 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 13507 invoked from network); 30 Sep 2003 18:51:45 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: XMLBeans website
+Date: Tue, 30 Sep 2003 11:51:47 -0700
+X-Zimbra-Received: Tue, 30 Sep 2003 11:51:47 -0700
+Message-ID: <4B2B4C417991364996F035E1EE39E2E11F33C5@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: XMLBeans website
+Thread-Index: AcOHew8fOOB58/1ZQdKqJTaD9P9yygAAs+bQ
+From: "Cezar Andrei" <cezar@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+X-OriginalArrivalTime: 30 Sep 2003 18:51:49.0851 (UTC)
+	FILETIME=[E7F42AB0:01C38783]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000046-0010
+
+There was a small problem at the bottom of the pages, it was saying "Build =
+with Forest Logo" instead of the logo itself.
+
+I just copied built-with-forrest-button.png in /www/xml.apache.org/xmlbeans=
+/images .
+
+We also need a project icon, I have something in mind, is website/src/docum=
+entation/resources/images a good place for it?=20
+
+Cezar
+
+> -----Original Message-----
+> From: David Remy=20
+> Sent: Tuesday, September 30, 2003 12:49 PM
+> To: xmlbeans-dev@xml.apache.org
+> Subject: XMLBeans website
+>=20
+>=20
+> The XMLBeans website is now updated (please let me know about=20
+> corrections/issues) including docs.  I mostly did it manually=20
+> so work still needs to be done to automate the process as=20
+> much as possible.  I added a wiki page describing the process=20
+> for updating it here=20
+> http://nagoya.apache.org/wiki/apachewiki.cgi?XMLBeansProjectPa
+ges/HowToBuildXmlBeansWebsite.  I still need update the process for adding =
+the docs.=20
+
+On the community tab there is a section for who we are.  If committers will=
+ post a short bio then we can link to it from that page (see David's about =
+me post).
+
+thx,
+rem
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

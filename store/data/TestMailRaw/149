@@ -1,0 +1,67 @@
+Return-Path: <xmlbeans-dev-return-181-smith=stanford.edu@xml.apache.org>
+Received: from leland4.Stanford.EDU (leland4.Stanford.EDU [171.64.14.29])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8N0wOKd006886
+	for <smith@popserver1.stanford.edu>; Mon, 22 Sep 2003 17:58:25 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland4.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8N0wH5U015108 for
+	<smith@stanford.edu>; Mon, 22 Sep 2003 17:58:18 -0700 (PDT)
+Received: (qmail 47829 invoked by uid 500); 23 Sep 2003 00:58:07 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 47816 invoked from network); 23 Sep 2003 00:58:07 -0000
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Subject: RE: Getting the distribution onto a download site somewhere ...
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+Date: Mon, 22 Sep 2003 16:58:53 -0700
+X-Zimbra-Received: Mon, 22 Sep 2003 16:58:53 -0700
+Message-ID: <4C2F1577F2EF2840A9AE9EC61860C8810A0FD8@usseex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: Getting the distribution onto a download site somewhere ...
+Thread-Index: AcOBV5GSHUShUhs+RYm1kWriMwOp4wAB9l5A
+From: "Cliff Schmidt" <cliff@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+X-OriginalArrivalTime: 22 Sep 2003 23:58:55.0326 (UTC)
+	FILETIME=[7B1687E0:01C38165]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000095-0010
+
+On Monday, September 22, 2003 3:19 PM, Ted Leung wrote:
+
+>> IMHO, requiring to prepend a new XMLBeans release with
+>> under-incubating-foo.tgz would somehow imply that the quality of the
+>> XMLBeans dist has decreased in quality or robustness.
+>>=20
+> That was my concern, but the folks in the incubator are being
+> difficult on this.  I think we should work to minimize disputes and
+> work to try to get us out of incubation ASAP.
+>=20
+> What do others think?  Do you want me to go push back some more?
+
+I don't think we need to push back.  We just need to describe the=20
+technical qualifications of the code separately from the organizational=20
+qualifications of the code.  The version numbers and other documentation=20
+can reflect the richness and stability of the code.  The "incubated"=20
+prefix/suffix/whatever can indicate that the project code is not yet=20
+fully endorsed by the ASF.  I also think a blurb in the README file
+and on the Web site can elaborate on this distinction. =20
+
+Cliff
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

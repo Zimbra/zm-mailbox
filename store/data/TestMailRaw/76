@@ -1,0 +1,213 @@
+Return-Path: <xmlbeans-dev-return-302-smith=stanford.edu@xml.apache.org>
+Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.64.14.58])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8UEj75a010573
+	for <smith@popserver1.stanford.edu>; Tue, 30 Sep 2003 07:45:07 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland2.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8UEj1wj003894 for
+	<smith@stanford.edu>; Tue, 30 Sep 2003 07:45:01 -0700 (PDT)
+Received: (qmail 52082 invoked by uid 500); 30 Sep 2003 14:44:57 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 52069 invoked from network); 30 Sep 2003 14:44:57 -0000
+Message-Id: <sf795eab.089@corp-gw.mantech.com>
+X-Mailer: Novell GroupWise Internet Agent 5.5.6.1
+Date: Tue, 30 Sep 2003 10:44:40 -0400
+X-Zimbra-Received: Tue, 30 Sep 2003 10:44:40 -0400
+From: "Darrell Teague" <darrell.teague@mantech.com>
+To: <xmlbeans-dev@xml.apache.org>
+Subject: Re: V2 store
+Mime-Version: 1.0
+Content-Type: multipart/alternative; boundary="=_431D08FB.2445CA02"
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000004c-0010
+
+
+--=_431D08FB.2445CA02
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+My two cents...
+I recommend that the group focus back on the use-cases (if there are any) f=
+or which the software is designed to support.  For example, in an e-commerc=
+e context, XML documents are generally be between 2K and 200K for 95% of th=
+e transactions (Purchase Orders, Invoices, etc).  Therefore, I recommend th=
+at the goals of small, fast and efficient hold, while supporting DOM (since=
+ node transversal is a common need) under a model of less than a MB of data=
+ (or some threshold).  As for memory in general, there should be an XMLBean=
+s road map that considers the industry trend toward more memory at a lower =
+cost (remember a few months ago when you thought one GB was a lot of memory=
+?).  Factoring that in may make a big difference in establishing the target=
+ threshold.
+
+>>> david.bau@bea.com 09/26/03 04:42PM >>>
+Eric,
+
+You called this morning with a difficult design problem that you're facing
+with v2 store given the features listed on the feature page, and I'm
+summarizing here.  Perhaps somebody reading here will have some ideas.
+
+Some of the problems that need to be solved are:
+(1) Support DOM in addition to our cursor API
+(2) Work with very large payloads without running out of RAM
+(3) Keep us small, keep us fast.  That means try to reduce object
+allocation, and try to avoid slower things like synchronize{} blocks.
+(4) When dealing with read-only data, a naive multithreaded user should be
+able to assume that they do not need to synchronize reads. (This is not on
+the feature list, but seems like an important API property.)
+
+But when you put together (1) (2) (3) and (4), you get some fundamental
+tensions:
+
+Here's the tension:
+
+(a) The DOM API (1) implies many more objects than you actually need.  For
+example, who really cares about the whitespace between tags in a typical
+app?  And if you can bind directly to "int", who really wants to ever
+allocate the string object that contains "413231"?  So that's in conflict
+with goal (3), being small, unless we build a "lazy DOM" that creates
+objects on demand.
+
+(b) Dealing with very large instances (2) also seems to leads to "lazy
+object" created on demand.  For example, if the bulk of an 20GB instance is
+stored on disk, yet an app can hold on to an object that represents a node,
+then certainly not all nodes can be in memory at once.  They're created on
+demand.
+
+(c) But creating objects on demand means that read operations mutate the
+underlying data structure.  This is in conflict with goal (4), that is,
+multiple readers on multiple threads need to syncrhonize against each other=
+,
+unless we synchronize for them.  But if we synchornize for them, that's
+again in conflict with goal (3).
+
+(d) The upshot: it seems like
+- we need to synchronize at a low level to satisfy (4) at the same time as
+allocate-on-demand
+- to satisfy (3) - i.e., no synchronization cost, perhaps we should have a
+global option per instance to turn off synchronization; users can use this
+option if they are synchronizing themselves in a savvy mulithreaded app, or
+if they are truly single-threaded.
+
+That last bullet is a bit clumsy.  But I don't see anything better....
+
+Thoughts?
+
+David
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+--=_431D08FB.2445CA02
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD>
+<META http-equiv=3DContent-Type content=3D"text/html; charset=3Diso-8859-1"=
+>
+<META content=3D"MSHTML 6.00.2800.1226" name=3DGENERATOR></HEAD>
+<BODY style=3D"MARGIN-TOP: 2px; FONT: 8pt Tahoma; MARGIN-LEFT: 2px">
+<DIV><FONT face=3D"Comic Sans MS" size=3D2>My two cents...</FONT></DIV>
+<DIV><FONT face=3D"Comic Sans MS" size=3D2>I recommend that the group focus=
+ back on=20
+the use-cases (if there are any) for which the software is designed to=20
+support.&nbsp; For example, in an e-commerce context, XML documents&nbsp;ar=
+e=20
+generally be between 2K and 200K for 95% of the transactions (Purchase Orde=
+rs,=20
+Invoices, etc).&nbsp; Therefore, I recommend that the goals of small, fast =
+and=20
+efficient hold, while supporting DOM (since node transversal is a common ne=
+ed)=20
+under a model of&nbsp;less than a MB of data (or some threshold).&nbsp; As =
+for=20
+memory in general, there should be an XMLBeans&nbsp;road map that considers=
+ the=20
+industry trend toward&nbsp;more memory&nbsp;at a&nbsp;lower cost (remember =
+a few=20
+months ago when you thought&nbsp;one GB was a&nbsp;lot of memory?).&nbsp;=20
+Factoring that in may make a big difference in establishing the target=20
+threshold.</FONT><BR><BR>&gt;&gt;&gt; david.bau@bea.com 09/26/03 04:42PM=20
+&gt;&gt;&gt;<BR>Eric,<BR><BR>You called this morning with a difficult desig=
+n=20
+problem that you're facing<BR>with v2 store given the features listed on th=
+e=20
+feature page, and I'm<BR>summarizing here.&nbsp; Perhaps somebody reading h=
+ere=20
+will have some ideas.<BR><BR>Some of the problems that need to be solved=20
+are:<BR>(1) Support DOM in addition to our cursor API<BR>(2) Work with very=
+=20
+large payloads without running out of RAM<BR>(3) Keep us small, keep us=20
+fast.&nbsp; That means try to reduce object<BR>allocation, and try to avoid=
+=20
+slower things like synchronize{} blocks.<BR>(4) When dealing with read-only=
+=20
+data, a naive multithreaded user should be<BR>able to assume that they do n=
+ot=20
+need to synchronize reads. (This is not on<BR>the feature list, but seems l=
+ike=20
+an important API property.)<BR><BR>But when you put together (1) (2) (3) an=
+d=20
+(4), you get some fundamental<BR>tensions:<BR><BR>Here's the tension:<BR><B=
+R>(a)=20
+The DOM API (1) implies many more objects than you actually need.&nbsp;=20
+For<BR>example, who really cares about the whitespace between tags in a=20
+typical<BR>app?&nbsp; And if you can bind directly to "int", who really wan=
+ts to=20
+ever<BR>allocate the string object that contains "413231"?&nbsp; So that's =
+in=20
+conflict<BR>with goal (3), being small, unless we build a "lazy DOM" that=20
+creates<BR>objects on demand.<BR><BR>(b) Dealing with very large instances =
+(2)=20
+also seems to leads to "lazy<BR>object" created on demand.&nbsp; For exampl=
+e, if=20
+the bulk of an 20GB instance is<BR>stored on disk, yet an app can hold on t=
+o an=20
+object that represents a node,<BR>then certainly not all nodes can be in me=
+mory=20
+at once.&nbsp; They're created on<BR>demand.<BR><BR>(c) But creating object=
+s on=20
+demand means that read operations mutate the<BR>underlying data structure.&=
+nbsp;=20
+This is in conflict with goal (4), that is,<BR>multiple readers on multiple=
+=20
+threads need to syncrhonize against each other,<BR>unless we synchronize fo=
+r=20
+them.&nbsp; But if we synchornize for them, that's<BR>again in conflict wit=
+h=20
+goal (3).<BR><BR>(d) The upshot: it seems like<BR>- we need to synchronize =
+at a=20
+low level to satisfy (4) at the same time as<BR>allocate-on-demand<BR>- to=20
+satisfy (3) - i.e., no synchronization cost, perhaps we should have a<BR>gl=
+obal=20
+option per instance to turn off synchronization; users can use this<BR>opti=
+on if=20
+they are synchronizing themselves in a savvy mulithreaded app, or<BR>if the=
+y are=20
+truly single-threaded.<BR><BR>That last bullet is a bit clumsy.&nbsp; But I=
+=20
+don't see anything better....<BR><BR>Thoughts?<BR><BR>David<BR><BR><BR>-=20
+---------------------------------------------------------------------<BR>To=
+=20
+unsubscribe, e-mail:&nbsp;&nbsp; xmlbeans-dev-unsubscribe@xml.apache.org<BR=
+>For=20
+additional commands, e-mail: xmlbeans-dev-help@xml.apache.org<BR>Apache XML=
+Beans=20
+Project -- URL: <A=20
+href=3D"http://xml.apache.org/xmlbeans/">http://xml.apache.org/xmlbeans/</A=
+><BR><BR></DIV></BODY></HTML>
+
+--=_431D08FB.2445CA02--
+

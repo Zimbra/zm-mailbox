@@ -1,0 +1,3 @@
+This custom auth module takes arguments in the following form:
+{URL} [GET|POST - default is GET] [encryption method - defautl is plain] [auth protocol - default is imap] 
+e.g.: http://auth.customer.com:80 GET plain imap

@@ -1,0 +1,88 @@
+Return-Path: <xmlbeans-dev-return-412-smith=stanford.edu@xml.apache.org>
+Received: from leland.Stanford.EDU (leland.Stanford.EDU [171.67.16.115]) by
+	popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hAJIYAoB027344 for
+	<smith@popserver1.stanford.edu>; Wed, 19 Nov 2003 10:34:10 -0800 (PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland.Stanford.EDU (8.12.10/8.12.10) with SMTP id hAJIY8et023820 for
+	<smith@stanford.edu>; Wed, 19 Nov 2003 10:34:08 -0800
+Received: (qmail 90750 invoked by uid 500); 19 Nov 2003 18:34:03 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 90736 invoked from network); 19 Nov 2003 18:34:03 -0000
+Message-ID: <000101c3aecb$ad507070$900210ac@lightbox>
+From: "David Bau" <david.bau@bea.com>
+To: <xmlbeans-dev@xml.apache.org>
+References: <5.2.1.1.0.20031112103429.01de1458@san-francisco.beasys.com>
+	 <5.2.1.1.0.20031114151841.01a6aea0@san-francisco.beasys.com>
+	 <789A0871-1A16-11D8-BC85-003065DC754C@apache.org>
+Subject: Re: Start-with-java annotations
+Date: Wed, 19 Nov 2003 07:35:10 -0500
+X-Zimbra-Received: Wed, 19 Nov 2003 07:35:10 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2800.1158
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000029-0010
+
+Robert writes (on comparison to Castor):
+
+> maybe point 2 needs a little expansion: serialization must be
+essentially lose-less in a java sense. i'd say that object round
+tripping means being able to go from a symantically meaningful object
+graph to an (easily) human readable (and symantically meaningful) xml
+document and then back to an object graph which is equivalent to the
+original.
+
+I agree with the point - "serialization" isn't what we're after but just
+"round tripping to XML".  Maybe we should call it "marshalling" instead of
+serialization.  But I'm still interested in the details the distinction
+you're drawing. If true serialization is loss-less, then the implication is
+that marshalling is allowed to lose something.  What kinds of things should
+fall into the gap?
+
+For example:
+  - How should we pick which parts of your classes go out to xml?
+  - What about non-tree data graphs?  Non-acyclic ones?
+  - Are there other things?
+
+Maybe the gap should be programmer-defined.  JAX-RPC definitely provides a
+standard with some "default" rules for how these things "should" work (in
+start-from-java), but there's also definitely a lot of Java classes which
+cannot be represented as XML using JAX-RPC default rules.
+
+Feels to me that there are two Q's that should be answered to understand the
+start-from-java problem:
+
+1. To what extent do we need to be able to marshall all different kinds of
+Java in the start-from-java case, particularly those which aren't covered by
+JAX-RPC "default" rules?  For example, perhaps we should permit you to
+marshal to/from fields rather than just public properties, if you annotate
+the fields in a certain way...?
+
+2. To what extent do we need to be able to generate all different kinds of
+schema in the start-from-java case?  For example, perhaps you should be able
+to specify that a specific property marshals to a specific XML element name,
+or perhaps to an XML attribute instead of an element?
+
+David
+
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

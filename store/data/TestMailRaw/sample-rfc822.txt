@@ -1,0 +1,20 @@
+To: "Zimbra Community Developer" <user1@example.com>
+From: "Zimbra Team" <zimbra@example.com>
+Subject: Welcome to the Zimbra Collaboration Suite source!
+Date: Fri, 26 Aug 2005 14:45:18 -0700
+
+Greetings.
+
+This is a sample message in the source code.  You can drop
+other sample messages in this directory (ZimbraServer\data\TestMailRaw)
+- during a "ant reset-the-world" these messages are 
+inserted into the 'user1' mailbox.
+
+The files here are nothing but straight RFC822 formatted
+text.  In most mail clients, you can do a 'Show Original'
+or equivalent function to see your message in its RFC822
+form.
+
+If you have any questions about the build, do not hesitate
+to search for answers on our forums (http://www.zimbra.com/forums),
+or to ask us a question of your own!

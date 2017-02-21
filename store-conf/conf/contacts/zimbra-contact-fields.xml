@@ -1,0 +1,2796 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+
+supported flags:
+
+    default: default when format is not specified
+    allfields: dump all fields
+    noheader: skip the header line
+
+
+supported formats:
+
+    zimbra-csv
+    yahoo-csv
+    thunderbird-csv
+    outlook-2003-csv
+
+type attribute:
+
+    name :
+
+        if the CSV has single name field instead of parsed firstName and lastName,
+        declare the column to
+
+            <column name="Name" field="firstName,middleName,lastName" type="name"/>
+
+        then the value of Name field will be split into firstName, middleName, and
+        lastName.
+
+    multivalue :
+
+        merge columns into a single Zimbra field.
+
+            <column name="Home Address,Home Address 2" field="homeStreet" type="multivalue"/>
+
+    tag :
+
+        translate the value of into Zimbra tag.
+
+            <column name="Category" type="tag"/>
+
+    date :
+
+        interpret the value as a date.
+-->
+
+<contacts>
+    <fields>
+        <!-- list of all well-known fields -->
+        <field name="assistant"/>
+        <field name="birthday"/>
+        <field name="callbackPhone"/>
+        <field name="carPhone"/>
+        <field name="company"/>
+        <field name="companyPhone"/>
+        <field name="custom1"/>
+        <field name="custom2"/>
+        <field name="custom3"/>
+        <field name="custom4"/>
+        <field name="department"/>
+        <field name="dlist"/>
+        <field name="email"/>
+        <field name="email2"/>
+        <field name="email3"/>
+        <field name="fileAs"/>
+        <field name="firstName"/>
+        <field name="fullName"/>
+        <field name="homeCity"/>
+        <field name="homeCountry"/>
+        <field name="homeFax"/>
+        <field name="homePhone"/>
+        <field name="homePhone2"/>
+        <field name="homePostalCode"/>
+        <field name="homeState"/>
+        <field name="homeStreet"/>
+        <field name="homeURL"/>
+        <field name="initials"/>
+        <field name="jobTitle"/>
+        <field name="lastName"/>
+        <field name="middleName"/>
+        <field name="mobilePhone"/>
+        <field name="namePrefix"/>
+        <field name="nameSuffix"/>
+        <field name="nickname"/>
+        <field name="notes"/>
+        <field name="office"/>
+        <field name="otherCity"/>
+        <field name="otherCountry"/>
+        <field name="otherFax"/>
+        <field name="otherPhone"/>
+        <field name="otherPostalCode"/>
+        <field name="otherState"/>
+        <field name="otherStreet"/>
+        <field name="otherURL"/>
+        <field name="phoneticCompany"/>
+        <field name="phoneticFirstName"/>
+        <field name="phoneticLastName"/>
+        <field name="pager"/>
+        <field name="workCity"/>
+        <field name="workCountry"/>
+        <field name="workFax"/>
+        <field name="workPhone"/>
+        <field name="workPhone2"/>
+        <field name="workPostalCode"/>
+        <field name="workState"/>
+        <field name="workStreet"/>
+        <field name="workURL"/>
+    </fields>
+
+    <!--
+         "delimiters" can be used to configure the default field delimiter
+         to use for exports in particular formats if "csvsep" is not specified.
+      -->
+
+    <delimiters default=",">
+        <delimiter locale="fr" format="outlook-2003-csv" char=";"/>
+    </delimiters>
+
+    <!--
+         "dateformats" can be used to configure the order of year month and day
+         for particular formats where the type of the field is "date".
+         Supported orders are : "ymd", "ydm", "myd", "mdy", "dmy" and "dym"
+         This is only used if the date is ambiguous.
+         For instance : 03/28/2004 clearly means 28th March 2004.
+         However :      03/04/2004 could mean 4th March 2004 or 3rd April 2004
+         If no order is specified, "03/04/2004" will be imported as "'03/04/2004'"
+         If a date order of "dmy" applies to the import format, it will be
+         imported as 3rd April 2004 (Internal Zimbra format 2004-04-03)
+
+         Note that for some formats, the order heavily depends on the
+         environment where the export was done and better data fidelity
+         will be achieved by not specifying a dateformat
+      -->
+
+    <dateformats>
+        <dateformat format="yahoo-csv" order="mdy"/>
+    </dateformats>
+
+    <format name="zimbra-csv" type="csv" flag="allfields,default">
+    </format>
+
+    <format name="yahoo-csv" type="csv">
+        <column name="First" field="firstName"/>
+        <column name="Middle" field="middleName"/>
+        <column name="Last" field="lastName"/>
+        <column name="Nickname" field="nickname"/>
+        <column name="Email" field="email"/>
+        <column name="Category" type="tag"/>
+        <column name="Distribution Lists"/>
+      <!-- TODO: map "screenname" to "yahoo://screenname" -->
+        <column name="Messenger ID" field="imAddress1"/>
+        <column name="Home" field="homePhone"/>
+        <column name="Work" field="workPhone"/>
+        <column name="Pager" field="pager"/>
+        <column name="Fax" field="workFax"/>
+        <column name="Mobile" field="mobilePhone"/>
+        <column name="Other" field="otherPhone"/>
+        <column name="Yahoo! Phone"/>
+        <!-- primary appears to be a numeric value that selects which phone is primary -->
+        <column name="Primary"/>
+        <column name="Alternate Email 1" field="email2"/>
+        <column name="Alternate Email 2" field="email3"/>
+        <column name="Personal Website" field="homeURL"/>
+        <column name="Business Website" field="workURL"/>
+        <column name="Title" field="jobTitle"/>
+        <column name="Company" field="company"/>
+        <column name="Work Address" field="workStreet"/>
+        <column name="Work City" field="workCity"/>
+        <column name="Work State" field="workState"/>
+        <column name="Work ZIP" field="workPostalCode"/>
+        <column name="Work Country" field="workCountry"/>
+        <column name="Home Address" field="homeStreet"/>
+        <column name="Home City" field="homeCity"/>
+        <column name="Home State" field="homeState"/>
+        <column name="Home ZIP" field="homePostalCode"/>
+        <column name="Home Country" field="homeCountry"/>
+        <column name="Birthday" field="birthday" type="date"/>
+        <column name="Anniversary" field="anniversary" type="date"/>
+        <column name="Custom 1" field="custom1"/>
+        <column name="Custom 2" field="custom2"/>
+        <column name="Custom 3" field="custom3"/>
+        <column name="Custom 4" field="custom4"/>
+        <column name="Comments" field="notes"/>
+      <!-- TODO: map "screenname" to "yahoo://screenname" -->
+        <column name="Messenger ID1" field="imAddress2"/>
+        <column name="Messenger ID2" field="imAddress3"/>
+        <column name="Messenger ID3" field="imAddress4"/>
+        <column name="Messenger ID4" field="imAddress5"/>
+        <column name="Messenger ID5" field="imAddress6"/>
+        <column name="Messenger ID6" field="imAddress7"/>
+        <column name="Messenger ID7" field="imAddress8"/>
+        <column name="Messenger ID8" field="imAddress9"/>
+        <column name="Messenger ID9" field="imAddress10"/>
+      <!-- TODO: [Q] can we merge these into imAddress#, collapsing empty ones? -->
+        <column name="Skype ID" field="skypeId" /> <!-- custom -->
+        <column name="IRC ID" field="ircId" /> <!-- custom -->
+        <column name="ICQ ID" field="icqId" /> <!-- custom -->
+        <column name="Google ID" field="googleChatId" /> <!-- custom -->
+        <column name="MSN ID" field="msnId" /> <!-- custom -->
+        <column name="AIM ID" field="aimId" /> <!-- custom -->
+        <column name="QQ ID" field="qqId" /> <!-- custom -->
+    </format>
+
+    <format name="thunderbird-csv" type="csv">
+        <column name="First Name" field="firstName"/>
+        <column name="Last Name" field="lastName"/>
+        <column name="Display Name" field="fullName"/>
+        <column name="Nickname" field="nickname"/>
+        <column name="Primary Email" field="email"/>
+        <column name="Secondary Email" field="email2"/>
+        <column name="Screen Name" field="aimId" /> <!-- custom -->
+        <column name="Work Phone" field="workPhone"/>
+        <column name="Home Phone" field="homePhone"/>
+        <column name="Fax Number" field="workFax"/>
+        <column name="Pager Number" field="pager"/>
+        <column name="Mobile Number" field="mobilePhone"/>
+        <column name="Home Address,Home Address 2" field="homeStreet" type="multivalue"/>
+        <column name="Home City" field="homeCity"/>
+        <column name="Home State" field="homeState"/>
+        <column name="Home ZipCode" field="homePostalCode"/>
+        <column name="Home Country" field="homeCountry"/>
+        <column name="Work Address,Work Address 2" field="workStreet" type="multivalue"/>
+        <column name="Work City" field="workCity"/>
+        <column name="Work State" field="workState"/>
+        <column name="Work ZipCode" field="workPostalCode"/>
+        <column name="Work Country" field="workCountry"/>
+        <column name="Job Title" field="jobTitle"/>
+        <column name="Department" field="department"/>
+        <column name="Organization" field="company"/>
+        <column name="Web Page 1" field="workURL"/>
+        <column name="Web Page 2" field="homeURL"/>
+        <column name="Birth Month,Birth Day,Birth Year" field="birthday" type="multivalue"/>
+        <column name="Custom 1" field="custom1"/>
+        <column name="Custom 2" field="custom2"/>
+        <column name="Custom 3" field="custom3"/>
+        <column name="Custom 4" field="custom4"/>
+        <column name="Notes" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="da"> <!-- From da Messenger -->
+        <column name="Fornavn" field="firstName"/>
+        <column name="Efternavn" field="lastName"/>
+        <column name="Vis navn" field="fullName"/>
+        <column name="Alias" field="nickname"/>
+        <column name="Primær mail" field="email"/>
+        <column name="Sekundær mail" field="email2"/>
+        <column name="Skærmnavn" field="aimId"/>
+        <column name="Arbejdstelefon" field="workPhone"/>
+        <column name="Hjemmetelefon" field="homePhone"/>
+        <column name="Faxnummer" field="workFax"/>
+        <column name="Personsøgernummer" field="pager"/>
+        <column name="Mobilnummer" field="mobilePhone"/>
+        <column name="Hjemmeadresse,Hjemmeadresse 2" field="homeStreet" type="multivalue"/>
+        <column name="Hjemmeby" field="homeCity"/>
+        <column name="Hjemmestat" field="homeState"/>
+        <column name="Hjemmepostnummer" field="homePostalCode"/>
+        <column name="Hjemmeland" field="homeCountry"/>
+        <column name="Arbejdsadresse,Arbejdsadresse 2" field="workStreet" type="multivalue"/>
+        <column name="Arbejdsby" field="workCity"/>
+        <column name="Arbejdsstat" field="workState"/>
+        <column name="Arbejdspostnummer" field="workPostalCode"/>
+        <column name="Arbejdsland" field="workCountry"/>
+        <column name="Job titel" field="jobTitle"/>
+        <column name="Afdeling" field="department"/>
+        <column name="Organisation" field="company"/>
+        <column name="Hjemmeside 1" field="workURL"/>
+        <column name="Hjemmeside 2" field="homeURL"/>
+        <column name="Fødselsmåned,Fødselsdag,Fødselsår" field="birthday" type="multivalue"/>
+        <column name="Brugerdef. 1" field="custom1"/>
+        <column name="Brugerdef. 2" field="custom2"/>
+        <column name="Brugerdef. 3" field="custom3"/>
+        <column name="Brugerdef. 4" field="custom4"/>
+        <column name="Notater" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="de">
+        <column name="Vorname" field="firstName"/>
+        <column name="Nachname" field="lastName"/>
+        <column name="Anzeigename" field="fullName"/>
+        <column name="Spitzname" field="nickname"/>
+        <column name="Primäre E-Mail-Adresse" field="email"/>
+        <column name="Sekundäre E-Mail-Adresse" field="email2"/>
+        <column name="Messenger-Name" field="aimId"/>
+        <column name="Tel. dienstlich" field="workPhone"/>
+        <column name="Tel. privat" field="homePhone"/>
+        <column name="Fax-Nummer" field="workFax"/>
+        <column name="Pager-Nummer" field="pager"/>
+        <column name="Mobil-Tel.-Nr." field="mobilePhone"/>
+        <column name="Privat: Adresse,Privat: Adresse 2" field="homeStreet" type="multivalue"/>
+        <column name="Privat: Ort" field="homeCity"/>
+        <column name="Privat: Bundesland" field="homeState"/>
+        <column name="Privat: PLZ" field="homePostalCode"/>
+        <column name="Privat: Land" field="homeCountry"/>
+        <column name="Dienstlich: Adresse,Dienstlich: Adresse 2" field="workStreet" type="multivalue"/>
+        <column name="Dienstlich: Ort" field="workCity"/>
+        <column name="Dienstlich: Bundesland" field="workState"/>
+        <column name="Dienstlich: PLZ" field="workPostalCode"/>
+        <column name="Dienstlich: Land" field="workCountry"/>
+        <column name="Arbeitstitel" field="jobTitle"/>
+        <column name="Abteilung" field="department"/>
+        <column name="Organisation" field="company"/>
+        <column name="Webseite 1" field="workURL"/>
+        <column name="Webseite 2" field="homeURL"/>
+        <column name="Geburtsmonat,Geburtstag,Geburtsjahr" field="birthday" type="multivalue"/>
+        <column name="Benutzerdef. 1" field="custom1"/>
+        <column name="Benutzerdef. 2" field="custom2"/>
+        <column name="Benutzerdef. 3" field="custom3"/>
+        <column name="Benutzerdef. 4" field="custom4"/>
+        <column name="Notizen" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="en_GB">
+        <column name="First Name" field="firstName"/>
+        <column name="Last Name" field="lastName"/>
+        <column name="Display Name" field="fullName"/>
+        <column name="Nickname" field="nickname"/>
+        <column name="Primary Email" field="email"/>
+        <column name="Secondary Email" field="email2"/>
+        <column name="Screen Name" field="aimId"/>
+        <column name="Work Phone" field="workPhone"/>
+        <column name="Home Phone" field="homePhone"/>
+        <column name="Fax Number" field="workFax"/>
+        <column name="Pager Number" field="pager"/>
+        <column name="Mobile Number" field="mobilePhone"/>
+        <column name="Home Address,Home Address 2" field="homeStreet" type="multivalue"/>
+        <column name="Home City" field="homeCity"/>
+        <column name="Home County" field="homeState"/>
+        <column name="Home Post Code" field="homePostalCode"/>
+        <column name="Home Country" field="homeCountry"/>
+        <column name="Work Address,Work Address 2" field="workStreet" type="multivalue"/>
+        <column name="Work City" field="workCity"/>
+        <column name="Work County" field="workState"/>
+        <column name="Work Post Code" field="workPostalCode"/>
+        <column name="Work Country" field="workCountry"/>
+        <column name="Job Title" field="jobTitle"/>
+        <column name="Department" field="department"/>
+        <column name="Organisation" field="company"/>
+        <column name="Web Page 1" field="workURL"/>
+        <column name="Web Page 2" field="homeURL"/>
+        <column name="Birth Month,Birth Day,Birth Year" field="birthday" type="multivalue"/>
+        <column name="Custom 1" field="custom1"/>
+        <column name="Custom 2" field="custom2"/>
+        <column name="Custom 3" field="custom3"/>
+        <column name="Custom 4" field="custom4"/>
+        <column name="Notes" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="es_ES">
+        <column name="Nombre" field="firstName"/>
+        <column name="Apellidos" field="lastName"/>
+        <column name="Nombre mostrado" field="fullName"/>
+        <column name="Apodo" field="nickname"/>
+        <column name="Dirección de correo electrónico principal" field="email"/>
+        <column name="Dirección de correo electrónico secundaria" field="email2"/>
+        <column name="Nombre en pantalla" field="aimId"/>
+        <column name="Teléfono (Trabajo)" field="workPhone"/>
+        <column name="Teléfono particular" field="homePhone"/>
+        <column name="Fax" field="workFax"/>
+        <column name="Buscapersonas" field="pager"/>
+        <column name="Teléfono móvil" field="mobilePhone"/>
+        <column name="Dirección personal,Dirección personal 2" field="homeStreet" type="multivalue"/>
+        <column name="Ciudad donde vive" field="homeCity"/>
+        <column name="Provincia" field="homeState"/>
+        <column name="Código postal" field="homePostalCode"/>
+        <column name="País de residencia" field="homeCountry"/>
+        <column name="Dirección de trabajo,Dirección de trabajo 2" field="workStreet" type="multivalue"/>
+        <column name="Ciudad (Trabajo)" field="workCity"/>
+        <column name="Provincia (Trabajo)" field="workState"/>
+        <column name="Código postal (Trabajo)" field="workPostalCode"/>
+        <column name="País (Trabajo)" field="workCountry"/>
+        <column name="Puesto" field="jobTitle"/>
+        <column name="Departamento" field="department"/>
+        <column name="Organización" field="company"/>
+        <column name="Página web 1" field="workURL"/>
+        <column name="Página web 2" field="homeURL"/>
+        <column name="Mes de nacimiento,Día de nacimiento,Año de nacimiento" field="birthday" type="multivalue"/>
+        <column name="Personalizado 1" field="custom1"/>
+        <column name="Personalizado 2" field="custom2"/>
+        <column name="Personalizado 3" field="custom3"/>
+        <column name="Personalizado 4" field="custom4"/>
+        <column name="Notas" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="fr">
+        <column name="Prénom" field="firstName"/>
+        <column name="Nom de famille" field="lastName"/>
+        <column name="Nom à afficher" field="fullName"/>
+        <column name="Surnom" field="nickname"/>
+        <column name="Adresse électronique principale" field="email"/>
+        <column name="Adresse électronique secondaire" field="email2"/>
+        <column name="Nom de l'écran" field="aimId"/>
+        <column name="Tél. professionnel" field="workPhone"/>
+        <column name="Tél. personnel" field="homePhone"/>
+        <column name="Fax" field="workFax"/>
+        <column name="Pager" field="pager"/>
+        <column name="Portable" field="mobilePhone"/>
+        <column name="Adresse privée,Adresse privée 2" field="homeStreet" type="multivalue"/>
+        <column name="Ville" field="homeCity"/>
+        <column name="Pays/État" field="homeState"/>
+        <column name="Code postal" field="homePostalCode"/>
+        <column name="Région" field="homeCountry"/>
+        <column name="Adresse professionnelle,Adresse professionnelle 2" field="workStreet" type="multivalue"/>
+        <column name="Ville" field="workCity"/>
+        <column name="Pays/État" field="workState"/>
+        <column name="Code postal" field="workPostalCode"/>
+        <column name="Région" field="workCountry"/>
+        <column name="Profession" field="jobTitle"/>
+        <column name="Service" field="department"/>
+        <column name="Société" field="company"/>
+        <column name="Site Web 1" field="workURL"/>
+        <column name="Site Web 2" field="homeURL"/>
+        <column name="Mois,Jour,Année de naissance" field="birthday" type="multivalue"/>
+        <column name="Divers 1" field="custom1"/>
+        <column name="Divers 2" field="custom2"/>
+        <column name="Divers 3" field="custom3"/>
+        <column name="Divers 4" field="custom4"/>
+        <column name="Notes" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="hi"> <!-- From hi Messenger -->
+        <column name="पहला नाम" field="firstName"/>
+        <column name="अंतिम नाम" field="lastName"/>
+        <column name="प्रदर्शन नाम" field="fullName"/>
+        <column name="उपनाम" field="nickname"/>
+        <column name="प्राथमिक मेल" field="email"/>
+        <column name="द्वितीयक मेल" field="email2"/>
+        <column name="Screen Name" field="aimId"/>
+        <column name="फोन कार्यालय" field="workPhone"/>
+        <column name="फोन आवास" field="homePhone"/>
+        <column name="फैक्स" field="workFax"/>
+        <column name="पेजर संख्या" field="pager"/>
+        <column name="मोबाइल नंबर" field="mobilePhone"/>
+        <column name="पता आवास,पता आवास 2" field="homeStreet" type="multivalue"/>
+        <column name="गृह नगर" field="homeCity"/>
+        <column name="गृह राज्य" field="homeState"/>
+        <column name="गृह जिपकोड" field="homePostalCode"/>
+        <column name="गृह देश" field="homeCountry"/>
+        <column name="पता कार्यालय,पता कार्यालय 2" field="workStreet" type="multivalue"/>
+        <column name="कार्यालय शहर" field="workCity"/>
+        <column name="कार्यालय राज्य" field="workState"/>
+        <column name="कार्यालय जिपकोड" field="workPostalCode"/>
+        <column name="कार्यालय देश" field="workCountry"/>
+        <column name="पदनाम" field="jobTitle"/>
+        <column name="विभाग" field="department"/>
+        <column name="संगठन" field="company"/>
+        <column name="वेबपेज 1" field="workURL"/>
+        <column name="वेबपेज 2" field="homeURL"/>
+        <column name="जन्म माह,जन्म दिन,जन्म साल" field="birthday" type="multivalue"/>
+        <column name="मनपसंद 1" field="custom1"/>
+        <column name="मनपसंद 2" field="custom2"/>
+        <column name="मनपसंद 3" field="custom3"/>
+        <column name="मनपसंद 4" field="custom4"/>
+        <column name="टिप्पणी" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="it">
+        <column name="Nome" field="firstName"/>
+        <column name="Cognome" field="lastName"/>
+        <column name="Nome visualizzato" field="fullName"/>
+        <column name="Soprannome" field="nickname"/>
+        <column name="E-mail primaria" field="email"/>
+        <column name="E-mail secondaria" field="email2"/>
+        <column name="Nome Instant Messenger" field="aimId"/>
+        <column name="Telefono ufficio" field="workPhone"/>
+        <column name="Telefono casa" field="homePhone"/>
+        <column name="Numero fax" field="workFax"/>
+        <column name="Numero cercapersone" field="pager"/>
+        <column name="Numero cellulare" field="mobilePhone"/>
+        <column name="Indirizzo di casa,Indirizzo di casa 2" field="homeStreet" type="multivalue"/>
+        <column name="Città di residenza" field="homeCity"/>
+        <column name="Provincia di residenza" field="homeState"/>
+        <column name="CAP di residenza" field="homePostalCode"/>
+        <column name="Nazione di residenza" field="homeCountry"/>
+        <column name="Indirizzo di lavoro,Indirizzo di lavoro 2" field="workStreet" type="multivalue"/>
+        <column name="Città di lavoro" field="workCity"/>
+        <column name="Provincia di lavoro" field="workState"/>
+        <column name="CAP di lavoro" field="workPostalCode"/>
+        <column name="Nazione di lavoro" field="workCountry"/>
+        <column name="Qualifica" field="jobTitle"/>
+        <column name="Reparto" field="department"/>
+        <column name="Organizzazione" field="company"/>
+        <column name="Pagina web 1" field="workURL"/>
+        <column name="Pagina web 2" field="homeURL"/>
+        <column name="Mese di nascita,Giorno di nascita,Anno di nascita" field="birthday" type="multivalue"/>
+        <column name="Personalizzato 1" field="custom1"/>
+        <column name="Personalizzato 2" field="custom2"/>
+        <column name="Personalizzato 3" field="custom3"/>
+        <column name="Personalizzato 4" field="custom4"/>
+        <column name="Note" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="ja">
+        <column name="名" field="firstName"/>
+        <column name="姓" field="lastName"/>
+        <column name="表示名" field="fullName"/>
+        <column name="ニックネーム" field="nickname"/>
+        <column name="メールアドレス" field="email"/>
+        <column name="別のメールアドレス" field="email2"/>
+        <column name="スクリーンネーム" field="aimId"/>
+        <column name="勤務先の電話番号" field="workPhone"/>
+        <column name="自宅の電話番号" field="homePhone"/>
+        <column name="FAX 番号" field="workFax"/>
+        <column name="ポケットベル番号" field="pager"/>
+        <column name="携帯電話番号" field="mobilePhone"/>
+        <column name="番地 (自宅),番地 (自宅) 2" field="homeStreet" type="multivalue"/>
+        <column name="市区町村 (自宅)" field="homeCity"/>
+        <column name="郵便番号 (自宅)" field="homeState"/>
+        <column name="郵便番号 (自宅)" field="homePostalCode"/>
+        <column name="国 (自宅)" field="homeCountry"/>
+        <column name="番地 (勤務先),番地 (勤務先) 2" field="workStreet" type="multivalue"/>
+        <column name="市区町村 (勤務先)" field="workCity"/>
+        <column name="都道府県 (勤務先)" field="workState"/>
+        <column name="郵便番号 (勤務先)" field="workPostalCode"/>
+        <column name="国 (勤務先)" field="workCountry"/>
+        <column name="役職" field="jobTitle"/>
+        <column name="部門" field="department"/>
+        <column name="組織" field="company"/>
+        <column name="Web ページ 1" field="workURL"/>
+        <column name="Web ページ 2" field="homeURL"/>
+        <column name="誕生月,誕生日,誕生年" field="birthday" type="multivalue"/>
+        <column name="追加情報 1" field="custom1"/>
+        <column name="追加情報 2" field="custom2"/>
+        <column name="追加情報 3" field="custom3"/>
+        <column name="追加情報 4" field="custom4"/>
+        <column name="メモ" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="ko"> <!-- From zh-TW Messenger -->
+        <column name="이름" field="firstName"/>
+        <column name="성" field="lastName"/>
+        <column name="표시명" field="fullName"/>
+        <column name="애칭" field="nickname"/>
+        <column name="기본 메일" field="email"/>
+        <column name="추가 메일" field="email2"/>
+        <column name="Screen 아이디" field="aimId"/>
+        <column name="직장 전화" field="workPhone"/>
+        <column name="자택 전화" field="homePhone"/>
+        <column name="팩스" field="workFax"/>
+        <column name="호출기" field="pager"/>
+        <column name="휴대폰" field="mobilePhone"/>
+        <column name="자택 주소1,자택 주소2" field="homeStreet" type="multivalue"/>
+        <column name="구/군" field="homeCity"/>
+        <column name="시/도" field="homeState"/>
+        <column name="우편번호" field="homePostalCode"/>
+        <column name="국가" field="homeCountry"/>
+        <column name="직장 주소1,직장 주소2" field="workStreet" type="multivalue"/>
+        <column name="구/군" field="workCity"/>
+        <column name="시/도" field="workState"/>
+        <column name="우편번호" field="workPostalCode"/>
+        <column name="국가" field="workCountry"/>
+        <column name="직위" field="jobTitle"/>
+        <column name="부서" field="department"/>
+        <column name="회사명" field="company"/>
+        <column name="웹 페이지1" field="workURL"/>
+        <column name="웹 페이지2" field="homeURL"/>
+        <column name="태어난 달,생일,태어난 해" field="birthday" type="multivalue"/>
+        <column name="사용자 정의1" field="custom1"/>
+        <column name="사용자 정의2" field="custom2"/>
+        <column name="사용자 정의3" field="custom3"/>
+        <column name="사용자 정의4" field="custom4"/>
+        <column name="메모" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="nl">
+        <column name="Voornaam" field="firstName"/>
+        <column name="Achternaam" field="lastName"/>
+        <column name="Weergavenaam" field="fullName"/>
+        <column name="Bijnaam" field="nickname"/>
+        <column name="Eerste e-mail" field="email"/>
+        <column name="Tweede e-mail" field="email2"/>
+        <column name="Schermnaam" field="aimId"/>
+        <column name="Telefoon werk" field="workPhone"/>
+        <column name="Telefoon thuis" field="homePhone"/>
+        <column name="Faxnummer" field="workFax"/>
+        <column name="Piepernummer" field="pager"/>
+        <column name="Mobiel nummer" field="mobilePhone"/>
+        <column name="Adres,Adres 2" field="homeStreet" type="multivalue"/>
+        <column name="Woonplaats" field="homeCity"/>
+        <column name="Provincie" field="homeState"/>
+        <column name="Postcode" field="homePostalCode"/>
+        <column name="Land" field="homeCountry"/>
+        <column name="Werkadres,Werkadres 2" field="workStreet" type="multivalue"/>
+        <column name="Werklocatie" field="workCity"/>
+        <column name="Werkprovincie" field="workState"/>
+        <column name="Werkpostcode" field="workPostalCode"/>
+        <column name="Werkland" field="workCountry"/>
+        <column name="Werkfunctie" field="jobTitle"/>
+        <column name="Afdeling" field="department"/>
+        <column name="Organisatie" field="company"/>
+        <column name="Webpagina 1" field="workURL"/>
+        <column name="Webpagina 2" field="homeURL"/>
+        <column name="Geboortemaand,Geboortedag,Geboortejaar" field="birthday" type="multivalue"/>
+        <column name="Overig 1" field="custom1"/>
+        <column name="Overig 2" field="custom2"/>
+        <column name="Overig 3" field="custom3"/>
+        <column name="Overig 4" field="custom4"/>
+        <column name="Aantekeningen" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="pl">
+        <column name="Imię" field="firstName"/>
+        <column name="Nazwisko" field="lastName"/>
+        <column name="Wyświetlana nazwa" field="fullName"/>
+        <column name="Pseudonim" field="nickname"/>
+        <column name="Podstawowy e-mail" field="email"/>
+        <column name="Dodatkowy e-mail" field="email2"/>
+        <column name="Komunikator AIM" field="aimId"/>
+        <column name="Telefonu służbowy" field="workPhone"/>
+        <column name="Telefon domowy" field="homePhone"/>
+        <column name="Numer faksu" field="workFax"/>
+        <column name="Pager" field="pager"/>
+        <column name="Numer telefonu komórkowego" field="mobilePhone"/>
+        <column name="Adres domowy,Adres domowy 2" field="homeStreet" type="multivalue"/>
+        <column name="Miasto (dom)" field="homeCity"/>
+        <column name="Województwo (dom)" field="homeState"/>
+        <column name="Kod pocztowy (dom)" field="homePostalCode"/>
+        <column name="Państwo (dom)" field="homeCountry"/>
+        <column name="Adres służbowy,Adres służbowy 2" field="workStreet" type="multivalue"/>
+        <column name="Miasto (praca)" field="workCity"/>
+        <column name="Województwo (praca)" field="workState"/>
+        <column name="Kod pocztowy (praca)" field="workPostalCode"/>
+        <column name="Państwo (praca)" field="workCountry"/>
+        <column name="Stanowisko" field="jobTitle"/>
+        <column name="Departament" field="department"/>
+        <column name="Firma/Organizacja" field="company"/>
+        <column name="Strona WWW 1" field="workURL"/>
+        <column name="Strona WWW 2" field="homeURL"/>
+        <column name="Urodziny - Miesiąc,Urodziny - Dzień,Urodziny - Rok" field="birthday" type="multivalue"/>
+        <column name="Informacja 1" field="custom1"/>
+        <column name="Informacja 2" field="custom2"/>
+        <column name="Informacja 3" field="custom3"/>
+        <column name="Informacja 4" field="custom4"/>
+        <column name="Notatki" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="pt_BR">
+        <column name="Primeiro nome" field="firstName"/>
+        <column name="Sobrenome" field="lastName"/>
+        <column name="Apresentar como" field="fullName"/>
+        <column name="Apelido" field="nickname"/>
+        <column name="Email primário" field="email"/>
+        <column name="Email secundário" field="email2"/>
+        <column name="Nome de tela" field="aimId"/>
+        <column name="Telefone comercial" field="workPhone"/>
+        <column name="Telefone residencial" field="homePhone"/>
+        <column name="Número do fax" field="workFax"/>
+        <column name="Número do pager" field="pager"/>
+        <column name="Número celular" field="mobilePhone"/>
+        <column name="Endereço,Endereço 2" field="homeStreet" type="multivalue"/>
+        <column name="Cidade" field="homeCity"/>
+        <column name="Estado" field="homeState"/>
+        <column name="CEP" field="homePostalCode"/>
+        <column name="País" field="homeCountry"/>
+        <column name="Endereço de trabalho,Endereço de trabalho 2" field="workStreet" type="multivalue"/>
+        <column name="Cidade de trabalho" field="workCity"/>
+        <column name="Estado de trabalho" field="workState"/>
+        <column name="CEP de trabalho" field="workPostalCode"/>
+        <column name="País de trabalho" field="workCountry"/>
+        <column name="Cargo" field="jobTitle"/>
+        <column name="Setor" field="department"/>
+        <column name="Empresa" field="company"/>
+        <column name="Página da web 1" field="workURL"/>
+        <column name="Página da web 2" field="homeURL"/>
+        <column name="Mês de nascimento,Nascimento,Ano de nascimento" field="birthday" type="multivalue"/>
+        <column name="Personalizado 1" field="custom1"/>
+        <column name="Personalizado 2" field="custom2"/>
+        <column name="Personalizado 3" field="custom3"/>
+        <column name="Personalizado 4" field="custom4"/>
+        <column name="Observações" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="ru">
+        <column name="Имя" field="firstName"/>
+        <column name="Фамилия" field="lastName"/>
+        <column name="Отображаемое имя" field="fullName"/>
+        <column name="Псевдоним" field="nickname"/>
+        <column name="Адрес электронной почты" field="email"/>
+        <column name="Альтернативный адрес электронной почты" field="email2"/>
+        <column name="Интернет-пейджер" field="aimId"/>
+        <column name="Рабочий телефон" field="workPhone"/>
+        <column name="Домашний телефон" field="homePhone"/>
+        <column name="Номер факса" field="workFax"/>
+        <column name="Номер пейджера" field="pager"/>
+        <column name="Номер сотового телефона" field="mobilePhone"/>
+        <column name="Адрес,Адрес 2" field="homeStreet" type="multivalue"/>
+        <column name="Город" field="homeCity"/>
+        <column name="Штат" field="homeState"/>
+        <column name="Почтовый индекс" field="homePostalCode"/>
+        <column name="Страна" field="homeCountry"/>
+        <column name="Адрес (раб.),Адрес 2 (раб.)" field="workStreet" type="multivalue"/>
+        <column name="Город (раб.)" field="workCity"/>
+        <column name="Штат (раб.)" field="workState"/>
+        <column name="Почтовый индекс (раб.)" field="workPostalCode"/>
+        <column name="Страна (раб.)" field="workCountry"/>
+        <column name="Должность" field="jobTitle"/>
+        <column name="Отдел" field="department"/>
+        <column name="Организация" field="company"/>
+        <column name="Веб-страница 1" field="workURL"/>
+        <column name="Веб-страница 2" field="homeURL"/>
+        <column name="Месяц рождения,День рождения,Год рождения" field="birthday" type="multivalue"/>
+        <column name="Прочее 1" field="custom1"/>
+        <column name="Прочее 2" field="custom2"/>
+        <column name="Прочее 3" field="custom3"/>
+        <column name="Прочее 4" field="custom4"/>
+        <column name="Заметки" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="sv">   <!-- From sv-SE -->
+        <column name="Förnamn" field="firstName"/>
+        <column name="Efternamn" field="lastName"/>
+        <column name="Kortnamn" field="fullName"/>
+        <column name="Smeknamn" field="nickname"/>
+        <column name="E-postadress" field="email"/>
+        <column name="Annan e-post" field="email2"/>
+        <column name="Skärmnamn" field="aimId"/>
+        <column name="Telefon arbete" field="workPhone"/>
+        <column name="Telefon hem" field="homePhone"/>
+        <column name="Faxnummer" field="workFax"/>
+        <column name="Personsökare" field="pager"/>
+        <column name="Mobiltelefon" field="mobilePhone"/>
+        <column name="Hemadress (rad 1),Hemadress (rad 2)" field="homeStreet" type="multivalue"/>
+        <column name="Hemort" field="homeCity"/>
+        <column name="(Delstat)" field="homeState"/>
+        <column name="Postnummer" field="homePostalCode"/>
+        <column name="Land" field="homeCountry"/>
+        <column name="Adress arbete (rad 1),Adress arbete (rad 2)" field="workStreet" type="multivalue"/>
+        <column name="Ort arbete" field="workCity"/>
+        <column name="(Delstat) arbete" field="workState"/>
+        <column name="Postnummer arbete" field="workPostalCode"/>
+        <column name="Land arbete" field="workCountry"/>
+        <column name="Titel" field="jobTitle"/>
+        <column name="Avdelning" field="department"/>
+        <column name="Företag" field="company"/>
+        <column name="Hemsida 1" field="workURL"/>
+        <column name="Hemsida 2" field="homeURL"/>
+        <column name="Födelsemånad,Födelsedatum,Födelseår" field="birthday" type="multivalue"/>
+        <column name="Annan uppgift 1" field="custom1"/>
+        <column name="Annan uppgift 2" field="custom2"/>
+        <column name="Annan uppgift 3" field="custom3"/>
+        <column name="Annan uppgift 4" field="custom4"/>
+        <column name="Anteckningar" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="zh_CN">
+        <column name="名字" field="firstName"/>
+        <column name="姓氏" field="lastName"/>
+        <column name="显示名称" field="fullName"/>
+        <column name="呢称" field="nickname"/>
+        <column name="主要电子邮件" field="email"/>
+        <column name="备用电子邮件" field="email2"/>
+        <column name="显示名" field="aimId"/>
+        <column name="工作电话" field="workPhone"/>
+        <column name="家庭电话" field="homePhone"/>
+        <column name="传真号码" field="workFax"/>
+        <column name="寻呼机号码" field="pager"/>
+        <column name="移动电话号码" field="mobilePhone"/>
+        <column name="家庭地址,家庭地址 2" field="homeStreet" type="multivalue"/>
+        <column name="城市" field="homeCity"/>
+        <column name="省/自治区/直辖市" field="homeState"/>
+        <column name="邮政编码" field="homePostalCode"/>
+        <column name="国家" field="homeCountry"/>
+        <column name="工作地址,工作地址 2" field="workStreet" type="multivalue"/>
+        <column name="城市" field="workCity"/>
+        <column name="省/自治区/直辖市" field="workState"/>
+        <column name="邮政编码" field="workPostalCode"/>
+        <column name="国家" field="workCountry"/>
+        <column name="职务" field="jobTitle"/>
+        <column name="部门" field="department"/>
+        <column name="组织" field="company"/>
+        <column name="网页 1" field="workURL"/>
+        <column name="网页 2" field="homeURL"/>
+        <column name="出生月份,出生日,出生年份" field="birthday" type="multivalue"/>
+        <column name="定制 1" field="custom1"/>
+        <column name="定制 2" field="custom2"/>
+        <column name="定制 3" field="custom3"/>
+        <column name="定制 4" field="custom4"/>
+        <column name="注释" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="zh_HK"> <!-- From zh-TW Messenger -->
+        <column name="名" field="firstName"/>
+        <column name="姓" field="lastName"/>
+        <column name="顯示名稱" field="fullName"/>
+        <column name="暱稱" field="nickname"/>
+        <column name="主要 Email" field="email"/>
+        <column name="次要 Email" field="email2"/>
+        <column name="網路代號" field="aimId"/>
+        <column name="商務電話" field="workPhone"/>
+        <column name="住家電話" field="homePhone"/>
+        <column name="傳真號碼" field="workFax"/>
+        <column name="呼叫器號碼" field="pager"/>
+        <column name="手機號碼" field="mobilePhone"/>
+        <column name="住家住址,住家住址 2" field="homeStreet" type="multivalue"/>
+        <column name="居住縣市" field="homeCity"/>
+        <column name="居住市鎮" field="homeState"/>
+        <column name="住址郵遞區號" field="homePostalCode"/>
+        <column name="居住國家" field="homeCountry"/>
+        <column name="商務地址,商務地址 2" field="workStreet" type="multivalue"/>
+        <column name="商務縣市" field="workCity"/>
+        <column name="商務省市" field="workState"/>
+        <column name="商務郵遞區號" field="workPostalCode"/>
+        <column name="商務國家" field="workCountry"/>
+        <column name="職稱" field="jobTitle"/>
+        <column name="部門" field="department"/>
+        <column name="公司" field="company"/>
+        <column name="網頁 1" field="workURL"/>
+        <column name="網頁 2" field="homeURL"/>
+        <column name="生日 (月),生日 (日),生日 (年)" field="birthday" type="multivalue"/>
+        <column name="自訂 1" field="custom1"/>
+        <column name="自訂 2" field="custom2"/>
+        <column name="自訂 3" field="custom3"/>
+        <column name="自訂 4" field="custom4"/>
+        <column name="註解" field="notes"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv">
+        <column name="Title" field="namePrefix"/>
+        <column name="First Name" field="firstName"/>
+        <column name="Middle Name" field="middleName"/>
+        <column name="Last Name" field="lastName"/>
+        <column name="Suffix" field="nameSuffix"/>
+        <column name="Name" field="firstName,middleName,lastName" type="name"/>
+        <column name="Company" field="company"/>
+        <column name="Department" field="department"/>
+        <column name="Job Title" field="jobTitle"/>
+        <column name="Business Address" field="workStreet"/>
+        <column name="Business Street,Business Street 2,Business Street 3" field="workStreet" type="multivalue"/>
+        <column name="Business City" field="workCity"/>
+        <column name="Business State" field="workState"/>
+        <column name="Business Postal Code" field="workPostalCode"/>
+        <column name="Business Country" field="workCountry"/>
+        <column name="Home Address" field="homeStreet"/>
+        <column name="Home Street,Home Street 2,Home Street 3" field="homeStreet" type="multivalue"/>
+        <column name="Home City" field="homeCity"/>
+        <column name="Home State" field="homeState"/>
+        <column name="Home Postal Code" field="homePostalCode"/>
+        <column name="Home Country" field="homeCountry"/>
+        <column name="Other Street,Other Street 2,Other Street 3" field="otherStreet" type="multivalue"/>
+        <column name="Other City" field="otherCity"/>
+        <column name="Other State" field="otherState"/>
+        <column name="Other Postal Code" field="otherPostalCode"/>
+        <column name="Other Country" field="otherCountry"/>
+        <column name="Assistant's Phone" field="assistant"/>
+        <column name="Business Fax" field="workFax"/>
+        <column name="Business Phone" field="workPhone"/>
+        <column name="Business Phone 2" field="workPhone2"/>
+        <column name="Callback" field="callbackPhone"/>
+        <column name="Car Phone" field="carPhone"/>
+        <column name="Company Main Phone" field="companyPhone"/>
+        <column name="Home Fax" field="homeFax"/>
+        <column name="Home Phone" field="homePhone"/>
+        <column name="Home Phone 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/> <!-- custom -->
+        <column name="Mobile Phone" field="mobilePhone"/>
+        <column name="Other Fax" field="otherFax"/>
+        <column name="Other Phone" field="otherPhone"/>
+        <column name="Pager" field="pager"/>
+        <column name="Primary Phone"/>
+        <column name="Radio Phone" field="radioPhone"/> <!-- custom -->
+        <column name="TTY/TDD Phone" field="ttyTDDPhone"/> <!-- custom -->
+        <column name="Telex" field="telex"/> <!-- custom -->
+        <column name="Account" field="account"/> <!-- custom -->
+        <column name="Anniversary" field="anniversary" type="date"/>
+        <column name="Assistant's Name" field="assistantName"/> <!-- custom -->
+        <column name="Billing Information" field="billingInfo"/> <!-- custom -->
+        <column name="Birthday" field="birthday" type="date"/>
+        <column name="Business Address PO Box"/>
+        <column name="Categories"/>
+        <column name="Children" field="children"/> <!-- custom -->
+        <column name="Directory Server"/>
+        <column name="E-mail Address" field="email"/>
+        <column name="E-mail Type"/>
+        <column name="E-mail Display Name"/>
+        <column name="E-mail 2 Address" field="email2"/>
+        <column name="E-mail 2 Type"/>
+        <column name="E-mail 2 Display Name"/>
+        <column name="E-mail 3 Address" field="email3"/>
+        <column name="E-mail 3 Type"/>
+        <column name="E-mail 3 Display Name"/>
+        <column name="Gender" field="gender"/> <!-- custom -->
+        <column name="Government ID Number" field="governmentId"/> <!-- custom -->
+        <column name="Hobby" field="hobby"/> <!-- custom -->
+        <column name="Home Address PO Box" field="homePOBox"/> <!-- custom -->
+        <column name="Initials" field="initials"/>
+        <column name="Internet Free Busy"/>
+        <column name="Keywords" field="keywords"/> <!-- custom -->
+        <column name="Language" field="language"/> <!-- custom -->
+        <column name="Location" field="location"/> <!-- custom -->
+        <column name="Manager's Name" field="managerName"/> <!-- custom -->
+        <column name="Mileage" field="mileage"/> <!-- custom -->
+        <column name="Notes" field="notes"/>
+        <column name="Office Location" field="office"/>
+        <column name="Organizational ID Number" field="organizationId"/> <!-- custom -->
+        <column name="Other Address PO Box" field="otherPOBox"/> <!-- custom -->
+        <column name="Priority"/>
+        <column name="Private"/>
+        <column name="Profession" field="profession"/> <!-- custom -->
+        <column name="Referred By" field="referredBy"/> <!-- custom -->
+        <column name="Sensitivity" field="sensitivity"/> <!-- custom -->
+        <column name="Spouse" field="spouse"/> <!-- custom -->
+        <column name="User 1" field="custom1"/>
+        <column name="User 2" field="custom2"/>
+        <column name="User 3" field="custom3"/>
+        <column name="User 4" field="custom4"/>
+        <column name="Web Page" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="da">
+        <column name="Titel" field="namePrefix"/>
+        <column name="Fornavn" field="firstName"/>
+        <column name="Mellemnavn" field="middleName"/>
+        <column name="Efternavn" field="lastName"/>
+        <column name="Suffiks" field="nameSuffix"/>
+        <column name="Navn" field="firstName,middleName,lastName" type="name"/>
+        <column name="Firma" field="company"/>
+        <column name="Afdeling" field="department"/>
+        <column name="Stilling" field="jobTitle"/>
+        <column name="Arbejdsadresse" field="workStreet"/>
+        <column name="Gade (arbejde),Gade 2 (firma),Gade 3 (firma)" field="workStreet" type="multivalue"/>
+        <column name="By (arbejde)" field="workCity"/>
+        <column name="Område (arbejde)" field="workState"/>
+        <column name="Postnummer (arbejde)" field="workPostalCode"/>
+        <column name="Land/område (arbejde)" field="workCountry"/>
+        <column name="Privatadresse" field="homeStreet"/>
+        <column name="Gade (privat),Gade 2 (privat),Gade 3 (privat)" field="homeStreet" type="multivalue"/>
+        <column name="By (privat)" field="homeCity"/>
+        <column name="Område (privat)" field="homeState"/>
+        <column name="Postnummer (privat)" field="homePostalCode"/>
+        <column name="Land/område (privat)" field="homeCountry"/>
+        <column name="Anden gade,Anden gade 2,Anden gade 3" field="otherStreet" type="multivalue"/>
+        <column name="Anden by" field="otherCity"/>
+        <column name="Andet område" field="otherState"/>
+        <column name="Andet postnummer" field="otherPostalCode"/>
+        <column name="Andet land/område" field="otherCountry"/>
+        <column name="Assistentens telefon" field="assistant"/>
+        <column name="Fax (arbejde)" field="workFax"/>
+        <column name="Telefon (arbejde)" field="workPhone"/>
+        <column name="Telefon 2 (arbejde)" field="workPhone2"/>
+        <column name="Tilbagekald" field="callbackPhone"/>
+        <column name="Biltelefon" field="carPhone"/>
+        <column name="Primær telefon (firma)" field="companyPhone"/>
+        <column name="Fax (privat)" field="homeFax"/>
+        <column name="Telefon (privat)" field="homePhone"/>
+        <column name="Telefon 2 (privat)" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="Mobiltelefon" field="mobilePhone"/>
+        <column name="Anden fax" field="otherFax"/>
+        <column name="Anden telefon" field="otherPhone"/>
+        <column name="Personsøger" field="pager"/>
+        <column name="Primær telefon"/>
+        <column name="Radiotelefon" field="radioPhone"/>
+        <column name="TTY/TDD-telefon" field="ttyTDDPhone"/>
+        <column name="Telex" field="telex"/>
+        <column name="Konto" field="account"/>
+        <column name="Mærkedag" field="anniversary" type="date"/>
+        <column name="Assistentens navn" field="assistantName"/>
+        <column name="Takstoplysninger" field="billingInfo"/>
+        <column name="Fødselsdag" field="birthday" type="date"/>
+        <column name="Adresse,postboks (arbejde)"/>
+        <column name="Kategorier"/>
+        <column name="Børn" field="children"/>
+        <column name="Adresseserver"/>
+        <column name="E-mail-adresse" field="email"/>
+        <column name="E-mail-type"/>
+        <column name="E-mail-vist navn"/>
+        <column name="E-mail 2-adresse" field="email2"/>
+        <column name="E-mail 2-type"/>
+        <column name="E-mail 2-vist navn"/>
+        <column name="E-mail 3-adresse" field="email3"/>
+        <column name="E-mail 3-type"/>
+        <column name="E-mail 3-vist navn"/>
+        <column name="Køn" field="gender"/>
+        <column name="Se-nr." field="governmentId"/>
+        <column name="Hobby" field="hobby"/>
+        <column name="Adresse,postboks (privat)" field="homePOBox"/>
+        <column name="Initialer" field="initials"/>
+        <column name="Ledig/optaget via internettet"/>
+        <column name="Nøgleord" field="keywords"/>
+        <column name="Sprog" field="language"/>
+        <column name="Sted" field="location"/>
+        <column name="Navn på overordnet" field="managerName"/>
+        <column name="Kørte kilometer" field="mileage"/>
+        <column name="Notater" field="notes"/>
+        <column name="Kontoradresse" field="office"/>
+        <column name="Firmanr." field="organizationId"/>
+        <column name="Anden adresse,postboks" field="otherPOBox"/>
+        <column name="Prioritet"/>
+        <column name="Privat"/>
+        <column name="Profession" field="profession"/>
+        <column name="Henvist af" field="referredBy"/>
+        <column name="Følsomhed" field="sensitivity"/>
+        <column name="Ægtefælle" field="spouse"/>
+        <column name="Bruger 1" field="custom1"/>
+        <column name="Bruger 2" field="custom2"/>
+        <column name="Bruger 3" field="custom3"/>
+        <column name="Bruger 4" field="custom4"/>
+        <column name="webside" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="de">
+        <column name="Anrede" field="namePrefix"/>
+        <column name="Vorname" field="firstName"/>
+        <column name="Weitere Vornamen" field="middleName"/>
+        <column name="Nachname" field="lastName"/>
+        <column name="Suffix" field="nameSuffix"/>
+        <column name="Name" field="firstName,middleName,lastName" type="name"/>
+        <column name="Firma" field="company"/>
+        <column name="Abteilung" field="department"/>
+        <column name="Position" field="jobTitle"/>
+        <column name="Adresse geschäftlich" field="workStreet"/>
+        <column name="Straße geschäftlich,Straße geschäftlich 2,Straße geschäftlich 3" field="workStreet" type="multivalue"/>
+        <column name="Ort geschäftlich" field="workCity"/>
+        <column name="Region geschäftlich" field="workState"/>
+        <column name="Postleitzahl geschäftlich" field="workPostalCode"/>
+        <column name="Land/Region geschäftlich" field="workCountry"/>
+        <column name="Adresse privat" field="homeStreet"/>
+        <column name="Straße privat,Straße privat 2,Straße privat 3" field="homeStreet" type="multivalue"/>
+        <column name="Ort privat" field="homeCity"/>
+        <column name="Bundesland/Kanton privat" field="homeState"/>
+        <column name="Postleitzahl privat" field="homePostalCode"/>
+        <column name="Land/Region privat" field="homeCountry"/>
+        <column name="Weitere Straße,Weitere Straße 2,Weitere Straße 3" field="otherStreet" type="multivalue"/>
+        <column name="Weiterer Ort" field="otherCity"/>
+        <column name="Weiteres/r Bundesland/Kanton" field="otherState"/>
+        <column name="Weitere Postleitzahl" field="otherPostalCode"/>
+        <column name="Weiteres/e Land/Region" field="otherCountry"/>
+        <column name="Telefon Assistent" field="assistant"/>
+        <column name="Fax geschäftlich" field="workFax"/>
+        <column name="Telefon geschäftlich" field="workPhone"/>
+        <column name="Telefon geschäftlich 2" field="workPhone2"/>
+        <column name="Rückmeldung" field="callbackPhone"/>
+        <column name="Autotelefon" field="carPhone"/>
+        <column name="Telefon Firma" field="companyPhone"/>
+        <column name="Fax privat" field="homeFax"/>
+        <column name="Telefon privat" field="homePhone"/>
+        <column name="Telefon privat 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="Mobiltelefon" field="mobilePhone"/>
+        <column name="Weiteres Fax" field="otherFax"/>
+        <column name="Weiteres Telefon" field="otherPhone"/>
+        <column name="Pager" field="pager"/>
+        <column name="Haupttelefon"/>
+        <column name="Mobiltelefon 2" field="radioPhone"/>
+        <column name="Telefon für Hörbehinderte" field="ttyTDDPhone"/>
+        <column name="Telex" field="telex"/>
+        <column name="Konto" field="account"/>
+        <column name="Jahrestag" field="anniversary" type="date"/>
+        <column name="Name Assistent" field="assistantName"/>
+        <column name="Abrechnungsinformation" field="billingInfo"/>
+        <column name="Geburtstag" field="birthday" type="date"/>
+        <column name="Postfach geschäftlich"/>
+        <column name="Kategorien"/>
+        <column name="Kinder" field="children"/>
+        <column name="Verzeichnisserver"/>
+        <column name="E-Mail-Adresse" field="email"/>
+        <column name="E-Mail-Typ"/>
+        <column name="E-Mail: Angezeigter Name"/>
+        <column name="E-Mail 2: Adresse" field="email2"/>
+        <column name="E-Mail 2: Typ"/>
+        <column name="E-Mail 2: Angezeigter Name"/>
+        <column name="E-Mail 3: Adresse" field="email3"/>
+        <column name="E-Mail 3: Typ"/>
+        <column name="E-Mail 3: Angezeigter Name"/>
+        <column name="Geschlecht" field="gender"/>
+        <column name="Regierungsnr." field="governmentId"/>
+        <column name="Hobby" field="hobby"/>
+        <column name="Postfach privat" field="homePOBox"/>
+        <column name="Initialen" field="initials"/>
+        <column name="Internet-Frei/Gebucht"/>
+        <column name="Stichwörter" field="keywords"/>
+        <column name="Sprache" field="language"/>
+        <column name="Ort" field="location"/>
+        <column name="Name des/der Vorgesetzten" field="managerName"/>
+        <column name="Reisekilometer" field="mileage"/>
+        <column name="Notizen" field="notes"/>
+        <column name="Büro" field="office"/>
+        <column name="Organisationsnr." field="organizationId"/>
+        <column name="Weiteres Postfach" field="otherPOBox"/>
+        <column name="Priorität"/>
+        <column name="Privat"/>
+        <column name="Beruf" field="profession"/>
+        <column name="Empfohlen von" field="referredBy"/>
+        <column name="Vertraulichkeit" field="sensitivity"/>
+        <column name="Partner" field="spouse"/>
+        <column name="Benutzer 1" field="custom1"/>
+        <column name="Benutzer 2" field="custom2"/>
+        <column name="Benutzer 3" field="custom3"/>
+        <column name="Benutzer 4" field="custom4"/>
+        <column name="Webseite" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="en_GB">
+        <column name="Title" field="namePrefix"/>
+        <column name="First Name" field="firstName"/>
+        <column name="Middle Name" field="middleName"/>
+        <column name="Last Name" field="lastName"/>
+        <column name="Suffix" field="nameSuffix"/>
+        <column name="Name" field="firstName,middleName,lastName" type="name"/>
+        <column name="Company" field="company"/>
+        <column name="Department" field="department"/>
+        <column name="Job Title" field="jobTitle"/>
+        <column name="Business Address" field="workStreet"/>
+        <column name="Business Street,Business Street 2,Business Street 3" field="workStreet" type="multivalue"/>
+        <column name="Business City" field="workCity"/>
+        <column name="Business State" field="workState"/>
+        <column name="Business Postal Code" field="workPostalCode"/>
+        <column name="Business Country/Region" field="workCountry"/>
+        <column name="Home Address" field="homeStreet"/>
+        <column name="Home Street,Home Street 2,Home Street 3" field="homeStreet" type="multivalue"/>
+        <column name="Home City" field="homeCity"/>
+        <column name="Home State" field="homeState"/>
+        <column name="Home Postal Code" field="homePostalCode"/>
+        <column name="Home Country/Region" field="homeCountry"/>
+        <column name="Other Street,Other Street 2,Other Street 3" field="otherStreet" type="multivalue"/>
+        <column name="Other City" field="otherCity"/>
+        <column name="Other State" field="otherState"/>
+        <column name="Other Postal Code" field="otherPostalCode"/>
+        <column name="Other Country/Region" field="otherCountry"/>
+        <column name="Assistant's Phone" field="assistant"/>
+        <column name="Business Fax" field="workFax"/>
+        <column name="Business Phone" field="workPhone"/>
+        <column name="Business Phone 2" field="workPhone2"/>
+        <column name="Callback" field="callbackPhone"/>
+        <column name="Car Phone" field="carPhone"/>
+        <column name="Company Main Phone" field="companyPhone"/>
+        <column name="Home Fax" field="homeFax"/>
+        <column name="Home Phone" field="homePhone"/>
+        <column name="Home Phone 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="Mobile Phone" field="mobilePhone"/>
+        <column name="Other Fax" field="otherFax"/>
+        <column name="Other Phone" field="otherPhone"/>
+        <column name="Pager" field="pager"/>
+        <column name="Primary Phone"/>
+        <column name="Radio Phone" field="radioPhone"/>
+        <column name="TTY/TDD Phone" field="ttyTDDPhone"/>
+        <column name="Telex" field="telex"/>
+        <column name="Account" field="account"/>
+        <column name="Anniversary" field="anniversary" type="date"/>
+        <column name="Assistant's Name" field="assistantName"/>
+        <column name="Billing Information" field="billingInfo"/>
+        <column name="Birthday" field="birthday" type="date"/>
+        <column name="Business Address PO Box"/>
+        <column name="Categories"/>
+        <column name="Children" field="children"/>
+        <column name="Directory Server"/>
+        <column name="E-mail Address" field="email"/>
+        <column name="E-mail Type"/>
+        <column name="E-mail Display Name"/>
+        <column name="E-mail 2 Address" field="email2"/>
+        <column name="E-mail 2 Type"/>
+        <column name="E-mail 2 Display Name"/>
+        <column name="E-mail 3 Address" field="email3"/>
+        <column name="E-mail 3 Type"/>
+        <column name="E-mail 3 Display Name"/>
+        <column name="Gender" field="gender"/>
+        <column name="Government ID Number" field="governmentId"/>
+        <column name="Hobby" field="hobby"/>
+        <column name="Home Address PO Box" field="homePOBox"/>
+        <column name="Initials" field="initials"/>
+        <column name="Internet Free Busy"/>
+        <column name="Keywords" field="keywords"/>
+        <column name="Language" field="language"/>
+        <column name="Location" field="location"/>
+        <column name="Manager's Name" field="managerName"/>
+        <column name="Mileage" field="mileage"/>
+        <column name="Notes" field="notes"/>
+        <column name="Office Location" field="office"/>
+        <column name="Organizational ID Number" field="organizationId"/>
+        <column name="Other Address PO Box" field="otherPOBox"/>
+        <column name="Priority"/>
+        <column name="Private"/>
+        <column name="Profession" field="profession"/>
+        <column name="Referred By" field="referredBy"/>
+        <column name="Sensitivity" field="sensitivity"/>
+        <column name="Spouse" field="spouse"/>
+        <column name="User 1" field="custom1"/>
+        <column name="User 2" field="custom2"/>
+        <column name="User 3" field="custom3"/>
+        <column name="User 4" field="custom4"/>
+        <column name="Web Page" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="es">
+        <column name="Title" field="namePrefix"/>
+        <column name="Nombre" field="firstName"/>
+        <column name="Segundo nombre" field="middleName"/>
+        <column name="Apellidos" field="lastName"/>
+        <column name="Suffix" field="nameSuffix"/>
+        <column name="Nombre" field="firstName,middleName,lastName" type="name"/>
+        <column name="Organización" field="company"/>
+        <column name="Department" field="department"/>
+        <column name="Puesto" field="jobTitle"/>
+        <column name="Dirección trabajo" field="workStreet"/>
+        <column name="Calle del trabajo,Calle del trabajo 2,Calle del trabajo 3" field="workStreet" type="multivalue"/>
+        <column name="Ciudad de trabajo" field="workCity"/>
+        <column name="Provincia o estado de trabajo" field="workState"/>
+        <column name="Código postal del trabajo" field="workPostalCode"/>
+        <column name="País o región del trabajo" field="workCountry"/>
+        <column name="Dirección particular" field="homeStreet"/>
+        <column name="Home Street,Home Street 2,Home Street 3" field="homeStreet" type="multivalue"/>
+        <column name="Home City" field="homeCity"/>
+        <column name="Home State" field="homeState"/>
+        <column name="Home Postal Code" field="homePostalCode"/>
+        <column name="País o región del domicilio" field="homeCountry"/>
+        <column name="Otra calle,Otra calle 2,Otra calle 3" field="otherStreet" type="multivalue"/>
+        <column name="Otra ciudad" field="otherCity"/>
+        <column name="Otra provincia o estado" field="otherState"/>
+        <column name="Otro código postal" field="otherPostalCode"/>
+        <column name="Otro país o región" field="otherCountry"/>
+        <column name="Assistant's Phone" field="assistant"/>
+        <column name="Business Fax" field="workFax"/>
+        <column name="Teléfono del trabajo" field="workPhone"/>
+        <column name="Business Phone 2" field="workPhone2"/>
+        <column name="Devolución de llamada" field="callbackPhone"/>
+        <column name="Car Phone" field="carPhone"/>
+        <column name="Número de centralita de la organización" field="companyPhone"/>
+        <column name="Home Fax" field="homeFax"/>
+        <column name="Particular" field="homePhone"/>
+        <column name="Home Phone 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="Mobile Phone" field="mobilePhone"/>
+        <column name="Otro fax" field="otherFax"/>
+        <column name="Otro teléfono" field="otherPhone"/>
+        <column name="Pager" field="pager"/>
+        <column name="Teléfono principal"/>
+        <column name="Radioteléfono" field="radioPhone"/>
+        <column name="Número de teletipo" field="ttyTDDPhone"/>
+        <column name="Télex" field="telex"/>
+        <column name="Account" field="account"/>
+        <column name="Anniversary" field="anniversary" type="date"/>
+        <column name="Assistant's Name" field="assistantName"/>
+        <column name="Facturación" field="billingInfo"/>
+        <column name="Birthday" field="birthday" type="date"/>
+        <column name="Apartado postal de la dirección del trabajo"/>
+        <column name="Categorías"/>
+        <column name="Hijos" field="children"/>
+        <column name="Servidor de directorio"/>
+        <column name="E-mail Address" field="email"/>
+        <column name="E-mail Type"/>
+        <column name="Nombre de pantalla de correo electrónico"/>
+        <column name="Dirección de correo electrónico 2" field="email2"/>
+        <column name="Tipo de correo electrónico 2"/>
+        <column name="Nombre de pantalla de correo electrónico 2"/>
+        <column name="Dirección del correo electrónico 3" field="email3"/>
+        <column name="Tipo de correo electrónico 3"/>
+        <column name="Nombre de pantalla de correo electrónico 3"/>
+        <column name="Género" field="gender"/>
+        <column name="Government ID Number" field="governmentId"/>
+        <column name="Aficiones" field="hobby"/>
+        <column name="Apartado postal de la dirección personal" field="homePOBox"/>
+        <column name="Initials" field="initials"/>
+        <column name="Internet Free Busy"/>
+        <column name="Keywords" field="keywords"/>
+        <column name="Language" field="language"/>
+        <column name="Location" field="location"/>
+        <column name="Nombre del director" field="managerName"/>
+        <column name="Kilometraje" field="mileage"/>
+        <column name="Notes" field="notes"/>
+        <column name="Office Location" field="office"/>
+        <column name="Organizational ID Number" field="organizationId"/>
+        <column name="Otro apartado postal" field="otherPOBox"/>
+        <column name="Prioridad"/>
+        <column name="Private"/>
+        <column name="Profesión" field="profession"/>
+        <column name="Remitido por" field="referredBy"/>
+        <column name="Confidencialidad" field="sensitivity"/>
+        <column name="Spouse" field="spouse"/>
+        <column name="Usuario 1" field="custom1"/>
+        <column name="Usuario 2" field="custom2"/>
+        <column name="Usuario 3" field="custom3"/>
+        <column name="Usuario 4" field="custom4"/>
+        <column name="Página Web" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="fr">
+        <column name="Titre" field="namePrefix"/>
+        <column name="Prénom" field="firstName"/>
+        <column name="Deuxième prénom" field="middleName"/>
+        <column name="Nom" field="lastName"/>
+        <column name="Suffixe" field="nameSuffix"/>
+        <column name="Nom" field="firstName,middleName,lastName" type="name"/>
+        <column name="Société" field="company"/>
+        <column name="Service" field="department"/>
+        <column name="Titre" field="jobTitle"/>
+        <column name="Adresse professionnelle" field="workStreet"/>
+        <column name="Rue (bureau),Rue (bureau) 2,Rue (bureau) 3" field="workStreet" type="multivalue"/>
+        <column name="Ville (bureau)" field="workCity"/>
+        <column name="Dép/Région (bureau)" field="workState"/>
+        <column name="Code postal (bureau)" field="workPostalCode"/>
+        <column name="Pays/Région (bureau)" field="workCountry"/>
+        <column name="Adresse personnelle" field="homeStreet"/>
+        <column name="Rue (domicile),Rue (domicile) 2,Rue (domicile) 3" field="homeStreet" type="multivalue"/>
+        <column name="Ville (domicile)" field="homeCity"/>
+        <column name="Dép/Région (domicile)" field="homeState"/>
+        <column name="Code postal (domicile)" field="homePostalCode"/>
+        <column name="Pays/Région (domicile)" field="homeCountry"/>
+        <column name="Rue (autre),Rue (autre) 2,Rue (autre) 3" field="otherStreet" type="multivalue"/>
+        <column name="Ville (autre)" field="otherCity"/>
+        <column name="Dép/Région (autre)" field="otherState"/>
+        <column name="Code postal (autre)" field="otherPostalCode"/>
+        <column name="Pays/Région (autre)" field="otherCountry"/>
+        <column name="Téléphone de l'assistant(e)" field="assistant"/>
+        <column name="Télécopie (bureau)" field="workFax"/>
+        <column name="Téléphone (bureau)" field="workPhone"/>
+        <column name="Téléphone 2 (bureau)" field="workPhone2"/>
+        <column name="Rappel" field="callbackPhone"/>
+        <column name="Téléphone (voiture)" field="carPhone"/>
+        <column name="Téléphone société" field="companyPhone"/>
+        <column name="Télécopie (domicile)" field="homeFax"/>
+        <column name="Téléphone (domicile)" field="homePhone"/>
+        <column name="Téléphone 2 (domicile)" field="homePhone2"/>
+        <column name="RNIS" field="isdn"/>
+        <column name="Tél. mobile" field="mobilePhone"/>
+        <column name="Télécopie (autre)" field="otherFax"/>
+        <column name="Téléphone (autre)" field="otherPhone"/>
+        <column name="Récepteur de radiomessagerie" field="pager"/>
+        <column name="Téléphone principal"/>
+        <column name="Radio téléphone" field="radioPhone"/>
+        <column name="Téléphone TDD/TTY" field="ttyTDDPhone"/>
+        <column name="Télex" field="telex"/>
+        <column name="Compte" field="account"/>
+        <column name="Anniversaire de mariage ou fête" field="anniversary" type="date"/>
+        <column name="Nom de l'assistant(e)" field="assistantName"/>
+        <column name="Informations facturation" field="billingInfo"/>
+        <column name="Anniversaire" field="birthday" type="date"/>
+        <column name="B.P. professionnelle"/>
+        <column name="Catégories"/>
+        <column name="Enfants" field="children"/>
+        <column name="Serveur d'annuaire"/>
+        <column name="Adresse de messagerie" field="email"/>
+        <column name="Type de messagerie"/>
+        <column name="Nom complet de l'adresse de messagerie"/>
+        <column name="Adresse de messagerie 2" field="email2"/>
+        <column name="Type de messagerie 2"/>
+        <column name="Nom complet de l'adresse de messagerie 2"/>
+        <column name="Adresse de messagerie 3" field="email3"/>
+        <column name="Type de messagerie 3"/>
+        <column name="Nom complet de l'adresse de messagerie 3"/>
+        <column name="Sexe" field="gender"/>
+        <column name="Code gouvernement" field="governmentId"/>
+        <column name="Passe-temps" field="hobby"/>
+        <column name="Boîte postale du domicile" field="homePOBox"/>
+        <column name="Initiales" field="initials"/>
+        <column name="Disponibilité Internet"/>
+        <column name="Mots clés" field="keywords"/>
+        <column name="Langue" field="language"/>
+        <column name="Emplacement" field="location"/>
+        <column name="Responsable" field="managerName"/>
+        <column name="Kilométrage" field="mileage"/>
+        <column name="Notes" field="notes"/>
+        <column name="Bureau" field="office"/>
+        <column name="Numéro d'identification de l'organisation" field="organizationId"/>
+        <column name="Autre boîte postale" field="otherPOBox"/>
+        <column name="Priorité"/>
+        <column name="Privé"/>
+        <column name="Profession" field="profession"/>
+        <column name="Recommandé par" field="referredBy"/>
+        <column name="Critère de diffusion" field="sensitivity"/>
+        <column name="Conjoint(e)" field="spouse"/>
+        <column name="Utilisateur 1" field="custom1"/>
+        <column name="Utilisateur 2" field="custom2"/>
+        <column name="Utilisateur 3" field="custom3"/>
+        <column name="Utilisateur 4" field="custom4"/>
+        <column name="Page Web" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="it">
+        <column name="Titolo" field="namePrefix"/>
+        <column name="Nome" field="firstName"/>
+        <column name="Secondo nome" field="middleName"/>
+        <column name="Cognome" field="lastName"/>
+        <column name="Titolo straniero" field="nameSuffix"/>
+        <column name="Nome" field="firstName,middleName,lastName" type="name"/>
+        <column name="Società" field="company"/>
+        <column name="Reparto" field="department"/>
+        <column name="Posizione" field="jobTitle"/>
+        <column name="Indirizzo ufficio" field="workStreet"/>
+        <column name="Via (uff.),Via (uff.) 2,Via (uff.) 3" field="workStreet" type="multivalue"/>
+        <column name="Città (uff.)" field="workCity"/>
+        <column name="Provincia (uff.)" field="workState"/>
+        <column name="CAP (uff.)" field="workPostalCode"/>
+        <column name="Paese (uff.)" field="workCountry"/>
+        <column name="Indirizzo casa" field="homeStreet"/>
+        <column name="Via (ab.),Via (ab.) 2,Via (ab.) 3" field="homeStreet" type="multivalue"/>
+        <column name="Città (ab.)" field="homeCity"/>
+        <column name="Provincia (ab.)" field="homeState"/>
+        <column name="CAP (ab.)" field="homePostalCode"/>
+        <column name="Paese (ab.)" field="homeCountry"/>
+        <column name="Altra via,Altra via 2,Altra via 3" field="otherStreet" type="multivalue"/>
+        <column name="Altra città" field="otherCity"/>
+        <column name="Altra provincia" field="otherState"/>
+        <column name="Altro CAP" field="otherPostalCode"/>
+        <column name="Altro paese" field="otherCountry"/>
+        <column name="Telefono assistente" field="assistant"/>
+        <column name="Fax (uff.)" field="workFax"/>
+        <column name="Ufficio" field="workPhone"/>
+        <column name="Ufficio 2" field="workPhone2"/>
+        <column name="Richiamata automatica" field="callbackPhone"/>
+        <column name="Telefono auto" field="carPhone"/>
+        <column name="Telefono principale società" field="companyPhone"/>
+        <column name="Fax (ab.)" field="homeFax"/>
+        <column name="Abitazione" field="homePhone"/>
+        <column name="Abitazione 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="Cellulare" field="mobilePhone"/>
+        <column name="Altro fax" field="otherFax"/>
+        <column name="Altro telefono" field="otherPhone"/>
+        <column name="Cercapersone" field="pager"/>
+        <column name="Telefono principale"/>
+        <column name="Radiotelefono" field="radioPhone"/>
+        <column name="Telefono TTY/TDD" field="ttyTDDPhone"/>
+        <column name="Telex" field="telex"/>
+        <column name="Account" field="account"/>
+        <column name="Anniversario" field="anniversary" type="date"/>
+        <column name="Nome assistente" field="assistantName"/>
+        <column name="Dati fatturazione" field="billingInfo"/>
+        <column name="Compleanno" field="birthday" type="date"/>
+        <column name="Indirizzo (uff.) - Casella postale"/>
+        <column name="Categorie"/>
+        <column name="Figli" field="children"/>
+        <column name="Server di elenchi in linea"/>
+        <column name="Indirizzo posta elettronica" field="email"/>
+        <column name="Tipo posta elettronica"/>
+        <column name="Nome visualizzato posta elettronica"/>
+        <column name="Indirizzo posta elettronica 2" field="email2"/>
+        <column name="Tipo posta elettronica 2"/>
+        <column name="Nome visualizzato posta elettronica 2"/>
+        <column name="Indirizzo posta elettronica 3" field="email3"/>
+        <column name="Tipo posta elettronica 3"/>
+        <column name="Nome visualizzato posta elettronica 3"/>
+        <column name="Sesso" field="gender"/>
+        <column name="Cod. Fisc./P. IVA" field="governmentId"/>
+        <column name="Hobby" field="hobby"/>
+        <column name="Indirizzo (ab.) - Casella postale" field="homePOBox"/>
+        <column name="Iniziali" field="initials"/>
+        <column name="Disponibilità Internet"/>
+        <column name="Parole chiave" field="keywords"/>
+        <column name="Lingua" field="language"/>
+        <column name="Luogo" field="location"/>
+        <column name="Nome manager" field="managerName"/>
+        <column name="Indennità trasferta" field="mileage"/>
+        <column name="Notes" field="notes"/>
+        <column name="Ubicazione ufficio" field="office"/>
+        <column name="Numero ID organizzativo" field="organizationId"/>
+        <column name="Altro indirizzo - Casella postale" field="otherPOBox"/>
+        <column name="Priorità"/>
+        <column name="Privato"/>
+        <column name="Professione" field="profession"/>
+        <column name="Presentato da" field="referredBy"/>
+        <column name="Riservatezza" field="sensitivity"/>
+        <column name="Nome coniuge" field="spouse"/>
+        <column name="Utente 1" field="custom1"/>
+        <column name="Utente 2" field="custom2"/>
+        <column name="Utente 3" field="custom3"/>
+        <column name="Utente 4" field="custom4"/>
+        <column name="Pagina Web" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="nl">
+        <column name="Titel" field="namePrefix"/>
+        <column name="Voornaam" field="firstName"/>
+        <column name="Middelste naam" field="middleName"/>
+        <column name="Achternaam" field="lastName"/>
+        <column name="Achtervoegsel" field="nameSuffix"/>
+        <column name="Naam" field="firstName,middleName,lastName" type="name"/>
+        <column name="Bedrijf" field="company"/>
+        <column name="Afdeling" field="department"/>
+        <column name="Functie" field="jobTitle"/>
+        <column name="Adres werk" field="workStreet"/>
+        <column name="Werkadres, straat,Werkadres 2, straat,Werkadres 3, straat" field="workStreet" type="multivalue"/>
+        <column name="Werkadres, plaats" field="workCity"/>
+        <column name="Werkadres, provincie" field="workState"/>
+        <column name="Werkadres, postcode" field="workPostalCode"/>
+        <column name="Land/regio (werk)" field="workCountry"/>
+        <column name="Adres thuis" field="homeStreet"/>
+        <column name="Huisadres, straat,Huisadres, straat 2,Huisadres, straat 3" field="homeStreet" type="multivalue"/>
+        <column name="Huisadres, plaats" field="homeCity"/>
+        <column name="Huisadres, provincie" field="homeState"/>
+        <column name="Huisadres, postcode" field="homePostalCode"/>
+        <column name="Land/regio (thuis)" field="homeCountry"/>
+        <column name="Ander adres, straat,Ander adres, straat 2,Ander adres, straat 3" field="otherStreet" type="multivalue"/>
+        <column name="Ander adres, plaats" field="otherCity"/>
+        <column name="Ander adres, provincie" field="otherState"/>
+        <column name="Ander adres, postcode" field="otherPostalCode"/>
+        <column name="Land/regio (anders)" field="otherCountry"/>
+        <column name="Telefoon assistent" field="assistant"/>
+        <column name="Fax op werk" field="workFax"/>
+        <column name="Telefoon op werk" field="workPhone"/>
+        <column name="Telefoon op werk 2" field="workPhone2"/>
+        <column name="Terugbellen" field="callbackPhone"/>
+        <column name="Autotelefoon" field="carPhone"/>
+        <column name="Hoofdtelefoon bedrijf" field="companyPhone"/>
+        <column name="Fax thuis" field="homeFax"/>
+        <column name="Telefoon thuis" field="homePhone"/>
+        <column name="Telefoon thuis 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="Mobiele telefoon" field="mobilePhone"/>
+        <column name="Andere fax" field="otherFax"/>
+        <column name="Andere telefoon" field="otherPhone"/>
+        <column name="Pager" field="pager"/>
+        <column name="Hoofdtelefoon"/>
+        <column name="Radiotelefoon" field="radioPhone"/>
+        <column name="Teksttelefoon" field="ttyTDDPhone"/>
+        <column name="Telex" field="telex"/>
+        <column name="Account" field="account"/>
+        <column name="Speciale datum" field="anniversary" type="date"/>
+        <column name="Naam assistent" field="assistantName"/>
+        <column name="Factuurinformatie" field="billingInfo"/>
+        <column name="Verjaardag" field="birthday" type="date"/>
+        <column name="Werkadres, postbusnummer"/>
+        <column name="Categorieën"/>
+        <column name="Kinderen" field="children"/>
+        <column name="Adreslijstserver"/>
+        <column name="E-mailadres" field="email"/>
+        <column name="E-mailtype"/>
+        <column name="Weergavenaam voor e-mail"/>
+        <column name="E-mailadres 2" field="email2"/>
+        <column name="E-mailtype 2"/>
+        <column name="E-mail, weergegeven naam 2"/>
+        <column name="E-mailadres 3" field="email3"/>
+        <column name="E-mailtype 3"/>
+        <column name="E-mail, weergegeven naam 3"/>
+        <column name="Geslacht" field="gender"/>
+        <column name="Sofinummer" field="governmentId"/>
+        <column name="Hobby's" field="hobby"/>
+        <column name="Huisadres, postbusnummer" field="homePOBox"/>
+        <column name="Initialen" field="initials"/>
+        <column name="Internet Beschikbaarheidsinfo"/>
+        <column name="Trefwoorden" field="keywords"/>
+        <column name="Taal" field="language"/>
+        <column name="Locatie" field="location"/>
+        <column name="Naam manager" field="managerName"/>
+        <column name="Reisafstand" field="mileage"/>
+        <column name="Notities" field="notes"/>
+        <column name="Kantoorlocatie" field="office"/>
+        <column name="Organisatie-id" field="organizationId"/>
+        <column name="Ander adres, postbusnummer" field="otherPOBox"/>
+        <column name="Prioriteit"/>
+        <column name="Privé"/>
+        <column name="Beroep" field="profession"/>
+        <column name="Referentie van" field="referredBy"/>
+        <column name="Gevoeligheid" field="sensitivity"/>
+        <column name="Partner" field="spouse"/>
+        <column name="Gebruiker 1" field="custom1"/>
+        <column name="Gebruiker 2" field="custom2"/>
+        <column name="Gebruiker 3" field="custom3"/>
+        <column name="Gebruiker 4" field="custom4"/>
+        <column name="Webpagina" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="pl">
+        <column name="Tytuł" field="namePrefix"/>
+        <column name="Imię" field="firstName"/>
+        <column name="Drugie imię" field="middleName"/>
+        <column name="Nazwisko" field="lastName"/>
+        <column name="Sufiks" field="nameSuffix"/>
+        <column name="Nazwa" field="firstName,middleName,lastName" type="name"/>
+        <column name="Firma" field="company"/>
+        <column name="Dział" field="department"/>
+        <column name="Stanowisko" field="jobTitle"/>
+        <column name="Adres służbowy" field="workStreet"/>
+        <column name="Adres służbowy - ulica,Adres służbowy - ulica 2,Adres służbowy - ulica 3" field="workStreet" type="multivalue"/>
+        <column name="Adres służbowy - miejscowość" field="workCity"/>
+        <column name="Adres służbowy - województwo" field="workState"/>
+        <column name="Adres służbowy - kod pocztowy" field="workPostalCode"/>
+        <column name="Adres służbowy - kraj/region" field="workCountry"/>
+        <column name="Adres domowy" field="homeStreet"/>
+        <column name="Adres domowy - ulica,Adres domowy - ulica (2),Adres domowy - ulica (3)" field="homeStreet" type="multivalue"/>
+        <column name="Adres domowy - miejscowość" field="homeCity"/>
+        <column name="Adres domowy - województwo" field="homeState"/>
+        <column name="Adres domowy - kod pocztowy" field="homePostalCode"/>
+        <column name="Adres domowy - kraj/region" field="homeCountry"/>
+        <column name="Inny adres - ulica,Inny adres - ulica 2,Inny adres - ulica 3" field="otherStreet" type="multivalue"/>
+        <column name="Inny adres - miejscowość" field="otherCity"/>
+        <column name="Inny adres - województwo" field="otherState"/>
+        <column name="Inny adres - kod pocztowy" field="otherPostalCode"/>
+        <column name="Inny adres - kraj/region" field="otherCountry"/>
+        <column name="Telefon asystenta" field="assistant"/>
+        <column name="Faks służbowy" field="workFax"/>
+        <column name="Telefon służbowy" field="workPhone"/>
+        <column name="Telefon służbowy 2" field="workPhone2"/>
+        <column name="Wywołanie zwrotne" field="callbackPhone"/>
+        <column name="Telefon w samochodzie" field="carPhone"/>
+        <column name="Główny telefon do firmy" field="companyPhone"/>
+        <column name="Faks domowy" field="homeFax"/>
+        <column name="Telefon domowy" field="homePhone"/>
+        <column name="Telefon domowy 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="Telefon komórkowy" field="mobilePhone"/>
+        <column name="Inny faks" field="otherFax"/>
+        <column name="Inny telefon" field="otherPhone"/>
+        <column name="Pager" field="pager"/>
+        <column name="Telefon podstawowy"/>
+        <column name="Radiotelefon" field="radioPhone"/>
+        <column name="Telefon TTY/TDD" field="ttyTDDPhone"/>
+        <column name="Teleks" field="telex"/>
+        <column name="Konto" field="account"/>
+        <column name="Rocznica" field="anniversary" type="date"/>
+        <column name="Imię i nazwisko asystenta" field="assistantName"/>
+        <column name="Informacje rozliczeniowe" field="billingInfo"/>
+        <column name="Urodziny" field="birthday" type="date"/>
+        <column name="Służbowa skrzynka pocztowa"/>
+        <column name="Kategorie"/>
+        <column name="Dzieci" field="children"/>
+        <column name="Serwer katalogowy"/>
+        <column name="Adres e-mail" field="email"/>
+        <column name="Typ poczty e-mail"/>
+        <column name="Wyświetlana nazwa e-mail"/>
+        <column name="Adres e-mail 2" field="email2"/>
+        <column name="Rodzaj e-mail 2"/>
+        <column name="Wyświetlana nazwa e-mail 2"/>
+        <column name="Adres e-mail 3" field="email3"/>
+        <column name="Rodzaj e-mail 3"/>
+        <column name="Wyświetlana nazwa e-mail 3"/>
+        <column name="Płeć" field="gender"/>
+        <column name="PESEL" field="governmentId"/>
+        <column name="Hobby" field="hobby"/>
+        <column name="Domowa skrzynka pocztowa" field="homePOBox"/>
+        <column name="Inicjały" field="initials"/>
+        <column name="Internetowe informacje wolny/zajęty"/>
+        <column name="Słowa kluczowe" field="keywords"/>
+        <column name="Język" field="language"/>
+        <column name="Lokalizacja" field="location"/>
+        <column name="Menedżer" field="managerName"/>
+        <column name="Przebieg" field="mileage"/>
+        <column name="Notatki" field="notes"/>
+        <column name="Lokalizacja biura" field="office"/>
+        <column name="Numer ewidencyjny w organizacji" field="organizationId"/>
+        <column name="Inna skrzynka pocztowa" field="otherPOBox"/>
+        <column name="Priorytet"/>
+        <column name="Prywatne"/>
+        <column name="Zawód" field="profession"/>
+        <column name="Osoba polecająca" field="referredBy"/>
+        <column name="Charakter" field="sensitivity"/>
+        <column name="Współmałżonek" field="spouse"/>
+        <column name="Użytkownik 1" field="custom1"/>
+        <column name="Użytkownik 2" field="custom2"/>
+        <column name="Użytkownik 3" field="custom3"/>
+        <column name="Użytkownik 4" field="custom4"/>
+        <column name="Strona sieci Web" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="pt_BR">
+        <column name="Tratamento" field="namePrefix"/>
+        <column name="Primeiro nome" field="firstName"/>
+        <column name="Segundo nome" field="middleName"/>
+        <column name="Sobrenome" field="lastName"/>
+        <column name="Sufixo" field="nameSuffix"/>
+        <column name="Nome" field="firstName,middleName,lastName" type="name"/>
+        <column name="Empresa" field="company"/>
+        <column name="Departamento" field="department"/>
+        <column name="Cargo" field="jobTitle"/>
+        <column name="Endereço comercial" field="workStreet"/>
+        <column name="Business Street,Rua do endereço comercial 2,Rua do endereço comercial 3" field="workStreet" type="multivalue"/>
+        <column name="Business City" field="workCity"/>
+        <column name="Business State" field="workState"/>
+        <column name="Business Postal Code" field="workPostalCode"/>
+        <column name="País/Região da Empresa" field="workCountry"/>
+        <column name="Endereço residencial" field="homeStreet"/>
+        <column name="Endereço residencial,Endereço residencial 2,Endereço residencial 3" field="homeStreet" type="multivalue"/>
+        <column name="Cidade do endereço residencial" field="homeCity"/>
+        <column name="Estado" field="homeState"/>
+        <column name="CEP do endereço residencial" field="homePostalCode"/>
+        <column name="País/Região de Residência" field="homeCountry"/>
+        <column name="Outro endereço,Outro endereço 2,Outro endereço 3" field="otherStreet" type="multivalue"/>
+        <column name="Cidade" field="otherCity"/>
+        <column name="Estado" field="otherState"/>
+        <column name="CEP" field="otherPostalCode"/>
+        <column name="Outro País/Região" field="otherCountry"/>
+        <column name="Telefone do assistente" field="assistant"/>
+        <column name="Fax comercial" field="workFax"/>
+        <column name="Telefone comercial" field="workPhone"/>
+        <column name="Telefone comercial 2" field="workPhone2"/>
+        <column name="Retorno de chamada" field="callbackPhone"/>
+        <column name="Telefone do carro" field="carPhone"/>
+        <column name="Telefone principal da empresa" field="companyPhone"/>
+        <column name="Fax residencial" field="homeFax"/>
+        <column name="Telefone residencial" field="homePhone"/>
+        <column name="Telefone residencial 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="Telefone celular" field="mobilePhone"/>
+        <column name="Outro fax" field="otherFax"/>
+        <column name="Outro telefone" field="otherPhone"/>
+        <column name="Pager" field="pager"/>
+        <column name="Telefone principal"/>
+        <column name="Radiofone" field="radioPhone"/>
+        <column name="Telefone TTY/TDD" field="ttyTDDPhone"/>
+        <column name="Telex" field="telex"/>
+        <column name="Conta" field="account"/>
+        <column name="Datas especiais" field="anniversary" type="date"/>
+        <column name="Nome do assistente" field="assistantName"/>
+        <column name="Informações para cobrança" field="billingInfo"/>
+        <column name="Birthday" field="birthday" type="date"/>
+        <column name="Caixa postal do endereço comercial"/>
+        <column name="Categorias"/>
+        <column name="Filhos" field="children"/>
+        <column name="Servidor de diretório"/>
+        <column name="E-mail Address" field="email"/>
+        <column name="Tipo de email"/>
+        <column name="Nome para exibição do email"/>
+        <column name="Endereço de email 2" field="email2"/>
+        <column name="Tipo de email 2"/>
+        <column name="Nome para exibição do email 2"/>
+        <column name="Endereço de email 3" field="email3"/>
+        <column name="Tipo de email 3"/>
+        <column name="Nome para exibição do email 3"/>
+        <column name="Sexo" field="gender"/>
+        <column name="Código do governo" field="governmentId"/>
+        <column name="Hobby" field="hobby"/>
+        <column name="Caixa postal do endereço residencial" field="homePOBox"/>
+        <column name="Iniciais" field="initials"/>
+        <column name="Disponibilidade da Internet"/>
+        <column name="Palavras-chave" field="keywords"/>
+        <column name="Idioma" field="language"/>
+        <column name="Local" field="location"/>
+        <column name="Nome do gerenciador" field="managerName"/>
+        <column name="Quilometragem" field="mileage"/>
+        <column name="Anotações" field="notes"/>
+        <column name="Sala" field="office"/>
+        <column name="Código da empresa" field="organizationId"/>
+        <column name="Caixa postal de outro endereço" field="otherPOBox"/>
+        <column name="Prioridade"/>
+        <column name="Particular"/>
+        <column name="Profissão" field="profession"/>
+        <column name="Indicação" field="referredBy"/>
+        <column name="Sensibilidade" field="sensitivity"/>
+        <column name="Spouse" field="spouse"/>
+        <column name="Personalizado 1" field="custom1"/>
+        <column name="Personalizado 2" field="custom2"/>
+        <column name="Personalizado 3" field="custom3"/>
+        <column name="Personalizado 4" field="custom4"/>
+        <column name="Página da Web" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="ru">
+        <column name="Обращение" field="namePrefix"/>
+        <column name="Имя" field="firstName"/>
+        <column name="Отчество" field="middleName"/>
+        <column name="Фамилия" field="lastName"/>
+        <column name="Суффикс" field="nameSuffix"/>
+        <column name="Имя" field="firstName,middleName,lastName" type="name"/>
+        <column name="Организация" field="company"/>
+        <column name="Отдел" field="department"/>
+        <column name="Должность" field="jobTitle"/>
+        <column name="Рабочий адрес" field="workStreet"/>
+        <column name="Улица (раб. адрес),Улица 2 (раб. адрес),Улица 3 (раб. адрес)" field="workStreet" type="multivalue"/>
+        <column name="Город (раб. адрес)" field="workCity"/>
+        <column name="Область (раб. адрес)" field="workState"/>
+        <column name="Индекс (раб. адрес)" field="workPostalCode"/>
+        <column name="Страна или регион (раб. адрес)" field="workCountry"/>
+        <column name="Домашний адрес" field="homeStreet"/>
+        <column name="Улица (дом. адрес),Улица 2 (дом. адрес),Улица 3 (дом. адрес)" field="homeStreet" type="multivalue"/>
+        <column name="Город (дом. адрес)" field="homeCity"/>
+        <column name="Область (дом. адрес)" field="homeState"/>
+        <column name="Почтовый код (дом.)" field="homePostalCode"/>
+        <column name="Страна или регион (дом. адрес)" field="homeCountry"/>
+        <column name="Улица (другой адрес),Улица    2 (другой адрес),Улица    3 (другой адрес)" field="otherStreet" type="multivalue"/>
+        <column name="Город    (другой адрес)" field="otherCity"/>
+        <column name="Область    (другой адрес)" field="otherState"/>
+        <column name="Индекс    (другой адрес)" field="otherPostalCode"/>
+        <column name="Страна или регион    (другой адрес)" field="otherCountry"/>
+        <column name="Телефон помощника" field="assistant"/>
+        <column name="Рабочий факс" field="workFax"/>
+        <column name="Рабочий телефон" field="workPhone"/>
+        <column name="Телефон раб. 2" field="workPhone2"/>
+        <column name="Обратный вызов" field="callbackPhone"/>
+        <column name="Телефон в машине" field="carPhone"/>
+        <column name="Основной телефон организации" field="companyPhone"/>
+        <column name="Домашний факс" field="homeFax"/>
+        <column name="Домашний телефон" field="homePhone"/>
+        <column name="Телефон дом. 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="Телефон переносной" field="mobilePhone"/>
+        <column name="Другой факс" field="otherFax"/>
+        <column name="Другой телефон" field="otherPhone"/>
+        <column name="Пейджер" field="pager"/>
+        <column name="Основной телефон"/>
+        <column name="Радиотелефон" field="radioPhone"/>
+        <column name="Телетайп/телефон с титрами" field="ttyTDDPhone"/>
+        <column name="Телекс" field="telex"/>
+        <column name="Счет" field="account"/>
+        <column name="Годовщина" field="anniversary" type="date"/>
+        <column name="Имя помощника" field="assistantName"/>
+        <column name="Счета" field="billingInfo"/>
+        <column name="День рождения" field="birthday" type="date"/>
+        <column name="Почтовый ящик (раб. адрес)"/>
+        <column name="Категории"/>
+        <column name="Дети" field="children"/>
+        <column name="Сервер каталогов"/>
+        <column name="Адрес эл. почты" field="email"/>
+        <column name="Тип эл. почты"/>
+        <column name="Краткое имя эл. почты"/>
+        <column name="Адрес 2 эл. почты" field="email2"/>
+        <column name="Тип 2 эл. почты"/>
+        <column name="Краткое 2 имя эл. почты"/>
+        <column name="Адрес 3 эл. почты" field="email3"/>
+        <column name="Тип 3 эл. почты"/>
+        <column name="Краткое 3 имя эл. почты"/>
+        <column name="Пол" field="gender"/>
+        <column name="Личный код" field="governmentId"/>
+        <column name="Хобби" field="hobby"/>
+        <column name="Почтовый ящик (дом. адрес)" field="homePOBox"/>
+        <column name="Инициалы" field="initials"/>
+        <column name="Сведения о доступности в Интернете"/>
+        <column name="Ключевые слова" field="keywords"/>
+        <column name="Язык" field="language"/>
+        <column name="Расположение" field="location"/>
+        <column name="Руководитель" field="managerName"/>
+        <column name="Расстояние" field="mileage"/>
+        <column name="Заметки" field="notes"/>
+        <column name="Расположение комнаты" field="office"/>
+        <column name="Код организации" field="organizationId"/>
+        <column name="Почтовый ящик (другой адрес)" field="otherPOBox"/>
+        <column name="Важность"/>
+        <column name="Частное"/>
+        <column name="Профессия" field="profession"/>
+        <column name="Отложено" field="referredBy"/>
+        <column name="Пометка" field="sensitivity"/>
+        <column name="Супруг(а)" field="spouse"/>
+        <column name="Пользователь 1" field="custom1"/>
+        <column name="Пользователь 2" field="custom2"/>
+        <column name="Пользователь 3" field="custom3"/>
+        <column name="Пользователь 4" field="custom4"/>
+        <column name="Веб-страница" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="sv">
+        <column name="Titel" field="namePrefix"/>
+        <column name="Förnamn" field="firstName"/>
+        <column name="Mellannamn" field="middleName"/>
+        <column name="Efternamn" field="lastName"/>
+        <column name="Namnsuffix" field="nameSuffix"/>
+        <column name="Namn" field="firstName,middleName,lastName" type="name"/>
+        <column name="Företag" field="company"/>
+        <column name="Avdelning" field="department"/>
+        <column name="Befattning" field="jobTitle"/>
+        <column name="Adress (arbete)" field="workStreet"/>
+        <column name="Gatuadress, arbete,Gatuadress 2, arbete,Gatuadress 3, arbete" field="workStreet" type="multivalue"/>
+        <column name="Ort, arbete" field="workCity"/>
+        <column name="Region, arbete" field="workState"/>
+        <column name="Postadress, arbete" field="workPostalCode"/>
+        <column name="Land, arbete" field="workCountry"/>
+        <column name="Adress (hem)" field="homeStreet"/>
+        <column name="Gatuadress, hem,Gatuadress 2, hem,Gatuadress 3, hem" field="homeStreet" type="multivalue"/>
+        <column name="Hemort" field="homeCity"/>
+        <column name="Region, hem" field="homeState"/>
+        <column name="Postnr, hem" field="homePostalCode"/>
+        <column name="Land, hem" field="homeCountry"/>
+        <column name="Annan gata,Annan gata 2,Annan gata 3" field="otherStreet" type="multivalue"/>
+        <column name="Annan ort" field="otherCity"/>
+        <column name="Annan region" field="otherState"/>
+        <column name="Annat postnummer" field="otherPostalCode"/>
+        <column name="Annat land" field="otherCountry"/>
+        <column name="Telefon, assistent" field="assistant"/>
+        <column name="Fax arbete" field="workFax"/>
+        <column name="Arbete" field="workPhone"/>
+        <column name="Telefon 2, arbete" field="workPhone2"/>
+        <column name="Motringning" field="callbackPhone"/>
+        <column name="Biltelefon" field="carPhone"/>
+        <column name="Företag, växel" field="companyPhone"/>
+        <column name="Fax, hem" field="homeFax"/>
+        <column name="Hem" field="homePhone"/>
+        <column name="Telefon 2, hem" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="Mobiltelefon" field="mobilePhone"/>
+        <column name="Fax, annan" field="otherFax"/>
+        <column name="Telefon, annan" field="otherPhone"/>
+        <column name="Personsökare" field="pager"/>
+        <column name="Telefon 1"/>
+        <column name="Telefon 2" field="radioPhone"/>
+        <column name="TTY/TDD-telefon" field="ttyTDDPhone"/>
+        <column name="Telex" field="telex"/>
+        <column name="Konto" field="account"/>
+        <column name="Årsdag" field="anniversary" type="date"/>
+        <column name="Namn, assistent" field="assistantName"/>
+        <column name="Fakturering" field="billingInfo"/>
+        <column name="Födelsedag" field="birthday" type="date"/>
+        <column name="Arbetsadress, box"/>
+        <column name="Kategorier"/>
+        <column name="Barn" field="children"/>
+        <column name="Katalogserver"/>
+        <column name="E-postadress" field="email"/>
+        <column name="E-posttyp"/>
+        <column name="E-postnamn"/>
+        <column name="E-postadress 2" field="email2"/>
+        <column name="E-posttyp 2"/>
+        <column name="E-postnamn 2"/>
+        <column name="E-postadress 3" field="email3"/>
+        <column name="E-posttyp 3"/>
+        <column name="E-postnamn 3"/>
+        <column name="Kön" field="gender"/>
+        <column name="Personnummer" field="governmentId"/>
+        <column name="Hobby" field="hobby"/>
+        <column name="Hemadress, box" field="homePOBox"/>
+        <column name="Initialer" field="initials"/>
+        <column name="Ledig/upptagen-information för Internet"/>
+        <column name="Nyckelord" field="keywords"/>
+        <column name="Språk" field="language"/>
+        <column name="Plats" field="location"/>
+        <column name="Namn, chef" field="managerName"/>
+        <column name="Reseersättning (km)" field="mileage"/>
+        <column name="Anteckningar" field="notes"/>
+        <column name="Arbetsplats" field="office"/>
+        <column name="Organisationsnummer" field="organizationId"/>
+        <column name="Annan adress, box" field="otherPOBox"/>
+        <column name="Prioritet"/>
+        <column name="Privat"/>
+        <column name="Yrke" field="profession"/>
+        <column name="Referens" field="referredBy"/>
+        <column name="Känslighet" field="sensitivity"/>
+        <column name="Make maka" field="spouse"/>
+        <column name="Användare 1" field="custom1"/>
+        <column name="Användare 2" field="custom2"/>
+        <column name="Användare 3" field="custom3"/>
+        <column name="Användare 4" field="custom4"/>
+        <column name="Webbsida" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="tr">
+        <column name="Unvan" field="namePrefix"/>
+        <column name="İlk Adı" field="firstName"/>
+        <column name="İkinci Adı" field="middleName"/>
+        <column name="Soyadı" field="lastName"/>
+        <column name="Sonek" field="nameSuffix"/>
+        <column name="Ad" field="firstName,middleName,lastName" type="name"/>
+        <column name="Şirket" field="company"/>
+        <column name="Bölüm" field="department"/>
+        <column name="İş Unvanı" field="jobTitle"/>
+        <column name="İş Adresi" field="workStreet"/>
+        <column name="İş-Cadde,İş-Cadde 2,İş-Cadde 2" field="workStreet" type="multivalue"/>
+        <column name="İş-Şehir" field="workCity"/>
+        <column name="İş-Bölge" field="workState"/>
+        <column name="İş-Posta Kodu" field="workPostalCode"/>
+        <column name="İş-Ülke/Bölge" field="workCountry"/>
+        <column name="Ev Adresi" field="homeStreet"/>
+        <column name="Ev-Cadde,Ev-Cadde 2,Ev-Cadde 3" field="homeStreet" type="multivalue"/>
+        <column name="Ev-Şehir" field="homeCity"/>
+        <column name="Ev-Bölge" field="homeState"/>
+        <column name="Ev-Posta Kodu" field="homePostalCode"/>
+        <column name="Ev-Ülke/Bölge" field="homeCountry"/>
+        <column name="Diğer-Cadde,Diğer-Cadde 2,Diğer-Cadde 3" field="otherStreet" type="multivalue"/>
+        <column name="Diğer-Şehir" field="otherCity"/>
+        <column name="Diğer-Bölge" field="otherState"/>
+        <column name="Diğer-Posta Kodu" field="otherPostalCode"/>
+        <column name="Diğer-Ülke/Bölge" field="otherCountry"/>
+        <column name="Yardımcının Telefonu" field="assistant"/>
+        <column name="İş Faks No" field="workFax"/>
+        <column name="İş Telefon No" field="workPhone"/>
+        <column name="İş Telefonu 2" field="workPhone2"/>
+        <column name="Geri Arama" field="callbackPhone"/>
+        <column name="Araç Telefonu" field="carPhone"/>
+        <column name="Şirket Santral Telefonu" field="companyPhone"/>
+        <column name="Ev-Faks No" field="homeFax"/>
+        <column name="Ev Telefonu" field="homePhone"/>
+        <column name="Ev Telefonu 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="Cep Telefonu" field="mobilePhone"/>
+        <column name="Diğer Faks No" field="otherFax"/>
+        <column name="Diğer Telefon No" field="otherPhone"/>
+        <column name="Çağrı Cihazı" field="pager"/>
+        <column name="Birincil Telefon"/>
+        <column name="Telsiz Telefonu" field="radioPhone"/>
+        <column name="TTY/TDD Telefonu" field="ttyTDDPhone"/>
+        <column name="Teleks" field="telex"/>
+        <column name="Hesap" field="account"/>
+        <column name="Yıldönümü" field="anniversary" type="date"/>
+        <column name="Yardımcının Adı" field="assistantName"/>
+        <column name="Faturalama Bilgisi" field="billingInfo"/>
+        <column name="Doğum günü" field="birthday" type="date"/>
+        <column name="İş Adresi Posta Kutusu"/>
+        <column name="Kategoriler"/>
+        <column name="Çocuklar" field="children"/>
+        <column name="Dizin Sunucusu"/>
+        <column name="Elektronik Posta Adresi" field="email"/>
+        <column name="Elektronik Posta Türü"/>
+        <column name="Elektronik Posta Görünen Adı"/>
+        <column name="Elektronik Posta 2 Adres" field="email2"/>
+        <column name="Elektronik Posta 2 Türü"/>
+        <column name="Elektronik Posta 2 Görünen Adı"/>
+        <column name="Elektronik Posta 3 Adres" field="email3"/>
+        <column name="Elektronik Posta 3 Türü"/>
+        <column name="Elektronik Posta 3 Görünen Adı"/>
+        <column name="Cinsiyet" field="gender"/>
+        <column name="Ulusal Kimlik No" field="governmentId"/>
+        <column name="Hobiler" field="hobby"/>
+        <column name="Ev Adresi Posta Kutusu" field="homePOBox"/>
+        <column name="İlk Harfler" field="initials"/>
+        <column name="Internet Serbest Meşgul"/>
+        <column name="Anahtar sözcükler" field="keywords"/>
+        <column name="Dil" field="language"/>
+        <column name="Konum" field="location"/>
+        <column name="Yönetici'nin Adı" field="managerName"/>
+        <column name="Dönem" field="mileage"/>
+        <column name="Notlar" field="notes"/>
+        <column name="İşyeri Konumu" field="office"/>
+        <column name="Kuruluş Kimlik No" field="organizationId"/>
+        <column name="Diğer Adres Posta Kutusu" field="otherPOBox"/>
+        <column name="Öncelik"/>
+        <column name="Özel"/>
+        <column name="Meslek" field="profession"/>
+        <column name="Başvuran" field="referredBy"/>
+        <column name="Duyarlılık" field="sensitivity"/>
+        <column name="Eşi" field="spouse"/>
+        <column name="Kullanıcı 1" field="custom1"/>
+        <column name="Kullanıcı 2" field="custom2"/>
+        <column name="Kullanıcı 3" field="custom3"/>
+        <column name="Kullanıcı 4" field="custom4"/>
+        <column name="Web Sayfası" field="workURL"/>
+    </format>
+
+    <format name="outlook-2003-csv" type="csv" locale="ja">
+        <column name="肩書き" field="namePrefix"/>
+        <column name="名" field="firstName"/>
+        <column name="ミドル" field="middleName"/>
+        <column name="姓" field="lastName"/>
+        <column name="敬称" field="nickname"/>
+        <column name="会社名" field="company"/>
+        <column name="部署" field="department"/>
+        <column name="役職" field="jobTitle"/>
+        <column name="番地 (会社),住所 2 (会社),住所 3 (会社)" field="workStreet" type="multivalue"/>
+        <column name="市町村 (会社)" field="workCity"/>
+        <column name="都道府県 (会社)" field="workState"/>
+        <column name="郵便番号 (会社)" field="workPostalCode"/>
+        <column name="国 (会社)/地域" field="workCountry"/>
+        <column name="番地 (自宅),住所 2 (自宅),住所 3 (自宅)" field="homeStreet" type="multivalue"/>
+        <column name="市町村 (自宅)" field="homeCity"/>
+        <column name="都道府県 (自宅)" field="homeState"/>
+        <column name="郵便番号 (自宅)" field="homePostalCode"/>
+        <column name="国 (自宅)/地域" field="homeCountry"/>
+        <column name="番地 (その他),住所 2 (その他),住所 3 (その他)" field="otherStreet" type="multivalue"/>
+        <column name="市町村 (その他)" field="otherCity"/>
+        <column name="都道府県 (その他)" field="otherState"/>
+        <column name="郵便番号 (その他)" field="otherPostalCode"/>
+        <column name="国 (その他)/地域" field="otherCountry"/>
+        <column name="秘書の電話" field="assistant"/>
+        <column name="会社 FAX" field="workFax"/>
+        <column name="会社電話" field="workPhone"/>
+        <column name="会社電話 2" field="workPhone2"/>
+        <column name="コールバック" field="callbackPhone"/>
+        <column name="自動車電話" field="carPhone"/>
+        <column name="会社代表電話" field="companyPhone"/>
+        <column name="自宅 FAX" field="homeFax"/>
+        <column name="自宅電話" field="homePhone"/>
+        <column name="自宅電話 2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/>
+        <column name="携帯電話" field="mobilePhone"/>
+        <column name="その他の FAX" field="otherFax"/>
+        <column name="その他の電話" field="otherPhone"/>
+        <column name="ポケットベル" field="pager"/>
+        <column name="通常の電話"/>
+        <column name="無線電話" field="radioPhone"/>
+        <column name="TTY/TDD" field="ttyTDDPhone"/>
+        <column name="テレックス" field="telex"/>
+        <column name="ID 番号" field="governmentId"/>
+        <column name="Web ページ" field="workURL"/>
+        <column name="アカウント" field="account"/>
+        <column name="イニシャル" field="initials"/>
+        <column name="インターネット空き時間情報"/>
+        <column name="キーワード" field="keywords"/>
+        <column name="その他住所私書箱" field="otherPOBox"/>
+        <column name="ディレクトリサーバー"/>
+        <column name="プライベート"/>
+        <column name="マネージャー" field="managerName"/>
+        <column name="メモ" field="notes"/>
+        <column name="ユーザー 1" field="custom1"/>
+        <column name="ユーザー 2" field="custom2"/>
+        <column name="ユーザー 3" field="custom3"/>
+        <column name="ユーザー 4" field="custom4"/>
+        <column name="会社 ID" field="organizationId"/>
+        <column name="会社住所私書箱" field="poBox"/>
+        <column name="会社名フリガナ" field="phoneticCompany"/>
+        <column name="記念日" field="anniversary" type="date"/>
+        <column name="経費情報"/>
+        <column name="言語" field="billingInfo"/>
+        <column name="参照事項" field="referredBy"/>
+        <column name="子供" field="children"/>
+        <column name="支払い条件"/>
+        <column name="事業所" field="office"/>
+        <column name="自宅住所私書箱" field="homePOBox"/>
+        <column name="趣味" field="hobby"/>
+        <column name="場所" field="location"/>
+        <column name="職業" field="profession"/>
+        <column name="姓フリガナ" field="phoneticLastName"/>
+        <column name="性別" field="gender"/>
+        <column name="誕生日" field="birthday" type="date"/>
+        <column name="電子メール アドレス" field="email"/>
+        <column name="電子メールの種類"/>
+        <column name="電子メール表示名"/>
+        <column name="電子メール 2 アドレス" field="email2"/>
+        <column name="電子メール 2 の種類"/>
+        <column name="電子メール 2 表示名"/>
+        <column name="電子メール 3 アドレス" field="email3"/>
+        <column name="電子メール 3 の種類"/>
+        <column name="電子メール 3 表示名"/>
+        <column name="配偶者" field="spouse"/>
+        <column name="秘書の氏名" field="assistantName"/>
+        <column name="秘密度" field="sensitivity"/>
+        <column name="分類" field="tag"/>
+        <column name="名前フリガナ" field="phoneticFirstName"/>
+        <column name="優先度" field="priority"/>
+    </format>
+
+    <format name="outlook-unknown-csv" type="csv">
+        <column name="Title" field="namePrefix"/>
+        <column name="FirstName" field="firstName"/>
+        <column name="MiddleName" field="middleName"/>
+        <column name="LastName" field="lastName"/>
+        <column name="Suffix" field="nameSuffix"/>
+        <column name="Company" field="company"/>
+        <column name="Department" field="department"/>
+        <column name="JobTitle" field="jobTitle"/>
+        <column name="BusinessStreet,BusinessStreet2,BusinessStreet3" field="workStreet" type="multivalue"/>
+        <column name="BusinessCity" field="workCity"/>
+        <column name="BusinessState" field="workState"/>
+        <column name="BusinessPostalCode" field="workPostalCode"/>
+        <column name="BusinessCountry" field="workCountry"/>
+        <column name="HomeStreet,HomeStreet2,HomeStreet3" field="homeStreet" type="multivalue"/>
+        <column name="HomeCity" field="homeCity"/>
+        <column name="HomeState" field="homeState"/>
+        <column name="HomePostalCode" field="homePostalCode"/>
+        <column name="HomeCountry" field="homeCountry"/>
+        <column name="OtherStreet,OtherStreet2,OtherStreet3" field="otherStreet" type="multivalue"/>
+        <column name="OtherCity" field="otherCity"/>
+        <column name="OtherState" field="otherState"/>
+        <column name="OtherPostalCode" field="otherPostalCode"/>
+        <column name="OtherCountry" field="otherCountry"/>
+        <column name="AssistantsPhone" field="assistant"/>
+        <column name="BusinessFax" field="workFax"/>
+        <column name="BusinessPhone" field="workPhone"/>
+        <column name="BusinessPhone2" field="workPhone2"/>
+        <column name="Callback" field="callbackPhone"/>
+        <column name="CarPhone" field="carPhone"/>
+        <column name="CompanyMainPhone" field="companyPhone"/>
+        <column name="HomeFax" field="homeFax"/>
+        <column name="HomePhone" field="homePhone"/>
+        <column name="HomePhone2" field="homePhone2"/>
+        <column name="ISDN" field="isdn"/> <!-- custom -->
+        <column name="MobilePhone" field="mobilePhone"/>
+        <column name="OtherFax" field="otherFax"/>
+        <column name="OtherPhone" field="otherPhone"/>
+        <column name="Pager" field="pager"/>
+        <column name="PrimaryPhone"/>
+        <column name="RadioPhone" field="radioPhone"/> <!-- custom -->
+        <column name="TTYTDDPhone" field="ttyTDDPhone"/> <!-- custom -->
+        <column name="Telex" field="telex"/> <!-- custom -->
+        <column name="Account" field="account"/> <!-- custom -->
+        <column name="Anniversary" field="anniversary" type="date"/>
+        <column name="AssistantsName" field="assistantName"/> <!-- custom -->
+        <column name="BillingInformation" field="billingInfo"/> <!-- custom -->
+        <column name="Birthday" field="birthday" type="date"/>
+        <column name="Categories"/>
+        <column name="Children" field="children"/> <!-- custom -->
+        <column name="DirectoryServer"/>
+        <column name="EmailAddress" field="email"/>
+        <column name="EmailDisplayName"/>
+        <column name="Email2Address" field="email2"/>
+        <column name="Email2DisplayName"/>
+        <column name="Email3Address" field="email3"/>
+        <column name="Email3DisplayName"/>
+        <column name="Gender" field="gender"/> <!-- custom -->
+        <column name="GovernmentIDNumber" field="governmentId"/> <!-- custom -->
+        <column name="Hobby" field="hobby"/> <!-- custom -->
+        <column name="Initials" field="initials"/>
+        <column name="InternetFreeBusy"/>
+        <column name="Keywords" field="keywords"/> <!-- custom -->
+        <column name="Language1" field="language"/> <!-- custom -->
+        <column name="Location" field="location"/> <!-- custom -->
+        <column name="ManagersName" field="managerName"/> <!-- custom -->
+        <column name="Mileage" field="mileage"/> <!-- custom -->
+        <column name="Notes" field="notes"/>
+        <column name="OfficeLocation" field="office"/>
+        <column name="OrganizationalIDNumber" field="organizationId"/> <!-- custom -->
+        <column name="POBox" field="poBox"/> <!-- custom -->
+        <column name="Priority" field="priority"/> <!-- custom -->
+        <column name="Private"/>
+        <column name="Profession" field="profession"/> <!-- custom -->
+        <column name="ReferredBy" field="referredBy"/> <!-- custom -->
+        <column name="Sensitivity" field="sensitivity"/> <!-- custom -->
+        <column name="Spouse" field="spouse"/> <!-- custom -->
+        <column name="User 1" field="custom1"/>
+        <column name="User 2" field="custom2"/>
+        <column name="User 3" field="custom3"/>
+        <column name="User 4" field="custom4"/>
+        <column name="Web Page" field="workURL"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv">
+        <column name="First Name" field="firstName"/>
+        <column name="Last Name" field="lastName"/>
+        <column name="Middle Name" field="middleName"/>
+        <column name="Name" field="firstName,middleName,lastName" type="name"/>
+        <column name="Nickname" field="nickname"/>
+        <column name="E-mail Address" field="email"/>
+        <column name="Home Street" field="homeStreet"/>
+        <column name="Home City" field="homeCity"/>
+        <column name="Home Postal Code" field="homePostalCode"/>
+        <column name="Home State" field="homeState"/>
+        <column name="Home Country" field="homeCountry"/>
+        <column name="Home Phone" field="homePhone"/>
+        <column name="Home Fax" field="homeFax"/>
+        <column name="Mobile Phone" field="mobilePhone"/>
+        <column name="Personal Web Page" field="homeURL"/>
+        <column name="Business Street" field="workStreet"/>
+        <column name="Business City" field="workCity"/>
+        <column name="Business Postal Code" field="workPostalCode"/>
+        <column name="Business State" field="workState"/>
+        <column name="Business Country" field="workCountry"/>
+        <column name="Business Web Page" field="workURL"/>
+        <column name="Business Phone" field="workPhone"/>
+        <column name="Business Fax" field="workFax"/>
+        <column name="Pager" field="pager"/>
+        <column name="Company" field="company"/>
+        <column name="Job Title" field="jobTitle"/>
+        <column name="Department" field="department"/>
+        <column name="Office Location" field="office"/>
+        <column name="Notes" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="ar">
+        <column name="الاسم الأول" field="firstName"/>
+        <column name="اسم العائلة" field="lastName"/>
+        <column name="الاسم الأوسط" field="middleName"/>
+        <column name="الاسم" field="firstName,middleName,lastName" type="name"/>
+        <column name="الاسم المستعار" field="nickname"/>
+        <column name="عنوان البريد الإلكتروني" field="email"/>
+        <column name="شارع المنزل" field="homeStreet"/>
+        <column name="المدينة" field="homeCity"/>
+        <column name="الرمز البريدي للمنزل" field="homePostalCode"/>
+        <column name="ولاية المنزل" field="homeState"/>
+        <column name="بلد المنزل/الإقليم" field="homeCountry"/>
+        <column name="هاتف المنزل" field="homePhone"/>
+        <column name="فاكس المنزل" field="homeFax"/>
+        <column name="الهاتف الجوال" field="mobilePhone"/>
+        <column name="صفحة ويب الشخصية" field="homeURL"/>
+        <column name="شارع العمل" field="workStreet"/>
+        <column name="مدينة العمل" field="workCity"/>
+        <column name="الرمز البريدي للعمل" field="workPostalCode"/>
+        <column name="ولاية العمل" field="workState"/>
+        <column name="بلد العمل/الإقليم" field="workCountry"/>
+        <column name="صفحة ويب العمل" field="workURL"/>
+        <column name="هاتف العمل" field="workPhone"/>
+        <column name="فاكس العمل" field="workFax"/>
+        <column name="جهاز النداء" field="pager"/>
+        <column name="الشركة" field="company"/>
+        <column name="المسمى الوظيفي" field="jobTitle"/>
+        <column name="القسم" field="department"/>
+        <column name="موقع المكتب" field="office"/>
+        <column name="ملاحظات" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="da">
+        <column name="Fornavn" field="firstName"/>
+        <column name="Efternavn" field="lastName"/>
+        <column name="Mellemnavn" field="middleName"/>
+        <column name="Navn" field="firstName,middleName,lastName" type="name"/>
+        <column name="Kaldenavn" field="nickname"/>
+        <column name="E-mail-adresse" field="email"/>
+        <column name="Gade (privat)" field="homeStreet"/>
+        <column name="By (privat)" field="homeCity"/>
+        <column name="Postnummer (privat)" field="homePostalCode"/>
+        <column name="Delstat (privat)" field="homeState"/>
+        <column name="Land/område (privat)" field="homeCountry"/>
+        <column name="Telefon (privat)" field="homePhone"/>
+        <column name="Fax (privat)" field="homeFax"/>
+        <column name="Mobiltelefon" field="mobilePhone"/>
+        <column name="Personlig webside" field="homeURL"/>
+        <column name="Adresse (arbejde)" field="workStreet"/>
+        <column name="By (arbejde)" field="workCity"/>
+        <column name="Postnummer (arbejde)" field="workPostalCode"/>
+        <column name="Delstat (arbejde)" field="workState"/>
+        <column name="Land/område (arbejde)" field="workCountry"/>
+        <column name="Webside (arbejde)" field="workURL"/>
+        <column name="Telefon (arbejde)" field="workPhone"/>
+        <column name="Fax (arbejde)" field="workFax"/>
+        <column name="Personsøger" field="pager"/>
+        <column name="Firma" field="company"/>
+        <column name="Stilling" field="jobTitle"/>
+        <column name="Afdeling" field="department"/>
+        <column name="Kontor" field="office"/>
+        <column name="Noter" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="de">
+        <column name="Vorname" field="firstName"/>
+        <column name="Nachname" field="lastName"/>
+        <column name="2. Vorname" field="middleName"/>
+        <column name="Name" field="firstName,middleName,lastName" type="name"/>
+        <column name="Spitzname" field="nickname"/>
+        <column name="E-Mail-Adresse" field="email"/>
+        <column name="Straße (privat)" field="homeStreet"/>
+        <column name="Ort (privat)" field="homeCity"/>
+        <column name="Postleitzahl (privat)" field="homePostalCode"/>
+        <column name="Bundesland (privat)" field="homeState"/>
+        <column name="Land/Region (privat)" field="homeCountry"/>
+        <column name="Telefon (privat)" field="homePhone"/>
+        <column name="Fax (privat)" field="homeFax"/>
+        <column name="Mobiltelefon" field="mobilePhone"/>
+        <column name="Webseite (privat)" field="homeURL"/>
+        <column name="Straße (geschäftlich)" field="workStreet"/>
+        <column name="Ort (geschäftlich)" field="workCity"/>
+        <column name="Postleitzahl (geschäftlich)" field="workPostalCode"/>
+        <column name="Bundesland (geschäftlich)" field="workState"/>
+        <column name="Land/Region (geschäftlich)" field="workCountry"/>
+        <column name="Webseite (geschäftlich)" field="workURL"/>
+        <column name="Telefon (geschäftlich)" field="workPhone"/>
+        <column name="Fax (geschäftlich)" field="workFax"/>
+        <column name="Pager" field="pager"/>
+        <column name="Firma" field="company"/>
+        <column name="Position" field="jobTitle"/>
+        <column name="Abteilung" field="department"/>
+        <column name="Büro" field="office"/>
+        <column name="Notizen" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="en_GB">
+        <column name="First Name" field="firstName"/>
+        <column name="Last Name" field="lastName"/>
+        <column name="Middle Name" field="middleName"/>
+        <column name="Name" field="firstName,middleName,lastName" type="name"/>
+        <column name="Nickname" field="nickname"/>
+        <column name="E-mail Address" field="email"/>
+        <column name="Home Street" field="homeStreet"/>
+        <column name="Home City" field="homeCity"/>
+        <column name="Home Postal Code" field="homePostalCode"/>
+        <column name="Home State" field="homeState"/>
+        <column name="Home Country/Region" field="homeCountry"/>
+        <column name="Home Phone" field="homePhone"/>
+        <column name="Home Fax" field="homeFax"/>
+        <column name="Mobile Phone" field="mobilePhone"/>
+        <column name="Personal Web Page" field="homeURL"/>
+        <column name="Business Street" field="workStreet"/>
+        <column name="Business City" field="workCity"/>
+        <column name="Business Postal Code" field="workPostalCode"/>
+        <column name="Business State" field="workState"/>
+        <column name="Business Country/Region" field="workCountry"/>
+        <column name="Business Web Page" field="workURL"/>
+        <column name="Business Phone" field="workPhone"/>
+        <column name="Business Fax" field="workFax"/>
+        <column name="Pager" field="pager"/>
+        <column name="Company" field="company"/>
+        <column name="Job Title" field="jobTitle"/>
+        <column name="Department" field="department"/>
+        <column name="Office Location" field="office"/>
+        <column name="Notes" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="es">
+        <column name="Nombre" field="firstName"/>
+        <column name="Apellidos" field="lastName"/>
+        <column name="Segundo nombre" field="middleName"/>
+        <column name="Nombre" field="firstName,middleName,lastName" type="name"/>
+        <column name="Alias" field="nickname"/>
+        <column name="Dirección de correo electrónico" field="email"/>
+        <column name="Calle" field="homeStreet"/>
+        <column name="Ciudad de residencia" field="homeCity"/>
+        <column name="Código postal del domicilio" field="homePostalCode"/>
+        <column name="Estado (domicilio particular)" field="homeState"/>
+        <column name="País o región de residencia" field="homeCountry"/>
+        <column name="Teléfono particular" field="homePhone"/>
+        <column name="Fax particular" field="homeFax"/>
+        <column name="Teléfono móvil" field="mobilePhone"/>
+        <column name="Página web personal" field="homeURL"/>
+        <column name="Calle del trabajo" field="workStreet"/>
+        <column name="Ciudad de trabajo" field="workCity"/>
+        <column name="Código postal del trabajo" field="workPostalCode"/>
+        <column name="Estado o provincia del trabajo" field="workState"/>
+        <column name="País o región del trabajo" field="workCountry"/>
+        <column name="Página web de la organización" field="workURL"/>
+        <column name="Teléfono del trabajo" field="workPhone"/>
+        <column name="Fax del trabajo" field="workFax"/>
+        <column name="Buscapersonas" field="pager"/>
+        <column name="Compañía" field="company"/>
+        <column name="Puesto" field="jobTitle"/>
+        <column name="Departamento" field="department"/>
+        <column name="Ubicación de la oficina" field="office"/>
+        <column name="Notas" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="fr">
+        <column name="Prénom" field="firstName"/>
+        <column name="Nom" field="lastName"/>
+        <column name="Deuxième prénom" field="middleName"/>
+        <column name="Nom" field="firstName,middleName,lastName" type="name"/>
+        <column name="Pseudo" field="nickname"/>
+        <column name="Adresse de messagerie" field="email"/>
+        <column name="Rue (domicile)" field="homeStreet"/>
+        <column name="Ville (domicile)" field="homeCity"/>
+        <column name="Code postal (domicile)" field="homePostalCode"/>
+        <column name="Département (domicile)" field="homeState"/>
+        <column name="Pays/région (domicile)" field="homeCountry"/>
+        <column name="Téléphone domicile" field="homePhone"/>
+        <column name="Télécopie domicile" field="homeFax"/>
+        <column name="Téléphone mobile" field="mobilePhone"/>
+        <column name="Page Web (domicile)" field="homeURL"/>
+        <column name="Rue (bureau)" field="workStreet"/>
+        <column name="Ville (bureau)" field="workCity"/>
+        <column name="Code postal (bureau)" field="workPostalCode"/>
+        <column name="Département (bureau)" field="workState"/>
+        <column name="Pays/région (bureau)" field="workCountry"/>
+        <column name="Page Web (bureau)" field="workURL"/>
+        <column name="Téléphone professionnel" field="workPhone"/>
+        <column name="Télécopie professionnelle" field="workFax"/>
+        <column name="Radiomessagerie" field="pager"/>
+        <column name="Société" field="company"/>
+        <column name="Fonction" field="jobTitle"/>
+        <column name="Service" field="department"/>
+        <column name="Adresse professionnelle" field="office"/>
+        <column name="Notes" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="hi">
+        <column name="प्रथम नाम" field="firstName"/>
+        <column name="अंतिम नाम" field="lastName"/>
+        <column name="मध्य नाम" field="middleName"/>
+        <column name="नाम" field="firstName,middleName,lastName" type="name"/>
+        <column name="निकनेम" field="nickname"/>
+        <column name="ई-मेल एड्रेस" field="email"/>
+        <column name="घर का पता" field="homeStreet"/>
+        <column name="गृह नगर" field="homeCity"/>
+        <column name="निवास का पिन कोड" field="homePostalCode"/>
+        <column name="गृह राज्य" field="homeState"/>
+        <column name="गृह राष्ट्र/क्षेत्र" field="homeCountry"/>
+        <column name="घर का फ़ोन" field="homePhone"/>
+        <column name="घर का फ़ैक्स" field="homeFax"/>
+        <column name="मोबाइल फ़ोन" field="mobilePhone"/>
+        <column name="व्यक्तिगत वेब पेज" field="homeURL"/>
+        <column name="व्यवसाय का पता" field="workStreet"/>
+        <column name="व्यवसाय का शहर" field="workCity"/>
+        <column name="व्यवसाय का पिन कोड" field="workPostalCode"/>
+        <column name="व्यवसाय का राज्य" field="workState"/>
+        <column name="व्यवसाय का देश/प्रांत" field="workCountry"/>
+        <column name="व्यावसायिक वेब पेज" field="workURL"/>
+        <column name="बिज़नेस फ़ोन" field="workPhone"/>
+        <column name="बिज़नेस फ़ैक्स" field="workFax"/>
+        <column name="पेजर" field="pager"/>
+        <column name="कंपनी" field="company"/>
+        <column name="पद नाम" field="jobTitle"/>
+        <column name="विभाग" field="department"/>
+        <column name="कार्यालय स्थान" field="office"/>
+        <column name="नोट्स" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="it">
+        <column name="Nome" field="firstName"/>
+        <column name="Cognome" field="lastName"/>
+        <column name="Secondo nome" field="middleName"/>
+        <column name="Nome" field="firstName,middleName,lastName" type="name"/>
+        <column name="Soprannome" field="nickname"/>
+        <column name="Indirizzo di posta elettronica" field="email"/>
+        <column name="Via (ab.)" field="homeStreet"/>
+        <column name="Città (ab.)" field="homeCity"/>
+        <column name="CAP (ab.)" field="homePostalCode"/>
+        <column name="Provincia (ab.)" field="homeState"/>
+        <column name="Paese (ab.)" field="homeCountry"/>
+        <column name="Telefono (abitazione)" field="homePhone"/>
+        <column name="Fax (abitazione)" field="homeFax"/>
+        <column name="Cellulare" field="mobilePhone"/>
+        <column name="Pagina Web personale" field="homeURL"/>
+        <column name="Via (uff.)" field="workStreet"/>
+        <column name="Città (uff.)" field="workCity"/>
+        <column name="CAP (uff.)" field="workPostalCode"/>
+        <column name="Provincia (uff.)" field="workState"/>
+        <column name="Paese (uff.)" field="workCountry"/>
+        <column name="Pagina Web professionale" field="workURL"/>
+        <column name="Telefono (ufficio)" field="workPhone"/>
+        <column name="Fax (ufficio)" field="workFax"/>
+        <column name="Cercapersone" field="pager"/>
+        <column name="Società" field="company"/>
+        <column name="Posizione" field="jobTitle"/>
+        <column name="Reparto" field="department"/>
+        <column name="Ufficio" field="office"/>
+        <column name="Note" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="ja">
+        <column name="名" field="firstName"/>
+        <column name="姓" field="lastName"/>
+        <column name="ミドル ネーム" field="middleName"/>
+        <column name="名前" field="firstName,middleName,lastName" type="name"/>
+        <column name="ニックネーム" field="nickname"/>
+        <column name="電子メール アドレス" field="email"/>
+        <column name="自宅の番地" field="homeStreet"/>
+        <column name="自宅の市区町村" field="homeCity"/>
+        <column name="自宅の郵便番号" field="homePostalCode"/>
+        <column name="自宅の都道府県" field="homeState"/>
+        <column name="国または地域" field="homeCountry"/>
+        <column name="自宅電話番号" field="homePhone"/>
+        <column name="自宅ファックス" field="homeFax"/>
+        <column name="携帯電話" field="mobilePhone"/>
+        <column name="個人 Web ページ" field="homeURL"/>
+        <column name="勤務先の番地" field="workStreet"/>
+        <column name="勤務先の市区町村" field="workCity"/>
+        <column name="勤務先の郵便番号" field="workPostalCode"/>
+        <column name="勤務先の都道府県" field="workState"/>
+        <column name="勤務先の国または地域" field="workCountry"/>
+        <column name="ビジネス Web ページ" field="workURL"/>
+        <column name="勤務先電話番号" field="workPhone"/>
+        <column name="勤務先ファックス " field="workFax"/>
+        <column name="ポケットベル" field="pager"/>
+        <column name="会社名" field="company"/>
+        <column name="役職" field="jobTitle"/>
+        <column name="部署" field="department"/>
+        <column name="オフィスの場所" field="office"/>
+        <column name="メモ" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="ko">
+        <column name="이름(성 제외)" field="firstName"/>
+        <column name="성" field="lastName"/>
+        <column name="중간 이름" field="middleName"/>
+        <column name="이름" field="firstName,middleName,lastName" type="name"/>
+        <column name="별명" field="nickname"/>
+        <column name="메일 주소" field="email"/>
+        <column name="주소(집)" field="homeStreet"/>
+        <column name="구/군/시(집)" field="homeCity"/>
+        <column name="우편 번호(집)" field="homePostalCode"/>
+        <column name="시/도(집)" field="homeState"/>
+        <column name="국가/지역(집)" field="homeCountry"/>
+        <column name="집 전화" field="homePhone"/>
+        <column name="집 팩스" field="homeFax"/>
+        <column name="휴대폰" field="mobilePhone"/>
+        <column name="개인 웹 페이지" field="homeURL"/>
+        <column name="주소(회사)" field="workStreet"/>
+        <column name="구/군/시(회사)" field="workCity"/>
+        <column name="우편 번호(회사)" field="workPostalCode"/>
+        <column name="시/도(회사)" field="workState"/>
+        <column name="국가(회사)" field="workCountry"/>
+        <column name="회사 웹 페이지" field="workURL"/>
+        <column name="직장 전화" field="workPhone"/>
+        <column name="직장 팩스" field="workFax"/>
+        <column name="호출기" field="pager"/>
+        <column name="회사" field="company"/>
+        <column name="직책" field="jobTitle"/>
+        <column name="부서" field="department"/>
+        <column name="사무실" field="office"/>
+        <column name="메모" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="nl">
+        <column name="Voornaam" field="firstName"/>
+        <column name="Achternaam" field="lastName"/>
+        <column name="Middelste naam" field="middleName"/>
+        <column name="Naam" field="firstName,middleName,lastName" type="name"/>
+        <column name="Bijnaam" field="nickname"/>
+        <column name="E-mailadres" field="email"/>
+        <column name="Adres thuis" field="homeStreet"/>
+        <column name="Plaats thuis" field="homeCity"/>
+        <column name="Postcode thuis" field="homePostalCode"/>
+        <column name="Provincie thuis" field="homeState"/>
+        <column name="Land/regio thuis" field="homeCountry"/>
+        <column name="Telefoon thuis" field="homePhone"/>
+        <column name="Fax thuis" field="homeFax"/>
+        <column name="Mobiele telefoon" field="mobilePhone"/>
+        <column name="Persoonlijke webpagina" field="homeURL"/>
+        <column name="Adres werk" field="workStreet"/>
+        <column name="Plaats werk" field="workCity"/>
+        <column name="Postcode werk" field="workPostalCode"/>
+        <column name="Provincie werk" field="workState"/>
+        <column name="Land/regio werk" field="workCountry"/>
+        <column name="Zakelijke webpagina" field="workURL"/>
+        <column name="Telefoon werk" field="workPhone"/>
+        <column name="Fax werk" field="workFax"/>
+        <column name="Pager" field="pager"/>
+        <column name="Bedrijf" field="company"/>
+        <column name="Functie" field="jobTitle"/>
+        <column name="Afdeling" field="department"/>
+        <column name="Kantoorlocatie" field="office"/>
+        <column name="Aantekeningen" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="pl">
+        <column name="Imię" field="firstName"/>
+        <column name="Nazwisko" field="lastName"/>
+        <column name="Drugie imię" field="middleName"/>
+        <column name="Nazwa" field="firstName,middleName,lastName" type="name"/>
+        <column name="Przydomek" field="nickname"/>
+        <column name="Adres e-mail" field="email"/>
+        <column name="Ulica (dom)" field="homeStreet"/>
+        <column name="Miasto (dom)" field="homeCity"/>
+        <column name="Kod pocztowy (dom)" field="homePostalCode"/>
+        <column name="Województwo (dom)" field="homeState"/>
+        <column name="Kraj/region (dom)" field="homeCountry"/>
+        <column name="Telefon domowy" field="homePhone"/>
+        <column name="Faks domowy" field="homeFax"/>
+        <column name="Telefon komórkowy" field="mobilePhone"/>
+        <column name="Osobista strona sieci Web" field="homeURL"/>
+        <column name="Ulica (biuro)" field="workStreet"/>
+        <column name="Miasto (biuro)" field="workCity"/>
+        <column name="Kod pocztowy (biuro)" field="workPostalCode"/>
+        <column name="Województwo (biuro)" field="workState"/>
+        <column name="Kraj/region (biuro)" field="workCountry"/>
+        <column name="Firmowa strona sieci Web" field="workURL"/>
+        <column name="Telefon służbowy" field="workPhone"/>
+        <column name="Faks służbowy" field="workFax"/>
+        <column name="Pager" field="pager"/>
+        <column name="Firma" field="company"/>
+        <column name="Stanowisko" field="jobTitle"/>
+        <column name="Dział" field="department"/>
+        <column name="Lokalizacja biura" field="office"/>
+        <column name="Uwagi" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="pt_BR">
+        <column name="Nome" field="firstName"/>
+        <column name="Sobrenome" field="lastName"/>
+        <column name="Nome do Meio" field="middleName"/>
+        <column name="Nome" field="firstName,middleName,lastName" type="name"/>
+        <column name="Apelido" field="nickname"/>
+        <column name="Endereço de Email" field="email"/>
+        <column name="Rua do Endereço Residencial" field="homeStreet"/>
+        <column name="Cidade do Endereço Residencial" field="homeCity"/>
+        <column name="CEP do Endereço Residencial" field="homePostalCode"/>
+        <column name="Estado do Endereço Residencial" field="homeState"/>
+        <column name="País/Região do endereço residencial" field="homeCountry"/>
+        <column name="Telefone Residencial" field="homePhone"/>
+        <column name="Fax Residencial" field="homeFax"/>
+        <column name="Celular" field="mobilePhone"/>
+        <column name="Página Pessoal da Web" field="homeURL"/>
+        <column name="Rua do Endereço Comercial" field="workStreet"/>
+        <column name="Cidade do Endereço Comercial" field="workCity"/>
+        <column name="CEP do Endereço Comercial" field="workPostalCode"/>
+        <column name="Estado do Endereço Comercial" field="workState"/>
+        <column name="País/Região do Endereço Comercial" field="workCountry"/>
+        <column name="Página Comercial da Web" field="workURL"/>
+        <column name="Telefone Comercial" field="workPhone"/>
+        <column name="Fax Comercial" field="workFax"/>
+        <column name="Pager" field="pager"/>
+        <column name="Empresa" field="company"/>
+        <column name="Cargo" field="jobTitle"/>
+        <column name="Departamento" field="department"/>
+        <column name="Endereço comercial" field="office"/>
+        <column name="Observações" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="ru">
+        <column name="Имя" field="firstName"/>
+        <column name="Фамилия" field="lastName"/>
+        <column name="Отчество" field="middleName"/>
+        <column name="Имя" field="firstName,middleName,lastName" type="name"/>
+        <column name="Псевдоним" field="nickname"/>
+        <column name="Адрес электронной почты" field="email"/>
+        <column name="Улица" field="homeStreet"/>
+        <column name="Город" field="homeCity"/>
+        <column name="Почтовый индекс" field="homePostalCode"/>
+        <column name="Область" field="homeState"/>
+        <column name="Дом. адрес, страна" field="homeCountry"/>
+        <column name="Домашний телефон" field="homePhone"/>
+        <column name="Домашний факс" field="homeFax"/>
+        <column name="Мобильный телефон" field="mobilePhone"/>
+        <column name="Личная веб-страница" field="homeURL"/>
+        <column name="Служ. адрес, улица" field="workStreet"/>
+        <column name="Служ. адрес, город" field="workCity"/>
+        <column name="Служ. адрес, почтовый код" field="workPostalCode"/>
+        <column name="Служ. адрес, область" field="workState"/>
+        <column name="Служ. адрес, страна" field="workCountry"/>
+        <column name="Служебная веб-страница" field="workURL"/>
+        <column name="Рабочий телефон" field="workPhone"/>
+        <column name="Рабочий факс" field="workFax"/>
+        <column name="Пейджер" field="pager"/>
+        <column name="Компания" field="company"/>
+        <column name="Должность" field="jobTitle"/>
+        <column name="Отдел" field="department"/>
+        <column name="Комната" field="office"/>
+        <column name="Заметки" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="sv">
+        <column name="Förnamn" field="firstName"/>
+        <column name="Efternamn" field="lastName"/>
+        <column name="Mellannamn" field="middleName"/>
+        <column name="Namn" field="firstName,middleName,lastName" type="name"/>
+        <column name="Smeknamn" field="nickname"/>
+        <column name="E-postadress" field="email"/>
+        <column name="Adress, hem" field="homeStreet"/>
+        <column name="Ort, hem" field="homeCity"/>
+        <column name="Postnummer, hem" field="homePostalCode"/>
+        <column name="Region, hem" field="homeState"/>
+        <column name="Land, hem" field="homeCountry"/>
+        <column name="Telefon, hem" field="homePhone"/>
+        <column name="Fax, hem" field="homeFax"/>
+        <column name="Mobiltelefon" field="mobilePhone"/>
+        <column name="Webbsida, privat" field="homeURL"/>
+        <column name="Adress, företag" field="workStreet"/>
+        <column name="Ort, företag" field="workCity"/>
+        <column name="Postnummer, företag" field="workPostalCode"/>
+        <column name="Region, företag" field="workState"/>
+        <column name="Land, företag" field="workCountry"/>
+        <column name="Webbsida, företag" field="workURL"/>
+        <column name="Telefon, företag" field="workPhone"/>
+        <column name="Fax, företag" field="workFax"/>
+        <column name="Personsökare" field="pager"/>
+        <column name="Företag" field="company"/>
+        <column name="Befattning" field="jobTitle"/>
+        <column name="Avdelning" field="department"/>
+        <column name="Arbetsplats" field="office"/>
+        <column name="Kommentar" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="tr">
+        <column name="Ad" field="firstName"/>
+        <column name="Soyadı" field="lastName"/>
+        <column name="İkinci Ad" field="middleName"/>
+        <column name="Ad" field="firstName,middleName,lastName" type="name"/>
+        <column name="Rumuz" field="nickname"/>
+        <column name="E-posta Adresi" field="email"/>
+        <column name="Ev Cadde" field="homeStreet"/>
+        <column name="Ev Şehir" field="homeCity"/>
+        <column name="Ev Posta Kodu" field="homePostalCode"/>
+        <column name="Ev İl" field="homeState"/>
+        <column name="Ev Ülke/Bölge" field="homeCountry"/>
+        <column name="Ev Telefonu" field="homePhone"/>
+        <column name="Ev Faksı" field="homeFax"/>
+        <column name="Cep Telefonu" field="mobilePhone"/>
+        <column name="Kişisel Web Sayfası" field="homeURL"/>
+        <column name="İş Cadde" field="workStreet"/>
+        <column name="İş Şehir" field="workCity"/>
+        <column name="İş Posta Kodu" field="workPostalCode"/>
+        <column name="İş İl" field="workState"/>
+        <column name="İş Ülke/Bölge" field="workCountry"/>
+        <column name="İş Web Sayfası" field="workURL"/>
+        <column name="İş Telefonu" field="workPhone"/>
+        <column name="İş Faksı" field="workFax"/>
+        <column name="Çağrı Cihazı" field="pager"/>
+        <column name="Şirket" field="company"/>
+        <column name="İş Unvanı" field="jobTitle"/>
+        <column name="Bölüm" field="department"/>
+        <column name="İşyeri Konumu" field="office"/>
+        <column name="Notlar" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="zh_CN">
+        <column name="名" field="firstName"/>
+        <column name="姓" field="lastName"/>
+        <column name="中间名" field="middleName"/>
+        <column name="名字" field="firstName,middleName,lastName" type="name"/>
+        <column name="昵称" field="nickname"/>
+        <column name="电子邮件地址" field="email"/>
+        <column name="住宅所在街道" field="homeStreet"/>
+        <column name="住宅所在市/县" field="homeCity"/>
+        <column name="住宅所在地的邮政编码" field="homePostalCode"/>
+        <column name="住宅所在省/市/自治区" field="homeState"/>
+        <column name="住宅所在国家/地区" field="homeCountry"/>
+        <column name="住宅电话" field="homePhone"/>
+        <column name="住宅传真" field="homeFax"/>
+        <column name="移动电话" field="mobilePhone"/>
+        <column name="个人网页" field="homeURL"/>
+        <column name="工作所在地街道" field="workStreet"/>
+        <column name="公司所在城市" field="workCity"/>
+        <column name="公司所在地的邮政编码" field="workPostalCode"/>
+        <column name="公司所在省/市/自治区" field="workState"/>
+        <column name="公司所在国家/地区" field="workCountry"/>
+        <column name="公司网页" field="workURL"/>
+        <column name="商务电话" field="workPhone"/>
+        <column name="商务传真" field="workFax"/>
+        <column name="寻呼机" field="pager"/>
+        <column name="公司" field="company"/>
+        <column name="职务" field="jobTitle"/>
+        <column name="部门" field="department"/>
+        <column name="办公地址" field="office"/>
+        <column name="注释" field="notes"/>
+    </format>
+
+    <format name="windows-live-mail-csv" type="csv" locale="zh_HK">
+        <column name="名字" field="firstName"/>
+        <column name="姓氏" field="lastName"/>
+        <column name="中間名" field="middleName"/>
+        <column name="名稱" field="firstName,middleName,lastName" type="name"/>
+        <column name="別名" field="nickname"/>
+        <column name="電子郵件地址" field="email"/>
+        <column name="住家所在街道地址" field="homeStreet"/>
+        <column name="住家所在市 / 鎮" field="homeCity"/>
+        <column name="住家所在郵遞區號" field="homePostalCode"/>
+        <column name="住家所在縣 / 市" field="homeState"/>
+        <column name="住家所在國家 / 地區" field="homeCountry"/>
+        <column name="住家電話" field="homePhone"/>
+        <column name="住家傳真" field="homeFax"/>
+        <column name="行動電話" field="mobilePhone"/>
+        <column name="個人網頁" field="homeURL"/>
+        <column name="公司所在街道地址" field="workStreet"/>
+        <column name="公司所在市 / 鎮" field="workCity"/>
+        <column name="公司所在郵遞區號" field="workPostalCode"/>
+        <column name="公司所在縣 / 市" field="workState"/>
+        <column name="公司所在國家 / 地區" field="workCountry"/>
+        <column name="公司網頁" field="workURL"/>
+        <column name="公司電話" field="workPhone"/>
+        <column name="公司傳真" field="workFax"/>
+        <column name="呼叫器" field="pager"/>
+        <column name="公司" field="company"/>
+        <column name="職稱" field="jobTitle"/>
+        <column name="部門" field="department"/>
+        <column name="辦公室位置" field="office"/>
+        <column name="備註" field="notes"/>
+    </format>
+</contacts>

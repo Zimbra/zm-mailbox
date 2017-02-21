@@ -1,0 +1,176 @@
+Return-Path: <xmlbeans-user-return-67-smith=stanford.edu@xml.apache.org>
+Received: from leland5.Stanford.EDU (leland5.Stanford.EDU [171.64.14.121])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h9N0XxdX021941
+	for <smith@popserver1.stanford.edu>; Wed, 22 Oct 2003 17:34:00 -0700
+	(PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland5.Stanford.EDU (8.12.10/8.12.10) with SMTP id h9N0XqVj005336 for
+	<smith@stanford.edu>; Wed, 22 Oct 2003 17:33:53 -0700 (PDT)
+Received: (qmail 12818 invoked by uid 500); 23 Oct 2003 00:33:43 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 12805 invoked from network); 23 Oct 2003 00:33:43 -0000
+X-MimeOLE: Produced By Microsoft Exchange V6.0.6375.0
+content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Subject: RE: deep equals implementation?
+Date: Wed, 22 Oct 2004 17:33:49 -0700
+X-Zimbra-Received: Wed, 22 Oct 2004 17:33:49 -0700
+Message-ID: <4B2B4C417991364996F035E1EE39E2E10D8E29@uskiex01.amer.bea.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: deep equals implementation?
+Thread-Index: AcOY+g1p3kAYoER0Rjup9R242UzWPAAAd5rg
+From: "Eric Vasilik" <ericvas@bea.com>
+To: <xmlbeans-user@xml.apache.org>
+X-OriginalArrivalTime: 23 Oct 2003 00:33:51.0353 (UTC)
+	FILETIME=[54CF5E90:01C398FD]
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=iso-8859-1
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000037-0010
+
+Substituting namespaces is not appropriate in this case.  What it seems you=
+ are looking for is a semantic XML comparison, not a syntactic one.  This c=
+an be done with the cursor.  Here is how I would proceed: Walk two cursors =
+through the documents you are wanting to compare and,
+
+    - Ignore namespace decls, they are syntactic
+    - Accumulate attrs for containers (elements, the top level
+      document) sorting them and then comparing them (i.e.
+      ignore attr order)
+    - Compare the QNames of elements and attributes for equality
+      (prefixes are syntactic)
+    - Ignore comments and PI's
+
+You may also want to trim white space from text tokens you encounter to dea=
+l with different formatting.  If you need, you can compare leaf values sche=
+matically by calling getObject on leaf elements and attributes and compare =
+those.  However, this does not provide for true schematic comparison (eleme=
+nts in various orders, etc).
+
+There are probably other techniques you can use, but this should put you in=
+ the right direction.
+
+- Eric
+
+-----Original Message-----
+From: Dmitri.Colebatch@toyota.com.au
+[mailto:Dmitri.Colebatch@toyota.com.au]
+Sent: Wednesday, October 22, 2003 5:08 PM
+To: xmlbeans-user@xml.apache.org
+Subject: Re: deep equals implementation?
+
+
+
+Thanks Rob,
+
+I had tried that path, but wasn't confident in it - perhaps with those
+options a revisit would be apprpriate.
+
+thanks
+dim
+
+
+
+
+
+Robert Wyrick <rob@wyrick.org> on 23/10/2003 09:43:36 AM
+
+Please respond to xmlbeans-user@xml.apache.org
+
+To:    xmlbeans-user@xml.apache.org
+cc:
+Subject:    Re: deep equals implementation?
+
+With careful use of :
+
+         xmlOptions.setLoadSubstituteNamespaces(namespaceMap);
+and
+         xmlOptions.setSaveImplicitNamespaces(namespaceMap);
+
+I was able to find a tempory workaround for the very problems you mention.
+This may or may not work in your case, but it worked in ours.
+
+For "deep" compares, we simply marshal back to a string and do a string
+compare.
+It's NOT an ideal solution and you end up with some odd looking xml when
+you
+marshal non-document nodes, but it works.
+
+-Rob
+
+Dmitri.Colebatch@toyota.com.au wrote:
+
+>Eric,
+>
+>Firstly, thanks for your response.  I did try walking the trees with
+>cursor, but found that equivalent trees with different namspace
+>declarations generated different tokens, understandably... I'm not sure
+>that is clear, what I mean is:
+>
+><foo xmlns=3D"http://foo" />
+>
+>is different to
+>
+><foo:foo xmlns:foo=3D"http://foo" />
+>
+>in terms of the cursor walk.... but I want them to be the equal.
+>
+>Any advice on getting past that would be appreciated, I had trouble trying
+>to see how to easily get past this in XmlCursor.... probably my lack of
+sax
+>parsing isn't helping (o:
+>
+>cheers
+>dim
+>
+>
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+
+
+
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                               DISCLAIMER
+* This email and any attachment may contain confidential information.
+  If you are not the intended recipient you are not authorised to copy
+  or disclose all or any part of it without the prior written consent
+  of Toyota.
+* Opinions expressed in this email and any attachment are those of the
+  sender and not necessarily the opinions of Toyota.
+* Please scan this email and any attachment for viruses.  Toyota does
+  not accept any responsibility for problems caused by viruses, whether
+  it is Toyota's fault or not.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

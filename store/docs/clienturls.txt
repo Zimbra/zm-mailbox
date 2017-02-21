@@ -1,0 +1,99 @@
+
+Query params for client:
+
+----------------------------------------
+
+ debug={debug-level}
+
+ turns on client-side debug popup window
+ 
+AjxDebug.NONE = 0; // no debugging (window will not come up)
+AjxDebug.DBG1 = 1; // minimal debugging
+AjxDebug.DBG2 = 2; // moderate debugging
+AjxDebug.DBG3 = 3; // anything goes
+
+ http://server/zimbra/?debug=1
+
+----------------------------------------
+
+ skin={skin-name}
+
+  load specified skin:
+  
+    bare
+    beach
+    sand
+    sky
+    steel
+	...
+
+ http://server/zimbra/?skin=beach
+ 
+----------------------------------------
+
+ app={app-name}
+
+  start in specified app:
+  
+    mail
+    contacts
+    calendar
+    options
+
+
+ http://server/zimbra/?app=calendar
+ 
+----------------------------------------    
+
+ nss=1
+ 
+  start with (n)o (s)plash (s)creen
+
+  http://server/zimbra/?nss=1
+ 
+----------------------------------------
+    
+ view={view-name}
+
+ start in a particular subview with given args:
+ 
+ compose
+  
+     &to={...}&subject={...}&body={...}
+
+  http://server/zimbra/?view=compose&to=a@b.com&subject=hello%20world&body=test
+
+
+
+ day|workWeek|week|month
+
+     &date=YYYYMMDD
+
+  http://server/zimbra/?app=calendar&view=workWeek&date=20030313
+
+ Note: the "app=calendar" part is required for this work.
+
+
+----------------------------------------
+
+ redirect=0|1
+ 
+   The client normally redirects the user's browser to their mailhost at login, unless you are connecting to
+   either localhost or an IP address. You can use redirect=0 to disable that redirect, or redirect=1 to force
+   a redirect in the localhost/IP case.
+   
+For example, assumming zimbraMailHost is server1.company.com, connecting to:
+  
+  http://localhost/zimbra/?redirect=1
+  
+will cause the client to redirect to server1.company.com, and connecting to:
+  
+  http://mail.company.com/zimbra/?redirect=0
+  
+  will tell it not to redirect (this assumes mail.company.com is a CNAME/VIP for server1.company.com).
+  
+Disabling redirect is only useful where you have split-dns issues, and you are trying to connect from the external-side, or when
+you are doing SSH port forwarding and you don't want to redirect to the real hostname.
+
+----------------------------------------
+

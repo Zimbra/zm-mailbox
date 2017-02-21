@@ -1,0 +1,125 @@
+Return-Path: <xmlbeans-dev-return-433-smith=stanford.edu@xml.apache.org>
+Received: from leland3.Stanford.EDU (leland3.Stanford.EDU [171.67.16.119])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id hAPNSToB017680
+	for <smith@popserver1.stanford.edu>; Tue, 25 Nov 2003 15:28:29 -0800
+	(PST)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland3.Stanford.EDU (8.12.10/8.12.10) with SMTP id hAPNSGii011071 for
+	<smith@stanford.edu>; Tue, 25 Nov 2003 15:28:17 -0800
+Received: (qmail 85752 invoked by uid 500); 25 Nov 2003 23:19:57 -0000
+Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-dev@xml.apache.org>
+List-Help: <mailto:xmlbeans-dev-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
+Reply-To: xmlbeans-dev@xml.apache.org
+Delivered-To: mailing list xmlbeans-dev@xml.apache.org
+Received: (qmail 85732 invoked from network); 25 Nov 2003 23:19:57 -0000
+X-Sent: 25 Nov 2003 23:20:03 GMT
+Mime-Version: 1.0 (Apple Message framework v606)
+In-Reply-To: <5.2.1.1.0.20031124140854.023b6ec8@san-francisco.beasys.com>
+References: <5.2.1.1.0.20031114151841.01a6aea0@san-francisco.beasys.com>
+	 <5.2.1.1.0.20031112103429.01de1458@san-francisco.beasys.com>
+	 <5.2.1.1.0.20031114151841.01a6aea0@san-francisco.beasys.com>
+	 <5.2.1.1.0.20031124140854.023b6ec8@san-francisco.beasys.com>
+Message-Id: <E5189F9B-1F9D-11D8-BCDC-003065DC754C@apache.org>
+Content-Transfer-Encoding: quoted-printable
+From: robert burrell donkin <rdonkin@apache.org>
+Subject: Re: Start-with-java annotations
+Date: Tue, 25 Nov 2003 23:20:02 +0000
+X-Zimbra-Received: Tue, 25 Nov 2003 23:20:02 +0000
+To: xmlbeans-dev@xml.apache.org
+X-Mailer: Apple Mail (2.606)
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=ISO-8859-1; FORMAT=flowed
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 0000007a-0010
+
+On 25 Nov 2003, at 00:53, Patrick Calahan wrote:
+> Hi Robert.=A0 Sorry for the delay in getting back to you.
+
+hi patrick
+
+i'm often tied up with stuff in jakartaland and haven't had time to=20
+catch up on the xml-beans list before now. if you agree to forget about=20
+my delay's, i'll forget yours :)
+
+> At 10:28 PM 11/18/2003 +0000, robert burrell donkin wrote:
+>
+>
+> FWIW a couple of obesrvations (IMHO, of course):
+>
+> 1. castor is very widely used but not as widely liked by developers as=20
+> it's usage suggests. (i think that it
+>
+> Sure, but doesn't that beg the question?=A0 If Castor has a large=20
+> audience held captive only by the absence of a better alternative,=20
+> wouldn't it behoove xmlbeans to strive to be (among other things)=20
+> exactly such an alternative?
+
+yep. agreed (so long as the alternative means "beyond caster" rather=20
+than "just caster")
+
+(just pointing out something i've personally observed but i haven't=20
+used castor a lot and so it's probably not too biased ;)
+
+> =A0loses a lot from being a general mapping tool rather than a=20
+> specialist xml one.)
+>
+> Is Castor really general-purpose?=A0 I've only used Castor a little bit=20
+> myself, but AFICT, it seems to me to have an XML-focused piece, and a=20
+> JDO-focused piece, and some limited integration between the two.=A0 The=20
+> XML piece does seem to be pretty specialized for XML.
+
+it's field-oriented whereas most java developers are method-oriented.=20
+it's language is unintuitive. IMHO this is because castor decided that=20
+it'd solve other kinds of object mapping (eg. JDO). IIRC the various=20
+mappings share a common nomenclature and shape. i'm not a castor expert=20
+so i'd best stop repeating gossip now...
+
+> 2. it's not really object serialization but round trip mapping that=20
+> developers want. in fact, i think that attempting object serialization=20
+> is positively harmful.
+>
+> maybe point 2 needs a little expansion: serialization must be=20
+> essentially lose-less in a java sense. i'd say that object round=20
+> tripping means being able to go from a symantically meaningful object=20
+> graph to an (easily) human readable (and symantically meaningful) xml=20
+> document and then back to an object graph which is equivalent to the=20
+> original.
+>
+> I'm a little confused about the distinction you are drawing between=20
+> round-tripping and serialization.=A0 'How is loss-less in the java=20
+> sense' different from getting back 'an object which is equivalent to=20
+> the original?'
+
+i'd say that serialization means ensuring that every field value is=20
+equal. equivalence might not mean equal but just equal enough.
+
+another example: a floating point property backed by a field. the=20
+business logic of the bean might say that this is really a 2 point=20
+decimal value (yes, i know that floats are inappropriate for this - but=20
+they are widely misused in this way and it's an easy example). a good=20
+serializer will record the current value so that it can be recreated.=20
+but in many use cases, what's really wanted is that the value rounded=20
+to 2 dps. a good round tripper will allow symantically equivalent=20
+values (1.11222322341234 and 1.11) even if this results in a loss of=20
+information and possible non-equality.
+
+
+one way to solve this is to allow users to flavour mappings with=20
+additional information to allow different transformations to be=20
+performed. i think that it's only objects (or primitives) mapped to=20
+strings (atomics would probably be a good description) that this is=20
+really important for. (or at least: i can't think of an and i've never=20
+had a request for this functionality.)
+
+- robert
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-dev-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-dev-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+

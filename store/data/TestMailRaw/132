@@ -1,0 +1,155 @@
+Return-Path: <xmlbeans-user-return-24-smith=stanford.edu@xml.apache.org>
+Received: from leland7.Stanford.EDU (leland7.Stanford.EDU [171.67.16.66])
+	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h985F5LB024421
+	for <smith@popserver1.stanford.edu>; Tue, 7 Oct 2003 22:15:05 -0700 (PDT)
+Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
+	leland7.Stanford.EDU (8.12.10/8.12.10) with SMTP id h985Etll029038 for
+	<smith@stanford.edu>; Tue, 7 Oct 2003 22:14:56 -0700 (PDT)
+Received: (qmail 22050 invoked by uid 500); 8 Oct 2003 05:14:43 -0000
+Mailing-List: contact xmlbeans-user-help@xml.apache.org; run by ezmlm
+Precedence: bulk
+X-No-Archive: yes
+List-Post: <mailto:xmlbeans-user@xml.apache.org>
+List-Help: <mailto:xmlbeans-user-help@xml.apache.org>
+List-Unsubscribe: <mailto:xmlbeans-user-unsubscribe@xml.apache.org>
+List-Subscribe: <mailto:xmlbeans-user-subscribe@xml.apache.org>
+Reply-To: xmlbeans-user@xml.apache.org
+Delivered-To: mailing list xmlbeans-user@xml.apache.org
+Received: (qmail 22037 invoked from network); 8 Oct 2003 05:14:43 -0000
+Date: Tue, 7 Oct 2003 22:14:48 -0700
+X-Zimbra-Received: Tue, 7 Oct 2003 22:14:48 -0700
+Subject: Re: cursor question...
+Mime-Version: 1.0 (Apple Message framework v552)
+From: Roland Smith <smith@stanford.edu>
+To: xmlbeans-user@xml.apache.org
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <4B2B4C417991364996F035E1EE39E2E10D8E20@uskiex01.amer.bea.com>
+Message-Id: <56A07A4A-F94E-11D7-8D14-000A95D98EF2@stanford.edu>
+X-Mailer: Apple Mail (2.552)
+X-Spam-Rating: daedalus.apache.org 1.6.2 0/1000/N
+Content-Type: text/plain; CHARSET=US-ASCII; FORMAT=flowed
+X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
+X-Evolution: 00000084-0010
+
+Thanks. I had a feeling there had to be an easier way. I remember 
+seeing the XmlObject.set method, but for some reason the javadoc 
+description made me think that the "soapBody" object could potentially 
+change to a new XmlObject, in which case I wasn't sure if  that new 
+object would still be part of the Envelope object. or maybe the
+<soap:Body> would now become <doc:Document>.  I think I might still be 
+a little confused on the whole
+inner vs. outer issues, and just scanned over the XmlObject javadocs on 
+that again and things are clearer.
+
+Here is something else I'm confused on. This works:
+
+         Soap12Detail detail = fault.addNewDetail();
+         detail.set(doc);
+
+While this didn't:
+
+         Soap12Detail detail = Soap12Detail.Factory.newInstance();
+         fault.setDetail(detail);
+         detail.set(doc);
+
+When calling one of the .set methods on an xmlbean, it hadn't occurred 
+to me that future changes to
+the XmlObject passed into the .set method would be ignored. Is the 
+object passed into .set methods
+copied? This does work, so I'm guessing yes:
+
+         Soap12Detail detail = Soap12Detail.Factory.newInstance();
+         fault.setDetail(detail);
+         fault.getDetail().set(doc);
+
+This example is a little contrived, as I switched things around while 
+debugging and normally always
+use the .addNew* methods.
+
+thanks again, roland
+
+
+On Tuesday, October 7, 2003, at 07:44  PM, Eric Vasilik wrote:
+
+> You should be able to do:
+>
+>         soapBody.set( document );
+>
+> instead of the cursor manipulation.  The above should effectively do 
+> the same thing for you.  Your use of cursors is correct, but a bit 
+> more cumbersome.
+>
+> - Eric
+>
+> -----Original Message-----
+> From: Roland Smith [mailto:smith@stanford.edu]
+> Sent: Tuesday, October 07, 2003 2:38 PM
+> To: xmlbeans-user@xml.apache.org
+> Subject: cursor question...
+>
+>
+> Hi. I've got a quick question object whether or not using cursors is 
+> the
+> right (and/or only) approach to what I'm trying to do.
+>
+> I've got an XmlObject which represents the body of a SOAP message
+> to construct, and I want to wrap an envelope around it.
+>
+> Compiling the SOAP 1.2 xsd (with a prefix of Soap12), gives me an
+> xmlbean class called:
+>
+> Soap12Body
+>
+> That declares no methods of its own, just inherits from XmlObject and
+> XmlTokenSource. I'm guessing in order to add the XmlObject to
+> that Body, I have to use a cursor.
+>
+> I ended up writing this:
+>
+>     /** Given an XmlObject, wrap it in an envelope and return it */
+>     public XmlObject soapEnvelope(XmlObject document)
+>     {
+>         Soap12EnvelopeDocument soapEnv =
+>             Soap12EnvelopeDocument.Factory.newInstance();
+>         Soap12Body soapBody = soapEnv.addNewEnvelope().addNewBody();
+>
+>         XmlCursor sc = null, dc = null;
+>         try {
+>             sc = soapBody.newCursor();
+>             sc.toNextToken();
+>             dc = document.newCursor();
+>             dc.toNextToken();
+>             dc.copyXml(sc);
+>         } finally {
+>             if (sc != null)
+>                 sc.dispose();
+>             if (dc != null)
+>                 dc.dispose();
+>         }
+>         return soapEnv;
+>     }
+>
+> Is there a better approach to doing this, or is this indeed the
+> correct use of cursors? It seems to work fine, just wasn't sure if it
+> was the most efficient way.
+>
+> thanks, roland
+>
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+>
+> - ---------------------------------------------------------------------
+> To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+> For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+> Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+>
+
+
+- ---------------------------------------------------------------------
+To unsubscribe, e-mail:   xmlbeans-user-unsubscribe@xml.apache.org
+For additional commands, e-mail: xmlbeans-user-help@xml.apache.org
+Apache XMLBeans Project -- URL: http://xml.apache.org/xmlbeans/
+
