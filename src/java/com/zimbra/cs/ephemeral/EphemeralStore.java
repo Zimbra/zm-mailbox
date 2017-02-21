@@ -16,6 +16,8 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.ephemeral.migrate.AttributeMigration;
+import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationFlag;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.extension.ZimbraExtension;
 import com.zimbra.cs.util.Zimbra;
@@ -140,6 +142,7 @@ public abstract class EphemeralStore {
             break;
         }
     }
+
     private static final void setFactory(String factoryClassName, FailureMode onFailure) {
         if (factoryClassName == null) {
             handleFailure(onFailure, "no EphemeralStore specified", null);
@@ -173,7 +176,22 @@ public abstract class EphemeralStore {
 
     public static final void setFactory(Class<? extends Factory> factoryClass, FailureMode onFailure) {
         try {
-            factory = factoryClass.newInstance();
+            boolean useFallback = false;
+            Factory fac = factoryClass.newInstance();
+            if (!(fac instanceof LdapEphemeralStore.Factory)) {
+                EphemeralStore store = fac.getStore();
+                MigrationFlag flag = AttributeMigration.getMigrationFlag(store);
+                try {
+                    useFallback = flag.isSet();
+                } catch (ServiceException e) {
+                    ZimbraLog.ephemeral.warn("unable to determine if migration is in progress", e);
+                }
+            }
+            if (useFallback) {
+                factory = new FallbackEphemeralStore.Factory(fac, AttributeMigration.getFallbackFactory());
+            } else {
+                factory = fac;
+            }
             factory.startup();
             ZimbraLog.ephemeral.debug("using ephemeral store factory %s", factoryClass.getDeclaringClass().getSimpleName());
         } catch (InstantiationException | IllegalAccessException e) {

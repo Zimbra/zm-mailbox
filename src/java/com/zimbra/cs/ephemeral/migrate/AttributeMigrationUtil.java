@@ -21,6 +21,7 @@ import com.zimbra.cs.ephemeral.migrate.AttributeMigration.AllAccountsSource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.DryRunMigrationCallback;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationCallback;
+import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationFlag;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.SomeAccountsSource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.ZimbraMigrationCallback;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -44,6 +45,8 @@ public class AttributeMigrationUtil {
         OPTIONS.addOption("d", "debug", false, "Enable debug logging");
         OPTIONS.addOption("h", "help", false, "Display this help message");
         OPTIONS.addOption("a", "account", true, "Comma-separated list of accounts to migrate. If not specified, all accounts will be migrated");
+        OPTIONS.addOption("s", "set-flag", false, "Set the 'migration in progress' flag. Used for testing or debugging.");
+        OPTIONS.addOption("u", "unset-flag", false, "Unset the 'migration in progress' flag. Used for testing or debugging.");
     }
 
     public static void main(String[] args) throws Exception {
@@ -51,7 +54,8 @@ public class AttributeMigrationUtil {
         CommandLineParser parser = new GnuParser();
         CommandLine cl = parser.parse(OPTIONS, args);
         List<String> attrsToMigrate = cl.getArgList();
-        if (cl.hasOption("h") || attrsToMigrate.isEmpty()) {
+        boolean flagChange = cl.hasOption('s') || cl.hasOption('u');
+        if (cl.hasOption("h") || (!flagChange && attrsToMigrate.isEmpty()) || (cl.hasOption('s') && cl.hasOption('u'))) {
             usage();
             return;
         }
@@ -61,6 +65,10 @@ public class AttributeMigrationUtil {
         boolean dryRun = cl.hasOption('r');
         if (dryRun && cl.hasOption('n')) {
             ZimbraLog.ephemeral.error("cannot specify --num-threads with --dry-run option");
+            return;
+        }
+        if (flagChange && (dryRun || cl.hasOption('n') || cl.hasOption('a') || cl.hasOption('k'))) {
+            ZimbraLog.ephemeral.error("cannot specify --set-flag or --unset-flag with -r, -n, -a, or -k options");
             return;
         }
         //a null numThreads value causes the migration process to run synchronously
@@ -77,7 +85,6 @@ public class AttributeMigrationUtil {
                 return;
             }
         }
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, numThreads);
         MigrationCallback callback;
         String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
         if (!dryRun) {
@@ -105,6 +112,31 @@ public class AttributeMigrationUtil {
         } else {
             callback = new DryRunMigrationCallback();
         }
+        if (flagChange) {
+            EphemeralStore store = new ZimbraMigrationCallback().getStore(); //EphemeralStore containing the flag
+            MigrationFlag flag = AttributeMigration.getMigrationFlag(store);
+            if (cl.hasOption('s')) {
+                //setting flag
+                if (flag.isSet()) {
+                    ZimbraLog.ephemeral.info("migration flag is already set on %s", store.getClass().getSimpleName());
+                } else {
+                    ZimbraLog.ephemeral.info("setting the migration flag on %s", store.getClass().getSimpleName());
+                    flag.set();
+                    AttributeMigration.clearConfigCacheOnAllServers(true);
+                }
+            } else {
+                //unsetting flag
+                if (!flag.isSet()) {
+                    ZimbraLog.ephemeral.info("migration flag is not set on %s", store.getClass().getSimpleName());
+                } else {
+                    ZimbraLog.ephemeral.info("unsetting the migration flag on %s", store.getClass().getSimpleName());
+                    flag.unset();
+                    AttributeMigration.clearConfigCacheOnAllServers(true);
+                }
+            }
+            return;
+        }
+        AttributeMigration migration = new AttributeMigration(attrsToMigrate, numThreads);
         migration.setCallback(callback);
         EntrySource source;
         if (cl.hasOption('a')) {
