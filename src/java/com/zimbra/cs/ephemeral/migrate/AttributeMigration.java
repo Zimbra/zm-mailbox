@@ -4,11 +4,22 @@ import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,11 +28,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.Pair;
@@ -60,6 +76,7 @@ public class AttributeMigration {
     private final Collection<String> attrsToMigrate;
     private boolean deleteOriginal = true;
     private boolean async = true;
+    private CSVReports csvReports = null;
     private MigrationCallback callback;
     private static ExecutorService executor = null;
     private static ServiceException exceptionWhileMigrating = null;
@@ -134,13 +151,153 @@ public class AttributeMigration {
     }
 
     private void migrateAccount(Account account) throws ServiceException {
-        MigrationTask migration = new MigrationTask(account, activeConverterMap, callback, deleteOriginal);
+        MigrationTask migration = new MigrationTask(account, activeConverterMap, csvReports, callback, deleteOriginal);
         migration.migrateAttributes();
     }
 
     private void migrateAccountAsync(Account account) throws ServiceException {
-        MigrationTask migration = new MigrationTask(account, activeConverterMap, callback, deleteOriginal);
+        MigrationTask migration = new MigrationTask(account, activeConverterMap, csvReports, callback, deleteOriginal);
         executor.submit(migration);
+    }
+
+    public final static class CSVReports {
+        private static String[] csvHeaders =
+            {"Name", "Start", "Elapsed ms", "Succeeded", "Number of attributes", "Info"};
+        private static final SimpleDateFormat CSV_SUFFIX_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+
+        final boolean dummyReport;
+        private Report fullReport = null;
+        private Report errorReport = null;
+
+        private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+
+        /** use this for a null report */
+        public CSVReports(boolean dummyMode) {
+            dummyReport = dummyMode;
+            if (dummyReport) {
+                return;
+            }
+            String suffix = CSV_SUFFIX_DATE_FORMAT.format(new Date(System.currentTimeMillis()));
+            fullReport = new Report(String.format("%s%szmmigrateattrs-%s.csv",
+                        LC.zimbra_tmp_directory.value(), File.separator, suffix));
+            errorReport = new Report(String.format("%s%szmmigrateattrs-errors-%s.csv",
+                        LC.zimbra_tmp_directory.value(), File.separator, suffix));
+        }
+
+        public void log(String acctName, long start, boolean success, int attrNum, String... rest) {
+            if (dummyReport) {
+                return;
+            }
+            List<String> line = Lists.newArrayList();
+            line.add(acctName);
+            line.add(DATE_FORMAT.format(new Date(start)));
+            long now = System.currentTimeMillis();
+            line.add(Long.toString(now - start));
+            line.add(success ? "Y" : "N");
+            line.add(Integer.toString(attrNum));
+            for (String str : rest) {
+                line.add(str);
+            }
+            fullReport.printRecord(line);
+            if (!success) {
+                errorReport.printRecord(line);
+            }
+        }
+
+        public void zimbraLogFinalSummary() {
+            if (dummyReport) {
+                return;
+            }
+            if (null != fullReport.csvPrinter) {
+                ZimbraLog.ephemeral.info("See full report               : '%s'", fullReport.name);
+            }
+            if (null != errorReport.csvPrinter) {
+                ZimbraLog.ephemeral.info("See report summary for errors : '%s'", errorReport.name);
+            }
+        }
+
+        public void close() {
+            if (dummyReport) {
+                return;
+            }
+            fullReport.close();
+            errorReport.close();
+        }
+
+        private class Report {
+            final String name;
+            CSVPrinter csvPrinter = null;
+            OutputStream outputStream = null;
+            boolean broken = false;
+            Report (String fname) {
+                name = fname;
+            }
+
+            void printRecord(List<String> line) {
+                if (!open()) {
+                    broken = true;
+                    return;
+                }
+                try {
+                    csvPrinter.printRecord(line);
+                } catch (IOException e) {
+                    ZimbraLog.ephemeral.error("Problem writing record '%s' to file '%s'", line, name, e);
+                }
+            }
+
+            boolean open() {
+                if (broken) {
+                    return false;
+                }
+                if (null != csvPrinter) {
+                    return true;
+                }
+                try {
+                    outputStream = new FileOutputStream(name);
+                    csvPrinter = CSVFormat.DEFAULT.withHeader(csvHeaders).print(
+                            new OutputStreamWriter(outputStream, "UTF-8"));
+                    Path path = Paths.get(name);
+                    try {
+                        Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rw-------"));
+                    } catch (IOException e) {
+                        ZimbraLog.ephemeral.error("Failed to set CSV file '%s' permissions", name, e);
+                    }
+                    return true;
+                } catch (IOException e) {
+                    ZimbraLog.ephemeral.error("Failed to create CSV file '%s'.", name, e);
+                    return false;
+                }
+            }
+
+            void close() {
+                if (csvPrinter != null) {
+                    try {
+                        csvPrinter.close();
+                    } catch (IOException e) {
+                        ZimbraLog.ephemeral.info("Problem closing CSVPrinter for %s", name,  e);
+                    }
+                    Path path = Paths.get(name);
+                    try {
+                        Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("r--------"));
+                    } catch (IOException e) {
+                        ZimbraLog.ephemeral.error("Failed to set CSV file '%s' permissions", name, e);
+                    }
+                }
+                if (outputStream != null) {
+                    try {
+                        outputStream.close();
+                    } catch (IOException e) {
+                        ZimbraLog.ephemeral.error("Problem closing Stream for CSVPrinter for file %s", name, e);
+                    }
+                }
+            }
+        }
+    }
+
+    private void closeReports() {
+        if (null != csvReports) {
+            csvReports.close();
+        }
     }
 
     public static void setMigrationHelper(MigrationHelper helper) {
@@ -178,31 +335,37 @@ public class AttributeMigration {
     public void migrateAllAccounts() throws ServiceException {
         ZimbraLog.ephemeral.info("beginning migration of attributes %s to ephemeral storage",
                 Joiner.on(", ").join(attrsToMigrate));
-        beginMigration();
-        if (async) {
-            for (NamedEntry entry: source.getEntries()) {
+        try {
+            beginMigration();
+            csvReports = new CSVReports(callback instanceof DryRunMigrationCallback);
+            if (async) {
+                for (NamedEntry entry: source.getEntries()) {
+                    try {
+                        migrateAccountAsync((Account) entry);
+                    } catch (RejectedExecutionException e) {
+                        //executor has been shut down due to error in migration process
+                        break;
+                    }
+                }
+                executor.shutdown();
                 try {
-                    migrateAccountAsync((Account) entry);
-                } catch (RejectedExecutionException e) {
-                    //executor has been shut down due to error in migration process
-                    break;
+                    executor.awaitTermination(10, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {}
+                if (exceptionWhileMigrating != null) {
+                    throw exceptionWhileMigrating;
+                }
+            } else {
+                for (NamedEntry entry: source.getEntries()) {
+                    migrateAccount((Account) entry);
                 }
             }
-            executor.shutdown();
-            try {
-                executor.awaitTermination(10, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {}
-            if (exceptionWhileMigrating != null) {
-                throw exceptionWhileMigrating;
-            }
-        } else {
-            for (NamedEntry entry: source.getEntries()) {
-                migrateAccount((Account) entry);
-            }
+            ZimbraLog.ephemeral.info("migration of attributes %s to ephemeral storage completed",
+                    Joiner.on(", ").join(attrsToMigrate));
+            endMigration();
+            csvReports.zimbraLogFinalSummary();
+        } finally {
+            closeReports();
         }
-        ZimbraLog.ephemeral.info("migration of attributes %s to ephemeral storage completed",
-                Joiner.on(", ").join(attrsToMigrate));
-        endMigration();
     }
 
     static interface EntrySource {
@@ -254,7 +417,7 @@ public class AttributeMigration {
         /**
          * handle EphemeralInput instances generated from LDAP attributes
          */
-        public abstract void setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException;
+        public abstract boolean setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException;
 
         /**
          * Delete original attribute values
@@ -293,14 +456,16 @@ public class AttributeMigration {
         }
 
         @Override
-        public void setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException {
+        public boolean setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException {
             ZimbraLog.ephemeral.debug("migrating '%s' value '%s'", origName, String.valueOf(origValue));
             EphemeralKey key = input.getEphemeralKey();
             EphemeralResult existing = store.get(key, location);
             if (existing == null || existing.isEmpty()) {
                 store.update(input, location);
+                return true;
             } else {
                 ZimbraLog.ephemeral.debug("%s already has value '%s' in %s, skipping", key, existing.getValue(), store.getClass().getSimpleName());
+                return false;
             }
         }
 
@@ -329,7 +494,7 @@ public class AttributeMigration {
         private static final PrintStream console = System.out;
 
         @Override
-        public void setEphemeralData(EphemeralInput input,
+        public boolean setEphemeralData(EphemeralInput input,
                 EphemeralLocation location, String origName, Object origValue) throws ServiceException {
             EphemeralKey key = input.getEphemeralKey();
             console.println(String.format("\n%s", origName));
@@ -344,6 +509,7 @@ public class AttributeMigration {
             }
             String locationStr = Joiner.on(" | ").join(location.getLocation());
             console.println(String.format("ephemeral location: [%s]", locationStr));
+            return true;
         }
 
         @Override
@@ -369,12 +535,25 @@ public class AttributeMigration {
         protected MigrationCallback callback;
         protected boolean deleteOriginal;
         protected Entry entry;
+        protected CSVReports csvReports = null;
+        protected long start;
 
-        public MigrationTask(Entry entry, Map<String, AttributeConverter> converters, MigrationCallback callback, boolean deleteOriginal) {
+        public MigrationTask(Entry entry, Map<String, AttributeConverter> converters,
+                MigrationCallback callback, boolean deleteOriginal) {
+            this(entry, converters, null, callback, deleteOriginal);
+        }
+
+        public MigrationTask(Entry entry, Map<String, AttributeConverter> converters,
+                CSVReports csvReports, MigrationCallback callback, boolean deleteOriginal) {
             this.entry = entry;
             this.converters = converters;
             this.callback = callback;
             this.deleteOriginal = deleteOriginal;
+            if (null == csvReports) {
+                this.csvReports = new CSVReports(true); /* dummy reports */
+            } else {
+                this.csvReports = csvReports;
+            }
         }
 
         /**
@@ -426,6 +605,7 @@ public class AttributeMigration {
 
         @VisibleForTesting
         public void migrateAttributes() throws ServiceException {
+            start = System.currentTimeMillis();
             ZimbraLog.ephemeral.debug("migrating attributes to ephemeral storage for account '%s'", entry.getLabel());
             List<Pair<EphemeralInput, Object>> inputs = new LinkedList<Pair<EphemeralInput, Object>>();
 
@@ -440,10 +620,12 @@ public class AttributeMigration {
                 }
             }
             if (!hasDataToMigrate) {
+                csvReports.log(entry.getLabel(), start, true, 0, "no ephemeral data to migrate");
                 ZimbraLog.ephemeral.info("no ephemeral data to migrate for account '%s'", entry.getLabel());
                 return;
             }
             EphemeralLocation location = getEphemeralLocation();
+            int attrsMigrated = 0;
             for (Pair<EphemeralInput, Object> pair: inputs) {
                 EphemeralInput input = pair.getFirst();
                 String attrName = input.getEphemeralKey().getKey();
@@ -453,10 +635,14 @@ public class AttributeMigration {
                         //another thread encountered an error during migration
                         return;
                     }
-                    callback.setEphemeralData(input, location, attrName, origValue);
+                    if (callback.setEphemeralData(input, location, attrName, origValue)) {
+                        attrsMigrated++;
+                    }
                 } catch (ServiceException e) {
                     // if an exception is encountered, shut down all the migration threads and store
                     // the error so that it can be re-raised at the end
+                    csvReports.log(entry.getLabel(), start, false, attrsMigrated,
+                            "error encountered during migration; stopping migration process");
                     ZimbraLog.ephemeral.error("error encountered during migration; stopping migration process");
                     if (executor != null) {
                         exceptionWhileMigrating = e;
@@ -468,12 +654,16 @@ public class AttributeMigration {
                     try {
                         callback.deleteOriginal(entry, attrName, origValue, converters.get(attrName));
                     } catch (ServiceException e) {
+                        csvReports.log(entry.getLabel(), start, false, attrsMigrated, String.format(
+                                "error deleting original LDAP value '%s' of attribute '%s' with callback '%s'",
+                                origValue, attrName, callback.getClass().getName()));
                         ZimbraLog.ephemeral.error(
                                 "error deleting original LDAP value '%s' of attribute '%s' with callback '%s'",
                                 origValue, attrName, callback.getClass().getName());
                     }
                 }
             }
+            csvReports.log(entry.getLabel(), start, true, attrsMigrated, "migration completed");
         }
 
         @Override
