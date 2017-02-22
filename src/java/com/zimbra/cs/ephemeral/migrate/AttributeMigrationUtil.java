@@ -98,7 +98,7 @@ public class AttributeMigrationUtil {
                 if (tokens != null && tokens.length > 0) {
                     backendName = tokens[0];
                     if (backendName.equalsIgnoreCase("ldap")) {
-                        ZimbraLog.ephemeral.info("ephemeral backend is LDAP; migration is not neeeded");
+                        ZimbraLog.ephemeral.info("ephemeral backend is LDAP; migration is not needed");
                         return;
                     }
                 }
