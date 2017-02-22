@@ -474,7 +474,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * internals of ehcache actual size in memory will often exceed this
      * limit by a modest margin.
      *
-     * @return zimbraActiveSyncEhcacheHeapSize, or 10MB if unset
+     * @return zimbraActiveSyncEhcacheHeapSize, or 10485760 if unset
      *
      * @since ZCS 8.8.0
      */
@@ -561,7 +561,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * internals of ehcache actual size on disk will often exceed this limit
      * by a modest margin.
      *
-     * @return zimbraActiveSyncEhcacheMaxDiskSize, or 10GB if unset
+     * @return zimbraActiveSyncEhcacheMaxDiskSize, or 10737418240 if unset
      *
      * @since ZCS 8.8.0
      */
@@ -1105,7 +1105,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2098)
     public boolean isAdminSieveFeatureVariablesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, true, true);
     }
 
     /**
@@ -10667,7 +10667,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * 100 gigabytes. This is a rough limit,Due to internals of ehcache
      * actual size in memory will often exceed this limit by a modest margin.
      *
-     * @return zimbraImapActiveSessionEhcacheMaxDiskSize, or 100GB if unset
+     * @return zimbraImapActiveSessionEhcacheMaxDiskSize, or 107374182400 if unset
      *
      * @since ZCS 8.8.0
      */
@@ -11534,7 +11534,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * 100 gigabytes. This is a rough limit,Due to internals of ehcache
      * actual size in memory will often exceed this limit by a modest margin.
      *
-     * @return zimbraImapInactiveSessionEhcacheMaxDiskSize, or 100GB if unset
+     * @return zimbraImapInactiveSessionEhcacheMaxDiskSize, or 107374182400 if unset
      *
      * @since ZCS 8.8.0
      */
@@ -11621,7 +11621,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * limit,Due to internals of ehcache actual size in memory will often
      * exceed this limit by a modest margin.
      *
-     * @return zimbraImapInactiveSessionEhcacheSize, or 1MB if unset
+     * @return zimbraImapInactiveSessionEhcacheSize, or 1048576 if unset
      *
      * @since ZCS 8.8.0
      */
@@ -46751,7 +46751,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2096)
     public boolean isSieveFeatureVariablesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false, true);
     }
 
     /**
@@ -46904,7 +46904,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2101)
     public boolean isSmimeOCSPEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraSmimeOCSPEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraSmimeOCSPEnabled, true, true);
     }
 
     /**

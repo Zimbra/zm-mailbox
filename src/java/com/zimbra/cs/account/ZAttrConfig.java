@@ -896,7 +896,7 @@ public abstract class ZAttrConfig extends Entry {
      * internals of ehcache actual size in memory will often exceed this
      * limit by a modest margin.
      *
-     * @return zimbraActiveSyncEhcacheHeapSize, or 10MB if unset
+     * @return zimbraActiveSyncEhcacheHeapSize, or 10485760 if unset
      *
      * @since ZCS 8.8.0
      */
@@ -983,7 +983,7 @@ public abstract class ZAttrConfig extends Entry {
      * internals of ehcache actual size on disk will often exceed this limit
      * by a modest margin.
      *
-     * @return zimbraActiveSyncEhcacheMaxDiskSize, or 10GB if unset
+     * @return zimbraActiveSyncEhcacheMaxDiskSize, or 10737418240 if unset
      *
      * @since ZCS 8.8.0
      */
@@ -2083,7 +2083,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2098)
     public boolean isAdminSieveFeatureVariablesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, true, true);
     }
 
     /**
@@ -14503,9 +14503,9 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraEphemeralBackendURL, or "ldap://default" if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
-    @ZAttr(id=2095)
+    @ZAttr(id=2995)
     public String getEphemeralBackendURL() {
         return getAttr(Provisioning.A_zimbraEphemeralBackendURL, "ldap://default", true);
     }
@@ -14516,9 +14516,9 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraEphemeralBackendURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
-    @ZAttr(id=2095)
+    @ZAttr(id=2995)
     public void setEphemeralBackendURL(String zimbraEphemeralBackendURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEphemeralBackendURL, zimbraEphemeralBackendURL);
@@ -14532,9 +14532,9 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
-    @ZAttr(id=2095)
+    @ZAttr(id=2995)
     public Map<String,Object> setEphemeralBackendURL(String zimbraEphemeralBackendURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEphemeralBackendURL, zimbraEphemeralBackendURL);
@@ -14546,9 +14546,9 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
-    @ZAttr(id=2095)
+    @ZAttr(id=2995)
     public void unsetEphemeralBackendURL() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEphemeralBackendURL, "");
@@ -14561,9 +14561,9 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
-    @ZAttr(id=2095)
+    @ZAttr(id=2995)
     public Map<String,Object> unsetEphemeralBackendURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEphemeralBackendURL, "");
@@ -17851,7 +17851,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2097)
     public int getGalSyncSizeLimit() {
-        return getIntAttr(Provisioning.A_zimbraGalSyncSizeLimit, 30000);
+        return getIntAttr(Provisioning.A_zimbraGalSyncSizeLimit, 30000, true);
     }
 
     /**
@@ -20694,7 +20694,7 @@ public abstract class ZAttrConfig extends Entry {
      * 100 gigabytes. This is a rough limit,Due to internals of ehcache
      * actual size in memory will often exceed this limit by a modest margin.
      *
-     * @return zimbraImapActiveSessionEhcacheMaxDiskSize, or 100GB if unset
+     * @return zimbraImapActiveSessionEhcacheMaxDiskSize, or 107374182400 if unset
      *
      * @since ZCS 8.8.0
      */
@@ -21374,7 +21374,7 @@ public abstract class ZAttrConfig extends Entry {
      * 100 gigabytes. This is a rough limit,Due to internals of ehcache
      * actual size in memory will often exceed this limit by a modest margin.
      *
-     * @return zimbraImapInactiveSessionEhcacheMaxDiskSize, or 100GB if unset
+     * @return zimbraImapInactiveSessionEhcacheMaxDiskSize, or 107374182400 if unset
      *
      * @since ZCS 8.8.0
      */
@@ -21461,7 +21461,7 @@ public abstract class ZAttrConfig extends Entry {
      * limit,Due to internals of ehcache actual size in memory will often
      * exceed this limit by a modest margin.
      *
-     * @return zimbraImapInactiveSessionEhcacheSize, or 1MB if unset
+     * @return zimbraImapInactiveSessionEhcacheSize, or 1048576 if unset
      *
      * @since ZCS 8.8.0
      */
@@ -27705,7 +27705,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2095)
     public boolean isMailSieveNotifyActionRFCCompliant() {
-        return getBooleanAttr(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, false);
+        return getBooleanAttr(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, false, true);
     }
 
     /**
@@ -53152,7 +53152,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2096)
+    @ZAttr(id=2996)
     public int getReverseProxyIPLoginImapLimit() {
         return getIntAttr(Provisioning.A_zimbraReverseProxyIPLoginImapLimit, 0, true);
     }
@@ -53176,7 +53176,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2096)
+    @ZAttr(id=2996)
     public void setReverseProxyIPLoginImapLimit(int zimbraReverseProxyIPLoginImapLimit) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimit, Integer.toString(zimbraReverseProxyIPLoginImapLimit));
@@ -53203,7 +53203,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2096)
+    @ZAttr(id=2996)
     public Map<String,Object> setReverseProxyIPLoginImapLimit(int zimbraReverseProxyIPLoginImapLimit, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimit, Integer.toString(zimbraReverseProxyIPLoginImapLimit));
@@ -53228,7 +53228,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2096)
+    @ZAttr(id=2996)
     public void unsetReverseProxyIPLoginImapLimit() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimit, "");
@@ -53254,7 +53254,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2096)
+    @ZAttr(id=2996)
     public Map<String,Object> unsetReverseProxyIPLoginImapLimit(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimit, "");
@@ -53273,7 +53273,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2097)
+    @ZAttr(id=2997)
     public int getReverseProxyIPLoginImapLimitTime() {
         return getIntAttr(Provisioning.A_zimbraReverseProxyIPLoginImapLimitTime, 3600, true);
     }
@@ -53291,7 +53291,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2097)
+    @ZAttr(id=2997)
     public void setReverseProxyIPLoginImapLimitTime(int zimbraReverseProxyIPLoginImapLimitTime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimitTime, Integer.toString(zimbraReverseProxyIPLoginImapLimitTime));
@@ -53312,7 +53312,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2097)
+    @ZAttr(id=2997)
     public Map<String,Object> setReverseProxyIPLoginImapLimitTime(int zimbraReverseProxyIPLoginImapLimitTime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimitTime, Integer.toString(zimbraReverseProxyIPLoginImapLimitTime));
@@ -53331,7 +53331,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2097)
+    @ZAttr(id=2997)
     public void unsetReverseProxyIPLoginImapLimitTime() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimitTime, "");
@@ -53351,7 +53351,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2097)
+    @ZAttr(id=2997)
     public Map<String,Object> unsetReverseProxyIPLoginImapLimitTime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginImapLimitTime, "");
@@ -53610,7 +53610,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2098)
+    @ZAttr(id=2998)
     public int getReverseProxyIPLoginPop3Limit() {
         return getIntAttr(Provisioning.A_zimbraReverseProxyIPLoginPop3Limit, 0, true);
     }
@@ -53634,7 +53634,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2098)
+    @ZAttr(id=2998)
     public void setReverseProxyIPLoginPop3Limit(int zimbraReverseProxyIPLoginPop3Limit) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3Limit, Integer.toString(zimbraReverseProxyIPLoginPop3Limit));
@@ -53661,7 +53661,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2098)
+    @ZAttr(id=2998)
     public Map<String,Object> setReverseProxyIPLoginPop3Limit(int zimbraReverseProxyIPLoginPop3Limit, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3Limit, Integer.toString(zimbraReverseProxyIPLoginPop3Limit));
@@ -53686,7 +53686,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2098)
+    @ZAttr(id=2998)
     public void unsetReverseProxyIPLoginPop3Limit() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3Limit, "");
@@ -53712,7 +53712,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2098)
+    @ZAttr(id=2998)
     public Map<String,Object> unsetReverseProxyIPLoginPop3Limit(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3Limit, "");
@@ -53731,7 +53731,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2099)
+    @ZAttr(id=2999)
     public int getReverseProxyIPLoginPop3LimitTime() {
         return getIntAttr(Provisioning.A_zimbraReverseProxyIPLoginPop3LimitTime, 3600, true);
     }
@@ -53749,7 +53749,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2099)
+    @ZAttr(id=2999)
     public void setReverseProxyIPLoginPop3LimitTime(int zimbraReverseProxyIPLoginPop3LimitTime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3LimitTime, Integer.toString(zimbraReverseProxyIPLoginPop3LimitTime));
@@ -53770,7 +53770,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2099)
+    @ZAttr(id=2999)
     public Map<String,Object> setReverseProxyIPLoginPop3LimitTime(int zimbraReverseProxyIPLoginPop3LimitTime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3LimitTime, Integer.toString(zimbraReverseProxyIPLoginPop3LimitTime));
@@ -53789,7 +53789,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2099)
+    @ZAttr(id=2999)
     public void unsetReverseProxyIPLoginPop3LimitTime() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3LimitTime, "");
@@ -53809,7 +53809,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2099)
+    @ZAttr(id=2999)
     public Map<String,Object> unsetReverseProxyIPLoginPop3LimitTime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyIPLoginPop3LimitTime, "");
@@ -64641,7 +64641,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2096)
     public boolean isSieveFeatureVariablesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false, true);
     }
 
     /**
@@ -65370,7 +65370,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2101)
     public boolean isSmimeOCSPEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraSmimeOCSPEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraSmimeOCSPEnabled, true, true);
     }
 
     /**
@@ -65442,7 +65442,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2100)
     public String[] getSmimePublicCertificateExtensions() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraSmimePublicCertificateExtensions); return value.length > 0 ? value : new String[] {"cer","crt","der","spc","p7b","p7r","sst","sto","pem"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraSmimePublicCertificateExtensions, true, true); return value.length > 0 ? value : new String[] {"cer","crt","der","spc","p7b","p7r","sst","sto","pem"};
     }
 
     /**
@@ -65576,7 +65576,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2099)
     public String[] getSmimeUserCertificateExtensions() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraSmimeUserCertificateExtensions); return value.length > 0 ? value : new String[] {"p12","pfx"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraSmimeUserCertificateExtensions, true, true); return value.length > 0 ? value : new String[] {"p12","pfx"};
     }
 
     /**
