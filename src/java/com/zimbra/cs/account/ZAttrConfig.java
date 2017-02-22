@@ -14503,7 +14503,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraEphemeralBackendURL, or "ldap://default" if unset
      *
-     * @since ZCS 8.7.2
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2995)
     public String getEphemeralBackendURL() {
@@ -14516,7 +14516,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraEphemeralBackendURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.2
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2995)
     public void setEphemeralBackendURL(String zimbraEphemeralBackendURL) throws com.zimbra.common.service.ServiceException {
@@ -14532,7 +14532,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.2
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2995)
     public Map<String,Object> setEphemeralBackendURL(String zimbraEphemeralBackendURL, Map<String,Object> attrs) {
@@ -14546,7 +14546,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.2
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2995)
     public void unsetEphemeralBackendURL() throws com.zimbra.common.service.ServiceException {
@@ -14561,7 +14561,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.2
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2995)
     public Map<String,Object> unsetEphemeralBackendURL(Map<String,Object> attrs) {
