@@ -307,7 +307,7 @@ public class MigrateAttributesTest {
 
     public static class DummyMigrationCallback implements AttributeMigration.MigrationCallback {
         private List<EphemeralInput> trackedInputs;
-        private Multimap<String, Object> deletedValues;
+        private final Multimap<String, Object> deletedValues;
         private EphemeralStore store = null;
         private boolean throwErrorDuringMigration = false;
 
@@ -324,7 +324,7 @@ public class MigrateAttributesTest {
         }
 
         @Override
-        public void setEphemeralData(EphemeralInput input,
+        public boolean setEphemeralData(EphemeralInput input,
                 EphemeralLocation location, String origKey, Object origValue) throws ServiceException {
             if (throwErrorDuringMigration) {
                 throw ServiceException.FAILURE("error during migration", null);
@@ -335,6 +335,7 @@ public class MigrateAttributesTest {
                 if (store != null) {
                     store.update(input, location);
                 }
+                return true;
             }
         }
 
