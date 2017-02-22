@@ -286,7 +286,6 @@ public class Mailbox {
     public static final int FIRST_USER_ID = 256;
 
 
-
     public static final String CONF_PREVIOUS_MAILBOX_IDS = "prev_mbox_ids";
 
     public static final class MailboxData implements Cloneable {
@@ -8800,17 +8799,6 @@ public class Mailbox {
         }
     }
 
-   public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType,
-            String author, String description, boolean descEnabled, InputStream data, MailItem.Type type)
-    throws ServiceException {
-        try {
-            ParsedDocument pd = new ParsedDocument(data, filename, mimeType, System.currentTimeMillis(), author, description, descEnabled);
-            return createDocument(octxt, folderId, pd, type, 0);
-        } catch (IOException ioe) {
-            throw ServiceException.FAILURE("error writing document blob", ioe);
-        }
-    }
-
     public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type,
             int flags)
     throws IOException, ServiceException {
@@ -8819,7 +8807,7 @@ public class Mailbox {
 
     public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type,
             int flags, MailItem parent, CustomMetadata custom, boolean indexing)
-    throws IOException, ServiceException {    
+    throws IOException, ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = sm.stage(pd.getBlob(), this);
 

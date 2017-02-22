@@ -43,6 +43,8 @@ public class OperationContext {
     private String     userAgent;
     private AuthToken  authToken;
     private SoapProtocol mResponseProtocol;
+    private String     mRequestedAccountId;
+    private String     mAuthTokenAccountId;
     private Map<String, OperationContextData> contextData;
     
     boolean changetype = CHECK_CREATED;
@@ -204,7 +206,6 @@ public class OperationContext {
     public void setmResponseProtocol(SoapProtocol mResponseProtocol) {
         this.mResponseProtocol = mResponseProtocol;
     }
-<<<<<<< HEAD
 
     public String getmRequestedAccountId() {
         return mRequestedAccountId;
@@ -221,6 +222,4 @@ public class OperationContext {
     public void setmAuthTokenAccountId(String mAuthTokenAccountId) {
         this.mAuthTokenAccountId = mAuthTokenAccountId;
     }
-=======
->>>>>>> Bug 106633 - Moving m element processing into ToXML instead of individual soap request handler in order to handle the m element processing for all soap requests
 }
