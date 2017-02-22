@@ -5727,9 +5727,9 @@ public class ZAttrProvisioning {
     /**
      * URL of ephemeral storage backend
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.8.0
      */
-    @ZAttr(id=2095)
+    @ZAttr(id=2995)
     public static final String A_zimbraEphemeralBackendURL = "zimbraEphemeralBackendURL";
 
     /**
@@ -14232,7 +14232,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2096)
+    @ZAttr(id=2996)
     public static final String A_zimbraReverseProxyIPLoginImapLimit = "zimbraReverseProxyIPLoginImapLimit";
 
     /**
@@ -14245,7 +14245,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2097)
+    @ZAttr(id=2997)
     public static final String A_zimbraReverseProxyIPLoginImapLimitTime = "zimbraReverseProxyIPLoginImapLimitTime";
 
     /**
@@ -14298,7 +14298,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2098)
+    @ZAttr(id=2998)
     public static final String A_zimbraReverseProxyIPLoginPop3Limit = "zimbraReverseProxyIPLoginPop3Limit";
 
     /**
@@ -14311,7 +14311,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.7.0
      */
-    @ZAttr(id=2099)
+    @ZAttr(id=2999)
     public static final String A_zimbraReverseProxyIPLoginPop3LimitTime = "zimbraReverseProxyIPLoginPop3LimitTime";
 
     /**
