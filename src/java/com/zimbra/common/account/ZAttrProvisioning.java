@@ -5727,7 +5727,7 @@ public class ZAttrProvisioning {
     /**
      * URL of ephemeral storage backend
      *
-     * @since ZCS 8.7.2
+     * @since ZCS 8.8.0
      */
     @ZAttr(id=2995)
     public static final String A_zimbraEphemeralBackendURL = "zimbraEphemeralBackendURL";
