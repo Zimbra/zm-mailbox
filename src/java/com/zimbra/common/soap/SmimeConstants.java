@@ -123,16 +123,4 @@ public class SmimeConstants {
     public static final String ERRORCODE_INVALID_SIGNATURE = "INVALID_SIGNATURE";
     public static final String ERRORCODE_SIGNATURE_VALIDATION_FAILED = "SIGNATURE_VALIDATION_FAILED";
 
-    public static final String PUB_CERT = "pubCert";
-    public static final String PVT_KEY = "pvtKey";
-    public static final String ALIAS = "alias";
-
-    public static final String CERT_SUFFIX = ".pem";
-    public static final String KEY_SUFFIX = ".key";
-    public static final String PUB_CERT_TYPE = "X.509";
-    public static final String PRIVATE_KEY_ALGORITHM = "keyAlgorithm";
-    public static final String PRIVATE_KEY_FORMAT = "keyFormat";
-    public static final String PRIVATE_KEY_INFO = "privateKeyInfo";
-    public static final String PUBLIC_CERT_INFO = "pubCertInfo";
-
 }
