@@ -13105,7 +13105,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=2097)
     public int getGalSyncSizeLimit() {
-        return getIntAttr(Provisioning.A_zimbraGalSyncSizeLimit, 30000);
+        return getIntAttr(Provisioning.A_zimbraGalSyncSizeLimit, 30000, true);
     }
 
     /**
