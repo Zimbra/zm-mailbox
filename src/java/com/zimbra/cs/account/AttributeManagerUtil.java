@@ -44,6 +44,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
@@ -56,6 +57,7 @@ import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager.ObjectClassInfo;
 import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.cs.util.MemoryUnitUtil;
 
 public class AttributeManagerUtil {
 
@@ -965,6 +967,12 @@ public class AttributeManagerUtil {
                    if (ai.getCardinality() == AttributeCardinality.multi) {
                        generateSetters(result, ai, false, SetterType.add);
                        generateSetters(result, ai, false, SetterType.remove);
+                       if (ai.isEphemeral()) {
+                           generateSetters(result, ai, false, SetterType.has);
+                       }
+                       if (ai.isExpirable()) {
+                           generateSetters(result, ai, false, SetterType.purge);
+                       }
                    }
                    generateSetters(result, ai, false, SetterType.unset);
                    break;
@@ -1019,7 +1027,8 @@ public class AttributeManagerUtil {
        }
    }
 
-   private static void generateGetter(StringBuilder result, AttributeInfo ai, boolean asString, AttributeClass ac) throws ServiceException {
+   @VisibleForTesting
+   public static void generateGetter(StringBuilder result, AttributeInfo ai, boolean asString, AttributeClass ac) throws ServiceException {
        String javaType;
        String javaBody;
        String javaDocReturns;
@@ -1033,31 +1042,48 @@ public class AttributeManagerUtil {
        if (asString) methodName += "AsString";
 
        String defaultValue = defaultValue(ai, ac);
+       String dynamic = ai.isDynamic() ? "dynamicComponent" : "null";
 
        switch (type) {
            case TYPE_BOOLEAN:
                defaultValue = "TRUE".equalsIgnoreCase(defaultValue) ? "true" : "false";
                javaType = "boolean";
-               javaBody = String.format("return getBooleanAttr(Provisioning.A_%s, %s);", name, defaultValue);
+               if (ai.isEphemeral()) {
+                   javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s, %s).getBoolValue(%s);", name, dynamic, defaultValue);
+               } else {
+                   javaBody = String.format("return getBooleanAttr(Provisioning.A_%s, %s, true);", name, defaultValue);
+               }
                javaDocReturns = String.format(", or %s if unset", defaultValue);
                break;
            case TYPE_BINARY:
            case TYPE_CERTIFICATE:
                defaultValue = "null";
                javaType = "byte[]";
-               javaBody = String.format("return getBinaryAttr(Provisioning.A_%s);", name);
+               if (ai.isEphemeral()) {
+                   javaBody = String.format("String v = getEphemeralAttr(Provisioning.A_%s, %s).getValue(%s); return v == null ? null : ByteUtil.decodeLDAPBase64(v);", name, dynamic, defaultValue);
+               } else {
+                   javaBody = String.format("return getBinaryAttr(Provisioning.A_%s, true);", name);
+               }
                javaDocReturns = String.format(", or null if unset", defaultValue);
                break;
            case TYPE_INTEGER:
                if (defaultValue == null) defaultValue = "-1";
                javaType = "int";
-               javaBody = String.format("return getIntAttr(Provisioning.A_%s, %s);", name, defaultValue);
+               if (ai.isEphemeral()) {
+                   javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s, %s).getIntValue(%s);", name, dynamic, defaultValue);
+               } else {
+                   javaBody = String.format("return getIntAttr(Provisioning.A_%s, %s, true);", name, defaultValue);
+               }
                javaDocReturns = String.format(", or %s if unset", defaultValue);
                break;
            case TYPE_PORT:
                if (defaultValue == null) defaultValue = "-1";
                javaType = "int";
-               javaBody = String.format("return getIntAttr(Provisioning.A_%s, %s);", name, defaultValue);
+               if (ai.isEphemeral()) {
+                   javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s, %s).getIntValue(%s);", name, dynamic, defaultValue);
+               } else {
+                   javaBody = String.format("return getIntAttr(Provisioning.A_%s, %s, true);", name, defaultValue);
+               }
                javaDocReturns = String.format(", or %s if unset", defaultValue);
                asStringDoc = true;
                break;
@@ -1068,13 +1094,21 @@ public class AttributeManagerUtil {
                } else {
                    defaultValue = "null";
                }
-               javaBody = String.format("try { String v = getAttr(Provisioning.A_%s); return v == null ? %s : ZAttrProvisioning.%s.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return %s; }", name, defaultValue,enumName(ai), defaultValue);
+               if (ai.isEphemeral()) {
+                   javaBody = String.format("try { String v = getEphemeralAttr(Provisioning.A_%s, %s).getValue(); return v == null ? %s : ZAttrProvisioning.%s.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return %s; }", name, dynamic, defaultValue,enumName(ai), defaultValue);
+               } else {
+                   javaBody = String.format("try { String v = getAttr(Provisioning.A_%s, true, true); return v == null ? %s : ZAttrProvisioning.%s.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return %s; }", name, defaultValue,enumName(ai), defaultValue);
+               }
                javaDocReturns = String.format(", or %s if unset and/or has invalid value", defaultValue);
                break;
            case TYPE_LONG:
                if (defaultValue == null) defaultValue = "-1";
                javaType = "long";
-               javaBody = String.format("return getLongAttr(Provisioning.A_%s, %sL);", name, defaultValue);
+               if (ai.isEphemeral()) {
+                   javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s, %s).getLongValue(%sL);", name, dynamic, defaultValue);
+               } else {
+                   javaBody = String.format("return getLongAttr(Provisioning.A_%s, %sL, true);", name, new MemoryUnitUtil(1024).convertToBytes(defaultValue));
+               }
                javaDocReturns = String.format(", or %s if unset", defaultValue);
                break;
            case TYPE_DURATION:
@@ -1086,14 +1120,22 @@ public class AttributeManagerUtil {
                    defaultValue = "-1";
                    defaultDurationStrValue = "";
                }
-               javaBody = String.format("return getTimeInterval(Provisioning.A_%s, %sL);", name, defaultValue);
+               if (ai.isEphemeral()) {
+                   javaBody = String.format("return getEphemeralTimeInterval(Provisioning.A_%s, %s, %sL);", name, dynamic, defaultValue);
+               } else {
+                   javaBody = String.format("return getTimeInterval(Provisioning.A_%s, %sL, true);", name, defaultValue);
+               }
                javaDocReturns = String.format(" in millseconds, or %s%s if unset", defaultValue, defaultDurationStrValue);
                javaType = "long";
                asStringDoc = true;
                break;
            case TYPE_GENTIME:
                javaType = "Date";
-               javaBody = String.format("return getGeneralizedTimeAttr(Provisioning.A_%s, null);", name);
+               if (ai.isEphemeral()) {
+                   javaBody = String.format("String v = getEphemeralAttr(Provisioning.A_%s, %s).getValue(%s); return v == null ? null : LdapDateUtil.parseGeneralizedTime(v);", name, dynamic, defaultValue);
+               } else {
+                   javaBody = String.format("return getGeneralizedTimeAttr(Provisioning.A_%s, null, true);", name);
+               }
                javaDocReturns = " as Date, null if unset or unable to parse";
                asStringDoc = true;
                break;
@@ -1105,14 +1147,23 @@ public class AttributeManagerUtil {
                        defaultValue = "null";
                    }
                    javaType = "String";
-                   javaBody = String.format("return getAttr(Provisioning.A_%s, %s);", name, defaultValue);
+                   if (ai.isEphemeral()) {
+                       javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s, %s).getValue(%s);", name, dynamic, defaultValue);
+                   } else {
+                       javaBody = String.format("return getAttr(Provisioning.A_%s, %s, true);", name, defaultValue);
+                   }
                    javaDocReturns = String.format(", or %s if unset", defaultValue);
                } else {
-                   javaType = "String[]";
-                   if (defaultValue == null) {
-                       javaBody = String.format("return getMultiAttr(Provisioning.A_%s);", name);
+                   if (ai.isEphemeral()) {
+                       javaType = "String";
+                       javaBody = String.format("return getEphemeralAttr(Provisioning.A_%s, %s).getValue(%s);", name, dynamic, defaultValue);
                    } else {
-                       javaBody = String.format("String[] value = getMultiAttr(Provisioning.A_%s); return value.length > 0 ? value : %s;", name, defaultValue);
+                       javaType = "String[]";
+                       if (defaultValue == null) {
+                           javaBody = String.format("return getMultiAttr(Provisioning.A_%s, true, true);", name);
+                       } else {
+                           javaBody = String.format("String[] value = getMultiAttr(Provisioning.A_%s, true, true); return value.length > 0 ? value : %s;", name, defaultValue);
+                       }
                    }
                    javaDocReturns = ", or empty array if unset";
                }
@@ -1134,6 +1185,12 @@ public class AttributeManagerUtil {
            result.append("     *\n");
            result.append(String.format("     * @see #%sAsString()%n", methodName));
        }
+       if (ai.isEphemeral()) {
+           result.append("     *\n");
+           result.append("     * Ephemeral attribute - requests routed to EphemeralStore\n");
+           result.append("     *\n");
+           result.append("     * @throws com.zimbra.common.service.ServiceException if error on accessing ephemeral data\n");
+       }
        result.append("     *\n");
        result.append(String.format("     * @return %s%s%n", name, javaDocReturns));
        if (ai.getSince() != null) {
@@ -1142,7 +1199,11 @@ public class AttributeManagerUtil {
        }
        result.append("     */\n");
        result.append(String.format("    @ZAttr(id=%d)%n", ai.getId()));
-       result.append(String.format("    public %s %s() {%n        %s%n    }%n", javaType, methodName, javaBody));
+       result.append(String.format("    public %s %s(%s)", javaType, methodName, ai.isDynamic() ? "String dynamicComponent" :""));
+       if (ai.isEphemeral()) {
+           result.append(" throws com.zimbra.common.service.ServiceException");
+       }
+       result.append(String.format(" {%n        %s%n    }%n", javaBody));
    }
 
    private static String versionListAsString(List<Version> versions) {
@@ -1160,14 +1221,25 @@ public class AttributeManagerUtil {
        }
    }
 
-   private static enum SetterType { set, add, unset, remove }
+   @VisibleForTesting
+   static enum SetterType { set, add, unset, remove, /* these two are for ephemeral attrs */ purge, has }
 
    private static void generateSetters(StringBuilder result, AttributeInfo ai, boolean asString, SetterType setterType) throws ServiceException {
        generateSetter(result, ai, asString, setterType, true);
        generateSetter(result, ai, asString, setterType, false);
    }
 
-   private static void generateSetter(StringBuilder result, AttributeInfo ai, boolean asString, SetterType setterType, boolean noMap) throws ServiceException {
+   @VisibleForTesting
+   public static void generateSetter(StringBuilder result, AttributeInfo ai, boolean asString, SetterType setterType, boolean noMap) throws ServiceException {
+       if (ai.isEphemeral()) {
+           if (!noMap) {
+               return; //don't generate any epheemeral setters with the map parameter
+           } else if (ai.isDynamic() && (setterType == SetterType.unset || setterType == SetterType.set)) {
+               //don't generate ephemeral setters/unsetters for dynamic ephemeral attributes,
+               //since we don't support deleting all values for a key.
+               return;
+           }
+       }
        String javaType;
        String putParam;
 
@@ -1175,7 +1247,6 @@ public class AttributeManagerUtil {
 
        AttributeType type = asString ? AttributeType.TYPE_STRING : ai.getType();
 
-       String methodNamePrefix;
        String methodName = ai.getName();
        if (methodName.startsWith("zimbra")) methodName = methodName.substring(6);
        methodName = setterType.name()+methodName.substring(0,1).toUpperCase() + methodName.substring(1);
@@ -1233,29 +1304,58 @@ public class AttributeManagerUtil {
        }
        result.append("     *\n");
 
-       String paramDoc = "";
+       StringBuilder paramDoc = new StringBuilder();
        String  body = "";
-
+       if (ai.isEphemeral()) {
+           paramDoc.append("     * Ephemeral attribute - requests routed to EphemeralStore\n");
+           paramDoc.append("     *\n");
+       }
+       String expiry = ai.isExpirable() ? "expiration" : "null";
+       String dynamic = ai.isDynamic() ? "dynamicComponent" : "null";
        switch(setterType) {
            case set:
-               body = String.format("        attrs.put(Provisioning.A_%s, %s);%n", name, putParam);
-               paramDoc = String.format("     * @param %s new value%n", name);
+               if (ai.isEphemeral()) {
+                   body = String.format("        modifyEphemeralAttr(Provisioning.A_%s, %s, %s, false, %s);%n", name, dynamic, putParam, expiry);
+               } else {
+                   body = String.format("        attrs.put(Provisioning.A_%s, %s);%n", name, putParam);
+               }
+               paramDoc.append(String.format("     * @param %s new value%n", name));
                break;
            case add:
-               body = String.format("        StringUtil.addToMultiMap(attrs, \"+\" + Provisioning.A_%s, %s);%n",name, name);
-               paramDoc = String.format("     * @param %s new to add to existing values%n", name);
+               if (ai.isEphemeral()) {
+                   body = String.format("        modifyEphemeralAttr(Provisioning.A_%s, %s, %s, true, %s);%n", name, dynamic, putParam, expiry);
+               } else {
+                   body = String.format("        StringUtil.addToMultiMap(attrs, \"+\" + Provisioning.A_%s, %s);%n",name, name);
+               }
+               paramDoc.append(String.format("     * @param %s new to add to existing values%n", name));
                break;
            case remove:
-               body = String.format("        StringUtil.addToMultiMap(attrs, \"-\" + Provisioning.A_%s, %s);%n",name, name);
-               paramDoc = String.format("     * @param %s existing value to remove%n", name);
+               if (ai.isEphemeral()) {
+                   body = String.format("        deleteEphemeralAttr(Provisioning.A_%s, %s, %s);%n", name, dynamic, putParam);
+               } else {
+                   body = String.format("        StringUtil.addToMultiMap(attrs, \"-\" + Provisioning.A_%s, %s);%n",name, name);
+               }
+               paramDoc.append(String.format("     * @param %s existing value to remove%n", name));
                break;
            case unset:
-               body = String.format("        attrs.put(Provisioning.A_%s, \"\");%n", name);
-               paramDoc = null;
+               if (ai.isEphemeral()) {
+                   body = String.format("        deleteEphemeralAttr(Provisioning.A_%s);%n", name);
+               } else {
+                   body = String.format("        attrs.put(Provisioning.A_%s, \"\");%n", name);
+               }
+               // paramDoc = null;
                break;
+           case purge:
+               body = String.format("        purgeEphemeralAttr(Provisioning.A_%s);%n", name);
+               break;
+           case has:
+               body = String.format("        return hasEphemeralAttr(Provisioning.A_%s, %s);%n", name, dynamic);
+               break;
+    default:
+        break;
        }
 
-       if (paramDoc != null) result.append(paramDoc);
+       if (paramDoc != null) result.append(paramDoc.toString());
        if (!noMap) {
            result.append(String.format("     * @param attrs existing map to populate, or null to create a new map%n"));
            result.append("     * @return populated map to pass into Provisioning.modifyAttrs\n");
@@ -1269,13 +1369,53 @@ public class AttributeManagerUtil {
        result.append("     */\n");
        result.append(String.format("    @ZAttr(id=%d)%n", ai.getId()));
        if (noMap) {
-           if (setterType !=  SetterType.unset)
-               result.append(String.format("    public void %s(%s %s) throws com.zimbra.common.service.ServiceException {%n", methodName, javaType, name));
-           else
-               result.append(String.format("    public void %s() throws com.zimbra.common.service.ServiceException {%n", methodName));
-           result.append(String.format("        HashMap<String,Object> attrs = new HashMap<String,Object>();%n"));
+           String expiryParam = ai.isExpirable() ? ", com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration" : "";
+           if (ai.isEphemeral()) {
+               switch (setterType) {
+               case set:
+                   result.append(String.format("    public void %s(%s %s%s) throws com.zimbra.common.service.ServiceException {%n", methodName, javaType, name, expiryParam));
+                   break;
+               case add:
+                   if (ai.isDynamic()) {
+                       result.append(String.format("    public void %s(String dynamicComponent, %s %s%s) throws com.zimbra.common.service.ServiceException {%n", methodName, javaType, name, expiryParam));
+                   } else {
+                       result.append(String.format("    public void %s(%s %s%s) throws com.zimbra.common.service.ServiceException {%n", methodName, javaType, name, expiryParam));
+                   }
+                   break;
+               case unset:
+                   result.append(String.format("    public void %s() throws com.zimbra.common.service.ServiceException {%n", methodName));
+                   break;
+               case remove:
+                   if (ai.isDynamic()) {
+                       result.append(String.format("    public void %s(String dynamicComponent, %s %s) throws com.zimbra.common.service.ServiceException {%n", methodName, javaType, name));
+                   } else {
+                       result.append(String.format("    public void %s(%s %s) throws com.zimbra.common.service.ServiceException {%n", methodName, javaType,  name));
+                   }
+                   break;
+               case purge:
+                   result.append(String.format("    public void %s() throws com.zimbra.common.service.ServiceException {%n", methodName));
+                   break;
+               case has:
+                   if (ai.isDynamic()) {
+                       result.append(String.format("    public boolean %s(String dynamicComponent) throws com.zimbra.common.service.ServiceException {%n", methodName));
+                   } else {
+                       result.append(String.format("    public boolean %s() throws com.zimbra.common.service.ServiceException {%n", methodName));
+                   }
+                   break;
+               }
+           } else {
+               if (setterType !=  SetterType.unset)
+                   result.append(String.format("    public void %s(%s %s) throws com.zimbra.common.service.ServiceException {%n", methodName, javaType, name));
+               else
+                   result.append(String.format("    public void %s() throws com.zimbra.common.service.ServiceException {%n", methodName));
+           }
+           if (!ai.isEphemeral()) {
+               result.append(String.format("        HashMap<String,Object> attrs = new HashMap<String,Object>();%n"));
+           }
            result.append(body);
-           result.append(String.format("        getProvisioning().modifyAttrs(this, attrs);%n"));
+           if (!ai.isEphemeral()) {
+               result.append(String.format("        getProvisioning().modifyAttrs(this, attrs);%n"));
+           }
        } else {
            if (setterType !=  SetterType.unset)
                result.append(String.format("    public %s %s(%s %s, %s attrs) {%n", mapType, methodName, javaType, name, mapType));

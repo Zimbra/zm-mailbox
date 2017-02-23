@@ -248,7 +248,6 @@
     <ivy:install organisation="org.codehaus.jackson" module="jackson-mapper-asl" revision="1.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.codehaus.jackson" module="jackson-xc" revision="1.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="asm" module="asm" revision="3.3.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="net.sf.ehcache" module="ehcache-core" revision="2.5.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="oauth" module="oauth" revision="1.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="com.googlecode.owasp-java-html-sanitizer" module="owasp-java-html-sanitizer" revision="r239" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="org.apache.httpcomponents" module="httpcore-nio" revision="4.2.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
@@ -279,6 +278,7 @@
   	<ivy:install organisation="com.sun.jersey" module="jersey-server" revision="1.11" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="com.sun.jersey.contribs" module="jersey-multipart" revision="1.12" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="javax.jws" module="jsr181-api" revision="2.2.6" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+        <ivy:install organisation="org.ehcache" module="ehcache" revision="3.1.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="javax.ws.rs" module="jsr311-api" revision="1.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="zimbra" module="zm-soap" revision="latest.integration" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="zimbra" module="zm-taglib" revision="latest.integration" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>

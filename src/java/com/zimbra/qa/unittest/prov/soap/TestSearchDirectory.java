@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,6 +48,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.qa.QA.Bug;
 import com.zimbra.qa.unittest.prov.Verify;
@@ -498,4 +500,15 @@ public class TestSearchDirectory extends SoapTest {
         }
     }
 
+    @Test
+    public void testResponsContainsEphemeralAttrs() throws Exception {
+        String acctName = String.format("user1@%s", domain.getName());
+        Account acct = provUtil.createAccount(acctName, PASSWORD);
+        Date date = new Date();
+        acct.setLastLogonTimestamp(date);
+        List<NamedEntry> results = searchDirectory(acct.getName(), false);
+        acct = (Account) results.get(0);
+        String timestamp = acct.getAttr(Provisioning.A_zimbraLastLogonTimestamp);
+        assertEquals(LdapDateUtil.toGeneralizedTime(date), timestamp);
+    }
 }

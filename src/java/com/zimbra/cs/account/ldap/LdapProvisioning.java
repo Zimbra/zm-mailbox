@@ -156,6 +156,12 @@ import com.zimbra.cs.account.ldap.entry.LdapZimlet;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.cs.ephemeral.EphemeralInput;
+import com.zimbra.cs.ephemeral.EphemeralKey;
+import com.zimbra.cs.ephemeral.EphemeralLocation;
+import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.LdapEntryLocation;
+import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
@@ -410,7 +416,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return Lists.newArrayList(attrs).toArray(new String[attrs.size()]);
     }
 
-
     /*
      * Contains parallel arrays of old addrs and new addrs as a result of domain change
      */
@@ -426,12 +431,27 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         public String[] newAddrs() { return mNewAddrs; }
     }
 
+    /**
+     * Modifies this entry. If any of the provided attributes are ephemeral,
+     * they will be stored in LDAP instead of routed to EphemeralStore.
+     * Used by LdapEphemeralStore.
+     * @param e
+     * @param attrs
+     * @throws ServiceException
+     */
+    public void modifyEphemeralAttrsInLdap(Entry e, Map<String, ? extends Object> attrs)
+    throws ServiceException {
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.MODIFY);
+        AttributeManager.getInstance().preModify(attrs, e, callbackContext, false, true);
+        modifyAttrsInternal(e, null, attrs, true);
+        AttributeManager.getInstance().postModify(attrs, e, callbackContext, true);
+    }
+
     @Override
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable)
     throws ServiceException {
         modifyAttrs(e, attrs, checkImmutable, true);
     }
-
 
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
@@ -481,6 +501,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         modifyAttrs(acct, attrs, false, false);
     }
 
+    protected void modifyAttrsInternal(Entry entry, ZLdapContext initZlc,
+            Map<String, ? extends Object> attrs)
+            throws ServiceException {
+        modifyAttrsInternal(entry, initZlc, attrs, false);
+    }
     /**
      * should only be called internally.
      *
@@ -489,15 +514,105 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * @throws ServiceException
      */
     protected void modifyAttrsInternal(Entry entry, ZLdapContext initZlc,
-            Map<String, ? extends Object> attrs)
+            Map<String, ? extends Object> attrs, boolean storeEphemeralInLdap)
             throws ServiceException {
         if (entry instanceof Account && !(entry instanceof CalendarResource)) {
             Account acct = (Account) entry;
             validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE,
                     acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct);
         }
-
+        if (!storeEphemeralInLdap) {
+            Map<String, AttributeInfo> ephemeralAttrMap = AttributeManager.getInstance().getEphemeralAttrs();
+            Map<String, Object> ephemeralAttrs = new HashMap<String, Object>();
+            List<String> toRemove = null; // remove after iteration to avoid ConcurrentModificationException
+            for (Map.Entry<String, ? extends Object> e: attrs.entrySet()) {
+                String key = e.getKey();
+                if (ephemeralAttrMap.containsKey(key.toLowerCase())) {
+                    ephemeralAttrs.put(key, e.getValue());
+                    if (null == toRemove) {
+                        toRemove = Lists.newArrayListWithExpectedSize(3); // only 3 ephemeral attrs currently
+                    }
+                    toRemove.add(key);
+                }
+            }
+            if (null != toRemove) {
+                for (String key : toRemove) {
+                    attrs.remove(key);
+                }
+            }
+            if (!ephemeralAttrs.isEmpty()) {
+                modifyEphemeralAttrs(entry, ephemeralAttrs, ephemeralAttrMap);
+            }
+        }
         modifyLdapAttrs(entry, initZlc, attrs);
+    }
+
+    private void modifyEphemeralAttrs(Entry entry, Map<String, Object> attrs, Map<String, AttributeInfo> ephemeralAttrMap) throws ServiceException {
+        EphemeralLocation location = new LdapEntryLocation(entry);
+        EphemeralStore store = EphemeralStore.getFactory().getStore();
+        for (Map.Entry<String, Object> e: attrs.entrySet()) {
+            String key = e.getKey();
+            Object value = e.getValue();
+            AttributeInfo ai = ephemeralAttrMap.get(key.toLowerCase());
+            if (ai == null) { continue; }
+            if (ai.isDynamic()) {
+                ZimbraLog.ephemeral.warn("Ephemeral attribute %s expects a dynamic key component; it cannot be modified with modifyAttrs", key);
+                continue;
+            }
+
+            boolean doAdd = key.charAt(0) == '+';
+            boolean doRemove = key.charAt(0) == '-';
+            if (doAdd || doRemove) {
+                key = key.substring(1);
+                if (attrs.containsKey(key))
+                    throw ServiceException.INVALID_REQUEST("can't mix +attrName/-attrName with attrName", null);
+            }
+
+            if (value instanceof Collection) {
+                Collection values = (Collection) value;
+                if (values.size() == 0) {
+                    ZimbraLog.ephemeral.warn("Ephemeral attribute %s doesn't support deletion by key; only deletion by key+value is supported", key);
+                    continue;
+                } else {
+                    for (Object v : values) {
+                        if (v == null) { continue; }
+                        String s = v.toString();
+                        EphemeralInput input = null;
+                        EphemeralKey ephemeralKey = new EphemeralKey(key);
+                        if (doAdd || !doRemove) {
+                            input = new EphemeralInput(ephemeralKey, s);
+                        }
+                        if (doAdd) {
+                            store.update(input, location);
+                        } else if (doRemove) {
+                            store.delete(ephemeralKey, s, location);
+                        } else {
+                            store.set(input, location);
+                        }
+                    }
+                }
+            } else if (value instanceof Map) {
+                throw ServiceException.FAILURE("Map is not a supported value type", null);
+            } else if (value != null) {
+                String s = value.toString();
+                EphemeralKey ephemeralKey = new EphemeralKey(key);
+                EphemeralInput input = null;
+                if (doAdd || !doRemove) {
+                    input = new EphemeralInput(ephemeralKey, s);
+                }
+                if (doAdd) {
+                    store.update(input, location);
+                }
+                else if (doRemove) {
+                    store.delete(ephemeralKey, s, location);
+                }
+                else {
+                    store.set(input, location);
+                }
+            } else {
+                ZimbraLog.ephemeral.warn("Ephemeral attribute %s doesn't support deletion by key; only deletion by key+value is supported", key);
+            }
+        }
     }
 
     private void modifyLdapAttrs(Entry entry, ZLdapContext initZlc,
@@ -4318,7 +4433,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             throw ServiceException.INVALID_REQUEST("zimbraLogHostname is set to " + serverName, null);
         }
         String[] attributesToRemove = {
-            Provisioning.A_zimbraReverseProxyAvailableLookupTargets, 
+            Provisioning.A_zimbraReverseProxyAvailableLookupTargets,
             Provisioning.A_zimbraReverseProxyUpstreamEwsServers,
             Provisioning.A_zimbraReverseProxyUpstreamLoginServers
         };
@@ -5288,35 +5403,24 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void updateLastLogon(Account acct) throws ServiceException {
-        Config config = Provisioning.getInstance().getConfig();
-        long freq = config.getTimeInterval(
-                    Provisioning.A_zimbraLastLogonTimestampFrequency,
-                    com.zimbra.cs.util.Config.D_ZIMBRA_LAST_LOGON_TIMESTAMP_FREQUENCY);
-
-        // never update timestamp if frequency is 0
-        if (freq == 0)
-            return;
-
-        Date lastLogon = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraLastLogonTimestamp, null);
-        if (lastLogon == null) {
-            Map<String, String> attrs = new HashMap<String, String>();
-            attrs.put(Provisioning.A_zimbraLastLogonTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
-            try {
-                modifyAttrs(acct, attrs);
-            } catch (ServiceException e) {
-                ZimbraLog.account.warn("updating zimbraLastLogonTimestamp", e);
+        if (EphemeralStore.getFactory() instanceof LdapEphemeralStore.Factory) {
+            Config config = Provisioning.getInstance().getConfig();
+            long freq = config.getLastLogonTimestampFrequency();
+            // never update timestamp if frequency is 0
+            if (freq == 0) {
+                return;
             }
-        } else {
-            long current = System.currentTimeMillis();
-            if (current - freq >= lastLogon.getTime()) {
-                Map<String, String> attrs = new HashMap<String , String>();
-                attrs.put(Provisioning.A_zimbraLastLogonTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
-                try {
-                    modifyAttrs(acct, attrs);
-                } catch (ServiceException e) {
-                    ZimbraLog.account.warn("updating zimbraLastLogonTimestamp", e);
-                }
+            Date lastLogon = acct.getLastLogonTimestamp();
+            // don't update if duration specified in zimbraLastLogonTimestampFrequency
+            // hasn't passed since the last timestamp was logged
+            if (lastLogon != null && (lastLogon.getTime() + freq > System.currentTimeMillis())) {
+                return;
             }
+        }
+        try {
+            acct.setLastLogonTimestamp(new Date());
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("error updating zimbraLastLogonTimestamp", e);
         }
     }
 
@@ -8582,6 +8686,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
             Config config = getConfig();
             reload(config, false);
+            EphemeralStore.clearFactory();
             return;
         case globalgrant:
             if (entries != null) {

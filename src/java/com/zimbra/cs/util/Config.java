@@ -48,9 +48,6 @@ public final class Config {
     public static final int D_SMTP_TIMEOUT = 60;
     public static final int D_SMTP_PORT = 25;
 
-    // update ever 7 days by default
-    public static final long D_ZIMBRA_LAST_LOGON_TIMESTAMP_FREQUENCY = 1000*60*60*24*7;
-
     private static Map<String, DbConfig> mConfigMap;
     private static Timestamp mYoungest;
 

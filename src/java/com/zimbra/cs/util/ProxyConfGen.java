@@ -792,6 +792,43 @@ abstract class ServersVar extends ProxyConfVar {
     }
 }
 
+class ReverseProxyIPThrottleWhitelist extends ProxyConfVar {
+
+	public ReverseProxyIPThrottleWhitelist() {
+        super("mail.whitelistip.:servers", null, null, ProxyConfValueType.CUSTOM,
+                ProxyConfOverride.CUSTOM,
+			    "List of Client IP addresses immune to IP Throttling");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+    	ArrayList<String> directives = new ArrayList<String>();
+        String[] ips = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyIPThrottleWhitelist);
+		Boolean first = true;
+    	for (String ip : ips) {
+			directives.add(ip);
+			mLog.debug("Added %s IP Throttle whitelist", ip);
+    	}
+    	mValue = directives;
+    }
+
+	@Override
+    public String format(Object o) {
+        @SuppressWarnings("unchecked")
+        ArrayList<String> servers = (ArrayList<String>) o;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < servers.size(); i++) {
+            String s = servers.get(i);
+            if (i == 0) {
+                sb.append(String.format("mail_whitelist_ip    %s;\n", s));
+            } else {
+                sb.append(String.format("    mail_whitelist_ip    %s;\n", s));
+            }
+        }
+        return sb.toString();
+    }
+}
+
 class WebUpstreamServersVar extends ServersVar {
 
 	public WebUpstreamServersVar() {
@@ -2527,6 +2564,10 @@ public class ProxyConfGen
         mConfVars.put("mail.saslapp", new ProxyConfVar("mail.saslapp", null, "nginx", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Application name used by NGINX to initialize SASL authentication"));
         mConfVars.put("mail.ipmax", new ProxyConfVar("mail.ipmax", "zimbraReverseProxyIPLoginLimit", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.CONFIG,"IP Login Limit (Throttle) - 0 means infinity"));
         mConfVars.put("mail.ipttl", new ProxyConfVar("mail.ipttl", "zimbraReverseProxyIPLoginLimitTime", new Long(3600000), ProxyConfValueType.TIME, ProxyConfOverride.CONFIG,"Time interval (ms) after which IP Login Counter is reset"));
+        mConfVars.put("mail.imapmax", new ProxyConfVar("mail.imapmax", "zimbraReverseProxyIPLoginImapLimit", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.CONFIG,"IMAP Login Limit (Throttle) - 0 means infinity"));
+        mConfVars.put("mail.imapttl", new ProxyConfVar("mail.imapttl", "zimbraReverseProxyIPLoginImapLimitTime", new Long(3600000), ProxyConfValueType.TIME, ProxyConfOverride.CONFIG,"Time interval (ms) after which IMAP Login Counter is reset"));
+        mConfVars.put("mail.pop3max", new ProxyConfVar("mail.pop3max", "zimbraReverseProxyIPLoginPop3Limit", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.CONFIG,"POP3 Login Limit (Throttle) - 0 means infinity"));
+        mConfVars.put("mail.pop3ttl", new ProxyConfVar("mail.pop3ttl", "zimbraReverseProxyIPLoginPop3LimitTime", new Long(3600000), ProxyConfValueType.TIME, ProxyConfOverride.CONFIG,"Time interval (ms) after which POP3 Login Counter is reset"));
         mConfVars.put("mail.iprej", new ProxyConfVar("mail.iprej", "zimbraReverseProxyIpThrottleMsg", "Login rejected from this IP", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Rejection message for IP throttle"));
         mConfVars.put("mail.usermax", new ProxyConfVar("mail.usermax", "zimbraReverseProxyUserLoginLimit", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.CONFIG,"User Login Limit (Throttle) - 0 means infinity"));
         mConfVars.put("mail.userttl", new ProxyConfVar("mail.userttl", "zimbraReverseProxyUserLoginLimitTime", new Long(3600000), ProxyConfValueType.TIME, ProxyConfOverride.CONFIG,"Time interval (ms) after which User Login Counter is reset"));
@@ -2558,6 +2599,8 @@ public class ProxyConfGen
         mConfVars.put("mail.pop3.enabled", new ProxyConfVar("mail.pop3.enabled", "zimbraReverseProxyMailPop3Enabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Pop Mail Proxy is enabled"));
         mConfVars.put("mail.pop3s.enabled", new ProxyConfVar("mail.pop3s.enabled", "zimbraReverseProxyMailPop3sEnabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Pops Mail Proxy is enabled"));
         mConfVars.put("mail.proxy.ssl", new ProxyConfVar("mail.proxy.ssl", "zimbraReverseProxySSLToUpstreamEnabled", true, ProxyConfValueType.BOOLEAN, ProxyConfOverride.SERVER, "Indicates whether using SSL to connect to upstream mail server"));
+        mConfVars.put("mail.whitelistip.:servers", new ReverseProxyIPThrottleWhitelist());
+        mConfVars.put("mail.whitelist.ttl", new TimeInSecVarWrapper(new ProxyConfVar("mail.whitelist.ttl", "zimbraReverseProxyIPThrottleWhitelistTime", new Long(300000), ProxyConfValueType.TIME, ProxyConfOverride.CONFIG,"Time-to-live, in seconds, of the list of servers for which IP throttling is disabled")));
         mConfVars.put("web.logfile", new ProxyConfVar("web.logfile", null, mWorkingDir + "/log/nginx.access.log", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Access log file path (relative to ${core.workdir})"));
         mConfVars.put("web.mailmode", new ProxyConfVar("web.mailmode", Provisioning.A_zimbraReverseProxyMailMode, "both", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"Reverse Proxy Mail Mode - can be http|https|both|redirect|mixed"));
         mConfVars.put("web.server_name.default", new ProxyConfVar("web.server_name.default", "zimbra_server_hostname", "localhost", ProxyConfValueType.STRING, ProxyConfOverride.LOCALCONFIG, "The server name for default server config"));

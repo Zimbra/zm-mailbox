@@ -48,6 +48,8 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
+import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.InMemoryEphemeralStore;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.elasticsearch.ElasticSearchConnector;
 import com.zimbra.cs.index.elasticsearch.ElasticSearchIndex;
@@ -115,6 +117,7 @@ public final class MailboxTestUtil {
     }
 
     public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir, boolean OctopusInstance) throws Exception {
+        EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
         initProvisioning(zimbraServerDir);
 
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
@@ -129,6 +132,7 @@ public final class MailboxTestUtil {
     }
 
     public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir) throws Exception {
+        EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
         initProvisioning(zimbraServerDir);
 
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
@@ -168,6 +172,7 @@ public final class MailboxTestUtil {
             MockHttpStore.purge();
         }
         DocumentHandler.resetLocalHost();
+        EphemeralStore.getFactory().shutdown();
     }
 
     private static void deleteDirContents(File dir) throws IOException {
@@ -181,7 +186,8 @@ public final class MailboxTestUtil {
             if (recurCount > 10) {
                 throw new IOException("Gave up after multiple IOExceptions", ioe);
             }
-            ZimbraLog.test.info("delete dir failed due to IOException (probably files still in use). Waiting a moment and trying again");
+            ZimbraLog.test.info("delete dir='%s' failed due to IOException '%s' (probably files still in use)."
+                    + "Waiting a moment and trying again", dir, ioe.getMessage());
             //wait a moment and try again; this can bomb if files still being written by some thread
             try {
                 Thread.sleep(2500);
