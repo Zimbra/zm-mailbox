@@ -714,8 +714,6 @@ public final class LC {
     @Reloadable
     public static final KnownKey imap_max_consecutive_error = KnownKey.newKey(5);
 
-    @Supported
-    public static final KnownKey imap_inactive_session_cache_size = KnownKey.newKey(10000);
     // Default 3 days.  Without limit 1 server was needing to restart every 30 to 45 days
     public static final KnownKey imap_noninteractive_session_cache_maxage_days = KnownKey.newKey(3);
     public static final KnownKey imap_use_ehcache = KnownKey.newKey(true);
