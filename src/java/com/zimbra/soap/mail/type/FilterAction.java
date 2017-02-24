@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class FilterAction {
@@ -73,6 +74,13 @@ public class FilterAction {
         @XmlAttribute(name=MailConstants.A_FOLDER_PATH, required=false)
         private final String folder;
 
+        /**
+         * @zm-api-field-tag copy
+         * @zm-api-field-description copy extension
+         */
+        @XmlAttribute(name=MailConstants.A_COPY /* copy */, required=false)
+        private ZmBoolean copy;
+
         @SuppressWarnings("unused")
         private FileIntoAction() {
             this(null);
@@ -80,15 +88,25 @@ public class FilterAction {
 
         public FileIntoAction(String folder) {
             this.folder = folder;
+            this.copy = ZmBoolean.FALSE;
+        }
+
+        public FileIntoAction(String folder, boolean copy) {
+            this.folder = folder;
+            this.copy = ZmBoolean.fromBool(copy, false);
         }
 
         public String getFolder() {
             return folder;
         }
 
+        public boolean isCopy() {
+            return ZmBoolean.toBool(copy, false);
+        }
+
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("folder", folder).toString();
+            return Objects.toStringHelper(this).add("folder", folder).add("copy", copy).toString();
         }
     }
 
@@ -132,6 +150,13 @@ public class FilterAction {
         @XmlAttribute(name=MailConstants.A_ADDRESS, required=false)
         private final String address;
 
+        /**
+         * @zm-api-field-tag copy
+         * @zm-api-field-description copy extension
+         */
+        @XmlAttribute(name=MailConstants.A_COPY /* copy */, required=false)
+        private ZmBoolean copy;
+
         @SuppressWarnings("unused")
         private RedirectAction() {
             this(null);
@@ -139,15 +164,25 @@ public class FilterAction {
 
         public RedirectAction(String addr) {
             address = addr;
+            this.copy = ZmBoolean.FALSE;
+        }
+
+        public RedirectAction(String addr, boolean copy) {
+            address = addr;
+            this.copy = ZmBoolean.fromBool(copy, false);
         }
 
         public String getAddress() {
             return address;
         }
 
+        public boolean isCopy() {
+            return ZmBoolean.toBool(copy, false);
+        }
+
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("address", address).toString();
+            return Objects.toStringHelper(this).add("address", address).add("copy", copy).toString();
         }
     }
 
