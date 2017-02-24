@@ -76,7 +76,9 @@ public class FilterAction {
 
         /**
          * @zm-api-field-tag copy
-         * @zm-api-field-description copy extension
+         * @zm-api-field-description If true, item will be copied to the new location,
+         *                           leaving the original in place. See https://tools.ietf.org/html/rfc3894
+         *                           "Sieve Extension: Copying Without Side Effects"
          */
         @XmlAttribute(name=MailConstants.A_COPY /* copy */, required=false)
         private ZmBoolean copy;
@@ -152,7 +154,9 @@ public class FilterAction {
 
         /**
          * @zm-api-field-tag copy
-         * @zm-api-field-description copy extension
+         * @zm-api-field-description If true, item's copy will be redirected,
+         *                           leaving the original in place.See https://tools.ietf.org/html/rfc3894
+         *                           "Sieve Extension: Copying Without Side Effects"
          */
         @XmlAttribute(name=MailConstants.A_COPY /* copy */, required=false)
         private ZmBoolean copy;
