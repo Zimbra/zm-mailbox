@@ -216,6 +216,11 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
+    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath, boolean copy)
+        throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
     protected void visitFlagAction(Node node, VisitPhase phase, RuleProperties props, Sieve.Flag flag)
             throws ServiceException {
     }
@@ -227,6 +232,11 @@ public abstract class SieveVisitor {
 
     @SuppressWarnings("unused")
     protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address, boolean copy)
             throws ServiceException {
     }
 
@@ -250,6 +260,7 @@ public abstract class SieveVisitor {
     }
 
     private static final Set<String> RULE_NODE_NAMES = ImmutableSet.of("if", "disabled_if");
+    private static final String COPY_EXT = ":copy";
 
     public class RuleProperties {
         boolean isEnabled = true;
@@ -622,11 +633,34 @@ public abstract class SieveVisitor {
             visitDiscardAction(node, VisitPhase.begin, props);
             accept(node, props);
             visitDiscardAction(node, VisitPhase.end, props);
-        } else if ("fileinto".equalsIgnoreCase(nodeName)) {
-            String folderPath = getValue(node, 0, 0, 0, 0);
-            visitFileIntoAction(node, VisitPhase.begin, props, folderPath);
-            accept(node, props);
-            visitFileIntoAction(node, VisitPhase.end, props, folderPath);
+        } else if ("fileinto".equalsIgnoreCase(nodeName) || "redirect".equalsIgnoreCase(nodeName)) {
+            int numArgs = getNode(node, 0).jjtGetNumChildren();
+            boolean copy = false;
+            String target = null;
+            for (int i = 0; i < numArgs; i++) {
+                boolean isTag = getNode(node, 0, i).jjtGetNumChildren() == 0 ? true : false;
+                if (isTag) {
+                    String value = getValue(node, 0, i++);
+                    if (COPY_EXT.equals(value)) {
+                        copy = true;
+                    } else {
+                        throw ServiceException.PARSE_ERROR("Invalid argument: " + value, null);
+                    }
+                    target = getValue(node, 0, i, 0, 0);
+                } else {
+                    target = getValue(node, 0, i, 0, 0);
+                }
+            }
+            if ("fileinto".equalsIgnoreCase(nodeName)) {
+                visitFileIntoAction(node, VisitPhase.begin, props, target, copy);
+                accept(node, props);
+                visitFileIntoAction(node, VisitPhase.end, props, target, copy);
+            }
+            if ("redirect".equalsIgnoreCase(nodeName)) {
+                visitRedirectAction(node, VisitPhase.begin, props, target, copy);
+                accept(node, props);
+                visitRedirectAction(node, VisitPhase.end, props, target, copy);
+            }
         } else if ("flag".equalsIgnoreCase(nodeName)) {
             String s = getValue(node, 0, 0, 0, 0);
             Sieve.Flag flag = Sieve.Flag.fromString(s);
@@ -639,11 +673,6 @@ public abstract class SieveVisitor {
             visitTagAction(node, VisitPhase.begin, props, tagName);
             accept(node, props);
             visitTagAction(node, VisitPhase.end, props, tagName);
-        } else if ("redirect".equalsIgnoreCase(nodeName)) {
-            String address = getValue(node, 0, 0, 0, 0);
-            visitRedirectAction(node, VisitPhase.begin, props, address);
-            accept(node, props);
-            visitRedirectAction(node, VisitPhase.end, props, address);
         } else if ("reply".equalsIgnoreCase(nodeName)) {
             String bodyTemplate = getValue(node, 0, 0, 0, 0);
             visitReplyAction(node, VisitPhase.begin, props, bodyTemplate);

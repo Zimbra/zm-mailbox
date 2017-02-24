@@ -3230,7 +3230,7 @@ Actions:
   </filterVariables>
   <actionKeep />
   <actionDiscard />
-  <actionFileInto folderPath="{folder-path}" />
+  <actionFileInto folderPath="{folder-path}" [copy="{0|1"}]/>
   <actionTag tagName="{tag-name}" />
   <actionFlag flagName="{flagged|read|priority}" />
   <actionRedirect a="{email-address}" />

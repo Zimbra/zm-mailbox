@@ -500,10 +500,15 @@ public final class SoapToSieve {
         } else if (action instanceof FilterAction.FileIntoAction) {
             FilterAction.FileIntoAction fileinto = (FilterAction.FileIntoAction) action;
             String folderPath = fileinto.getFolder();
+            boolean copy = fileinto.isCopy();
             if (StringUtil.isNullOrEmpty(folderPath)) {
                 throw ServiceException.INVALID_REQUEST("Missing folderPath", null);
             }
-            return String.format("fileinto \"%s\"", FilterUtil.escape(folderPath));
+            if (copy) {
+                return String.format("fileinto :copy \"%s\"", FilterUtil.escape(folderPath));
+            } else {
+                return String.format("fileinto \"%s\"", FilterUtil.escape(folderPath));
+            }
         } else if (action instanceof FilterAction.TagAction) {
             FilterAction.TagAction tag = (FilterAction.TagAction) action;
             String tagName = tag.getTag();
@@ -521,10 +526,15 @@ public final class SoapToSieve {
         } else if (action instanceof FilterAction.RedirectAction) {
             FilterAction.RedirectAction redirect = (FilterAction.RedirectAction) action;
             String address = redirect.getAddress();
+            boolean copy = redirect.isCopy();
             if (StringUtil.isNullOrEmpty(address)) {
                 throw ServiceException.INVALID_REQUEST("Missing address", null);
             }
-            return String.format("redirect \"%s\"", FilterUtil.escape(address));
+            if (copy) {
+                return String.format("redirect :copy \"%s\"", FilterUtil.escape(address));
+            } else {
+                return String.format("redirect \"%s\"", FilterUtil.escape(address));
+            }
         } else if (action instanceof FilterAction.ReplyAction) {
             FilterAction.ReplyAction reply = (FilterAction.ReplyAction) action;
             String content = reply.getContent();

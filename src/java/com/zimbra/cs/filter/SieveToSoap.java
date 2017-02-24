@@ -432,10 +432,15 @@ public final class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath) {
+    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath, boolean copy) {
         if (phase == VisitPhase.begin) {
-            addAction(new FilterAction.FileIntoAction(folderPath));
+            addAction(new FilterAction.FileIntoAction(folderPath, copy));
         }
+    }
+
+    @Override
+    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath) {
+        visitFileIntoAction(node, phase, props, folderPath, false);
     }
 
     @Override
@@ -454,8 +459,13 @@ public final class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address) {
+        visitRedirectAction(node, phase, props, address, false);
+    }
+
+    @Override
+    protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address, boolean copy) {
         if (phase == VisitPhase.begin) {
-            addAction(new FilterAction.RedirectAction(address));
+            addAction(new FilterAction.RedirectAction(address, copy));
         }
     }
 
