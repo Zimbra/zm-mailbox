@@ -646,6 +646,7 @@ public final class MailConstants {
     public static final String A_IMP = "imp";
     public static final String E_FILTER_VARIABLES = "filterVariables";
     public static final String E_FILTER_VARIABLE = "filterVariable";
+    public static final String A_COPY = "copy";
 
     // Sieve filter: RFC compliant 'notify' action
     public static final String A_FROM = "from";
