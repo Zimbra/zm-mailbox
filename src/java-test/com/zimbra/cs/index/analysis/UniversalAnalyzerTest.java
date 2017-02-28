@@ -28,10 +28,12 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.util.Version;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /**
  * Unit test for {@link UniversalAnalyzer}.
@@ -45,6 +47,11 @@ public final class UniversalAnalyzerTest {
     private CJKAnalyzer cjkAnalyzer = new CJKAnalyzer(Version.LUCENE_31);
     // See https://issues.apache.org/jira/browse/LUCENE-1068
     private boolean assertOffset = true;
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+    }
 
     @Before
     public void setUp() {
