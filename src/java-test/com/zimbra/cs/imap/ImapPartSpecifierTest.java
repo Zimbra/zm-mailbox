@@ -22,6 +22,7 @@ import java.io.InputStream;
 import javax.mail.internet.MimeMessage;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
@@ -29,9 +30,15 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.imap.ImapPartSpecifier.BinaryDecodingException;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.util.JMSession;
 
 public class ImapPartSpecifierTest {
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+    }
 
     private void checkBody(MimeMessage mm, String part, String modifier, String startsWith, String endsWith)
     throws IOException, ImapPartSpecifier.BinaryDecodingException, ServiceException {
