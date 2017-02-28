@@ -27,9 +27,10 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.cs.index.ZimbraAnalyzer;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /**
  * Unit test for {@link ZimbraAnalyzer}.
@@ -37,6 +38,11 @@ import com.zimbra.cs.index.ZimbraAnalyzer;
  * @author ysasaki
  */
 public final class ZimbraAnalyzerTest {
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+    }
 
     @Test
     public void size() throws Exception {
@@ -69,7 +75,7 @@ public final class ZimbraAnalyzerTest {
         stream.end();
         stream.close();
     }
-    
+
     @Test
     public void phraseQuery() throws Exception {
         String src = "three^two";
