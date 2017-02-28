@@ -18,6 +18,7 @@ package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
@@ -27,12 +28,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -133,5 +136,54 @@ public class HeaderTest {
         env.addLocalRecipient(recipient1);
         env.addLocalRecipient(recipient2);
         return env;
+    }
+
+    public void singleMimePart() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        RuleManager.clearCachedRules(account);
+        account.setMailSieveScript("if header \"Subject\" \"important\" { flag \"priority\"; }");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+        String msgContent = "From: test@zimbra.com\nSubject: important";
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                new ParsedMessage(msgContent.getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        Message msg = mbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertTrue(msg.isTagged(FlagInfo.PRIORITY));
+    }
+
+    @Test
+    public void RFC822Attached() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        RuleManager.clearCachedRules(account);
+        account.setMailSieveScript("if header :is \"Subject\" \"Attached HTML message\" { flag \"priority\"; }");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+        String msgContent = new String(
+                ByteUtil.getContent(new File("/opt/zimbra/unittest/TestFilter-testBodyContains.msg")));
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                new ParsedMessage(msgContent.getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        Message msg = mbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertFalse(msg.isTagged(FlagInfo.PRIORITY));
+    }
+
+    @Test
+    public void fileAttached() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        RuleManager.clearCachedRules(account);
+        account.setMailSieveScript("if header :contains \"Content-Disposition\" \"attachment.txt\" { flag \"priority\"; }");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+        String msgContent = new String(
+                ByteUtil.getContent(new File("/opt/zimbra/unittest/TestFilter-testBodyContains.msg")));
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                new ParsedMessage(msgContent.getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        Message msg = mbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertFalse(msg.isTagged(FlagInfo.PRIORITY));
     }
 }
