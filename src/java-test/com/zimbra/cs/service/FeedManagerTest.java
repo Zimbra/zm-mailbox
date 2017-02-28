@@ -16,27 +16,35 @@
  */
 package com.zimbra.cs.service;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.BufferedInputStream;
 import java.nio.charset.Charset;
 import java.util.List;
 
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FeedManager.RemoteDataInfo;
 import com.zimbra.cs.service.FeedManager.SubscriptionData;
 
 public class FeedManagerTest {
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+    }
+
     @Test
     public void subject() throws Exception {
         Assert.assertEquals("null", "", FeedManager.stripXML(null));
