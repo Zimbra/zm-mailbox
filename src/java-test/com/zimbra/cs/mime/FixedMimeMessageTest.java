@@ -20,9 +20,11 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.util.JMSession;
 
@@ -32,6 +34,12 @@ import com.zimbra.cs.util.JMSession;
  * @author ysasaki
  */
 public final class FixedMimeMessageTest {
+
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+    }
 
     @Test
     public void messageId() throws Exception {

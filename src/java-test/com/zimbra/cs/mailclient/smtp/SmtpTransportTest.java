@@ -31,11 +31,13 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.MockTcpServer;
 
@@ -47,6 +49,12 @@ import com.zimbra.cs.util.MockTcpServer;
 public final class SmtpTransportTest {
     private static final int PORT = 9025;
     private MockTcpServer server;
+
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+    }
 
     @After
     public void tearDown() {

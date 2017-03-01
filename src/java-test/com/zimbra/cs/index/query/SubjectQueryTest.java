@@ -17,9 +17,11 @@
 package com.zimbra.cs.index.query;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.cs.index.ZimbraAnalyzer;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /**
  * Unit test for {@link SubjectQuery}.
@@ -27,6 +29,12 @@ import com.zimbra.cs.index.ZimbraAnalyzer;
  * @author ysasaki
  */
 public final class SubjectQueryTest {
+
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+    }
 
     @Test
     public void emptySubject() throws Exception {
