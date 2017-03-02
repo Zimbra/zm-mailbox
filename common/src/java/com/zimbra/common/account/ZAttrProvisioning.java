@@ -2861,6 +2861,40 @@ public class ZAttrProvisioning {
     public static final String A_zimbraACE = "zimbraACE";
 
     /**
+     * Ehcache: default expiration time for activesync cache values; default
+     * is 5 minutes. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3003)
+    public static final String A_zimbraActiveSyncEhcacheExpiration = "zimbraActiveSyncEhcacheExpiration";
+
+    /**
+     * Ehcache: the maximum heap size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10MB. This is a rough limit,Due to
+     * internals of ehcache actual size in memory will often exceed this
+     * limit by a modest margin.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3001)
+    public static final String A_zimbraActiveSyncEhcacheHeapSize = "zimbraActiveSyncEhcacheHeapSize";
+
+    /**
+     * Ehcache: the maximum disk size of the ActiveSync cache in Bytes before
+     * eviction. By default this value is 10GB. This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3002)
+    public static final String A_zimbraActiveSyncEhcacheMaxDiskSize = "zimbraActiveSyncEhcacheMaxDiskSize";
+
+    /**
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
@@ -5691,6 +5725,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraEmptyFolderOpTimeout = "zimbraEmptyFolderOpTimeout";
 
     /**
+     * URL of ephemeral storage backend
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2995)
+    public static final String A_zimbraEphemeralBackendURL = "zimbraEphemeralBackendURL";
+
+    /**
      * URL for posting error report popped up in WEB client
      *
      * @since ZCS 6.0.5
@@ -7633,6 +7675,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIdentityMaxNumEntries = "zimbraIdentityMaxNumEntries";
 
     /**
+     * Ehcache: the maximum amount of disk space the imap active session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3005)
+    public static final String A_zimbraImapActiveSessionEhcacheMaxDiskSize = "zimbraImapActiveSessionEhcacheMaxDiskSize";
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=178)
@@ -7704,6 +7757,39 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2013)
     public static final String A_zimbraImapInactiveSessionCacheMaxDiskSize = "zimbraImapInactiveSessionCacheMaxDiskSize";
+
+    /**
+     * Ehcache: the maximum amount of disk space the imap inactive session
+     * cache will consume in Bytes before eviction. By default this value is
+     * 100 gigabytes. This is a rough limit,Due to internals of ehcache
+     * actual size in memory will often exceed this limit by a modest margin.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3006)
+    public static final String A_zimbraImapInactiveSessionEhcacheMaxDiskSize = "zimbraImapInactiveSessionEhcacheMaxDiskSize";
+
+    /**
+     * Ehcache: the maximum heap size of the inactive session cache in Bytes
+     * before eviction. By default this value is 1 megabyte. This is a rough
+     * limit,Due to internals of ehcache actual size in memory will often
+     * exceed this limit by a modest margin.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3004)
+    public static final String A_zimbraImapInactiveSessionEhcacheSize = "zimbraImapInactiveSessionEhcacheSize";
+
+    /**
+     * Determines the load-balancing algorithm used to select an IMAP server
+     * from the pool of available zimbraReverseProxyUpstreamImapServers.
+     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * ...]
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3009)
+    public static final String A_zimbraImapLoadBalancingAlgorithm = "zimbraImapLoadBalancingAlgorithm";
 
     /**
      * Maximum number of concurrent IMAP connections allowed. New connections
@@ -8060,8 +8146,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraJunkMessagesIndexingEnabled = "zimbraJunkMessagesIndexingEnabled";
 
     /**
-     * rough estimate of when the user last logged in. see
-     * zimbraLastLogonTimestampFrequency
+     * rough estimate of when the user last logged in
      */
     @ZAttr(id=113)
     public static final String A_zimbraLastLogonTimestamp = "zimbraLastLogonTimestamp";
@@ -14132,6 +14217,38 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyInactivityTimeout = "zimbraReverseProxyInactivityTimeout";
 
     /**
+     * Sets the upper limit on logins from a remote IP via IMAP to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2996)
+    public static final String A_zimbraReverseProxyIPLoginImapLimit = "zimbraReverseProxyIPLoginImapLimit";
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based IMAP login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2997)
+    public static final String A_zimbraReverseProxyIPLoginImapLimitTime = "zimbraReverseProxyIPLoginImapLimitTime";
+
+    /**
      * Sets the upper limit on logins from a remote IP via POP or IMAP to
      * this proxy server after which login is rejected with an appropriate
      * protocol specific bye response. This counter is cumulative for all
@@ -14166,6 +14283,38 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyIPLoginLimitTime = "zimbraReverseProxyIPLoginLimitTime";
 
     /**
+     * Sets the upper limit on logins from a remote IP via POP3 to this proxy
+     * server after which login is rejected with an appropriate protocol
+     * specific bye response. This counter is cumulative for all users that
+     * appear to the proxy to be logging in from the same IP address. If
+     * multiple users appear to the proxy to be logging in from the same IP
+     * address (usual with NATing), then each of the different users login
+     * will contribute to increasing the hit counter for that IP address, and
+     * when the counter eventually exceeds the limit, then the connections
+     * from that IP address will be throttled. Therefore, all users from the
+     * same IP will contribute to (and be affected by) this counter. If this
+     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
+     * will be used to determine possible throttling behavior.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2998)
+    public static final String A_zimbraReverseProxyIPLoginPop3Limit = "zimbraReverseProxyIPLoginPop3Limit";
+
+    /**
+     * Sets the time-to-live for the hit counter for IP based POP3 login
+     * throttling. If time is set to 3600 and limit is set to 1000, then it
+     * means that NGINX should not allow more than 1000 users to log in via
+     * the proxy from the same IP, within the time interval of an hour. The
+     * semantics for such a configuration would then be: allow maximum 1000
+     * users per hour from any given IP address.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=2999)
+    public static final String A_zimbraReverseProxyIPLoginPop3LimitTime = "zimbraReverseProxyIPLoginPop3LimitTime";
+
+    /**
      * The error message with which a connection attempt from an IP address
      * will be throttled, if the connection count exceeds the configured
      * limit
@@ -14174,6 +14323,28 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=727)
     public static final String A_zimbraReverseProxyIpThrottleMsg = "zimbraReverseProxyIpThrottleMsg";
+
+    /**
+     * Client IP/IPRange whitelist for exclusion from IP throttling. Value
+     * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
+     * IPV6 is supported as well.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3000)
+    public static final String A_zimbraReverseProxyIPThrottleWhitelist = "zimbraReverseProxyIPThrottleWhitelist";
+
+    /**
+     * Sets the time-to-live for mail_whitelist_ip_ttl in nginx. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3007)
+    public static final String A_zimbraReverseProxyIPThrottleWhitelistTime = "zimbraReverseProxyIPThrottleWhitelistTime";
 
     /**
      * Log level for NGINX Proxy error log
@@ -14472,6 +14643,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1595)
     public static final String A_zimbraReverseProxyUpstreamEwsServers = "zimbraReverseProxyUpstreamEwsServers";
+
+    /**
+     * The pool of servers that are available to the proxy for handling IMAP
+     * sessions. If empty, the NginxLookupExtension will select the mailbox
+     * server that hosts the account.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3008)
+    public static final String A_zimbraReverseProxyUpstreamImapServers = "zimbraReverseProxyUpstreamImapServers";
 
     /**
      * The servers to be included in the login block in the nginx web proxy

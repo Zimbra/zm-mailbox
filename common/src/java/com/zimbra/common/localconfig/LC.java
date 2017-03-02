@@ -714,8 +714,6 @@ public final class LC {
     @Reloadable
     public static final KnownKey imap_max_consecutive_error = KnownKey.newKey(5);
 
-    @Supported
-    public static final KnownKey imap_inactive_session_cache_size = KnownKey.newKey(10000);
     // Default 3 days.  Without limit 1 server was needing to restart every 30 to 45 days
     public static final KnownKey imap_noninteractive_session_cache_maxage_days = KnownKey.newKey(3);
     public static final KnownKey imap_use_ehcache = KnownKey.newKey(true);
@@ -1300,6 +1298,12 @@ public final class LC {
 
     public static final KnownKey zimbra_ews_autodiscover_use_service_url =
         KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey smime_truststore = KnownKey.newKey("${mailboxd_truststore}");
+
+    @Supported
+    public static final KnownKey smime_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
 
     static {
         // Automatically set the key name with the variable name.

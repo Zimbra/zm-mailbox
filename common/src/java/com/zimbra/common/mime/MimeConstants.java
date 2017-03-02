@@ -41,6 +41,9 @@ public class MimeConstants {
     public static final String CT_APPLICATION_PGP = "application/pgp-encrypted";
     public static final String CT_APPLICATION_SHOCKWAVE_FLASH = "application/x-shockwave-flash";
     public static final String CT_APPLICATION_SMIME = "application/pkcs7-mime";
+    public static final String CT_APPLICATION_SMIME_SIGNATURE = "application/pkcs7-signature";
+    public static final String CT_APPLICATION_SMIME_OLD = "application/x-pkcs7-mime";
+    public static final String CT_APPLICATION_SMIME_SIGNATURE_OLD = "application/x-pkcs7-signature";
     public static final String CT_APPLICATION_TNEF = "application/ms-tnef";
     public static final String CT_APPLICATION_XHTML = "application/xhtml+xml";
     public static final String CT_APPLICATION_ZIMBRA_DOC = "application/x-zimbra-doc";
@@ -75,6 +78,8 @@ public class MimeConstants {
     public static final String CT_DEFAULT = CT_TEXT_PLAIN;
     public static final String CT_APPLEFILE = "application/applefile";
     public static final String CT_APPLICATION_ZIP = "application/zip";
+    public static final String CT_SMIME_TYPE_ENVELOPED_DATA = "enveloped-data";
+    public static final String CT_SMIME_TYPE_SIGNED_DATA = "signed-data";
 
     // encodings
     public static final String ET_7BIT = "7bit";
@@ -96,6 +101,13 @@ public class MimeConstants {
     public static final String P_CHARSET_WINDOWS_31J = "Windows-31J";
     public static final String P_CHARSET_SHIFT_JIS = "shift_jis";
     public static final String P_CHARSET_DEFAULT = P_CHARSET_ASCII;
+
+    //smime
+    public static final String ERR_LOAD_CERTIFICATE_FAILED = "LOAD_CERTIFICATE_FAILED";
+    public static final String ERR_LOAD_PRIVATE_KEY_FAILED = "LOAD_PRIVATE_KEY_FAILED";
+    public static final String ERR_USER_CERT_MISMATCH = "USER_CERT_MISMATCH";
+    public static final String ERR_DECRYPTION_FAILED = "DECRYPTION_FAILED";
+    public static final String ERR_FEATURE_SMIME_DISABLED = "FEATURE_SMIME_DISABLED";
 
     public static final ImmutableSet<String> ZIMBRA_DOC_CT_SET = ImmutableSet.of(
             CT_APPLICATION_ZIMBRA_DOC, CT_APPLICATION_ZIMBRA_SLIDES, CT_APPLICATION_ZIMBRA_SPREADSHEET

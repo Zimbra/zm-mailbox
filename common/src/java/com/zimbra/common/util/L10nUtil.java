@@ -270,7 +270,7 @@ public class L10nUtil {
         spnego_browser_setup_wiki,
 
         errorTitle,
-        zipFile
+        zipFile,
 
         // add other messages in the future...
     }

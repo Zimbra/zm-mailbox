@@ -477,6 +477,11 @@ public class Log {
         mLogger.setLevel(ZIMBRA_TO_LOG4J.get(level));
     }
 
+    public Level getLevel() {
+        Level lev = LOG4J_TO_ZIMBRA.get(mLogger.getLevel());
+        return (lev != null) ? lev : Level.info;
+    }
+
     public String getCategory() {
         return mLogger.getName();
     }
