@@ -1049,7 +1049,15 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.GetOAuthConsumersRequest.class,
             com.zimbra.soap.account.message.GetOAuthConsumersResponse.class,
             com.zimbra.soap.account.message.RevokeOAuthConsumerRequest.class,
-            com.zimbra.soap.account.message.RevokeOAuthConsumerResponse.class
+            com.zimbra.soap.account.message.RevokeOAuthConsumerResponse.class,
+
+            //smime
+            com.zimbra.soap.mail.message.SendSecureMsgRequest.class,
+            com.zimbra.soap.mail.message.SendSecureMsgResponse.class,
+            com.zimbra.soap.account.message.GetSmimeCertificateInfoRequest.class,
+            com.zimbra.soap.account.message.GetSmimeCertificateInfoResponse.class,
+            com.zimbra.soap.account.message.SaveSmimeCertificateRequest.class,
+            com.zimbra.soap.account.message.SaveSmimeCertificateResponse.class
         };
 
         try {
