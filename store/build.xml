@@ -15,7 +15,7 @@
     </not>
   </condition>
   <!-- properties used for generating and testing LDAP changes -->
-  <property name="ldap.config.dir" location="../zm-ldap-utilities/conf/ldap"/>
+  <property name="ldap.config.dir" location="${zimbra.root.dir}/zm-ldap-utilities/conf/ldap"/>
   <property name="slapd.config.dir" value="${ldap.config.dir}/config"/>
   <condition property="slapd.config.src" value="${slapd.config.dir}/cn=config.ldif">
     <isset property="is-production"/>
