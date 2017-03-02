@@ -358,27 +358,6 @@ public class TestCookieReuse extends TestCase {
     }
 
     /**
-     * Verify that when zimbraLowestSupportedAuthVersion is set to 2, authtokens get added to LDAP
-     * Verify that when zimbraLowestSupportedAuthVersion is set to 1, authtokens do not get added to LDAP
-     * @throws Exception
-     */
-    @Test
-    public void testChangingSupportedAuthVersion() throws Exception {
-        Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(2);
-        Account a = TestUtil.getAccount(USER_NAME);
-        String[] tokens = a.getAuthTokens();
-        ZimbraAuthToken at1 = new ZimbraAuthToken(a, System.currentTimeMillis() + 10000);
-        String[] tokens2 = a.getAuthTokens();
-        assertEquals("should have one more registered token", tokens.length+1,tokens2.length);
-
-        Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(1);
-        ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 10000);
-        String[] tokens3 = a.getAuthTokens();
-        assertEquals("should have the same number of registered tokens as before", tokens2.length,tokens3.length);
-
-    }
-
-    /**
      * Verify that when zimbraForceClearCookies is set to TRUE authtokens get deregistered
      * @throws Exception
      */
@@ -390,27 +369,6 @@ public class TestCookieReuse extends TestCase {
         Assert.assertTrue("token should be registered", at.isRegistered());
         at.deRegister();
         Assert.assertFalse("token should not be registered", at.isRegistered());
-    }
-
-    /**
-     * Verify that expired authtokens get cleaned up after a new token is created
-     * @throws Exception
-     */
-    @Test
-    public void testAuthTokenCleanup() throws Exception {
-        Account a = TestUtil.getAccount(USER_NAME);
-        String[] tokensPre = a.getAuthTokens();
-        ZimbraAuthToken at1 = new ZimbraAuthToken(a, System.currentTimeMillis() + 1000);
-        assertFalse("token should not be expired yet", at1.isExpired());
-        String[] tokensPost = a.getAuthTokens();
-        assertEquals("should have one more authtoken now", tokensPre.length+1, tokensPost.length);
-        Thread.sleep(2000);
-        assertTrue("token should have expired by now", at1.isExpired());
-
-        //get a new authtoken, this should clean up the expired one
-        ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 1000);
-        String[] tokensFinal = a.getAuthTokens();
-        assertEquals("should have the same nunber of authtoken now as before", tokensPost.length, tokensFinal.length);
     }
 
     /**
@@ -426,17 +384,7 @@ public class TestCookieReuse extends TestCase {
         assertTrue("token should have expired by now", at1.isExpired());
 
         //explicitely clean up expired auth tokens
-        String[] tokens = a.getAuthTokens();
-        for(String tk : tokens) {
-            String[] tokenParts = tk.split("\\|");
-            if(tokenParts.length > 0) {
-                String szExpire = tokenParts[1];
-                Long expires = Long.parseLong(szExpire);
-                if(System.currentTimeMillis() > expires) {
-                    a.removeAuthTokens(tk);
-                }
-            }
-        }
+        a.purgeAuthTokens();
 
         //verify that AuthRequest still works
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
@@ -452,47 +400,7 @@ public class TestCookieReuse extends TestCase {
     }
 
     /**
-     * Verify that EndSessionRequest does not clean up expired tokens
-     * @throws Exception
-     */
-    @Test
-    public void testEndSessionNoCleanup() throws Exception {
-        Account a = TestUtil.getAccount(USER_NAME);
-        String[] tokensPre = a.getAuthTokens();
-        ZimbraAuthToken at1 = new ZimbraAuthToken(a, System.currentTimeMillis() + 1000);
-        ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 100000);
-        assertFalse("First token should not be expired yet", at1.isExpired());
-        assertFalse("Second token should not be expired", at2.isExpired());
-
-        String[] tokensPost = a.getAuthTokens();
-        assertEquals("should have two more authtoken now", tokensPre.length+2, tokensPost.length);
-        Thread.sleep(2000);
-        assertTrue("First token should have expired by now", at1.isExpired());
-        assertFalse("Second token should not have expired by now", at2.isExpired());
-
-        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
-        EndSessionRequest esr = new EndSessionRequest();
-        transport.setAuthToken(at2.getEncoded());
-        transport.invoke(JaxbUtil.jaxbToElement(esr, SoapProtocol.SoapJS.getFactory()));
-        Provisioning.getInstance().reload(a);
-        String[] tokensFinal = a.getAuthTokens();
-        assertEquals("should have one less authtoken after EndSessionRequest", tokensFinal.length,tokensPost.length-1);
-
-        //verify that AuthRequest still works
-        AccountSelector acctSel = new AccountSelector(com.zimbra.soap.type.AccountBy.name, a.getName());
-        AuthRequest req = new AuthRequest(acctSel, "test123");
-        transport.setAuthToken("");
-        Element resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
-        AuthResponse authResp = JaxbUtil.elementToJaxb(resp);
-        String newAuthToken = authResp.getAuthToken();
-        assertNotNull("should have received a new authtoken", newAuthToken);
-        AuthToken at = ZimbraAuthToken.getAuthToken(newAuthToken);
-        assertTrue("new auth token should be registered", at.isRegistered());
-        assertFalse("new auth token should ne be expired yet", at.isExpired());
-    }
-
-    /**
-     * Verify that we CANNOT make an unauthorized admin GET request without an admin cookie 
+     * Verify that we CANNOT make an unauthorized admin GET request without an admin cookie
      */
     @Test
     public static void testGetWithoutAdminCookie() throws Exception {
@@ -510,7 +418,7 @@ public class TestCookieReuse extends TestCase {
     }
 
     /**
-     * Verify that we CAN make an admin GET request by re-using a valid non-csrf-enabled cookie 
+     * Verify that we CAN make an admin GET request by re-using a valid non-csrf-enabled cookie
      */
     @Test
     public static void testReuseAdminCookieWithoutCsrf() throws Exception {
@@ -534,7 +442,7 @@ public class TestCookieReuse extends TestCase {
     }
 
     /**
-     * Verify that we CAN make a GET request by reusing a valid non-csrf-enabled cookie 
+     * Verify that we CAN make a GET request by reusing a valid non-csrf-enabled cookie
      */
     @Test
     public static void testReuseUserCookieWithoutCsrf() throws Exception {
@@ -550,9 +458,9 @@ public class TestCookieReuse extends TestCase {
         int statusCode = HttpClientUtil.executeMethod(eve, get);
         assertEquals("This request should succeed. Getting status code " + statusCode + " Response: " + get.getResponseBodyAsString(), HttpStatus.SC_OK,statusCode);
     }
-    
+
     /**
-     * Verify that we CAN make a GET request by reusing a valid CSRF-enabled cookie 
+     * Verify that we CAN make a GET request by reusing a valid CSRF-enabled cookie
      */
     @Test
     public static void testReuseUserCookieWithCsrf() throws Exception {
@@ -570,7 +478,7 @@ public class TestCookieReuse extends TestCase {
     }
 
     /**
-     * Verify that we CAN make an admin GET request by reusing a valid csrf-enabled cookie 
+     * Verify that we CAN make an admin GET request by reusing a valid csrf-enabled cookie
      */
     @Test
     public static void testReuseAdminCookieWithCsrf() throws Exception {
@@ -632,7 +540,7 @@ public class TestCookieReuse extends TestCase {
         }
         fail("should have caught an exception");
     }
-    
+
 
     /**
      * Verify that we CANNOT make an admin POST request with a non-CSRF-enabled auth token if the auth token has an associated CSRF token

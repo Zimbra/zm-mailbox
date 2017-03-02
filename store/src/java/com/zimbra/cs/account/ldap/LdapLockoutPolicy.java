@@ -18,7 +18,6 @@
 package com.zimbra.cs.account.ldap;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -140,7 +139,7 @@ public class LdapLockoutPolicy {
         private static Cache<String, List<String>> cache =
             CacheBuilder.newBuilder().maximumSize(maxCacheSize).expireAfterWrite(cacheExpiryInMinute, TimeUnit.MINUTES).build();
 
-        private static boolean suppressPasswordLockOut(Account acct, String protocol, String password) {
+        private static boolean suppressPasswordLockOut(Account acct, String protocol, String password) throws ServiceException {
             if (!(StringUtil.isNullOrEmpty(password) || StringUtil.isNullOrEmpty(protocol))) {
                 if (acct.isPasswordLockoutSuppressionEnabled()) {
                     for (String suppressionProtocol : acct.getPasswordLockoutSuppressionProtocolsAsString()) {
@@ -190,19 +189,19 @@ public class LdapLockoutPolicy {
         }
     }
 
-    public void failedLogin() {
+    public void failedLogin() throws ServiceException {
         failedLogin(failedLogins, null, null);
     }
 
-    public void failedSecondFactorLogin() {
+    public void failedSecondFactorLogin() throws ServiceException {
         failedLogin(twoFactorFailedLogins, null, null);
     }
 
-    public void failedLogin(String protocol, String password) {
+    public void failedLogin(String protocol, String password) throws ServiceException {
         failedLogin(failedLogins, protocol, password);
     }
 
-    private void failedLogin(FailedLoginState login, String protocol, String password) {
+    private void failedLogin(FailedLoginState login, String protocol, String password) throws ServiceException {
         if (!mEnabled || !login.mEnabled) return;
 
         if (PasswordLockoutCache.suppressPasswordLockOut(mAccount, protocol, password)) {

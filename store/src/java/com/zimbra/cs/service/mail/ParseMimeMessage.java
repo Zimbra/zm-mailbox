@@ -200,10 +200,17 @@ public final class ParseMimeMessage {
         }
     }
 
+    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt,
+        Mailbox mbox, Element msgElem, MimeBodyPart[] additionalParts, MimeMessageData out)
+        throws ServiceException {
+        return parseMimeMsgSoap(zsc, octxt, mbox, msgElem, additionalParts, NO_INV_ALLOWED_PARSER,
+            out, false);
+    }
+
     public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
-                                               Element msgElem, MimeBodyPart[] additionalParts, MimeMessageData out)
+                                               Element msgElem, MimeBodyPart[] additionalParts, MimeMessageData out, boolean attachMessageFromCache)
     throws ServiceException {
-        return parseMimeMsgSoap(zsc, octxt, mbox, msgElem, additionalParts, NO_INV_ALLOWED_PARSER, out);
+        return parseMimeMsgSoap(zsc, octxt, mbox, msgElem, additionalParts, NO_INV_ALLOWED_PARSER, out, attachMessageFromCache);
     }
 
     public static String getTextPlainContent(Element elem) {
@@ -274,6 +281,12 @@ public final class ParseMimeMessage {
         }
     }
 
+    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt,
+        Mailbox mbox, Element msgElem, MimeBodyPart[] additionalParts, InviteParser inviteParser,
+        MimeMessageData out) throws ServiceException {
+        return parseMimeMsgSoap(zsc, octxt, mbox, msgElem, additionalParts, inviteParser, out, false);
+    }
+
     /**
      * Given an {@code <m>} element from SOAP, return us a parsed {@link MimeMessage}, and also fill in the
      * {@link MimeMessageData} structure with information we parsed out of it (e.g. contained Invite, msgids, etc etc)
@@ -285,7 +298,7 @@ public final class ParseMimeMessage {
      * @param out Holds info about things we parsed out of the message that the caller might want to know about
      */
     public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
-            Element msgElem, MimeBodyPart[] additionalParts, InviteParser inviteParser, MimeMessageData out)
+            Element msgElem, MimeBodyPart[] additionalParts, InviteParser inviteParser, MimeMessageData out, boolean attachMessageFromCache)
     throws ServiceException {
         assert(msgElem.getName().equals(MailConstants.E_MSG)); // msgElem == "<m>" E_MSG
 
@@ -368,7 +381,7 @@ public final class ParseMimeMessage {
             }
             // attachments go into the toplevel "mixed" part
             if (isMultipart && attachElem != null) {
-                handleAttachments(attachElem, mmp, ctxt, null, Part.ATTACHMENT);
+                handleAttachments(attachElem, mmp, ctxt, null, Part.ATTACHMENT, attachMessageFromCache);
             }
 
             // <m> attributes: id, f[lags], s[ize], d[ate], cid(conv-id), l(parent folder)
@@ -448,7 +461,13 @@ public final class ParseMimeMessage {
         }
     }
 
-    private static void handleAttachments(Element attachElem, MimeMultipart mmp, ParseMessageContext ctxt, String contentID, String contentDisposition)
+    private static void handleAttachments(Element attachElem, MimeMultipart mmp,
+        ParseMessageContext ctxt, String contentID, String contentDisposition)
+        throws ServiceException, MessagingException, IOException {
+        handleAttachments(attachElem, mmp, ctxt, contentID, contentDisposition, false);
+    }
+
+    private static void handleAttachments(Element attachElem, MimeMultipart mmp, ParseMessageContext ctxt, String contentID, String contentDisposition, boolean attachFromMessageCache)
     throws ServiceException, MessagingException, IOException {
         if (contentID != null) {
             contentID = '<' + contentID + '>';
@@ -476,7 +495,7 @@ public final class ParseMimeMessage {
                     attachPart(mmp, iid, part, contentID, ctxt, contentDisposition);
                 } else if (attachType.equals(MailConstants.E_MSG)) {
                     ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
-                    attachMessage(mmp, iid, contentID, ctxt);
+                    attachMessage(mmp, iid, contentID, ctxt, attachFromMessageCache);
                 } else if (attachType.equals(MailConstants.E_CONTACT)) {
                     ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
                     attachContact(mmp, iid, contentID, ctxt);
@@ -686,7 +705,13 @@ public final class ParseMimeMessage {
     }
 
     @SuppressWarnings("unchecked")
-    private static void attachMessage(MimeMultipart mmp, ItemId iid, String contentID, ParseMessageContext ctxt)
+    private static void attachMessage(MimeMultipart mmp, ItemId iid, String contentID,
+        ParseMessageContext ctxt) throws MessagingException, ServiceException {
+        attachMessage(mmp, iid, contentID, ctxt, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void attachMessage(MimeMultipart mmp, ItemId iid, String contentID, ParseMessageContext ctxt, boolean attachMessageFromCache)
     throws MessagingException, ServiceException {
         if (!iid.isLocal()) {
             attachRemoteItem(mmp, iid, contentID, ctxt, Collections.EMPTY_MAP, new ContentType(MimeConstants.CT_MESSAGE_RFC822));
@@ -698,9 +723,16 @@ public final class ParseMimeMessage {
         ctxt.incrementSize("attached message", msg.getSize());
 
         MimeBodyPart mbp = new ZMimeBodyPart();
-        mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(msg.getBlob())));
-        mbp.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
-        mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
+        if (attachMessageFromCache && mbox.getAccount().isFeatureSMIMEEnabled()
+            && (Mime.isEncrypted(msg.getMimeMessage(false).getContentType())
+                || Mime.isPKCS7Signed(msg.getMimeMessage(false).getContentType()))) {
+            MimeMessage cachedMimeMessage = msg.getMimeMessage(true);
+            mbp.setContent(cachedMimeMessage, MimeConstants.CT_MESSAGE_RFC822);
+        } else {
+            mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(msg.getBlob())));
+            mbp.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
+            mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
+        }
         mbp.setContentID(contentID);
         mmp.addBodyPart(mbp);
     }

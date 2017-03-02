@@ -3510,14 +3510,22 @@ public abstract class CalendarItem extends MailItem {
         return MessageCache.getMimeMessage(this, !DebugConfig.disableMimeConvertersForCalendarBlobs);
     }
 
+    public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {
+        return MessageCache.getMimeMessage(this, runConverters);
+    }
+
+    public MimeMessage getSubpartMessage(int subId) throws ServiceException {
+        return getSubpartMessage(subId, !DebugConfig.disableMimeConvertersForCalendarBlobs);
+    }
+
     /**
      * @param subId
      * @return
      * @throws ServiceException
      */
-    public MimeMessage getSubpartMessage(int subId) throws ServiceException {
+    public MimeMessage getSubpartMessage(int subId, boolean runConverters) throws ServiceException {
         try {
-            MimeBodyPart mbp = findBodyBySubId(subId);
+            MimeBodyPart mbp = findBodyBySubId(subId, runConverters);
             return mbp == null ? null : (MimeMessage) Mime.getMessageContent(mbp);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException while getting MimeMessage for item " + mId, e);
@@ -3547,11 +3555,15 @@ public abstract class CalendarItem extends MailItem {
     }
 
     private MimeBodyPart findBodyBySubId(int subId) throws ServiceException {
+       return findBodyBySubId(subId, !DebugConfig.disableMimeConvertersForCalendarBlobs);
+    }
+
+    private MimeBodyPart findBodyBySubId(int subId, boolean runConverters) throws ServiceException {
         if (getSize() <= 0)
             return null;
         MimeMessage mm = null;
         try {
-            mm = MessageCache.getMimeMessage(this, !DebugConfig.disableMimeConvertersForCalendarBlobs);
+            mm = MessageCache.getMimeMessage(this, runConverters);
             // It should be multipart/digest.
             MimeMultipart mmp;
             Object obj = null;

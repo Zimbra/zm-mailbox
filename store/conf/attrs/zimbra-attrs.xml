@@ -89,6 +89,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
                 and personal part is optional.
     id..........^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
     integer.....32 bit signed, min/max checked
+    long........64 bit unsigned unbounded number
+                Can also contain human readable memory unit values: ex 1KB => 1024 bytes
     port........0-65535
     regex.......value attr is a regular expression. Should explicitly
                 add ^ to front and $ at the end
@@ -138,6 +140,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
                            encoding in SOAP responses.
     serverPreferAlwaysOn...if zimbraAlwaysOnClusterId is configured override the server
                            attributes from the alwaysOnCluster
+    ephemeral..............this attribute will be stored in ephemeral storage,
+                           as specified by zimbraEphemeralBackendURL
+    expirable..............ephemeral values will expire after a specified amount of time;
+                           must be used in conjunction with the "ephemeral" flag
+    dynamic................ephemeral attribute will have a dynamic component to the key;
+                           must be used in conjunction with the "ephemeral" flag and cardinality="multi"
 
   requiresRestart: server(s) need be to restarted after changing this attribute.
                    values are comma-separated if more than one servers need to be restarted.
@@ -773,8 +781,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>deprecated in favor of the accountInfo flag</deprecateDesc>
 </attr>
 
-<attr id="113" name="zimbraLastLogonTimestamp" type="gentime" immutable="1" cardinality="single" optionalIn="account">
-  <desc>rough estimate of when the user last logged in. see zimbraLastLogonTimestampFrequency</desc>
+<attr id="113" name="zimbraLastLogonTimestamp" type="gentime" immutable="1" cardinality="single" optionalIn="account" flags="ephemeral">
+  <desc>rough estimate of when the user last logged in</desc>
 </attr>
 
 <attr id="114" name="zimbraLastLogonTimestampFrequency" type="duration" cardinality="single" optionalIn="globalConfig">
@@ -7949,9 +7957,9 @@ TODO: delete them permanently from here
 <attr id="1584" name="zimbraDNSUseTCP" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>yes</globalConfigValue>
   <desc>For zimbra dnscache, whether or not to use TCP. Defaults to yes</desc>
-</attr>  
-  
-<attr id="1585" name="zimbraAuthTokens" type="string" cardinality="multi" optionalIn="account" since="8.5.0">
+</attr>
+
+<attr id="1585" name="zimbraAuthTokens" type="string" cardinality="multi" optionalIn="account" since="8.5.0" flags="ephemeral,dynamic,expirable">
   <desc>list of currently active auth tokens</desc>
 </attr>
 
@@ -8209,8 +8217,8 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1629" name="zimbraCsrfTokenData" type="string"
-  cardinality="multi" optionalIn="account" since="8.5.0">
-  <desc>List of data associated with CSRF token for an account. The data format is 
+  cardinality="multi" optionalIn="account" since="8.5.0" flags="ephemeral,dynamic,expirable">
+  <desc>List of data associated with CSRF token for an account. The data format is
    CSRF token data:Auth token Key crumb:Auth Token Key expiration</desc>
 </attr>
 
@@ -9282,6 +9290,119 @@ TODO: delete them permanently from here
 <attr id="2101" name="zimbraSmimeOCSPEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>enable OCSP support for SMIME.</desc>
+</attr>
+
+<attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.8.0">
+  <desc>URL of ephemeral storage backend</desc>
+  <globalConfigValue>ldap://default</globalConfigValue>
+</attr>
+
+<attr id="2996" name="zimbraReverseProxyIPLoginImapLimit" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="8.7.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Sets the upper limit on logins from a remote IP via IMAP
+    to this proxy server after which login is rejected with an
+    appropriate protocol specific bye response. This counter is
+    cumulative for all users that appear to the proxy to be logging in
+    from the same IP address.  If multiple users appear to the proxy
+    to be logging in from the same IP address (usual with NATing),
+    then each of the different users login will contribute to
+    increasing the hit counter for that IP address, and when the
+    counter eventually exceeds the limit, then the connections
+    from that IP address will be throttled.  Therefore, all users from
+    the same IP will contribute to (and be affected by) this counter.
+    If this value is set to 0, then the value of
+    zimbraReverseProxyIPLoginLimit will be used to determine possible
+    throttling behavior.
+    </desc>
+</attr>
+
+<attr id="2997" name="zimbraReverseProxyIPLoginImapLimitTime" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="8.7.0">
+  <globalConfigValue>3600</globalConfigValue>
+  <desc>Sets the time-to-live for the hit counter for IP based IMAP login
+    throttling.  If time is set to 3600 and limit is set to 1000, then
+    it means that NGINX should not allow more than 1000 users to log
+    in via the proxy from the same IP, within the time interval of an
+    hour.  The semantics for such a configuration would then be:
+    allow maximum 1000 users per hour from any given IP address.
+  </desc>
+</attr>
+
+<attr id="2998" name="zimbraReverseProxyIPLoginPop3Limit" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="8.7.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Sets the upper limit on logins from a remote IP via POP3
+    to this proxy server after which login is rejected with an
+    appropriate protocol specific bye response. This counter is
+    cumulative for all users that appear to the proxy to be logging in
+    from the same IP address.  If multiple users appear to the proxy
+    to be logging in from the same IP address (usual with NATing),
+    then each of the different users login will contribute to
+    increasing the hit counter for that IP address, and when the
+    counter eventually exceeds the limit, then the connections
+    from that IP address will be throttled.  Therefore, all users from
+    the same IP will contribute to (and be affected by) this counter.
+    If this value is set to 0, then the value of
+    zimbraReverseProxyIPLoginLimit will be used to determine possible
+    throttling behavior.
+    </desc>
+</attr>
+
+<attr id="2999" name="zimbraReverseProxyIPLoginPop3LimitTime" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="8.7.0">
+  <globalConfigValue>3600</globalConfigValue>
+  <desc>Sets the time-to-live for the hit counter for IP based POP3 login
+    throttling.  If time is set to 3600 and limit is set to 1000, then
+    it means that NGINX should not allow more than 1000 users to log
+    in via the proxy from the same IP, within the time interval of an
+    hour.  The semantics for such a configuration would then be:
+    allow maximum 1000 users per hour from any given IP address.
+  </desc>
+</attr>
+
+<attr id="3000" name="zimbraReverseProxyIPThrottleWhitelist" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+  <desc>Client IP/IPRange whitelist for exclusion from IP throttling. Value may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.  IPV6 is supported as well.</desc>
+</attr>
+
+<attr id="3001" name="zimbraActiveSyncEhcacheHeapSize" type="long" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>10485760</globalConfigValue>
+  <desc> Ehcache: the maximum heap size of the ActiveSync cache in Bytes before eviction. By default this value is 10MB. This is a rough limit,Due to internals of ehcache actual size in memory will often exceed this limit by a modest margin. </desc>
+</attr>
+
+<attr id="3002" name="zimbraActiveSyncEhcacheMaxDiskSize" type="long" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>10737418240</globalConfigValue>
+  <desc> Ehcache: the maximum disk size of the ActiveSync cache in Bytes before eviction. By default this value is 10GB. This is a rough limit,Due to internals of ehcache actual size on disk will often exceed this limit by a modest margin. </desc>
+</attr>
+
+<attr id="3003" name="zimbraActiveSyncEhcacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>5m</globalConfigValue>
+  <desc>Ehcache: default expiration time for activesync cache values; default is 5 minutes</desc>
+</attr>
+
+<attr id="3004" name="zimbraImapInactiveSessionEhcacheSize" type="long" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>1048576</globalConfigValue>
+  <desc> Ehcache: the maximum heap size of the inactive session cache in Bytes before eviction. By default this value is 1 megabyte. This is a rough limit,Due to internals of ehcache actual size in memory will often exceed this limit by a modest margin. </desc>
+</attr>
+
+<attr id="3005" name="zimbraImapActiveSessionEhcacheMaxDiskSize" type="long" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>107374182400</globalConfigValue>
+  <desc> Ehcache: the maximum amount of disk space the imap active session cache will consume in Bytes before eviction. By default this value is 100 gigabytes. This is a rough limit,Due to internals of ehcache actual size in memory will often exceed this limit by a modest margin. </desc>
+</attr>
+
+<attr id="3006" name="zimbraImapInactiveSessionEhcacheMaxDiskSize" type="long" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="mailbox" since="8.8.0">
+  <globalConfigValue>107374182400</globalConfigValue>
+  <desc> Ehcache: the maximum amount of disk space the imap inactive session cache will consume in Bytes before eviction. By default this value is 100 gigabytes. This is a rough limit,Due to internals of ehcache actual size in memory will often exceed this limit by a modest margin. </desc>
+</attr>
+
+<attr id="3007" name="zimbraReverseProxyIPThrottleWhitelistTime" type="duration" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+  <globalConfigValue>300s</globalConfigValue>
+  <desc>Sets the time-to-live for mail_whitelist_ip_ttl in nginx</desc>
+</attr>
+
+<attr id="3008" name="zimbraReverseProxyUpstreamImapServers" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+  <desc>The pool of servers that are available to the proxy for handling IMAP sessions. If empty, the NginxLookupExtension will select the mailbox server that hosts the account.</desc>
+</attr>
+
+<attr id="3009" name="zimbraImapLoadBalancingAlgorithm" type="string" max="512" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" callback="ImapLBMech" since="8.8.0">
+  <globalConfigValue>ClientIpHash</globalConfigValue>
+  <desc>Determines the load-balancing algorithm used to select an IMAP server from the pool of available zimbraReverseProxyUpstreamImapServers. Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2 ...]</desc>
 </attr>
 
 </attrs>

@@ -40,6 +40,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.MimeUtility;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 
 import com.google.common.base.Joiner;
@@ -154,6 +155,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.smime.SmimeHandler;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.AlarmDataInfo;
 import com.zimbra.soap.mail.type.CalendarReply;
@@ -783,7 +785,7 @@ public final class ToXML {
                 //      an existing attribute with null or empty string value?
                 String value = contact.get(name);
                 if (!Strings.isNullOrEmpty(value)) {
-                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic);
+                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt);
                 } else if (attachments != null) {
                     for (Attachment attach : attachments) {
                         if (attach.getName().equals(name)) {
@@ -812,7 +814,7 @@ public final class ToXML {
                 }
 
                 if (name != null && !name.trim().isEmpty() && !Strings.isNullOrEmpty(value)) {
-                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic);
+                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt);
                 }
             }
             if (attachments != null) {
@@ -823,7 +825,7 @@ public final class ToXML {
         }
 
         if (migratedDlist != null) {
-            encodeContactAttr(el, ContactConstants.A_dlist, migratedDlist, contact, false);
+            encodeContactAttr(el, ContactConstants.A_dlist, migratedDlist, contact, false, octxt);
         } else if (contactGroup != null) {
             encodeContactGroup(el, contactGroup, memberAttrFilter, ifmt, octxt, summary, fields);
         }
@@ -832,12 +834,15 @@ public final class ToXML {
     }
 
     private static void encodeContactAttr(Element elem, String name, String value,
-            Contact contact, boolean encodeContactGroupMembers) {
+            Contact contact, boolean encodeContactGroupMembers, OperationContext octxt) {
         if (Contact.isMultiValueAttr(value)) {
             try {
                 for (String v : Contact.parseMultiValueAttr(value)) {
                     if (Contact.isUrlField(name)) {
                         v = DefangFilter.sanitize(v, true);
+                    } else if (Contact.isSMIMECertField(name)) {
+                        encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses());
+                        continue;
                     }
                     elem.addKeyValuePair(name, v);
                 }
@@ -860,8 +865,19 @@ public final class ToXML {
         } else {
             if (Contact.isUrlField(name)) {
                 value = DefangFilter.sanitize(value, true);
+            } else if (Contact.isSMIMECertField(name)) {
+                encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses());
+                return;
             }
             elem.addKeyValuePair(name, value);
+        }
+    }
+
+    private static void encodeCertificate(OperationContext octxt, Element elem, String name, String value, List<String> emailAddresses) {
+        Account account = octxt.getAuthenticatedUser();
+        elem.addKeyValuePair(name, value);
+        if (SmimeHandler.getHandler() != null) {
+            SmimeHandler.getHandler().encodeCertificate(account, elem, value, octxt.getmResponseProtocol(), emailAddresses);
         }
     }
 
@@ -1403,7 +1419,14 @@ public final class ToXML {
 
             MimeMessage mm = null;
             try {
-                mm = msg.getMimeMessage();
+                String requestedAccountId = octxt.getmRequestedAccountId();
+                String authtokenAccountId = octxt.getmAuthTokenAccountId();
+                boolean isDecryptionNotAllowed = StringUtils.isNotEmpty(authtokenAccountId) && !authtokenAccountId.equalsIgnoreCase(requestedAccountId);
+                if (isDecryptionNotAllowed && Mime.isEncrypted(msg.getMimeMessage(false).getContentType())) {
+                    mm = msg.getMimeMessage(false);
+                } else {
+                    mm = msg.getMimeMessage();
+                }
             } catch (MailServiceException e) {
                 if (encodeMissingBlobs && MailServiceException.NO_SUCH_BLOB.equals(e.getCode())) {
                     ZimbraLog.mailbox.error("Unable to get blob while encoding message", e);
@@ -1444,6 +1467,7 @@ public final class ToXML {
             // Add fragment before emails to maintain consistent ordering
             // of elements with encodeConversation - need to do this to
             // overcome JAXB issues.
+
             String fragment = msg.getFragment();
             if (fragment != null && !fragment.isEmpty()) {
                 m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
@@ -1545,6 +1569,37 @@ public final class ToXML {
             }
 
             success = true;
+            // update crypto flags - isSigned/isEncrypted
+            if (SmimeHandler.getHandler() != null) {
+                if (!wholeMessage) {
+                    // check content type of attachment message for encryption flag
+                    SmimeHandler.getHandler().updateCryptoFlags(msg, m, mm, mm);
+                } else {
+                    MimeMessage originalMimeMessage = msg.getMimeMessage(false);
+                    SmimeHandler.getHandler().updateCryptoFlags(msg, m, originalMimeMessage, mm);
+                }
+            }
+
+            // if the mime it is signed
+            if (Mime.isMultipartSigned(mm.getContentType())
+                || Mime.isPKCS7Signed(mm.getContentType())) {
+                ZimbraLog.mailbox.debug(
+                    "The message is signed. Forwarding it to SmimeHandler for signature verification.");
+                if (SmimeHandler.getHandler() != null) {
+                    SmimeHandler.getHandler().verifyMessageSignature(msg.getMailbox().getAccount(), m,
+                        mm, octxt.getmResponseProtocol());
+                }
+            } else {
+                // if the original mime message was PKCS7-signed and it was
+                // decoded and stored in cache as plain mime
+                if ((mm instanceof Mime.FixedMimeMessage)
+                    && ((Mime.FixedMimeMessage) mm).isPKCS7Signed()) {
+                    if (SmimeHandler.getHandler() != null) {
+                        SmimeHandler.getHandler().addPKCS7SignedMessageSignatureDetails(
+                            msg.getMailbox().getAccount(), m, mm, octxt.getmResponseProtocol());
+                    }
+                }
+            }
             return m;
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);

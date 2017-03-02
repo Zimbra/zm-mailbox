@@ -72,6 +72,7 @@ import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Threader.ThreadIndex;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeProcessor;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
@@ -108,6 +109,7 @@ public class MailSender {
     private final List<String> mRecipients = new ArrayList<String>();
     private String mEnvelopeFrom;
     private String mDsn;
+    private MimeProcessor mimeProcessor = null;
 
     public MailSender()  {
         mSession = JMSession.getSession();
@@ -409,6 +411,14 @@ public class MailSender {
      */
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
             ItemId origMsgId, String replyType, String identityId, boolean replyToSender) throws ServiceException {
+        return sendMimeMessage(octxt, mbox, mm, uploads, origMsgId, replyType, identityId, replyToSender, null);
+    }
+
+    /**
+     * Sets member variables and sends the message.
+     */
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, boolean replyToSender, MimeProcessor mimeProc) throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
         if (authuser == null) {
             authuser = mbox.getAccount();
@@ -417,14 +427,19 @@ public class MailSender {
         if (identityId != null) {
             identity = Provisioning.getInstance().get(authuser, Key.IdentityBy.id, identityId);
         }
-        return sendMimeMessage(octxt, mbox, null, mm, uploads, origMsgId, replyType, identity, replyToSender);
+        return sendMimeMessage(octxt, mbox, null, mm, uploads, origMsgId, replyType, identity, replyToSender, mimeProc);
     }
 
     public ItemId sendDataSourceMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
             ItemId origMsgId, String replyType) throws ServiceException {
+        return sendDataSourceMimeMessage(octxt, mbox, mm, uploads, origMsgId, replyType, null);
+    }
+
+    public ItemId sendDataSourceMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, MimeProcessor mimeProc) throws ServiceException {
         mIsDataSourceSender = true;
         ((Mime.FixedMimeMessage) mm).setSession(mSession);
-        return sendMimeMessage(octxt, mbox, false, mm, uploads, origMsgId, replyType, null, false);
+        return sendMimeMessage(octxt, mbox, false, mm, uploads, origMsgId, replyType, null, false, mimeProc);
     }
 
     protected static class RollbackData {
@@ -461,7 +476,7 @@ public class MailSender {
      * Sets member variables and sends the message.
      */
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
-            Collection<Upload> uploads, ItemId origMsgId, String replyType, Identity identity, boolean replyToSender)
+            Collection<Upload> uploads, ItemId origMsgId, String replyType, Identity identity, boolean replyToSender, MimeProcessor mimeProc)
             throws ServiceException {
         mSaveToSent = saveToSent;
         mUploads = uploads;
@@ -469,7 +484,14 @@ public class MailSender {
         mReplyType = replyType;
         mIdentity = identity;
         mReplyToSender = replyToSender;
+        mimeProcessor = mimeProc;
         return sendMimeMessage(octxt, mbox, mm);
+    }
+
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
+            Collection<Upload> uploads, ItemId origMsgId, String replyType, Identity identity, boolean replyToSender)
+            throws ServiceException {
+           return sendMimeMessage(octxt, mbox, saveToSent, mm, uploads, origMsgId, replyType, identity, replyToSender, null);
     }
 
     /**
@@ -556,6 +578,14 @@ public class MailSender {
             Address[] rcptAddresses = getRecipients(mm);
             if (rcptAddresses != null && rcptAddresses.length > 0)
                 newAddrs = mbox.newContactAddrs(Arrays.asList(rcptAddresses));
+
+            if (mimeProcessor != null) {
+                try {
+                    mimeProcessor.process(mm, mbox);
+                } finally {
+                    mimeProcessor = null;
+                }
+            }
 
             // if requested, save a copy of the message to the Sent Mail folder
             ParsedMessage pm = null;

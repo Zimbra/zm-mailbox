@@ -45,6 +45,8 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
+import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
 
 /**
  * @since May 30, 2004
@@ -297,7 +299,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         try {
             Server server = acct.getServer();
             if (server != null) {
-                server_version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+                server_version = server.getServerVersion();
+            } else {
+                server_version = Provisioning.getInstance().getLocalServer().getServerVersion();
             }
         } catch (ServiceException e) {
             LOG.error("Unable to fetch server version for the user account", e);
@@ -409,7 +413,8 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
                 } catch (ServiceException e) {
                     LOG.error("unable to de-register auth token", e);
                 }
-                acct.addAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
+                Expiration expiration = new AbsoluteExpiration(this.expires);
+                acct.addAuthTokens(String.valueOf(tokenID), server_version, expiration);
             }
         } catch (ServiceException e) {
             LOG.error("unable to register auth token", e);
@@ -422,7 +427,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 		try {
 		    Account acct = Provisioning.getInstance().getAccountById(accountId);
 		    if(acct != null) {
-		        acct.removeAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
+		        acct.removeAuthTokens(String.valueOf(tokenID), server_version);
 		    }
 		    if(acct.getBooleanAttr(Provisioning.A_zimbraLogOutFromAllServers, false)) {
 		        AuthTokenRegistry.addTokenToQueue(this);
@@ -536,20 +541,14 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
                 }
             }
         } catch (ServiceException e) {
-            LOG.fatal("Unable to verify auth token registration in LDAP", e);
+            LOG.fatal("Unable to verify auth token registration in ephemeral store", e);
         }
 
         return false;
     }
 
-    private boolean isRegisteredInternal(Account acct) {
-        String []  tokens = acct.getAuthTokens();
-        for(String tk : tokens) {
-            if(tk.startsWith(tokenID.toString())) {
-                return true;
-            }
-        }
-        return false;
+    private boolean isRegisteredInternal(Account acct) throws ServiceException {
+        return acct.hasAuthTokens(String.valueOf(tokenID));
     }
 
     @Override

@@ -32,11 +32,13 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.qa.unittest.TestUtil;
 
@@ -46,6 +48,12 @@ import com.zimbra.qa.unittest.TestUtil;
  * @author ysasaki
  */
 public class MimeTest {
+
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+    }
 
     private void testCP932(String contentType) throws IOException {
         Reader reader = Mime.getTextReader(getClass().getResourceAsStream("cp932.txt"), contentType, null);

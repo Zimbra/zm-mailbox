@@ -236,10 +236,17 @@ public class Document extends MailItem {
 
     static Document create(int id, String uuid, Folder folder, String filename, String type, ParsedDocument pd,
             CustomMetadata custom, int flags) throws ServiceException {
+        return create(id, uuid, folder, filename, type, pd, custom, flags, null);
+    }
+    static Document create(int id, String uuid, Folder folder, String filename, String type, ParsedDocument pd,
+            CustomMetadata custom, int flags, MailItem parent) throws ServiceException {
         assert(id != Mailbox.ID_AUTO_INCREMENT);
 
         Mailbox mbox = folder.getMailbox();
         UnderlyingData data = prepareCreate(Type.DOCUMENT, id, uuid, folder, filename, type, pd, null, custom, flags);
+        if (parent != null) {
+            data.parentId = parent.mId;
+        }
         data.contentChanged(mbox);
 
         ZimbraLog.mailop.info("Adding Document %s: id=%d, folderId=%d, folderName=%s",
@@ -247,7 +254,7 @@ public class Document extends MailItem {
         new DbMailItem(mbox).create(data);
 
         Document doc = new Document(mbox, data);
-        doc.finishCreation(null);
+        doc.finishCreation(parent);
         pd.setVersion(doc.getVersion());
         return doc;
     }
