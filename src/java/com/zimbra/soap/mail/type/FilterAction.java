@@ -17,19 +17,23 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlValue;
 
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
+
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
+@XmlTransient
 public class FilterAction {
 
     /**
@@ -437,4 +441,124 @@ public class FilterAction {
         }
     }
 
+    @XmlAccessorType(XmlAccessType.NONE)
+    public static class RejectAction extends FilterAction {
+        public static final String TEXT_TEMPLATE = "text:";
+
+        /**
+         * @zm-api-field-tag content
+         * @zm-api-field-description message text
+         */
+        @XmlValue
+        protected final String content;
+
+        @SuppressWarnings("unused")
+        private RejectAction() {
+            this(null);
+        }
+
+        public RejectAction(String content) {
+            this.content = content;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("content", content).toString();
+        }
+    }
+
+    @XmlAccessorType(XmlAccessType.NONE)
+    public static final class ErejectAction extends RejectAction {
+        @SuppressWarnings("unused")
+        private ErejectAction() {
+            this(null);
+        }
+
+        public ErejectAction(String value) {
+            super(value);
+        }
+    }
+
+    @XmlAccessorType(XmlAccessType.NONE)
+    public static class LogAction extends FilterAction {
+        public static final String LOGLEVEL_FATAL = "fatal";
+        public static final String LOGLEVEL_ERROR = "error";
+        public static final String LOGLEVEL_WARN = "warn";
+        public static final String LOGLEVEL_INFO = "info";
+        public static final String LOGLEVEL_DEBUG = "debug";
+        public static final String LOGLEVEL_TRACE = "trace";
+
+        /**
+         * @zm-api-field-tag logLevel
+         * @zm-api-field-description Log level - <b>fatal|error|warn|info|debug|trace</b>, info is default if not specified.
+         */
+        @XmlAttribute(name=MailConstants.A_LEVEL/* level */, required=false)
+        private String level;
+
+        /**
+         * @zm-api-field-tag content
+         * @zm-api-field-description message text
+         */
+        @XmlValue
+        protected final String content;
+
+        @SuppressWarnings("unused")
+        private LogAction() {
+            this(null, null);
+        }
+
+        public LogAction(String level, String content) {
+            this.level = validateLogLevel(level);
+            this.content = content;
+        }
+
+        /**
+         * @return the level
+         */
+        public String getLevel() {
+            return level;
+        }
+
+        /**
+         * @param level the level to set
+         */
+        public void setLevel(String level) {
+            this.level = validateLogLevel(level);
+        }
+
+        /**
+         * @return the content
+         */
+        public String getContent() {
+            return content;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("level", level).add("content", content).toString();
+        }
+
+        public static String validateLogLevel(String level) {
+            if (StringUtil.isNullOrEmpty(level)) {
+                ZimbraLog.filter.info("Log level is not available, setting to %s", LOGLEVEL_INFO);
+                return LOGLEVEL_INFO;
+            }
+            if (!(LOGLEVEL_FATAL.equalsIgnoreCase(level)
+                    || LOGLEVEL_ERROR.equalsIgnoreCase(level)
+                    || LOGLEVEL_WARN.equalsIgnoreCase(level)
+                    || LOGLEVEL_INFO.equalsIgnoreCase(level)
+                    || LOGLEVEL_DEBUG.equalsIgnoreCase(level)
+                    || LOGLEVEL_TRACE.equalsIgnoreCase(level)
+                    )) {
+                ZimbraLog.filter.info("Log level is not valid %s, resetting to %s", level, LOGLEVEL_INFO);
+                return LOGLEVEL_INFO;
+            } else {
+                return level.toLowerCase();
+            }
+        }
+    }
 }

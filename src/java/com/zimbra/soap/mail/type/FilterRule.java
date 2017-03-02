@@ -40,7 +40,7 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {"filterVariables", "tests", "actions","child"})
+@XmlType(propOrder = {"filterVariables", "tests", "actions", "child"})
 @JsonPropertyOrder({ "name", "active", "filterVariables", "tests", "actions","child" })
 public final class FilterRule {
 
@@ -88,11 +88,14 @@ public final class FilterRule {
         @XmlElement(name=MailConstants.E_ACTION_REPLY /* actionReply */, type=FilterAction.ReplyAction.class),
         @XmlElement(name=MailConstants.E_ACTION_NOTIFY /* actionNotify */, type=FilterAction.NotifyAction.class),
         @XmlElement(name=MailConstants.E_ACTION_RFCCOMPLIANTNOTIFY /* actionNotify (RFC compliant) */, type=FilterAction.RFCCompliantNotifyAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class)
+        @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_REJECT /* actionReject */, type=FilterAction.RejectAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_EREJECT /* actionEreject */, type=FilterAction.ErejectAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_LOG /* actionLog */, type=FilterAction.LogAction.class)
     })
     // in nested rule case, actions could be null.
     private List<FilterAction> actions;
-    
+
     // For Nested Rule
     /**
      * @zm-api-field-description Nested Rule
@@ -160,6 +163,21 @@ public final class FilterRule {
         return this;
     }
 
+    public List<FilterAction> getFilterActions() {
+        // there must be no actions.size()==0 case. This is for just in case.
+        if(actions == null || actions.size() == 0) {
+            return null;
+        }
+        return Collections.unmodifiableList(actions);
+    }
+
+    public int getActionCount() {
+        if(actions == null){
+            return 0;
+        }
+        return actions.size();
+    }
+
     public String getName() {
         return name;
     }
@@ -180,21 +198,6 @@ public final class FilterRule {
         return tests;
     }
 
-    public List<FilterAction> getFilterActions() {
-        // there must be no actions.size()==0 case. This is for just in case.
-        if(actions == null || actions.size() == 0) {
-            return null;
-        }
-        return Collections.unmodifiableList(actions);
-    }
-
-    public int getActionCount() {
-        if(actions == null){
-            return 0;
-        }        
-        return actions.size();
-    }
-    
     // For Nested Rule
     public NestedRule getChild() {
         return child;
