@@ -1,5 +1,7 @@
-build
-.project
 .classpath
-/bin/
-.settings
+.settings/
+.project
+.idea/
+build/
+bin/
+.DS_Store

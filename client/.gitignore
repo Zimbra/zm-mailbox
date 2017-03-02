@@ -1,3 +1,7 @@
-build/
-.project
 .classpath
+.settings/
+.project
+.idea/
+build/
+bin/
+.DS_Store

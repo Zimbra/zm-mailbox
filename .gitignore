@@ -1,5 +1,7 @@
 .classpath
 .project
+.settings/
+.idea/
 build/
 bin/
 .DS_Store
