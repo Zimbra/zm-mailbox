@@ -239,7 +239,9 @@ public class AttributeMigration {
                     return;
                 }
                 try {
-                    csvPrinter.printRecord(line);
+                    synchronized(this) {
+                        csvPrinter.printRecord(line);
+                    }
                 } catch (IOException e) {
                     ZimbraLog.ephemeral.error("Problem writing record '%s' to file '%s'", line, name, e);
                 }
@@ -253,9 +255,14 @@ public class AttributeMigration {
                     return true;
                 }
                 try {
-                    outputStream = new FileOutputStream(name);
-                    csvPrinter = CSVFormat.DEFAULT.withHeader(csvHeaders).print(
-                            new OutputStreamWriter(outputStream, "UTF-8"));
+                    synchronized(this) {
+                        if (null != csvPrinter) {
+                            return true;
+                        }
+                        outputStream = new FileOutputStream(name);
+                        csvPrinter = CSVFormat.DEFAULT.withHeader(csvHeaders).print(
+                                new OutputStreamWriter(outputStream, "UTF-8"));
+                    }
                     Path path = Paths.get(name);
                     try {
                         Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rw-------"));
