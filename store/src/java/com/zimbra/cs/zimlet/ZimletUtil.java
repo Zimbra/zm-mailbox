@@ -519,9 +519,13 @@ public class ZimletUtil {
 		return attrs;
 	}
 
-	public static File getZimletRootDir(String zimletName) {
-	    return new File(LC.zimlet_directory.value(), zimletName);
-	}
+    public static File getZimletRootDir(String zimletName) throws ZimletException {
+        if(zimletName.matches("^[\\w.-]+$")) {
+            return new File(LC.zimlet_directory.value(), zimletName);
+        } else {
+            throw ZimletException.INVALID_ZIMLET_NAME("Zimlet name may contain only letters, numbers and the following simbols: '.', '-' and '_'");
+        }
+    }
 
 	public static void flushCache() throws ZimletException {
 	    sZimletsLoaded = false;
@@ -788,12 +792,14 @@ public class ZimletUtil {
 			sZimlets.remove(zimlet);
 		}
         ZimbraLog.zimlet.info("undeploying zimlet %s", zimlet);
-        File zimletDir = ZimletUtil.getZimletRootDir(zimlet);
         try {
+            File zimletDir = ZimletUtil.getZimletRootDir(zimlet);
             FileUtil.deleteDir(zimletDir);
             ZimbraLog.zimlet.info("zimlet directory %s is deleted", zimletDir.getName());
         } catch (IOException e) {
-            ZimbraLog.zimlet.warn("error happend when deleting zimlet directory", e);
+            throw ServiceException.FAILURE("error occurred when deleting zimlet directory", e);
+        } catch (ZimletException e) {
+            throw ServiceException.FAILURE("error occurred when deleting zimlet directory", e);
         }
 	}
 

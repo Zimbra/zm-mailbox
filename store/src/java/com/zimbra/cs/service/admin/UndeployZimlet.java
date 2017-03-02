@@ -62,7 +62,7 @@ public class UndeployZimlet extends AdminDocumentHandler {
 	    String name = request.getAttribute(AdminConstants.A_NAME);
 		String action = request.getAttribute(AdminConstants.A_ACTION, null);
 		ZAuthToken auth = null;
-		if (action == null) {
+		if (action != null) {
             auth = zsc.getRawAuthToken();
         }
 

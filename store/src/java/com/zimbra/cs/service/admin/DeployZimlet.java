@@ -190,6 +190,9 @@ public class DeployZimlet extends AdminDocumentHandler {
                 if(zf.getZimletDescription().isExtension() && !zsc.getAuthToken().isAdmin()) {
                     throw ServiceException.PERM_DENIED("Only global admin is allowed to deploy extensions for Zimbra Admin UI");
                 }
+                if(!zf.getZimletName().matches("^[\\w.-]+$")) {
+                    throw ZimletException.INVALID_ZIMLET_NAME("Zimlet name may contain only letters, numbers and the following simbols: '.', '-' and '_'");
+                }
             } catch (IOException | ZimletException e1) {
                 ZimbraLog.zimlet.warn("error while deploying Zimlet", e1);
                 throw ServiceException.FAILURE("error while deploying Zimlet", e1);

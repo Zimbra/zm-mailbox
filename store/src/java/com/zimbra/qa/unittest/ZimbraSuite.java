@@ -136,6 +136,7 @@ public class ZimbraSuite  {
         sClasses.add(TestLockoutMailbox.class);
         sClasses.add(TestSearchDirectory.class);
         sClasses.add(TestChangeEphemeralStore.class);
+        sClasses.add(TestDeployZimlet.class);
     }
 
     /**
