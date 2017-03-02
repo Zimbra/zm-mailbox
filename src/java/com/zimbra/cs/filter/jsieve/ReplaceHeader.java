@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -103,7 +103,7 @@ public class ReplaceHeader extends AbstractCommand {
                                     newHeaderName = header.getName();
                                 }
                                 if (ehe.getNewValue() != null) {
-                                    newHeaderValue = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), ehe.getNewValue());
+                                    newHeaderValue = FilterUtil.replaceVariables(mailAdapter, ehe.getNewValue());
                                     newHeaderValue = MimeUtility.fold(newHeaderName.length() + 2, MimeUtility.encodeText(newHeaderValue));
                                 } else {
                                     newHeaderValue = header.getValue();

@@ -89,7 +89,7 @@ public class SetVariable extends AbstractCommand {
                     key = FilterUtil.handleQuotedAndEncodedVar(argument);
                 } else {
                     if (argument.contains("${")) {
-                        value = FilterUtil.replaceVariables(existingVars, matchedValues, argument);
+                        value = FilterUtil.replaceVariables(mailAdapter, argument);
                     } else {
                         value = argument;
                     }

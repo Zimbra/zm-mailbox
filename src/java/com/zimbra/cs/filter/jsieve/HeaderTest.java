@@ -204,8 +204,7 @@ public class HeaderTest extends Header {
         }
         ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
         for (String key : keys) {
-            String temp = FilterUtil.replaceVariables(zma.getVariables(), zma.getMatchedValues(),
-                    key);
+            String temp = FilterUtil.replaceVariables(zma, key);
             replacedVariables.add(temp);
         }
         

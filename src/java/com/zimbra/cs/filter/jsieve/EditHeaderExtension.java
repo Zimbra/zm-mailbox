@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -523,7 +523,7 @@ public class EditHeaderExtension {
         List<String> temp = new ArrayList<String>();
         if (this.valueList != null && !this.valueList.isEmpty()) {
             for (String value : this.valueList) {
-                temp.add(FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), value));
+                temp.add(FilterUtil.replaceVariables(mailAdapter, value));
             }
         }
         this.valueList = temp;

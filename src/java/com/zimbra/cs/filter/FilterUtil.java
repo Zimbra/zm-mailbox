@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -17,8 +17,6 @@
 package com.zimbra.cs.filter;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -29,9 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.Header;
@@ -40,10 +36,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.MimeUtility;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.client.ZFolder;
@@ -69,7 +63,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
-import com.zimbra.cs.filter.jsieve.Variables;
+import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
@@ -837,10 +831,15 @@ public final class FilterUtil {
      * @param sourceStr text string that may contain "variable-ref" (RFC 5229 Section 3.)
      * @return Replaced text string
      */
-    public static String replaceVariables(Map<String, String> variables, List<String> matchedVariables, String sourceStr) {
+    public static String replaceVariables(ZimbraMailAdapter mailAdapter, String sourceStr) {
+        if (null == mailAdapter || !SetVariable.isVariablesExtAvailable(mailAdapter)) {
+            return sourceStr;
+        }
         if (sourceStr.indexOf("${") == -1) {
             return sourceStr;
         }
+        Map<String, String> variables = mailAdapter.getVariables();
+        List<String> matchedVariables = mailAdapter.getMatchedValues();
         ZimbraLog.filter.debug("Variable: %s " , sourceStr);
         ZimbraLog.filter.debug("Variable available: %s : %s", variables ,  matchedVariables);
         String resultStr = sourceStr;

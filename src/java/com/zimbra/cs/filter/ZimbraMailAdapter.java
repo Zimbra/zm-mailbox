@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -69,7 +69,6 @@ import com.zimbra.cs.filter.jsieve.ActionRedirect;
 import com.zimbra.cs.filter.jsieve.ActionReply;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.filter.jsieve.ErejectException;
-import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
@@ -286,9 +285,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
                     String folderPath = fileinto.getDestination();
-                    if (SetVariable.isVariablesExtAvailable(this)) {
-                    	folderPath = FilterUtil.replaceVariables(this.variables, this.matchedValues, folderPath);
-                    }
+                    folderPath = FilterUtil.replaceVariables(this, folderPath);
                     try {
                         if (!allowFilterToMountpoint && isMountpoint(mailbox, folderPath)) {
                             ZimbraLog.filter.info("Filing to mountpoint \"%s\" is not allowed.  Filing to the default folder instead.",
@@ -306,9 +303,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     // redirect mail to another address
                     ActionRedirect redirect = (ActionRedirect) action;
                     String addr = redirect.getAddress();
-                    if (SetVariable.isVariablesExtAvailable(this)) {
-                    	addr = FilterUtil.replaceVariables(this.variables, this.matchedValues, addr);
-                    }
+                    addr = FilterUtil.replaceVariables(this, addr);
                     ZimbraLog.filter.info("Redirecting message to %s.", addr);
                     try {
                         handler.redirect(addr);
@@ -322,10 +317,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     ActionReply reply = (ActionReply) action;
                     ZimbraLog.filter.debug("Replying to message");
                     try {
-                    	String replyStrg = reply.getBodyTemplate();
-                    	if (SetVariable.isVariablesExtAvailable(this)) {
-                    		replyStrg = FilterUtil.replaceVariables(this.variables, this.matchedValues, replyStrg);
-                        }
+                        String replyStrg = FilterUtil.replaceVariables(this, reply.getBodyTemplate());
                         handler.reply(replyStrg);
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to reply.", e);
@@ -336,19 +328,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     ZimbraLog.filter.debug("Sending notification message to %s.", notify.getEmailAddr());
                     try {
                     	
-                    	if (SetVariable.isVariablesExtAvailable(this)) {
-                    		 handler.notify(FilterUtil.replaceVariables(this.variables, this.matchedValues, notify.getEmailAddr()),
-                    				 FilterUtil.replaceVariables(this.variables, this.matchedValues, notify.getSubjectTemplate()),
-                    				 FilterUtil.replaceVariables(this.variables, this.matchedValues, notify.getBodyTemplate()),
-                                     notify.getMaxBodyBytes(),
-                                     notify.getOrigHeaders());
-                    	} else {
-	                        handler.notify(notify.getEmailAddr(),
-	                                       notify.getSubjectTemplate(),
-	                                       notify.getBodyTemplate(),
-	                                       notify.getMaxBodyBytes(),
-	                                       notify.getOrigHeaders());
-                    	}
+                        handler.notify(FilterUtil.replaceVariables(this, notify.getEmailAddr()),
+                                FilterUtil.replaceVariables(this, notify.getSubjectTemplate()),
+                                FilterUtil.replaceVariables(this, notify.getBodyTemplate()),
+                                notify.getMaxBodyBytes(),
+                                notify.getOrigHeaders());
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to notify.", e);
                         keep(KeepType.EXPLICIT_KEEP);
@@ -360,12 +344,8 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     if (isRejectSupported) {
 	                    ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
 	                    try {
-	                    	if (SetVariable.isVariablesExtAvailable(this)) {
-	                    		String msg = FilterUtil.replaceVariables(this.variables, this.matchedValues,reject.getMessage());
-	                    		handler.reject(msg, envelope);
-	                    	} else {
-	                    		handler.reject(reject.getMessage(), envelope);
-	                    	}
+	                        String msg = FilterUtil.replaceVariables(this, reject.getMessage());
+	                        handler.reject(msg, envelope);
 	                        handler.discard();
 	                    } catch (Exception e) {
 	                        ZimbraLog.filter.info("Unable to reject.", e);
