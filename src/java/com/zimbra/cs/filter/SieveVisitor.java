@@ -31,8 +31,11 @@ import org.apache.jsieve.parser.generated.Node;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.NotifyMailto;
+import com.zimbra.soap.mail.type.FilterAction;
+import com.zimbra.soap.mail.type.FilterAction.LogAction;
 import com.zimbra.soap.mail.type.FilterTest;
 
 /**
@@ -257,6 +260,18 @@ public abstract class SieveVisitor {
 
     @SuppressWarnings("unused")
     protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitRejectAction(Node node, VisitPhase phase, RuleProperties props, String content) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitErejectAction(Node node, VisitPhase phase, RuleProperties props, String content) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitLogAction(Node node, VisitPhase phase, RuleProperties props, String logLevel, String logText) throws ServiceException {
     }
 
     private static final Set<String> RULE_NODE_NAMES = ImmutableSet.of("if", "disabled_if");
@@ -751,6 +766,63 @@ public abstract class SieveVisitor {
             visitVariable(node, VisitPhase.begin, props, name, value);
             accept(node, props);
             visitVariable(node, VisitPhase.end, props, name, value);
+        } else if ("reject".equalsIgnoreCase(nodeName)) {
+            String content = null;
+            String val1 = getValue(node, 0, 0, 0, 0);
+            if (!StringUtil.isNullOrEmpty(val1)) {
+                if (FilterAction.RejectAction.TEXT_TEMPLATE.equals(val1)) {
+                    content = getValue(node, 0, 1, 0, 0);
+                } else {
+                    content = val1;
+                }
+                visitRejectAction(node, VisitPhase.begin, props, content);
+                accept(node, props);
+                visitRejectAction(node, VisitPhase.end, props, content);
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid reject action: Missing reject message", null);
+            }
+        } else if ("ereject".equalsIgnoreCase(nodeName)) {
+            String content = null;
+            String val1 = getValue(node, 0, 0, 0, 0);
+            if (!StringUtil.isNullOrEmpty(val1)) {
+                if (FilterAction.RejectAction.TEXT_TEMPLATE.equals(val1)) {
+                    content = getValue(node, 0, 1, 0, 0);
+                } else {
+                    content = val1;
+                }
+                visitErejectAction(node, VisitPhase.begin, props, content);
+                accept(node, props);
+                visitErejectAction(node, VisitPhase.end, props, content);
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid ereject action: Missing ereject message", null);
+            }
+        } else if ("log".equalsIgnoreCase(nodeName)) {
+            String level = null;
+            boolean isTag = getNode(node, 0, 0).jjtGetNumChildren() == 0 ? true : false;
+            if (isTag) {
+                level = getValue(node, 0, 0);
+                if (!StringUtil.isNullOrEmpty(level)) {
+                    level = level.substring(1);// remove preceding ":"
+                    if (!(LogAction.LOGLEVEL_FATAL.equalsIgnoreCase(level)
+                            || LogAction.LOGLEVEL_ERROR.equalsIgnoreCase(level)
+                            || LogAction.LOGLEVEL_WARN.equalsIgnoreCase(level)
+                            || LogAction.LOGLEVEL_INFO.equalsIgnoreCase(level)
+                            || LogAction.LOGLEVEL_DEBUG.equalsIgnoreCase(level)
+                            || LogAction.LOGLEVEL_TRACE.equalsIgnoreCase(level)
+                            )) {
+                        ZimbraLog.filter.info("Invalid log level found: %s, reseting to %s", level, LogAction.LOGLEVEL_INFO);
+                        level = LogAction.LOGLEVEL_INFO;
+                    }
+                }
+            }
+            String logText = getValue(node, 0, 1, 0, 0);
+            if (!StringUtil.isNullOrEmpty(logText)) {
+                visitLogAction(node, VisitPhase.begin, props, level, logText);
+                accept(node, props);
+                visitLogAction(node, VisitPhase.end, props, level, logText);
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid log action: Missing log message", null);
+            }
         } else {
             accept(node, props);
         }

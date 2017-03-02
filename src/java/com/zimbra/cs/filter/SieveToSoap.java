@@ -25,6 +25,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
@@ -47,7 +48,6 @@ public final class SieveToSoap extends SieveVisitor {
     private int numOfIfProcessingDone = 0; // For counting num of finished If processings
     private NestedRule currentNestedRule; // keep the pointer to nested rule being processed
     private List<FilterVariable> currentVariables = null;
-    private boolean insideIf = false;
     private List<FilterVariable> actionVariables = null;
 
     public SieveToSoap(List<String> ruleNames) {
@@ -102,7 +102,7 @@ public final class SieveToSoap extends SieveVisitor {
     @Override
     protected void visitVariable(Node ruleNode, VisitPhase phase, RuleProperties props, String name, String value) {
         if (phase == VisitPhase.begin) {
-            if (insideIf) {
+            if (isNestedRule()) {
                 if (actionVariables == null) {
                     actionVariables = Lists.newArrayList();
                 }
@@ -120,7 +120,6 @@ public final class SieveToSoap extends SieveVisitor {
     protected void visitIfControl(Node ruleNode, VisitPhase phase, RuleProperties props) {
         if (phase == VisitPhase.end) {
             numOfIfProcessingDone++; // number of if for which process is done
-            insideIf = false; // if block finished
             if (actionVariables != null && !actionVariables.isEmpty()) {
                 FilterAction action = new FilterVariables(actionVariables);
                 addAction(action);
@@ -129,7 +128,6 @@ public final class SieveToSoap extends SieveVisitor {
             return;
         }
         nunOfIfProcessingStarted++;   // number of if for which process is started.
-        insideIf = true; // if block started
     }
 
     private boolean isNestedRule(){
@@ -142,7 +140,7 @@ public final class SieveToSoap extends SieveVisitor {
 
     private <T extends FilterTest> T addTest(T test, RuleProperties props) {
         FilterTests tests;
-        if(currentNestedRule != null){ // Nested Rule is being processed
+        if (currentNestedRule != null) { // Nested Rule is being processed
             tests = currentNestedRule.getFilterTests();
         } else {                     // Root Rule is being processed
             tests = currentRule.getFilterTests();
@@ -531,6 +529,39 @@ public final class SieveToSoap extends SieveVisitor {
     protected void visitTagAction(Node node, VisitPhase phase, RuleProperties props, String tag) {
         if (phase == VisitPhase.begin) {
             addAction(new FilterAction.TagAction(tag));
+        }
+    }
+
+    @Override
+    protected void visitRejectAction(Node node, VisitPhase phase, RuleProperties props, String content) throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            if (!Strings.isNullOrEmpty(content)) {
+                addAction(new FilterAction.RejectAction(content));
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid reject action: Missing reject message", null);
+            }
+        }
+    }
+
+    @Override
+    protected void visitErejectAction(Node node, VisitPhase phase, RuleProperties props, String content) throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            if (!Strings.isNullOrEmpty(content)) {
+                addAction(new FilterAction.ErejectAction(content));
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid ereject action: Missing ereject message", null);
+            }
+        }
+    }
+
+    @Override
+    protected void visitLogAction(Node node, VisitPhase phase, RuleProperties props, String level, String logText) throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            if (!Strings.isNullOrEmpty(logText)) {
+                addAction(new FilterAction.LogAction(level, logText));
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid log action: Missing log message", null);
+            }
         }
     }
 }
