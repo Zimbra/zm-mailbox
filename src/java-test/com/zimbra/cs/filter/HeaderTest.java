@@ -19,8 +19,11 @@ package com.zimbra.cs.filter;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
+
+import javax.mail.internet.MimeMessage;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,6 +32,7 @@ import org.junit.Test;
 
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -43,6 +47,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.JMSession;
 
 public class HeaderTest {
     private static String sampleMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
@@ -160,10 +165,10 @@ public class HeaderTest {
         account.setMailSieveScript("if header :is \"Subject\" \"Attached HTML message\" { flag \"priority\"; }");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-        String msgContent = new String(
-                ByteUtil.getContent(new File("/opt/zimbra/unittest/TestFilter-testBodyContains.msg")));
+        InputStream is = getClass().getResourceAsStream("TestFilter-testBodyContains.msg");
+        MimeMessage mm = new ZMimeMessage(JMSession.getSession(), is);
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-                new ParsedMessage(msgContent.getBytes(), false),
+                new ParsedMessage(mm, false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
