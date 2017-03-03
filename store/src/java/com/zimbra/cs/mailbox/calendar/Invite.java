@@ -875,8 +875,12 @@ public class Invite {
      * @return can return null
      */
     public MimeMessage getMimeMessage() throws ServiceException {
+        return  getMimeMessage(!DebugConfig.disableMimeConvertersForCalendarBlobs);
+    }
+
+    public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {
         if (mCalItem == null || mMailItemId <= 0) return null;
-        return mCalItem.getSubpartMessage(mMailItemId);
+        return mCalItem.getSubpartMessage(mMailItemId, runConverters);
     }
 
     public void setPartStat(String partStat) { mPartStat = partStat; }
