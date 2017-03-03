@@ -117,7 +117,6 @@ public class GetMsg extends MailDocumentHandler {
                         wantHTML, neuter, headers, false, needGroupInfo, LC.mime_encode_missing_blob.booleanValue(), wantContent);
             }
         }
-
         return response;
     }
 

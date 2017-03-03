@@ -89,6 +89,7 @@ import com.zimbra.common.zmime.ZMimePart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.account.type.CertificateInfo;
 
 /**
  * @since Apr 17, 2004
@@ -120,6 +121,10 @@ public class Mime {
     private static final int MAX_PREAMBLE_LENGTH = 1024;
 
     public static class FixedMimeMessage extends ZMimeMessage {
+        private boolean isPKCS7Signed = false;
+        private List<CertificateInfo> signerCerts = null;
+        private String decryptionError = null;
+
         public FixedMimeMessage(Session session) {
             super(session);
         }
@@ -134,9 +139,38 @@ public class Mime {
 
         public FixedMimeMessage(MimeMessage source, Account acct) throws MessagingException {
             super(source);
+            if(source instanceof FixedMimeMessage) {
+                this.isPKCS7Signed = ((FixedMimeMessage)source).isPKCS7Signed;
+                this.signerCerts = ((FixedMimeMessage)source).signerCerts;
+                this.decryptionError = ((FixedMimeMessage)source).decryptionError;
+            }
             if (acct != null) {
                 setProperty("mail.mime.charset", acct.getPrefMailDefaultCharset());
             }
+        }
+
+        public boolean isPKCS7Signed() {
+            return isPKCS7Signed;
+        }
+
+        public void setPKCS7Signed(boolean isPKCS7Signed) {
+            this.isPKCS7Signed = isPKCS7Signed;
+        }
+
+        public List<CertificateInfo> getSignerCerts() {
+            return signerCerts;
+        }
+
+        public void setSignerCerts(List<CertificateInfo> signerCerts) {
+            this.signerCerts = signerCerts;
+        }
+
+        public String getDecryptionError() {
+            return decryptionError;
+        }
+
+        public void setDecryptionError(String decryptionError) {
+            this.decryptionError = decryptionError;
         }
 
         /**
@@ -1557,5 +1591,28 @@ public class Mime {
         }
 
         return refs;
+    }
+
+    public static boolean isMultipartSigned(String contentType) {
+        if (contentType.contains(MimeConstants.CT_MULTIPART_SIGNED))
+            return true;
+        else
+            return false;
+    }
+
+    public static boolean isPKCS7Signed(String contentType) {
+        if ((contentType.contains(MimeConstants.CT_APPLICATION_SMIME)
+            || (contentType.contains(MimeConstants.CT_APPLICATION_SMIME_OLD)))
+            && contentType.contains(MimeConstants.CT_SMIME_TYPE_SIGNED_DATA))
+            return true;
+        else
+            return false;
+    }
+
+    public static boolean isEncrypted(String contentType) {
+        if (contentType.contains(MimeConstants.CT_SMIME_TYPE_ENVELOPED_DATA))
+            return true;
+        else
+            return false;
     }
 }

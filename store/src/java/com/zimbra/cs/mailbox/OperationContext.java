@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -41,6 +42,9 @@ public class OperationContext {
     private String     requestIP;
     private String     userAgent;
     private AuthToken  authToken;
+    private SoapProtocol mResponseProtocol;
+    private String     mRequestedAccountId;
+    private String     mAuthTokenAccountId;
     private Map<String, OperationContextData> contextData;
     
     boolean changetype = CHECK_CREATED;
@@ -193,5 +197,29 @@ public class OperationContext {
         } else {
             return contextData.get(key);
         }
+    }
+
+    public SoapProtocol getmResponseProtocol() {
+        return mResponseProtocol;
+    }
+
+    public void setmResponseProtocol(SoapProtocol mResponseProtocol) {
+        this.mResponseProtocol = mResponseProtocol;
+    }
+
+    public String getmRequestedAccountId() {
+        return mRequestedAccountId;
+    }
+
+    public void setmRequestedAccountId(String mRequestedAccountId) {
+        this.mRequestedAccountId = mRequestedAccountId;
+    }
+
+    public String getmAuthTokenAccountId() {
+        return mAuthTokenAccountId;
+    }
+
+    public void setmAuthTokenAccountId(String mAuthTokenAccountId) {
+        this.mAuthTokenAccountId = mAuthTokenAccountId;
     }
 }

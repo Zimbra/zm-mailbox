@@ -127,6 +127,7 @@ import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Note.Rectangle;
@@ -280,8 +281,10 @@ public class Mailbox {
     @Deprecated
     public static final int ID_FOLDER_PROFILE = 18;
 
+    //This id should be incremented if any new ID_FOLDER_* is added.
     public static final int HIGHEST_SYSTEM_ID = 18;
     public static final int FIRST_USER_ID = 256;
+
 
     public static final String CONF_PREVIOUS_MAILBOX_IDS = "prev_mbox_ids";
 
@@ -8799,6 +8802,12 @@ public class Mailbox {
     public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type,
             int flags)
     throws IOException, ServiceException {
+        return createDocument(octxt, folderId, pd, type, flags, null, null, true);
+    }
+
+    public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type,
+            int flags, MailItem parent, CustomMetadata custom, boolean indexing)
+    throws IOException, ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = sm.stage(pd.getBlob(), this);
 
@@ -8817,7 +8826,7 @@ public class Mailbox {
             Document doc;
             switch (type) {
                 case DOCUMENT:
-                    doc = Document.create(itemId, uuid, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null, flags);
+                    doc = Document.create(itemId, uuid, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, custom, flags, parent);
                     break;
                 case WIKI:
                     doc = WikiItem.create(itemId, uuid, getFolderById(folderId), pd.getFilename(), pd, null);
@@ -8840,7 +8849,9 @@ public class Mailbox {
             MailboxBlob mailboxBlob = doc.setContent(staged, pd);
             redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
-            index.add(doc);
+            if (indexing) {
+                index.add(doc);
+            }
 
             success = true;
             long elapsed = System.currentTimeMillis() - start;
@@ -9868,6 +9879,23 @@ public class Mailbox {
             beginTransaction("getComments", octxt, null);
             MailItem parent = getItemByUuid(parentUuid, MailItem.Type.UNKNOWN, fromDumpster);
             return parent.getComments(SortBy.DATE_DESC, offset, length);
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public UnderlyingData getFirstChildData(OperationContext octxt, MailItem parent)
+            throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getFirstChildData", octxt, null);
+            List<UnderlyingData> keyItems = DbMailItem.getByParent(parent);
+            if (!keyItems.isEmpty()) {
+                success = true;
+                return keyItems.get(0);
+            } else {
+                throw ServiceException.NOT_FOUND("Data not found");
+            }
         } finally {
             endTransaction(success);
         }

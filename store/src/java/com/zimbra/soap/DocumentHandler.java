@@ -137,6 +137,9 @@ public abstract class DocumentHandler {
         octxt.setChangeConstraint(zsc.getChangeConstraintType(), zsc.getChangeConstraintLimit());
         octxt.setRequestIP(zsc.getRequestIP()).setSession(session);
         octxt.setUserAgent(zsc.getUserAgent());
+        octxt.setmResponseProtocol(zsc.getmResponseProtocol());
+        octxt.setmRequestedAccountId(zsc.getRequestedAccountId());
+        octxt.setmAuthTokenAccountId(zsc.getAuthtokenAccountId());
         return octxt;
     }
 

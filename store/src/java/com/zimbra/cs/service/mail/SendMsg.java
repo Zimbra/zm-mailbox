@@ -33,6 +33,8 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.dom4j.QName;
+
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
@@ -72,6 +74,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeProcessor;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
@@ -88,132 +91,141 @@ import com.zimbra.soap.type.MsgContent;
  *
  * @since Sep 17, 2004
  */
-public final class SendMsg extends MailDocumentHandler {
+public class SendMsg extends MailDocumentHandler {
     private static final Log LOG = LogFactory.getLog(SendMsg.class);
 
     private enum SendState { NEW, SENT, PENDING };
 
     private static final long MAX_IN_FLIGHT_DELAY_MSECS = 4 * Constants.MILLIS_PER_SECOND;
     private static final long RETRY_CHECK_PERIOD_MSECS = 500;
+    protected static MimeProcessor processor = null;
 
     private static final ItemId NO_MESSAGE_SAVED_TO_SENT = new ItemId((String) null, -1);
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(zsc);
-        AccountUtil.checkQuotaWhenSendMail(mbox);
+        return handle(request, context, MailConstants.SEND_MSG_RESPONSE);
+    }
 
-        OperationContext octxt = getOperationContext(zsc, context);
-        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+    public Element handle(Element request, Map<String, Object> context, QName respQname) throws ServiceException {
+           try {
+               ZimbraSoapContext zsc = getZimbraSoapContext(context);
+               Mailbox mbox = getRequestedMailbox(zsc);
+               AccountUtil.checkQuotaWhenSendMail(mbox);
 
-        // <m>
-        Element msgElem = request.getElement(MailConstants.E_MSG);
+               OperationContext octxt = getOperationContext(zsc, context);
+               ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        // check to see whether the entire message has been uploaded under separate cover
-        String attachId = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
+               // <m>
+               Element msgElem = request.getElement(MailConstants.E_MSG);
 
-        boolean needCalendarSentByFixup = request.getAttributeBool(MailConstants.A_NEED_CALENDAR_SENTBY_FIXUP, false);
-        boolean isCalendarForward = request.getAttributeBool(MailConstants.A_IS_CALENDAR_FORWARD, false);
-        boolean noSaveToSent = request.getAttributeBool(MailConstants.A_NO_SAVE_TO_SENT, false);
-        boolean fetchSavedMsg = request.getAttributeBool(MailConstants.A_FETCH_SAVED_MSG, false);
+               // check to see whether the entire message has been uploaded under separate cover
+               String attachId = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
 
-        String origId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
-        ItemId iidOrigId = origId == null ? null : new ItemId(origId, zsc);
-        String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
-        String identityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
-        String dataSourceId = msgElem.getAttribute(MailConstants.A_DATASOURCE_ID, null);
-        String draftId = msgElem.getAttribute(MailConstants.A_DRAFT_ID, null);
-        ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
-        boolean sendFromDraft = msgElem.getAttributeBool(MailConstants.A_SEND_FROM_DRAFT, false);
+               boolean needCalendarSentByFixup = request.getAttributeBool(MailConstants.A_NEED_CALENDAR_SENTBY_FIXUP, false);
+               boolean isCalendarForward = request.getAttributeBool(MailConstants.A_IS_CALENDAR_FORWARD, false);
+               boolean noSaveToSent = request.getAttributeBool(MailConstants.A_NO_SAVE_TO_SENT, false);
+               boolean fetchSavedMsg = request.getAttributeBool(MailConstants.A_FETCH_SAVED_MSG, false);
 
-        SendState state = SendState.NEW;
-        ItemId savedMsgId = null;
-        Pair<String, ItemId> sendRecord = null;
+               String origId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
+               ItemId iidOrigId = origId == null ? null : new ItemId(origId, zsc);
+               String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
+               String identityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
+               String dataSourceId = msgElem.getAttribute(MailConstants.A_DATASOURCE_ID, null);
+               String draftId = msgElem.getAttribute(MailConstants.A_DRAFT_ID, null);
+               ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
+               boolean sendFromDraft = msgElem.getAttributeBool(MailConstants.A_SEND_FROM_DRAFT, false);
 
-        // get the "send uid" and check that this isn't a retry of a pending send
-        String sendUid = request.getAttribute(MailConstants.A_SEND_UID, null);
-        if (sendUid != null) {
-            long delay = MAX_IN_FLIGHT_DELAY_MSECS;
-            do {
-                if (state == SendState.PENDING) {
-                    try {
-                        delay -= RETRY_CHECK_PERIOD_MSECS;
-                        Thread.sleep(RETRY_CHECK_PERIOD_MSECS);
-                    } catch (InterruptedException ie) { }
-                }
+               SendState state = SendState.NEW;
+               ItemId savedMsgId = null;
+               Pair<String, ItemId> sendRecord = null;
 
-                Pair<SendState, Pair<String, ItemId>> result = findPendingSend(mbox.getId(), sendUid);
-                state = result.getFirst();
-                sendRecord = result.getSecond();
-            } while (state == SendState.PENDING && delay >= 0);
-        }
+               // get the "send uid" and check that this isn't a retry of a pending send
+               String sendUid = request.getAttribute(MailConstants.A_SEND_UID, null);
+               if (sendUid != null) {
+                   long delay = MAX_IN_FLIGHT_DELAY_MSECS;
+                   do {
+                       if (state == SendState.PENDING) {
+                           try {
+                               delay -= RETRY_CHECK_PERIOD_MSECS;
+                               Thread.sleep(RETRY_CHECK_PERIOD_MSECS);
+                           } catch (InterruptedException ie) { }
+                       }
 
-        if (state == SendState.SENT) {
-            // message successfully sent by another thread
-            savedMsgId = sendRecord.getSecond();
-        } else if (state == SendState.PENDING) {
-            // tired of waiting for another thread to complete the send
-            throw MailServiceException.TRY_AGAIN("message send already in progress: " + sendUid);
-        } else if (state == SendState.NEW) {
-            MimeMessageData mimeData = new MimeMessageData();
-            try {
-                // holds return data about the MimeMessage
-                MimeMessage mm;
-                if (attachId != null) {
-                    mm = parseUploadedMessage(zsc, attachId, mimeData, needCalendarSentByFixup);
-                } else if (iidDraft != null && sendFromDraft) {
-                    Message msg = mbox.getMessageById(octxt, iidDraft.getId());
-                    mm = msg.getMimeMessage(false);
-                } else {
-                    mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
-                }
+                       Pair<SendState, Pair<String, ItemId>> result = findPendingSend(mbox.getId(), sendUid);
+                       state = result.getFirst();
+                       sendRecord = result.getSecond();
+                   } while (state == SendState.PENDING && delay >= 0);
+               }
 
-                savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
-                        dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
+               if (state == SendState.SENT) {
+                   // message successfully sent by another thread
+                   savedMsgId = sendRecord.getSecond();
+               } else if (state == SendState.PENDING) {
+                   // tired of waiting for another thread to complete the send
+                   throw MailServiceException.TRY_AGAIN("message send already in progress: " + sendUid);
+               } else if (state == SendState.NEW) {
+                   MimeMessageData mimeData = new MimeMessageData();
+                   try {
+                       // holds return data about the MimeMessage
+                       MimeMessage mm;
+                       if (attachId != null) {
+                           mm = parseUploadedMessage(zsc, attachId, mimeData, needCalendarSentByFixup);
+                       } else if (iidDraft != null && sendFromDraft) {
+                           Message msg = mbox.getMessageById(octxt, iidDraft.getId());
+                           mm = msg.getMimeMessage(false);
+                       } else {
+                           mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
+                       }
 
-                // (need to make sure that *something* gets recorded, because caching
-                //   a null ItemId makes the send appear to still be PENDING)
-                if (savedMsgId == null) {
-                    savedMsgId = NO_MESSAGE_SAVED_TO_SENT;
-                }
+                       savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                               dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
 
-                // and record it in the table in case the client retries the send
-                if (sendRecord != null) {
-                    sendRecord.setSecond(savedMsgId);
-                }
-            } catch (ServiceException e) {
-                clearPendingSend(mbox.getId(), sendRecord);
-                throw e;
-            } catch (RuntimeException re) {
-                clearPendingSend(mbox.getId(), sendRecord);
-                throw re;
-            } finally {
-                // purge the messages fetched from other servers.
-                if (mimeData.fetches != null) {
-                    FileUploadServlet.deleteUploads(mimeData.fetches);
-                }
-            }
-        }
+                       // (need to make sure that *something* gets recorded, because caching
+                       //   a null ItemId makes the send appear to still be PENDING)
+                       if (savedMsgId == null) {
+                           savedMsgId = NO_MESSAGE_SAVED_TO_SENT;
+                       }
 
-        if (iidDraft != null) {
-            deleteDraft(iidDraft, octxt, mbox, zsc);
-        }
+                       // and record it in the table in case the client retries the send
+                       if (sendRecord != null) {
+                           sendRecord.setSecond(savedMsgId);
+                       }
+                   } catch (ServiceException e) {
+                       clearPendingSend(mbox.getId(), sendRecord);
+                       throw e;
+                   } catch (RuntimeException re) {
+                       clearPendingSend(mbox.getId(), sendRecord);
+                       throw re;
+                   } finally {
+                       // purge the messages fetched from other servers.
+                       if (mimeData.fetches != null) {
+                           FileUploadServlet.deleteUploads(mimeData.fetches);
+                       }
+                   }
+               }
 
-        Element response = zsc.createElement(MailConstants.SEND_MSG_RESPONSE);
-        if (savedMsgId != null && savedMsgId != NO_MESSAGE_SAVED_TO_SENT && savedMsgId.getId() > 0) {
-            if (fetchSavedMsg) {
-                Message msg = GetMsg.getMsg(octxt, mbox, savedMsgId, false);
-                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, 0, true, true, null, false, false,
-                        LC.mime_encode_missing_blob.booleanValue(), MsgContent.both);
-            } else {
-                Element respElement = response.addElement(MailConstants.E_MSG);
-                respElement.addAttribute(MailConstants.A_ID, ifmt.formatItemId(savedMsgId));
-            }
-        } else {
-            response.addElement(MailConstants.E_MSG);
-        }
-        return response;
+               if (iidDraft != null) {
+                   deleteDraft(iidDraft, octxt, mbox, zsc);
+               }
+
+               Element response = zsc.createElement(respQname);
+               if (savedMsgId != null && savedMsgId != NO_MESSAGE_SAVED_TO_SENT && savedMsgId.getId() > 0) {
+                   if (fetchSavedMsg) {
+                       Message msg = GetMsg.getMsg(octxt, mbox, savedMsgId, false);
+                       ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, 0, true, true, null, false, false,
+                               LC.mime_encode_missing_blob.booleanValue(), MsgContent.both);
+                   } else {
+                       Element respElement = response.addElement(MailConstants.E_MSG);
+                       respElement.addAttribute(MailConstants.A_ID, ifmt.formatItemId(savedMsgId));
+                   }
+               } else {
+                   response.addElement(MailConstants.E_MSG);
+               }
+               return response;
+           } finally {
+               processor = null;
+           }
     }
 
     public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
@@ -240,9 +252,9 @@ public final class SendMsg extends MailDocumentHandler {
         if (dataSourceId == null) {
             sender = isCalendarMessage ? CalendarMailSender.getCalendarMailSender(mbox) : mbox.getMailSender();
             if (noSaveToSent) {
-                id = sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false);
+                id = sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false, processor);
             } else {
-                id = sender.sendMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, false);
+                id = sender.sendMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, false, processor);
             }
         } else {
             com.zimbra.cs.account.DataSource dataSource = mbox.getAccount().getDataSourceById(dataSourceId);
