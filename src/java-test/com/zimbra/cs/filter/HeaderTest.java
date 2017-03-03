@@ -182,10 +182,10 @@ public class HeaderTest {
         account.setMailSieveScript("if header :contains \"Content-Disposition\" \"attachment.txt\" { flag \"priority\"; }");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-        String msgContent = new String(
-                ByteUtil.getContent(new File("/opt/zimbra/unittest/TestFilter-testBodyContains.msg")));
+        InputStream is = getClass().getResourceAsStream("TestFilter-testBodyContains.msg");
+        MimeMessage mm = new ZMimeMessage(JMSession.getSession(), is);
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-                new ParsedMessage(msgContent.getBytes(), false),
+                new ParsedMessage(mm, false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
