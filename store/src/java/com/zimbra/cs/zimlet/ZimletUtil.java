@@ -555,7 +555,7 @@ public class ZimletUtil {
             File file = new File(ZIMLET_CACHE_DIR);
             FileUtil.deleteDirContents(file);
         } catch (IOException e) {
-            ZimbraLog.misc.warn("failed to flush zimlet cache", e);
+            ZimbraLog.zimlet.warn("failed to flush zimlet cache", e);
         }
     }
 

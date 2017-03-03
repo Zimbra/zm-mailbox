@@ -88,12 +88,14 @@ public class DeployZimlet extends AdminDocumentHandler {
                 mStatus.put(name, s);
 		    }
 		    s.value = status;
+		    ZimbraLog.zimlet.info("Updated status of %s to %s", name, status);
 		}
 		public void writeResponse(Element resp) {
 			for (Map.Entry<String, Status> entry : mStatus.entrySet()) {
 				Element progress = resp.addElement(AdminConstants.E_PROGRESS);
 				progress.addAttribute(AdminConstants.A_SERVER, entry.getKey());
 				progress.addAttribute(AdminConstants.A_STATUS, entry.getValue().value);
+				ZimbraLog.zimlet.info("Reporting status %s : %s", entry.getKey(), entry.getValue().value);
 				Exception e = entry.getValue().error;
 				if (e != null) {
 	                progress.addAttribute(AdminConstants.A_ERROR, e.getMessage());
@@ -175,11 +177,15 @@ public class DeployZimlet extends AdminDocumentHandler {
 		String action = request.getAttribute(AdminConstants.A_ACTION).toLowerCase();
 		Element content = request.getElement(MailConstants.E_CONTENT);
 		String aid = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
+        if(aid == null || aid.isEmpty()) {
+            throw MailServiceException.INVALID_REQUEST("Missing or invalid upload id (aid)", null);
+        }
 		boolean flushCache = request.getAttributeBool(AdminConstants.A_FLUSH, false);
         boolean synchronous = request.getAttributeBool(AdminConstants.A_SYNCHRONOUS, false);
 		if (action.equals(AdminConstants.A_STATUS)) {
 			// just print the status
-		} else {
+		} else  if(AdminConstants.A_DEPLOYALL.equals(action) || AdminConstants.A_DEPLOYLOCAL.equals(action)) {
+		    //we are deploying locally or remotely. Fetch the upload
 		    Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), aid, zsc.getAuthToken());
             if (up == null) {
                 throw MailServiceException.NO_SUCH_UPLOAD(aid);
@@ -255,10 +261,10 @@ public class DeployZimlet extends AdminDocumentHandler {
 	                    WebClientServiceUtil.sendFlushZimletRequestToUiNode(localServer);
 	                }
 	            }
-	        } else {
-	            throw ServiceException.INVALID_REQUEST("invalid action "+action, null);
 	        }
-		}
+		} else {
+            throw ServiceException.INVALID_REQUEST("invalid action " + action, null);
+        }
 
 		Element response = zsc.createElement(AdminConstants.DEPLOY_ZIMLET_RESPONSE);
 		Progress progress = mProgressMap.get(aid);
