@@ -108,7 +108,7 @@ public class DeleteHeader extends AbstractCommand {
                 }
                 // if deleteCurrentHeader is true, don't add header to mime
                 if (!deleteCurrentHeader) {
-                    mm.addHeader(header.getName() ,header.getValue());
+                    mm.addHeaderLine(header.getName() + ": " + header.getValue());
                 }
              }
             mm.saveChanges();

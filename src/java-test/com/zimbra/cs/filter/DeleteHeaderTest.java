@@ -19,10 +19,13 @@ package com.zimbra.cs.filter;
 import static org.junit.Assert.fail;
 
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.mail.Header;
+import javax.mail.internet.MimeMessage;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,6 +43,8 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.MPartInfo;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 
@@ -108,6 +113,33 @@ public class DeleteHeaderTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testDeleteHeaderXTestHeaderAll() {
+        String[] expected = {"Received: from edge01e.zimbra.com ([127.0.0.1])\r\n"
+                + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\r\n"
+                + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)",
+                "Received: from localhost (localhost [127.0.0.1])\r\n"
+                + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\r\n"
+                + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)",
+                "X-Test-Header-non-ascii: =?utf-8?B?5pel5pys6Kqe44Gu5Lu25ZCN?=",
+                "X-Numeric-Header: 2",
+                "X-Numeric-Header: 3",
+                "X-Numeric-Header: 4",
+                "X-Dummy-Header: ABC",
+                "X-Dummy-Header: 123",
+                "X-Dummy-Header: abc",
+                "X-Dummy-Header: \"\"",
+                "X-Dummy-Header: xyz",
+                "X-Dummy-Header: ",
+                "X-Dummy-Header: test",
+                "X-Dummy-Header: ''",
+                "X-Dummy-Header: a1b2c3",
+                "X-Header-With-Control-Chars: =?utf-8?B?dGVzdCBIVAkgVlQLIEVUWAMgQkVMByBCUwggbnVsbAAgYWZ0ZXIgbnVsbA0K?=",
+                "from: test2@zimbra.com",
+                "Subject: example",
+                "to: test@zimbra.com",
+                "Content-Transfer-Encoding: 7bit",
+                "MIME-Version: 1.0",
+                "Message-ID:"};
+
         try {
            String filterScript = "require [\"editheader\"];\n"
                     + " deleteheader \"X-Test-Header\" \r\n"
@@ -135,6 +167,23 @@ public class DeleteHeaderTest {
                 }
             }
             Assert.assertTrue(headerDeleted);
+
+            // Verify the order of the message header
+            MimeMessage mm = message.getMimeMessage();
+            List<MPartInfo> parts = Mime.getParts(mm);
+            Set<MPartInfo> bodies = Mime.getBody(parts, false);
+            Assert.assertEquals(1, bodies.size());
+            for (MPartInfo body : bodies) {
+                Enumeration e = body.getMimePart().getAllHeaderLines();
+                int i = 0;
+                while (e.hasMoreElements()) {
+                    String header = (String) e.nextElement();
+                    if (header.startsWith("Message-ID:")) {
+                        header = "Message-ID:";
+                    }
+                    Assert.assertEquals(expected[i++], header);
+                }
+            }
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
