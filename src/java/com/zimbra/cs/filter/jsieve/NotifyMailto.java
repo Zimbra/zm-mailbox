@@ -123,8 +123,8 @@ public class NotifyMailto extends AbstractActionCommand {
                             if (addr.isValid()) {
                                 from = email;
                             } else {
-							    // if the :from addr is not valid, the FilterUtil.notifyMailto() method takes 
-								// care of the From header before composing the notification message.
+                                // if the :from addr is not valid, the FilterUtil.notifyMailto() method takes
+                                // care of the From header before composing the notification message.
                                 ZimbraLog.filter.info("The value of the \":from\" [" + email + "] is not valid");
                             }
                         } else {
