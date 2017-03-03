@@ -56,8 +56,8 @@ public class EnvelopeTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret",
-                new HashMap<String, Object>());
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("original@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Before
@@ -438,6 +438,61 @@ public class EnvelopeTest {
             Assert.assertEquals("testCompareEmptyStringWithAsciiNumeric header", tags[1]);
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testTo_Alias() {
+        String filterScript = "require \"envelope\";\n"
+                + "set \"rcptto\" \"unknown\";\n"
+                + "if envelope :all :matches \"to\" \"*\" {\n"
+                + "  set \"rcptto\" \"${1}\";\n"
+                + "  tag \"${rcptto}\";\n"
+                + "}\n"
+                + "if envelope :all :matches \"to\" \"alias1*\" {\n"
+                + "  tag \"${1}\";\n"
+                + "}\n"
+                + "if envelope :all :matches \"to\" \"alias2*\" {\n"
+                + "  tag \"bad\";\n"
+                + "}\n"
+                + "if envelope :count \"eq\" :comparator \"i;ascii-numeric\" \"to\" \"1\" {"
+                + "  tag \"1\";\n"
+                + "}";
+
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<alias1@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailAdminSieveScriptBefore(filterScript);
+            account.setMail("original@zimbra.com");
+            String[] alias = {"alias1@zimbra.com", "alias2@zimbra.com"};
+            account.setMailAlias(alias);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+
+            String[] tags = msg.getTags();
+            Assert.assertTrue(tags != null);
+            Assert.assertEquals(3, tags.length);
+            Assert.assertEquals("alias1@zimbra.com", tags[0]);
+            Assert.assertEquals("@zimbra.com", tags[1]);
+            Assert.assertEquals("1", tags[2]);
+        } catch (Exception e) {
+            fail("No exception should be thrown:" + e);
         }
     }
 }

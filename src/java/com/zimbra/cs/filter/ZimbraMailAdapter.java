@@ -784,7 +784,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
              * from the RCPT command that caused delivery to this user is available
              * in the "to" part of the envelope.
              * ---
-             * Return only the address who is currently being processed.
+             * Return only the address (primary and alias) who is currently being processed.
              */
             List<LmtpAddress> recipients = envelope.getRecipients();
             try {
@@ -793,6 +793,16 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     for (LmtpAddress recipient: recipients) {
                         if (myaddress.toUpperCase().startsWith(recipient.getEmailAddress().toUpperCase())) {
                             result.add(recipient.getEmailAddress());
+                        }
+                    }
+                }
+                String[] myaliases = mailbox.getAccount().getMailAlias();
+                if (myaliases.length > 0) {
+                    for (String alias : myaliases) {
+                        for (LmtpAddress recipient: recipients) {
+                            if (alias.toUpperCase().startsWith(recipient.getEmailAddress().toUpperCase())) {
+                                result.add(recipient.getEmailAddress());
+                            }
                         }
                     }
                 }
