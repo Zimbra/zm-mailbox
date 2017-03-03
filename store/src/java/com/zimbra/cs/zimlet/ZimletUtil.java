@@ -99,6 +99,7 @@ public class ZimletUtil {
 	public static final String ZIMLET_ALLOWED_DOMAINS = "allowedDomains";
 	public static final String ZIMLET_DEFAULT_COS = "default";
 	public static final String PARAM_ZIMLET = "Zimlet";
+	public static final String ZIMLET_NAME_REGEX = "^[\\w.-]+$";
 	private static final String ZIMLET_CACHE_DIR = "/opt/zimbra/jetty/work/resource-cache/zimletres/latest";
 
 	private static int P_MAX = Integer.MAX_VALUE;
@@ -520,10 +521,10 @@ public class ZimletUtil {
 	}
 
     public static File getZimletRootDir(String zimletName) throws ZimletException {
-        if(zimletName.matches("^[\\w.-]+$")) {
+        if(zimletName.matches(ZIMLET_NAME_REGEX)) {
             return new File(LC.zimlet_directory.value(), zimletName);
         } else {
-            throw ZimletException.INVALID_ZIMLET_NAME("Zimlet name may contain only letters, numbers and the following simbols: '.', '-' and '_'");
+            throw ZimletException.INVALID_ZIMLET_NAME();
         }
     }
 

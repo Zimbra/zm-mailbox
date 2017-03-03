@@ -161,7 +161,7 @@ public class DeployZimlet extends AdminDocumentHandler {
             try {
                 t.join(TimeUnit.MILLISECONDS.convert(LC.zimlet_deploy_timeout.intValue(), TimeUnit.SECONDS));
             } catch (InterruptedException e) {
-                ZimbraLog.zimlet.warn("error while deploying Zimlet", e);
+                ZimbraLog.zimlet.warn("error deploying Zimlet", e);
             }
         }
         if (latch != null) {
@@ -190,12 +190,12 @@ public class DeployZimlet extends AdminDocumentHandler {
                 if(zf.getZimletDescription().isExtension() && !zsc.getAuthToken().isAdmin()) {
                     throw ServiceException.PERM_DENIED("Only global admin is allowed to deploy extensions for Zimbra Admin UI");
                 }
-                if(!zf.getZimletName().matches("^[\\w.-]+$")) {
-                    throw ZimletException.INVALID_ZIMLET_NAME("Zimlet name may contain only letters, numbers and the following simbols: '.', '-' and '_'");
+                if(!zf.getZimletName().matches(ZimletUtil.ZIMLET_NAME_REGEX)) {
+                    throw ZimletException.INVALID_ZIMLET_NAME();
                 }
             } catch (IOException | ZimletException e1) {
-                ZimbraLog.zimlet.warn("error while deploying Zimlet", e1);
-                throw ServiceException.FAILURE("error while deploying Zimlet", e1);
+                ZimbraLog.zimlet.warn("error deploying Zimlet", e1);
+                throw ServiceException.FAILURE("error deploying Zimlet", e1);
             }
 		    if (action.equals(AdminConstants.A_DEPLOYALL)) {
 		        List<Server> servers = Provisioning.getInstance().getAllServers();

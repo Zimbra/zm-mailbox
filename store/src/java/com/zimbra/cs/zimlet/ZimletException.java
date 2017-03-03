@@ -44,6 +44,10 @@ public class ZimletException extends Exception {
 		return new ZimletException(msg);
 	}
 
+    public static ZimletException INVALID_ZIMLET_NAME() {
+        return new ZimletException("Zimlet name may contain only letters, numbers and the following symbols: '.', '-' and '_'");
+    }
+
     public static ZimletException INVALID_ZIMLET_NAME(String msg) {
         return new ZimletException(msg);
     }
