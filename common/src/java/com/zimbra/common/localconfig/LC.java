@@ -1301,6 +1301,12 @@ public final class LC {
     public static final KnownKey zimbra_ews_autodiscover_use_service_url =
         KnownKey.newKey(false);
 
+    @Supported
+    public static final KnownKey smime_truststore = KnownKey.newKey("${mailboxd_truststore}");
+
+    @Supported
+    public static final KnownKey smime_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
