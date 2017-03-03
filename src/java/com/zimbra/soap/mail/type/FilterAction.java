@@ -21,14 +21,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlValue;
 
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
 import com.google.common.base.Objects;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -485,19 +486,35 @@ public class FilterAction {
 
     @XmlAccessorType(XmlAccessType.NONE)
     public static class LogAction extends FilterAction {
-        public static final String LOGLEVEL_FATAL = "fatal";
-        public static final String LOGLEVEL_ERROR = "error";
-        public static final String LOGLEVEL_WARN = "warn";
-        public static final String LOGLEVEL_INFO = "info";
-        public static final String LOGLEVEL_DEBUG = "debug";
-        public static final String LOGLEVEL_TRACE = "trace";
+        @XmlEnum
+        public enum LogLevel {
+            fatal,
+            error,
+            warn,
+            info,
+            debug,
+            trace;
+
+            public static LogLevel fromString(String s) throws ServiceException {
+                try {
+                    return LogLevel.valueOf(s);
+                } catch (IllegalArgumentException e) {
+                    throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+                }
+            }
+
+            public LogLevel toKeyLogLevel()
+            throws ServiceException {
+                return LogLevel.fromString(this.name());
+            }
+        }
 
         /**
          * @zm-api-field-tag logLevel
          * @zm-api-field-description Log level - <b>fatal|error|warn|info|debug|trace</b>, info is default if not specified.
          */
         @XmlAttribute(name=MailConstants.A_LEVEL/* level */, required=false)
-        private String level;
+        private LogLevel level;
 
         /**
          * @zm-api-field-tag content
@@ -511,7 +528,7 @@ public class FilterAction {
             this(null, null);
         }
 
-        public LogAction(String level, String content) {
+        public LogAction(LogLevel level, String content) {
             this.level = validateLogLevel(level);
             this.content = content;
         }
@@ -519,14 +536,14 @@ public class FilterAction {
         /**
          * @return the level
          */
-        public String getLevel() {
+        public LogLevel getLevel() {
             return level;
         }
 
         /**
          * @param level the level to set
          */
-        public void setLevel(String level) {
+        public void setLevel(LogLevel level) {
             this.level = validateLogLevel(level);
         }
 
@@ -542,22 +559,22 @@ public class FilterAction {
             return Objects.toStringHelper(this).add("level", level).add("content", content).toString();
         }
 
-        public static String validateLogLevel(String level) {
-            if (StringUtil.isNullOrEmpty(level)) {
-                ZimbraLog.filter.info("Log level is not available, setting to %s", LOGLEVEL_INFO);
-                return LOGLEVEL_INFO;
+        public static LogLevel validateLogLevel(LogLevel level) {
+            if (level == null) {
+                ZimbraLog.filter.info("Log level is not available, setting to %s", LogLevel.info);
+                return LogLevel.info;
             }
-            if (!(LOGLEVEL_FATAL.equalsIgnoreCase(level)
-                    || LOGLEVEL_ERROR.equalsIgnoreCase(level)
-                    || LOGLEVEL_WARN.equalsIgnoreCase(level)
-                    || LOGLEVEL_INFO.equalsIgnoreCase(level)
-                    || LOGLEVEL_DEBUG.equalsIgnoreCase(level)
-                    || LOGLEVEL_TRACE.equalsIgnoreCase(level)
+            if (!(LogLevel.fatal == level
+                    || LogLevel.error == level
+                    || LogLevel.warn == level
+                    || LogLevel.info == level
+                    || LogLevel.debug == level
+                    || LogLevel.trace == level
                     )) {
-                ZimbraLog.filter.info("Log level is not valid %s, resetting to %s", level, LOGLEVEL_INFO);
-                return LOGLEVEL_INFO;
+                ZimbraLog.filter.info("Log level is not valid %s, resetting to %s", level, LogLevel.info);
+                return LogLevel.info;
             } else {
-                return level.toLowerCase();
+                return level;
             }
         }
     }
