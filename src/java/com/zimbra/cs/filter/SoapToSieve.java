@@ -628,10 +628,10 @@ public final class SoapToSieve {
             FilterAction.LogAction logAction = (FilterAction.LogAction)action;
             StringBuilder sb = new StringBuilder();
             sb.append("log");
-            String level = logAction.getLevel();
-            if (!StringUtil.isNullOrEmpty(level)) {
+            FilterAction.LogAction.LogLevel level = logAction.getLevel();
+            if (level != null) {
                 level = FilterAction.LogAction.validateLogLevel(level);
-                sb.append(" :").append(level);
+                sb.append(" :").append(level.toString());
             }
             sb.append(" \"").append(logAction.getContent()).append("\"");
             return sb.toString();

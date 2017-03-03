@@ -35,7 +35,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.NotifyMailto;
 import com.zimbra.soap.mail.type.FilterAction;
-import com.zimbra.soap.mail.type.FilterAction.LogAction;
 import com.zimbra.soap.mail.type.FilterTest;
 
 /**
@@ -271,7 +270,7 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
-    protected void visitLogAction(Node node, VisitPhase phase, RuleProperties props, String logLevel, String logText) throws ServiceException {
+    protected void visitLogAction(Node node, VisitPhase phase, RuleProperties props, FilterAction.LogAction.LogLevel logLevel, String logText) throws ServiceException {
     }
 
     private static final Set<String> RULE_NODE_NAMES = ImmutableSet.of("if", "disabled_if");
@@ -797,29 +796,37 @@ public abstract class SieveVisitor {
                 throw ServiceException.PARSE_ERROR("Invalid ereject action: Missing ereject message", null);
             }
         } else if ("log".equalsIgnoreCase(nodeName)) {
-            String level = null;
-            boolean isTag = getNode(node, 0, 0).jjtGetNumChildren() == 0 ? true : false;
+            FilterAction.LogAction.LogLevel logLevel = null;
+            boolean isTag = getNode(node, 0, 0) == null ? false : getNode(node, 0, 0).jjtGetNumChildren() == 0 ? true : false;
+            String logText = null;
             if (isTag) {
-                level = getValue(node, 0, 0);
+                String level = getValue(node, 0, 0);
                 if (!StringUtil.isNullOrEmpty(level)) {
                     level = level.substring(1);// remove preceding ":"
-                    if (!(LogAction.LOGLEVEL_FATAL.equalsIgnoreCase(level)
-                            || LogAction.LOGLEVEL_ERROR.equalsIgnoreCase(level)
-                            || LogAction.LOGLEVEL_WARN.equalsIgnoreCase(level)
-                            || LogAction.LOGLEVEL_INFO.equalsIgnoreCase(level)
-                            || LogAction.LOGLEVEL_DEBUG.equalsIgnoreCase(level)
-                            || LogAction.LOGLEVEL_TRACE.equalsIgnoreCase(level)
+                    try {
+                        logLevel = FilterAction.LogAction.LogLevel.fromString(level);
+                    } catch (ServiceException se) {
+                        ZimbraLog.filter.info("Invalid log level found: %s, reseting to %s", level, FilterAction.LogAction.LogLevel.info);
+                    }
+                    if (!(FilterAction.LogAction.LogLevel.fatal == logLevel
+                            || FilterAction.LogAction.LogLevel.error == logLevel
+                            || FilterAction.LogAction.LogLevel.warn == logLevel
+                            || FilterAction.LogAction.LogLevel.info == logLevel
+                            || FilterAction.LogAction.LogLevel.debug == logLevel
+                            || FilterAction.LogAction.LogLevel.trace == logLevel
                             )) {
-                        ZimbraLog.filter.info("Invalid log level found: %s, reseting to %s", level, LogAction.LOGLEVEL_INFO);
-                        level = LogAction.LOGLEVEL_INFO;
+                        ZimbraLog.filter.info("Invalid log level found: %s, reseting to %s", level, FilterAction.LogAction.LogLevel.info);
+                        logLevel = FilterAction.LogAction.LogLevel.info;
                     }
                 }
+                logText = getValue(node, 0, 1, 0, 0);
+            } else {
+                logText = getValue(node, 0, 0, 0, 0);
             }
-            String logText = getValue(node, 0, 1, 0, 0);
             if (!StringUtil.isNullOrEmpty(logText)) {
-                visitLogAction(node, VisitPhase.begin, props, level, logText);
+                visitLogAction(node, VisitPhase.begin, props, logLevel, logText);
                 accept(node, props);
-                visitLogAction(node, VisitPhase.end, props, level, logText);
+                visitLogAction(node, VisitPhase.end, props, logLevel, logText);
             } else {
                 throw ServiceException.PARSE_ERROR("Invalid log action: Missing log message", null);
             }

@@ -555,10 +555,10 @@ public final class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitLogAction(Node node, VisitPhase phase, RuleProperties props, String level, String logText) throws ServiceException {
+    protected void visitLogAction(Node node, VisitPhase phase, RuleProperties props, FilterAction.LogAction.LogLevel logLevel, String logText) throws ServiceException {
         if (phase == VisitPhase.begin) {
             if (!Strings.isNullOrEmpty(logText)) {
-                addAction(new FilterAction.LogAction(level, logText));
+                addAction(new FilterAction.LogAction(logLevel, logText));
             } else {
                 throw ServiceException.PARSE_ERROR("Invalid log action: Missing log message", null);
             }
