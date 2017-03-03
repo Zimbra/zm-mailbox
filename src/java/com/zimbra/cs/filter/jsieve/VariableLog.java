@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -17,11 +17,6 @@
 
 package com.zimbra.cs.filter.jsieve;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
@@ -34,8 +29,7 @@ import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 public class VariableLog extends Log {
-	private Map<String, String> variables = new HashMap<String, String>();
-	private List<String> matchedValues = new ArrayList<String>();
+	private ZimbraMailAdapter mailAdapter = null;
 
 	@Override 
 	protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block,
@@ -45,18 +39,14 @@ public class VariableLog extends Log {
 			return null;
 		}
 
-		ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
-		if (SetVariable.isVariablesExtAvailable(mailAdapter)) {
-			this.variables = mailAdapter.getVariables();
-			this.matchedValues = mailAdapter.getMatchedValues();
-		}
+		this.mailAdapter = (ZimbraMailAdapter) mail;
 		return super.executeBasic(mail, arguments, block, context);
 
 	}
 
 	@Override
 	protected void log(String logLevel, String message, SieveContext context) throws SyntaxException {
-		message = FilterUtil.replaceVariables(variables, matchedValues, message);
+		message = FilterUtil.replaceVariables(mailAdapter, message);
 		super.log(logLevel, message, context);
 	}
 

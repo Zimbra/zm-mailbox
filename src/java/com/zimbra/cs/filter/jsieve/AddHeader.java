@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -96,8 +96,8 @@ public class AddHeader extends AbstractCommand {
         }
 
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
-        headerName = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), headerName);
-        headerValue = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), headerValue);
+        headerName = FilterUtil.replaceVariables(mailAdapter, headerName);
+        headerValue = FilterUtil.replaceVariables(mailAdapter, headerValue);
         try {
             headerValue = MimeUtility.fold(headerName.length() + 2, MimeUtility.encodeText(headerValue));
         } catch (UnsupportedEncodingException uee) {

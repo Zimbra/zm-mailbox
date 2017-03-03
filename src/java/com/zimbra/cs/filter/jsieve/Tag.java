@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -49,10 +49,7 @@ public class Tag extends AbstractActionCommand {
 
         // Only one tag with the same tag name allowed, others should be
         // discarded?   
-        ZimbraMailAdapter mailAdapter  = (ZimbraMailAdapter) mail;
-        if (SetVariable.isVariablesExtAvailable(mailAdapter)) {
-        	tagName = FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), tagName);
-        }
+        tagName = FilterUtil.replaceVariables((ZimbraMailAdapter) mail, tagName);
         mail.addAction(new ActionTag(tagName));
 
         return null;

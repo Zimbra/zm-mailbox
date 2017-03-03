@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -103,7 +103,7 @@ public class StringTest extends Header {
         }
         List<String> tempSourceValues =  new ArrayList<String>();
         for (String sourceValue : sourceValues) {
-            sourceValue = FilterUtil.replaceVariables(existingVars, matchedValues, sourceValue);
+            sourceValue = FilterUtil.replaceVariables(mailAdapter, sourceValue);
             tempSourceValues.add(sourceValue);
         }
         sourceValues = tempSourceValues;
@@ -125,7 +125,7 @@ public class StringTest extends Header {
     @Override
     protected void validateArguments(Arguments arguments, SieveContext context) throws SieveException {
         if (arguments.getArgumentList().size() < 3) {
-            throw new SyntaxException("Atleast 3 argument are needed. Found " + arguments);
+            throw new SyntaxException("At least 3 argument are needed. Found " + arguments);
         }
         for (Argument a : arguments.getArgumentList()) {
             System.out.println(a);

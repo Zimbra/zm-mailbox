@@ -115,7 +115,7 @@ public class NotifyMailto extends AbstractActionCommand {
                             if (stringList.size() != 1) {
                                 throw new SyntaxException("Expecting exactly one String for " + NOTIFY_FROM);
                             }
-                            String email = FilterUtil.replaceVariables(variables, matchedVariables, (String) stringList.get(0));
+                            String email = FilterUtil.replaceVariables(mailAdapter, (String) stringList.get(0));
                             // Check if the value of the ":from" tag has an valid email address.
                             // Because this value is eventually used as a parameter of the MAIL FROM, use
                             // a method of the LmtpAddress to validate the email address.
@@ -143,7 +143,7 @@ public class NotifyMailto extends AbstractActionCommand {
                                 throw new SyntaxException("Expecting exactly one String for " + NOTIFY_IMPORTANCE);
                             }
                             String strImportance = (String) stringList.get(0);
-                            FilterUtil.replaceVariables(mailAdapter.getVariables(), mailAdapter.getMatchedValues(), strImportance);
+                            FilterUtil.replaceVariables(mailAdapter, strImportance);
                             importance = Integer.parseInt(strImportance);
                             if (!(importance  == 1 || importance == 2 || importance == 3)) {
                                 throw new SyntaxException("Expecting an integer number (1, 2, 3) for " + NOTIFY_IMPORTANCE);
@@ -178,8 +178,8 @@ public class NotifyMailto extends AbstractActionCommand {
                                     key = "";
                                     value ="";
                                 }
-                                key = FilterUtil.replaceVariables(variables, matchedVariables, key);
-                                value = FilterUtil.replaceVariables(variables, matchedVariables, value);
+                                key = FilterUtil.replaceVariables(mailAdapter, key);
+                                value = FilterUtil.replaceVariables(mailAdapter, value);
                                 options.put(key, value);
                             }
                         } else {
@@ -197,7 +197,7 @@ public class NotifyMailto extends AbstractActionCommand {
                             if (stringList.size() != 1) {
                                 throw new SyntaxException("Expecting exactly one String for " + NOTIFY_MESSAGE);
                             }
-                            message = FilterUtil.replaceVariables(variables, matchedVariables, (String) stringList.get(0));
+                            message = FilterUtil.replaceVariables(mailAdapter, (String) stringList.get(0));
                         } else {
                             throw new SyntaxException("Expecting a StringList for " + NOTIFY_MESSAGE);
                         }
@@ -228,13 +228,13 @@ public class NotifyMailto extends AbstractActionCommand {
         if (method == null) {
             throw context.getCoordinate().syntaxException("Expecting a method string");
         } else {
-            method = FilterUtil.replaceVariables(variables, matchedVariables, method);
+            method = FilterUtil.replaceVariables(mailAdapter, method);
         }
         
         mailtoParams = new HashMap<String, List<String>>();
         try {
             URL url = new URL(method);
-            mailto = FilterUtil.replaceVariables(variables, matchedVariables, url.getPath());
+            mailto = FilterUtil.replaceVariables(mailAdapter, url.getPath());
             String query = url.getQuery();
 
             if (!StringUtil.isNullOrEmpty(query)) {
