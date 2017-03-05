@@ -529,7 +529,7 @@ public class FilterAction {
         }
 
         public LogAction(LogLevel level, String content) {
-            this.level = validateLogLevel(level);
+            this.level = level;
             this.content = content;
         }
 
@@ -544,7 +544,7 @@ public class FilterAction {
          * @param level the level to set
          */
         public void setLevel(LogLevel level) {
-            this.level = validateLogLevel(level);
+            this.level = level;
         }
 
         /**
@@ -557,25 +557,6 @@ public class FilterAction {
         @Override
         public String toString() {
             return Objects.toStringHelper(this).add("level", level).add("content", content).toString();
-        }
-
-        public static LogLevel validateLogLevel(LogLevel level) {
-            if (level == null) {
-                ZimbraLog.filter.info("Log level is not available, setting to %s", LogLevel.info);
-                return LogLevel.info;
-            }
-            if (!(LogLevel.fatal == level
-                    || LogLevel.error == level
-                    || LogLevel.warn == level
-                    || LogLevel.info == level
-                    || LogLevel.debug == level
-                    || LogLevel.trace == level
-                    )) {
-                ZimbraLog.filter.info("Log level is not valid %s, resetting to %s", level, LogLevel.info);
-                return LogLevel.info;
-            } else {
-                return level;
-            }
         }
     }
 }
