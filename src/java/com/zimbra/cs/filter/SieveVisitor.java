@@ -815,8 +815,8 @@ public abstract class SieveVisitor {
                             || FilterAction.LogAction.LogLevel.debug == logLevel
                             || FilterAction.LogAction.LogLevel.trace == logLevel
                             )) {
-                        ZimbraLog.filter.info("Invalid log level found: %s, reseting to %s", level, FilterAction.LogAction.LogLevel.info);
-                        logLevel = FilterAction.LogAction.LogLevel.info;
+                        String message = "Invalid log action: Invalid log level found: " + logLevel.toString();
+                        throw ServiceException.PARSE_ERROR(message, null);
                     }
                 }
                 logText = getValue(node, 0, 1, 0, 0);

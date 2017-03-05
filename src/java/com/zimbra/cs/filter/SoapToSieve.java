@@ -630,7 +630,16 @@ public final class SoapToSieve {
             sb.append("log");
             FilterAction.LogAction.LogLevel level = logAction.getLevel();
             if (level != null) {
-                level = FilterAction.LogAction.validateLogLevel(level);
+                if (!(FilterAction.LogAction.LogLevel.fatal == level
+                        || FilterAction.LogAction.LogLevel.error == level
+                        || FilterAction.LogAction.LogLevel.warn == level
+                        || FilterAction.LogAction.LogLevel.info == level
+                        || FilterAction.LogAction.LogLevel.debug == level
+                        || FilterAction.LogAction.LogLevel.trace == level
+                        )) {
+                    String message = "Invalid log action: Invalid log level found: " + level.toString();
+                    throw ServiceException.PARSE_ERROR(message, null);
+                }
                 sb.append(" :").append(level.toString());
             }
             sb.append(" \"").append(logAction.getContent()).append("\"");
