@@ -306,11 +306,11 @@ public class HeaderTest extends Header {
         boolean isMatched = false;
         Iterator<String> headerNamesIter = headerNames.iterator();
         while (!isMatched && headerNamesIter.hasNext()) {
-            Set<String> values = zma.getMatchingHeaderFromAllParts(headerNamesIter.next());
+            List<String> values = zma.getMatchingHeader(headerNamesIter.next());
             if (MatchTypeTags.CONTAINS_TAG.equals(matchType) && values != null && values.isEmpty()) {
                 isMatched = false;
             } else {
-                isMatched = match(comparator, matchType, new ArrayList<String>(values), keys, context);
+                isMatched = match(comparator, matchType, values, keys, context);
             }
         }
         return isMatched;
