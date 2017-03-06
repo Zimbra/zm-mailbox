@@ -3244,6 +3244,9 @@ Actions:
   <actionRFCCompliantNotify from="{from}" [importance="{importance}"] [options="{options}"] message="{subject}">
     <method>{method}</method>
   </actionRFCCompliantNotify>
+  <actionReject [index={"index-number"}]>{this is reject message}</actionReject>
+  <actionEreject [index={"index-number"}]>{this is ereject message}</actionEreject>
+  <actionLog [level={fatal|error|warn|info|debug|trace}] [index={"index-number"}]>{this is log message}</actionLog>
 
 Each action has an optional "index" attribute which specifies a guaranteed order
 for the action elements.

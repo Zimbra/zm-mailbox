@@ -53,7 +53,7 @@ public final class SoapToSieve {
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\"");
+            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\"");
             if (JsieveConfigMapHandler.isNotifyActionRFCCompliantAvailable()) {
                 buffer.append(", \"enotify\"");
             }
@@ -210,7 +210,6 @@ public final class SoapToSieve {
 
         nestedIfBlock.append(baseIndents);
         nestedIfBlock.append("}\n");
-
         return nestedIfBlock.toString();
     }
 
@@ -619,10 +618,51 @@ public final class SoapToSieve {
                 }
                 return sb.toString();
             }
+        } else if (action instanceof FilterAction.RejectAction) {
+            FilterAction.RejectAction rejectAction = (FilterAction.RejectAction)action;
+            return handleRejectAction(rejectAction);
+        } else if (action instanceof FilterAction.ErejectAction) {
+            FilterAction.ErejectAction erejectAction = (FilterAction.ErejectAction)action;
+            return handleRejectAction(erejectAction);
+        } else if (action instanceof FilterAction.LogAction) {
+            FilterAction.LogAction logAction = (FilterAction.LogAction)action;
+            StringBuilder sb = new StringBuilder();
+            sb.append("log");
+            FilterAction.LogAction.LogLevel level = logAction.getLevel();
+            if (level != null) {
+                if (!(FilterAction.LogAction.LogLevel.fatal == level
+                        || FilterAction.LogAction.LogLevel.error == level
+                        || FilterAction.LogAction.LogLevel.warn == level
+                        || FilterAction.LogAction.LogLevel.info == level
+                        || FilterAction.LogAction.LogLevel.debug == level
+                        || FilterAction.LogAction.LogLevel.trace == level
+                        )) {
+                    String message = "Invalid log action: Invalid log level found: " + level.toString();
+                    throw ServiceException.PARSE_ERROR(message, null);
+                }
+                sb.append(" :").append(level.toString());
+            }
+            sb.append(" \"").append(logAction.getContent()).append("\"");
+            return sb.toString();
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected action: %s", action);
         }
         return null;
+    }
+
+    private static String handleRejectAction(FilterAction.RejectAction rejectAction) throws ServiceException {
+        String act = rejectAction instanceof FilterAction.ErejectAction ? "ereject" : "reject";
+        if (!StringUtil.isNullOrEmpty(rejectAction.getContent())) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(act);
+            sb.append(" text:\r\n");
+            sb.append(rejectAction.getContent());
+            sb.append("\r\n.\r\n");
+            return sb.toString();
+        } else {
+            String message = "Empty " + act + " action";
+            throw ServiceException.PARSE_ERROR(message, null);
+        }
     }
 
     private static boolean containsSubjectHeader(String origHeaders) {
