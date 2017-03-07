@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,15 +16,19 @@
  */
 
 package com.zimbra.cs.filter;
-
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -34,47 +38,68 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.zimbra.common.mime.InternetAddress;
-import com.zimbra.cs.filter.jsieve.ActionNotify;
-import com.zimbra.cs.filter.jsieve.ActionReply;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
-import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.jsieve.mail.ActionKeep;
-import org.apache.jsieve.mail.ActionRedirect;
+import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
+import org.apache.jsieve.mail.optional.EnvelopeAccessors;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.jsieve.ActionEreject;
+import com.zimbra.cs.filter.jsieve.ActionFileInto;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.ActionNotify;
+import com.zimbra.cs.filter.jsieve.ActionNotifyMailto;
+import com.zimbra.cs.filter.jsieve.ActionRedirect;
+import com.zimbra.cs.filter.jsieve.ActionReply;
 import com.zimbra.cs.filter.jsieve.ActionTag;
+import com.zimbra.cs.filter.jsieve.ErejectException;
+import com.zimbra.cs.lmtpserver.LmtpAddress;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.StoreManager;
+
 
 /**
  * Sieve evaluation engine adds a list of {@link org.apache.jsieve.mail.Action}s
  * that have matched the filter conditions to this object
  * and invokes its {@link #executeActions()} method.
  */
-public class ZimbraMailAdapter implements MailAdapter {
+public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private Mailbox mailbox;
     private FilterHandler handler;
     private String[] tags;
     private boolean allowFilterToMountpoint = true;
+    private Map<String, String> variables = new HashMap<String, String>();
+    private List<String> matchedValues = new ArrayList<String>();
+
+    public enum VARIABLEFEATURETYPE { UNKNOWN, OFF, AVAILABLE};
+    private VARIABLEFEATURETYPE variablesExtAvailable = VARIABLEFEATURETYPE.UNKNOWN;
 
     /**
      * Keeps track of folders into which we filed messages, so we don't file twice
@@ -101,9 +126,24 @@ public class ZimbraMailAdapter implements MailAdapter {
 
     private boolean discardActionPresent = false;
 
+    private LmtpEnvelope envelope = null;
+
     public ZimbraMailAdapter(Mailbox mailbox, FilterHandler handler) {
         this.mailbox = mailbox;
         this.handler = handler;
+
+        try {
+            Account account = getMailbox().getAccount();
+            boolean variablesExtAvailable = Provisioning.getInstance().getServer(account)
+                    .getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
+            if (variablesExtAvailable) {
+                this.setVariablesExtAvailable(VARIABLEFEATURETYPE.AVAILABLE);
+            } else {
+                this.setVariablesExtAvailable(VARIABLEFEATURETYPE.OFF);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
+        }
     }
 
     public void setAllowFilterToMountpoint(boolean allowFilterToMountpoint) {
@@ -197,16 +237,36 @@ public class ZimbraMailAdapter implements MailAdapter {
                 return;
             }
 
-            if (getDeliveryActions().isEmpty()) {
+            List<Action> deliveryActions = getDeliveryActions();
+            if (deliveryActions.isEmpty()) {
                 // i.e. no keep/fileinto/redirect actions
-                if (getReplyNotifyActions().isEmpty()) {
+                if (getReplyNotifyRejectActions().isEmpty()) {
                     // if only flag/tag actions are present, we keep the message even if discard
                     // action is present
-                    explicitKeep();
+                    keep(KeepType.EXPLICIT_KEEP);
                 } else if (!discardActionPresent) {
-                    // else if reply/notify actions are present and there's no discard, do sort
+                    // else if reply/notify/reject/ereject actions are present and there's no discard, do sort
                     // of implicit keep
-                    explicitKeep();
+                    keep(KeepType.EXPLICIT_KEEP);
+                }
+            } else {
+                ListIterator<Action> li = deliveryActions.listIterator(deliveryActions.size());
+                while (li.hasPrevious()) {
+                    Action lastDeliveryAction = li.previous();
+
+                    if (lastDeliveryAction instanceof ActionFileInto) {
+                        ActionFileInto lastFileIntoAction = (ActionFileInto) lastDeliveryAction;
+                        if (lastFileIntoAction.isCopy() && !discardActionPresent) {
+                            keep(KeepType.EXPLICIT_KEEP);
+                        }
+                        break;
+                    } else if (lastDeliveryAction instanceof ActionRedirect) {
+                        ActionRedirect lastRedirectAction = (ActionRedirect) lastDeliveryAction;
+                        if (lastRedirectAction.isCopy() && !discardActionPresent) {
+                            keep(KeepType.EXPLICIT_KEEP);
+                        }
+                        break;
+                    }
                 }
             }
 
@@ -214,64 +274,109 @@ public class ZimbraMailAdapter implements MailAdapter {
                 if (action instanceof ActionKeep) {
                     if (context == null) {
                         ZimbraLog.filter.warn("SieveContext has unexpectedly not been set");
-                        doDefaultFiling();
+                        keep(KeepType.IMPLICIT_KEEP);
                     } else if (context.getCommandStateManager().isImplicitKeep()) {
                         // implicit keep: this means that none of the user's rules have been matched
                         // we need to check system spam filter to see if the mail is spam
-                        doDefaultFiling();
+                        keep(KeepType.IMPLICIT_KEEP);
                     } else {
-                        explicitKeep();
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
                     String folderPath = fileinto.getDestination();
+                    folderPath = FilterUtil.replaceVariables(this, folderPath);
                     try {
                         if (!allowFilterToMountpoint && isMountpoint(mailbox, folderPath)) {
                             ZimbraLog.filter.info("Filing to mountpoint \"%s\" is not allowed.  Filing to the default folder instead.",
                                                   folderPath);
-                            explicitKeep();
+                            keep(KeepType.EXPLICIT_KEEP);
                         } else {
                             fileInto(folderPath);
                         }
                     } catch (ServiceException e) {
                         ZimbraLog.filter.info("Unable to file message to %s.  Filing to %s instead.",
                                               folderPath, handler.getDefaultFolderPath(), e);
-                        explicitKeep();
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 } else if (action instanceof ActionRedirect) {
                     // redirect mail to another address
                     ActionRedirect redirect = (ActionRedirect) action;
                     String addr = redirect.getAddress();
+                    addr = FilterUtil.replaceVariables(this, addr);
                     ZimbraLog.filter.info("Redirecting message to %s.", addr);
                     try {
                         handler.redirect(addr);
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to redirect to %s.  Filing message to %s.",
                                               addr, handler.getDefaultFolderPath(), e);
-                        explicitKeep();
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 } else if (action instanceof ActionReply) {
                     // reply to mail
                     ActionReply reply = (ActionReply) action;
                     ZimbraLog.filter.debug("Replying to message");
                     try {
-                        handler.reply(reply.getBodyTemplate());
+                        String replyStrg = FilterUtil.replaceVariables(this, reply.getBodyTemplate());
+                        handler.reply(replyStrg);
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to reply.", e);
-                        explicitKeep();
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 } else if (action instanceof ActionNotify) {
                     ActionNotify notify = (ActionNotify) action;
                     ZimbraLog.filter.debug("Sending notification message to %s.", notify.getEmailAddr());
                     try {
-                        handler.notify(notify.getEmailAddr(),
-                                       notify.getSubjectTemplate(),
-                                       notify.getBodyTemplate(),
-                                       notify.getMaxBodyBytes(),
-                                       notify.getOrigHeaders());
+                    	
+                        handler.notify(FilterUtil.replaceVariables(this, notify.getEmailAddr()),
+                                FilterUtil.replaceVariables(this, notify.getSubjectTemplate()),
+                                FilterUtil.replaceVariables(this, notify.getBodyTemplate()),
+                                notify.getMaxBodyBytes(),
+                                notify.getOrigHeaders());
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to notify.", e);
-                        explicitKeep();
+                        keep(KeepType.EXPLICIT_KEEP);
+                    }
+                } else if (action instanceof ActionReject) {
+                    ActionReject reject = (ActionReject) action;
+                    boolean isRejectSupported = Provisioning.getInstance().getConfig().getBooleanAttr(
+                            Provisioning.A_zimbraSieveRejectEnabled, false);
+                    if (isRejectSupported) {
+	                    ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
+	                    try {
+	                        String msg = FilterUtil.replaceVariables(this, reject.getMessage());
+	                        handler.reject(msg, envelope);
+	                        handler.discard();
+	                    } catch (Exception e) {
+	                        ZimbraLog.filter.info("Unable to reject.", e);
+	                        keep(KeepType.EXPLICIT_KEEP);
+	                    }
+                    }
+                } else if (action instanceof ActionEreject) {
+                    ActionEreject ereject = (ActionEreject) action;
+                    ZimbraLog.filter.debug("Refusing delivery of a message at the protocol level");
+                    try {
+                        handler.ereject(envelope);
+                    } catch (ErejectException e) {
+                        // 'ereject' action executed
+                        throw e;
+                    } catch (Exception e) {
+                        ZimbraLog.filter.warn("Unable to ereject.", e);
+                    }
+                } else if (action instanceof ActionNotifyMailto) {
+                    ActionNotifyMailto notifyMailto = (ActionNotifyMailto) action;
+                    ZimbraLog.filter.debug("Sending RFC 5435/5436 compliant notification message to %s.", notifyMailto.getMailto());
+                    try {
+                        handler.notifyMailto(envelope,
+                                             notifyMailto.getFrom(),
+                                             notifyMailto.getImportance(),
+                                             notifyMailto.getOptions(),
+                                             notifyMailto.getMessage(),
+                                             notifyMailto.getMailto(),
+                                             notifyMailto.getMailtoParams());
+                    } catch (Exception e) {
+                        ZimbraLog.filter.warn("Unable to notify (mailto).", e);
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 }
             }
@@ -321,10 +426,11 @@ public class ZimbraMailAdapter implements MailAdapter {
         return actions;
     }
 
-    private List<Action> getReplyNotifyActions() {
+    private List<Action> getReplyNotifyRejectActions() {
         List<Action> actions = new ArrayList<Action>();
         for (Action action : this.actions) {
-            if (action instanceof ActionReply || action instanceof ActionNotify) {
+            if (action instanceof ActionReply || action instanceof ActionNotify
+               || action instanceof ActionReject || action instanceof ActionEreject) {
                 actions.add(action);
             }
         }
@@ -332,19 +438,27 @@ public class ZimbraMailAdapter implements MailAdapter {
     }
 
     /**
-     * Files the message into the inbox or spam folder.  Keeps track
-     * of the folder path, to make sure we don't file to the same
+     * Files the message into the inbox or sent or spam  folder.
+     * Keeps track of the folder path, to make sure we don't file to the same
      * folder twice.
      */
-    public Message doDefaultFiling()
-    throws ServiceException {
+    public enum KeepType {IMPLICIT_KEEP, EXPLICIT_KEEP};
+    public Message keep(KeepType type) throws ServiceException {
         String folderPath = handler.getDefaultFolderPath();
+        folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
         Message msg = null;
-        if (filedIntoPaths.contains(folderPath)) {
+        ZimbraLog.filter.debug(type == KeepType.EXPLICIT_KEEP ? "Explicit - fileinto " : "Implicit - fileinto " +
+            appendFlagTagActionsInfo(folderPath, getFlagActions(), getTagActions()));
+        if (isPathContainedInFiledIntoPaths(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
-            msg = handler.implicitKeep(getFlagActions(), getTags());
+            if (type == KeepType.EXPLICIT_KEEP) {
+                msg = handler.explicitKeep(getFlagActions(), getTags());
+            } else {
+                msg = handler.implicitKeep(getFlagActions(), getTags());
+            }
             if (msg != null) {
+                setTagsVisible(getTags());
                 filedIntoPaths.add(folderPath);
                 addedMessageIds.add(new ItemId(msg));
             }
@@ -352,30 +466,18 @@ public class ZimbraMailAdapter implements MailAdapter {
         return msg;
     }
 
-    /**
-     * Files the message into the inbox folder.  Keeps track
-     * of the folder path, to make sure we don't file to the same
-     * folder twice.
-     */
-    private Message explicitKeep()
-    throws ServiceException {
-        String folderPath = handler.getDefaultFolderPath();
-        if (ZimbraLog.filter.isDebugEnabled()) {
-            ZimbraLog.filter.debug(
-                    appendFlagTagActionsInfo(
-                            "Explicit keep - fileinto " + folderPath, getFlagActions(), getTagActions()));
-        }
-        Message msg = null;
+    private boolean isPathContainedInFiledIntoPaths(String folderPath) {
+        // 1. Check folder name case-sensitively if it has already been registered in folderIntoPaths list
         if (filedIntoPaths.contains(folderPath)) {
-            ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
-        } else {
-            msg = handler.explicitKeep(getFlagActions(), getTags());
-            if (msg != null) {
-                filedIntoPaths.add(folderPath);
-                addedMessageIds.add(new ItemId(msg));
+            return true;
+        }
+        // 2. Check it case-insensitively
+        for (String path : filedIntoPaths) {
+            if (path.equalsIgnoreCase(folderPath)) {
+                return true;
             }
         }
-        return msg;
+        return false;
     }
 
     /**
@@ -385,17 +487,33 @@ public class ZimbraMailAdapter implements MailAdapter {
      */
     private void fileInto(String folderPath)
     throws ServiceException {
+        folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
         if (ZimbraLog.filter.isDebugEnabled()) {
             ZimbraLog.filter.debug(
                     appendFlagTagActionsInfo("fileinto " + folderPath, getFlagActions(), getTagActions()));
         }
-        if (filedIntoPaths.contains(folderPath)) {
+        if (isPathContainedInFiledIntoPaths(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
             ItemId id = handler.fileInto(folderPath, getFlagActions(), getTags());
             if (id != null) {
+                setTagsVisible(getTags());
                 filedIntoPaths.add(folderPath);
                 addedMessageIds.add(id);
+            }
+        }
+    }
+
+    private void setTagsVisible(String[] tags) {
+        for (String tagName : tags) {
+            try {
+                Tag tag;
+                tag = mailbox.getTagByName(null, tagName);
+                if (tag == null || !tag.isListed()) {
+                    mailbox.createTag(null, tagName, (byte) 0);
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.filter.info("Failed to set tag visible.  \"" + tagName + "\" stays invisible on the tag list");
             }
         }
     }
@@ -608,4 +726,124 @@ public class ZimbraMailAdapter implements MailAdapter {
     public void setDiscardActionPresent() {
         discardActionPresent = true;
     }
+
+
+    public void setEnvelope(LmtpEnvelope env) {
+        this.envelope  = env;
+    }
+
+    @Override
+    public List<String> getEnvelope(String name) throws SieveMailException {
+        return getMatchingEnvelope(name);
+    }
+
+    @Override
+    public List<String> getEnvelopeNames() throws SieveMailException {
+        List<String> result = new ArrayList<String>();
+        if (envelope.hasRecipients()) {
+            result.add("to");
+        }
+        if (envelope.hasSender()) {
+            result.add("from");
+        }
+        return result;
+    }
+
+    @Override
+    public List<String> getMatchingEnvelope(String name)
+        throws SieveMailException {
+        List<String> result = Lists.newArrayListWithExpectedSize(2);
+        if (envelope == null) {
+            return result;
+        }
+
+        if (name.compareToIgnoreCase("to") == 0) {
+            /* RFC 5228 5.4. Test envelope
+             * ---
+             * If the SMTP transaction involved several RCPT commands, only the data
+             * from the RCPT command that caused delivery to this user is available
+             * in the "to" part of the envelope.
+             * ---
+             * Return only the address (primary and alias) who is currently being processed.
+             */
+            List<LmtpAddress> recipients = envelope.getRecipients();
+            try {
+                String myaddress = mailbox.getAccount().getMail();
+                if (null != myaddress && !myaddress.isEmpty()) {
+                    for (LmtpAddress recipient: recipients) {
+                        if (myaddress.toUpperCase().startsWith(recipient.getEmailAddress().toUpperCase())) {
+                            result.add(recipient.getEmailAddress());
+                        }
+                    }
+                }
+                String[] myaliases = mailbox.getAccount().getMailAlias();
+                if (myaliases.length > 0) {
+                    for (String alias : myaliases) {
+                        for (LmtpAddress recipient: recipients) {
+                            if (alias.toUpperCase().startsWith(recipient.getEmailAddress().toUpperCase())) {
+                                result.add(recipient.getEmailAddress());
+                            }
+                        }
+                    }
+                }
+            } catch (ServiceException e) {
+                // nothing to do with this exception. Just return an empty list
+            }
+        } else {
+            LmtpAddress sender = envelope.getSender();
+            result.add(sender.getEmailAddress());
+        }
+        return result;
+    }
+    
+    public String getVariable(String key) {
+        return variables.get(key);
+    }
+
+    public void addVariable(String key, String value) {
+        this.variables.put(key.toLowerCase(), value);
+    }
+
+    public List<String> getMatchedValues() {
+        return matchedValues;
+    }
+
+    public void setMatchedValues(List<String> matchedValues) {
+        this.matchedValues = matchedValues;
+    }
+
+    public Map<String, String> getVariables() {
+        return variables;
+    }
+
+    public void updateIncomingBlob() {
+        DeliveryContext ctxt = handler.getDeliveryContext();
+        if (ctxt != null) {
+            StoreManager sm = StoreManager.getInstance();
+            InputStream in = null;
+            Blob blob = ctxt.getIncomingBlob();
+            try {
+                ParsedMessage pm = getParsedMessage();
+                pm.updateMimeMessage();
+                in = pm.getRawInputStream();
+                blob = sm.storeIncoming(in);
+            } catch (IOException | ServiceException | MessagingException e) {
+                ZimbraLog.filter.error("Unable to update MimeMessage and incomimg blob.", e);
+            } finally {
+                ByteUtil.closeStream(in);
+            }
+            ctxt.setIncomingBlob(blob);
+        }
+    }
+
+    public void clearValues() {
+        clearMatchedValues();
+        clearVariables();
+    }
+
+    public void clearMatchedValues() { matchedValues.clear(); }
+    public void clearVariables() { variables.clear(); }
+
+    public VARIABLEFEATURETYPE getVariablesExtAvailable() { return variablesExtAvailable; }
+    public void setVariablesExtAvailable(VARIABLEFEATURETYPE type) { this.variablesExtAvailable = type; }
 }
