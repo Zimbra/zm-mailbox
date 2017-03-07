@@ -112,7 +112,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 		boolean isLocal = true;
 		ZimletFile zf;
 		
-		public DeployThread(Server server,  Progress pr, ZAuthToken au, boolean flush, ZimletFile zf) {
+		public DeployThread(Server server, Progress pr, ZAuthToken au, boolean flush, ZimletFile zf) {
 		    this.server = server;
 			progress = pr;
 			this.zf = zf;
@@ -182,7 +182,7 @@ public class DeployZimlet extends AdminDocumentHandler {
         }
 		boolean flushCache = request.getAttributeBool(AdminConstants.A_FLUSH, false);
         boolean synchronous = request.getAttributeBool(AdminConstants.A_SYNCHRONOUS, false);
-		if (action.equals(AdminConstants.A_STATUS)) {
+		if (AdminConstants.A_STATUS.equals(action)) {
 			// just print the status
 		} else  if(AdminConstants.A_DEPLOYALL.equals(action) || AdminConstants.A_DEPLOYLOCAL.equals(action)) {
 		    //we are deploying locally or remotely. Fetch the upload
@@ -203,7 +203,7 @@ public class DeployZimlet extends AdminDocumentHandler {
                 ZimbraLog.zimlet.warn("error deploying Zimlet", e1);
                 throw ServiceException.FAILURE("error deploying Zimlet", e1);
             }
-		    if (action.equals(AdminConstants.A_DEPLOYALL)) {
+		    if (AdminConstants.A_DEPLOYALL.equals(action)) {
 		        List<Server> servers = Provisioning.getInstance().getAllServers();
 	            
 	            CountDownLatch latch = new CountDownLatch(servers.size());
@@ -242,7 +242,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	                ZimbraLog.zimlet.warn("CountDownLatch failed %d", latch.getCount(), e);
 	            }
 	            FileUploadServlet.deleteUpload(up);
-	        } else if (action.equals(AdminConstants.A_DEPLOYLOCAL)) {
+	        } else if (AdminConstants.A_DEPLOYLOCAL.equals(action)) {
 	            Server localServer = Provisioning.getInstance().getLocalServer();
 	            checkRight(zsc, context, localServer, Admin.R_deployZimlet);
 	            try {
