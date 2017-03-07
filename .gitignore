@@ -1,7 +1,11 @@
 .classpath
 .project
+<<<<<<< HEAD
 .settings/
 .idea/
 build/
 bin/
 .DS_Store
+=======
+bin/
+>>>>>>> 930a35fff43bfe1ed04198837bf3c4d71e9eaa92
