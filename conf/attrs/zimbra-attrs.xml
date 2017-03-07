@@ -9283,5 +9283,4 @@ TODO: delete them permanently from here
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>enable OCSP support for SMIME.</desc>
 </attr>
-
 </attrs>
