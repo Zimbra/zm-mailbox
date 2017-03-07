@@ -43,7 +43,15 @@ public class ZimletException extends Exception {
 	public static ZimletException INVALID_ZIMLET_CONFIG(String msg) {
 		return new ZimletException(msg);
 	}
-	
+
+    public static ZimletException INVALID_ZIMLET_NAME() {
+        return new ZimletException("Zimlet name may contain only letters, numbers and the following symbols: '.', '-' and '_'");
+    }
+
+    public static ZimletException INVALID_ZIMLET_NAME(String msg) {
+        return new ZimletException(msg);
+    }
+
 	public static ZimletException CANNOT_DEPLOY(String zimlet, Throwable cause) {
 		return new ZimletException("Cannot deploy Zimlet " + zimlet, cause);
 	}

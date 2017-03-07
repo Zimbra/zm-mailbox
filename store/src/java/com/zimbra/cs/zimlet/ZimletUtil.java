@@ -99,6 +99,7 @@ public class ZimletUtil {
 	public static final String ZIMLET_ALLOWED_DOMAINS = "allowedDomains";
 	public static final String ZIMLET_DEFAULT_COS = "default";
 	public static final String PARAM_ZIMLET = "Zimlet";
+	public static final String ZIMLET_NAME_REGEX = "^[\\w.-]+$";
 	private static final String ZIMLET_CACHE_DIR = "/opt/zimbra/jetty/work/resource-cache/zimletres/latest";
 
 	private static int P_MAX = Integer.MAX_VALUE;
@@ -519,9 +520,13 @@ public class ZimletUtil {
 		return attrs;
 	}
 
-	public static File getZimletRootDir(String zimletName) {
-	    return new File(LC.zimlet_directory.value(), zimletName);
-	}
+    public static File getZimletRootDir(String zimletName) throws ZimletException {
+        if(zimletName.matches(ZIMLET_NAME_REGEX)) {
+            return new File(LC.zimlet_directory.value(), zimletName);
+        } else {
+            throw ZimletException.INVALID_ZIMLET_NAME();
+        }
+    }
 
 	public static void flushCache() throws ZimletException {
 	    sZimletsLoaded = false;
@@ -550,7 +555,7 @@ public class ZimletUtil {
             File file = new File(ZIMLET_CACHE_DIR);
             FileUtil.deleteDirContents(file);
         } catch (IOException e) {
-            ZimbraLog.misc.warn("failed to flush zimlet cache", e);
+            ZimbraLog.zimlet.warn("failed to flush zimlet cache", e);
         }
     }
 
@@ -788,12 +793,14 @@ public class ZimletUtil {
 			sZimlets.remove(zimlet);
 		}
         ZimbraLog.zimlet.info("undeploying zimlet %s", zimlet);
-        File zimletDir = ZimletUtil.getZimletRootDir(zimlet);
         try {
+            File zimletDir = ZimletUtil.getZimletRootDir(zimlet);
             FileUtil.deleteDir(zimletDir);
             ZimbraLog.zimlet.info("zimlet directory %s is deleted", zimletDir.getName());
         } catch (IOException e) {
-            ZimbraLog.zimlet.warn("error happend when deleting zimlet directory", e);
+            throw ServiceException.FAILURE("error occurred when deleting zimlet directory", e);
+        } catch (ZimletException e) {
+            throw ServiceException.FAILURE("error occurred when deleting zimlet directory", e);
         }
 	}
 
