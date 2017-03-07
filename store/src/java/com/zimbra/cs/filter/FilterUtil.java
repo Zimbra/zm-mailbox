@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -22,18 +22,24 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import javax.mail.Address;
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
@@ -46,14 +52,19 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZInternetHeader;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.SetVariable;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Folder;
@@ -245,13 +256,15 @@ public final class FilterUtil {
     public static final String HEADER_FORWARDED = "X-Zimbra-Forwarded";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
+    public static final String HEADER_RETURN_PATH = "Return-Path";
+    public static final String HEADER_AUTO_SUBMITTED = "Auto-Submitted";
 
     public static void redirect(OperationContext octxt, Mailbox sourceMbox, MimeMessage msg, String destinationAddress)
     throws ServiceException {
         MimeMessage outgoingMsg;
 
         try {
-            if (!isMailLoop(sourceMbox, msg)) {
+            if (!isMailLoop(sourceMbox, msg, new String[]{HEADER_FORWARDED})) {
                 outgoingMsg = new Mime.FixedMimeMessage(msg);
                 Mime.recursiveRepairTransferEncoding(outgoingMsg);
                 outgoingMsg.addHeader(HEADER_FORWARDED, sourceMbox.getAccount().getName());
@@ -324,7 +337,7 @@ public final class FilterUtil {
     public static void reply(OperationContext octxt, Mailbox mailbox, ParsedMessage parsedMessage, String bodyTemplate)
     throws MessagingException, ServiceException {
         MimeMessage mimeMessage = parsedMessage.getMimeMessage();
-        if (isMailLoop(mailbox, mimeMessage)) {
+        if (isMailLoop(mailbox, mimeMessage, new String[]{HEADER_FORWARDED})) {
             String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(mimeMessage));
             throw ServiceException.FAILURE(error, null);
         }
@@ -378,7 +391,7 @@ public final class FilterUtil {
             String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders)
     throws MessagingException, ServiceException {
         MimeMessage mimeMessage = parsedMessage.getMimeMessage();
-        if (isMailLoop(mailbox, mimeMessage)) {
+        if (isMailLoop(mailbox, mimeMessage, new String[]{HEADER_FORWARDED})) {
             String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(mimeMessage));
             throw ServiceException.FAILURE(error, null);
         }
@@ -461,6 +474,225 @@ public final class FilterUtil {
         mailSender.sendMimeMessage(octxt, mailbox, notification);
     }
 
+    public static void reject(OperationContext octxt, Mailbox mailbox, ParsedMessage parsedMessage,
+                              String reason, LmtpEnvelope envelope)
+      throws MessagingException, ServiceException {
+        MimeMessage mimeMessage = parsedMessage.getMimeMessage();
+        if (isMailLoop(mailbox, mimeMessage, new String[]{HEADER_FORWARDED})) {
+            // Detected a mail loop.  Do not send MDN, but just discard the message
+            String error = String.format("Detected a mail loop for message %s. No MDN sent.",
+                Mime.getMessageID(mimeMessage));
+            ZimbraLog.filter.info(error);
+            throw ServiceException.FAILURE(error, null);
+        }
+        String reportTo = null;
+        if (envelope != null && envelope.hasSender()) {
+            reportTo = envelope.getSender().getEmailAddress();
+        }
+        if (reportTo == null || reportTo.isEmpty()) {
+            String [] returnPath = mimeMessage.getHeader(HEADER_RETURN_PATH);
+            if (returnPath == null || returnPath.length == 0) {
+                // RFC 5429 2.2.1.
+                // >> Note that according to [MDN], Message Disposition Notifications MUST
+                // >> NOT be generated if the MAIL FROM (or Return-Path) is empty.
+                throw new MessagingException("Neither 'envelope from' nor 'Return-Path' specified. Can't locate the address to reject to (No MDN sent)");
+            } else {
+                // At least one 'return-path' should exist.
+                reportTo = returnPath[0];
+            }
+        }
+
+        Account owner = mailbox.getAccount();
+        Locale locale = owner.getLocale();
+        String charset = owner.getPrefMailDefaultCharset();
+        if (charset == null) {
+            charset = MimeConstants.P_CHARSET_UTF8;
+        }
+
+        SMTPMessage report = new SMTPMessage(JMSession.getSmtpSession());
+
+        // add the forwarded header account names to detect the mail loop between accounts
+        for (String headerFwdAccountName : Mime.getHeaders(mimeMessage, HEADER_FORWARDED)) {
+            report.addHeader(HEADER_FORWARDED, headerFwdAccountName);
+        }
+        report.addHeader(HEADER_FORWARDED, owner.getName());
+
+        // MDN header
+        report.setEnvelopeFrom("<>");
+        report.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(reportTo));
+        String subject = L10nUtil.getMessage(MsgKey.seiveRejectMDNSubject, locale);
+        report.setSubject(subject);
+        report.setSentDate(new Date());
+        InternetAddress address = new JavaMailInternetAddress(owner.getName());
+        report.setFrom(address);
+
+        MimeMultipart multi = new ZMimeMultipart("report");
+        // part 1: human-readable notification
+        String text = L10nUtil.getMessage(MsgKey.seiveRejectMDNErrorMsg, locale) + "\n" + reason;
+        MimeBodyPart mpText = new ZMimeBodyPart();
+        mpText.setText(text, CharsetUtil.checkCharset(text, charset));
+        multi.addBodyPart(mpText);
+
+        // part 2: disposition notification
+        StringBuilder mdn = new StringBuilder();
+        mdn.append("Final-Recipient: rfc822;").append(owner.getName()).append("\r\n");
+        mdn.append("Disposition: automatic-action/MDN-sent-automatically");
+        mdn.append("; deleted\r\n");
+
+        MimeBodyPart mpMDN = new ZMimeBodyPart();
+        mpMDN.setText(mdn.toString(), MimeConstants.P_CHARSET_UTF8);
+        mpMDN.setHeader("Content-Type", "message/disposition-notification; charset=utf-8");
+        multi.addBodyPart(mpMDN);
+
+        // Assemble the MDN
+        report.setContent(multi);
+        report.setHeader("Content-Type", multi.getContentType() + "; report-type=disposition-notification");
+        report.saveChanges();
+
+        MailSender mailSender = mailbox.getMailSender().setSaveToSent(false);
+        mailSender.setRecipients(reportTo);
+        mailSender.setEnvelopeFrom("<>");
+        mailSender.sendMimeMessage(octxt, mailbox, report);
+    }
+
+
+    public static void notifyMailto(LmtpEnvelope envelope, OperationContext octxt, Mailbox mailbox,
+            ParsedMessage parsedMessage, String from, int importance, Map<String, String> options,
+            String message, String mailto, Map<String, List<String>> mailtoParams)
+                    throws MessagingException, ServiceException {
+        // X-Zimbra-Forwarded
+        MimeMessage mimeMessage = parsedMessage.getMimeMessage();
+        if (isMailLoop(mailbox, mimeMessage, new String[]{HEADER_FORWARDED, HEADER_AUTO_SUBMITTED})) {
+            String error = String.format("Detected a mail loop for message %s while notifying", Mime.getMessageID(mimeMessage));
+            throw ServiceException.FAILURE(error, null);
+        }
+
+        Account account = mailbox.getAccount();
+        MimeMessage notification = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
+        MailSender mailSender = mailbox.getMailSender().setSaveToSent(false);
+        mailSender.setRedirectMode(true);
+
+        // add the forwarded header account names to detect the mail loop between accounts
+        for (String headerFwdAccountName : Mime.getHeaders(mimeMessage, HEADER_FORWARDED)) {
+            notification.addHeader(HEADER_FORWARDED, headerFwdAccountName);
+        }
+        notification.addHeader(HEADER_FORWARDED, account.getName());
+
+        // Envelope FROM
+        // RFC 5436 2.7. (1st item of the 'guidelines')
+        String envelopeFrom = null;
+        String originalEnvelopeFrom = envelope == null ? null : envelope.getSender().getEmailAddress();
+        if (originalEnvelopeFrom == null) {
+            // Whenever the envelope FROM of the original message is <>, set <> to the notification message too
+            mailSender.setEnvelopeFrom("<>");
+        } else if (!StringUtil.isNullOrEmpty(from)) {
+            mailSender.setEnvelopeFrom(from);
+        } else {
+            // System default value
+            mailSender.setEnvelopeFrom("<>");
+        }
+
+        // Envelope TO & Header To/Cc
+        // RFC 5436 2.7. (2nd and 5th item of the 'guidelines')
+        Set<String> envelopeTos = new HashSet<String>();
+        envelopeTos.add(mailto);
+        notification.addRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(mailto));
+
+        List<String> tos = mailtoParams.get("to");
+        if (tos != null && tos.size() > 0) {
+            for (String to : tos) {
+                envelopeTos.add(to);
+                notification.addRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(to));
+            }
+        }
+        List<String> ccs = mailtoParams.get("cc");
+        if (ccs != null && ccs.size() > 0) {
+            for (String cc : ccs) {
+                envelopeTos.add(cc);
+                notification.addRecipient(javax.mail.Message.RecipientType.CC, new JavaMailInternetAddress(cc));
+            }
+        }
+        List<String> bccs = mailtoParams.get("bcc");
+        if (bccs != null && bccs.size() > 0) {
+            for (String bcc : bccs) {
+                envelopeTos.add(bcc);
+                // No Bcc for the message header
+            }
+        }
+        mailSender.setRecipients(envelopeTos.toArray(new String[envelopeTos.size()]));
+
+        // Auto-Submitted
+        // RFC 5436 2.7. (3rd item of the 'guidelines') and 2.7.1.
+        StringBuilder autoSubmitted = new StringBuilder("auto-notified; owner-email=\"").append(account.getName()).append("\"");
+        notification.addHeader(HEADER_AUTO_SUBMITTED, autoSubmitted.toString());
+
+        // Header From
+        // RFC 5436 2.7. (4th item of the 'guidelines')
+        if (!StringUtil.isNullOrEmpty(from)) {
+            // The "From:" header field of the notification message SHOULD be set
+            // to the value of the ":from" tag to the notify action, if one is
+            // specified, has email address syntax, and is valid according to the
+            // implementation-specific security checks.
+            notification.addHeader("from", from);
+        } else {
+            // If ":from" is not specified or is not valid, the
+            // "From:" header field of the notification message SHOULD be set
+            // either to the envelope "to" field from the triggering message, as
+            // used by Sieve...
+            // This MUST NOT be overridden by a "from" URI header, and any such
+            // URI header MUST be ignored.
+            notification.addHeader("from", mailbox.getAccount().getMail());
+        }
+
+        // Subject
+        // RFC 5436 2.7. (6th item of the 'guidelines')
+        if (StringUtil.isNullOrEmpty(message)) {
+            List<String> subjectList = mailtoParams.get("subject");
+            if (subjectList != null && subjectList.size() > 0) {
+                message = subjectList.get(0);
+            } else {
+                String[] subjects = Mime.getHeaders(mimeMessage, "Subject");
+                if (subjects.length > 0) {
+                    message = subjects[0];
+                }
+            }
+        }
+        notification.setSubject(message, getCharset(account, message));
+
+        // Body
+        // RFC 5436 2.7. (8th item of the 'guidelines')
+        List<String> bodys = mailtoParams.get("body");
+        if (bodys != null && bodys.size() > 0) {
+            String body = bodys.get(0);
+            notification.setText(body, getCharset(account, body));
+        } else {
+            notification.setText("");
+        }
+
+        notification.saveChanges();
+
+        // Misc.
+        notification.setSentDate(new Date());
+        for (String headerName : mailtoParams.keySet()) {
+            if (!("to".equalsIgnoreCase(headerName) ||
+                  "cc".equalsIgnoreCase(headerName) ||
+                  "bcc".equalsIgnoreCase(headerName) ||
+                  "from".equalsIgnoreCase(headerName) ||
+                  "subject".equalsIgnoreCase(headerName) ||
+                  "auto-submitted".equalsIgnoreCase(headerName) ||
+                  "x-zimbra-forwarded".equalsIgnoreCase(headerName) ||
+                  "body".equalsIgnoreCase(headerName))) {
+                List<String> values = mailtoParams.get(headerName);
+                for (String value : values) {
+                    notification.addHeader(headerName, value);
+                }
+            }
+        }
+
+        mailSender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
+        mailSender.sendMimeMessage(octxt, mailbox, notification);
+    }
+
     /**
      * Gets appropriate charset for the given data. The charset preference order is:
      *                `
@@ -525,16 +757,39 @@ public final class FilterUtil {
     }
 
     /**
-     * Returns <tt>true</tt> if the current account's name is
-     * specified in one of the X-Zimbra-Forwarded headers.
+     * Returns <tt>true</tt> if the triggering message is an automatically
+     * generated message.
+     * @param sourceMbox owner's mailbox
+     * @param msg triggering message
+     * @param checkHeaders a list of header field names to be checked on the triggering message.
+     *  For the reply and notify (legacy Zimbra version) action, checks X-Zimbra-Forwarded
+     *  For the notify (RFC compliant) action, checks X-Zimbra-Forwarded and Auto-Submitted headers.
      */
-    private static boolean isMailLoop(Mailbox sourceMbox, MimeMessage msg)
+    private static boolean isMailLoop(Mailbox sourceMbox, MimeMessage msg, String[] checkHeaders)
     throws ServiceException {
-        String[] forwards = Mime.getHeaders(msg, HEADER_FORWARDED);
         String userName = sourceMbox.getAccount().getName();
-        for (String forward : forwards) {
-            if (StringUtil.equal(userName, forward)) {
-                return true;
+        for (String header : checkHeaders) {
+            if (HEADER_FORWARDED.equals(header)) {
+                String[] forwards = Mime.getHeaders(msg, HEADER_FORWARDED);
+                for (String forward : forwards) {
+                    if (StringUtil.equal(userName, forward)) {
+                        return true;
+                    }
+                }
+            } else if (HEADER_AUTO_SUBMITTED.equals(header)) {
+                String[] values = Mime.getHeaders(msg, HEADER_AUTO_SUBMITTED);
+                for (String value : values) {
+                    String[] tokens = value.split(";");
+                    if (tokens.length > 1) {
+                        if ("no".equalsIgnoreCase(tokens[0].trim())) {
+                            return false;
+                        } else {
+                            // Sample header value
+                            //   Auto-Submitted: auto-notified; owner-email="recipient@example.org"
+                            return true;
+                        }
+                    }
+                }
             }
         }
         return false;
@@ -562,6 +817,186 @@ public final class FilterUtil {
         Set<String> tags = Sets.newHashSet(tags1);
         tags.addAll(Arrays.asList(tags2));
         return tags.toArray(new String[tags.size()]);
+    }
+
+    /**
+     * Look-up the variable table to get the set value.
+     * If the 'sourceStr' contains a variable-ref (formatted with ${variable-name}), this method looks up the
+     * variable table with its variable-name and replaces the variable with the text value assigned by
+     * the 'set' command.
+     * According to the RFC 5229 Section 4., "Variable names are case insensitive."
+     *
+     * @param variables a list of variable name/value
+     * @param matchedVariables a list of Matched Variables
+     * @param sourceStr text string that may contain "variable-ref" (RFC 5229 Section 3.)
+     * @return Replaced text string
+     */
+    public static String replaceVariables(ZimbraMailAdapter mailAdapter, String sourceStr) {
+        if (null == mailAdapter || !SetVariable.isVariablesExtAvailable(mailAdapter)) {
+            return sourceStr;
+        }
+        if (sourceStr.indexOf("${") == -1) {
+            return sourceStr;
+        }
+        Map<String, String> variables = mailAdapter.getVariables();
+        List<String> matchedVariables = mailAdapter.getMatchedValues();
+        ZimbraLog.filter.debug("Variable: %s " , sourceStr);
+        ZimbraLog.filter.debug("Variable available: %s : %s", variables ,  matchedVariables);
+        String resultStr = sourceStr;
+
+        // (1) Resolve the Matched Variables (numeric variables; "${N}" (N=0,1,...9)
+        int i = 0;
+        for (; i < matchedVariables.size() && i < 10; i++) {
+            String keyName = "(?i)" + "\\$\\{" + String.valueOf(i) + "\\}";
+            resultStr = resultStr.replaceAll(keyName, Matcher.quoteReplacement(matchedVariables.get(i)));
+        }
+        // (2) Replace the empty string to Matched Variables whose index is out of range
+        for (; i < 10; i++) {
+            String keyName = "(?i)" + "\\$\\{" + String.valueOf(i) + "\\}";
+            resultStr = resultStr.replaceAll(keyName, Matcher.quoteReplacement(""));
+        }
+
+        // (3) Resolve the named variables ("${xxx}")
+        resultStr = leastGreedyReplace(variables, resultStr);
+        ZimbraLog.filter.debug("Sieve: variable value is: %s", resultStr);
+        return resultStr;
+    }
+
+    /**
+     * Replaces all ${variable name} variables within the 'sourceStr' into the defined text value.
+     *
+     * The variable name matches as short as possible (non-greedy matching).  Unknown variables are replaced
+     * by the empty string (RFC 5229 Section 3.)
+     *
+     * @param variables map table of the variable name and value
+     * @param sourceStr text string that may contain one or more than one "variable-ref"
+     * @return Replaced text string
+     */
+    public static String leastGreedyReplace(Map<String, String> variables, String sourceStr) {
+        if (variables == null || sourceStr == null || sourceStr.length() == 0) {
+            return sourceStr;
+        }
+        sourceStr = FilterUtil.handleQuotedAndEncodedVar(sourceStr);
+        StringBuilder resultStr = new StringBuilder();
+        int start1 = 0;
+        int end = -1;
+        while (start1 < sourceStr.length()) {
+            int start2 = sourceStr.indexOf("${", start1);
+            if (start2 >= 0) {
+                resultStr.append(sourceStr.substring(start1, start2));
+                end = sourceStr.indexOf("}", start2 + 2);
+                if (end > 0) {
+                    int start3 = sourceStr.indexOf("${", start2 + 2);
+                    if (start3 > start2 && start3 < end) {
+                        start1 = start3;
+                        resultStr.append(sourceStr.substring(start2, start3));
+                    } else {
+                        // a variable name found
+                        String key = sourceStr.substring(start2 + 2, end).toLowerCase();
+                        if (key.matches("[\\p{Alpha}]+[._\\w]*")) {
+                            // the variable name is valid
+                            String value = variables.get(key);
+                            if (value != null) {
+                                resultStr.append(value);
+                            }
+                        } else {
+                            // the variable name contains some invalid characters
+                            resultStr.append(sourceStr.substring(start2, end + 1));
+                        }
+                        start1 = end + 1;
+                    }
+                } else {
+                    // no corresponding }
+                    resultStr.append(sourceStr.substring(start2, sourceStr.length()));
+                    break;
+                }
+            } else {
+                // no more ${
+                resultStr.append(sourceStr.substring(end + 1, sourceStr.length()));
+                break;
+            }
+        }
+        return resultStr.toString();
+    }
+
+    /**
+     * @param varName
+     * @return
+     * "${fo\o}"  => ${foo}  => the expansion of variable foo.
+     * "${fo\\o}" => ${fo\o} => illegal identifier => left verbatim.
+     * "\${foo}"  => ${foo}  => the expansion of variable foo.
+     * "\\${foo}" => \${foo} => a backslash character followed by the
+     *                           expansion of variable foo.
+	 */
+	public static String handleQuotedAndEncodedVar(String varName) {
+		String processedStr  = varName;
+		StringBuilder sb = new StringBuilder();
+		char [] charArray = varName.toCharArray();
+		for (int i = 0; i < charArray.length; ++i) {
+			if (charArray[i] == '\\') {
+				if (charArray[i] == '\\' && (i+1 <= charArray.length -1) && (charArray[i + 1] == '\\' || charArray[i + 1] == '*')) {
+					sb.append('\\');
+				}
+			} else {
+				sb.append(charArray[i]);
+			}
+		}
+		processedStr = sb.toString();
+		
+		return processedStr;
+	}
+
+    /**
+     * Converts a Sieve pattern in a java regex pattern
+     */
+    public static String sieveToJavaRegex(String pattern) {
+        int ch;
+        StringBuffer buffer = new StringBuffer(2 * pattern.length());
+        for (ch = 0; ch < pattern.length(); ch++) {
+            final char nextChar = pattern.charAt(ch);
+            switch (nextChar) {
+            case '*':
+                //
+                // Java Matcher has issues with repeated stars
+                //
+                buffer.append("(.*)?");
+                break;
+            case '?':
+                buffer.append('.');
+                break;
+            case '\\':
+                buffer.append('\\');
+                if (ch == pattern.length() - 1)
+                    buffer.append('\\');
+                else if (isSieveMatcherSpecialChar(pattern.charAt(ch + 1)))
+                    buffer.append(pattern.charAt(++ch));
+                else
+                    buffer.append('\\');
+                break;
+            default:
+                if (isRegexSpecialChar(nextChar))
+                    buffer.append('\\');
+                buffer.append(nextChar);
+                break;
+            }
+        }
+        return buffer.toString();
+    }
+    
+    /**
+     * Returns true if the char is a special char for regex
+     */
+    private static boolean isRegexSpecialChar(char ch) {
+        return (ch == '*' || ch == '?' || ch == '+' || ch == '[' || ch == ']'
+                || ch == '(' || ch == ')' || ch == '|' || ch == '^'
+                || ch == '$' || ch == '.' || ch == '{' || ch == '}' || ch == '\\');
+    }
+
+    /**
+     * Returns true if the char is a special char for sieve matching
+     */
+    private static boolean isSieveMatcherSpecialChar(char ch) {
+        return (ch == '*' || ch == '?' || ch == '\\');
     }
 }
 

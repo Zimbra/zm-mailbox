@@ -1391,4 +1391,14 @@ public final class ParsedMessage {
     public String getDataSourceId() {
         return dataSourceId;
     }
+
+    public void updateMimeMessage () throws IOException, MessagingException {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            mimeMessage.writeTo(buffer);
+            byte[] content = buffer.toByteArray();
+            ByteUtil.closeStream(sharedStream);
+            sharedStream = new SharedByteArrayInputStream(content);
+            mimeMessage = expandedMessage = null;
+            mimeMessage = expandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), sharedStream);
+    }
 }

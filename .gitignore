@@ -5,3 +5,4 @@
 build/
 bin/
 .DS_Store
+outgoing
