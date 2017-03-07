@@ -2922,3 +2922,214 @@ Access:
  - requires moveMailboxFromServer grant on target server
 
 note: this request is by default proxied to the account's home server
+
+---------------------------
+
+<GetFilterRulesRequest type="{before | after}" xmlns="urn:zimbraAdmin">
+  {
+  <account by="{id | name}">{account-id | name}</account> |
+  <domain by="{id | name | virtualHostname | krb5Realm | foreignName}">{server-id | name}</domain> |
+  <cos by="{id | name}">{server-id | name}</cos> |
+  <server by="{id | name | serviceHostname}">{server-id | name | serviceHostname}</server>
+  }
+</GetFilterRulesRequest>
+
+<GetFilterRulesResponse type="{before | after}" xmlns="urn:zimbraAdmin">
+  {
+  <account by="{id | name}">{account-id | name}</account> |
+  <domain by="{id | name | virtualHostname | krb5Realm | foreignName}">{server-id | name}</domain> |
+  <cos by="{id | name}">{server-id | name}</cos> |
+  <server by="{id | name | serviceHostname}">{server-id | name | serviceHostname}</server>
+  }
+  <filterRules>
+    <filterRule name="{rule-name}" [active="{0|1}"]>*
+        <filterVariables>
+            <filterVariable name="{variable-name}" value="{variable-value}"/>
+            ...
+        </filterVariables>
+        <filterTests condition="{allof | anyof"}>
+        {test}
+        [test]
+        ...
+      </filterTests>
+      [<nestedRule>
+        <filterTests>...</filterTests>
+        [<nestedRule>...</nestedRule>]
+        [<filterActions>...</filterActions>]
+      </nestedRule>]
+      [<filterActions>
+        <filterVariables>
+            <filterVariable name="{variable-name}" value="{variable-value}"/>
+            ...
+        </filterVariables>
+        {action}
+        [action]
+        ...
+      </filterActions>]
+    </filterRule>
+  </filterRules>
+</GetFilterRulesResponse>
+
+<ModifyFilterRulesRequest type="{before | after}" xmlns="urn:zimbraAdmin">
+  {
+  <account by="{id | name}">{account-id | name}</account> |
+  <domain by="{id | name | virtualHostname | krb5Realm | foreignName}">{server-id | name}</domain> |
+  <cos by="{id | name}">{server-id | name}</cos> |
+  <server by="{id | name | serviceHostname}">{server-id | name | serviceHostname}</server>
+  }
+  <filterRules> ... </filterRules>
+</ModifyFilterRulesRequest>
+
+<ModifyFilterRulesResponse/>
+
+    * Default value for "active" is 1.
+
+Type:
+  type="{before | after}"
+  before = admin sieve rule BEFORE
+  after = admin sieve rule AFTER
+
+Tests:
+
+  <addressBookTest header="{header-name}"/>
+  <addressTest [part="{all|localpart|domain}"] stringComparison="{type}" [caseSensitive="{0|1}"]
+      header="{comma-separated-header-names}" value="{value}"/>
+  <attachmentTest/>
+  <bulkTest/>
+  <contactRankingTest header="{header-name}"/>
+  <conversationTest [where="{started|participated}"]/>
+  <currentDayOfWeekTest value="comma-separated-day-of-week-indices"/>
+  <currentTimeTest dateComparison="{before|after}" d="time-in-HHmm-format}"/>
+  <bodyTest [caseSensitive="{0|1}"] value="{value}"/>
+  <dateTest dateComparison="{before|after}" d="{date}"/>
+  <facebookTest/>
+  <flaggedTest flagName="{flagged|read|priority}"/>
+  <headerExistsTest header="{header-name}"/>
+  <headerTest header="{comma-separated-header-names}" stringComparison="{type}" [caseSensitive="{0|1}"] value="{value}"/>
+  <importanceTest imp="{high|normal|low}"/>
+  <inviteTest>
+    <method>{method}</method>+
+  </inviteTest>
+  <linkedinTest/>
+  <listTest/>
+  <meTest header="{header-name}"/>
+  <mimeHeaderTest header="{header-name}" stringComparison="{type}" [caseSensitive="{0|1}"] value="{value}"/>
+  <sizeTest numberComparison="{over|under}" s="{size}"/>
+  <socialcastTest/>
+  <twitterTest/>
+  <communityRequestsTest/>
+  <communityContentTest/>
+  <communityConnectionsTest/>
+
+Each test has the following optional attributes:
+    * "negative": specifies a "not" condition for that test
+    * "index": specifies a guaranteed order for the test and action elements
+
+Actions:
+
+  <filterVariables>
+    <filterVariable name="{variable-name}" value="{variable-value}"/>
+    ...
+  </filterVariables>
+  <actionKeep />
+  <actionDiscard />
+  <actionFileInto folderPath="{folder-path}" [copy="{0|1}"]/>
+  <actionTag tagName="{tag-name}" />
+  <actionFlag flagName="{flagged|read|priority}" />
+  <actionRedirect [copy="{0|1}"] a="{email-address}"/>
+  <actionStop />
+  <actionReply>
+    <content>{body-template}</content>
+  </actionReply>
+  <actionNotify a="email-address" [su="subject-template"] [maxBodySize="{num-bytes}"] [origHeaders="{comma-separated-header-names}|*"]>
+    <content>{body-template}</content> ?
+  </actionNotify>
+  <actionRFCCompliantNotify from="{from}" [importance="{importance}"] [options="{options}"] message="{subject}">
+    <method>{method}</method>
+  </actionRFCCompliantNotify>
+  <actionReject [index={"index-number"}]>{this is reject message}</actionReject>
+  <actionEreject [index={"index-number"}]>{this is ereject message}</actionEreject>
+  <actionLog [level={fatal|error|warn|info|debug|trace}] [index={"index-number"}]>{this is log message}</actionLog>
+
+Each action has an optional "index" attribute which specifies a guaranteed order
+for the action elements.
+
+stringComparison values: is, contains, matches
+numberComparison values: over, under
+dateComparison values: before, after
+size values are in bytes (no suffix), kilobytes (50K), megabytes (50M) or gigabytes (2G)
+<dateTest>: date values are are truncated to the day. Hours, minutes, and seconds are ignored.
+index is an integer, used to maintain the order of filter tests and actions.
+method values: anyrequest, anyreply, publish, request, reply, add, cancel, refresh,
+  counter, declinecounter.  anyrequest matches publish, request, add, cancel,
+  declinecounter.  anyreply matches reply, refresh, counter.  If no methods are
+  specified, the test returns true for all invites.
+<mimeHeaderTest>: behaves just like <headerTest>, but matches headers on
+  all MIME parts, instead of just the top-level headers.
+<currentDayOfWeekTest>: day-of-week-indices - 0=Sunday, 6=Saturday
+body-template/subject-template: Can contain variables such as ${SUBJECT}, ${TO}, ${CC}, etc
+  (basically ${any-header-name}; case not important), plus ${BODY} (text body of the message).
+origHeaders: Specifies list of headers to be copied from the original message to the notification message.
+  Value "*" implies that all headers need to be copied.
+<addressTest>: this test is preferred instead of <headerTest> for headers that contain email addresses. The default
+  value of the part attribute is "all" which implies comparison against the full email address.
+<communityRequestsTest>, <communityContentTest>, and <communityConnectionsTest> all check the "X-Zimbra-Community-Notification-Type"
+header against predefined groups of values. The groups are:
+
+communityRequestsTest:
+bb196c30-fad3-4ad8-a644-2a0187fc5617 - Friendships Requests
+3772ef23-6aa0-4a22-9e88-a4313c37ebe6 - Group Membership Request
+1b0500d2-c789-421e-a25b-3ab823af53be - Forums Requiring Moderation
+
+communityContentTest:
+6a3659db-dec2-477f-981c-ada53603ccbb - Likes
+94dc0d37-3a65-43de-915d-d7d62774b576 - Ratings
+4876d7ce-b48c-4a08-8cd9-872342c5bdf8 - Blog Post Comment
+82e1d0b4-854e-43c9-85d7-dea7d4dec949 - Wiki Page Update
+8e627c29-8602-4110-877d-0232e4ea2fd5 - Media Comment
+be997a7a-5026-435f-8ea5-4fe3d90a6ba9 - New Media in Owned Gallery
+eea4ccbb-6e07-4a6d-9bb6-8b02f060f79c - Forum Thread Awaiting Moderation Notification
+352a702d-2a77-4307-9e9e-c564426e8cc8 - Forum Thread Subscription Notification
+0e952633-fa46-448d-b1aa-bb6c60a388fb - Forum Reply Awaiting Moderation Notification
+e3df1b21-ac81-4eb3-8ab6-69dc049f5684 - Forum Replies
+f8c93cd5-d40e-461d-b13a-b02e92bfcbbf - Forum Thread Verified Answers
+
+communityConnectionsTest:
+194d3363-f5a8-43b4-a1bd-92a95f6dd76b - Friendships
+1cee0f92-3650-4110-9f0b-69b0e175914d - Mentions
+bb196c30-fad3-4ad8-a644-2a0187fc5617 - Group Membership
+328e5139-d759-405c-98da-91cd25bcc80c - Group Mentions
+
+Nested Rules:
+
+In addition to the normal set of tests and actions, a filter rule may contain one or more layers of nested rules. If nested rules are
+specified the filter action(s) must be specified on the innermost level. All conditions are evaluated and if true the innermost action(s) are executed.
+Note that as of ZCS 8.5 nested filter rules are supported in the SOAP API but not in the end user filter preferences UI.
+
+Notify action:
+<actionNotify> generates the Zimbra specific format of the notify filter rule.
+<actionRFCCompliantNotify> generates the RFC 5436 and 5436 compliant notify filter rule.
+<actionRFCCompliantNotify> is available only when the global config 'zimbraMailSieveNotifyActionRFCCompliant' key is set to TRUE 
+(if this key is set to TRUE, the Zimbra-format notify action will fail to execute, and vise versa).
+  {from} : The from address which is displayed at the From header of the notification message.
+  {subject} : The subject of the notification message.
+  {method} : "mailto:" url.  Please refer to the RFC 5436 for more details.
+  {importance} and {options} : Reserved.
+
+--------------------------
+
+Corresponding API for outgoing/sent email filters (message structure same as above):
+
+<GetOutgoingFilterRulesRequest type="{before | after}" xmlns="urn:zimbraAdmin">
+  ...
+</GetOutgoingFilterRulesRequest>
+
+<GetOutgoingFilterRulesResponse type="{before | after}" xmlns="urn:zimbraAdmin">
+  ...
+</GetOutgoingFilterRulesResponse>
+
+<ModifyOutgoingFilterRulesRequest type="{before | after}" xmlns="urn:zimbraAdmin">
+  ...
+</ModifyOutgoingFilterRulesRequest>
+
+<ModifyOutgoingFilterRulesResponse/>

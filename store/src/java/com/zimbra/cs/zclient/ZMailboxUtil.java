@@ -317,6 +317,7 @@ public class ZMailboxUtil implements DebugListener {
                 "    redirect \"address\"\n" +
                 "    reply \"body-template\"\n" +
                 "    notify \"address\" \"subject-template\" \"body-template\" [\"max-body-size(bytes)\"]\n" +
+                "    notify rfc \"from\" [\"importance\" \"options\"] \"message(subject)\" \"mailto url\"\n" +
                 "    stop\n"),
         FOLDER("help on folder-related commands"),
         ITEM("help on item-related commands"),
