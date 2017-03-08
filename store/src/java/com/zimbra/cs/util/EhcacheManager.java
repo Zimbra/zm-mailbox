@@ -116,31 +116,31 @@ public final class EhcacheManager {
                 .build();
     }
 
-    private CacheConfiguration<String, ImapFolder> createActiveSyncStateItemCache() {
+    private CacheConfiguration<String, String> createActiveSyncStateItemCache() {
         long heapSize;
         long timeout;
         long diskSize;
         try {
             heapSize = Provisioning.getInstance().getLocalServer().getActiveSyncEhcacheHeapSize();
         } catch (ServiceException e) {
-            ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraActiveSyncEhcacheHeapSize, e);
+            ZimbraLog.sync.error("Exception while fetching attribute %s", Provisioning.A_zimbraActiveSyncEhcacheHeapSize, e);
             heapSize = new MemoryUnitUtil().convertToBytes("10MB");
         }
         try {
             timeout = Provisioning.getInstance().getLocalServer().getActiveSyncEhcacheExpiration();
         } catch (ServiceException e) {
-            ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraActiveSyncEhcacheExpiration, e);
+            ZimbraLog.sync.error("Exception while fetching attribute %s", Provisioning.A_zimbraActiveSyncEhcacheExpiration, e);
             timeout = 5 * 60 * 1000; // 5 minutes in milliseconds
         }
         try {
             diskSize = Provisioning.getInstance().getLocalServer().getActiveSyncEhcacheMaxDiskSize();
         } catch (ServiceException e) {
-            ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraActiveSyncEhcacheMaxDiskSize, e);
+            ZimbraLog.sync.error("Exception while fetching attribute %s", Provisioning.A_zimbraActiveSyncEhcacheMaxDiskSize, e);
             diskSize = new MemoryUnitUtil().convertToBytes("100GB");
         }
 
         return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
-                ImapFolder.class,
+                String.class,
                 ResourcePoolsBuilder.newResourcePoolsBuilder()
                 .heap(heapSize, MemoryUnit.B)
                 .disk(diskSize, MemoryUnit.B, true)) // disk backed persistent store
@@ -150,6 +150,10 @@ public final class EhcacheManager {
 
     public Cache<String, ImapFolder> getEhcache(String cacheName) {
         return cacheManager.getCache(cacheName, String.class, ImapFolder.class);
+    }
+    
+    public Cache<String, String> getSyncStateEhcache() {
+        return cacheManager.getCache(SYNC_STATE_ITEM_CACHE, String.class, String.class);
     }
 
     public void shutdown() {
