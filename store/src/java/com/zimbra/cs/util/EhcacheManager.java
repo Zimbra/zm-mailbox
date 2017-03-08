@@ -152,8 +152,8 @@ public final class EhcacheManager {
         return cacheManager.getCache(cacheName, String.class, ImapFolder.class);
     }
     
-    public Cache<String, String> getSyncStateEhcache(String cacheName) {
-        return cacheManager.getCache(cacheName, String.class, String.class);
+    public Cache<String, String> getSyncStateEhcache() {
+        return cacheManager.getCache(SYNC_STATE_ITEM_CACHE, String.class, String.class);
     }
 
     public void shutdown() {
