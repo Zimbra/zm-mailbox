@@ -321,7 +321,7 @@ public class AttributeMigration {
 
     @VisibleForTesting
     public void beginMigration() throws ServiceException {
-        ZimbraLog.ephemeral.info("beginning migration of attributes %s to ephemeral storage for all accounts",
+        ZimbraLog.ephemeral.info("beginning migration of attributes %s to ephemeral storage",
                 Joiner.on(", ").join(attrsToMigrate));
         EphemeralStore store = callback.getStore();
         if (store != null) {
@@ -337,11 +337,10 @@ public class AttributeMigration {
             getMigrationFlag(store).unset();
             migrationHelper.flushCache();
         }
-    }
-
-    public void migrateAllAccounts() throws ServiceException {
-        ZimbraLog.ephemeral.info("beginning migration of attributes %s to ephemeral storage",
+        ZimbraLog.ephemeral.info("migration of attributes %s to ephemeral storage completed",
                 Joiner.on(", ").join(attrsToMigrate));
+    }
+    public void migrateAllAccounts() throws ServiceException {
         try {
             beginMigration();
             csvReports = new CSVReports(callback instanceof DryRunMigrationCallback);
@@ -366,8 +365,6 @@ public class AttributeMigration {
                     migrateAccount((Account) entry);
                 }
             }
-            ZimbraLog.ephemeral.info("migration of attributes %s to ephemeral storage completed",
-                    Joiner.on(", ").join(attrsToMigrate));
             endMigration();
             csvReports.zimbraLogFinalSummary();
         } finally {
