@@ -2,7 +2,6 @@ package com.zimbra.cs.ephemeral.migrate;
 
 import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
 import static java.util.concurrent.Executors.newCachedThreadPool;
-import static java.util.concurrent.Executors.newFixedThreadPool;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,7 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.csv.CSVFormat;
@@ -35,7 +33,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -75,10 +72,9 @@ public class AttributeMigration {
     private EntrySource source;
     private final Collection<String> attrsToMigrate;
     private boolean deleteOriginal = true;
-    private boolean async = true;
+    private int numThreads;
     private CSVReports csvReports = null;
     private MigrationCallback callback;
-    private static ExecutorService executor = null;
     private static ServiceException exceptionWhileMigrating = null;
     private static MigrationHelper migrationHelper;
     static {
@@ -112,10 +108,10 @@ public class AttributeMigration {
         initConverters();
         setSource(source);
         setCallback(callback);
-        if (numThreads != null) {
-            executor = newFixedThreadPool(numThreads, new ThreadFactoryBuilder().setNameFormat("MigrateEphemeralAttrs-%d").setDaemon(false).build());
+        if ((null == numThreads) || (1 == numThreads)) {
+            this.numThreads = 1;
         } else {
-            async = false;
+            this.numThreads = numThreads;
         }
     }
 
@@ -148,16 +144,6 @@ public class AttributeMigration {
                 activeConverterMap.put(attr,  converter);
             }
         }
-    }
-
-    private void migrateAccount(Account account) throws ServiceException {
-        MigrationTask migration = new MigrationTask(account, activeConverterMap, csvReports, callback, deleteOriginal);
-        migration.migrateAttributes();
-    }
-
-    private void migrateAccountAsync(Account account) throws ServiceException {
-        MigrationTask migration = new MigrationTask(account, activeConverterMap, csvReports, callback, deleteOriginal);
-        executor.submit(migration);
     }
 
     public final static class CSVReports {
@@ -340,30 +326,75 @@ public class AttributeMigration {
         ZimbraLog.ephemeral.info("migration of attributes %s to ephemeral storage completed",
                 Joiner.on(", ").join(attrsToMigrate));
     }
+
+    /**
+     * A lightweight partial implementation of a Queue that can only be consumed, not added to.
+     * Could have used a LinkedList but that seems overkill
+     */
+    private static class ConsumableQueue<T> {
+        private final List<T> queue;
+        private int headIndex;
+
+        public ConsumableQueue(List<T> entries) {
+            queue = Collections.unmodifiableList(entries);
+            headIndex = 0;
+        }
+
+        public int size() {
+            return queue.size() - headIndex;
+        }
+
+        public boolean isEmpty() {
+            return size() <= 0;
+        }
+
+        /**
+         * Retrieves and removes the head of this queue, or returns {@code null} if this queue is empty.
+         * @return the head of this queue, or {@code null} if this queue is empty
+         */
+        public synchronized T poll() {
+            if (isEmpty()) {
+                return null;
+            }
+            T entry = queue.get(headIndex);
+            headIndex++;
+            return entry;
+        }
+    }
+
     public void migrateAllAccounts() throws ServiceException {
         try {
             beginMigration();
             csvReports = new CSVReports(callback instanceof DryRunMigrationCallback);
-            if (async) {
-                for (NamedEntry entry: source.getEntries()) {
+            ConsumableQueue<NamedEntry> queue = new ConsumableQueue<NamedEntry>(source.getEntries());
+            int numEntries = queue.size();
+            if ((numThreads > 1) && (numEntries > 1)) {
+                if (numThreads > numEntries) {
+                    ZimbraLog.ephemeral.info("Only using %d threads - 1 for each account", numEntries);
+                    numThreads = numEntries;
+                }
+                Thread[] threads = new Thread[numThreads];
+                for (int i = 0; i < threads.length; i++) {
+                    MigrationWorker worker = new MigrationWorker(
+                            queue, activeConverterMap, csvReports, callback, deleteOriginal);
+                    threads[i] = new Thread(worker, String.format("MigrateEphemeralAttrs-%d", i));
+                }
+                for (Thread thread : threads) {
+                    thread.start();
+                }
+                for (Thread thread : threads) {
                     try {
-                        migrateAccountAsync((Account) entry);
-                    } catch (RejectedExecutionException e) {
-                        //executor has been shut down due to error in migration process
-                        break;
+                        thread.join();
+                    } catch (InterruptedException e) {
                     }
                 }
-                executor.shutdown();
-                try {
-                    executor.awaitTermination(10, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {}
-                if (exceptionWhileMigrating != null) {
-                    throw exceptionWhileMigrating;
-                }
             } else {
-                for (NamedEntry entry: source.getEntries()) {
-                    migrateAccount((Account) entry);
-                }
+                MigrationWorker worker = new MigrationWorker(
+                        queue, activeConverterMap, csvReports, callback, deleteOriginal);
+                worker.run();
+            }
+            if (exceptionWhileMigrating != null) {
+                throw exceptionWhileMigrating;
             }
             endMigration();
             csvReports.zimbraLogFinalSummary();
@@ -533,7 +564,7 @@ public class AttributeMigration {
      * @author iraykin
      *
      */
-    public static class MigrationTask implements Runnable {
+    public static class MigrationTask {
 
         protected Map<String, AttributeConverter> converters;
         protected MigrationCallback callback;
@@ -648,9 +679,8 @@ public class AttributeMigration {
                     csvReports.log(entry.getLabel(), start, false, attrsMigrated,
                             "error encountered during migration; stopping migration process");
                     ZimbraLog.ephemeral.error("error encountered during migration; stopping migration process");
-                    if (executor != null) {
+                    if (exceptionWhileMigrating != null) {
                         exceptionWhileMigrating = e;
-                        executor.shutdownNow();
                     }
                     throw e;
                 }
@@ -669,14 +699,43 @@ public class AttributeMigration {
             }
             csvReports.log(entry.getLabel(), start, true, attrsMigrated, "migration completed");
         }
+    }
+
+    /**
+     * Responsible for consuming some of the shared queue of entries in co-operation with other workers
+     */
+    public static class MigrationWorker implements Runnable {
+        private final ConsumableQueue<NamedEntry> entries;
+        private final Map<String, AttributeConverter> converters;
+        private final CSVReports csvReports;
+        private final MigrationCallback callback;
+        private final boolean deleteOriginal;
+
+        public MigrationWorker(ConsumableQueue<NamedEntry> entries, Map<String, AttributeConverter> converters,
+                CSVReports csvReports, MigrationCallback callback, boolean deleteOriginal) {
+            this.entries = entries;
+            this.converters = converters;
+            this.csvReports = csvReports;
+            this.callback = callback;
+            this. deleteOriginal = deleteOriginal;
+        }
 
         @Override
         public void run() {
-            try {
-                migrateAttributes();
-            } catch (ServiceException e) {
-                // async migration will re-raise the exception after all threads have been shut down
+            ZimbraLog.ephemeral.debug("Starting Thread %s", Thread.currentThread().getName());
+            while (exceptionWhileMigrating == null) {
+                Entry entry = entries.poll();
+                if (null == entry) {
+                    break;  // All entries processed.  We're done
+                }
+                MigrationTask migration = new MigrationTask(entry, converters, csvReports, callback, deleteOriginal);
+                try {
+                    migration.migrateAttributes();
+                } catch (ServiceException e) {
+                    // async migration will re-raise the exception after all threads have been shut down
+                }
             }
+            ZimbraLog.ephemeral.debug("Finishing Thread %s", Thread.currentThread().getName());
         }
     }
 
