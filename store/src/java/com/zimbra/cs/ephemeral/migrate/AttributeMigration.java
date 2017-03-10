@@ -77,7 +77,7 @@ public class AttributeMigration {
     private MigrationCallback callback;
     // exceptionWhileMigrating is static for convenient access from threads.
     // Note that there is an implicit assumption that only one AttributMigration is active at any one time
-    private static ServiceException exceptionWhileMigrating = null;
+    private static Exception exceptionWhileMigrating = null;
     private static MigrationHelper migrationHelper;
     static {
         setMigrationHelper(new ZimbraMigrationHelper());
@@ -193,12 +193,16 @@ public class AttributeMigration {
             }
         }
 
-        public void zimbraLogFinalSummary() {
+        public void zimbraLogFinalSummary(boolean completed) {
             if (dummyReport) {
                 return;
             }
             if (null != fullReport.csvPrinter) {
-                ZimbraLog.ephemeral.info("See full report               : '%s'", fullReport.name);
+                if (completed) {
+                    ZimbraLog.ephemeral.info("See full report               : '%s'", fullReport.name);
+                } else {
+                    ZimbraLog.ephemeral.info("See PARTIAL report (migration abandoned) : '%s'", fullReport.name);
+                }
             }
             if (null != errorReport.csvPrinter) {
                 ZimbraLog.ephemeral.info("See report summary for errors : '%s'", errorReport.name);
@@ -397,10 +401,11 @@ public class AttributeMigration {
                 worker.run();
             }
             if (exceptionWhileMigrating != null) {
-                throw exceptionWhileMigrating;
+                csvReports.zimbraLogFinalSummary(false);
+                throw ServiceException.FAILURE("Failure during migration", exceptionWhileMigrating);
             }
             endMigration();
-            csvReports.zimbraLogFinalSummary();
+            csvReports.zimbraLogFinalSummary(true);
         } finally {
             closeReports();
         }
@@ -689,12 +694,13 @@ public class AttributeMigration {
                     if (callback.setEphemeralData(input, location, attrName, origValue)) {
                         attrsMigrated++;
                     }
-                } catch (ServiceException e) {
+                } catch (Exception e) {
                     // if an exception is encountered, shut down all the migration threads and store
                     // the error so that it can be re-raised at the end
                     csvReports.log(entry.getLabel(), start, false, attrsMigrated,
-                            "error encountered during migration; stopping migration process");
-                    ZimbraLog.ephemeral.error("error encountered during migration; stopping migration process");
+                            String.format("error encountered during migration; stopping migration process - %s",
+                                    e.getMessage()));
+                    ZimbraLog.ephemeral.error("error encountered during migration; stopping migration process", e);
                     if (null == exceptionWhileMigrating) {
                         exceptionWhileMigrating = e;
                     }
@@ -747,7 +753,7 @@ public class AttributeMigration {
                 MigrationTask migration = new MigrationTask(entry, converters, csvReports, callback, deleteOriginal);
                 try {
                     migration.migrateAttributes();
-                } catch (ServiceException e) {
+                } catch (Exception e) {
                     // async migration will re-raise the exception after all threads have been shut down
                 }
             }
