@@ -244,6 +244,7 @@ public class MigrateAttributesTest {
                 Provisioning.A_zimbraLastLogonTimestamp});
 
         DummyMigrationCallback callback = new DummyMigrationCallback(results, deletedAttrs);
+        callback.throwErrorDuringMigration = false;
         AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
         migration.migrateAllAccounts();
         assertTrue(results.isEmpty());
@@ -348,6 +349,11 @@ public class MigrateAttributesTest {
         @Override
         public EphemeralStore getStore() {
             return store;
+        }
+
+        @Override
+        public boolean disableCreatingReports() {
+            return true;
         }
     }
 

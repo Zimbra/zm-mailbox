@@ -162,7 +162,16 @@ public class AttributeMigrationUtil {
     }
 
     private static void initEphemeralBackendExtension(String backendName) throws ServiceException {
-        ExtensionUtil.initAllMatching(new EphemeralStore.EphemeralStoreMatcher(backendName));
+        Level savedExten = ZimbraLog.extensions.getLevel();
+        try {
+            if (!ZimbraLog.ephemeral.isDebugEnabled()) {
+                // cut down on noise unless enabled debug
+                ZimbraLog.extensions.setLevel(Level.error);
+            }
+            ExtensionUtil.initAllMatching(new EphemeralStore.EphemeralStoreMatcher(backendName));
+        } finally {
+            ZimbraLog.extensions.setLevel(savedExten);
+        }
         Factory factory = EphemeralStore.getFactory(backendName);
         if (factory == null) {
             Zimbra.halt(String.format(
