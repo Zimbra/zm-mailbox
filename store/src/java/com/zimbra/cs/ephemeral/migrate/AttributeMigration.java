@@ -75,6 +75,8 @@ public class AttributeMigration {
     private int numThreads;
     private CSVReports csvReports = null;
     private MigrationCallback callback;
+    // exceptionWhileMigrating is static for convenient access from threads.
+    // Note that there is an implicit assumption that only one AttributMigration is active at any one time
     private static ServiceException exceptionWhileMigrating = null;
     private static MigrationHelper migrationHelper;
     static {
@@ -113,6 +115,7 @@ public class AttributeMigration {
         } else {
             this.numThreads = numThreads;
         }
+        exceptionWhileMigrating = null; // reset for later unit tests
     }
 
     public static void registerConverter(String attribute, AttributeConverter converter) {
@@ -365,7 +368,7 @@ public class AttributeMigration {
     public void migrateAllAccounts() throws ServiceException {
         try {
             beginMigration();
-            csvReports = new CSVReports(callback instanceof DryRunMigrationCallback);
+            csvReports = new CSVReports(callback.disableCreatingReports());
             ConsumableQueue<NamedEntry> queue = new ConsumableQueue<NamedEntry>(source.getEntries());
             int numEntries = queue.size();
             if ((numThreads > 1) && (numEntries > 1)) {
@@ -460,6 +463,9 @@ public class AttributeMigration {
         public abstract void deleteOriginal(Entry entry, String attrName, Object value, AttributeConverter converter) throws ServiceException;
 
         public abstract EphemeralStore getStore();
+
+        /** @return Whether CSV reports should be created */
+        public boolean disableCreatingReports();
     }
 
     /**
@@ -523,6 +529,11 @@ public class AttributeMigration {
         public EphemeralStore getStore() {
             return store;
         }
+
+        @Override
+        public boolean disableCreatingReports() {
+            return false;
+        }
     }
 
     static class DryRunMigrationCallback implements MigrationCallback {
@@ -555,6 +566,11 @@ public class AttributeMigration {
         @Override
         public EphemeralStore getStore() {
             return null;
+        }
+
+        @Override
+        public boolean disableCreatingReports() {
+            return true;
         }
     }
 
@@ -679,7 +695,7 @@ public class AttributeMigration {
                     csvReports.log(entry.getLabel(), start, false, attrsMigrated,
                             "error encountered during migration; stopping migration process");
                     ZimbraLog.ephemeral.error("error encountered during migration; stopping migration process");
-                    if (exceptionWhileMigrating != null) {
+                    if (null == exceptionWhileMigrating) {
                         exceptionWhileMigrating = e;
                     }
                     throw e;
