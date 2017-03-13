@@ -791,7 +791,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraActiveSyncEhcacheExpiration in millseconds, or 300000 (5m)  if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3003)
     public long getActiveSyncEhcacheExpiration() {
@@ -807,7 +807,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraActiveSyncEhcacheExpiration, or "5m" if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3003)
     public String getActiveSyncEhcacheExpirationAsString() {
@@ -824,7 +824,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraActiveSyncEhcacheExpiration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3003)
     public void setActiveSyncEhcacheExpiration(String zimbraActiveSyncEhcacheExpiration) throws com.zimbra.common.service.ServiceException {
@@ -844,7 +844,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3003)
     public Map<String,Object> setActiveSyncEhcacheExpiration(String zimbraActiveSyncEhcacheExpiration, Map<String,Object> attrs) {
@@ -862,7 +862,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3003)
     public void unsetActiveSyncEhcacheExpiration() throws com.zimbra.common.service.ServiceException {
@@ -881,7 +881,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3003)
     public Map<String,Object> unsetActiveSyncEhcacheExpiration(Map<String,Object> attrs) {
@@ -898,7 +898,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraActiveSyncEhcacheHeapSize, or 10485760 if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3001)
     public long getActiveSyncEhcacheHeapSize() {
@@ -914,7 +914,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraActiveSyncEhcacheHeapSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3001)
     public void setActiveSyncEhcacheHeapSize(long zimbraActiveSyncEhcacheHeapSize) throws com.zimbra.common.service.ServiceException {
@@ -933,7 +933,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3001)
     public Map<String,Object> setActiveSyncEhcacheHeapSize(long zimbraActiveSyncEhcacheHeapSize, Map<String,Object> attrs) {
@@ -950,7 +950,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3001)
     public void unsetActiveSyncEhcacheHeapSize() throws com.zimbra.common.service.ServiceException {
@@ -968,7 +968,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3001)
     public Map<String,Object> unsetActiveSyncEhcacheHeapSize(Map<String,Object> attrs) {
@@ -985,7 +985,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraActiveSyncEhcacheMaxDiskSize, or 10737418240 if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3002)
     public long getActiveSyncEhcacheMaxDiskSize() {
@@ -1001,7 +1001,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraActiveSyncEhcacheMaxDiskSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3002)
     public void setActiveSyncEhcacheMaxDiskSize(long zimbraActiveSyncEhcacheMaxDiskSize) throws com.zimbra.common.service.ServiceException {
@@ -1020,7 +1020,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3002)
     public Map<String,Object> setActiveSyncEhcacheMaxDiskSize(long zimbraActiveSyncEhcacheMaxDiskSize, Map<String,Object> attrs) {
@@ -1037,7 +1037,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3002)
     public void unsetActiveSyncEhcacheMaxDiskSize() throws com.zimbra.common.service.ServiceException {
@@ -1055,7 +1055,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3002)
     public Map<String,Object> unsetActiveSyncEhcacheMaxDiskSize(Map<String,Object> attrs) {
@@ -14503,7 +14503,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraEphemeralBackendURL, or "ldap://default" if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2995)
     public String getEphemeralBackendURL() {
@@ -14516,7 +14516,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraEphemeralBackendURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2995)
     public void setEphemeralBackendURL(String zimbraEphemeralBackendURL) throws com.zimbra.common.service.ServiceException {
@@ -14532,7 +14532,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2995)
     public Map<String,Object> setEphemeralBackendURL(String zimbraEphemeralBackendURL, Map<String,Object> attrs) {
@@ -14546,7 +14546,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2995)
     public void unsetEphemeralBackendURL() throws com.zimbra.common.service.ServiceException {
@@ -14561,7 +14561,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2995)
     public Map<String,Object> unsetEphemeralBackendURL(Map<String,Object> attrs) {
@@ -20696,7 +20696,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraImapActiveSessionEhcacheMaxDiskSize, or 107374182400 if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3005)
     public long getImapActiveSessionEhcacheMaxDiskSize() {
@@ -20712,7 +20712,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraImapActiveSessionEhcacheMaxDiskSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3005)
     public void setImapActiveSessionEhcacheMaxDiskSize(long zimbraImapActiveSessionEhcacheMaxDiskSize) throws com.zimbra.common.service.ServiceException {
@@ -20731,7 +20731,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3005)
     public Map<String,Object> setImapActiveSessionEhcacheMaxDiskSize(long zimbraImapActiveSessionEhcacheMaxDiskSize, Map<String,Object> attrs) {
@@ -20748,7 +20748,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3005)
     public void unsetImapActiveSessionEhcacheMaxDiskSize() throws com.zimbra.common.service.ServiceException {
@@ -20766,7 +20766,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3005)
     public Map<String,Object> unsetImapActiveSessionEhcacheMaxDiskSize(Map<String,Object> attrs) {
@@ -21376,7 +21376,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraImapInactiveSessionEhcacheMaxDiskSize, or 107374182400 if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3006)
     public long getImapInactiveSessionEhcacheMaxDiskSize() {
@@ -21392,7 +21392,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraImapInactiveSessionEhcacheMaxDiskSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3006)
     public void setImapInactiveSessionEhcacheMaxDiskSize(long zimbraImapInactiveSessionEhcacheMaxDiskSize) throws com.zimbra.common.service.ServiceException {
@@ -21411,7 +21411,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3006)
     public Map<String,Object> setImapInactiveSessionEhcacheMaxDiskSize(long zimbraImapInactiveSessionEhcacheMaxDiskSize, Map<String,Object> attrs) {
@@ -21428,7 +21428,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3006)
     public void unsetImapInactiveSessionEhcacheMaxDiskSize() throws com.zimbra.common.service.ServiceException {
@@ -21446,7 +21446,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3006)
     public Map<String,Object> unsetImapInactiveSessionEhcacheMaxDiskSize(Map<String,Object> attrs) {
@@ -21463,7 +21463,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraImapInactiveSessionEhcacheSize, or 1048576 if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3004)
     public long getImapInactiveSessionEhcacheSize() {
@@ -21479,7 +21479,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraImapInactiveSessionEhcacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3004)
     public void setImapInactiveSessionEhcacheSize(long zimbraImapInactiveSessionEhcacheSize) throws com.zimbra.common.service.ServiceException {
@@ -21498,7 +21498,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3004)
     public Map<String,Object> setImapInactiveSessionEhcacheSize(long zimbraImapInactiveSessionEhcacheSize, Map<String,Object> attrs) {
@@ -21515,7 +21515,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3004)
     public void unsetImapInactiveSessionEhcacheSize() throws com.zimbra.common.service.ServiceException {
@@ -21533,7 +21533,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3004)
     public Map<String,Object> unsetImapInactiveSessionEhcacheSize(Map<String,Object> attrs) {
