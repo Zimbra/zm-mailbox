@@ -153,7 +153,7 @@ public class FilterUtilTest {
             mailAdapter.addVariable("var", "hello");
 
             mailAdapter.addVariable("company", "ACME");
-            mailAdapter.addVariable("a.b", "おしらせ");
+            mailAdapter.addVariable("a_b", "\u304a\u3057\u3089\u305b");
             mailAdapter.addVariable("c_d", "C");
             mailAdapter.addVariable("1", "One");
             mailAdapter.addVariable("23", "twenty three");
@@ -174,14 +174,14 @@ public class FilterUtilTest {
             varValue = FilterUtil.replaceVariables(mailAdapter, "${${COMpANY}}");
             Assert.assertEquals("${ACME}", varValue);
 
-            varValue = FilterUtil.replaceVariables(mailAdapter, "${a.b}}");
-            Assert.assertEquals("おしらせ}", varValue);
+            varValue = FilterUtil.replaceVariables(mailAdapter, "${a_b}}");
+            Assert.assertEquals("\u304a\u3057\u3089\u305b}", varValue);
 
             varValue = FilterUtil.replaceVariables(mailAdapter, "$c_d}}");
             Assert.assertEquals("$c_d}}", varValue);
 
-            varValue = FilterUtil.replaceVariables(mailAdapter, "You've got a mail. ${a.b} ${combination} ${c_d}hao!");
-            Assert.assertEquals("You've got a mail. おしらせ Hello ACME!! Chao!", varValue);
+            varValue = FilterUtil.replaceVariables(mailAdapter, "You've got a mail. ${a_b} ${combination} ${c_d}hao!");
+            Assert.assertEquals("You've got a mail. \u304a\u3057\u3089\u305b Hello ACME!! Chao!", varValue);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e);
         }
