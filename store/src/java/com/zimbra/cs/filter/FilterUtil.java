@@ -893,7 +893,7 @@ public final class FilterUtil {
                     } else {
                         // a variable name found
                         String key = sourceStr.substring(start2 + 2, end).toLowerCase();
-                        if (key.matches("[\\p{Alpha}]+[._\\w]*")) {
+                        if (key.matches("([\\p{Alpha}]|_)+([\\p{Alnum}|_])*")) {
                             // the variable name is valid
                             String value = variables.get(key);
                             if (value != null) {
