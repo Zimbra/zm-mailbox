@@ -15473,7 +15473,7 @@ public class ZAttrProvisioning {
     /**
      * enable OCSP support for SMIME.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public static final String A_zimbraSmimeOCSPEnabled = "zimbraSmimeOCSPEnabled";
@@ -15481,7 +15481,7 @@ public class ZAttrProvisioning {
     /**
      * The supported smime public certificate file extensions
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2100)
     public static final String A_zimbraSmimePublicCertificateExtensions = "zimbraSmimePublicCertificateExtensions";
@@ -15489,7 +15489,7 @@ public class ZAttrProvisioning {
     /**
      * The supported smime user certificate file extensions
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2099)
     public static final String A_zimbraSmimeUserCertificateExtensions = "zimbraSmimeUserCertificateExtensions";

@@ -46900,7 +46900,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraSmimeOCSPEnabled, or true if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public boolean isSmimeOCSPEnabled() {
@@ -46913,7 +46913,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraSmimeOCSPEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public void setSmimeOCSPEnabled(boolean zimbraSmimeOCSPEnabled) throws com.zimbra.common.service.ServiceException {
@@ -46929,7 +46929,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public Map<String,Object> setSmimeOCSPEnabled(boolean zimbraSmimeOCSPEnabled, Map<String,Object> attrs) {
@@ -46943,7 +46943,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public void unsetSmimeOCSPEnabled() throws com.zimbra.common.service.ServiceException {
@@ -46958,7 +46958,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public Map<String,Object> unsetSmimeOCSPEnabled(Map<String,Object> attrs) {
