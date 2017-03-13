@@ -28,9 +28,6 @@ import java.util.TreeMap;
 
 import javax.mail.Header;
 
-import com.google.common.collect.Maps;
-
-import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.junit.Assert;
 import org.junit.Before;
@@ -38,6 +35,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -48,8 +46,8 @@ import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -195,19 +193,19 @@ public class SetVariableTest {
         // variable-name       =  num-variable / identifier
         // num-variable        =  1*DIGIT
         // identifier          = (ALPHA / "_") *(ALPHA / DIGIT / "_")
-        variables.put("a_b", "おしらせ");
+        variables.put("a_b", "\u304a\u3057\u3089\u305b");
         variables.put("c_d", "C");
         variables.put("_1", "One");
         variables.put("_23", "twenty three");
         variables.put("uppercase", "upper case");
 
-        testCases.put("${a_b}", "おしらせ");
+        testCases.put("${a_b}", "\u304a\u3057\u3089\u305b");
         testCases.put("${c_d}", "C");
         testCases.put("${1}", "${1}");       // Invalid variable name
         testCases.put("${23}", "${23}");     // Not defined
         testCases.put("${123}", "${123}");   // Invalid variable name
-        testCases.put("${a_b} ${COMpANY} ${c_d}hao!", "おしらせ ACME Chao!");
-        testCases.put("${a_b} ${def} ${c_d}hao!", "おしらせ  Chao!"); // 1st valid variable, 2nd undefined, 3rd valid variable
+        testCases.put("${a_b} ${COMpANY} ${c_d}hao!", "\u304a\u3057\u3089\u305b ACME Chao!");
+        testCases.put("${a_b} ${def} ${c_d}hao!", "\u304a\u3057\u3089\u305b  Chao!"); // 1st valid variable, 2nd undefined, 3rd valid variable
         testCases.put("${upperCase}", "upper case");
         testCases.put("${UPPERCASE}", "upper case");
         testCases.put("${uppercase}", "upper case");
@@ -450,13 +448,13 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             // set "company" "ACME";
-            // set "a.b" "おしらせ"; (or any non-ascii characters)
+            // set "a.b" "おしらせ"; (or any non-ascii characters [\u304a\u3057\u3089\u305b])
             // set "c_d" "C";
             // set "1" "One"; ==> Should be ignored or error [Note 1]
             // set "23" "twenty three"; ==> Should be ignored or error [Note 1]
             // set "combination" "Hello ${company}!!";
             filterScript = "require [\"variables\"];\n"
-                         + "set \"company\" \"おしらせ\" ;\n"
+                         + "set \"company\" \"\u304a\u3057\u3089\u305b\" ;\n"
                          + "set  \"c_d\" \"C\";\n"
                          + "set  \"combination\" \"Hello ${company}!!\"; "
                          + "if header :matches \"Subject\" \"*\" {\n"
@@ -472,7 +470,7 @@ public class SetVariableTest {
                     new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
                     Mailbox.ID_FOLDER_INBOX, true);
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
-            Assert.assertEquals("Hello おしらせ!!", ArrayUtil.getFirstElement(msg.getTags()));
+            Assert.assertEquals("Hello \u304a\u3057\u3089\u305b!!", ArrayUtil.getFirstElement(msg.getTags()));
         } catch (Exception e) {
             fail("No exception should be thrown");
         }
