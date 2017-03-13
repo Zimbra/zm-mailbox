@@ -5753,6 +5753,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainType = "zimbraDomainType";
 
     /**
+     * Drive own or next cloud URL.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2110)
+    public static final String A_zimbraDriveOwnCloudURL = "zimbraDriveOwnCloudURL";
+
+    /**
      * enable/disable dumpster
      *
      * @since ZCS 7.0.0

@@ -9454,4 +9454,7 @@ TODO: delete them permanently from here
   <desc>make distribution list members friends</desc>
 </attr>
 
+<attr id="2110" name="zimbraDriveOwnCloudURL" type="string" cardinality="single" optionalIn="domain" since="8.8.0">
+  <desc>Drive own or next cloud URL.</desc>
+</attr>
 </attrs>

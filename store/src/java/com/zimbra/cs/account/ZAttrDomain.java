@@ -6985,6 +6985,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Drive own or next cloud URL.
+     *
+     * @return zimbraDriveOwnCloudURL, or null if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2110)
+    public String getDriveOwnCloudURL() {
+        return getAttr(Provisioning.A_zimbraDriveOwnCloudURL, null);
+    }
+
+    /**
+     * Drive own or next cloud URL.
+     *
+     * @param zimbraDriveOwnCloudURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2110)
+    public void setDriveOwnCloudURL(String zimbraDriveOwnCloudURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDriveOwnCloudURL, zimbraDriveOwnCloudURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Drive own or next cloud URL.
+     *
+     * @param zimbraDriveOwnCloudURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2110)
+    public Map<String,Object> setDriveOwnCloudURL(String zimbraDriveOwnCloudURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDriveOwnCloudURL, zimbraDriveOwnCloudURL);
+        return attrs;
+    }
+
+    /**
+     * Drive own or next cloud URL.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2110)
+    public void unsetDriveOwnCloudURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDriveOwnCloudURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Drive own or next cloud URL.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2110)
+    public Map<String,Object> unsetDriveOwnCloudURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDriveOwnCloudURL, "");
+        return attrs;
+    }
+
+    /**
      * URL for posting error report popped up in WEB client
      *
      * @return zimbraErrorReportUrl, or null if unset
