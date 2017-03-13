@@ -40,6 +40,10 @@ public class AccountTestUtil {
         return (account != null);
     }
 
+    /**
+     * @return the <code>Account</code>, or <code>null</code> if account does not exist.
+     * @throws ServiceException if name is invalid or can't determine the default domain
+     */
     public static Account getAccount(String userName)
     throws ServiceException {
         String address = getAddress(userName);
