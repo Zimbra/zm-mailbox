@@ -1,9 +1,12 @@
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -11,7 +14,6 @@ import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.FilePartSource;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -22,12 +24,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
@@ -47,7 +46,6 @@ import com.zimbra.soap.admin.message.DeployZimletResponse;
 import com.zimbra.soap.admin.message.UndeployZimletRequest;
 import com.zimbra.soap.admin.message.UndeployZimletResponse;
 import com.zimbra.soap.admin.type.AttachmentIdAttrib;
-import com.zimbra.soap.admin.type.Attr;
 
 /**
  * copy test data from data/unittest to /opt/zimbra/data/unittest before running this test 
@@ -75,6 +73,14 @@ public class TestDeployZimlet {
         delegatedAdmin = TestUtil.createAccount(TestUtil.addDomainIfNecessary(DELEGATED_ADMIN), attrs);
         TestUtil.grantRightToAdmin(TestUtil.newSoapProvisioning(), com.zimbra.soap.type.TargetType.fromString(com.zimbra.cs.account.accesscontrol.TargetType.server
                 .toString()), localServer.getName(), delegatedAdmin.getName(), Admin.R_deployZimlet.getName());
+        File rogueFile = new File("/opt/zimbra/conf/rogue.file");
+        if(rogueFile.exists()) {
+            rogueFile.delete();
+        }
+        File legitFile = new File("/opt/zimbra/zimlets-deployed/absolute/opt/zimbra/conf/rogue.file");
+        if(legitFile.exists()) {
+            legitFile.delete();
+        }
     }
 
     @AfterClass
@@ -357,7 +363,115 @@ public class TestDeployZimlet {
         String status = deployResp.getProgresses().get(0).getStatus();
         assertTrue("should be getting 'pending' or 'succeeded' status", status.equals(DeployZimlet.sPENDING) || status.equals(DeployZimlet.sSUCCEEDED)); 
     }
-    
+
+    @Test
+    public void testZipWithTraversal() throws Exception {
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getAdminSoapUrl());
+        com.zimbra.soap.admin.message.AuthRequest authReq = new com.zimbra.soap.admin.message.AuthRequest(
+                LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
+        authReq.setCsrfSupported(false);
+        Element response = transport.invoke(JaxbUtil.jaxbToElement(authReq, SoapProtocol.SoapJS.getFactory()));
+        com.zimbra.soap.admin.message.AuthResponse authResp = JaxbUtil.elementToJaxb(response);
+        String authToken = authResp.getAuthToken();
+        String aid = adminUpload(authToken, "attack.zip", "/opt/zimbra/data/unittest/zimlets/com_zimbra_url.zip");
+        assertNotNull("Attachment ID should not be null", aid);
+
+        AttachmentIdAttrib att = new AttachmentIdAttrib(aid);
+        transport.setAdmin(true);
+        transport.setAuthToken(authToken);
+        DeployZimletRequest deployReq = new DeployZimletRequest(AdminConstants.A_DEPLOYLOCAL, false, true, att);
+        Element req = JaxbUtil.jaxbToElement(deployReq);
+        try {
+            Element res = transport.invoke(req);
+            JaxbUtil.elementToJaxb(res);
+            fail("Should throw SoapFaultException");
+        } catch (SoapFaultException e) {
+            //expected
+        }
+    }
+
+    @Test
+    public void testZipWithInvalidCharacter() throws Exception {
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getAdminSoapUrl());
+        com.zimbra.soap.admin.message.AuthRequest authReq = new com.zimbra.soap.admin.message.AuthRequest(
+                LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
+        authReq.setCsrfSupported(false);
+        Element response = transport.invoke(JaxbUtil.jaxbToElement(authReq, SoapProtocol.SoapJS.getFactory()));
+        com.zimbra.soap.admin.message.AuthResponse authResp = JaxbUtil.elementToJaxb(response);
+        String authToken = authResp.getAuthToken();
+        String aid = adminUpload(authToken, "jelmer.zip", "/opt/zimbra/data/unittest/zimlets/jelmer.zip");
+        assertNotNull("Attachment ID should not be null", aid);
+
+        AttachmentIdAttrib att = new AttachmentIdAttrib(aid);
+        transport.setAdmin(true);
+        transport.setAuthToken(authToken);
+        DeployZimletRequest deployReq = new DeployZimletRequest(AdminConstants.A_DEPLOYLOCAL, false, true, att);
+        Element req = JaxbUtil.jaxbToElement(deployReq);
+        try {
+            Element res = transport.invoke(req);
+            JaxbUtil.elementToJaxb(res);
+            fail("Should throw SoapFaultException");
+        } catch (SoapFaultException e) {
+            //expected
+        }
+    }
+
+    @Test
+    public void testZipWithAbsolutePath() throws Exception {
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getAdminSoapUrl());
+        com.zimbra.soap.admin.message.AuthRequest authReq = new com.zimbra.soap.admin.message.AuthRequest(
+                LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
+        authReq.setCsrfSupported(false);
+        Element response = transport.invoke(JaxbUtil.jaxbToElement(authReq, SoapProtocol.SoapJS.getFactory()));
+        com.zimbra.soap.admin.message.AuthResponse authResp = JaxbUtil.elementToJaxb(response);
+        String authToken = authResp.getAuthToken();
+        String aid = adminUpload(authToken, "absolute.zip", "/opt/zimbra/data/unittest/zimlets/absolute.zip");
+        assertNotNull("Attachment ID should not be null", aid);
+
+        AttachmentIdAttrib att = new AttachmentIdAttrib(aid);
+        transport.setAdmin(true);
+        transport.setAuthToken(authToken);
+        DeployZimletRequest deployReq = new DeployZimletRequest(AdminConstants.A_DEPLOYLOCAL, false, true, att);
+        Element req = JaxbUtil.jaxbToElement(deployReq);
+        try {
+            Element res = transport.invoke(req);
+            JaxbUtil.elementToJaxb(res);
+            fail("Should throw SoapFaultException");
+        } catch (SoapFaultException e) {
+            //expected
+        }
+
+        //check that file did not get extracted to absolute path
+        File rogueFile = new File("/opt/zimbra/conf/rogue.file");
+        assertFalse("/opt/zimbra/conf/rogue.file should not have been created", rogueFile.exists());
+    }
+
+    @Test
+    public void testPhilsZip() throws Exception {
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getAdminSoapUrl());
+        com.zimbra.soap.admin.message.AuthRequest authReq = new com.zimbra.soap.admin.message.AuthRequest(
+                LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
+        authReq.setCsrfSupported(false);
+        Element response = transport.invoke(JaxbUtil.jaxbToElement(authReq, SoapProtocol.SoapJS.getFactory()));
+        com.zimbra.soap.admin.message.AuthResponse authResp = JaxbUtil.elementToJaxb(response);
+        String authToken = authResp.getAuthToken();
+        String aid = adminUpload(authToken, "phil.zip", "/opt/zimbra/data/unittest/zimlets/phil.zip");
+        assertNotNull("Attachment ID should not be null", aid);
+
+        AttachmentIdAttrib att = new AttachmentIdAttrib(aid);
+        transport.setAdmin(true);
+        transport.setAuthToken(authToken);
+        DeployZimletRequest deployReq = new DeployZimletRequest(AdminConstants.A_DEPLOYLOCAL, false, true, att);
+        Element req = JaxbUtil.jaxbToElement(deployReq);
+        try {
+            Element res = transport.invoke(req);
+            JaxbUtil.elementToJaxb(res);
+            fail("Should throw SoapFaultException");
+        } catch (SoapFaultException e) {
+            //expected
+        }
+    }
+
     public String adminUpload(String authToken, String fileName, String filePath) throws Exception {
         PostMethod post = new PostMethod(ADMIN_UPLOAD_URL);
         FilePart part = new FilePart(fileName, new FilePartSource(new File(filePath)));
