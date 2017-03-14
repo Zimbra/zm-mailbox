@@ -9,7 +9,6 @@
       <ant dir="./store"  target="publish-local" inheritAll="false"/>
       <ant dir="./store"  target="war"           inheritAll="false"/>
       <ant dir="./store"  target="create-version-sql" inheritAll="false"/>
-      <ant dir="./milter" target="publish-local" inheritAll="false"/>
    </target>
 
    <target name="clean">
@@ -18,6 +17,5 @@
       <ant dir="./soap"   target="clean" inheritAll="false"/>
       <ant dir="./client" target="clean" inheritAll="false"/>
       <ant dir="./store"  target="clean" inheritAll="false"/>
-      <ant dir="./milter" target="clean" inheritAll="false"/>
    </target>
 </project>
