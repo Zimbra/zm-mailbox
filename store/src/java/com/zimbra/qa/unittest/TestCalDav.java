@@ -38,10 +38,6 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import junit.framework.TestCase;
-import net.fortuna.ical4j.model.TimeZoneRegistry;
-import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
-
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -109,16 +105,22 @@ import com.zimbra.soap.mail.type.ContactInfo;
 import com.zimbra.soap.mail.type.NewMountpointSpec;
 import com.zimbra.soap.type.SearchHit;
 
+import junit.framework.TestCase;
+import net.fortuna.ical4j.model.TimeZoneRegistry;
+import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
+
 public class TestCalDav extends TestCase {
 
     static final TimeZoneRegistry tzRegistry = TimeZoneRegistryFactory.getInstance().createRegistry();
     private static String NAME_PREFIX = "TestCalDav";
-    private static String USER_NAME = "user1";
-    private static String DAV1 = "dav1";
-    private static String DAV2 = "dav2";
-    private static String DAV3 = "dav3";
-    private static String DAV4 = "dav4";
     private static String DL1 = "davdistlist1";
+    private static TestUtil.UserInfo[] users = {
+            new TestUtil.UserInfo("dav0user"),
+            new TestUtil.UserInfo("dav1user"),
+            new TestUtil.UserInfo("dav2user"),
+            new TestUtil.UserInfo("dav3user"),
+            new TestUtil.UserInfo("dav4user")
+    };
 
     public static class MkColMethod extends EntityEnclosingMethod {
         @Override
@@ -323,7 +325,7 @@ public class TestCalDav extends TestCase {
     }
 
     public void testBadBasicAuth() throws Exception {
-        Account dav1 = TestUtil.createAccount(DAV1);
+        Account dav1 = users[1].create();
         String calFolderUrl = getFolderUrl(dav1, "Calendar").replaceAll("@", "%40");
         HttpClient client = new HttpClient();
         GetMethod method = new GetMethod(calFolderUrl);
@@ -332,9 +334,9 @@ public class TestCalDav extends TestCase {
     }
 
     public void testPostToSchedulingOutbox() throws Exception {
-        Account dav1 = TestUtil.createAccount(DAV1);
-        Account dav2 = TestUtil.createAccount(DAV2);
-        Account dav3 = TestUtil.createAccount(DAV3);
+        Account dav1 = users[1].create();
+        Account dav2 = users[2].create();
+        Account dav3 = users[3].create();
         String url = getSchedulingOutboxUrl(dav1, dav1);
         HttpClient client = new HttpClient();
         PostMethod method = new PostMethod(url);
@@ -351,9 +353,9 @@ public class TestCalDav extends TestCase {
     }
 
     public void testBadPostToSchedulingOutbox() throws Exception {
-        Account dav1 = TestUtil.createAccount(DAV1);
-        Account dav2 = TestUtil.createAccount(DAV2);
-        Account dav3 = TestUtil.createAccount(DAV3);
+        Account dav1 = users[1].create();
+        Account dav2 = users[2].create();
+        Account dav3 = users[3].create();
         String url = getSchedulingOutboxUrl(dav2, dav2);
         HttpClient client = new HttpClient();
         PostMethod method = new PostMethod(url);
@@ -382,7 +384,7 @@ public class TestCalDav extends TestCase {
     public static StringBuilder getLocalServerRoot() throws ServiceException {
         Server localServer = Provisioning.getInstance().getLocalServer();
         StringBuilder sb = new StringBuilder();
-        sb.append("http://localhost:").append(localServer.getIntAttr(Provisioning.A_zimbraMailPort, 0));
+        sb.append("https://").append(localServer.getAttr(Provisioning.A_zimbraServiceHostname, "localhost"));
         return sb;
     }
 
@@ -524,14 +526,14 @@ public class TestCalDav extends TestCase {
     }
 
     public void testCalendarQueryOnInbox() throws Exception {
-        Account dav1 = TestUtil.createAccount(DAV1);
+        Account dav1 = users[1].create();
         String url = getSchedulingInboxUrl(dav1, dav1);
         Document doc = calendarQuery(url, dav1);
         org.w3c.dom.Element rootElem = doc.getDocumentElement();
         assertFalse("response when there are no items should have no child elements", rootElem.hasChildNodes());
 
         // Send an invite from user1 and check tags.
-        ZMailbox organizer = TestUtil.getZMailbox(USER_NAME);
+        ZMailbox organizer = users[0].getZMailbox();
         String subject = NAME_PREFIX + " testInvite request 1";
         Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
         Date endDate = new Date(startDate.getTime() + Constants.MILLIS_PER_HOUR);
@@ -544,15 +546,15 @@ public class TestCalDav extends TestCase {
     }
 
     public void testCalendarQueryOnOutbox() throws Exception {
-        Account dav1 = TestUtil.createAccount(DAV1);
-        ZMailbox dav1mbox = TestUtil.getZMailbox(USER_NAME);
+        Account dav1 = users[1].create();
+        ZMailbox dav1mbox = users[0].getZMailbox();
         String url = getSchedulingOutboxUrl(dav1, dav1);
         Document doc = calendarQuery(url, dav1);
         org.w3c.dom.Element rootElem = doc.getDocumentElement();
         assertFalse("response when there are no items should have no child elements", rootElem.hasChildNodes());
 
         // Send an invite to user2 and check tags.
-        ZMailbox recipient = TestUtil.getZMailbox(USER_NAME);
+        ZMailbox recipient = users[0].getZMailbox();
         String subject = NAME_PREFIX + " testInvite request 1";
         Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
         Date endDate = new Date(startDate.getTime() + Constants.MILLIS_PER_HOUR);
@@ -567,13 +569,13 @@ public class TestCalDav extends TestCase {
     }
 
     public void testPropFindSupportedReportSetOnInbox() throws Exception {
-        Account user1 = TestUtil.getAccount(USER_NAME);
+        Account user1 = users[0].create();
         checkPropFindSupportedReportSet(user1, getSchedulingInboxUrl(user1, user1),
                 UrlNamespace.getSchedulingInboxUrl(user1.getName(), user1.getName()));
     }
 
     public void testPropFindSupportedReportSetOnOutbox() throws Exception {
-        Account user1 = TestUtil.getAccount(USER_NAME);
+        Account user1 = users[0].create();
         checkPropFindSupportedReportSet(user1, getSchedulingOutboxUrl(user1, user1),
                 UrlNamespace.getSchedulingOutboxUrl(user1.getName(), user1.getName()));
     }
@@ -696,25 +698,25 @@ public class TestCalDav extends TestCase {
     private final String[] eventComponents = {"VEVENT", "VFREEBUSY"};
     private final String[] todoComponents = {"VTODO", "VFREEBUSY"};
     public void testPropFindSupportedCalendarComponentSetOnInbox() throws Exception {
-        Account user1 = TestUtil.getAccount(USER_NAME);
+        Account user1 = users[0].create();
         checkPropFindSupportedCalendarComponentSet(user1, getSchedulingInboxUrl(user1, user1),
                 UrlNamespace.getSchedulingInboxUrl(user1.getName(), user1.getName()), componentsForBothTasksAndEvents);
     }
 
     public void testPropFindSupportedCalendarComponentSetOnOutbox() throws Exception {
-        Account user1 = TestUtil.getAccount(USER_NAME);
+        Account user1 = users[0].create();
         checkPropFindSupportedCalendarComponentSet(user1, getSchedulingOutboxUrl(user1, user1),
                 UrlNamespace.getSchedulingOutboxUrl(user1.getName(), user1.getName()), componentsForBothTasksAndEvents);
     }
 
     public void testPropFindSupportedCalendarComponentSetOnCalendar() throws Exception {
-        Account user1 = TestUtil.getAccount(USER_NAME);
+        Account user1 = users[0].create();
         checkPropFindSupportedCalendarComponentSet(user1, getFolderUrl(user1, "Calendar"),
                 UrlNamespace.getFolderUrl(user1.getName(), "Calendar"), eventComponents);
     }
 
     public void testPropFindSupportedCalendarComponentSetOnTasks() throws Exception {
-        Account user1 = TestUtil.getAccount(USER_NAME);
+        Account user1 = users[0].create();
         checkPropFindSupportedCalendarComponentSet(user1, getFolderUrl(user1, "Tasks"),
                 UrlNamespace.getFolderUrl(user1.getName(), "Tasks"), todoComponents);
     }
@@ -729,7 +731,7 @@ public class TestCalDav extends TestCase {
      *      at com.zimbra.cs.dav.service.DavServlet.service(DavServlet.java:322)
      */
     public void testCreateUsingClientChosenName() throws ServiceException, IOException {
-        Account dav1 = TestUtil.createAccount(DAV1);
+        Account dav1 = users[1].create();
         String davBaseName = "clientInvented.now";
         String calFolderUrl = getFolderUrl(dav1, "Calendar");
         String url = String.format("%s%s", calFolderUrl, davBaseName);
@@ -812,10 +814,10 @@ public class TestCalDav extends TestCase {
      * messages still work to the remaining attendees.
      */
     public void testCreateModifyDeleteAttendeeModifyAndCancel() throws ServiceException, IOException {
-        Account dav1 = TestUtil.createAccount(DAV1);
-        Account dav2 = TestUtil.createAccount(DAV2);
-        Account dav3 = TestUtil.createAccount(DAV3);
-        Account dav4 = TestUtil.createAccount(DAV4);
+        Account dav1 = users[1].create();
+        Account dav2 = users[2].create();
+        Account dav3 = users[3].create();
+        Account dav4 = users[4].create();
         DistributionList dl = TestUtil.createDistributionList(DL1);
         Provisioning prov = Provisioning.getInstance();
         String[] members = { dav4.getName() };
@@ -852,8 +854,8 @@ public class TestCalDav extends TestCase {
         doDeleteMethod(getLocalServerRoot().append(inboxhref).toString(), dav4, HttpStatus.SC_NO_CONTENT);
 
         // Test that iTip handling still happens when some of the attendees no longer exist.
-        TestUtil.deleteAccount(DAV3);
-        TestUtil.deleteAccount(DAV4); // attendee via DL
+        users[3].cleanup();
+        users[4].cleanup(); // attendee via DL
         vCal = simpleMeeting(dav1, attendees, uid, "3", 10);
         doIcalPut(url, dav1, zvcalendarToBytes(vCal), HttpStatus.SC_CREATED);
         inboxhref = TestCalDav.waitForNewSchedulingRequestByUID(dav2, uid);
@@ -920,9 +922,9 @@ public class TestCalDav extends TestCase {
             "END:VCALENDAR\n";
             public String androidSeriesMeetingUid = "6db50587-d283-49a1-9cf4-63aa27406829";
     public void testAndroidMeetingSeries() throws Exception {
-        Account dav1 = TestUtil.createAccount(DAV1);
-        Account dav2 = TestUtil.createAccount(DAV2);
-        ZMailbox dav2MB = TestUtil.getZMailbox(DAV2); // Force creation of mailbox - shouldn't be needed
+        Account dav1 = users[1].create();
+        Account dav2 = users[2].create();
+        users[2].getZMailbox(); // Force creation of mailbox - shouldn't be needed
         String calFolderUrl = getFolderUrl(dav1, "Calendar").replaceAll("@", "%40");
         String url = String.format("%s%s.ics", calFolderUrl, androidSeriesMeetingUid);
         HttpClient client = new HttpClient();
@@ -1071,7 +1073,7 @@ public class TestCalDav extends TestCase {
     }
 
     public void testSimpleMkcol() throws Exception {
-        Account dav1 = TestUtil.createAccount(DAV1);
+        Account dav1 = users[1].create();
         StringBuilder url = getLocalServerRoot();
         url.append(DavServlet.DAV_PATH).append("/").append(dav1.getName()).append("/simpleMkcol/");
         MkColMethod method = new MkColMethod(url.toString());
@@ -1093,7 +1095,7 @@ public class TestCalDav extends TestCase {
                 "       </D:prop>" +
                 "     </D:set>" +
                 "</D:mkcol>";
-        Account dav1 = TestUtil.createAccount(DAV1);
+        Account dav1 = users[1].create();
         StringBuilder url = getLocalServerRoot();
         url.append(DavServlet.DAV_PATH).append("/").append(dav1.getName()).append("/OtherContacts/");
         MkColMethod method = new MkColMethod(url.toString());
@@ -1201,10 +1203,10 @@ public class TestCalDav extends TestCase {
                 "  </A:set>" +
                 "</A:propertyupdate>";
 
-        Account dav1 = TestUtil.createAccount(DAV1);
+        Account dav1 = users[1].create();
 
         // Create an event in Dav1's calendar
-        ZMailbox organizer = TestUtil.getZMailbox(DAV1);
+        ZMailbox organizer = users[1].getZMailbox();
         String subject = NAME_PREFIX + " testInvite request 1";
         Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
         Date endDate = new Date(startDate.getTime() + Constants.MILLIS_PER_HOUR);
@@ -1388,14 +1390,14 @@ public class TestCalDav extends TestCase {
     }
 
     private void attendeeDeleteFromCalendar(boolean suppressReply) throws Exception {
-        Account dav1 = TestUtil.createAccount(DAV1);
-        Account dav2 = TestUtil.createAccount(DAV2);
+        Account dav1 = users[1].create();
+        users[2].create();
         String url = getSchedulingInboxUrl(dav1, dav1);
         ReportMethod method = new ReportMethod(url);
         addBasicAuthHeaderForUser(method, dav1);
 
-        ZMailbox organizer = TestUtil.getZMailbox(DAV2);
-        ZMailbox dav1MB = TestUtil.getZMailbox(DAV1); // Force creation of mailbox - shouldn't be needed
+        ZMailbox organizer = users[2].getZMailbox();
+        users[1].getZMailbox(); // Force creation of mailbox - shouldn't be needed
         String subject = String.format("%s %s", NAME_PREFIX,
                 suppressReply ? "testInvite which shouldNOT be replied to" : "testInvite to be auto-declined");
         Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
@@ -1450,7 +1452,7 @@ public class TestCalDav extends TestCase {
                                         "END:VCARD\r\n";
 
     public void testCreateContactWithIfNoneMatchTesting() throws ServiceException, IOException {
-        Account dav1 = TestUtil.createAccount(DAV1);
+        Account dav1 = users[1].create();
         String davBaseName = "SCRUFF1.vcf";  // Based on UID
         String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
         String url = String.format("%s%s", contactsFolderUrl, davBaseName);
@@ -1524,7 +1526,7 @@ public class TestCalDav extends TestCase {
             "END:VCARD\n";
 
     public void testAppleStyleGroup() throws ServiceException, IOException {
-        Account dav1 = TestUtil.createAccount(DAV1);
+        Account dav1 = users[1].create();
         String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
         HttpClient client = new HttpClient();
 
@@ -1582,7 +1584,7 @@ public class TestCalDav extends TestCase {
         searchRequest.setLimit(8);
         searchRequest.setSearchTypes("contact");
         searchRequest.setQuery("in:Contacts");
-        ZMailbox mbox = TestUtil.getZMailbox(DAV1);
+        ZMailbox mbox = users[1].getZMailbox();
         SearchResponse searchResp = mbox.invokeJaxb(searchRequest);
         assertNotNull("JAXB SearchResponse object", searchResp);
         List<SearchHit> hits = searchResp.getSearchHits();
@@ -1641,7 +1643,7 @@ public class TestCalDav extends TestCase {
 
 
     public void testXBusyMacAttach() throws ServiceException, IOException {
-        Account dav1 = TestUtil.createAccount(DAV1);
+        Account dav1 = users[1].create();
         String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
         HttpClient client = new HttpClient();
 
@@ -1684,7 +1686,7 @@ public class TestCalDav extends TestCase {
         searchRequest.setLimit(8);
         searchRequest.setSearchTypes("contact");
         searchRequest.setQuery("in:Contacts");
-        ZMailbox mbox = TestUtil.getZMailbox(DAV1);
+        ZMailbox mbox = users[1].getZMailbox();
         SearchResponse searchResp = mbox.invokeJaxb(searchRequest);
         assertNotNull("JAXB SearchResponse object", searchResp);
         List<SearchHit> hits = searchResp.getSearchHits();
@@ -1747,9 +1749,9 @@ public class TestCalDav extends TestCase {
      * for instance Zimbra requires the proposed delegate to accept shares.
      */
     public void testAppleCaldavProxyFunctions() throws ServiceException, IOException {
-        Account sharer = TestUtil.createAccount(DAV3);
-        Account sharee1 = TestUtil.createAccount(DAV1);
-        Account sharee2 = TestUtil.createAccount(DAV2);
+        Account sharer = users[3].create();
+        Account sharee1 = users[1].create();
+        Account sharee2 = users[2].create();
         ZMailbox mboxSharer = TestUtil.getZMailbox(sharer.getName());
         ZMailbox mboxSharee1 = TestUtil.getZMailbox(sharee1.getName());
         ZMailbox mboxSharee2 = TestUtil.getZMailbox(sharee2.getName());
@@ -1916,16 +1918,13 @@ public class TestCalDav extends TestCase {
             File tzFile = new File(tzFilePath);
             WellKnownTimeZones.loadFromFile(tzFile);
         }
-        cleanUp();
+        tearDown();
     }
 
-    public void cleanUp()
+    @Override
+    public void tearDown()
     throws Exception {
-        TestUtil.deleteAccount(DAV1);
-        TestUtil.deleteAccount(DAV2);
-        TestUtil.deleteAccount(DAV3);
-        TestUtil.deleteAccount(DAV4);
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.UserInfo.cleanup(users);
         TestUtil.deleteDistributionList(DL1);
     }
 

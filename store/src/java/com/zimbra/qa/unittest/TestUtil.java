@@ -37,8 +37,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import junit.framework.Assert;
-
 import org.dom4j.DocumentException;
 import org.junit.runner.JUnitCore;
 
@@ -161,6 +159,8 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.TargetBy;
 import com.zimbra.soap.type.TargetType;
 
+import junit.framework.Assert;
+
 /**
  * @author bburtin
  */
@@ -173,6 +173,10 @@ public class TestUtil extends Assert {
         return AccountTestUtil.accountExists(userName);
     }
 
+    /**
+     * @return the <code>Account</code>, or <code>null</code> if account does not exist.
+     * @throws ServiceException if name is invalid or can't determine the default domain
+     */
     public static Account getAccount(String userName) throws ServiceException {
         return AccountTestUtil.getAccount(userName);
     }
@@ -1333,9 +1337,75 @@ public class TestUtil extends Assert {
         } else {
             target = new EffectiveRightsTargetSelector(targetType, TargetBy.name, targetName);
         }
-    
+
         RightModifierInfo right = new RightModifierInfo(rightName);
         GrantRightResponse grResp = adminSoapProv.invokeJaxb(new GrantRightRequest(target, grantee, right));
         assertNotNull("GrantRightResponse for " + right.getValue(), grResp);
+    }
+
+    public static class UserInfo {
+        final String name;
+        Account acct;
+        UserInfo(String acctName) {
+            try {
+                acctName = AccountTestUtil.getAddress(acctName);
+            } catch (ServiceException e) {
+            }
+            name = acctName;
+            acct = null;
+        }
+
+        Mailbox getMailbox() throws ServiceException {
+            ensureAcctExists();
+            return TestUtil.getMailbox(name);
+        }
+
+        ZMailbox getZMailbox() throws ServiceException {
+            ensureAcctExists();
+            return TestUtil.getZMailbox(name);
+        }
+
+        private void ensureAcctExists() throws ServiceException {
+            if (null != acct) {
+                return;
+            }
+            try {
+                acct = getAccount(name);
+            } catch (Exception se) {
+                ZimbraLog.test.debug("ensureAcctExists getAccount exception '%s'", name, se);
+            }
+            if (null != acct) {
+                return;
+            }
+            acct = create();
+        }
+
+        public Account create() throws ServiceException {
+            acct = TestUtil.createAccount(name);
+            return acct;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+
+        public void cleanup() {
+            if (null == acct) {
+                return;  // Assumes only user UserInfo for creation/deletion of accounts
+            }
+            try {
+                TestUtil.deleteAccount(name);
+            } catch (Exception ex) {
+                ZimbraLog.test.info("Exception thrown when deleting account '%s'", name, ex);
+            }
+            acct = null;
+        }
+
+        public static void cleanup(UserInfo[] users) {
+            for (UserInfo user : users) {
+                user.cleanup();
+            }
+        }
     }
 }
