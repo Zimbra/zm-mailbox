@@ -63796,7 +63796,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraSmimeOCSPEnabled, or true if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public boolean isSmimeOCSPEnabled() {
@@ -63809,7 +63809,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSmimeOCSPEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public void setSmimeOCSPEnabled(boolean zimbraSmimeOCSPEnabled) throws com.zimbra.common.service.ServiceException {
@@ -63825,7 +63825,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public Map<String,Object> setSmimeOCSPEnabled(boolean zimbraSmimeOCSPEnabled, Map<String,Object> attrs) {
@@ -63839,7 +63839,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public void unsetSmimeOCSPEnabled() throws com.zimbra.common.service.ServiceException {
@@ -63854,7 +63854,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public Map<String,Object> unsetSmimeOCSPEnabled(Map<String,Object> attrs) {
@@ -63868,7 +63868,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraSmimePublicCertificateExtensions, or empty array if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2100)
     public String[] getSmimePublicCertificateExtensions() {
@@ -63881,7 +63881,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSmimePublicCertificateExtensions new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2100)
     public void setSmimePublicCertificateExtensions(String[] zimbraSmimePublicCertificateExtensions) throws com.zimbra.common.service.ServiceException {
@@ -63897,7 +63897,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2100)
     public Map<String,Object> setSmimePublicCertificateExtensions(String[] zimbraSmimePublicCertificateExtensions, Map<String,Object> attrs) {
@@ -63912,7 +63912,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSmimePublicCertificateExtensions new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2100)
     public void addSmimePublicCertificateExtensions(String zimbraSmimePublicCertificateExtensions) throws com.zimbra.common.service.ServiceException {
@@ -63928,7 +63928,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2100)
     public Map<String,Object> addSmimePublicCertificateExtensions(String zimbraSmimePublicCertificateExtensions, Map<String,Object> attrs) {
@@ -63943,7 +63943,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSmimePublicCertificateExtensions existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2100)
     public void removeSmimePublicCertificateExtensions(String zimbraSmimePublicCertificateExtensions) throws com.zimbra.common.service.ServiceException {
@@ -63959,7 +63959,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2100)
     public Map<String,Object> removeSmimePublicCertificateExtensions(String zimbraSmimePublicCertificateExtensions, Map<String,Object> attrs) {
@@ -63973,7 +63973,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2100)
     public void unsetSmimePublicCertificateExtensions() throws com.zimbra.common.service.ServiceException {
@@ -63988,7 +63988,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2100)
     public Map<String,Object> unsetSmimePublicCertificateExtensions(Map<String,Object> attrs) {
@@ -64002,7 +64002,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraSmimeUserCertificateExtensions, or empty array if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2099)
     public String[] getSmimeUserCertificateExtensions() {
@@ -64015,7 +64015,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSmimeUserCertificateExtensions new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2099)
     public void setSmimeUserCertificateExtensions(String[] zimbraSmimeUserCertificateExtensions) throws com.zimbra.common.service.ServiceException {
@@ -64031,7 +64031,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2099)
     public Map<String,Object> setSmimeUserCertificateExtensions(String[] zimbraSmimeUserCertificateExtensions, Map<String,Object> attrs) {
@@ -64046,7 +64046,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSmimeUserCertificateExtensions new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2099)
     public void addSmimeUserCertificateExtensions(String zimbraSmimeUserCertificateExtensions) throws com.zimbra.common.service.ServiceException {
@@ -64062,7 +64062,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2099)
     public Map<String,Object> addSmimeUserCertificateExtensions(String zimbraSmimeUserCertificateExtensions, Map<String,Object> attrs) {
@@ -64077,7 +64077,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSmimeUserCertificateExtensions existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2099)
     public void removeSmimeUserCertificateExtensions(String zimbraSmimeUserCertificateExtensions) throws com.zimbra.common.service.ServiceException {
@@ -64093,7 +64093,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2099)
     public Map<String,Object> removeSmimeUserCertificateExtensions(String zimbraSmimeUserCertificateExtensions, Map<String,Object> attrs) {
@@ -64107,7 +64107,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2099)
     public void unsetSmimeUserCertificateExtensions() throws com.zimbra.common.service.ServiceException {
@@ -64122,7 +64122,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2099)
     public Map<String,Object> unsetSmimeUserCertificateExtensions(Map<String,Object> attrs) {
