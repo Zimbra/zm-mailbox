@@ -2867,7 +2867,7 @@ public class ZAttrProvisioning {
      * seconds, d - days, ms - milliseconds. If time unit is not specified,
      * the default is s(seconds).
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3003)
     public static final String A_zimbraActiveSyncEhcacheExpiration = "zimbraActiveSyncEhcacheExpiration";
@@ -2878,7 +2878,7 @@ public class ZAttrProvisioning {
      * internals of ehcache actual size in memory will often exceed this
      * limit by a modest margin.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3001)
     public static final String A_zimbraActiveSyncEhcacheHeapSize = "zimbraActiveSyncEhcacheHeapSize";
@@ -2889,7 +2889,7 @@ public class ZAttrProvisioning {
      * internals of ehcache actual size on disk will often exceed this limit
      * by a modest margin.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3002)
     public static final String A_zimbraActiveSyncEhcacheMaxDiskSize = "zimbraActiveSyncEhcacheMaxDiskSize";
@@ -5727,7 +5727,7 @@ public class ZAttrProvisioning {
     /**
      * URL of ephemeral storage backend
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2995)
     public static final String A_zimbraEphemeralBackendURL = "zimbraEphemeralBackendURL";
@@ -7680,7 +7680,7 @@ public class ZAttrProvisioning {
      * 100 gigabytes. This is a rough limit,Due to internals of ehcache
      * actual size in memory will often exceed this limit by a modest margin.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3005)
     public static final String A_zimbraImapActiveSessionEhcacheMaxDiskSize = "zimbraImapActiveSessionEhcacheMaxDiskSize";
@@ -7764,7 +7764,7 @@ public class ZAttrProvisioning {
      * 100 gigabytes. This is a rough limit,Due to internals of ehcache
      * actual size in memory will often exceed this limit by a modest margin.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3006)
     public static final String A_zimbraImapInactiveSessionEhcacheMaxDiskSize = "zimbraImapInactiveSessionEhcacheMaxDiskSize";
@@ -7775,7 +7775,7 @@ public class ZAttrProvisioning {
      * limit,Due to internals of ehcache actual size in memory will often
      * exceed this limit by a modest margin.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3004)
     public static final String A_zimbraImapInactiveSessionEhcacheSize = "zimbraImapInactiveSessionEhcacheSize";
@@ -15473,7 +15473,7 @@ public class ZAttrProvisioning {
     /**
      * enable OCSP support for SMIME.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2101)
     public static final String A_zimbraSmimeOCSPEnabled = "zimbraSmimeOCSPEnabled";
@@ -15481,7 +15481,7 @@ public class ZAttrProvisioning {
     /**
      * The supported smime public certificate file extensions
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2100)
     public static final String A_zimbraSmimePublicCertificateExtensions = "zimbraSmimePublicCertificateExtensions";
@@ -15489,7 +15489,7 @@ public class ZAttrProvisioning {
     /**
      * The supported smime user certificate file extensions
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.5
      */
     @ZAttr(id=2099)
     public static final String A_zimbraSmimeUserCertificateExtensions = "zimbraSmimeUserCertificateExtensions";
