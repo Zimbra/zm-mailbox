@@ -328,37 +328,37 @@ public class ZimletFile implements Comparable<ZimletFile> {
     public ZimletEntry getEntry(String name) {
         return mEntries.get(name.toLowerCase());
     }
-    
+
     public Collection<ZimletEntry> getAllEntries() {
         return mEntries.values();
     }
-    
+
     public String getZimletName() {
         return mZimletName;
     }
-    
+
     public String getName() {
         return getZimletName() + ".zip";
     }
-    
+
     public URL toURL() throws MalformedURLException {
         return mBase.toURL();
     }
-    
+
     public File getFile() {
         return mBase;
     }
-    
+
     private static String findZimlet(String zimlet) throws FileNotFoundException {
         File zimletFile = new File(zimlet);
-        
+
         if (!zimletFile.exists()) {
             zimletFile = new File(zimlet + ZIP_SUFFIX);
             if (!zimletFile.exists()) {
                 throw new FileNotFoundException("Zimlet not found: " + zimlet);
             }
         }
-        
+
         if (zimletFile.isDirectory()) {
             String[] files = zimletFile.list();
             String zimletTargetName = zimletFile.getName() + ZIP_SUFFIX;
@@ -369,10 +369,10 @@ public class ZimletFile implements Comparable<ZimletFile> {
                 }
             }
         }
-        
+
         return zimlet;
     }
-    
+
     public byte[] toByteArray() {
         return mCopy;
     }
