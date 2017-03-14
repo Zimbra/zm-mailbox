@@ -57,6 +57,8 @@ public class SetVariable extends AbstractCommand {
 
     public static final int OPERATIONS_IDX = 7;
 
+    public static final Pattern VALID_IDENTIFIER_PATTERN = Pattern.compile("([\\p{Alpha}]|_)+([\\p{Alnum}|_])*",  Pattern.CASE_INSENSITIVE);
+
     @Override
     protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context)
             throws SieveException {
@@ -223,9 +225,8 @@ public class SetVariable extends AbstractCommand {
      * @param key
      * @return
      */
-    private boolean isValidIdentifier(String key) {
-        Pattern pattern = Pattern.compile("([\\p{Alpha}]|_)+([\\p{Alnum}|_])*",  Pattern.CASE_INSENSITIVE);
-        if (pattern.matcher(key).matches()) {
+    public static boolean isValidIdentifier(String key) {
+        if (VALID_IDENTIFIER_PATTERN.matcher(key).matches()) {
            return true;
         }
         return false;

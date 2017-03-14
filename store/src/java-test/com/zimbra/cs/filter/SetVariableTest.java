@@ -1463,7 +1463,11 @@ public class SetVariableTest {
                     Mailbox.ID_FOLDER_INBOX, true);
             Assert.assertEquals(1, ids.size());
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
-            Assert.assertEquals("hello", msg.getTags()[0]);
+            String tag = msg.getTags()[0];
+            // 1 is not a valid identifier. So, no tag will be set because of a Sieve syntax Exception
+            // while setting the variable and we will get an ArrayIndexOutOfBoundsException while fetching
+            // the tag.
+            fail("Should not reach here");
 
         } catch (ArrayIndexOutOfBoundsException e) {
             assertTrue(true);
@@ -1497,7 +1501,11 @@ public class SetVariableTest {
                     Mailbox.ID_FOLDER_INBOX, true);
             Assert.assertEquals(1, ids.size());
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
-            Assert.assertEquals("hello", msg.getTags()[0]);
+            String tag = msg.getTags()[0];
+            // a.b is not a valid identifier. So, no tag will be set because of a Sieve syntax Exception
+            // while setting the variable and we will get an ArrayIndexOutOfBoundsException while fetching
+            // the tag.
+            fail("Should not reach here");
 
         } catch (ArrayIndexOutOfBoundsException e) {
             assertTrue(true);
