@@ -1475,7 +1475,7 @@ public class SetVariableTest {
                   + "if string :count \"eq\" :comparator \"i;ascii-numeric\" [\"${sample}\",\"${hello}\"] \"2\" {"
                   + "  addheader :last \"X-New-Header-42\" \"string test count eq two\";\n"
                   + "}"
-                  + "if string :count \"eq\" :comparator \"i;ascii-numeric\" [\"${sample}\",\"${unknown}\"] [\"1\",\"2\"] {"
+                  + "if string :count \"eq\" :comparator \"i;ascii-numeric\" [\"${sample}\",\"${unknown}\"] [\"3\",\"2\",\"1\"] {"
                   + "  addheader :last \"X-New-Header-43\" \"string test count eq one or two\";\n"
                   + "}"
                   // Default comparator

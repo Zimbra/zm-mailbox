@@ -244,10 +244,11 @@ public class StringTest extends Header {
         } else {
             Iterator<String> sourceIter = sourceValues.iterator();
             while (!isMatched && sourceIter.hasNext()) {
+                String source = sourceIter.next();
                 keyIter = keyValues.iterator();
                 while(!isMatched && keyIter.hasNext()) {
                     isMatched = ZimbraComparatorUtils.match(comparator, matchType, operator,
-                            sourceIter.next(), keyIter.next(), context);
+                            source, keyIter.next(), context);
                 }
             }
         }
