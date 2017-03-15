@@ -19,20 +19,20 @@ package com.zimbra.soap.base;
 
 import java.util.List;
 
-import com.zimbra.soap.type.AccountIdAndFolderIds;
+import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.IdAndType;
 
 public interface WaitSetResp {
     public void setCanceled(Boolean canceled);
     public void setSeqNo(String seqNo);
-    public void setSignalledAccounts(Iterable <AccountIdAndFolderIds> signalledAccounts);
-    public WaitSetResp addSignalledAccount(AccountIdAndFolderIds signalledAccount);
+    public void setSignalledAccounts(Iterable <AccountWithModifications> signalledAccounts);
+    public WaitSetResp addSignalledAccount(AccountWithModifications signalledAccount);
     public void setErrors(Iterable <IdAndType> errors);
     public WaitSetResp addError(IdAndType error);
     public String getWaitSetId();
     public Boolean getCanceled();
     public String getSeqNo();
-    public List<AccountIdAndFolderIds> getSignalledAccounts();
+    public List<AccountWithModifications> getSignalledAccounts();
     public List<IdAndType> getErrors();
     public void setWaitSetId(String waitSetId);
 }
