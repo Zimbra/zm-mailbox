@@ -147,6 +147,7 @@ import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
+import com.zimbra.soap.account.message.ResetRecentMessageCountRequest;
 import com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
@@ -5832,12 +5833,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public void delete(OpContext octxt, List<Integer> itemIds, List<Integer> nonExistingItems) throws ServiceException {
         throw new UnsupportedOperationException("ZMailbox does not support method yet");
     }
+
     /** Resets the mailbox's "recent message count" to 0.  A message is considered "recent" if:
      *     (a) it's not a draft or a sent message, and
      *     (b) it was added since the last write operation associated with any SOAP session. */
     @Override
     public void resetRecentMessageCount(OpContext octxt) throws ServiceException {
-        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+        ResetRecentMessageCountRequest req = new ResetRecentMessageCountRequest();
+        invokeJaxb(req);
     }
 
     /** Acquire an in process lock relevant for this type of MailboxStore */
