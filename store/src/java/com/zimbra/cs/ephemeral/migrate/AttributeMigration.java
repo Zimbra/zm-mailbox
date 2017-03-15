@@ -478,7 +478,6 @@ public class AttributeMigration {
      */
     static class ZimbraMigrationCallback implements MigrationCallback {
         private final EphemeralStore store;
-        private final boolean destinationIsLdap;
         private LdapProvisioning prov = null;
 
         public ZimbraMigrationCallback() throws ServiceException {
@@ -494,7 +493,6 @@ public class AttributeMigration {
             } else{
                 this.store = store;
             }
-            this.destinationIsLdap = (store instanceof LdapEphemeralStore);
             Provisioning myProv = Provisioning.getInstance();
             if (myProv instanceof LdapProvisioning) {
                 this.prov = (LdapProvisioning) myProv;
@@ -523,15 +521,11 @@ public class AttributeMigration {
         @Override
         public void deleteOriginal(Entry entry, String attrName, Object value, AttributeConverter converter)
                 throws ServiceException {
-            // don't delete LDAP value if we are using LdapEphemeralStore and the attribute is single-valued,
-            // since the value was already overwritten in the setEphemeralData step
-            if (!(destinationIsLdap && !converter.isMultivalued())) {
-                ZimbraLog.ephemeral.debug("deleting original value for attribute '%s': '%s'", attrName, value);
-                Map<String, Object> attrs = new HashMap<String, Object>();
-                attrs.put("-" + attrName, value);
-                if (prov != null) {
-                    prov.modifyEphemeralAttrsInLdap(entry, attrs);
-                }
+            ZimbraLog.ephemeral.debug("deleting original value for attribute '%s': '%s'", attrName, value);
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            attrs.put("-" + attrName, value);
+            if (prov != null) {
+                prov.modifyEphemeralAttrsInLdap(entry, attrs);
             }
         }
 
