@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -31,8 +27,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.WaitSetReq;
 import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.WaitSetAddSpec;
 import com.zimbra.soap.type.ZmBoolean;
@@ -70,7 +70,7 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ADMIN_WAIT_SET_REQUEST)
-public class AdminWaitSetRequest {
+public class AdminWaitSetRequest implements WaitSetReq {
 
     /**
      * @zm-api-field-tag waitset-id
@@ -106,6 +106,7 @@ public class AdminWaitSetRequest {
      * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
      * <tr> <td> <b>all</b> </td> <td> all types (equiv to "f,m,c,a,t,d") </td> </tr>
      * </table>
+     * <p>This is used if <b>types</b> isn't specified for an account</p>
      */
     @XmlAttribute(name=MailConstants.A_DEFTYPES /* defTypes */, required=false)
     private String defaultInterests;
@@ -122,21 +123,21 @@ public class AdminWaitSetRequest {
      */
     @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD /* add */, required=false)
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
-    private List<WaitSetAddSpec> addAccounts = Lists.newArrayList();
+    private final List<WaitSetAddSpec> addAccounts = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Waitsets to update
      */
     @XmlElementWrapper(name=MailConstants.E_WAITSET_UPDATE /* update */, required=false)
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
-    private List<WaitSetAddSpec> updateAccounts = Lists.newArrayList();
+    private final List<WaitSetAddSpec> updateAccounts = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Waitsets to remove
      */
     @XmlElementWrapper(name=MailConstants.E_WAITSET_REMOVE /* remove */, required=false)
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
-    private List<Id> removeAccounts = Lists.newArrayList();
+    private final List<Id> removeAccounts = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -151,11 +152,15 @@ public class AdminWaitSetRequest {
         this.lastKnownSeqNo = lastKnownSeqNo;
     }
 
+    @Override
     public void setBlock(Boolean block) { this.block = ZmBoolean.fromBool(block); }
+    @Override
     public void setDefaultInterests(String defaultInterests) {
         this.defaultInterests = defaultInterests;
     }
+    @Override
     public void setTimeout(Long timeout) { this.timeout = timeout; }
+    @Override
     public void setAddAccounts(Iterable <WaitSetAddSpec> addAccounts) {
         this.addAccounts.clear();
         if (addAccounts != null) {
@@ -163,11 +168,13 @@ public class AdminWaitSetRequest {
         }
     }
 
+    @Override
     public AdminWaitSetRequest addAddAccount(WaitSetAddSpec addAccount) {
         this.addAccounts.add(addAccount);
         return this;
     }
 
+    @Override
     public void setUpdateAccounts(Iterable <WaitSetAddSpec> updateAccounts) {
         this.updateAccounts.clear();
         if (updateAccounts != null) {
@@ -175,11 +182,13 @@ public class AdminWaitSetRequest {
         }
     }
 
+    @Override
     public AdminWaitSetRequest addUpdateAccount(WaitSetAddSpec updateAccount) {
         this.updateAccounts.add(updateAccount);
         return this;
     }
 
+    @Override
     public void setRemoveAccounts(Iterable <Id> removeAccounts) {
         this.removeAccounts.clear();
         if (removeAccounts != null) {
@@ -187,22 +196,31 @@ public class AdminWaitSetRequest {
         }
     }
 
+    @Override
     public AdminWaitSetRequest addRemoveAccount(Id removeAccount) {
         this.removeAccounts.add(removeAccount);
         return this;
     }
 
+    @Override
     public String getWaitSetId() { return waitSetId; }
+    @Override
     public String getLastKnownSeqNo() { return lastKnownSeqNo; }
-    public Boolean getBlock() { return ZmBoolean.toBool(block); }
+    @Override
+    public Boolean getBlock() { return ZmBoolean.toBool(block, false); }
+    @Override
     public String getDefaultInterests() { return defaultInterests; }
+    @Override
     public Long getTimeout() { return timeout; }
+    @Override
     public List<WaitSetAddSpec> getAddAccounts() {
         return Collections.unmodifiableList(addAccounts);
     }
+    @Override
     public List<WaitSetAddSpec> getUpdateAccounts() {
         return Collections.unmodifiableList(updateAccounts);
     }
+    @Override
     public List<Id> getRemoveAccounts() {
         return Collections.unmodifiableList(removeAccounts);
     }
