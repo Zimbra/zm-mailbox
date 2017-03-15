@@ -969,7 +969,7 @@ public class ReplaceHeaderTest {
     }
 
     /*
-     * Replace header with numeric comparator :value
+     * Replace header with ascii-casemap comparator and :value match type
      */
     @SuppressWarnings("unchecked")
     @Test
