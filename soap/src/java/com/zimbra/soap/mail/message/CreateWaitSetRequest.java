@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -31,7 +27,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.CreateWaitSetReq;
 import com.zimbra.soap.type.WaitSetAddSpec;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -47,7 +47,7 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_CREATE_WAIT_SET_REQUEST)
-public class CreateWaitSetRequest {
+public class CreateWaitSetRequest implements CreateWaitSetReq {
 
     /**
      * @zm-api-field-tag default-interests
@@ -61,6 +61,7 @@ public class CreateWaitSetRequest {
      * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
      * <tr> <td> <b>all</b> </td> <td> all types (equiv to "f,m,c,a,t,d") </td> </tr>
      * </table>
+     * <p>This is used if <b>types</b> isn't specified for an account</p>
      */
     @XmlAttribute(name=MailConstants.A_DEFTYPES /* defTypes */, required=true)
     private final String defaultInterests;
@@ -81,30 +82,29 @@ public class CreateWaitSetRequest {
      * are available)
      */
     @XmlAttribute(name=MailConstants.A_ALL_ACCOUNTS /* allAccounts */, required=false)
-    private ZmBoolean allAccounts;
+    private final ZmBoolean allAccounts;
 
     /**
      * @zm-api-field-description Waitsets to add
      */
     @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD /* add */, required=false)
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
-    private List<WaitSetAddSpec> accounts = Lists.newArrayList();
+    private final List<WaitSetAddSpec> accounts = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private CreateWaitSetRequest() {
-        this((String) null);
+        this((String) null, (Boolean) null);
     }
 
-    public CreateWaitSetRequest(String defaultInterests) {
+    public CreateWaitSetRequest(String defaultInterests, Boolean allAccounts) {
         this.defaultInterests = defaultInterests;
-    }
-
-    public void setAllAccounts(Boolean allAccounts) {
         this.allAccounts = ZmBoolean.fromBool(allAccounts);
     }
+
+    @Override
     public void setAccounts(Iterable <WaitSetAddSpec> accounts) {
         this.accounts.clear();
         if (accounts != null) {
@@ -112,13 +112,17 @@ public class CreateWaitSetRequest {
         }
     }
 
+    @Override
     public CreateWaitSetRequest addAccount(WaitSetAddSpec account) {
         this.accounts.add(account);
         return this;
     }
 
+    @Override
     public String getDefaultInterests() { return defaultInterests; }
-    public Boolean getAllAccounts() { return ZmBoolean.toBool(allAccounts); }
+    @Override
+    public Boolean getAllAccounts() { return ZmBoolean.toBool(allAccounts, false); }
+    @Override
     public List<WaitSetAddSpec> getAccounts() {
         return Collections.unmodifiableList(accounts);
     }
