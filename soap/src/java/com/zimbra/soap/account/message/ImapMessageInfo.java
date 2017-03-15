@@ -11,19 +11,39 @@ public class ImapMessageInfo implements Comparable<ImapMessageInfo> {
 
     public ImapMessageInfo() {}
 
-    @XmlAttribute(name=MailConstants.A_ID, required=true)
+    /**
+     * @zm-api-field-tag item-id
+     * @zm-api-field-description ID for item
+     */
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private Integer id;
 
-    @XmlAttribute(name=MailConstants.A_IMAP_UID, required=true)
+    /**
+     * @zm-api-field-tag imap-uid
+     * @zm-api-field-description IMAP UID
+     */
+    @XmlAttribute(name=MailConstants.A_IMAP_UID /* i4uid */, required=true)
     private Integer imapUid;
 
-    @XmlAttribute(name=MailConstants.A_TYPE, required=true)
+    /**
+     * @zm-api-field-tag item-type
+     * @zm-api-field-description Item type
+     */
+    @XmlAttribute(name=MailConstants.A_TYPE /* t */, required=true)
     private String type;
 
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=true)
+    /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description Flags
+     */
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=true)
     private Integer flags;
 
-    @XmlAttribute(name=MailConstants.A_TAGS, required=true)
+    /**
+     * @zm-api-field-tag tag-names
+     * @zm-api-field-description Comma separated list of name of tags associated with this item
+     */
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=true)
     private String tags;
 
     public ImapMessageInfo(Integer id, Integer imapUid, String type, Integer flags, String tags) {
