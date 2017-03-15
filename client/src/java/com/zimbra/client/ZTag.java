@@ -23,12 +23,13 @@ import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyTagEvent;
+import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
-public class ZTag implements Comparable<ZTag>, ZItem, ToZJSONObject {
+public class ZTag implements Comparable<ZTag>, ZItem, ZimbraTag, ToZJSONObject {
 
     private Color mColor;
     private String mId;
@@ -191,5 +192,15 @@ public class ZTag implements Comparable<ZTag>, ZItem, ToZJSONObject {
 
     public void setRetentionPolicy(RetentionPolicy rp) {
         mRetentionPolicy = rp;
+    }
+
+    @Override
+    public int getTagId() {
+        return Integer.valueOf(getId());
+    }
+
+    @Override
+    public String getTagName() {
+        return getName();
     }
 }
