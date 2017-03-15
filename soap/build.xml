@@ -204,19 +204,55 @@
     <delete verbose="true">
       <fileset dir="${common.jars.dir}" includes="zm-soap*.jar,zimbrasoap*.jar"/>
       <fileset dir="${jetty.endorsed.jars.dir}" includes="zm-soap*.jar,zimbrasoap*.jar"/>
-      <fileset dir="${jetty.webapps.dir}/zimbra/WEB-INF/lib" includes="zm-soap*.jar,zimbrasoap*.jar"/>
-      <fileset dir="${jetty.webapps.dir}/zimbraAdmin/WEB-INF/lib" includes="zm-soap*.jar,zimbrasoap*.jar"/>
-      <fileset dir="${jetty.webapps.dir}/service/WEB-INF/lib" includes="zm-soap*.jar,zimbrasoap*.jar"/>
     </delete>
+    <if>
+      <available file="${jetty.webapps.dir}/zimbra/" type="dir" property="zimbra.webapp.installed"/>
+      <then>
+        <delete verbose="true">
+          <fileset dir="${jetty.webapps.dir}/zimbra/WEB-INF/lib" includes="zm-soap*.jar,zimbrasoap*.jar"/>
+        </delete>
+      </then>
+    </if>
+	<if>
+	  <available file="${jetty.webapps.dir}/zimbraAdmin/" type="dir" property="zimbraadmin.webapp.installed"/>
+	  <then>
+	    <delete verbose="true">
+	      <fileset dir="${jetty.webapps.dir}/zimbraAdmin/WEB-INF/lib" includes="zm-soap*.jar,zimbrasoap*.jar"/>
+	    </delete>
+	  </then>
+	</if>
+    <if>
+      <available file="${jetty.webapps.dir}/service/" type="dir" property="service.webapp.installed"/>
+      <then>
+        <delete verbose="true">
+          <fileset dir="${jetty.webapps.dir}/service/WEB-INF/lib" includes="zm-soap*.jar,zimbrasoap*.jar"/>
+        </delete>
+      </then>
+    </if>
   </target>
 
   <!-- relies on undeploy to stop the webserver -->
   <target name="deploy" depends="jar,set-dev-version,undeploy" description="Deploy">
     <!-- until zm* scripts are fixed to use versioned zm* jars, we have to deploy this jar with a fixed name -->
     <copy file="${build.dir}/${jar.file}" tofile="${common.jars.dir}/zimbrasoap.jar"/>
-    <copy file="${build.dir}/${jar.file}" tofile="${jetty.webapps.dir}/zimbra/WEB-INF/lib/${jar.file}"/>
-    <copy file="${build.dir}/${jar.file}" tofile="${jetty.webapps.dir}/zimbraAdmin/WEB-INF/lib/${jar.file}"/>
-    <copy file="${build.dir}/${jar.file}" tofile="${jetty.webapps.dir}/service/WEB-INF/lib/${jar.file}"/>
+    <if>
+      <available file="${jetty.webapps.dir}/zimbra/" type="dir" property="zimbra.webapp.installed"/>
+      <then>
+        <copy file="${build.dir}/${jar.file}" tofile="${jetty.webapps.dir}/zimbra/WEB-INF/lib/${jar.file}"/>
+      </then>
+    </if>
+	<if>
+	  <available file="${jetty.webapps.dir}/zimbraAdmin/" type="dir" property="zimbraadmin.webapp.installed"/>
+	  <then>
+        <copy file="${build.dir}/${jar.file}" tofile="${jetty.webapps.dir}/zimbraAdmin/WEB-INF/lib/${jar.file}"/>
+	  </then>
+	</if>
+    <if>
+      <available file="${jetty.webapps.dir}/service/" type="dir" property="service.webapp.installed"/>
+      <then>
+        <copy file="${build.dir}/${jar.file}" tofile="${jetty.webapps.dir}/service/WEB-INF/lib/${jar.file}"/>
+      </then>
+    </if>
     <ant dir="${server.dir}" target="start-webserver" inheritAll="false"/>
   </target>
 </project>
