@@ -18,12 +18,14 @@
 package com.zimbra.client;
 
 import java.io.InputStream;
+import java.net.URI;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 
 public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
 
@@ -99,8 +101,6 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
     public abstract long getSize();
     @Override
     public abstract MailItemType getMailItemType();
-    /** @return item's ID.  IDs are unique within a Mailbox and are assigned in increasing
-     * (though not necessarily gap-free) order. */
     /** Returns an {@link InputStream} of the raw, uncompressed content of the message.  This is the message body as
      * received via SMTP; no postprocessing has been performed to make opaque attachments (e.g. TNEF) visible.
      *
@@ -109,7 +109,12 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
      * @see #getMimeMessage()
      * @see #getContent() */
     @Override
-    public abstract InputStream getContentStream() throws ServiceException;
+    public InputStream getContentStream() throws ServiceException {
+        String contentPath = String.format("%s/get?id=%d", AccountConstants.CONTENT_SERVLET_PATH, getIdInMailbox());
+        URI uri = mMailbox.getTransportURI(contentPath);
+        return mMailbox.getResource(uri);
+    }
+
     /**
      * @return the UID the item is referenced by in the IMAP server.  Returns <tt>0</tt> for items that require
      * renumbering because of moves.
@@ -117,6 +122,8 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
      * IMAP session. */
     @Override
     public abstract int getImapUid();
+    /** @return item's ID.  IDs are unique within a Mailbox and are assigned in increasing
+     * (though not necessarily gap-free) order. */
     @Override
     public abstract String getId();
 
