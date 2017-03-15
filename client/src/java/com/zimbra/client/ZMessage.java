@@ -258,6 +258,11 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         return mFolderId;
     }
 
+    @Override
+    public int getFolderIdInMailbox() throws ServiceException {
+        return getIdInMailbox(getFolderId());
+    }
+
     public String getMessageIdHeader() {
         return mMessageIdHeader;
     }
