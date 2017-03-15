@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,6 +44,14 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.dom4j.DocumentException;
 import org.dom4j.ElementHandler;
 import org.dom4j.io.SAXReader;
@@ -50,6 +59,7 @@ import org.xml.sax.SAXException;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.httpclient.HttpProxyConfig;
+import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.ProxyHostConfiguration;
 import com.zimbra.common.service.ServiceException;
@@ -173,6 +183,22 @@ public class SoapHttpTransport extends SoapTransport {
         return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, null);
     }
 
+    private String getUriWithPath(Element document) {
+        String uri, query;
+        int i = mUri.indexOf('?');
+        if (i >= 0) {
+            uri = mUri.substring(0, i);
+            query = mUri.substring(i);
+        } else {
+            uri = mUri;
+            query = "";
+        }
+        if (!uri.endsWith("/"))
+            uri += '/';
+
+        return String.format("%s%s%s", uri, getDocumentName(document), query);
+    }
+
     public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId,
             String changeToken, String tokenType, ResponseHandler respHandler)
             throws IOException, HttpException, ServiceException {
@@ -181,19 +207,8 @@ public class SoapHttpTransport extends SoapTransport {
         try {
             // Assemble post method.  Append document name, so that the request
             // type is written to the access log.
-            String uri, query;
-            int i = mUri.indexOf('?');
-            if (i >= 0) {
-                uri = mUri.substring(0, i);
-                query = mUri.substring(i);
-            } else {
-                uri = mUri;
-                query = "";
-            }
-            if (!uri.endsWith("/"))
-                uri += '/';
-            uri += getDocumentName(document);
-            method = new PostMethod(uri + query);
+            String uri = getUriWithPath(document);
+            method = new PostMethod(uri);
 
             // Set user agent if it's specified.
             String agentName = getUserAgentName();
@@ -345,5 +360,55 @@ public class SoapHttpTransport extends SoapTransport {
                 throw ServiceException.SAX_READER_ERROR(e.getMessage(), e.getCause());
             }
         }
+    }
+
+    @Override
+    public Future<HttpResponse> invokeAsync(Element document, boolean raw, boolean noSession, String requestedAccountId,
+            String changeToken, String tokenType, FutureCallback<HttpResponse> cb) throws IOException,
+            ServiceException {
+        HttpPost post = new HttpPost(getUriWithPath(document));
+        // Set user agent if it's specified.
+        String agentName = getUserAgentName();
+        if (agentName != null) {
+            String agentVersion = getUserAgentVersion();
+            if (agentVersion != null)
+                agentName += " " + agentVersion;
+            post.setHeader("User-Agent", agentName);
+        }
+
+        // request headers
+        post.setHeader("Content-Type", getRequestProtocol().getContentType());
+        if (getClientIp() != null) {
+            post.setHeader(RemoteIP.X_ORIGINATING_IP_HEADER, getClientIp());
+            if (ZimbraLog.misc.isDebugEnabled()) {
+                ZimbraLog.misc.debug("set remote IP header [%s] to [%s]", RemoteIP.X_ORIGINATING_IP_HEADER, getClientIp());
+            }
+        }
+        if (getRequestProtocol().hasSOAPActionHeader())
+            post.setHeader("SOAPAction", mUri);
+
+        if (mCustomHeaders != null) {
+            for (Map.Entry<String, String> entry : mCustomHeaders.entrySet())
+                post.setHeader(entry.getKey(), entry.getValue());
+        }
+
+        //SOAP message
+        Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
+        String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
+        post.setEntity(new ByteArrayEntity(soapMessage.getBytes("UTF-8")));
+        HttpClientContext context = HttpClientContext.create();
+        String host = post.getURI().getHost();
+        CookieStore cookieStore = HttpClientUtil.newCookieStore(getAuthToken(), host, isAdmin());
+        String trustedToken = getTrustedToken();
+        if (trustedToken != null) {
+            BasicClientCookie cookie = new BasicClientCookie(ZimbraCookie.COOKIE_ZM_TRUST_TOKEN, trustedToken);
+            cookie.setDomain(post.getURI().getHost());
+            cookie.setPath("/");
+            cookie.setSecure(false);
+            cookieStore.addCookie(cookie);
+        }
+        context.setCookieStore(cookieStore);
+        CloseableHttpAsyncClient httpClient = ZimbraHttpClientManager.getInstance().getInternalAsyncHttpClient();
+        return httpClient.execute(post, context, cb);
     }
 }
