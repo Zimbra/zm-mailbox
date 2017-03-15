@@ -488,7 +488,12 @@ public class AttributeMigration {
             }
             String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
             factory.test(url);
-            this.store = factory.getStore();
+            EphemeralStore store = factory.getStore();
+            if (store instanceof FallbackEphemeralStore) {
+                this.store = ((FallbackEphemeralStore) store).getPrimaryStore();
+            } else{
+                this.store = store;
+            }
             this.destinationIsLdap = (store instanceof LdapEphemeralStore);
             Provisioning myProv = Provisioning.getInstance();
             if (myProv instanceof LdapProvisioning) {
