@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
@@ -147,10 +148,10 @@ import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
-import com.zimbra.soap.account.message.GetModifiedItemsIDsRequest;
-import com.zimbra.soap.account.message.GetModifiedItemsIDsResponse;
 import com.zimbra.soap.account.message.GetLastItemIdInMailboxRequest;
 import com.zimbra.soap.account.message.GetLastItemIdInMailboxResponse;
+import com.zimbra.soap.account.message.GetModifiedItemsIDsRequest;
+import com.zimbra.soap.account.message.GetModifiedItemsIDsResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.message.ImapCursorInfo;
@@ -173,10 +174,10 @@ import com.zimbra.soap.mail.message.GetFilterRulesRequest;
 import com.zimbra.soap.mail.message.GetFilterRulesResponse;
 import com.zimbra.soap.mail.message.GetFolderRequest;
 import com.zimbra.soap.mail.message.GetFolderResponse;
-import com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest;
-import com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse;
 import com.zimbra.soap.mail.message.GetIMAPRecentRequest;
 import com.zimbra.soap.mail.message.GetIMAPRecentResponse;
+import com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest;
+import com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsResponse;
 import com.zimbra.soap.mail.message.ItemActionRequest;
@@ -2582,8 +2583,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 msgEl.addAttribute(MailConstants.A_WANT_HTML, params.isWantHtml());
                 msgEl.addAttribute(MailConstants.A_NEUTER, params.isNeuterImages());
                 msgEl.addAttribute(MailConstants.A_RAW, params.isRawContent());
-                if (params.getMax() != null) {
-                    msgEl.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, params.getMax());
+                Integer max = params.getMax();
+                if (max != null) {
+                    msgEl.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, max);
+                    if (params.isRawContent() && (max == 0)) {
+                        msgEl.addAttribute(MailConstants.A_USE_CONTENT_URL, true);
+                    }
                 }
                 //header request bug:33054
                 String reqHdrs = params.getReqHeaders();
@@ -2609,21 +2614,31 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
-    public ZMessage getMessageById(String id) throws ServiceException {
+    public ZMessage getMessageById(String id, boolean raw, Integer max) throws ServiceException {
         ZGetMessageParams params = new ZGetMessageParams();
         params.setId(id);
+        params.setRawContent(raw);
+        params.setMax(max);
         return getMessage(params);
     }
 
-    public ZMessage getMessageById(ItemIdentifier itemId) throws ServiceException {
+    public ZMessage getMessageById(String id) throws ServiceException {
+        return getMessageById(id, false, null);
+    }
+
+    public ZMessage getMessageById(ItemIdentifier itemId, boolean raw, Integer max) throws ServiceException {
         try {
-        return getMessageById(itemId.toString());
+            return getMessageById(itemId.toString(), raw, max);
         } catch (SoapFaultException sfe) {
             if (sfe.getMessage().startsWith("no such message")) {
                 throw ZClientException.NO_SUCH_CONTACT(itemId.id, sfe);
             }
             throw sfe;
         }
+    }
+
+    public ZMessage getMessageById(ItemIdentifier itemId) throws ServiceException {
+        return getMessageById(itemId, false, null);
     }
 
     /**
@@ -2901,6 +2916,43 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
+    public URI getTransportURI(String relativePath) throws ServiceException {
+        String pathPrefix = (relativePath.startsWith("/")) ? "" : "/";
+        try {
+            URI uri = new URI(mTransport.getURI());
+            return  uri.resolve(pathPrefix + relativePath);
+        } catch (URISyntaxException e) {
+            throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
+        }
+    }
+
+    public InputStream getResource(URI uri) throws ServiceException {
+        return getResource(uri, null, null, getTimeout());
+    }
+
+    private InputStream getResource(URI uri, String startTimeArg, String endTimeArg, int msecTimeout)
+    throws ServiceException {
+        GetMethod get = null;
+        try {
+            HttpClient client = getHttpClient(uri);
+            get = new GetMethod(uri.toString());
+            if (msecTimeout > -1) {
+                get.getParams().setSoTimeout(msecTimeout);
+            }
+            int statusCode = HttpClientUtil.executeMethod(client, get);
+            // parse the response
+            if (statusCode == HttpServletResponse.SC_OK) {
+                return new GetMethodInputStream(get);
+            } else {
+                String msg = String.format("GET from %s failed, status=%d.  %s", uri, statusCode, get.getStatusText());
+                throw ServiceException.FAILURE(msg, null);
+            }
+        } catch (IOException e) {
+            String msg = String.format("Unable to get resource from '%s' : %s", uri, e.getMessage());
+            throw ZClientException.IO_ERROR(msg, e);
+        }
+    }
+
     /**
      * returns a rest URL relative to this mailbox.
      * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
@@ -2970,11 +3022,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     private InputStream getRESTResource(String relativePath, String startTimeArg, String endTimeArg,
             int msecTimeout, String alternateUrl)
-                    throws ServiceException {
-        GetMethod get = null;
+    throws ServiceException {
         URI uri = null;
-
-        int statusCode;
         try {
             if (startTimeArg != null) {
                 String encodedArg = URLEncoder.encode(startTimeArg, "UTF-8");
@@ -2992,32 +3041,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                     relativePath = relativePath + "&end=" + encodedArg;
                 }
             }
-
-            uri = getRestURI(relativePath, alternateUrl);
-            HttpClient client = getHttpClient(uri);
-
-            get = new GetMethod(uri.toString());
-
-            if (msecTimeout > -1) {
-                get.getParams().setSoTimeout(msecTimeout);
-            }
-
-            statusCode = HttpClientUtil.executeMethod(client, get);
-            // parse the response
-            if (statusCode == HttpServletResponse.SC_OK) {
-                return new GetMethodInputStream(get);
-            } else {
-                String msg = String.format("GET from %s failed, status=%d.  %s", uri.toString(), statusCode, get.getStatusText());
-                throw ServiceException.FAILURE(msg, null);
-            }
-        } catch (IOException e) {
-            String fromUri = "";
-            if (uri != null) {
-                fromUri = " from " + uri.toString();
-            }
-            String msg = String.format("Unable to get REST resource%s: %s", fromUri, e.getMessage());
+        } catch (UnsupportedEncodingException e) {
+            String msg = String.format("Unable to get REST resource relativePath=%s start=%s end=%s: %s",
+                    relativePath, startTimeArg, endTimeArg, e.getMessage());
             throw ZClientException.IO_ERROR(msg, e);
         }
+        uri = getRestURI(relativePath, alternateUrl);
+        return getResource(uri, startTimeArg, endTimeArg, msecTimeout);
     }
 
     /**
@@ -6165,7 +6195,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public static class OpenIMAPFolderParams {
 
         private static final int DEFAULT_LIMIT = 1000;
-        private int folderId;
+        private final int folderId;
         private int limit;
         private String cursorId;
 
