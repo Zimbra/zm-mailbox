@@ -22,7 +22,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -65,6 +64,13 @@ public class SessionForWaitSet {
     private Integer mboxSyncTokenDiff;
 
     /**
+     * @zm-api-field-tag acct-id-error
+     * @zm-api-field-description Account ID stored in WaitSetAccount object.  Differs from <b>account</b> value.
+     */
+    @XmlAttribute(name="acctIdError", required=false)
+    private String acctIdError;
+
+    /**
      * @zm-api-field-description WaitSet session Information
      */
     @XmlElement(name="WaitSetSession", required=false)
@@ -102,4 +108,7 @@ public class SessionForWaitSet {
     public Integer getMboxSyncToken() { return mboxSyncToken; }
     public Integer getMboxSyncTokenDiff() { return mboxSyncTokenDiff; }
     public WaitSetSessionInfo getWaitSetSession() { return waitSetSession; }
+
+    public String getAcctIdError() { return acctIdError; }
+    public void setAcctIdError(String acctIdError) { this.acctIdError = acctIdError; }
 }
