@@ -40,4 +40,6 @@ public interface WaitSetReq {
     public List<WaitSetAddSpec> getAddAccounts();
     public List<WaitSetAddSpec> getUpdateAccounts();
     public List<Id> getRemoveAccounts();
+    public boolean getExpand();
+    public void setExpand(Boolean expand);
 }
