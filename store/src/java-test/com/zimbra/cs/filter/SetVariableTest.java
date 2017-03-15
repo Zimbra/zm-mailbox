@@ -29,10 +29,15 @@ import java.util.TreeMap;
 import javax.mail.Header;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 import com.google.common.collect.Maps;
 
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
+=======
+import com.google.common.collect.Maps;
+
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
 import org.apache.jsieve.exception.SyntaxException;
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,9 +46,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.google.common.collect.Maps;
 =======
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
+=======
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -55,12 +63,17 @@ import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 =======
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
+=======
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailItem;
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -71,7 +84,11 @@ import com.zimbra.cs.service.util.ItemId;
 
 public class SetVariableTest {
     private String filterScript = "";
+<<<<<<< HEAD
    
+=======
+
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -207,6 +224,7 @@ public class SetVariableTest {
         // num-variable        =  1*DIGIT
         // identifier          = (ALPHA / "_") *(ALPHA / DIGIT / "_")
 <<<<<<< HEAD
+<<<<<<< HEAD
         variables.put("a_b", "\u304a\u3057\u3089\u305b");
         variables.put("c_d", "C");
         variables.put("_1", "One");
@@ -215,6 +233,8 @@ public class SetVariableTest {
 
         testCases.put("${a_b}", "\u304a\u3057\u3089\u305b");
 =======
+=======
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
         variables.put("a.b", "おしらせ");
         variables.put("c_d", "C");
         variables.put("1", "One");
@@ -222,11 +242,15 @@ public class SetVariableTest {
         variables.put("uppercase", "upper case");
 
         testCases.put("${a.b}", "おしらせ");
+<<<<<<< HEAD
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
+=======
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
         testCases.put("${c_d}", "C");
         testCases.put("${1}", "${1}");       // Invalid variable name
         testCases.put("${23}", "${23}");     // Not defined
         testCases.put("${123}", "${123}");   // Invalid variable name
+<<<<<<< HEAD
 <<<<<<< HEAD
         testCases.put("${a_b} ${COMpANY} ${c_d}hao!", "\u304a\u3057\u3089\u305b ACME Chao!");
         testCases.put("${a_b} ${def} ${c_d}hao!", "\u304a\u3057\u3089\u305b  Chao!"); // 1st valid variable, 2nd undefined, 3rd valid variable
@@ -234,6 +258,10 @@ public class SetVariableTest {
         testCases.put("${a.b} ${COMpANY} ${c_d}hao!", "おしらせ ACME Chao!");
         testCases.put("${a.b} ${def} ${c_d}hao!", "おしらせ  Chao!"); // 1st valid variable, 2nd undefined, 3rd valid variable
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
+=======
+        testCases.put("${a.b} ${COMpANY} ${c_d}hao!", "おしらせ ACME Chao!");
+        testCases.put("${a.b} ${def} ${c_d}hao!", "おしらせ  Chao!"); // 1st valid variable, 2nd undefined, 3rd valid variable
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
         testCases.put("${upperCase}", "upper case");
         testCases.put("${UPPERCASE}", "upper case");
         testCases.put("${uppercase}", "upper case");
@@ -477,24 +505,34 @@ public class SetVariableTest {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             // set "company" "ACME";
 <<<<<<< HEAD
+<<<<<<< HEAD
             // set "a.b" "おしらせ"; (or any non-ascii characters [\u304a\u3057\u3089\u305b])
 =======
             // set "a.b" "おしらせ"; (or any non-ascii characters)
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
+=======
+            // set "a.b" "おしらせ"; (or any non-ascii characters)
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
             // set "c_d" "C";
             // set "1" "One"; ==> Should be ignored or error [Note 1]
             // set "23" "twenty three"; ==> Should be ignored or error [Note 1]
             // set "combination" "Hello ${company}!!";
             filterScript = "require [\"variables\"];\n"
 <<<<<<< HEAD
+<<<<<<< HEAD
                          + "set \"company\" \"\u304a\u3057\u3089\u305b\" ;\n"
                          + "set  \"c_d\" \"C\";\n"
 =======
+=======
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
                          + "set \"company\" \"おしらせ\" ;\n"
                          + "set  \"a.b\" \"${a}\";\n"
                          + "set  \"c_d\" \"C\";\n"
                          + "set  \"1\" \"One\";"
+<<<<<<< HEAD
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
+=======
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
                          + "set  \"combination\" \"Hello ${company}!!\"; "
                          + "if header :matches \"Subject\" \"*\" {\n"
                          + "  tag \"${combination}\";\n"
@@ -510,10 +548,14 @@ public class SetVariableTest {
                     Mailbox.ID_FOLDER_INBOX, true);
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
 <<<<<<< HEAD
+<<<<<<< HEAD
             Assert.assertEquals("Hello \u304a\u3057\u3089\u305b!!", ArrayUtil.getFirstElement(msg.getTags()));
 =======
             Assert.assertEquals("Hello おしらせ!!", ArrayUtil.getFirstElement(msg.getTags()));
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
+=======
+            Assert.assertEquals("Hello おしらせ!!", ArrayUtil.getFirstElement(msg.getTags()));
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
         } catch (Exception e) {
             fail("No exception should be thrown");
         }
@@ -717,6 +759,294 @@ public class SetVariableTest {
     }
 
     @Test
+<<<<<<< HEAD
+=======
+    public void testVariables_Address_HeaderList_KeyList() {
+        try {
+            String raw = "From: user2@ykomiyam.local\n"
+                + "To: coyote@ACME.Example.COM\n"
+                + "Subject: hello version 1.0 is out\n"
+                + "\n"
+                + "Hello World.";
+            filterScript = "require [\"variables\", \"tag\"];\n"
+                + "set \"from_address_One\" \"user1@ykomiyam.local\";"
+                + "set \"from_address_Two\" \"user2@ykomiyam.local\";"
+                + "set \"from_header_name\" \"From\";"
+                + "set \"to_header_name\" \"To\";"
+                + "if address :comparator \"i;ascii-casemap\" :is \"From\" [\"${from_address_One}\",\"${from_address_Two}\"] {"
+                + "  tag \"KeyListTag\";\n" + "}"
+                + "if address :comparator \"i;ascii-casemap\" :is [\"${from_header_name}\",\"${to_header_name}\"] \"user2@ykomiyam.local\" {"
+                + "  tag \"HeaderListTag\";\n" + "}";
+
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            String[] tags = msg.getTags();
+            Assert.assertEquals(2, tags.length);
+            Assert.assertEquals("KeyListTag", tags[0]);
+            Assert.assertEquals("HeaderListTag", tags[1]);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testVariables_Envelope_KeyList() {
+        String sampleMsg =
+            "from: tim@example.com\n"
+          + "to: test@zimbra.com\n"
+          + "Subject: Example\n";
+        String filterScript = "require [\"envelope\", \"variables\", \"tag\"];\n"
+            + "set \"from_address\" \"tim@example.com\";"
+            + "set \"to_address\" \"test1@zimbra.com\";" + "set \"from_header_name\" \"From\";"
+            + "if envelope :all :is \"from\" [\"to_address\", \"${from_address}\"] {\n"
+            + "    tag \"KeyListTag\";" + "}";
+
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<test1@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            String[] tags = msg.getTags();
+            Assert.assertEquals(1, tags.length);
+            Assert.assertEquals("KeyListTag", tags[0]);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testVariables_Header_HeaderNames() {
+        try {
+           String sampleMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
+                + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
+                + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+                + "Received: from localhost (localhost [127.0.0.1])\n"
+                + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
+                + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+                + "x-priority: 1\n"
+                + "from: tim@zimbra.com\n"
+                + "Subject: =?ISO-2022-JP?B?GyRCJDMkcyRLJEEkTxsoQg==?=\n"
+                + "to: test1@zimbra.com, test2@zimbra.com\n";
+            String filterScript = "require [\"variables\", \"tag\"];\n"
+                + "set \"header_name\" \"x-priority\";"
+                + "if header :contains [\"${header_name}\"] [\"\"] { tag \"zimbra\"; }";
+
+            LmtpEnvelope env = new LmtpEnvelope();
+            LmtpAddress sender = new LmtpAddress("<tim@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+            LmtpAddress recipient1 = new LmtpAddress("<test1@zimbra.com>", null, null);
+            LmtpAddress recipient2 = new LmtpAddress("<test2@zimbra.com>", null, null);
+            env.setSender(sender);
+            env.addLocalRecipient(recipient1);
+            env.addLocalRecipient(recipient2);
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("zimbra", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testVariables_String_Source() {
+        try {
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: Test\n"
+                       + "\n"
+                       + "Hello World.";
+            filterScript = "require [\"variables\", \"tag\"];\n"
+                + "set :lower :upperfirst \"name\" \"Joe\";\n"
+                + "if string :is :comparator \"i;ascii-casemap\" \"{name}\" [\"{name}\", \"Bob\"]{\n"
+                + "  tag \"SourceTag\";\n" + "}";
+
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            String[] tags = msg.getTags();
+            Assert.assertEquals(1, tags.length);
+            Assert.assertEquals("SourceTag", tags[0]);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testVariables_AddHeader_FieldName_Value() {
+        try {
+          String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
+                + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
+                + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+                + "Received: from localhost (localhost [127.0.0.1])\n"
+                + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
+                + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+                + "from: test2@zimbra.com\n"
+                + "Subject: example\n"
+                + "to: test1@zimbra.com\n";
+            String filterScript = "require [\"editheader\", \"variables\"];\n"
+                + "set \"header_name\" \"my-new-header\";"
+                + "set \"header_value\" \"my-new-header-value\";"
+                + "if header :contains \"Subject\" \"example\" {\n"
+                + " addheader \"${header_name}\" \"${header_value}\" \r\n" + "  ;\n" + "}";
+
+            Account acct = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct);
+            RuleManager.clearCachedRules(acct);
+            acct.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            int index = 0;
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                index++;
+                if ("my-new-header".equals(temp.getName())) {
+                    break;
+                }
+            }
+            // the header field is inserted at the beginning of the existing message header.
+            Assert.assertEquals(1, index);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testVariables_DeleteHeader_FieldName() {
+        try {
+            String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
+                + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
+                + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+                + "Received: from localhost (localhost [127.0.0.1])\n"
+                + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
+                + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+                + "X-Test-Header: test1\n"
+                + "X-Test-Header: test2\n"
+                + "X-Test-Header: test3\n"
+                + "from: test2@zimbra.com\n"
+                + "Subject: example\n"
+                + "to: test1@zimbra.com\n";
+            String filterScript = "require [\"editheader\", \"variables\"];\n"
+                + "set \"header_name\" \"X-Test-Header\";"
+                + "set \"header_value\" \"test2\";"
+                + "deleteheader :is \"${header_name}\" \"${header_value}\" \r\n" + "  ;\n";
+
+            Account acct1 = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test-Header".equals(header.getName()) && "test2".equals(header.getValue())) {
+                    matchFound = true;
+                    break;
+                }
+            }
+            Assert.assertFalse(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testVariables_ReplaceHeader_FieldName() {
+        try {
+            String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
+                + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
+                + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+                + "Received: from localhost (localhost [127.0.0.1])\n"
+                + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
+                + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+                + "X-Test-Header: test1\n"
+                + "X-Test-Header: test2\n"
+                + "X-Test-Header: test3\n"
+                + "from: test2@zimbra.com\n"
+                + "Subject: example\n"
+                + "to: test1@zimbra.com\n";
+            String filterScript = "require [\"editheader\"];\n"
+                + "set \"header_name\" \"Subject\";"
+                + "set \"header_value\" \"example\";"
+                + "set \"new_value\" \"my subject\";"
+                + "replaceheader :newvalue \"${new_value}\" :contains \"${header_name}\" \"${header_value}\" \r\n"
+                + "  ;\n";
+
+            Account acct1 = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String newSubject = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header temp = enumeration.nextElement();
+                if ("Subject".equals(temp.getName())) {
+                    newSubject = temp.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals("my subject", newSubject);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
     public void testSetVarSieveFeatureDisabled() {
         try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -1385,10 +1715,13 @@ public class SetVariableTest {
                     "set \"dollar\" \"$\";\n"
                   + "set \"sample\" \"test text\";\n"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
                   + "set \"hello\" \"world\";\n"
                   + "set \"number\" \"7\";\n"
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
+=======
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
                   + "# set \"abc${dollar}{sample}\" in source\n"
                   + "if string :matches :comparator \"i;ascii-casemap\" \"abc${dollar}{sample}\" \"*${sample}\" {\n"
                   + "  addheader :last \"X-New-Header-1\" \"${1}\";\n"
@@ -1420,6 +1753,7 @@ public class SetVariableTest {
                   + "if string :is :comparator \"i;ascii-casemap\" \"${dollar}{sample}\" \"${dollar}{sample}\" {\n"
                   + "  addheader :last \"X-New-Header-11\" \"is\";\n"
                   + "}"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
                   // String comparison of "test text" ?? "M:middle of alphabet list"
@@ -1531,6 +1865,8 @@ public class SetVariableTest {
                   + "  addheader :last \"X-New-Header-45\" \"string test count numeric eq\";\n"
                   + "}"
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
+=======
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
                   ;
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -1549,6 +1885,7 @@ public class SetVariableTest {
             Assert.assertEquals("contains", value[0]);
             value = msg.getMimeMessage().getHeader("X-New-Header-11");
             Assert.assertEquals("is", value[0]);
+<<<<<<< HEAD
 <<<<<<< HEAD
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
@@ -1724,6 +2061,10 @@ public class SetVariableTest {
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
+=======
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+>>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
         }
     }
 }
