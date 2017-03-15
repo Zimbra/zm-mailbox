@@ -166,6 +166,12 @@ public class AccountConstants {
     public static final String E_REVOKE_OAUTH_CONSUMER_REQUEST = "RevokeOAuthConsumerRequest";
     public static final String E_REVOKE_OAUTH_CONSUMER_RESPONSE = "RevokeOAuthConsumerResponse";
 
+    //IMAP
+    public static final String E_LIST_IMAP_SUBSCRIPTIONS_REQUEST = "ListIMAPSubscriptionsRequest";
+    public static final String E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE = "ListIMAPSubscriptionsResponse";
+    public static final String E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST = "SaveIMAPSubscriptionsRequest";
+    public static final String E_SAVE_IMAP_SUBSCRIPTIONS_RESPONSE = "SaveIMAPSubscriptionsResponse";
+
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
     public static final QName AUTH_RESPONSE = QName.get(E_AUTH_RESPONSE, NAMESPACE);
@@ -306,6 +312,12 @@ public class AccountConstants {
     public static final QName REVOKE_OAUTH_CONSUMER_REQUEST = QName.get(E_REVOKE_OAUTH_CONSUMER_REQUEST, NAMESPACE);
     public static final QName REVOKE_OAUTH_CONSUMER_RESPONSE = QName.get(E_REVOKE_OAUTH_CONSUMER_RESPONSE, NAMESPACE);
 
+    //IMAP
+    public static final QName LIST_IMAP_SUBSCRIPTIONS_REQUEST = QName.get(E_LIST_IMAP_SUBSCRIPTIONS_REQUEST, NAMESPACE);
+    public static final QName LIST_IMAP_SUBSCRIPTIONS_RESPONSE = QName.get(E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
+    public static final QName SAVE_IMAP_SUBSCRIPTIONS_REQUEST = QName.get(E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST, NAMESPACE);
+    public static final QName SAVE_IMAP_SUBSCRIPTIONS_RESPONSE = QName.get(E_SAVE_IMAP_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
+
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
     public static final String E_ADMIN_DELEGATED = "adminDelegated";
@@ -387,6 +399,7 @@ public class AccountConstants {
     public static final String E_CONTACT_ID = "cid";
     public static final String E_STORE = "store";
     public static final String E_BOSH_URL = "boshURL";
+    public static final String E_SUBSCRIPTION = "sub";
     
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
