@@ -23,6 +23,7 @@ import org.dom4j.QName;
 public class AccountConstants {
 
     public static final String USER_SERVICE_URI  = "/service/soap/";
+    public static final String CONTENT_SERVLET_PATH = "/service/content";
 
     public static final String NAMESPACE_STR = "urn:zimbraAccount";
     public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
