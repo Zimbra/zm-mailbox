@@ -1195,6 +1195,7 @@ public final class MailConstants {
     public static final String A_TYPES = "types";
     public static final String A_FOLDER_INTERESTS = "folderInterests";
     public static final String A_CHANGED_FOLDERS = "changedFolders";
+    public static final String A_CHANGE = "change";
     public static final String E_A = "a";
     public static final String A_EXPAND = "expand";
     public static final String E_PENDING_FOLDER_MODIFICATIONS = "mods";
