@@ -18,7 +18,7 @@
 package com.zimbra.soap.type;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -27,13 +27,16 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class WaitSetAddSpec {
 
     private static Joiner COMMA_JOINER = Joiner.on(",");
+    private static Splitter COMMA_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
 
     /**
      * @zm-api-field-tag account-name
@@ -73,7 +76,7 @@ public class WaitSetAddSpec {
     @XmlAttribute(name=MailConstants.A_TYPES /* types */, required=false)
     private String interests;
 
-    private final List <Integer> folderInterests = Lists.newArrayList();
+    private final Set<Integer> folderInterests = Sets.newHashSet();
 
     public WaitSetAddSpec() {
     }
@@ -102,8 +105,15 @@ public class WaitSetAddSpec {
         return COMMA_JOINER.join(folderInterests);
     }
 
+    public void setFolderInterests(String fInterests) {
+        this.folderInterests.clear();
+        for (String fi : COMMA_SPLITTER.split(Strings.nullToEmpty(fInterests))) {
+            folderInterests.add(Integer.parseInt(fi));
+        }
+    }
+
     @XmlTransient
-    public List<Integer> getFolderInterestsAsList() { return folderInterests; }
+    public Set<Integer> getFolderInterestsAsSet() { return folderInterests; }
 
     public WaitSetAddSpec setFolderInterests(Integer... folderIds) {
         this.folderInterests.clear();
@@ -117,7 +127,9 @@ public class WaitSetAddSpec {
 
     public WaitSetAddSpec setFolderInterests(Collection<Integer> folderIds) {
         this.folderInterests.clear();
-        this.folderInterests.addAll(folderIds);
+        if (folderIds != null) {
+            this.folderInterests.addAll(folderIds);
+        }
         return this;
     }
 
