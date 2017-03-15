@@ -54,6 +54,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.dom4j.QName;
 import org.json.JSONException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -147,8 +148,12 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
+import com.zimbra.soap.account.message.ImapCursorInfo;
+import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
+import com.zimbra.soap.account.message.OpenImapFolderRequest;
+import com.zimbra.soap.account.message.OpenImapFolderResponse;
 import com.zimbra.soap.account.message.ResetRecentMessageCountRequest;
 import com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.type.AuthToken;
@@ -6073,5 +6078,72 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public int getLastChangeID() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("ZMailbox method not supported yet");
+    }
+
+    @VisibleForTesting
+    public OpenImapFolderResponse fetchImapFolderChunk(OpenImapFolderParams params) throws ServiceException {
+        OpenImapFolderRequest req = new OpenImapFolderRequest();
+        req.setFolderId(String.valueOf(params.getFolderId()));
+        req.setLimit(params.getLimit());
+        if (params.getCursorId() != null) {
+            req.setCursor(new ImapCursorInfo(params.getCursorId()));
+        }
+        return invokeJaxb(req);
+    }
+
+    /**
+     * Iterate OpenImapFolderRequests until all results have been returned
+     * @param params
+     * @return
+     * @throws ServiceException
+     */
+    public List<ImapMessageInfo> openImapFolder(int folderId, int chunkSize) throws ServiceException {
+        List<ImapMessageInfo> msgs = new ArrayList<ImapMessageInfo>();
+        String cursorId = null;
+        OpenImapFolderResponse folderInfo = null;
+        do {
+            OpenImapFolderParams params = new OpenImapFolderParams(folderId);
+            params.setLimit(chunkSize);
+            if (cursorId != null) {
+                params.setCursorId(cursorId);
+            }
+            folderInfo = fetchImapFolderChunk(params);
+            List<ImapMessageInfo> results = folderInfo.getImapMessageInfo();
+            if (results.isEmpty()) {
+                break;
+            } else {
+                ImapCursorInfo cursor = folderInfo.getCursor();
+                if (cursor == null) {
+                    //fall back to last message of this results page
+                    cursorId = String.valueOf(results.get(results.size() - 1).getId());
+                } else {
+                    cursorId = cursor.getId();
+                }
+                msgs.addAll(results);
+            }
+        } while (folderInfo.getHasMore());
+        return msgs;
+    }
+
+    public static class OpenImapFolderParams {
+
+        private static final int DEFAULT_LIMIT = 1000;
+        private int folderId;
+        private int limit;
+        private String cursorId;
+
+        public OpenImapFolderParams(int folderId) {
+            this.folderId = folderId;
+            this.limit = DEFAULT_LIMIT;
+            this.cursorId = null;
+        }
+
+        public int getFolderId() { return folderId; }
+
+        public void setLimit(int limit) { this.limit = limit; }
+        public int getLimit() { return limit; }
+
+        public void setCursorId(String id) { this.cursorId =id; }
+        public String getCursorId() { return cursorId; }
     }
 }
