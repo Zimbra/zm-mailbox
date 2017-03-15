@@ -112,6 +112,10 @@ public class WaitSetAddSpec {
         }
     }
 
+    public void addFolderInterest(Integer folderId) {
+        this.folderInterests.add(folderId);
+    }
+
     @XmlTransient
     public Set<Integer> getFolderInterestsAsSet() { return folderInterests; }
 
