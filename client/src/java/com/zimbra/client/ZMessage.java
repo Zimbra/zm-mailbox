@@ -17,6 +17,7 @@
 
 package com.zimbra.client;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,38 +27,41 @@ import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyMessageEvent;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.zclient.ZClientException;
 
-public class ZMessage implements ZItem, ToZJSONObject {
+public class ZMessage implements ZItem, ToZJSONObject, ZimbraMailItem {
 
-    private String mId;
+    private final String mId;
     private String mFlags;
-    private String mSubject;
-    private String mFragment;
+    private final String mSubject;
+    private final String mFragment;
     private String mTags;
     private String mFolderId;
     private String mConversationId;
-    private String mPartName;
-    private long mReceivedDate;
-    private long mSentDate;
-    private String mMessageIdHeader;
-    private List<ZEmailAddress> mAddresses;
+    private final String mPartName;
+    private final long mReceivedDate;
+    private final long mSentDate;
+    private final String mMessageIdHeader;
+    private final List<ZEmailAddress> mAddresses;
     private ZMimePart mMimeStructure;
     private String mContent;
     private String mContentURL;
-    private long mSize;
-    private String mReplyType;
-    private String mInReplyTo;
-    private String mOrigId;
+    private final long mSize;
+    private final String mReplyType;
+    private final String mInReplyTo;
+    private final String mOrigId;
     private ZInvite mInvite;
     private ZShare mShare;
-    private ZMailbox mMailbox;
-    private Map<String, String> mReqHdrs;
-    private String mIdentityId;
-    private long mAutoSendTime;
+    private final ZMailbox mMailbox;
+    private final Map<String, String> mReqHdrs;
+    private final String mIdentityId;
+    private final long mAutoSendTime;
 
     public ZMessage(Element e, ZMailbox mailbox) throws ServiceException {
         mMailbox = mailbox;
@@ -170,6 +174,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         return mReplyType;
     }
 
+    @Override
     public long getSize() {
         return mSize;
     }
@@ -314,20 +319,20 @@ public class ZMessage implements ZItem, ToZJSONObject {
     }
 
     public static class ZMimePart implements ToZJSONObject {
-        private String mPartName;
-        private String mName;
-        private String mContentType;
-        private String mContentDisposition;
-        private String mFileName;
-        private String mContentId;
-        private String mContentLocation;
-        private String mContentDescription;
-        private String mContent;
-        private boolean mIsBody;
-        private List<ZMimePart> mChildren;
-        private long mSize;
-        private ZMimePart mParent;
-        private boolean mTruncated;
+        private final String mPartName;
+        private final String mName;
+        private final String mContentType;
+        private final String mContentDisposition;
+        private final String mFileName;
+        private final String mContentId;
+        private final String mContentLocation;
+        private final String mContentDescription;
+        private final String mContent;
+        private final boolean mIsBody;
+        private final List<ZMimePart> mChildren;
+        private final long mSize;
+        private final ZMimePart mParent;
+        private final boolean mTruncated;
 
         public ZMimePart(ZMimePart parent, Element e) throws ServiceException {
             mParent = parent;
@@ -508,7 +513,6 @@ public class ZMessage implements ZItem, ToZJSONObject {
         getMailbox().flagMessage(getId(), flag);
     }
 
-
     public void tag(String nameOrId, boolean tagged) throws ServiceException {
         ZTag tag = mMailbox.getTag(nameOrId);
         if (tag == null)
@@ -551,5 +555,38 @@ public class ZMessage implements ZItem, ToZJSONObject {
 
     public long getAutoSendTime() {
         return mAutoSendTime;
+    }
+
+    @Override
+    public long getDate() {
+        return this.getReceivedDate();
+    }
+
+    @Override
+    public InputStream getContentStream() throws ServiceException {
+        // TODO - needs to handle both when data is provided by getContent and when provided by
+        // getContentURL
+        throw new UnsupportedOperationException("ZMessage method not supported yet");
+    }
+
+    @Override
+    public int getIdInMailbox() throws ServiceException {
+        String acctId = null;
+        try {
+            acctId = mMailbox.getAccountId();
+        } catch (ServiceException e) {
+        }
+        ItemIdentifier itemId = new ItemIdentifier(this.getId(), acctId);
+        return itemId.id;
+    }
+
+    @Override
+    public MailItemType getMailItemType() {
+        return MailItemType.MESSAGE;
+    }
+
+    @Override
+    public int getModifiedSequence() {
+        throw new UnsupportedOperationException("ZMessage method not supported yet");
     }
 }
