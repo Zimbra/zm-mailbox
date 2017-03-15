@@ -11634,6 +11634,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraOpenidConsumerStatelessModeEnabled = "zimbraOpenidConsumerStatelessModeEnabled";
 
     /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3010)
+    public static final String A_zimbraOpenImapFolderRequestChunkSize = "zimbraOpenImapFolderRequestChunkSize";
+
+    /**
      * regex of allowed characters in password
      *
      * @since ZCS 7.1.0
