@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -29,22 +25,24 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.CreateWaitSetResp;
 import com.zimbra.soap.type.IdAndType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_CREATE_WAIT_SET_RESPONSE)
-@XmlType(propOrder = {})
-public class CreateWaitSetResponse {
+public class CreateWaitSetResponse implements CreateWaitSetResp {
 
     /**
      * @zm-api-field-tag waitset-id
      * @zm-api-field-description WaitSet ID
      */
     @XmlAttribute(name=MailConstants.A_WAITSET_ID /* waitSet */, required=true)
-    private final String waitSetId;
+    private String waitSetId;
 
     /**
      * @zm-api-field-tag default-interests
@@ -58,38 +56,38 @@ public class CreateWaitSetResponse {
      * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
      * <tr> <td> <b>all</b> </td> <td> all types (equiv to "f,m,c,a,t,d") </td> </tr>
      * </table>
+     * <p>This will be used if <b>types</b> isn't specified for an account</p>
      */
     @XmlAttribute(name=MailConstants.A_DEFTYPES /* defTypes */, required=true)
-    private final String defaultInterests;
+    private String defaultInterests;
 
     /**
      * @zm-api-field-tag sequence
      * @zm-api-field-description Sequence
      */
     @XmlAttribute(name=MailConstants.A_SEQ /* seq */, required=true)
-    private final int sequence;
+    private int sequence;
 
     /**
      * @zm-api-field-description Error information
      */
     @XmlElement(name=MailConstants.E_ERROR /* error */, required=false)
-    private List<IdAndType> errors = Lists.newArrayList();
+    private final List<IdAndType> errors = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
-    private CreateWaitSetResponse() {
+    public CreateWaitSetResponse() {
         this((String) null, (String) null, -1);
     }
 
-    public CreateWaitSetResponse(String waitSetId, String defaultInterests,
-                    int sequence) {
+    public CreateWaitSetResponse(String waitSetId, String defaultInterests, int sequence) {
         this.waitSetId = waitSetId;
         this.defaultInterests = defaultInterests;
         this.sequence = sequence;
     }
 
+    @Override
     public void setErrors(Iterable <IdAndType> errors) {
         this.errors.clear();
         if (errors != null) {
@@ -97,15 +95,23 @@ public class CreateWaitSetResponse {
         }
     }
 
+    @Override
     public CreateWaitSetResponse addError(IdAndType error) {
         this.errors.add(error);
         return this;
     }
 
+    @Override
     public String getWaitSetId() { return waitSetId; }
+    @Override
     public String getDefaultInterests() { return defaultInterests; }
+    @Override
     public int getSequence() { return sequence; }
+    @Override
     public List<IdAndType> getErrors() {
+        if (errors.isEmpty()) {
+            return null;
+        }
         return Collections.unmodifiableList(errors);
     }
 
@@ -122,5 +128,23 @@ public class CreateWaitSetResponse {
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+
+    @Override
+    public CreateWaitSetResponse setWaitSetId(String wsid) {
+        waitSetId = wsid;
+        return this;
+    }
+
+    @Override
+    public CreateWaitSetResponse setDefaultInterests(String defInterests) {
+        defaultInterests = defInterests;
+        return this;
+    }
+
+    @Override
+    public CreateWaitSetResponse setSequence(int seq) {
+        sequence = seq;
+        return this;
     }
 }
