@@ -47,6 +47,7 @@ import org.apache.jsieve.tests.ComparatorTags;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CharsetUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
@@ -298,7 +299,11 @@ public class EditHeaderExtension {
                         arg = itr.next();
                         if (arg instanceof StringListArgument) {
                             StringListArgument sla = (StringListArgument) arg;
-                            this.newName = sla.getList().get(0);
+                            String origNewName = sla.getList().get(0);
+                            if (StringUtil.isNullOrEmpty(origNewName)) {
+                                throw new SyntaxException("New name must be present with :newname in replaceheader : " + arg);
+                            }
+                            this.newName = origNewName;
                         } else {
                             throw new SyntaxException("New name not provided with :newname in replaceheader : " + arg);
                         }
@@ -368,8 +373,6 @@ public class EditHeaderExtension {
                         arg = itr.next();
                         sla = (StringListArgument) arg;
                         this.valueList = sla.getList();
-                    } else {
-                        throw new SyntaxException("Value for " + this.key + " is not provided in replaceheader.");
                     }
                 } else if (ac instanceof DeleteHeader) {
                     StringListArgument sla = (StringListArgument) arg;
@@ -388,6 +391,10 @@ public class EditHeaderExtension {
                 ZimbraLog.filter.info("Unknown argument provided: " + arg.getValue());
             }
         }
+
+        if (!(isIs() || isContains() || isMatches() || isCountTag() || isValueTag())) {
+           this.is = true;
+        }
     }
 
     /**
@@ -402,7 +409,7 @@ public class EditHeaderExtension {
      * @throws LookupException 
      * @throws MessagingException 
      */
-    public boolean matchCondition(ZimbraMailAdapter mailAdapter, Header header, int headerCount, String value, SieveContext context) throws LookupException, SieveException, MessagingException {
+    public boolean matchCondition(ZimbraMailAdapter mailAdapter, Header header, List<String> headerList, String value, SieveContext context) throws LookupException, SieveException, MessagingException {
         boolean matchFound = false;
         String unfoldedAndDecodedHeaderValue = "";
         try {
@@ -413,14 +420,11 @@ public class EditHeaderExtension {
             ZimbraLog.filter.debug("Failed to decode \"%s\"", MimeUtility.unfold(header.getValue()));
             throw new MessagingException("Exception occured while decoding header value.", uee);
         }
+
         if (this.valueTag) {
-        	matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
+            matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
         } else if (this.countTag) {
-        	List<String> temp = new ArrayList<String>();
-            for (int i = 0; i < headerCount; i++) {
-            	temp.add("");
-            }
-        	matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, temp, value, context);
+            matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, headerList, value, context);
         } else if (this.is && ComparatorUtils.is(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
         } else if (this.contains && ComparatorUtils.contains(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
@@ -453,8 +457,9 @@ public class EditHeaderExtension {
     /**
      * Replace sieve variables with their values in <b>valueList</b>
      * @param mailAdapter : Object of <b>ZimbraMailAdapter</b>
+     * @throws SyntaxException 
      */
-    public void replaceVariablesInValueList(ZimbraMailAdapter mailAdapter) {
+    public void replaceVariablesInValueList(ZimbraMailAdapter mailAdapter) throws SyntaxException {
         List<String> temp = new ArrayList<String>();
         if (this.valueList != null && !this.valueList.isEmpty()) {
             for (String value : this.valueList) {
@@ -465,14 +470,27 @@ public class EditHeaderExtension {
     }
 
     /**
+     * Replace sieve variables with their value in <b>key</b>
+     * @param mailAdapter : Object of <b>ZimbraMailAdapter</b>
+     * @throws SyntaxException 
+     */
+    public void replaceVariablesInKey(ZimbraMailAdapter mailAdapter) throws SyntaxException {
+        if (this.key != null) {
+            this.key = FilterUtil.replaceVariables(mailAdapter, key);
+        }
+    }
+
+    /**
      * Common validation for replaceheader and deleteheader
      * @throws SyntaxException
      */
     public void commonValidation() throws SyntaxException {
-        if (this.key != null) {
+        if (!StringUtil.isNullOrEmpty(this.key)) {
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(this.key, CharsetUtil.US_ASCII))) {
                 throw new SyntaxException("key must be printable ASCII only.");
             }
+        } else {
+            throw new SyntaxException("EditHeaderExtension:Header name must be present.");
         }
         // relation comparator must be valid
         if (this.relationalComparator != null) {
@@ -512,15 +530,17 @@ public class EditHeaderExtension {
      * @return
      * @throws OperationException 
      */
-    public int getHeaderCount(MimeMessage mm) throws OperationException {
-        int headerCount = 0;
+    public List<String> getMatchingHeaders(MimeMessage mm) throws OperationException {
+        List<String> headerList = new ArrayList<String>();
         try {
             String[] headerValues = mm.getHeader(this.key);
-            headerCount = headerValues != null ? headerValues.length : 0;
+            if (headerValues != null) {
+                headerList = Arrays.asList(headerValues);
+            }
         } catch (MessagingException e) {
             throw new OperationException("Error occured while fetching " + this.key + " headers from mime.", e);
         }
-        return headerCount;
+        return headerList;
     }
 
     /**
