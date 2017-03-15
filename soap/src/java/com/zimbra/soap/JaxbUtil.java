@@ -1063,7 +1063,9 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest.class,
             com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse.class,
             com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest.class,
-            com.zimbra.soap.account.message.SaveIMAPSubscriptionsResponse.class
+            com.zimbra.soap.account.message.SaveIMAPSubscriptionsResponse.class,
+            com.zimbra.soap.account.message.ResetRecentMessageCountRequest.class,
+            com.zimbra.soap.account.message.ResetRecentMessageCountResponse.class
         };
 
         try {
