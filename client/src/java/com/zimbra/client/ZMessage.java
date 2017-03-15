@@ -18,6 +18,7 @@
 package com.zimbra.client;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +32,7 @@ import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 
 public class ZMessage extends ZBaseItem implements ToZJSONObject {
@@ -92,10 +94,10 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
 
         //request headers
         mReqHdrs = new HashMap<String,String>();
-        Element attrsEl = e.getOptionalElement("_attrs");
-        if(attrsEl != null) {
-            for (Element.Attribute eHdr : attrsEl.listAttributes()) {
-                mReqHdrs.put(eHdr.getKey(),eHdr.getValue());
+        List<Element.KeyValuePair> hdrs = e.listKeyValuePairs(MailConstants.A_HEADER, MailConstants.A_ATTRIBUTE_NAME);
+        if (hdrs != null) {
+            for (Element.KeyValuePair hdr : hdrs) {
+                mReqHdrs.put(hdr.getKey(), hdr.getValue());
             }
         }
 
@@ -539,11 +541,18 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         return this.getReceivedDate();
     }
 
+    /** This should return the same data as MailItem.getContentStream() */
     @Override
     public InputStream getContentStream() throws ServiceException {
-        // TODO - needs to handle both when data is provided by getContent and when provided by
-        // getContentURL
-        throw new UnsupportedOperationException("ZMessage method not supported yet");
+        /* Initially thought that if mContent was not null (only true in "raw" mode) we could use that as the basis
+         * of the result but it appears that line ending information is lost.
+         */
+        if (mContentURL != null) {
+            ZimbraLog.mailbox.debug("ZMessage getContentStream() based on mContentURL '%s'", mContentURL);
+            URI uri = mMailbox.getTransportURI(mContentURL);
+            return mMailbox.getResource(uri);
+        }
+        return super.getContentStream();
     }
 
     @Override
