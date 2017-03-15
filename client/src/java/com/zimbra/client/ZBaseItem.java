@@ -89,7 +89,6 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
         return mTagIds;
     }
 
-    public abstract int getFolderIdInMailbox() throws ServiceException;
     public abstract boolean hasAttachment();
     public abstract boolean isFlagged();
     @Override
@@ -120,4 +119,9 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
     public abstract int getImapUid();
     @Override
     public abstract String getId();
+
+    @Override
+    public String getAccountId() throws ServiceException {
+        return getMailbox().getAccountId();
+    }
 }
