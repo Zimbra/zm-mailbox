@@ -25,9 +25,11 @@ import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers
- * 
+ *
  */
 public class ZClientException extends ServiceException {
+
+    private static final long serialVersionUID = -728413545620278749L;
 
     public static final String CLIENT_ERROR       = "zclient.CLIENT_ERROR";
     public static final String IO_ERROR           = "zclient.IO_ERROR";
@@ -38,7 +40,7 @@ public class ZClientException extends ServiceException {
     private ZClientException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
     }
-    
+
     private ZClientException(String message, String code, boolean isReceiversFault, Throwable cause) {
         super(message, code, isReceiversFault, cause);
     }
@@ -61,5 +63,49 @@ public class ZClientException extends ServiceException {
 
     public static ZClientException ZIMBRA_SHARE_PARSE_ERROR(String msg, Throwable cause) {
         return new ZClientException(msg, ZIMBRA_SHARE_PARSE_ERROR, SENDERS_FAULT, cause);
+    }
+
+    public static class ZClientNoSuchItemException extends ZClientException {
+        private static final long serialVersionUID = 6322647788472338821L;
+
+        public ZClientNoSuchItemException(String msg, Throwable cause) {
+            super(msg, CLIENT_ERROR, SENDERS_FAULT, cause);
+        }
+
+        public ZClientNoSuchItemException(int id, Throwable cause) {
+            super("no such item: "+ id, CLIENT_ERROR, SENDERS_FAULT, cause);
+        }
+
+        public ZClientNoSuchItemException(int id) {
+            this(id, null);
+        }
+    }
+
+    public static class ZClientNoSuchMsgException extends ZClientNoSuchItemException {
+        private static final long serialVersionUID = 7916158633910054737L;
+
+        public ZClientNoSuchMsgException(int id, Throwable cause) {
+            super("no such message: "+ id, cause);
+        }
+    }
+
+    public static class ZClientNoSuchContactException extends ZClientNoSuchItemException {
+        private static final long serialVersionUID = -6622409008893327197L;
+
+        public ZClientNoSuchContactException(int id, Throwable cause) {
+            super("no such contact: "+ id, cause);
+        }
+    }
+
+    public static ZClientException NO_SUCH_ITEM(int id) {
+        return new ZClientNoSuchItemException(id);
+    }
+
+    public static ZClientException NO_SUCH_CONTACT(int id, Throwable cause) {
+        return new ZClientNoSuchContactException(id, cause);
+    }
+
+    public static ZClientException NO_SUCH_MSG(int id, Throwable cause) {
+        return new ZClientNoSuchMsgException(id, cause);
     }
 }
