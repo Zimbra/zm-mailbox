@@ -9,6 +9,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
+import com.zimbra.soap.mail.type.ModifyNotification.RenameFolderNotification;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class PendingFolderModifications {
@@ -34,11 +37,25 @@ public class PendingFolderModifications {
     private final List<DeleteItemNotification> deleted = Lists.newArrayList();
 
     /**
-     * @zm-api-field-tag modified
-     * @zm-api-field-description list of modified items
+     * @zm-api-field-tag modMsgs
+     * @zm-api-field-description list of modified messages
      */
-    @XmlElement(name=MailConstants.E_MODIFIED /* modified */, required=false)
-    private final List<ModifyNotification> modified = Lists.newArrayList();
+    @XmlElement(name=MailConstants.E_MODIFIED_MSGS /* modMsgs */, required=false, type=ModifyItemNotification.class)
+    private final List<ModifyItemNotification> modifiedMsgs = Lists.newArrayList();
+
+    /**
+     * @zm-api-field-tag modTags
+     * @zm-api-field-description list of modified tags
+     */
+    @XmlElement(name=MailConstants.E_MODIFIED_TAGS /* modTags */, required=false, type=ModifyTagNotification.class)
+    private final List<ModifyTagNotification> modifiedTags = Lists.newArrayList();
+
+    /**
+     * @zm-api-field-tag modFolders
+     * @zm-api-field-description list of renamed folders
+     */
+    @XmlElement(name=MailConstants.E_MODIFIED_FOLDERS /* modFolders */, required=false, type=RenameFolderNotification.class)
+    private final List<RenameFolderNotification> modifiedFolders = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -60,9 +77,6 @@ public class PendingFolderModifications {
         deleted.add(item);
     }
 
-    public void addModifiedItem(ModifyNotification item) {
-        modified.add(item);
-    }
 
     public List<CreateItemNotification> getCreated() {
         return created;
@@ -72,8 +86,28 @@ public class PendingFolderModifications {
         return deleted;
     }
 
-    public List<ModifyNotification> getModified() {
-        return modified;
+    public void addModifiedMsg(ModifyItemNotification item) {
+        modifiedMsgs.add(item);
+    }
+
+    public List<ModifyItemNotification> getModifiedMsgs() {
+        return modifiedMsgs;
+    }
+
+    public void addModifiedTag(ModifyTagNotification item) {
+        modifiedTags.add(item);
+    }
+
+    public List<ModifyTagNotification> getModifiedTags() {
+        return modifiedTags;
+    }
+
+    public void addRenamedFolder(RenameFolderNotification item) {
+        modifiedFolders.add(item);
+    }
+
+    public List<RenameFolderNotification> getRenamedFolders() {
+        return modifiedFolders;
     }
 
     public Integer getFolderId() {
