@@ -80,6 +80,7 @@ public class WaitSetSessionInfo {
     private String token;
 
     private final Set<Integer> folderInterests = Sets.newHashSet();
+    private final Set<Integer> changedFolders = Sets.newHashSet();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -141,6 +142,44 @@ public class WaitSetSessionInfo {
         this.folderInterests.clear();
         if (folderIds != null) {
             this.folderInterests.addAll(folderIds);
+        }
+    }
+
+    /**
+     * @zm-api-field-tag waitset-folder-interests
+     * @zm-api-field-description Comma separated list of IDs for folders.
+     */
+    @XmlAttribute(name=MailConstants.A_CHANGED_FOLDERS /* changedFolders */, required=false)
+    public String getChangedFolders() {
+        if (changedFolders.isEmpty()) {
+            return null;
+        }
+        return COMMA_JOINER.join(changedFolders);
+    }
+
+    public void setChangedFolders(String fInterests) {
+        this.changedFolders.clear();
+        for (String fi : COMMA_SPLITTER.split(Strings.nullToEmpty(fInterests))) {
+            changedFolders.add(Integer.parseInt(fi));
+        }
+    }
+
+    @XmlTransient
+    public Set<Integer> getChangedFoldersAsSet() { return changedFolders; }
+
+    public void setChangedFolders(Integer... folderIds) {
+        this.changedFolders.clear();
+        if (folderIds != null) {
+            for (Integer folderId : folderIds) {
+                this.changedFolders.add(folderId);
+            }
+        }
+    }
+
+    public void setChangedFolders(Collection<Integer> folderIds) {
+        this.changedFolders.clear();
+        if (folderIds != null) {
+            this.changedFolders.addAll(folderIds);
         }
     }
 }
