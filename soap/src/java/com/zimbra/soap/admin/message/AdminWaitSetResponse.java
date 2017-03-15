@@ -65,6 +65,9 @@ public class AdminWaitSetResponse implements WaitSetResp {
     /**
      * @zm-api-field-tag signaled-accounts
      * @zm-api-field-description Information on signaled accounts.
+     * <br />folder IDs are only provided if a list of <b>folderInterests</b> are active for the signalled account.
+     * It follows that they will never be provided if <b>allAccounts</b> is set because <b>folderInterests</b> can
+     * only be set via <b>add/update/remove</b> elements which are ignored when <b>allAccounts</b> is set.
      * <br />If folder IDs are included then changes only affect those folders.
      */
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
