@@ -171,6 +171,8 @@ public class AccountConstants {
     public static final String E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE = "ListIMAPSubscriptionsResponse";
     public static final String E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST = "SaveIMAPSubscriptionsRequest";
     public static final String E_SAVE_IMAP_SUBSCRIPTIONS_RESPONSE = "SaveIMAPSubscriptionsResponse";
+    public static final String E_RESET_RECENT_MESSAGE_COUNT_REQUEST = "ResetRecentMessageCountRequest";
+    public static final String E_RESET_RECENT_MESSAGE_COUNT_RESPONSE = "ResetRecentMessageCountResponse";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -317,6 +319,8 @@ public class AccountConstants {
     public static final QName LIST_IMAP_SUBSCRIPTIONS_RESPONSE = QName.get(E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
     public static final QName SAVE_IMAP_SUBSCRIPTIONS_REQUEST = QName.get(E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST, NAMESPACE);
     public static final QName SAVE_IMAP_SUBSCRIPTIONS_RESPONSE = QName.get(E_SAVE_IMAP_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
+    public static final QName RESET_RECENT_MESSAGE_COUNT_REQUEST = QName.get(E_RESET_RECENT_MESSAGE_COUNT_REQUEST, NAMESPACE);
+    public static final QName RESET_RECENT_MESSAGE_COUNT_RESPONSE = QName.get(E_RESET_RECENT_MESSAGE_COUNT_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
