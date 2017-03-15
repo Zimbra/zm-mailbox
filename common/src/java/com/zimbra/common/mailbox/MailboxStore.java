@@ -78,4 +78,6 @@ public interface MailboxStore {
             throws ServiceException;
     public void setTags(OpContext octxt, Collection<ItemIdentifier> itemIds, int flags, Collection<String> tags)
             throws ServiceException;
+    public ZimbraSearchParams createSearchParams(String queryString);
+    public ZimbraQueryHitResults search(OpContext octx, ZimbraSearchParams params) throws ServiceException;
 }
