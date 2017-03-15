@@ -146,6 +146,8 @@ import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
+import com.zimbra.soap.account.message.GetModifiedItemsIDsRequest;
+import com.zimbra.soap.account.message.GetModifiedItemsIDsResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.message.ImapCursorInfo;
@@ -5987,7 +5989,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @Override
     public List<Integer> getIdsOfModifiedItemsInFolder(OpContext octxt, int lastSync, int folderId)
     throws ServiceException {
-        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+        GetModifiedItemsIDsRequest req = new GetModifiedItemsIDsRequest(folderId, lastSync);
+        GetModifiedItemsIDsResponse resp = invokeJaxb(req);
+        return resp.getIds();
     }
 
     public Set<String> listIMAPSubscriptions() throws ServiceException {
