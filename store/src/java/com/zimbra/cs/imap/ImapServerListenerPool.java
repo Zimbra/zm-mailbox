@@ -23,6 +23,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -42,20 +43,20 @@ public class ImapServerListenerPool {
             .initialCapacity(16) /* TODO - base on the total number of servers or use LDAP config? */
             .build(new CacheLoader<String, ImapServerListener>() {
 
-    @Override
-    public ImapServerListener load(String serverName) throws Exception {
-        return new ImapServerListener(serverName);
-    }
-});
+        @Override
+        public ImapServerListener load(String serverName) throws Exception {
+            return new ImapServerListener(serverName);
+        }
+    });
 
     private ImapServerListenerPool() {
     }
 
-    static ImapServerListenerPool getInstance() {
+    public static ImapServerListenerPool getInstance() {
         return SINGLETON;
     }
 
-    ImapServerListener get(ZMailbox zmbox) throws ServiceException {
+    public ImapServerListener get(ZMailbox zmbox) throws ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.id, zmbox.getAccountId());
         try {
             return serverToListenerMap.get(acct.getServerName());
