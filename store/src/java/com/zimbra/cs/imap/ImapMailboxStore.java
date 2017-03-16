@@ -34,7 +34,14 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.Session;
 
-public interface ImapMailboxStore {
+public abstract class ImapMailboxStore {
+
+    protected transient ImapFlagCache flags;
+
+    protected ImapMailboxStore() {
+        this.flags = ImapFlagCache.getSystemFlags();
+    }
+
     public static ImapMailboxStore get(Mailbox mbox) {
         if (mbox == null) {
             return null;
@@ -52,32 +59,38 @@ public interface ImapMailboxStore {
         return null;
     }
 
-    public ImapFlag getFlagByName(String name);
-    public List<String> getFlagList(boolean permanentOnly);
-    public ImapFlag getTagByName(String tag) throws ServiceException;
-    public void resetImapUid(List<Integer> renumber) throws ServiceException;
-    public Set<ImapMessage> getSubsequence(ImapFolder i4folder, String tag, String sequenceSet, boolean byUID)
+    public ImapFlag getFlagByName(String name) {
+        return flags.getByImapName(name);
+    }
+
+    public List<String> getFlagList(boolean permanentOnly) {
+        return flags.listNames(permanentOnly);
+    }
+
+    public abstract ImapFlag getTagByName(String tag) throws ServiceException;
+    public abstract void resetImapUid(List<Integer> renumber) throws ServiceException;
+    public abstract Set<ImapMessage> getSubsequence(ImapFolder i4folder, String tag, String sequenceSet, boolean byUID)
             throws ImapParseException;
-    public void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException;
-    public Metadata getConfig(OperationContext octxt, String section) throws ServiceException;
-    public void beginTrackingImap() throws ServiceException;
-    public void deleteMessages(OperationContext octxt, List<Integer> ids);
-    public List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
+    public abstract void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException;
+    public abstract Metadata getConfig(OperationContext octxt, String section) throws ServiceException;
+    public abstract void beginTrackingImap() throws ServiceException;
+    public abstract void deleteMessages(OperationContext octxt, List<Integer> ids);
+    public abstract List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
             throws IOException, ServiceException;
-    public InputStreamWithSize getByImapId(OperationContext octxt, int imapId, String folderId, String resolvedPath)
+    public abstract InputStreamWithSize getByImapId(OperationContext octxt, int imapId, String folderId, String resolvedPath)
             throws ServiceException;
-    public void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException;
-    public int getCurrentMODSEQ(int folderId) throws ServiceException;
-    public List<Session> getListeners();
-    public boolean attachmentsIndexingEnabled() throws ServiceException;
-    public boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException;
-    public int getId();
-    public MailboxStore getMailboxStore();
+    public abstract void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException;
+    public abstract int getCurrentMODSEQ(int folderId) throws ServiceException;
+    public abstract List<Session> getListeners();
+    public abstract boolean attachmentsIndexingEnabled() throws ServiceException;
+    public abstract boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException;
+    public abstract int getId();
+    public abstract MailboxStore getMailboxStore();
     /** Returns this mailbox's Account. */
-    public Account getAccount() throws ServiceException;
+    public abstract Account getAccount() throws ServiceException;
     /** Returns the ID of this mailbox's Account. */
-    public String getAccountId();
-    public Collection<FolderStore> getVisibleFolders(OperationContext octxt, ImapCredentials credentials,
+    public abstract String getAccountId();
+    public abstract Collection<FolderStore> getVisibleFolders(OperationContext octxt, ImapCredentials credentials,
             String owner, ImapPath relativeTo)
     throws ServiceException;
 }
