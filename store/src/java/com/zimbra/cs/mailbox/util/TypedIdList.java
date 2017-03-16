@@ -25,22 +25,25 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 
 public final class TypedIdList implements Iterable<Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>>> {
     public static class ItemInfo {
         int id;
+        int folderId; /* folder ID or Mailbox.ID_AUTO_INCREMENT (i.e. -1) */
         String uuid;
         int modSequence;
         String prev_folders;
 
-        public ItemInfo(int id, String uuid) {
-            this.id = id;
-            this.uuid = uuid;
+        public ItemInfo(int id, int folderId, String uuid) {
+            this(id, folderId, uuid, (Integer) null);
         }
 
-        public ItemInfo(int id, String uuid, int modSequence) {
-            this(id, uuid);
-            this.modSequence = modSequence;
+        public ItemInfo(int id, int folderId, String uuid, Integer modSequence) {
+            this.id = id;
+            this.folderId = folderId;
+            this.uuid = uuid;
+            this.modSequence = (null != modSequence) ? modSequence : 0;
         }
 
         public ItemInfo(int id, String uuid, int modSequence, String prevFolders) {
@@ -50,6 +53,10 @@ public final class TypedIdList implements Iterable<Map.Entry<MailItem.Type, List
 
         public int getId() {
             return this.id;
+        }
+
+        public int getFolderId() {
+            return this.folderId;
         }
 
         public String getUuid() {
@@ -77,25 +84,27 @@ public final class TypedIdList implements Iterable<Map.Entry<MailItem.Type, List
 
     /** Adds an id/UUID pair to the list. */
     public void add(MailItem.Type type, Integer id, String uuid) {
-        if (id == null)
-            return;
-
-        List<ItemInfo> items = type2ids.get(type);
-        if (items == null) {
-            type2ids.put(type, items = new ArrayList<ItemInfo>(1));
-        }
-        items.add(new ItemInfo(id, uuid));
+        add(type, id, (Integer) null, uuid, (Integer) null);
     }
 
-    public void add(MailItem.Type type, Integer id, String uuid, int modSequence) {
-        if (id == null)
+    public void add(MailItem.Type type, Integer id, Integer folderId, String uuid) {
+        add(type, id, folderId, uuid, (Integer) null);
+    }
+
+    public void add(MailItem.Type type, Integer id, String uuid, Integer modSequence) {
+        add(type, id, (Integer)null, uuid, modSequence);
+    }
+
+    public void add(MailItem.Type type, Integer id, Integer folderId, String uuid, Integer modSequence) {
+        if (id == null) {
             return;
+        }
 
         List<ItemInfo> items = type2ids.get(type);
         if (items == null) {
             type2ids.put(type, items = new ArrayList<ItemInfo>(1));
         }
-        items.add(new ItemInfo(id, uuid, modSequence));
+        items.add(new ItemInfo(id, (null != folderId) ? folderId : Mailbox.ID_AUTO_INCREMENT, uuid, modSequence));
     }
 
     public void add(MailItem.Type type, Integer id, String uuid, int modSequence, String prevFolders) {

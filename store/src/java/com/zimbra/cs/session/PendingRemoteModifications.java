@@ -121,6 +121,7 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
             created = new LinkedHashMap<PendingModifications.ModificationKey, ZBaseItem>();
         }
         changedTypes.add(getItemType(item));
+        /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
         created.put(new ModificationKey(item), item);
 
     }
@@ -129,6 +130,7 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     public void recordDeleted(ZBaseItem itemSnapshot) {
         MailItem.Type type = getItemType(itemSnapshot);
         changedTypes.add(type);
+        /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
         delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
     }
 
@@ -152,12 +154,14 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     @Override
     public void recordModified(ZBaseItem item, int reason) {
         changedTypes.add(getItemType(item));
+        /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
         recordModified(new ModificationKey(item), item, reason, null, true);
     }
 
     @Override
     public void recordModified(ZBaseItem item, int reason, ZBaseItem preModifyItem) {
         changedTypes.add(getItemType(item));
+        /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
         recordModified(new ModificationKey(item), item, reason, preModifyItem, false);
     }
 
@@ -191,9 +195,13 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
 
     }
 
+    @Override
+    boolean trackingFolderIds() {
+        return false;
+    }
+
     private static Object snapshotItemIgnoreEx(Object item) {
         // TODO - Do we need to be able to snapshot ZBaseItems?
         return null;
     }
-
 }
