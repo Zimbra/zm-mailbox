@@ -539,9 +539,9 @@ public class TestUtil extends Assert {
                 Assert.fail("Unexpected number of messages (" + msgs.size() + ") returned by query '" + query + "'");
             }
             try {
-                if (timeout_millis > 100) {
-                    Thread.sleep(100);
-                    timeout_millis = timeout_millis - 100;
+                if (timeout_millis > 50) {
+                    Thread.sleep(50);
+                    timeout_millis = timeout_millis - 50;
                 } else {
                     Thread.sleep(timeout_millis);
                     timeout_millis = 0;

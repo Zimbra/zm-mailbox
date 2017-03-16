@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.http.HttpEntity;
@@ -38,6 +39,8 @@ import org.dom4j.io.DocumentResult;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
+import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.service.ServiceException;
@@ -47,12 +50,15 @@ import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetResponse;
 import com.zimbra.soap.admin.message.AdminWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetResponse;
+import com.zimbra.soap.admin.message.QueryWaitSetRequest;
+import com.zimbra.soap.admin.message.QueryWaitSetResponse;
 import com.zimbra.soap.mail.message.CreateWaitSetRequest;
 import com.zimbra.soap.mail.message.CreateWaitSetResponse;
 import com.zimbra.soap.mail.message.WaitSetRequest;
@@ -94,9 +100,11 @@ public class TestWaitSetRequest extends TestCase {
     private void cleanUp() throws Exception {
         if(acc1 != null) {
             acc1.deleteAccount();
+            acc1 = null;
         }
         if(acc2 != null) {
             acc2.deleteAccount();
+            acc2 = null;
         }
         cbCalled = false;
         lastKnownSeq = "0";
@@ -123,6 +131,13 @@ public class TestWaitSetRequest extends TestCase {
         "</soap:Envelope>";
     }
 
+    private String jaxbToString(Object obj) throws JAXBException {
+        DocumentResult dr = new DocumentResult();
+        marshaller.marshal(obj, dr);
+        Document doc = dr.getDocument();
+        return doc.getRootElement().asXML();
+    }
+
     private Object sendReq(String requestBody, String url) throws IOException, ServiceException {
         ZimbraLog.test.info("Sending request " + requestBody);
         CloseableHttpClient client = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
@@ -139,6 +154,11 @@ public class TestWaitSetRequest extends TestCase {
         return JaxbUtil.elementToJaxb(doc);
     }
 
+    private Object sendReq(Object obj, String authToken, String urlBase)
+    throws IOException, ServiceException, JAXBException {
+        return sendReq(envelope(authToken, jaxbToString(obj), "urn:zimbra"), urlBase + obj.getClass().getSimpleName());
+    }
+
     @Test
     public void testSyncWaitSetRequest() throws Exception {
         String user1Name = "testSyncWaitSetRequest_user1";
@@ -151,28 +171,89 @@ public class TestWaitSetRequest extends TestCase {
         int seq = resp.getSequence();
 
         WaitSetRequest waitSet = new com.zimbra.soap.mail.message.WaitSetRequest(waitSetId, Integer.toString(seq));
-        DocumentResult dr = new DocumentResult();
-        marshaller.marshal(waitSet, dr);
-        Document doc = dr.getDocument();
-        WaitSetResponse wsResp = (WaitSetResponse) sendReq(envelope(authToken, doc.getRootElement().asXML(), "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
+        WaitSetResponse wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet),
+                "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
         Assert.assertEquals("0", wsResp.getSeqNo());
 
         String subject = NAME_PREFIX + " test wait set request 1";
         TestUtil.addMessageLmtp(subject, user1Name, "user999@example.com");
-        try { Thread.sleep(500); } catch (Exception e) {}
-        wsResp = (WaitSetResponse) sendReq(envelope(authToken, doc.getRootElement().asXML(), "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
+        // try { Thread.sleep(500); } catch (Exception e) {}
+        TestUtil.waitForMessages(mbox, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
+        wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet), "urn:zimbra"),
+                TestUtil.getSoapUrl() + "WaitSetRequest");
         Assert.assertFalse(wsResp.getSeqNo().equals("0"));
     }
 
+    @Test
+    public void testFolderInterestSyncWaitSetRequest() throws Exception {
+        String user1Name = "testFISyncWaitSetRequest_user1";
+        acc1 = TestUtil.createAccount(user1Name);
+        ZMailbox mbox = TestUtil.getZMailbox(user1Name);
+        String authToken = mbox.getAuthToken().getValue();
+        String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
+        ZFolder myFolder = TestUtil.createFolder(mbox, "funFolder");
+        Set<Integer> folderInterest = Sets.newHashSet();
+        folderInterest.add(myFolder.getFolderIdInOwnerMailbox());
+
+        /* initially only interested in funFolder */
+        CreateWaitSetResponse resp = createWaitSet(mbox.getAccountInfo(false).getId(), authToken, folderInterest);
+        Assert.assertNotNull(resp);
+        waitSetId = resp.getWaitSetId();
+        int seq = resp.getSequence();
+
+        WaitSetRequest waitSet = new com.zimbra.soap.mail.message.WaitSetRequest(waitSetId, Integer.toString(seq));
+        WaitSetResponse wsResp = (WaitSetResponse) sendReq(waitSet, authToken, TestUtil.getSoapUrl());
+        Assert.assertEquals("0", wsResp.getSeqNo());
+
+        String subject = NAME_PREFIX + " test wait set request 1";
+        TestUtil.addMessageLmtp(subject, user1Name, "user999@example.com");
+        TestUtil.waitForMessages(mbox, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
+        wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet), "urn:zimbra"),
+                TestUtil.getSoapUrl() + "WaitSetRequest");
+        Assert.assertTrue(wsResp.getSeqNo().equals("0"));
+        Assert.assertEquals("Number of signalled accounts", 0, wsResp.getSignalledAccounts().size());
+
+        QueryWaitSetResponse qwsResp;
+        QueryWaitSetRequest qwsReq = new QueryWaitSetRequest(waitSetId);
+        qwsResp = (QueryWaitSetResponse) sendReq(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl());
+
+        /* interested in funFolder AND inbox */
+        folderInterest.add(Integer.valueOf(Mailbox.ID_FOLDER_INBOX));
+        waitSet.addUpdateAccount(createWaitSetAddSpec(mbox.getAccountId(), authToken, folderInterest));
+        wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet),
+                "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
+        Assert.assertTrue(wsResp.getSeqNo().equals("0"));
+        Assert.assertEquals("Number of signalled accounts", 0, wsResp.getSignalledAccounts().size());
+
+        qwsResp = (QueryWaitSetResponse) sendReq(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl());
+
+        subject = NAME_PREFIX + " test wait set request 2";
+        TestUtil.addMessageLmtp(subject, user1Name, "user999@example.com");
+        TestUtil.waitForMessages(mbox, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
+        waitSet = new com.zimbra.soap.mail.message.WaitSetRequest(waitSetId, Integer.toString(seq));
+        wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet),
+                "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
+        Assert.assertFalse(wsResp.getSeqNo().equals("0"));
+        Assert.assertEquals("Number of signalled accounts", 1, wsResp.getSignalledAccounts().size());
+    }
+
     private CreateWaitSetResponse createWaitSet(String accountId, String authToken) throws Exception {
+        return createWaitSet(accountId, authToken, null);
+    }
+
+    private CreateWaitSetResponse createWaitSet(String accountId, String authToken, Set<Integer>folderInterest)
+    throws Exception {
         CreateWaitSetRequest req = new CreateWaitSetRequest("all", (Boolean) null);
+        req.addAccount(createWaitSetAddSpec(accountId, authToken, folderInterest));
+        return (CreateWaitSetResponse) sendReq(envelope(authToken, jaxbToString(req), "urn:zimbra"),
+                TestUtil.getSoapUrl() + "CreateWaitSetRequest");
+    }
+
+    private WaitSetAddSpec createWaitSetAddSpec(String accountId, String authToken, Set<Integer>folderInterest) {
         WaitSetAddSpec add = new WaitSetAddSpec();
         add.setId(accountId);
-        req.addAccount(add);
-        DocumentResult dr = new DocumentResult();
-        marshaller.marshal(req, dr);
-        Document doc = dr.getDocument();
-        return (CreateWaitSetResponse) sendReq(envelope(authToken, doc.getRootElement().asXML(), "urn:zimbra"), TestUtil.getSoapUrl() + "CreateWaitSetRequest");
+        add.setFolderInterests(folderInterest);
+        return add;
     }
 
     private AdminCreateWaitSetResponse createAdminWaitSet(Set<String> accountIds, String authToken) throws Exception {
@@ -418,7 +499,7 @@ public class TestWaitSetRequest extends TestCase {
                     } catch (UnsupportedOperationException | IOException | ServiceException e) {
                         Assert.fail(e.getMessage());
                     }
-                    try { Thread.sleep(500); } catch (Exception e) {}
+                    try { Thread.sleep(100); } catch (Exception e) {}
                 }
                 doneSignal.countDown();
             }
@@ -498,7 +579,7 @@ public class TestWaitSetRequest extends TestCase {
                         ZimbraLog.test.error(e);
                     }
                 }
-                try { Thread.sleep(500); } catch (Exception e) {}
+                try { Thread.sleep(100); } catch (Exception e) {}
                 doneSignal.countDown();
             }
 
