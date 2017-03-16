@@ -31,6 +31,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.qa.unittest.prov.TestChangeEphemeralStore;
 import com.zimbra.qa.unittest.prov.soap.TestSearchDirectory;
+import com.zimbra.qa.unittest.prov.soap.TestSoapProvisioning;
 import com.zimbra.qa.unittest.server.TestCalDavImportServer;
 import com.zimbra.qa.unittest.server.TestDataSourceServer;
 import com.zimbra.qa.unittest.server.TestDocumentServer;
@@ -146,6 +147,7 @@ public class ZimbraSuite  {
         sClasses.add(TestDraftCount.class);
         sClasses.add(TestMinusOperator.class);
         sClasses.add(TestImapServerListener.class);
+        sClasses.add(TestSoapProvisioning.class);
     }
 
     /**
