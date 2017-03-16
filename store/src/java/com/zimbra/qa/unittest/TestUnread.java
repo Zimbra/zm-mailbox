@@ -17,16 +17,21 @@
 
 package com.zimbra.qa.unittest;
 import java.util.EnumSet;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
@@ -92,7 +97,10 @@ public class TestUnread {
     @Before
     public void setUp() throws Exception {
 
-        mAccount = TestUtil.createAccount(USER_NAME);
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
+
+        mAccount = TestUtil.createAccount(USER_NAME, attrs);
         Assert.assertNotNull(String.format("Unable to create account for user '%s'", USER_NAME), mAccount);
         mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
 
