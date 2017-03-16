@@ -429,7 +429,7 @@ public class TestImapServerListener {
         Assume.assumeNotNull(remoteServer);
         Assume.assumeNotNull(remoteAccount);
         assertNotNull("ImapServerListener instance should not be null", remoteListener);
-        
+
         RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
         assertNotNull("ImapMailboxStore instance should not be null", imapStore);
         ImapCredentials creds = new ImapCredentials(remoteAccount);
@@ -441,7 +441,7 @@ public class TestImapServerListener {
         assertNotNull("ImapFolder instance should not be null", i4folder);
         assertNotNull("ImapFolder.getCredentials() should not return null", i4folder.getCredentials());
         assertNotNull("ImapFolder.getPath() should not return null", i4folder.getPath());
-        
+
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         assertNotNull("ImapListener instance should not be null", session);
         assertFalse("Expecting ImapServerListener::isListeningOn to return false before calling addListener", remoteListener.isListeningOn(session.getTargetAccountId(), session.getFolderId()));
@@ -480,7 +480,7 @@ public class TestImapServerListener {
 
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         assertNotNull("ImapListener instance should not be null", session);
-        List<ImapRemoteSession> sessions = remoteListener.getListeners(remoteAccount.getId(), i4folder.getId());
+        Set<ImapRemoteSession> sessions = remoteListener.getListeners(remoteAccount.getId(), i4folder.getId());
         assertNotNull("getListeners should not return NULL before adding a listener", sessions);
         assertTrue("expecting an empty list before adding a listener", sessions.isEmpty());
         remoteListener.addListener(session);
@@ -515,7 +515,7 @@ public class TestImapServerListener {
         assertNull("Should not have a waitset after shutting down ImapServerListener", remoteListener.getWSId());
     }
 
-    //TODO: when I run this test several times consequently, it sometimes fails to add folder interests possibly because of session sweeper. 
+    //TODO: when I run this test several times consequently, it sometimes fails to add folder interests possibly because of session sweeper.
     @Test
     public void testRemoveFolderInterest() throws Exception {
         Assume.assumeNotNull(remoteServer);
@@ -634,7 +634,7 @@ public class TestImapServerListener {
             return new InetSocketAddress("localhost", 0);
         }
     }
-    
+
     class MockImapListener extends ImapRemoteSession {
         private boolean triggered = false;
         public CountDownLatch doneSignal;
@@ -647,6 +647,7 @@ public class TestImapServerListener {
             return triggered;
         }
 
+        @Override
         public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
             triggered = true;
             doneSignal.countDown();
