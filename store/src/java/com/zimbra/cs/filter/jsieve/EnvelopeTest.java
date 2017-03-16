@@ -37,12 +37,12 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.optional.Envelope;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
-
-import com.google.common.collect.Lists;
 
 public class EnvelopeTest extends Envelope {
 
@@ -127,6 +127,7 @@ public class EnvelopeTest extends Envelope {
             } else if ("from".equalsIgnoreCase(headerName)) {
                 List<String> value = getMatchingValues(mail, headerName);
                 if (value != null) {
+                    value.removeIf(s -> Strings.isNullOrEmpty(s));
                     headerValues.addAll(value);
                 }
             } else {
