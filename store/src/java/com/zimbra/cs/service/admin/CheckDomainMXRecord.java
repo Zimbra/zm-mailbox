@@ -49,7 +49,7 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        CheckDomainMXRecordRequest req = JaxbUtil.elementToJaxb(request);
+        CheckDomainMXRecordRequest req = zsc.elementToJaxb(request);
         DomainBy domainBy = req.getDomain().getBy().toKeyDomainBy();
         String value = req.getDomain().getKey();
 
