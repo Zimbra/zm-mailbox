@@ -16,8 +16,11 @@
  */
 package com.zimbra.cs.account;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -1484,7 +1487,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static boolean onLocalServer(Account account, Reasons reasons) throws ServiceException {
-        String target    = account.getAttr(Provisioning.A_zimbraMailHost);
+        String target = account.getAttr(Provisioning.A_zimbraMailHost);
         String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
         boolean isLocal = (target != null && target.equalsIgnoreCase(localhost));
         boolean onLocalSvr =  (isLocal || isAlwaysOn(account));
@@ -1493,6 +1496,35 @@ public abstract class Provisioning extends ZAttrProvisioning {
                     onLocalSvr, isLocal, target, localhost, account.getName()));
         }
         return onLocalSvr;
+    }
+
+    public static boolean canUseLocalIMAP(Account account) throws ServiceException {
+        if(account == null) {
+            return false;
+        }
+        Server homeServer = account.getServer();
+        if(homeServer == null) {
+            return false;
+        }
+        String[] upstreamIMAPServers = homeServer.getReverseProxyUpstreamImapServers();
+        if(upstreamIMAPServers != null && upstreamIMAPServers.length > 0) {
+            return Arrays.asList(upstreamIMAPServers).contains(getInstance().getLocalServer().getServiceHostname());
+        } else {
+            return onLocalServer(account);
+        }
+    }
+
+    public static List<String> getPreferredIMAPServers(Account account) throws ServiceException {
+        Server homeServer = account.getServer();
+        if(homeServer == null) {
+            return Collections.emptyList();
+        }
+        String[] upstreamIMAPServers = homeServer.getReverseProxyUpstreamImapServers();
+        if(upstreamIMAPServers != null && upstreamIMAPServers.length > 0) {
+            return Arrays.asList(upstreamIMAPServers);
+        } else {
+            return Arrays.asList(account.getMailHost());
+        }
     }
 
     private static boolean isAlwaysOn(Account account) throws ServiceException {
