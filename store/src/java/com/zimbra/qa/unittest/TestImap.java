@@ -95,8 +95,6 @@ public class TestImap {
         sp.soapZimbraAdminAuthenticate();
 
         //preserve settings
-        mDisplayMailFoldersOnly = homeServer.isImapDisplayMailFoldersOnly();
-        homeServer.setImapDisplayMailFoldersOnly(false);
         imapServersForLocalhost = homeServer.getReverseProxyUpstreamImapServers();
         homeServer.setReverseProxyUpstreamImapServers(new String[] {});
         sp.flushCache("all", null, true);
@@ -105,7 +103,6 @@ public class TestImap {
     @AfterClass
     public static void afterClass() throws Exception {
         if(homeServer != null) {
-            homeServer.setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
             homeServer.setReverseProxyUpstreamImapServers(imapServersForLocalhost);
         }
     }
@@ -116,7 +113,8 @@ public class TestImap {
             TestUtil.cliSetup();
         }
         cleanup();
-
+        mDisplayMailFoldersOnly = homeServer.isImapDisplayMailFoldersOnly();
+        homeServer.setImapDisplayMailFoldersOnly(false);
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraMailHost, homeServer.getServiceHostname());
         attrs.put(Provisioning.A_zimbraFeatureIMEnabled, ProvisioningConstants.TRUE);
@@ -130,6 +128,7 @@ public class TestImap {
         cleanup();
         homeServer.setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
         if(homeServer != null) {
+            homeServer.setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
             homeServer.setReverseProxyUpstreamImapServers(imapServersForLocalhost);
         }
     }
@@ -365,7 +364,7 @@ public class TestImap {
         Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(true);
         List<ListData> listResult = connection.list("", "*");
         Assert.assertNotNull(listResult);
-        Assert.assertTrue("List result should have atleast 5  entries", listResult.size() >= 5);
+        Assert.assertTrue("List result should have at least 5  entries", listResult.size() >= 5);
 	    boolean hasContacts = false;
 	    boolean hasChats = false;
 	    boolean hasEmailedContacts = false;
@@ -418,7 +417,7 @@ public class TestImap {
     public void testFoldersList() throws Exception {
         List<ListData> listResult = connection.list("", "*");
         Assert.assertNotNull(listResult);
-        Assert.assertTrue("List result should have atleast 8  entries", listResult.size() >= 8);
+        Assert.assertTrue("List result should have at least 8 entries. Got " + listResult.size(), listResult.size() >= 8);
         verifyFolderList(listResult);
     }
 
@@ -427,7 +426,7 @@ public class TestImap {
     List<ListData> listResult = connection.list("", "*Contacts*");
          Assert.assertNotNull(listResult);
          // 'Contacts' and 'Emailed Contacts'
-         Assert.assertTrue("List result should have at least 2 entries", listResult.size() >= 2);
+         Assert.assertTrue("List result should have at least 2 entries. Got " + listResult.size(), listResult.size() >= 2);
          for (ListData le : listResult) {
             Assert.assertTrue(String.format("mailbox '%s' contains 'Contacts'", le.getMailbox()),
                     le.getMailbox().contains("Contacts"));
@@ -907,6 +906,15 @@ public class TestImap {
                 testMultiappend();
             }
         });
+    }
+
+    @Test
+    public void testCreate() throws Exception {
+        String folderName = "TestImap-testCreate";
+        Assert.assertFalse(connection.exists(folderName));
+        connection.create(folderName);
+        Assert.assertTrue(connection.exists(folderName));
+        
     }
 
     private String url(String mbox, AppendResult res) {
