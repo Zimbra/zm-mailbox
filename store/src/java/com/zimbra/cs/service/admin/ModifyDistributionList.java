@@ -63,7 +63,7 @@ public class ModifyDistributionList extends DistributionListDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        ModifyDistributionListRequest req = JaxbUtil.elementToJaxb(request);
+        ModifyDistributionListRequest req = zsc.elementToJaxb(request);
         String id = req.getId();
         Group group = getGroupFromContext(context);
 
