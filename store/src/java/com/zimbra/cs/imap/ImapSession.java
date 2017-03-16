@@ -27,6 +27,7 @@ import java.util.TreeMap;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
@@ -63,7 +64,7 @@ public class ImapSession extends ImapListener {
         void handleTagRename(int changeId, Tag tag, Change chg);
         void handleItemDelete(int changeId, int itemId, Change chg);
         void handleItemCreate(int changeId, MailItem item, AddedItems added);
-        void handleFolderRename(int changeId, Folder folder, Change chg);
+        void handleFolderRename(int changeId, FolderStore folder, Change chg);
         void handleItemUpdate(int changeId, Change chg, AddedItems added);
         void handleAddedMessages(int changeId, AddedItems added);
         void finishNotification(int changeId) throws IOException;
@@ -651,7 +652,7 @@ public class ImapSession extends ImapListener {
         }
 
         @Override
-        public void handleFolderRename(int changeId, Folder folder, Change chg) {
+        public void handleFolderRename(int changeId, FolderStore folder, Change chg) {
             queueModify(changeId, chg);
         }
 
