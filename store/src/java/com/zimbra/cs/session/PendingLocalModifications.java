@@ -42,13 +42,6 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     public PendingLocalModifications() {
     }
 
-    public static final class Change extends PendingModifications.Change {
-
-        Change(Object thing, int reason, Object preModifyObj) {
-            super(thing, reason, preModifyObj);
-        }
-    }
-
     @Override
     PendingModifications<MailItem> add(PendingModifications<MailItem> other) {
         changedTypes.addAll(other.changedTypes);
@@ -81,7 +74,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     }
 
     @Override
-    protected void delete(PendingModifications.ModificationKey key, Type type, ZimbraMailItem itemSnapshot) {
+    protected void delete(PendingModifications.ModificationKey key, Type type, Object itemSnapshot) {
         delete(key, new Change(type, Change.NONE, itemSnapshot));
     }
 
