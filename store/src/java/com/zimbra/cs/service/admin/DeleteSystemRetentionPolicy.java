@@ -41,8 +41,8 @@ public class DeleteSystemRetentionPolicy extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        
-        DeleteSystemRetentionPolicyRequest req = JaxbUtil.elementToJaxb(request);
+
+        DeleteSystemRetentionPolicyRequest req = zsc.elementToJaxb(request);
         Provisioning prov = Provisioning.getInstance();
         // assume default retention policy to be set in globalConfig (for backward compatibility)
         Entry entry = prov.getConfig();
@@ -55,7 +55,7 @@ public class DeleteSystemRetentionPolicy extends AdminDocumentHandler {
         }
         // check right
         CreateSystemRetentionPolicy.checkSetRight(entry, zsc, context, this);
-        
+
 
         Policy policy = req.getPolicy();
         if (policy == null) {
@@ -70,9 +70,9 @@ public class DeleteSystemRetentionPolicy extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("Could not find policy with id " + id, null);
         }
         DeleteSystemRetentionPolicyResponse res = new DeleteSystemRetentionPolicyResponse();
-        return JaxbUtil.jaxbToElement(res, zsc.getResponseProtocol().getFactory()); 
+        return zsc.jaxbToElement(res);
     }
-    
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         notes.add("Need set attr right on attribute " + CreateSystemRetentionPolicy.SYSTEM_RETENTION_POLICY_ATTR);

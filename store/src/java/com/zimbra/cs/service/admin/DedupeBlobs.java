@@ -50,7 +50,7 @@ public final class DedupeBlobs extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST(sm.getClass().getName()
                     + " is not supported", null);
         }
-        DedupeBlobsRequest req = JaxbUtil.elementToJaxb(request);
+        DedupeBlobsRequest req = zsc.elementToJaxb(request);
         BlobDeduper deduper = BlobDeduper.getInstance();
         DedupeBlobsResponse resp = new DedupeBlobsResponse();
         // Assemble the list of volumes.
@@ -120,7 +120,7 @@ public final class DedupeBlobs extends AdminDocumentHandler {
         Pair<Integer, Long> pair = deduper.getCountAndSize();
         resp.setTotalCount(pair.getFirst());
         resp.setTotalSize(pair.getSecond());
-        return JaxbUtil.jaxbToElement(resp);
+        return zsc.jaxbToElement(resp);
     }
 
     @Override
