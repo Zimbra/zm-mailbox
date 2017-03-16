@@ -42,8 +42,8 @@ public class ModifySystemRetentionPolicy extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        
-        ModifySystemRetentionPolicyRequest req = JaxbUtil.elementToJaxb(request);
+
+        ModifySystemRetentionPolicyRequest req = zsc.elementToJaxb(request);
         Provisioning prov = Provisioning.getInstance();
         // assume default retention policy to be set in globalConfig (for backward compatibility)
         Entry entry = prov.getConfig();
@@ -56,7 +56,7 @@ public class ModifySystemRetentionPolicy extends AdminDocumentHandler {
         }
         // check right
         CreateSystemRetentionPolicy.checkSetRight(entry, zsc, context, this);
-        
+
 
         Policy p = req.getPolicy();
         if (p == null) {
@@ -65,7 +65,7 @@ public class ModifySystemRetentionPolicy extends AdminDocumentHandler {
         if (p.getId() == null) {
             throw ServiceException.INVALID_REQUEST("id not specified for policy", null);
         }
-        
+
         RetentionPolicyManager mgr = RetentionPolicyManager.getInstance();
         String id = p.getId();
         Policy current = mgr.getPolicyById(entry, id);
@@ -76,9 +76,9 @@ public class ModifySystemRetentionPolicy extends AdminDocumentHandler {
         String lifetime = SystemUtil.coalesce(p.getLifetime(), current.getLifetime());
         Policy latest = mgr.modifySystemPolicy(entry, id, name, lifetime);
         ModifySystemRetentionPolicyResponse res = new ModifySystemRetentionPolicyResponse(latest);
-        return JaxbUtil.jaxbToElement(res, zsc.getResponseProtocol().getFactory());
+        return zsc.jaxbToElement(res);
     }
-    
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         notes.add("Need set attr right on attribute " + CreateSystemRetentionPolicy.SYSTEM_RETENTION_POLICY_ATTR);

@@ -60,7 +60,7 @@ public final class ExportContacts extends MailDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
 
-        ExportContactsRequest req = JaxbUtil.elementToJaxb(request);
+        ExportContactsRequest req = zsc.elementToJaxb(request);
         String folder = req.getFolderId();
         ItemId iidFolder = folder == null ? null : new ItemId(folder, zsc);
 

@@ -140,7 +140,7 @@ public class SendShareNotification extends MailDocumentHandler {
 
         String action = request.getAttribute(MailConstants.A_ACTION, null);
         ArrayList<ShareInfoData> shareInfos = new ArrayList<ShareInfoData>();
-        SendShareNotificationRequest req = JaxbUtil.elementToJaxb(request);
+        SendShareNotificationRequest req = zsc.elementToJaxb(request);
         ItemId iid = new ItemId(req.getItem().getId(), zsc);
         MailItem item = mbox.getItemById(octxt, iid.getId(), MailItem.Type.UNKNOWN);
         Provisioning prov = Provisioning.getInstance();
