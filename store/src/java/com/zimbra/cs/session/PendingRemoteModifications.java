@@ -185,17 +185,17 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         return null;
     }
 
-    public static PendingRemoteModifications fromSOAP(PendingFolderModifications mods, String acctId) {
+    public static PendingRemoteModifications fromSOAP(PendingFolderModifications mods, Integer folderId, String acctId) {
 
         PendingRemoteModifications prms = new PendingRemoteModifications();
         for (CreateItemNotification createSpec: mods.getCreated()) {
-            prms.recordCreated(ModificationItem.itemUpdate(createSpec.getMessageInfo(), acctId));
+            prms.recordCreated(ModificationItem.itemUpdate(createSpec.getMessageInfo(), folderId, acctId));
         }
         for (ModifyNotification modSpec: mods.getModified()) {
             int change = modSpec.getChangeBitmask();
             if (modSpec instanceof ModifyItemNotification) {
                 ModifyItemNotification modifyItem = (ModifyItemNotification) modSpec;
-                BaseItemInfo itemUpdate = ModificationItem.itemUpdate(modifyItem.getMessageInfo(), acctId);
+                BaseItemInfo itemUpdate = ModificationItem.itemUpdate(modifyItem.getMessageInfo(), folderId, acctId);
                 prms.recordModified(itemUpdate, change);
             } else if (modSpec instanceof ModifyTagNotification) {
                 ModifyTagNotification modifyTag = (ModifyTagNotification) modSpec;
@@ -205,9 +205,9 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
                 prms.recordModified(tagRename, acctId, change);
             } else if (modSpec instanceof RenameFolderNotification) {
                 RenameFolderNotification renameFolder = (RenameFolderNotification) modSpec;
-                int folderId = renameFolder.getFolderId();
+                int renamedFolderId = renameFolder.getFolderId();
                 String newPath = renameFolder.getPath();
-                ModificationItem folderRename = ModificationItem.folderRename(folderId, newPath, acctId);
+                ModificationItem folderRename = ModificationItem.folderRename(renamedFolderId, newPath, acctId);
                 prms.recordModified(folderRename, change);
             }
         }
