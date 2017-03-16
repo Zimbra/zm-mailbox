@@ -77,8 +77,8 @@ final class ImapSessionManager {
             .initialCapacity(128)
             .maximumWeightedCapacity(Long.MAX_VALUE) // we manually manage evictions
             .build();
-    private final Cache activeSessionCache; // not LRU'ed
-    private final Cache inactiveSessionCache; // LRU'ed
+    private final Cache<String, ImapFolder> activeSessionCache; // not LRU'ed
+    private final Cache<String, ImapFolder> inactiveSessionCache; // LRU'ed
 
     private static final ImapSessionManager SINGLETON = new ImapSessionManager();
 
@@ -673,7 +673,7 @@ final class ImapSessionManager {
         return key.contains("_");
     }
 
-    static interface Cache {
+    static interface Cache<String, ImapFolder> {
         /** Stores the folder into cache, or does nothing if failed to do so. */
         void put(String key, ImapFolder folder);
 
