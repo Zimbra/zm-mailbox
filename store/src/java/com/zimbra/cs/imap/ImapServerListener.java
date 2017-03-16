@@ -144,6 +144,10 @@ public class ImapServerListener {
         return Collections.emptySet();
     }
 
+    public int getLastKnownSequenceNumber() {
+        return lastSequence.intValue();
+    }
+
     private void initWaitSet(String accountId, boolean alreadyListening) throws ServiceException {
         if(wsID == null && this.sessionMap.containsKey(accountId)) {
             AdminCreateWaitSetRequest req = new AdminCreateWaitSetRequest("all", false);
