@@ -70,6 +70,7 @@ public class WaitSetAccount {
         // See bug 31666 for more info
         //
         WaitSetSession session = new WaitSetSession(ws, accountId, interests, folderInterests, lastKnownSyncToken);
+        ZimbraLog.session.debug("Created WaitSetSession %s for waitset %s on account %s", session.getSessionId(), ws.getWaitSetId(), accountId);
         mbox.lock.lock();
         try {
             session.register();
