@@ -16,10 +16,9 @@
  */
 package com.zimbra.qa.unittest;
 
-import junit.framework.TestCase;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
@@ -28,15 +27,15 @@ import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
 import com.zimbra.common.service.ServiceException;
 
-public class TestMinusOperator extends TestCase {
+public class TestMinusOperator {
 
     private static final String USER_NAME = "testuser123";
     private static final String REMOTE_USER_NAME = "testuser456";
     private static ZMailbox mbox;
 
-    @Override
-    @BeforeClass
+    @Before
     public void setUp() throws ServiceException{
+        cleanup();
         TestUtil.createAccount(USER_NAME);
         TestUtil.createAccount(REMOTE_USER_NAME);
         mbox = TestUtil.getZMailbox(USER_NAME);
@@ -44,27 +43,34 @@ public class TestMinusOperator extends TestCase {
         mbox.sendMessage(msg,null,false);
     }
 
-    @Override
-    @AfterClass
+    @After
     public void tearDown() throws ServiceException {
-        TestUtil.deleteAccount(USER_NAME);
-        TestUtil.deleteAccount(REMOTE_USER_NAME);
+        cleanup();
+    }
+
+    private void cleanup() throws ServiceException {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
+        if(TestUtil.accountExists(REMOTE_USER_NAME)) {
+            TestUtil.deleteAccount(REMOTE_USER_NAME);
+        }
     }
 
     @Test
     public void testExcludeText() throws ServiceException {
         ZSearchResult search1 = mbox.search(new ZSearchParams("in:sent test"));
-        assertEquals(search1.getHits().size(),1); //control
+        Assert.assertEquals(search1.getHits().size(),1); //control
         ZSearchResult search2 = mbox.search(new ZSearchParams("in:sent -test"));
-        assertEquals(search2.getHits().size(),0);
+        Assert.assertEquals(search2.getHits().size(),0);
     }
 
     @Test
     public void testExcludeRecipient() throws ServiceException {
         ZSearchResult search1 = mbox.search(new ZSearchParams("in:sent to:"+REMOTE_USER_NAME));
-        assertEquals(search1.getHits().size(),1);
+        Assert.assertEquals(search1.getHits().size(),1);
         ZSearchResult search2 = mbox.search(new ZSearchParams("in:sent -to:"+REMOTE_USER_NAME));
-        assertEquals(search2.getHits().size(),0);
+        Assert.assertEquals(search2.getHits().size(),0);
     }
 
 }
