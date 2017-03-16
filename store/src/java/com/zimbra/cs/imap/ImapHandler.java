@@ -62,8 +62,10 @@ import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraQueryHit;
+import com.zimbra.common.mailbox.ZimbraQueryHitResults;
+import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
@@ -82,8 +84,6 @@ import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.imap.ImapSessionManager.InitialFolderValues;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -3239,11 +3239,11 @@ abstract class ImapHandler {
                     mboxStore.unlock();
                 }
             } else {
-                ZimbraQueryResults zqr = runSearch(i4search, i4folder, sort,
+                ZimbraQueryHitResults zqr = runSearch(i4search, i4folder, sort,
                         requiresMODSEQ ? SearchParams.Fetch.MODSEQ : SearchParams.Fetch.IDS);
                 hits = unsorted ? new ImapMessageSet() : new ArrayList<ImapMessage>();
                 try {
-                    for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
+                    for (ZimbraQueryHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = i4folder.getById(hit.getItemId());
                         if (i4msg == null || i4msg.isExpunged()) {
                             continue;
@@ -3337,14 +3337,15 @@ abstract class ImapHandler {
         return byUID ? i4msg.imapUid : i4msg.sequence;
     }
 
-    private ZimbraQueryResults runSearch(ImapSearch i4search, ImapFolder i4folder, SortBy sort,
+    private ZimbraQueryHitResults runSearch(ImapSearch i4search, ImapFolder i4folder, SortBy sort,
             SearchParams.Fetch fetch) throws ImapParseException, ServiceException {
         MailboxStore mbox = i4folder.getMailbox();
         if (mbox == null) {
             throw ServiceException.FAILURE("unexpected session close during search", null);
         }
         Account acct = credentials == null ? null : credentials.getAccount();
-        TimeZone tz = acct == null ? null : WellKnownTimeZones.getTimeZoneById(acct.getAttr(Provisioning.A_zimbraPrefTimeZoneId));
+        TimeZone tz = acct == null ? null :
+            WellKnownTimeZones.getTimeZoneById(acct.getAttr(Provisioning.A_zimbraPrefTimeZoneId));
 
         String search;
         mbox.lock(false);
@@ -3362,18 +3363,15 @@ abstract class ImapHandler {
             mbox.unlock();
         }
 
-        SearchParams params = new SearchParams();
+        ZimbraSearchParams params = mbox.createSearchParams(search);
         params.setIncludeTagDeleted(true);
-        params.setQueryString(search);
-        params.setTypes(i4folder.getTypeConstraint());
-        params.setSortBy(sort);
-        params.setChunkSize(2000);
+        params.setMailItemTypes(MailItem.Type.toCommon(i4folder.getTypeConstraint()));
+        params.setZimbraSortBy(sort.toZimbraSortBy());
+        params.setLimit(2000);
         params.setPrefetch(false);
-        params.setFetchMode(fetch);
+        params.setZimbraFetchMode(fetch.toZimbraFetchMode());
         params.setTimeZone(tz);
-
-        // TODO runSearch returns ZimbraQueryResults which is very Mailboxy
-        return ((Mailbox)mbox).index.search(SoapProtocol.Soap12, getContext(), params);
+        return mbox.search(getContext(), params);
     }
 
     boolean doTHREAD(String tag, ImapSearch i4search, boolean byUID) throws IOException, ImapException {
@@ -3404,9 +3402,9 @@ abstract class ImapHandler {
             //              threads, with each thread containing messages with the same
             //              base subject text.  Finally, the threads are sorted by the
             //              sent date of the first message in the thread."
-            ZimbraQueryResults zqr = runSearch(i4search, i4folder, SortBy.DATE_ASC, SearchParams.Fetch.PARENT);
+            ZimbraQueryHitResults zqr = runSearch(i4search, i4folder, SortBy.DATE_ASC, SearchParams.Fetch.PARENT);
             try {
-                for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
+                for (ZimbraQueryHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
                     ImapMessage i4msg = i4folder.getById(hit.getItemId());
                     if (i4msg == null || i4msg.isExpunged()) {
                         continue;
