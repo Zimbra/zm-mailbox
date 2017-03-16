@@ -120,6 +120,7 @@ public abstract class MailboxListener {
     public static void notifyListeners(ChangeNotification notification) {
         for (MailboxListener l : sListeners) {
             if (!Collections.disjoint(notification.mods.changedTypes, l.registerForItemTypes())) {
+                // TODO: Also allow filtering by folders affected - see PendingModification.changedFolders
                 l.notify(notification);
             }
         }
