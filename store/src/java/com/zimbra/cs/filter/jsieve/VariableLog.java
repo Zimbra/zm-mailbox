@@ -61,10 +61,19 @@ public class VariableLog extends Log {
         if (arguments.getArgumentList().size() > 2) {
             throw new SyntaxException("Log: maximum 2 parameters allowed with Log");
         }
+        boolean foundTagArg = false;
+        int index = 0;
         Iterator<Argument> itr = arguments.getArgumentList().iterator();
         while (itr.hasNext()) {
             Argument arg = itr.next();
+            index++;
             if (arg instanceof TagArgument) {
+                if (foundTagArg) {
+                    throw new SyntaxException("Log: Multiple log levels are not allowed.");
+                }
+                if (index > 1) {
+                    throw new SyntaxException("Log: Log level must be mentioned before log message.");
+                }
                 TagArgument tag = (TagArgument) arg;
                 if (!(tag.is(":" + FilterAction.LogAction.LogLevel.fatal.toString())
                         || tag.is(":" + FilterAction.LogAction.LogLevel.error.toString())
@@ -75,6 +84,10 @@ public class VariableLog extends Log {
                         )) {
                     throw new SyntaxException("Log: Invalid log level provided - " + tag.getTag());
                 }
+                foundTagArg = true;
+            }
+            if (index > 1 && !foundTagArg) {
+                throw new SyntaxException("Log: Only 1 text message allowed with log statement.");
             }
         }
         ZimbraLog.filter.debug("Log: Validation successfful");
