@@ -221,13 +221,15 @@ public class TestUtil extends Assert {
 
     public static String getAdminSoapUrl() {
         int port;
+        String hostname = "localhost";
         try {
             port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+            hostname = Provisioning.getInstance().getLocalServer().getServiceHostname();
         } catch (ServiceException e) {
             ZimbraLog.test.error("Unable to get admin SOAP port", e);
             port = LC.zimbra_admin_service_port.intValue();
         }
-        return "https://localhost:" + port + AdminConstants.ADMIN_SERVICE_URI;
+        return "https://" + hostname + ":" + port + AdminConstants.ADMIN_SERVICE_URI;
     }
 
     public static LmcSession getSoapSession(String userName) throws ServiceException, LmcSoapClientException,
