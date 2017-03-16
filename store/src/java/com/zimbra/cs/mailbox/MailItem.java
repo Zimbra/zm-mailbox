@@ -166,6 +166,28 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             return miType;
         }
 
+        public static Set<MailItemType> toCommon(Set<Type> typs) {
+            if (null == typs) {
+                return Collections.emptySet();
+            }
+            Set<MailItemType> mits = Sets.newHashSetWithExpectedSize(typs.size());
+            for (Type typ : typs) {
+                mits.add(typ.miType);
+            }
+            return mits;
+        }
+
+        public static Set<Type> fromCommon(Set<MailItemType> mits) {
+            if (null == mits) {
+                return Collections.emptySet();
+            }
+            Set<Type> types = Sets.newHashSetWithExpectedSize(mits.size());
+            for (MailItemType mit : mits) {
+                types.add(Type.fromCommon(mit));
+            }
+            return types;
+        }
+
         /**
          * Returns the item type for the specified human-readable type name.
          *
@@ -803,6 +825,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return Type.of(mData.type);
     }
 
+    @Override
     public MailItemType getMailItemType() {
         return Type.of(mData.type).toCommon();
     }
@@ -973,6 +996,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     /** Returns the change ID corresponding to the last time the item's
      *  metadata and/or content was modified.  This includes changes in tags
      *  and flags as well as folder-to-folder moves and recoloring. */
+    @Override
     public int getModifiedSequence() {
         return mData.modMetadata;
     }
