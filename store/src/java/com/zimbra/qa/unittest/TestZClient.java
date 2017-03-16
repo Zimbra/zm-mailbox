@@ -254,6 +254,30 @@ public class TestZClient extends TestCase {
         Assert.assertEquals("After adding a message, ZFolder modseq is not the same as folder modseq", zfolder.getImapMODSEQ(), folder.getImapMODSEQ());
         Assert.assertFalse("ZFolder modseq did not change after adding a message", zmodSeq == zfolder.getImapMODSEQ());
     }
+    
+    @Test
+    public void testRecentMessageCount() throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Assert.assertEquals("Mailbox::getRecentMessageCount should return 0 before adding a message", 0, mbox.getRecentMessageCount());
+        // add a message to the folder (there is a test in FolderTest which verifies that adding a message modifies imapmodseq)
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
+        String message = TestUtil.getTestMessage(NAME_PREFIX, mbox.getAccount().getName(), "someone@zimbra.com", "nothing here", new Date(System.currentTimeMillis()));
+        ParsedMessage pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
+        mbox.addMessage(null, pm, dopt, null);
+        Assert.assertEquals("Mailbox::getRecentMessageCount should return 1 after adding a message", 1, mbox.getRecentMessageCount());
+        zmbox.resetRecentMessageCount(null);
+        Assert.assertEquals("Mailbox::getRecentMessageCount should return 0 after reset", 0, mbox.getRecentMessageCount());
+        message = TestUtil.getTestMessage(NAME_PREFIX, mbox.getAccount().getName(), "someone@zimbra.com", "nothing here 2", new Date(System.currentTimeMillis() + 1000));
+        pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
+        mbox.addMessage(null, pm, dopt, null);
+        message = TestUtil.getTestMessage(NAME_PREFIX, mbox.getAccount().getName(), "someone@zimbra.com", "nothing here 3", new Date(System.currentTimeMillis() + 2000));
+        pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
+        mbox.addMessage(null, pm, dopt, null);
+        Assert.assertEquals("Mailbox::getRecentMessageCount should return 2 after adding two messages", 2, mbox.getRecentMessageCount());
+        zmbox.resetRecentMessageCount(null);
+        Assert.assertEquals("Mailbox::getRecentMessageCount should return 0 after the second reset", 0, mbox.getRecentMessageCount());
+    }
 
     @Override
     public void tearDown()
