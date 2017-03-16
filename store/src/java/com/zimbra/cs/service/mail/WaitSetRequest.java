@@ -303,8 +303,6 @@ public class WaitSetRequest extends MailDocumentHandler {
                     }
                 }
 
-                //TODO: process tag modifications
-                //TODO: process folder renames
                 if(accountMods!= null && accountMods.modified != null) {
                     for(Object mod : accountMods.modified.values()) {
                         if(mod instanceof Change) {
@@ -350,7 +348,6 @@ public class WaitSetRequest extends MailDocumentHandler {
             // timed out....they should try again
             resp.setSeqNo(lastKnownSeqNo);
         }
-
         resp.setErrors(encodeErrors(cb.errors));
     }
 
@@ -370,14 +367,6 @@ public class WaitSetRequest extends MailDocumentHandler {
         return new DeleteItemNotification(itemId, type);
     }
     
-    private static ItemSpec getItemSpec(MailItem mod, String folderId) {
-        ItemSpec item = new ItemSpec();
-        item.setFolder(folderId);
-        item.setId(Integer.toString(mod.getId()));
-        item.setName(mod.getName());
-        return item;
-    }
-
     private static PendingFolderModifications getFolderMods(Integer folderId, HashMap<Integer, PendingFolderModifications> folderMap) {
         PendingFolderModifications folderMods = folderMap.get(folderId);
         if(folderMods == null) {
