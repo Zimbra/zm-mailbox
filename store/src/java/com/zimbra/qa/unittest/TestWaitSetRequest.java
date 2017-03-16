@@ -695,8 +695,7 @@ public class TestWaitSetRequest {
         ZimbraLog.test.info("Should signal accounts %s and %s", mbox1.getAccountId(), mbox2.getAccountId());
         subject = NAME_PREFIX + " test wait set request 2";
 
-        //only one account will be signaled this time, because user2 will be added to WS after the WS gets notified
-        waitForAccounts(Arrays.asList(mbox1.getAccountId()), doneSignal2, waitSetReq, "testBlockingAdminAddAccount - 2");
+        waitForAccounts(Arrays.asList(mbox1.getAccountId(), mbox2.getAccountId()), doneSignal2, waitSetReq, "testBlockingAdminAddAccount - 2");
         TestUtil.addMessage(mbox2, subject);
         TestUtil.addMessage(mbox1, subject);
 
@@ -707,6 +706,26 @@ public class TestWaitSetRequest {
         }
         Assert.assertTrue("callback2 was not triggered.", cbCalled);
         Assert.assertTrue(failureMessage, success);
+
+        if(numSignalledAccounts.intValue() < 2) {
+            cbCalled = false;
+            success = false;
+            failureMessage = null;
+            ZimbraLog.test.info("Sending followup to 2d AdminWaitSetRequest");
+            //the waitset may return both accounts at once or be triggered for each account separately
+            waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
+            waitSetReq.setBlock(true);
+            final CountDownLatch doneSignal1 = new CountDownLatch(1);
+            waitForAccounts(Arrays.asList(mbox1.getAccountId(), mbox2.getAccountId()), doneSignal1, waitSetReq, "testBlockingAdminAddAccount - 2.5");
+            try {
+                doneSignal1.await(5, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                Assert.fail("Wait interrupted.");
+            }
+            Assert.assertTrue("callback2.5 was not triggered.", cbCalled);
+            Assert.assertTrue(failureMessage, success);
+            Assert.assertEquals("If WaitSet was triggered again, it should have returned only one account", 1, numSignalledAccounts.intValue());
+        }
 
         //3rd request
         ZimbraLog.test.info("Sending 3rd AdminWaitSetRequest");
