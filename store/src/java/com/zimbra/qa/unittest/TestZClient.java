@@ -18,13 +18,11 @@
 package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -40,17 +38,20 @@ import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
 import com.zimbra.client.ZSignature;
 import com.zimbra.common.account.Key.AccountBy;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.imap.RemoteImapMailboxStore;
+import com.zimbra.cs.mailbox.DeliveryOptions;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
-
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 
 public class TestZClient extends TestCase {
@@ -58,7 +59,6 @@ public class TestZClient extends TestCase {
     private static String RECIPIENT_USER_NAME = NAME_PREFIX + "_user2";
     private static final String USER_NAME = NAME_PREFIX + "_user1";
     private static final String FOLDER_NAME = "testfolder";
-    private static ZFolder folder;
 
     @Override
     public void setUp()
@@ -153,6 +153,7 @@ public class TestZClient extends TestCase {
     @Test
     public void testSubscribeFolder() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder folder = null;
         try {
             folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", FOLDER_NAME, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
         } catch (ServiceException e) {
@@ -172,11 +173,9 @@ public class TestZClient extends TestCase {
     public void testResetImapUID() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         try {
-            folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", FOLDER_NAME, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
+            mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", FOLDER_NAME, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
         } catch (ServiceException e) {
-            if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
-                folder = mbox.getFolderByPath("/"+FOLDER_NAME);
-            } else {
+            if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
                 throw e;
             }
         }
@@ -212,6 +211,7 @@ public class TestZClient extends TestCase {
         Assert.assertTrue(path.equalsIgnoreCase(subs.iterator().next()));
     }
 
+    @Test
     public void testSaveIMAPSubscriptions() throws Exception {
         //check that no subscriptions are saved yet
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
@@ -230,6 +230,29 @@ public class TestZClient extends TestCase {
         Assert.assertNotNull(savedSubs);
         Assert.assertFalse(savedSubs.isEmpty());
         Assert.assertTrue(path.equalsIgnoreCase(savedSubs.iterator().next()));
+    }
+
+    @Test
+    public void testImapMODSEQ() throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Folder folder = mbox.createFolder(null, NAME_PREFIX, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
+        int folderId = folder.getId();
+
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder zfolder = zmbox.getFolderById(Integer.toString(folderId));
+        int zmodSeq = zfolder.getImapMODSEQ();
+        Assert.assertEquals("Before adding a message, ZFolder modseq is not the same as folder modseq", zmodSeq, folder.getImapMODSEQ());
+
+        // add a message to the folder (there is a test in FolderTest which verifies that adding a message modifies imapmodseq)
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setFlags(Flag.BITMASK_UNREAD);
+        String message = TestUtil.getTestMessage(NAME_PREFIX, mbox.getAccount().getName(), "someone@zimbra.com", "nothing here", new Date(System.currentTimeMillis()));
+        ParsedMessage pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
+        mbox.addMessage(null, pm, dopt, null);
+        zmbox.noOp(); //get notifications and update folder cache
+        zfolder = zmbox.getFolderById(Integer.toString(folderId));
+        folder = mbox.getFolderById(null, folderId);
+        Assert.assertEquals("After adding a message, ZFolder modseq is not the same as folder modseq", zfolder.getImapMODSEQ(), folder.getImapMODSEQ());
+        Assert.assertFalse("ZFolder modseq did not change after adding a message", zmodSeq == zfolder.getImapMODSEQ());
     }
 
     @Override
