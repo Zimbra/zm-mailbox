@@ -59,7 +59,7 @@ public class ImapPartSpecifierTest {
 
     private void checkPartial(MimeMessage mm, String part, String modifier, int start, int count, String startsWith, String endsWith) throws IOException, BinaryDecodingException, ServiceException {
         ImapPartSpecifier pspec = new ImapPartSpecifier("BODY", part, modifier, start, count);
-        InputStreamWithSize content = pspec.getContent(mm);
+        InputStreamWithSize content = pspec.getContentOctetRange(mm);
         if (startsWith == null) {
             Assert.assertNull(pspec.getSectionSpec() + " is null", content);
         } else {
