@@ -68,7 +68,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public void resetImapUid(List<Integer> renumber) throws ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        zMailbox.resetImapUid(renumber);
     }
 
     @Override
