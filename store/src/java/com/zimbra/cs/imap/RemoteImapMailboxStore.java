@@ -28,6 +28,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
@@ -48,29 +49,21 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.store.Blob;
 
-public class RemoteImapMailboxStore implements ImapMailboxStore {
+public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     private transient ZMailbox zMailbox;
     private transient String accountId;
 
     public RemoteImapMailboxStore(ZMailbox mailbox, String accountId) {
+        super();
         this.zMailbox = mailbox;
         this.accountId = accountId;
     }
 
     @Override
-    public ImapFlag getFlagByName(String name) {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
-    }
-
-    @Override
-    public List<String> getFlagList(boolean permanentOnly) {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
-    }
-
-    @Override
     public ImapFlag getTagByName(String tag) throws ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        ZTag ztag = zMailbox.getTagByName(tag);
+        return new ImapFlag(ztag);
     }
 
     @Override
@@ -139,7 +132,11 @@ public class RemoteImapMailboxStore implements ImapMailboxStore {
 
     @Override
     public void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        ImapFlagCache flagset = ImapFlagCache.getSystemFlags();
+        ImapFlagCache tagset = new ImapFlagCache(zMailbox);
+        for (AppendMessage append : appends) {
+            append.checkFlags(flagset, tagset);
+        }
     }
 
     @Override
