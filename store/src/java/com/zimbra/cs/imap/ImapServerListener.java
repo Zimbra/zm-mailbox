@@ -18,6 +18,7 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -38,14 +39,15 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.session.PendingRemoteModifications;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetResponse;
 import com.zimbra.soap.admin.message.AdminDestroyWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetResponse;
-import com.zimbra.soap.type.AccountIdAndFolderIds;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.WaitSetAddSpec;
 
 public class ImapServerListener {
@@ -77,7 +79,7 @@ public class ImapServerListener {
         } finally {
             synchronized(soapProv) {
                 soapProv.soapLogOut();
-            } 
+            }
         }
     }
 
@@ -231,19 +233,24 @@ public class ImapServerListener {
                     SoapProtocol proto = SoapProtocol.determineProtocol(envelope);
                     Element doc = proto.getBodyElement(envelope);
                     AdminWaitSetResponse wsResp = (AdminWaitSetResponse) JaxbUtil.elementToJaxb(doc);
-                    lastSequence.put(wsResp.getWaitSetId(), Integer.parseInt(wsResp.getSeqNo()));
+                    int modSeq = Integer.parseInt(wsResp.getSeqNo());
+                    lastSequence.put(wsResp.getWaitSetId(), modSeq);
                     if(wsResp.getSignalledAccounts().size() > 0) {
-                        Iterator<AccountIdAndFolderIds> iter = wsResp.getSignalledAccounts().iterator();
+                        Iterator<AccountWithModifications> iter = wsResp.getSignalledAccounts().iterator();
                         while(iter.hasNext()) {
-                            AccountIdAndFolderIds accInfo = iter.next();
+                            AccountWithModifications accInfo = iter.next();
                             ConcurrentHashMap<Integer, List<ImapRemoteSession>> foldersToSessions = sessionMap.get(accInfo.getId());
-                            if(foldersToSessions != null) {
-                                List<Integer> signaledFolders = accInfo.getFolderIdsAsList();
-                                for(Integer f : signaledFolders) {
-                                    List<ImapRemoteSession> listeners = foldersToSessions.get(f);
-                                    if(listeners != null) {
-                                        for(ImapRemoteSession l : listeners) {
-                                            l.signalAccountChange();
+                            if(foldersToSessions != null && !foldersToSessions.isEmpty()) {
+                                Collection<PendingFolderModifications> mods = accInfo.getPendingFolderModifications();
+                                if(mods != null && !mods.isEmpty()) {
+                                    for(PendingFolderModifications folderMods : mods) {
+                                        PendingRemoteModifications remoteMods = PendingRemoteModifications.fromSOAP(folderMods, accInfo.getId());
+                                        Integer folderId = folderMods.getFolderId();
+                                        List<ImapRemoteSession> listeners = foldersToSessions.get(folderId);
+                                        if(listeners != null) {
+                                            for(ImapRemoteSession l : listeners) {
+                                                l.notifyPendingChanges(remoteMods, modSeq, null);
+                                            }
                                         }
                                     }
                                 }

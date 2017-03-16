@@ -19,24 +19,18 @@ package com.zimbra.cs.imap;
 import java.util.TreeMap;
 
 import com.google.common.base.Objects;
-import com.zimbra.client.ZBaseItem;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.session.PendingModifications.ModificationKey;
-import com.zimbra.cs.session.Session;
 
 public class ImapSession extends ImapListener {
 
@@ -64,13 +58,8 @@ public class ImapSession extends ImapListener {
         }
 
         @Override
-        protected synchronized void queueCreate(int changeId, MailItem item) {
+        protected synchronized void queueCreate(int changeId, BaseItemInfo item) {
           getQueuedLocalNotifications(changeId).recordCreated(item);
-        }
-
-        @Override
-        protected synchronized void queueCreate(int changeId, ZBaseItem item) {
-          ZimbraLog.imap.warn("Unexpected call to queueCreate %s", ZimbraLog.getStackTrace(20));
         }
 
         @Override
@@ -143,44 +132,21 @@ public class ImapSession extends ImapListener {
             int changeId, AddedItems added) {
         PendingLocalModifications pns = (PendingLocalModifications) pnsIn;
         if (pns.created != null) {
-            for (MailItem item : pns.created.values()) {
-                handleCreate(changeId, item, added);
-            }
-        }
-    }
-
-    private void handleCreate(int changeId, MailItem item, AddedItems added) {
-        if (item == null || item.getId() <= 0) {
-            return;
-        } else if (item.getFolderId() == mFolderId && (item instanceof Message || item instanceof Contact)) {
-            mFolder.handleItemCreate(changeId, item, added);
-        }
-    }
-
-    @Override
-    protected void handleModify(int changeId, Change chg, AddedItems added) {
-        if (chg.what instanceof Tag && (chg.why & Change.NAME) != 0) {
-            mFolder.handleTagRename(changeId, (Tag) chg.what, chg);
-        } else if (chg.what instanceof Folder && ((Folder) chg.what).getId() == mFolderId) {
-            Folder folder = (Folder) chg.what;
-            if ((chg.why & Change.FLAGS) != 0 && (folder.getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
-                // notify client that mailbox is deselected due to \Noselect?
-                // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
-                //                mailbox, but disconnect all other clients who have the
-                //                mailbox accessed by sending a untagged BYE response."
-                if (handler != null) {
-                    handler.close();
+            for (BaseItemInfo item : pns.created.values()) {
+                try {
+                    handleCreate(changeId, item, added);
+                } catch (ServiceException e) {
+                    ZimbraLog.imap.warn("error handling creation of item in changeId %s", changeId);
                 }
-            } else if ((chg.why & (Change.FOLDER | Change.NAME)) != 0) {
-                mFolder.handleFolderRename(changeId, folder, chg);
             }
-        } else if (chg.what instanceof Message || chg.what instanceof Contact) {
-            MailItem item = (MailItem) chg.what;
-            boolean inFolder = mIsVirtual || item.getFolderId() == mFolderId;
-            if (!inFolder && (chg.why & Change.FOLDER) == 0) {
-                return;
-            }
-            mFolder.handleItemUpdate(changeId, chg, added);
+        }
+    }
+
+    private void handleCreate(int changeId, BaseItemInfo item, AddedItems added) throws ServiceException {
+        if (item == null || item.getIdInMailbox() <= 0) {
+            return;
+        } else if (item.getFolderIdInMailbox() == mFolderId && (item instanceof Message || item instanceof Contact)) {
+            mFolder.handleItemCreate(changeId, item, added);
         }
     }
 
