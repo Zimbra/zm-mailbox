@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
@@ -157,8 +158,15 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public List<Session> getListeners() {
-        return mailbox.getListeners(Session.Type.IMAP);
+    public List<ImapListener> getListeners() {
+        List<Session> sessions = mailbox.getListeners(Session.Type.IMAP);
+        List<ImapListener> listeners = Lists.newArrayListWithCapacity(sessions.size());
+        for (Session sess : sessions) {
+            if (sess instanceof ImapSession) {
+                listeners.add((ImapSession)sess);
+            }
+        }
+        return listeners;
     }
 
     public boolean attachmentsIndexingEnabled() throws ServiceException {
