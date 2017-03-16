@@ -714,7 +714,7 @@ public class TestUtil extends Assert {
             }
             try {
                 if (timeout_millis > 500) {
-                    Thread.sleep(1000);
+                    Thread.sleep(500);
                     timeout_millis = timeout_millis - 500;
                 } else {
                     Thread.sleep(timeout_millis);
@@ -805,7 +805,7 @@ public class TestUtil extends Assert {
         adminMbox.emptyDumpster();
     }
 
-    private static void deleteMessages(ZMailbox mbox, String query) throws ServiceException {
+    static void deleteMessages(ZMailbox mbox, String query) throws ServiceException {
         // Delete messages
         ZSearchParams params = new ZSearchParams(query);
         params.setTypes(ZSearchParams.TYPE_MESSAGE);
