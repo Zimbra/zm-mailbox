@@ -25,16 +25,21 @@ import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
@@ -42,28 +47,22 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.cs.html.DefangFactory;
-import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.service.util.*;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 
 /**
  * The content servlet returns an attachment document in its original format.
@@ -74,7 +73,7 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 public class ContentServlet extends ZimbraServlet {
     private static final long serialVersionUID = 6466028729668217319L;
 
-    public static final String SERVLET_PATH = "/service/content";
+    public static final String SERVLET_PATH = AccountConstants.CONTENT_SERVLET_PATH; /* "/service/content" */
 
     public static final String PREFIX_GET = "/get";
     protected static final String PREFIX_PROXY = "/proxy";
