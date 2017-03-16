@@ -27,7 +27,6 @@
   <dependency org="commons-dbcp" name="commons-dbcp" rev="1.4"/>
   <dependency org="commons-codec" name="commons-codec" rev="1.7"/>
   <dependency org="commons-io" name="commons-io" rev="1.4"/>
-  <dependency org="commons-logging" name="commons-logging" rev="1.1.1"/>
   <dependency org="com.ibm.icu" name="icu4j" rev="4.8.1.1"/>
   <dependency org="oauth" name="oauth" rev="1.4"/>
   <dependency org="ews_2010" name="ews_2010" rev="1.0"/>
@@ -81,7 +80,10 @@
   <dependency org="org.hsqldb" name="hsqldb" rev="2.2.9" />
   <dependency org="org.hsqldb" name="sqltool" rev="2.2.9" />
   <dependency org="org.easymock" name="easymock" rev="3.0" />
-  <dependency org="cglib" name="cglib-nodep" rev="2.2.2"/>
+  <dependency org="cglib" name="cglib" rev="2.2.2" />
+  <dependency org="cglib" name="cglib-nodep" rev="2.2"/>
+  <dependency org="org.objenesis" name="objenesis" rev="1.2"/>
+  <dependency org="asm" name="asm" rev="3.3.1" /> 
   <dependency org="zimbra" name="zm-common" rev="latest.integration" />
   <dependency org="zimbra" name="zm-soap" rev="latest.integration" /> 
   <dependency org="zimbra" name="zm-client" rev="latest.integration" /> 

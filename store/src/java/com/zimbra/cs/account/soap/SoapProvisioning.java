@@ -408,6 +408,7 @@ public class SoapProvisioning extends Provisioning {
        mAuthTokenLifetime = response.getAttributeLong(AdminConstants.E_LIFETIME);
        mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
        mTransport.setAuthToken(mAuthToken);
+       mTransport.setVoidOnExpired(true);
     }
 
     public void soapAdminAuthenticate(ZAuthToken zat) throws ServiceException {
@@ -444,7 +445,7 @@ public class SoapProvisioning extends Provisioning {
             mAuthToken = null;
         } catch (ServiceException e) {
             //do not thrown an exception if the authtoken has already expired
-            if(!ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
+            if(!ServiceException.AUTH_REQUIRED.equals(e.getCode()) && !ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
                 throw ZClientException.CLIENT_ERROR("Failed to log out", e);
             }
         }
@@ -471,7 +472,7 @@ public class SoapProvisioning extends Provisioning {
         }
     }
 
-    private Future<HttpResponse> invokeRequestAsync(Element request, FutureCallback<HttpResponse> cb) throws ServiceException, IOException {
+    private Future<HttpResponse> invokeRequestAsync(Element request, FutureCallback<HttpResponse> cb) throws IOException {
         if (mNeedSession) {
             return mTransport.invokeAsync(request, cb);
         } else {
@@ -483,9 +484,7 @@ public class SoapProvisioning extends Provisioning {
         checkTransport();
         try {
             return invokeRequestAsync(request, cb);
-        } catch (SoapFaultException e) {
-            throw e; // for now, later, try to map to more specific exception
-        } catch (IOException e) {
+        }  catch (IOException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
         }
     }
@@ -565,8 +564,7 @@ public class SoapProvisioning extends Provisioning {
         return invokeAsync(JaxbUtil.jaxbToElement(jaxbObject), cb);
     }
 
-    public Future<HttpResponse> invokeJaxbAsync(Object jaxbObject, String serverName, FutureCallback<HttpResponse> cb)
-    throws ServiceException {
+    public Future<HttpResponse> invokeJaxbAsync(Object jaxbObject, String serverName, FutureCallback<HttpResponse> cb) throws ServiceException {
         return invokeAsync(JaxbUtil.jaxbToElement(jaxbObject), serverName, cb);
     }
 
@@ -592,6 +590,36 @@ public class SoapProvisioning extends Provisioning {
         Element req = JaxbUtil.jaxbToElement(jaxbObject);
         Element res = invoke(req, serverName);
         return (T) JaxbUtil.elementToJaxb(res);
+    }
+
+    public <T> T invokeJaxbAsAdminWithRetry(Object jaxbObject) throws ServiceException {
+        T resp = null;
+        try {
+            resp = invokeJaxb(jaxbObject);
+        } catch (ServiceException ex) {
+            if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode()) || ServiceException.AUTH_REQUIRED.equalsIgnoreCase(ex.getCode())) {
+                soapZimbraAdminAuthenticate();
+                resp = invokeJaxb(jaxbObject);
+            } else {
+                throw ex;
+            }
+        }
+        return resp;
+    }
+
+    public <T> T invokeJaxbAsAdminWithRetry(Object jaxbObject, String serverName) throws ServiceException {
+        T resp = null;
+        try {
+            resp = invokeJaxb(jaxbObject, serverName);
+        } catch (ServiceException ex) {
+            if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode()) || ServiceException.AUTH_REQUIRED.equalsIgnoreCase(ex.getCode())) {
+                soapZimbraAdminAuthenticate();
+                resp = invokeJaxb(jaxbObject, serverName);
+            } else {
+                throw ex;
+            }
+        }
+        return resp;
     }
 
     public static Map<String, Object> getAttrs(Element e) throws ServiceException {
