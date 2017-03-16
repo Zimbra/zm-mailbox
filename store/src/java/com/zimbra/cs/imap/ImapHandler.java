@@ -100,7 +100,6 @@ import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.util.ItemId;
@@ -1441,7 +1440,7 @@ public abstract class ImapHandler {
         if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
             sendNO(tag, "account does not have IMAP access enabled");
             return null;
-        } 
+        }
 
         if(!Provisioning.canUseLocalIMAP(account) && !ZimbraAuthenticator.MECHANISM.equals(mechanism)) {
             List<String> preferredServers = Provisioning.getPreferredIMAPServers(account);
@@ -1485,15 +1484,13 @@ public abstract class ImapHandler {
         boolean writable;
         List<String> permflags = Collections.emptyList();
         try {
-            // set imap_proxy_to_localhost = true to test IMAP proxy
-            ImapMailboxStore mboxStore = path.getOwnerImapMailboxStore(
-                    DebugConfig.imapProxyToLocalhost && path.useReferent());
-            if (mboxStore instanceof RemoteImapMailboxStore) {
+            // use proxy only when we are selecting a shared folder
+            ImapMailboxStore imapStore = path.getOwnerImapMailboxStore();
+            if (path.useReferent() && imapStore instanceof RemoteImapMailboxStore) {
                 // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox
                 //         before attempting the new selection.  Consequently, if a mailbox is selected
                 //         and a SELECT command that fails is attempted, no mailbox is selected."
                 unsetSelectedFolder(true);
-
                 ImapProxy proxy = new ImapProxy(this, path);
                 if (proxy.select(tag, params, qri)) {
                     imapProxy = proxy;
@@ -1502,7 +1499,6 @@ public abstract class ImapHandler {
                 }
                 return true;
             }
-
             FolderDetails selectdata = setSelectedFolder(path, params);
             i4folder = selectdata.listener.getImapFolder();
             initial  = selectdata.initialFolderValues;
