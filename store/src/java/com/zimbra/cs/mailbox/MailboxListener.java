@@ -31,7 +31,7 @@ import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.acl.AclPushListener;
 import com.zimbra.cs.mailbox.acl.ShareExpirationListener;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
-import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.util.ZimbraApplication;
 
 
@@ -41,11 +41,11 @@ public abstract class MailboxListener {
         public Account mailboxAccount;
         public OperationContext ctxt;
         public int lastChangeId;
-        public PendingModifications mods;
+        public PendingLocalModifications mods;
         public MailboxOperation op;
         public long timestamp;
 
-        public ChangeNotification(Account account, PendingModifications mods, OperationContext ctxt, int lastChangeId,
+        public ChangeNotification(Account account, PendingLocalModifications mods, OperationContext ctxt, int lastChangeId,
                 MailboxOperation op, long timestamp) {
             this.mailboxAccount = account;
             this.mods = mods;
