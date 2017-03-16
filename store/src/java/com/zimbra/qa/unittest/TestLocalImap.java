@@ -10,7 +10,15 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 
-public class TestLocalImapShared extends SharedImapTests {
+/**
+ * This is a shell test for Local IMAP tests that does the necessary configuration to select
+ * the local variant of IMAP access.
+ *
+ * The Remote equivalent is {@Link TestRemoteImapShared}
+ *
+ * The actual tests that are run are in {@link SharedImapTests}
+ */
+public class TestLocalImap extends SharedImapTests {
     private static boolean saved_imap_always_use_remote_store;
 
     @Before
