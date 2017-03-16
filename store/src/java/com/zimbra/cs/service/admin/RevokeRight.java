@@ -36,7 +36,7 @@ public class RevokeRight extends RightDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        RevokeRightRequest rrReq = JaxbUtil.elementToJaxb(request);
+        RevokeRightRequest rrReq = zsc.elementToJaxb(request);
         RightModifier rightModifier = GrantRight.getRightModifier(rrReq.getRight());
 
         // right checking is done in RightCommand

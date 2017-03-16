@@ -47,7 +47,7 @@ public class RevokeOAuthConsumer extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         account = getRequestedAccount(zsc);
 
-        RevokeOAuthConsumerRequest revokeRequest = JaxbUtil.elementToJaxb(request);
+        RevokeOAuthConsumerRequest revokeRequest = zsc.elementToJaxb(request);
         accessTokenToBeRemoved = revokeRequest.getAccessToken();
 
         removeOAuthAccessor();

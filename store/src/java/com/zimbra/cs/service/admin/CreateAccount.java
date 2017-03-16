@@ -58,7 +58,7 @@ public class CreateAccount extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        CreateAccountRequest req = JaxbUtil.elementToJaxb(request);
+        CreateAccountRequest req = zsc.elementToJaxb(request);
 
         String name = req.getName().toLowerCase();
         Map<String, Object> attrs = req.getAttrsAsOldMultimap(true /* ignoreEmptyValues */);

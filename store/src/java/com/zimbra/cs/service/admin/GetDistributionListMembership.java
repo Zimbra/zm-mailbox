@@ -62,7 +62,7 @@ public class GetDistributionListMembership extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        GetDistributionListMembershipRequest req = JaxbUtil.elementToJaxb(request);
+        GetDistributionListMembershipRequest req = zsc.elementToJaxb(request);
 
         int limit = (req.getLimit() == null) ? 0 : req.getLimit();
         if (limit < 0) {
