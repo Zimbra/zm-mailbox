@@ -25,7 +25,9 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.InputStreamWithSize;
@@ -33,9 +35,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.ImapPartSpecifier.BinaryDecodingException;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
@@ -244,10 +244,8 @@ final class ImapURL {
                         throw new ImapUrlException(tag, mURL, "no such message");
                     }
                     MailboxStore i4Mailbox = i4folder.getMailbox();
-                    if (i4Mailbox instanceof Mailbox) {
-                        MailItem item = ((Mailbox)i4Mailbox).getItemById(octxt, i4msg.msgId, i4msg.getType());
-                        content = ImapMessage.getContent(item);
-                    }
+                    ZimbraMailItem item = i4Mailbox.getItemById(octxt, ItemIdentifier.fromAccountIdAndItemId(i4Mailbox.getAccountId(), i4msg.msgId), i4msg.getMailItemType());
+                    content = ImapMessage.getContent(item);
                 }
             }
             // if not, have to fetch by IMAP UID if we're local or handle off-server URLs
