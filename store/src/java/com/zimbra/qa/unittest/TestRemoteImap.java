@@ -150,6 +150,32 @@ public class TestRemoteImap {
         assertNotNull(listResult);
     }
 
+    @Test
+    public void testLOGOUTNotLoggedIn() throws IOException {
+        Assume.assumeTrue(servers.size() > 1);
+        connection = connect(imapServer);
+        connection.logout();
+        assertFalse("IMAP connection should not be authenticated after sending LOGOUT", connection.isAuthenticated());
+    }
+
+    @Test
+    public void testLOGOUTHomeServer() throws IOException {
+        Assume.assumeTrue(servers.size() > 1);
+        connection = connect(homeServer);
+        connection.logout();
+        assertFalse("IMAP connection should not be authenticated after sending LOGOUT", connection.isAuthenticated());
+    }
+
+    @Test
+    public void testLOGOUT() throws IOException {
+        Assume.assumeTrue(servers.size() > 1);
+        connection = connect(imapServer);
+        connection.login(PASS);
+        Assert.assertTrue("IMAP should be authenticated after logging in", connection.isAuthenticated());
+        connection.logout();
+        assertFalse("IMAP connection should not be authenticated after sending LOGOUT", connection.isAuthenticated());
+    }
+
     private ImapConnection connect(Server server) throws IOException {
         ImapConfig config = new ImapConfig(server.getServiceHostname());
         config.setPort(server.getImapBindPort());
