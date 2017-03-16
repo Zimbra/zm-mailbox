@@ -281,12 +281,13 @@ public class ImapPath implements Comparable<ImapPath> {
         if (useReferent()) {
             return mReferent.getOwnerImapMailboxStore(forceRemote);
         }
-        if (forceRemote) {
+        Account target = getOwnerAccount();
+        if (forceRemote || (Provisioning.canUseLocalIMAP(target) && !Provisioning.onLocalServer(target))) {
             ZMailbox zmbox = getOwnerZMailbox();
             imapMboxStore = (null == zmbox) ? null : ImapMailboxStore.get(zmbox, this.getOwnerAccountId());
         }
         if (imapMboxStore == null) {
-            Account target = getOwnerAccount();
+            
             if (target == null) {
                 imapMboxStore = null;
             } else if (Provisioning.onLocalServer(target)) {
