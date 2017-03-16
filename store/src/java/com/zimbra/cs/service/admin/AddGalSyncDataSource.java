@@ -52,7 +52,7 @@ public class AddGalSyncDataSource extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        AddGalSyncDataSourceRequest dsRequest = JaxbUtil.elementToJaxb(request);
+        AddGalSyncDataSourceRequest dsRequest = zsc.elementToJaxb(request);
 
         String name = dsRequest.getName();
         String domainStr = dsRequest.getDomain();
