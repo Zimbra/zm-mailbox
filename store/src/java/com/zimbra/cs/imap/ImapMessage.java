@@ -71,6 +71,7 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.soap.account.message.ImapMessageInfo;
 
 /**
  * @since Apr 30, 2005
@@ -154,12 +155,20 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         this.tags    = i4msg.tags;
     }
 
+    ImapMessage(ImapMessageInfo msgInfo) {
+        this.msgId   = msgInfo.getId();
+        this.imapUid = msgInfo.getImapUid();
+        this.flags   = msgInfo.getFlags();
+        this.tags    = msgInfo.getTags() == null ? null : msgInfo.getTags().split(",");
+        this.sflags  = msgInfo.getType().equalsIgnoreCase(MailItem.Type.CONTACT.name()) ? FLAG_IS_CONTACT : 0;
+    }
+
     ImapMessage reset() {
         sflags &= FLAG_IS_CONTACT;
         return this;
     }
 
-    MailItem.Type getType() {
+    public MailItem.Type getType() {
         return (sflags & FLAG_IS_CONTACT) == 0 ? MailItem.Type.MESSAGE : MailItem.Type.CONTACT;
     }
 
@@ -733,6 +742,11 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
             add("m", msgId).
             add("u", imapUid).toString();
     }
+
+    public int getMsgId() { return msgId; }
+    public int getImapUid() { return imapUid; }
+    public int getFlags() { return flags; }
+    public String[] getTags() { return tags; }
 
     public static void main(String[] args) {
         PrintStream ps = new PrintStream(System.out);
