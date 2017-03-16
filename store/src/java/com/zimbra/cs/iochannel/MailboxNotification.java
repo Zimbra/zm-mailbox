@@ -28,6 +28,8 @@ import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingLocalModifications;
+
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 
@@ -124,14 +126,14 @@ public class MailboxNotification extends Message {
                     return;
                 }
 
-                PendingModifications pms = null;
+                PendingLocalModifications pms = null;
                 for (Session session : sessions) {
                     log.debug("notifying session %s", session.toString());
                     if (pms == null) {
                         try {
                             MailboxStore mboxStore = session.getMailbox();
                             if ((null == mboxStore) || (mboxStore instanceof Mailbox)) {
-                                pms = PendingModifications.deserialize((Mailbox)mboxStore, message.getPayload());
+                                pms = PendingLocalModifications.deserialize((Mailbox)mboxStore, message.getPayload());
                             } else {
                                 log.warn("could not deserialize notification for non-Mailbox MailboxStore '%s'",
                                         mboxStore.getClass().getName());
