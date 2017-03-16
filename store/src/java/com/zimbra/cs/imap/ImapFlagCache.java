@@ -23,9 +23,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
@@ -43,7 +46,6 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
         final boolean mPositive;
         final boolean mPermanent;
         final boolean mListed;
-        final int     mModseq;
 
         static final boolean VISIBLE = true, HIDDEN = false;
 
@@ -51,18 +53,35 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
             this(ltag.getName(), ltag, true);
         }
 
+        ImapFlag(ZTag ztag) {
+            this(ztag.getName(), ztag, true);
+        }
+
+        ImapFlag(String name, ZTag ztag, boolean positive) {
+            mId   = Integer.valueOf(ztag.getId());    mBitmask = 0;
+            mName = ztag.getName();  mImapName  = normalize(name, mId);
+            mPositive = positive;    mPermanent = true;
+            mListed = VISIBLE;
+        }
         ImapFlag(String name, Tag ltag, boolean positive) {
             mId   = ltag.getId();    mBitmask   = ltag instanceof Flag ? ((Flag) ltag).toBitmask() : 0;
             mName = ltag.getName();  mImapName  = normalize(name, mId);
             mPositive = positive;    mPermanent = true;
-            mListed = VISIBLE;       mModseq    = ltag.getSavedSequence();
+            mListed = VISIBLE;
         }
 
         ImapFlag(String name, short bitmask, boolean listed) {
             mId   = 0;         mBitmask   = bitmask;
             mName = name;      mImapName  = name;
             mPositive = true;  mPermanent = false;
-            mListed = listed;  mModseq    = -1;
+            mListed = listed;
+        }
+
+        ImapFlag(String name, FlagInfo flagInfo, boolean positive) {
+            mId   = flagInfo.toId();      mBitmask   = flagInfo.toBitmask();
+            mName = flagInfo.toString();  mImapName  = normalize(name, mId);
+            mPositive = positive;         mPermanent = true;
+            mListed = VISIBLE;
         }
 
         private String normalize(String name, int id) {
@@ -113,6 +132,13 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
         mNames = Maps.newHashMap();
     }
 
+    ImapFlagCache(ZMailbox mbox) throws ServiceException {
+        this();
+        for (ZTag ztag: mbox.getAllTags()) {
+            cache(new ImapFlag(ztag));
+        }
+    }
+
     ImapFlagCache(Mailbox mbox, OperationContext octxt) throws ServiceException {
         this();
         try {
@@ -121,6 +147,7 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
                     cache(new ImapFlag(ltag));
                 }
             }
+
         } catch (ServiceException e) {
             if (!e.getCode().equals(ServiceException.PERM_DENIED)) {
                 throw e;
@@ -128,17 +155,17 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
         }
     }
 
-    static ImapFlagCache getSystemFlags(Mailbox mbox) throws ServiceException {
+    static ImapFlagCache getSystemFlags() {
         ImapFlagCache i4cache = new ImapFlagCache();
 
-        i4cache.cache(new ImapFlag("\\Answered", mbox.getFlagById(Flag.ID_REPLIED),   true));
-        i4cache.cache(new ImapFlag("\\Deleted",  mbox.getFlagById(Flag.ID_DELETED),   true));
-        i4cache.cache(new ImapFlag("\\Draft",    mbox.getFlagById(Flag.ID_DRAFT),     true));
-        i4cache.cache(new ImapFlag("\\Flagged",  mbox.getFlagById(Flag.ID_FLAGGED),   true));
-        i4cache.cache(new ImapFlag("\\Seen",     mbox.getFlagById(Flag.ID_UNREAD),    false));
-        i4cache.cache(new ImapFlag("$Forwarded", mbox.getFlagById(Flag.ID_FORWARDED), true));
-        i4cache.cache(new ImapFlag("$MDNSent",   mbox.getFlagById(Flag.ID_NOTIFIED),  true));
-        i4cache.cache(new ImapFlag("Forwarded",  mbox.getFlagById(Flag.ID_FORWARDED), true));
+        i4cache.cache(new ImapFlag("\\Answered", FlagInfo.REPLIED,   true));
+        i4cache.cache(new ImapFlag("\\Deleted",  FlagInfo.DELETED,   true));
+        i4cache.cache(new ImapFlag("\\Draft",    FlagInfo.DRAFT,     true));
+        i4cache.cache(new ImapFlag("\\Flagged",  FlagInfo.FLAGGED,   true));
+        i4cache.cache(new ImapFlag("\\Seen",     FlagInfo.UNREAD,    false));
+        i4cache.cache(new ImapFlag("$Forwarded", FlagInfo.FORWARDED, true));
+        i4cache.cache(new ImapFlag("$MDNSent",   FlagInfo.NOTIFIED,  true));
+        i4cache.cache(new ImapFlag("Forwarded",  FlagInfo.FORWARDED, true));
 
         i4cache.cache(new ImapFlag("\\Recent",     ImapMessage.FLAG_RECENT,       ImapFlag.HIDDEN));
         i4cache.cache(new ImapFlag("$Junk",        ImapMessage.FLAG_SPAM,         ImapFlag.VISIBLE));
