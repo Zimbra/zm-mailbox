@@ -1,5 +1,7 @@
 package com.zimbra.qa.unittest;
 
+import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
+import static java.util.concurrent.Executors.newCachedThreadPool;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -10,8 +12,12 @@ import java.io.IOException;
 import java.sql.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.mail.MessagingException;
@@ -453,6 +459,33 @@ public class TestRemoteImap {
 
         } finally {
             msg.dispose();
+        }
+    }
+
+    @Test
+    public void testMultipleSelect() throws Exception {
+        Assume.assumeTrue(servers.size() > 1);
+        String folderName = "TestRemoteImap-testSelectFolder";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        TestUtil.createFolder(zmbox, folderName);
+        connection = connect(imapServer);
+        connection.login(PASS);
+        ExecutorService executor = newCachedThreadPool(newDaemonThreadFactory("TestRemoteImap"));
+        for (int i=0; i<3; i++) {
+            Future<MailboxInfo> future = executor.submit(new Callable<MailboxInfo>() {
+
+                @Override
+                public MailboxInfo call() throws Exception {
+                    return connection.select(folderName);
+                }
+            });
+            try {
+                MailboxInfo info = future.get(5, TimeUnit.SECONDS);
+                assertNotNull(info);
+            } catch (TimeoutException e) {
+                Assert.fail("failed getting a response from SELECT command within 5 seconds");
+            }
+
         }
     }
 }
