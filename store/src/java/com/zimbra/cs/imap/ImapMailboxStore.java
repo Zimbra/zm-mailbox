@@ -30,9 +30,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.session.Session;
 
 public abstract class ImapMailboxStore {
 
@@ -42,11 +40,14 @@ public abstract class ImapMailboxStore {
         this.flags = ImapFlagCache.getSystemFlags();
     }
 
-    public static ImapMailboxStore get(Mailbox mbox) {
-        if (mbox == null) {
-            return null;
+    public static ImapMailboxStore get(MailboxStore mbox) throws ServiceException {
+        if (mbox instanceof Mailbox) {
+            return new LocalImapMailboxStore((Mailbox) mbox);
         }
-        return new LocalImapMailboxStore(mbox);
+        if (mbox instanceof ZMailbox) {
+            return new RemoteImapMailboxStore((ZMailbox) mbox);
+        }
+        return null;
     }
 
     public static ImapMailboxStore get(MailboxStore mailboxStore, String accountId) {
@@ -77,7 +78,7 @@ public abstract class ImapMailboxStore {
             throws ServiceException;
     public abstract void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException;
     public abstract int getCurrentMODSEQ(int folderId) throws ServiceException;
-    public abstract List<Session> getListeners();
+    public abstract List<ImapListener> getListeners();
     public abstract boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException;
     public abstract int getId();
     public abstract MailboxStore getMailboxStore();

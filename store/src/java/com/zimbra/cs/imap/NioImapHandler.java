@@ -109,9 +109,10 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     private boolean processRequest(NioImapRequest req) throws IOException {
-        ImapSession i4selected = selectedFolder;
-        if (i4selected != null)
+        ImapListener i4selected = selectedFolderListener;
+        if (i4selected != null) {
             i4selected.updateAccessTime();
+        }
 
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
 
