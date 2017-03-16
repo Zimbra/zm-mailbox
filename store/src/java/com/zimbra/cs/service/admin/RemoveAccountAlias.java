@@ -69,7 +69,7 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        RemoveAccountAliasRequest req = JaxbUtil.elementToJaxb(request);
+        RemoveAccountAliasRequest req = zsc.elementToJaxb(request);
         String id = req.getId();
         String alias = req.getAlias();
 

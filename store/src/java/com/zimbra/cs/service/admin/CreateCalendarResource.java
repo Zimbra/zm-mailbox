@@ -60,7 +60,7 @@ public class CreateCalendarResource extends AdminDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        CreateCalendarResourceRequest req = JaxbUtil.elementToJaxb(request);
+        CreateCalendarResourceRequest req = zsc.elementToJaxb(request);
 
         String name = req.getName().toLowerCase();
         checkDomainRightByEmail(zsc, name, Admin.R_createCalendarResource);

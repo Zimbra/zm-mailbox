@@ -67,7 +67,7 @@ public class GetAccountInfo extends AdminDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        GetAccountInfoRequest req = JaxbUtil.elementToJaxb(request);
+        GetAccountInfoRequest req = zsc.elementToJaxb(request);
         AccountBy accountBy = req.getAccount().getBy().toKeyAccountBy();
         String accountSelectorKey = req.getAccount().getKey();
 
