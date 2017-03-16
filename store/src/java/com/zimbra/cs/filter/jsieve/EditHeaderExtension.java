@@ -49,6 +49,10 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
+<<<<<<< HEAD
+import com.zimbra.cs.filter.ZimbraComparatorUtils;
+=======
+>>>>>>> 215d1e4eace39d8bba4963dce369b183199d0284
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 public class EditHeaderExtension {
@@ -401,7 +405,7 @@ public class EditHeaderExtension {
      * @throws LookupException 
      * @throws MessagingException 
      */
-    public boolean matchCondition(ZimbraMailAdapter mailAdapter, Header header, int headerCount, String value, SieveContext context) throws LookupException, SieveException, MessagingException {
+    public boolean matchCondition(ZimbraMailAdapter mailAdapter, Header header, List<String> headerList, String value, SieveContext context) throws LookupException, SieveException, MessagingException {
         boolean matchFound = false;
         String unfoldedAndDecodedHeaderValue = "";
         try {
@@ -412,6 +416,17 @@ public class EditHeaderExtension {
             ZimbraLog.filter.debug("Failed to decode \"%s\"", MimeUtility.unfold(header.getValue()));
             throw new MessagingException("Exception occured while decoding header value.", uee);
         }
+<<<<<<< HEAD
+<<<<<<< HEAD
+        if (this.valueTag) {
+        	matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
+        } else if (this.countTag) {
+        	List<String> temp = new ArrayList<String>();
+            for (int i = 0; i < headerCount; i++) {
+            	temp.add("");
+            }
+        	matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, temp, value, context);
+=======
         if (this.comparator.equals(I_ASCII_NUMERIC)) {
             if (this.valueTag) {
                 switch (this.relationalComparator) {
@@ -486,6 +501,14 @@ public class EditHeaderExtension {
             } else {
                 throw new SyntaxException(":value or :count not found for numeric operation in replaceheader.");
             }
+>>>>>>> 215d1e4eace39d8bba4963dce369b183199d0284
+=======
+
+        if (this.valueTag) {
+        	matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
+        } else if (this.countTag) {
+        	matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, headerList, value, context);
+>>>>>>> e92ff8e... ZCS-865: review comment changes
         } else if (this.is && ComparatorUtils.is(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
         } else if (this.contains && ComparatorUtils.contains(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
@@ -506,7 +529,11 @@ public class EditHeaderExtension {
      * @param headerCount : <b>int</b>
      */
     public void setEffectiveIndex(int headerCount) {
+<<<<<<< HEAD
+        if (this.last && headerCount >= this.index) {
+=======
         if (this.last && headerCount > this.index) {
+>>>>>>> 215d1e4eace39d8bba4963dce369b183199d0284
             if (this.index == 0) {
                 this.index = headerCount - this.index;
             } else  {
@@ -530,6 +557,8 @@ public class EditHeaderExtension {
     }
 
     /**
+<<<<<<< HEAD
+=======
      * Replace sieve variables with their value in <b>key</b>
      * @param mailAdapter : Object of <b>ZimbraMailAdapter</b>
      */
@@ -540,6 +569,7 @@ public class EditHeaderExtension {
     }
 
     /**
+>>>>>>> 215d1e4eace39d8bba4963dce369b183199d0284
      * Common validation for replaceheader and deleteheader
      * @throws SyntaxException
      */
@@ -587,15 +617,17 @@ public class EditHeaderExtension {
      * @return
      * @throws OperationException 
      */
-    public int getHeaderCount(MimeMessage mm) throws OperationException {
-        int headerCount = 0;
+    public List<String> getMatchingHeaders(MimeMessage mm) throws OperationException {
+    	List<String> headerList = new ArrayList<String>();
         try {
             String[] headerValues = mm.getHeader(this.key);
-            headerCount = headerValues != null ? headerValues.length : 0;
+            if (headerValues != null) {
+            	headerList = Arrays.asList(headerValues);
+            }
         } catch (MessagingException e) {
             throw new OperationException("Error occured while fetching " + this.key + " headers from mime.", e);
         }
-        return headerCount;
+        return headerList;
     }
 
     /**
