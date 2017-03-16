@@ -117,6 +117,7 @@ public class TestRemoteImap {
         if(imapServer != null) {
             imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
         }
+        sp.flushCache("all", null, true);
     }
 
     @Test
