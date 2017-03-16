@@ -88,7 +88,7 @@ public class TestWaitSet extends TestCase {
 
         try {
             String curSeqNo = "0";
-            assertEquals(0, errors.size());
+            assertEquals("Expecting sequence to be 0 when the test starts", 0, errors.size());
 
             { // waitset shouldn't signal until message added to a mailbox
                 WaitSetCallback cb = new WaitSetCallback();
@@ -96,8 +96,8 @@ public class TestWaitSet extends TestCase {
                 // wait shouldn't find anything yet
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
                 errors = ws.doWait(cb, "0", null, null);
-                assertEquals(0, errors.size());
-                synchronized(cb) { assertEquals(false, cb.completed); }
+                assertEquals("Expecting sequence to be 0 during first wait", 0, errors.size());
+                synchronized(cb) { assertEquals("Callback should not be completed yet", false, cb.completed); }
 
                 // inserting a message to existing account should trigger waitset
                 String sender = TestUtil.getAddress(USER_1_NAME);
@@ -105,7 +105,7 @@ public class TestWaitSet extends TestCase {
                 String subject = NAME_PREFIX + " testWaitSet 1";
                 TestUtil.addMessageLmtp(subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
-                synchronized(cb) { assertEquals(true, cb.completed); }
+                synchronized(cb) { assertEquals("callback should be completed now", true, cb.completed); }
                 curSeqNo = cb.seqNo;
             }
 
@@ -120,8 +120,8 @@ public class TestWaitSet extends TestCase {
                 add2.add(new WaitSetAccount(user2Acct.getId(), null, TypeEnum.m.getTypes(), null));
                 errors = ws.doWait(cb, curSeqNo, add2, null);
                 // wait shouldn't find anything yet
-                assertEquals(0, errors.size());
-                synchronized(cb) { assertEquals(false, cb.completed); }
+                assertEquals("Should have no errors", 0, errors.size());
+                synchronized(cb) { assertEquals("Callback should not be completed before it is triggered by the second account", false, cb.completed); }
 
                 // adding a message to the new account SHOULD trigger waitset
                 String sender = TestUtil.getAddress(WS_USER_NAME);
@@ -129,7 +129,7 @@ public class TestWaitSet extends TestCase {
                 String subject = NAME_PREFIX + " testWaitSet 3";
                 TestUtil.addMessageLmtp(subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
-                synchronized(cb) { assertEquals(true, cb.completed); }
+                synchronized(cb) { assertEquals("Callback should be completed after it is triggered by the second account", true, cb.completed); }
                 curSeqNo = cb.seqNo;
             }
         } finally {
@@ -144,7 +144,7 @@ public class TestWaitSet extends TestCase {
         String waitSetId = result.getFirst();
         String curSeqNo = "0";
         List<WaitSetError> errors = result.getSecond();
-        assertEquals(0, errors.size());
+        assertEquals("'errors' shoul dbe empty before creating a callback", 0, errors.size());
 
         try {
 
@@ -154,8 +154,8 @@ public class TestWaitSet extends TestCase {
                 // wait shouldn't find anything yet
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
                 errors = ws.doWait(cb, "0", null, null);
-                assertEquals(0, errors.size());
-                synchronized(cb) { assertEquals(false, cb.completed); }
+                assertEquals("'errors' should be empty", 0, errors.size());
+                synchronized(cb) { assertFalse("callback for all accounts should not be completed before it is triggered", cb.completed); }
 
                 // inserting a message to existing account should trigger waitset
                 String sender = TestUtil.getAddress(USER_1_NAME);
@@ -163,7 +163,7 @@ public class TestWaitSet extends TestCase {
                 String subject = NAME_PREFIX + " testWaitSet 1";
                 TestUtil.addMessageLmtp(subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
-                synchronized(cb) { assertEquals(true, cb.completed); }
+                synchronized(cb) { assertTrue("callback for all accounts should be completed after it is triggered by " + USER_1_NAME, cb.completed); }
                 curSeqNo = cb.seqNo;
             }
 
@@ -173,7 +173,7 @@ public class TestWaitSet extends TestCase {
                 errors = ws.doWait(cb, "0", null, null);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 assertEquals(0, errors.size());
-                synchronized(cb) { assertEquals(true, cb.completed); }
+                synchronized(cb) { assertTrue("call back for all accounts should remain completed until sequence number is increased", cb.completed); }
                 curSeqNo = cb.seqNo;
             }
 
@@ -183,14 +183,14 @@ public class TestWaitSet extends TestCase {
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
                 errors = ws.doWait(cb, curSeqNo, null, null);
                 assertEquals(0, errors.size());
-                synchronized(cb) { assertEquals(false, cb.completed); }
+                synchronized(cb) { assertFalse("call back for all accounts should switch to not completed after sequence number is increased", cb.completed); }
 
                 // creating a document in existing account should trigger waitset
                 String subject = NAME_PREFIX + " testWaitSet document 1";
                 TestUtil.createDocument(TestUtil.getZMailbox(USER_2_NAME),
                         ZFolder.ID_BRIEFCASE, subject, "text/plain", "Hello, world!".getBytes());
                 try { Thread.sleep(500); } catch (Exception e) {}
-                synchronized(cb) { assertEquals("document waitset", true, cb.completed); }
+                synchronized(cb) { assertTrue("document waitset should be completed", cb.completed); }
                 curSeqNo = cb.seqNo;
             }
 
@@ -201,11 +201,11 @@ public class TestWaitSet extends TestCase {
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
                 errors = ws.doWait(cb, curSeqNo, null, null);
                 assertEquals(0, errors.size());
-                synchronized(cb) { assertEquals(false, cb.completed); }
+                synchronized(cb) { assertFalse("Doing nothing should not complete the callback", cb.completed); }
 
                 // create a new account, shouldn't trigger waitset
                 TestUtil.createAccount(WS_USER_NAME);
-                synchronized(cb) { assertEquals(false, cb.completed); }
+                synchronized(cb) { assertFalse("creating a new account should not complete the callback", cb.completed); }
 
                 // adding a message to the new account SHOULD trigger waitset
                 String sender = TestUtil.getAddress(WS_USER_NAME);
@@ -213,7 +213,7 @@ public class TestWaitSet extends TestCase {
                 String subject = NAME_PREFIX + " testWaitSet 2";
                 TestUtil.addMessageLmtp(subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
-                synchronized(cb) { assertEquals(true, cb.completed); }
+                synchronized(cb) { assertTrue("Callback should be completed after adding a message to " + WS_USER_NAME, cb.completed); }
                 curSeqNo = cb.seqNo;
             }
         } finally {
