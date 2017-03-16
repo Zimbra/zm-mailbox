@@ -461,7 +461,7 @@ public abstract class ImapListener extends Session {
             return;
         } else if (type == MailItem.Type.TAG) {
             mFolder.handleTagDelete(changeId, id, chg);
-        } else if (id == mFolderId) {
+        } else if (id == mFolderId && mFolder instanceof ImapFolder) {
             // Once the folder's gone, there's no point in keeping an IMAP Session listening on it around.
             detach();
             // notify client that mailbox is deselected due to delete?
