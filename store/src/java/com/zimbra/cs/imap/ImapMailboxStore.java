@@ -82,7 +82,7 @@ public abstract class ImapMailboxStore {
             throws ServiceException;
     public abstract void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException;
     public abstract int getCurrentMODSEQ(int folderId) throws ServiceException;
-    public abstract List<ImapListener> getListeners();
+    public abstract List<ImapListener> getListeners(int folderId);
     public abstract boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException;
     public abstract MailboxStore getMailboxStore();
     /** Returns this mailbox's Account. */
