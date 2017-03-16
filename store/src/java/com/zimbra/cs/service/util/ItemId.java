@@ -137,8 +137,9 @@ public class ItemId implements java.io.Serializable {
         return new ItemIdentifier(mAccountId, mId, mSubpartId);
     }
 
-    @Override public String toString() {
-        return toString((String) null);
+    @Override
+    public String toString() {
+        return toItemIdentifier().toString();
     }
 
     public String toString(Account authAccount) {
@@ -150,13 +151,7 @@ public class ItemId implements java.io.Serializable {
     }
 
     public String toString(String authAccountId) {
-        StringBuilder sb = new StringBuilder();
-        if (mAccountId != null && mAccountId.length() > 0 && !mAccountId.equals(authAccountId))
-            sb.append(mAccountId).append(ItemIdentifier.ACCOUNT_DELIMITER);
-        sb.append(mId);
-        if (hasSubpart())
-            sb.append(ItemIdentifier.PART_DELIMITER).append(mSubpartId);
-        return sb.toString();
+        return toItemIdentifier().toString(authAccountId);
     }
 
     @Override public boolean equals(Object that) {
