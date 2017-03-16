@@ -18,7 +18,6 @@ package com.zimbra.cs.imap;
 
 import java.util.TreeMap;
 
-import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailItemType;
@@ -60,7 +59,7 @@ public class ImapRemoteSession extends ImapListener {
 
         @Override
         protected synchronized void queueModify(int changeId, Change chg) {
-            getQueuedRemoteNotifications(changeId).recordModified((ZBaseItem) chg.what, chg.why, (ZBaseItem) chg.preModifyObj);
+            getQueuedRemoteNotifications(changeId).recordModified((BaseItemInfo) chg.what, chg.why, null);
         }
     }
 

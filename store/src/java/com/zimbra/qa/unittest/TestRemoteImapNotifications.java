@@ -9,8 +9,6 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.mail.MessagingException;
-
 import org.apache.log4j.BasicConfigurator;
 import org.dom4j.DocumentException;
 import org.junit.After;
@@ -22,6 +20,7 @@ import org.junit.Test;
 
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.localconfig.ConfigException;
@@ -379,6 +378,27 @@ public class TestRemoteImapNotifications {
         return false;
     }
 
+    boolean tagMessageAndWait(ZMailbox zmbox, String msgId, String tagId) throws Exception {
+        ImapServerListener listener = ImapServerListenerPool.getInstance().get(zmbox);
+        String wsID = listener.getWSId();
+        SomeAccountsWaitSet ws = (SomeAccountsWaitSet)(WaitSetMgr.lookup(wsID));
+        long lastSequence = ws.getCurrentSeqNo();
+        zmbox.tagMessage(msgId, tagId, true);
+        int timeout = 6000;
+        while(timeout > 0) {
+            if(listener.getLastKnownSequenceNumber() > lastSequence) {
+                return true;
+            }
+            timeout -= 500;
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                return false;
+            }
+        }
+        return false;
+    }
+
 
 
     @Ignore("TODO - support for delete tag notifications")
@@ -498,7 +518,6 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName);
-
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by fetch 1", 2, mdMap.size());
 
@@ -510,4 +529,63 @@ public class TestRemoteImapNotifications {
         assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
     }
 
+
+    @Test
+    public void testModifyItemNotificationActiveFolder() throws Exception {
+        String folderName = "testNotificationsActiveFolder-folder";
+        String subject = "testNotificationsActiveFolder-msg1";
+        String tagName = "testNotificationsActiveFolder-tag";
+
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName);
+        ZTag tag = zmbox.createTag(tagName, Color.blue);
+        String msgId = TestUtil.addMessage(zmbox, subject, folder.getId(), null);
+        ZMessage msg = zmbox.getMessageById(msgId);
+        connection = connect(imapServer);
+        connection.login(PASS);
+        connection.select(folderName);
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+        assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
+        //sanity check - make sure the tag is not already set on the message
+        Flags flags = mdMap.get(1L).getFlags();
+        assertFalse(flags.contains(new Atom(tag.getName())));
+        assertTrue(tagMessageAndWait(zmbox, msg.getId(), tag.getId()));
+
+        mdMap = connection.fetch("1:*", "(FLAGS)");
+        assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
+        flags = mdMap.get(1L).getFlags();
+        assertTrue(flags.contains(new Atom(tag.getName())));
+    }
+
+    @Test
+    public void testModifyItemNotificationCachedFolder() throws Exception {
+        String folderName1 = "testNotificationsActiveFolder-folder1";
+        String folderName2 = "testNotificationsActiveFolder-folder2";
+        String subject = "testNotificationsActiveFolder-msg1";
+        String tagName = "testNotificationsActiveFolder-tag";
+
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName1);
+        TestUtil.createFolder(zmbox, folderName2);
+        ZTag tag = zmbox.createTag(tagName, Color.blue);
+        String msgId = TestUtil.addMessage(zmbox, subject, folder.getId(), null);
+        ZMessage msg = zmbox.getMessageById(msgId);
+
+        connection = connect(imapServer);
+        connection.login(PASS);
+        connection.select(folderName1);
+
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+        assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
+        //sanity check - make sure the tag is not already set on the message
+        Flags flags = mdMap.get(1L).getFlags();
+        assertFalse(flags.contains(new Atom(tag.getName())));
+        connection.select(folderName2);
+        assertTrue(tagMessageAndWait(zmbox, msg.getId(), tag.getId()));
+        connection.select(folderName1);
+        mdMap = connection.fetch("1:*", "(FLAGS)");
+        assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
+        flags = mdMap.get(1L).getFlags();
+        assertTrue(flags.contains(new Atom(tag.getName())));
+    }
 }
