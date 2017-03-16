@@ -35,7 +35,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.memcached.MemcachedConnector;
-import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
@@ -104,7 +104,7 @@ public class CalSummaryMemcachedCache {
         mMemcachedLookup.removeMulti(keys);
     }
 
-    void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    void notifyCommittedChanges(PendingLocalModifications mods, int changeId) {
         Set<CalSummaryKey> keysToInvalidate = new HashSet<CalSummaryKey>();
         if (mods.modified != null) {
             for (Map.Entry<ModificationKey, Change> entry : mods.modified.entrySet()) {
