@@ -29,6 +29,7 @@ import com.google.common.collect.Sets;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
@@ -162,11 +163,6 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public List<Session> getListeners() {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
-    }
-
-    @Override
-    public boolean attachmentsIndexingEnabled() throws ServiceException {
         throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
     }
 
