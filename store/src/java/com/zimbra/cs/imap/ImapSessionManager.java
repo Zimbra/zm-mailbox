@@ -120,6 +120,7 @@ final class ImapSessionManager {
     }
 
     void uncacheSession(ImapListener session) {
+        session.getImapMboxStore().unregisterWithImapServerListener(session);
         sessions.remove(session);
     }
 
@@ -343,6 +344,7 @@ final class ImapSessionManager {
                 session = imapStore.createListener(i4folder, handler);
                 session.register();
                 sessions.put(session, session /* cannot be null for ConcurrentLinkedHashMap */);
+                imapStore.registerWithImapServerListener(session);
                 return new FolderDetails(session, initial);
             } catch (ServiceException e) {
                 if (session != null) {
