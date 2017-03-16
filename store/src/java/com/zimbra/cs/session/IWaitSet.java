@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.soap.admin.type.WaitSetInfo;
 
 /**
  * WaitSet: scalable mechanism for listening for changes to one or many accounts */
@@ -87,11 +87,6 @@ public interface IWaitSet {
      */
     public String getWaitSetId();
 
-    /**
-     * Handle a QueryWaitSet request by encoding all of our internal data
-     * into the response
-     *
-     * @param response
-     */
-    public void handleQuery(Element response);
+    /** Handle a QueryWaitSet request by encoding all of our internal data into a JAXB object for the response */
+    public WaitSetInfo handleQuery();
 }
