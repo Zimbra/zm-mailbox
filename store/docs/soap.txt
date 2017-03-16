@@ -4575,20 +4575,29 @@ Saves the list of folders that this account has subscribed to via IMAP
 <SaveIMAPSubscriptionsResponse xmlns="urn:zimbraAccount"/>
 
 -----------------------------
-OpenImapFolderRequest:
+OpenIMAPFolderRequest:
 Returns a paginated list of IMAP messages in a folder. If the specified limit
 is reached while more items remain, the response will contain the more="1" attribute,
 and the next request should contain the "cursor" element with the "id" attribute
 set to the item ID of the last message in the previous result set.
 
-<OpenImapFolderRequest l="{folder-id}" limit="{...}">
+<OpenIMAPFolderRequest l="{folder-id}" limit="{...}">
     [<cursor id="{prev-id}"]
-</OpenImapFolderRequest>
+</OpenIMAPFolderRequest>
 
-<OpenImapFolderResponse more="0|1">
+<OpenIMAPFolderResponse more="0|1">
     <folder>
         [<m i4uid="{imap-uid}" t="{type}" f="{flags}" id="{item-id}"/>]
         ...
     </folder>
     [<cursor id="{prev-id}"]
-</OpenImapFolderResponse>
+</OpenIMAPFolderResponse>
+
+-----------------------------
+BeginTrackingIMAPRequest:
+Signals to the server to being tracking IMAP for the mailbox associated with the account.
+If IMAP tracking is already enabled, does nothing.
+
+<BeginTrackingIMAPRequest/>
+
+<BeginTrackingIMAPResponse/>

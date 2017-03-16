@@ -35,7 +35,7 @@ import com.zimbra.client.ZFeatures;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGetInfoResult;
 import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMailbox.OpenImapFolderParams;
+import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
 import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
@@ -64,7 +64,7 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.account.message.ImapMessageInfo;
-import com.zimbra.soap.account.message.OpenImapFolderResponse;
+import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 
 public class TestZClient extends TestCase {
@@ -383,10 +383,10 @@ public class TestZClient extends TestCase {
         }
 
         //test pagination
-        OpenImapFolderParams params = new OpenImapFolderParams(folderId);
+        OpenIMAPFolderParams params = new OpenIMAPFolderParams(folderId);
 
         params.setLimit(100); //test fetching all results
-        OpenImapFolderResponse result = zmbox.fetchImapFolderChunk(params);
+        OpenIMAPFolderResponse result = zmbox.fetchImapFolderChunk(params);
         assertEquals(10, result.getImapMessageInfo().size());
         assertFalse(result.getHasMore());
 
@@ -454,6 +454,18 @@ public class TestZClient extends TestCase {
         modifiedIds = zmbox.getIdsOfModifiedItemsInFolder(null, lastChange, folderId);
         assertEquals(1, modifiedIds.size());
         assertEquals(Integer.valueOf(msg.getId()), modifiedIds.get(0));
+    }
+
+    @Test
+    public void testBeginTrackingImap() throws ServiceException {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        try {
+            zmbox.beginTrackingImap();
+        } catch (ServiceException e) {
+            fail("beginTrackingImap should succeed");
+        }
+        assertTrue(mbox.isTrackingImap());
     }
 
     @Override
