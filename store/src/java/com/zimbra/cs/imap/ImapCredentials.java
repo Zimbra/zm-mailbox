@@ -123,29 +123,12 @@ class ImapCredentials implements java.io.Serializable {
         }
     }
 
-    private Set<String> parseConfig(Metadata config) throws ServiceException {
-        if (config == null || !config.containsKey(FN_SUBSCRIPTIONS))
-            return null;
-        MetadataList slist = config.getList(FN_SUBSCRIPTIONS, true);
-        if (slist == null || slist.isEmpty())
-            return null;
-        Set<String> subscriptions = new HashSet<String>(slist.size());
-        for (int i = 0; i < slist.size(); i++)
-            subscriptions.add(slist.get(i));
-        return subscriptions;
-    }
-
-    private void saveConfig(Set<String> subscriptions) throws ServiceException {
-        MetadataList slist = new MetadataList();
-        if (subscriptions != null && !subscriptions.isEmpty()) {
-            for (String sub : subscriptions)
-                slist.add(sub);
-        }
-        getImapMailboxStore().setConfig(getContext(), SN_IMAP, new Metadata().put(FN_SUBSCRIPTIONS, slist));
+    private void saveSubscriptions(Set<String> subscriptions) throws ServiceException {
+        getImapMailboxStore().saveSubscriptions(getContext(), subscriptions);
     }
 
     Set<String> listSubscriptions() throws ServiceException {
-        return parseConfig(getImapMailboxStore().getConfig(getContext(), SN_IMAP));
+        return getImapMailboxStore().listSubscriptions(getContext());
     }
 
     void subscribe(ImapPath path) throws ServiceException {
@@ -160,7 +143,7 @@ class ImapCredentials implements java.io.Serializable {
         if (subscriptions == null)
             subscriptions = new HashSet<String>();
         subscriptions.add(path.asImapPath());
-        saveConfig(subscriptions);
+        saveSubscriptions(subscriptions);
     }
 
     void unsubscribe(ImapPath path) throws ServiceException {
@@ -176,7 +159,7 @@ class ImapCredentials implements java.io.Serializable {
         }
         if (!found)
             return;
-        saveConfig(subscriptions);
+        saveSubscriptions(subscriptions);
     }
 
     void hideFolder(ImapPath path) {
