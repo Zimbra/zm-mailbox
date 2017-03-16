@@ -22,11 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.mail.WaitSetRequest;
+import com.zimbra.soap.admin.type.AccountsAttrib;
+import com.zimbra.soap.admin.type.WaitSetInfo;
+import com.zimbra.soap.type.IdAndType;
 
 /**
  * The base class defines shared functions, as well as any APIs which should be
@@ -158,32 +159,27 @@ public abstract class WaitSetBase implements IWaitSet {
     }
 
     @Override
-    public synchronized void handleQuery(Element response) {
-        response.addAttribute(AdminConstants.A_ID, mWaitSetId);
-        response.addAttribute(AdminConstants.A_OWNER, mOwnerAccountId);
-        response.addAttribute(AdminConstants.A_DEFTYPES, WaitSetRequest.expandInterestStr(defaultInterest));
-        response.addAttribute(AdminConstants.A_LAST_ACCESSED_DATE, mLastAccessedTime);
+    public synchronized WaitSetInfo handleQuery() {
+        WaitSetInfo info = WaitSetInfo.createForWaitSetIdOwnerInterestsLastAccessDate(mWaitSetId, mOwnerAccountId,
+                WaitSetRequest.expandInterestStr(defaultInterest), mLastAccessedTime);
 
         if (mCurrentErrors.size() > 0) {
-            Element errors = response.addElement(AdminConstants.E_ERRORS);
             for (WaitSetError error : mCurrentErrors) {
-                Element errorElt = errors.addElement("error");
-                errorElt.addAttribute(AdminConstants.A_ID, error.accountId);
-                errorElt.addAttribute(AdminConstants.A_TYPE, error.error.name());
+                info.addError(new IdAndType(error.accountId, error.error.name()));
             }
         }
 
         // signaled accounts
         if (mCurrentSignalledSessions.size() > 0) {
-            Element signaled = response.addElement(AdminConstants.A_READY);
             StringBuilder signaledStr = new StringBuilder();
             for (String accountId : mCurrentSignalledSessions) {
                 if (signaledStr.length() > 0)
                     signaledStr.append(",");
                 signaledStr.append(accountId);
             }
-            signaled.addAttribute(AdminConstants.A_ACCOUNTS, signaledStr.toString());
+            info.setSignalledAccounts(new AccountsAttrib(signaledStr.toString()));
         }
+        return info;
     }
 
     protected synchronized void signalError(WaitSetError err) {

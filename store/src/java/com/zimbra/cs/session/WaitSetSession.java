@@ -18,6 +18,7 @@ package com.zimbra.cs.session;
 
 import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -33,20 +34,19 @@ import com.zimbra.cs.service.util.SyncToken;
 public class WaitSetSession extends Session {
     SomeAccountsWaitSet mWs = null;
     Set<MailItem.Type> interest;
-    /**
-     * The IDs of folders we are interested in changes for.
-     * null means interested in all folders
-     */
+    /** The IDs of folders we are interested in changes for. null or empty means interested in all folders */
     Set<Integer> folderInterest;
     int mHighestChangeId;
     SyncToken mSyncToken;
 
-    WaitSetSession(SomeAccountsWaitSet ws, String accountId, Set<MailItem.Type> interest, SyncToken lastKnownSyncToken) {
+    WaitSetSession(SomeAccountsWaitSet ws, String accountId, Set<MailItem.Type> interest, Set<Integer> folderInterests,
+            SyncToken lastKnownSyncToken) {
         super(accountId, Session.Type.WAITSET);
         mWs = ws;
         this.interest = interest;
-        this.folderInterest = null;
+        this.folderInterest = folderInterests;
         mSyncToken = lastKnownSyncToken;
+        ZimbraLog.session.trace("Created %s", this);
     }
 
     @Override
@@ -59,8 +59,9 @@ public class WaitSetSession extends Session {
         return false;
     }
 
-    void update(Set<MailItem.Type> interest, SyncToken lastKnownSyncToken) {
-        this.interest = interest;
+    void update(Set<MailItem.Type> interests, Set<Integer> folderInterests, SyncToken lastKnownSyncToken) {
+        this.interest = interests;
+        this.folderInterest = folderInterests;
         mSyncToken = lastKnownSyncToken;
         if (mSyncToken != null) {
             // if the sync token is non-null, then we want
@@ -81,6 +82,7 @@ public class WaitSetSession extends Session {
             else
                 mWs.signalDataReady(this);
         }
+        ZimbraLog.session.trace("Updated %s", this);
     }
 
     @Override
@@ -95,25 +97,33 @@ public class WaitSetSession extends Session {
     public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
         boolean trace = ZimbraLog.session.isTraceEnabled();
         if (trace) {
-            ZimbraLog.session.trace("Notifying WaitSetSession: change id=%s, highest change id=%s, sync token=%s",
-                    changeId, mHighestChangeId, mSyncToken);
+            ZimbraLog.session.trace("Notifying WaitSetSession %s: change id=%s changedFolders=%s changesTypes='%s'",
+                    this, changeId, pns.getChangedFolders(), pns.changedTypes);
         }
         if (changeId > mHighestChangeId) {
             mHighestChangeId = changeId;
         }
         if (mSyncToken != null && mSyncToken.after(mHighestChangeId)) {
-            if (trace) ZimbraLog.session.trace("Not signaling waitset; sync token is later than highest change id");
+            if (trace) {
+                ZimbraLog.session.trace("Not signaling waitset; sync token '%s' is later than highest change id '%s'",
+                        mSyncToken, mHighestChangeId);
+            }
             return; // don't signal, sync token stopped us
         }
         if (Sets.intersection(interest, pns.changedTypes).isEmpty()) {
             if (trace) {
-                ZimbraLog.session.trace("Not signaling waitset; waitset is not interested in change type");
+                ZimbraLog.session.trace(
+                        "Not signaling waitset; waitset is not interested in change type. interest=[%s] changes=[%s]",
+                        interest, pns.changedTypes);
             }
             return;
         }
-        if ((this.folderInterest != null) && Sets.intersection(folderInterest, pns.getChangedFolders()).isEmpty()) {
+        if ((folderInterest != null) && !folderInterest.isEmpty() &&
+                Sets.intersection(folderInterest, pns.getChangedFolders()).isEmpty()) {
             if (trace) {
-                ZimbraLog.session.trace("Not signaling waitset; changes not in folders waitset is interested in");
+                ZimbraLog.session.trace(
+                        "Not signaling waitset; changes not in folders waitset is interested in %s changed=%s",
+                        this.folderInterest, pns.getChangedFolders());
             }
             return;
         }
@@ -125,4 +135,17 @@ public class WaitSetSession extends Session {
             ZimbraLog.session.trace("WaitSetSession.notifyPendingChanges done");
         }
     }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("syncToken", mSyncToken)
+                .add("highestChangeId", mHighestChangeId)
+                .add("interests", interest)
+                .add("folderInterests", folderInterest)
+                .add("mWs", mWs)
+                .add("hashCode()", hashCode())
+                .toString();
+    }
+
 }
