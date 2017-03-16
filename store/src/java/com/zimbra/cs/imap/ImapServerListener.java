@@ -16,15 +16,12 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -55,7 +52,7 @@ import com.zimbra.soap.type.WaitSetAddSpec;
 public class ImapServerListener {
     private final String server;
     private volatile String wsID = null;
-    private final ConcurrentHashMap<String /* account ID */, ConcurrentHashMap<Integer /* folder ID */, List<ImapRemoteSession>>> sessionMap = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, List<ImapRemoteSession>>>();
+    private final ConcurrentHashMap<String /* account ID */, ConcurrentHashMap<Integer /* folder ID */, Set<ImapRemoteSession>>> sessionMap = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Set<ImapRemoteSession>>>();
     private final AtomicInteger lastSequence = new AtomicInteger(0);
     private final SoapProvisioning soapProv = new SoapProvisioning();
     private Future<HttpResponse> pendingRequest;
@@ -88,11 +85,11 @@ public class ImapServerListener {
     public void addListener(ImapRemoteSession listener) throws ServiceException {
         String accountId = listener.getTargetAccountId();
         boolean alreadyListening = sessionMap.containsKey(accountId);
-        sessionMap.putIfAbsent(accountId, new ConcurrentHashMap<Integer, List<ImapRemoteSession>>());
+        sessionMap.putIfAbsent(accountId, new ConcurrentHashMap<Integer, Set<ImapRemoteSession>>());
         Integer folderId = listener.getFolderId();
-        ConcurrentHashMap<Integer, List<ImapRemoteSession>> foldersToSessions = sessionMap.get(accountId);
-        foldersToSessions.putIfAbsent(folderId, Collections.synchronizedList(new ArrayList<ImapRemoteSession>()));
-        List<ImapRemoteSession> sessions = foldersToSessions.get(folderId);
+        ConcurrentHashMap<Integer, Set<ImapRemoteSession>> foldersToSessions = sessionMap.get(accountId);
+        foldersToSessions.putIfAbsent(folderId, Collections.newSetFromMap(new ConcurrentHashMap<ImapRemoteSession, Boolean>()));
+        Set<ImapRemoteSession> sessions = foldersToSessions.get(folderId);
         if(!sessions.contains(listener)) {
             sessions.add(listener);
         }
@@ -101,10 +98,10 @@ public class ImapServerListener {
 
     public void removeListener(ImapRemoteSession listener) throws ServiceException {
         String accountId = listener.getTargetAccountId();
-        ConcurrentHashMap<Integer, List<ImapRemoteSession>> foldersToSessions = sessionMap.get(accountId);
+        ConcurrentHashMap<Integer, Set<ImapRemoteSession>> foldersToSessions = sessionMap.get(accountId);
         if(foldersToSessions != null) {
             Integer folderId = listener.getFolderId();
-            List<ImapRemoteSession> sessions = foldersToSessions.get(folderId);
+            Set<ImapRemoteSession> sessions = foldersToSessions.get(folderId);
             if(sessions != null) {
                 sessions.remove(listener);
                 //cleanup to save memory at cost of reducing speed of adding/removing sessions
@@ -127,24 +124,24 @@ public class ImapServerListener {
     }
 
     public boolean isListeningOn(String accountId, Integer folderId) {
-        ConcurrentHashMap<Integer, List<ImapRemoteSession>> folderSessions = sessionMap.get(accountId);
+        ConcurrentHashMap<Integer, Set<ImapRemoteSession>> folderSessions = sessionMap.get(accountId);
         if(folderSessions != null) {
-            List<ImapRemoteSession> sessions = folderSessions.get(folderId);
+            Set<ImapRemoteSession> sessions = folderSessions.get(folderId);
             return sessions != null && !sessions.isEmpty();
         } else {
             return false;
         }
     }
 
-    public List<ImapRemoteSession> getListeners(String accountId, int folderId) throws ServiceException {
-        ConcurrentHashMap<Integer, List<ImapRemoteSession>> folderSessions = sessionMap.get(accountId);
+    public Set<ImapRemoteSession> getListeners(String accountId, int folderId) throws ServiceException {
+        ConcurrentHashMap<Integer, Set<ImapRemoteSession>> folderSessions = sessionMap.get(accountId);
         if(folderSessions != null) {
-            List<ImapRemoteSession> sessions = folderSessions.get(folderId);
+            Set<ImapRemoteSession> sessions = folderSessions.get(folderId);
             if(sessions != null) {
                 return sessions;
             }
         }
-        return Collections.emptyList();
+        return Collections.emptySet();
     }
 
     private void initWaitSet(String accountId, boolean alreadyListening) throws ServiceException {
@@ -270,14 +267,14 @@ public class ImapServerListener {
                 Iterator<AccountWithModifications> iter = wsResp.getSignalledAccounts().iterator();
                 while(iter.hasNext()) {
                     AccountWithModifications accInfo = iter.next();
-                    ConcurrentHashMap<Integer, List<ImapRemoteSession>> foldersToSessions = sessionMap.get(accInfo.getId());
+                    ConcurrentHashMap<Integer, Set<ImapRemoteSession>> foldersToSessions = sessionMap.get(accInfo.getId());
                     if(foldersToSessions != null && !foldersToSessions.isEmpty()) {
                         Collection<PendingFolderModifications> mods = accInfo.getPendingFolderModifications();
                         if(mods != null && !mods.isEmpty()) {
                             for(PendingFolderModifications folderMods : mods) {
                                 Integer folderId = folderMods.getFolderId();
                                 PendingRemoteModifications remoteMods = PendingRemoteModifications.fromSOAP(folderMods, folderId, accInfo.getId());
-                                List<ImapRemoteSession> listeners = foldersToSessions.get(folderId);
+                                Set<ImapRemoteSession> listeners = foldersToSessions.get(folderId);
                                 if(listeners != null) {
                                     for(ImapRemoteSession l : listeners) {
                                         l.notifyPendingChanges(remoteMods, modSeq, null);
