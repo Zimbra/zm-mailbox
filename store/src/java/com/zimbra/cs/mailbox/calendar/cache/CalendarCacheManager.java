@@ -26,7 +26,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.memcached.MemcachedConnector;
-import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingLocalModifications;
 
 public class CalendarCacheManager {
 
@@ -55,7 +55,7 @@ public class CalendarCacheManager {
         mSummaryCache = new CalSummaryCache(summaryLRUSize);
     }
 
-    public void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    public void notifyCommittedChanges(PendingLocalModifications mods, int changeId) {
         if (mSummaryCacheEnabled)
             mSummaryCache.notifyCommittedChanges(mods, changeId);
         if (MemcachedConnector.isConnected()) {
