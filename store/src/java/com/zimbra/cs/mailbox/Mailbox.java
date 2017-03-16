@@ -80,6 +80,8 @@ import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraQueryHitResults;
+import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
@@ -125,6 +127,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.iochannel.MailboxNotification;
 import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.iochannel.MessageChannelException;
@@ -10351,4 +10354,21 @@ public class Mailbox implements MailboxStore {
     public void unlock() {
         lock.release();
     }
+
+    @Override
+    public ZimbraSearchParams createSearchParams(String queryString) {
+        SearchParams sp = new SearchParams();
+        sp.setQueryString(queryString);
+        return sp;
+    }
+
+    @SuppressWarnings("resource")
+    @Override
+    public ZimbraQueryHitResults search(OpContext octx, ZimbraSearchParams params)
+    throws ServiceException {
+        ZimbraQueryResults zqr =
+                index.search(SoapProtocol.Soap12, OperationContext.asOperationContext(octx), (SearchParams) params);
+        return new LocalQueryHitResults(zqr);
+    }
+
 }
