@@ -41,8 +41,8 @@ public class GetSystemRetentionPolicy extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        
-        GetSystemRetentionPolicyRequest req = JaxbUtil.elementToJaxb(request); 
+
+        GetSystemRetentionPolicyRequest req = zsc.elementToJaxb(request);
         Provisioning prov = Provisioning.getInstance();
         // assume default retention policy to be set in globalConfig (for backward compatibility)
         Entry entry = prov.getConfig();
@@ -55,22 +55,22 @@ public class GetSystemRetentionPolicy extends AdminDocumentHandler {
         }
         // check right
         checkGetRight(entry, zsc, context);
-        
+
         RetentionPolicy rp = RetentionPolicyManager.getInstance().getSystemRetentionPolicy(entry);
         GetSystemRetentionPolicyResponse res = new GetSystemRetentionPolicyResponse(rp);
-        return JaxbUtil.jaxbToElement(res, zsc.getResponseProtocol().getFactory());
+        return zsc.jaxbToElement(res);
     }
-    
-    private void checkGetRight(Entry entry, ZimbraSoapContext zsc, Map<String, Object> context) 
+
+    private void checkGetRight(Entry entry, ZimbraSoapContext zsc, Map<String, Object> context)
     throws ServiceException {
         AdminAccessControl.GetAttrsRight gar = new AdminAccessControl.GetAttrsRight();
         gar.addAttr(CreateSystemRetentionPolicy.SYSTEM_RETENTION_POLICY_ATTR);
         checkRight(zsc, context, entry, gar);
     }
-    
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add("Need get attr right on attribute " + 
+        notes.add("Need get attr right on attribute " +
                 CreateSystemRetentionPolicy.SYSTEM_RETENTION_POLICY_ATTR);
     }
 

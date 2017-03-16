@@ -57,7 +57,7 @@ public class CreateDistributionList extends AdminDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        CreateDistributionListRequest req = JaxbUtil.elementToJaxb(request);
+        CreateDistributionListRequest req = zsc.elementToJaxb(request);
 
         String name = req.getName().toLowerCase();
         Map<String, Object> attrs = req.getAttrsAsOldMultimap(true);
