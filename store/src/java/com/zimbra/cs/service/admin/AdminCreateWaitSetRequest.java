@@ -20,21 +20,23 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.service.mail.CreateWaitSet;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.message.AdminCreateWaitSetResponse;
 
 public class AdminCreateWaitSetRequest extends AdminDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Element response = zsc.createElement(AdminConstants.ADMIN_CREATE_WAIT_SET_RESPONSE);
-        return CreateWaitSet.staticHandle(this, request, context, response);
+        com.zimbra.soap.admin.message.AdminCreateWaitSetRequest req = zsc.elementToJaxb(request);
+        AdminCreateWaitSetResponse resp = new AdminCreateWaitSetResponse();
+        CreateWaitSet.staticHandle(this, req, context, resp);
+        return zsc.jaxbToElement(resp);  /* MUST use zsc variant NOT JaxbUtil */
     }
-    
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         notes.add("If allAccounts is specified, " + AdminRightCheckPoint.Notes.SYSTEM_ADMINS_ONLY);

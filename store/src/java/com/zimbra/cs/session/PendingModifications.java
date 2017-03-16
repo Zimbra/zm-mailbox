@@ -21,6 +21,7 @@
 package com.zimbra.cs.session;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -28,9 +29,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 
 
@@ -119,6 +123,14 @@ public abstract class PendingModifications<T> {
         }
 
         protected abstract void toStringInit(StringBuilder sb);
+
+        /** @return ID of folder ID or -1 if not known/appropriate */
+        public int getFolderId() {
+            if (preModifyObj instanceof MailItem) {
+                return ((MailItem) preModifyObj).getFolderId();
+            }
+            return -1;
+        }
     }
 
     public static class ModificationKey extends Pair<String, Integer> {
@@ -152,6 +164,7 @@ public abstract class PendingModifications<T> {
      * Set of all the MailItem types that are included in this structure
      */
     public Set<MailItem.Type> changedTypes = EnumSet.noneOf(MailItem.Type.class);
+    private final Set<Integer> changedFolders = Sets.newHashSet();
 
     public LinkedHashMap<ModificationKey, T> created;
     public Map<ModificationKey, Change> modified;
@@ -197,10 +210,11 @@ public abstract class PendingModifications<T> {
 
     public abstract void recordCreated(T item);
 
-    public void recordDeleted(String acctId, int id, MailItem.Type type) {
+    public void recordDeleted(String acctId, int id, int parentFolderId, MailItem.Type type) {
         if (type != MailItem.Type.UNKNOWN) {
             changedTypes.add(type);
         }
+        addChangedFolderId(parentFolderId);
         ModificationKey key = new ModificationKey(acctId, id);
         delete(key, type, null);
     }
@@ -210,6 +224,7 @@ public abstract class PendingModifications<T> {
         for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> entry : idlist) {
             MailItem.Type type = entry.getKey();
             for (TypedIdList.ItemInfo iinfo : entry.getValue()) {
+                addChangedFolderId(iinfo.getFolderId());
                 delete(new ModificationKey(acctId, iinfo.getId()), type, null);
             }
         }
@@ -221,6 +236,7 @@ public abstract class PendingModifications<T> {
         if (deletes != null && !deletes.isEmpty()) {
             for (Map.Entry<ModificationKey, Change> entry : deletes.entrySet()) {
                 changedTypes.add((MailItem.Type) entry.getValue().what);
+                addChangedFolderId(entry.getValue().getFolderId());
                 delete(entry.getKey(), entry.getValue());
             }
         }
@@ -255,12 +271,40 @@ public abstract class PendingModifications<T> {
     public abstract void recordModified(T item, int reason, T preModifyItem);
 
     abstract PendingModifications<T> add(PendingModifications<T> other);
+    abstract boolean trackingFolderIds();
+
+    public Set<Integer> getChangedFolders() {
+        return Collections.unmodifiableSet(changedFolders);
+    }
+
+    void addChangedFolderId(int folderId) {
+        if (!trackingFolderIds()) {
+            return;
+        }
+        if (folderId == Mailbox.ID_AUTO_INCREMENT) {
+            // Not expecting this
+            ZimbraLog.misc.trace("ChangedFolderId unset (i.e. -1) %s", ZimbraLog.getStackTrace(15));
+            return;
+        }
+        changedFolders.add(folderId);
+    }
+
+    void addChangedFolderIds(Set<Integer> folderIds) {
+        if (trackingFolderIds()) {
+            changedFolders.addAll(folderIds);
+            changedFolders.remove(Mailbox.ID_AUTO_INCREMENT); /* just in case it is in the list of folderIds */
+            if (ZimbraLog.misc.isTraceEnabled() && folderIds.contains(Mailbox.ID_AUTO_INCREMENT)) {
+                ZimbraLog.misc.trace("ChangedFolderId -1 in '%s' %s", folderIds, ZimbraLog.getStackTrace(15));
+            }
+        }
+    }
 
     public void clear()  {
         created = null;
         deleted = null;
         modified = null;
         changedTypes.clear();
+        changedFolders.clear();
     }
 
     public static final class ModificationKeyMeta implements Serializable {

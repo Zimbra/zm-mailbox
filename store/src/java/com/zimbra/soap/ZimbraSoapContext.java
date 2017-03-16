@@ -856,6 +856,10 @@ public final class ZimbraSoapContext {
         return mRequestProtocol.getFactory().createElement(qname);
     }
 
+    public <T> T elementToJaxb(Element e) throws ServiceException {
+        return JaxbUtil.elementToJaxb(e);
+    }
+
     /**
      * Only use this for response objects (or requests)
      * {@link jaxbToNamedElement} should be used for all other cases.
