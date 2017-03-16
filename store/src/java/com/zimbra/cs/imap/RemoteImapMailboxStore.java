@@ -18,6 +18,7 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
+import com.zimbra.soap.account.message.ImapMessageInfo;
 
 public class RemoteImapMailboxStore extends ImapMailboxStore {
 
@@ -243,7 +245,12 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public List<ImapMessage> openImapFolder(OperationContext octxt, ItemIdentifier folderId) throws ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        List<ImapMessage> msgs = new ArrayList<ImapMessage>();
+        Integer chunkSize = Provisioning.getInstance().getLocalServer().getOpenImapFolderRequestChunkSize();
+        for (ImapMessageInfo msg: zMailbox.openImapFolder(folderId.id, chunkSize)) {
+            msgs.add(new ImapMessage(msg));
+        }
+        return msgs;
     }
 
     @Override
