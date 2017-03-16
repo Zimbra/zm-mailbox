@@ -40,6 +40,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 
 
@@ -47,7 +48,7 @@ import com.zimbra.cs.mailbox.util.TypedIdList;
  * @param <T> - MailItem (local mailbox) | ZBaseItem (remote mailbox)
 */
 public abstract class PendingModifications<T extends ZimbraMailItem> {
-    public static abstract class Change {
+    public static final class Change {
         public static final int NONE             = 0x00000000;
         public static final int UNREAD           = 0x00000001;
         public static final int TAGS             = 0x00000002;
@@ -82,6 +83,7 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         public Object what;
         public int    why;
         public Object preModifyObj;
+        private int   folderId = -1;
 
         Change(Object thing, int reason, Object preModifyObj) {
             what = thing; // MailItem.Type for deletions
@@ -146,7 +148,13 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
             if (preModifyObj instanceof MailItem) {
                 return ((MailItem) preModifyObj).getFolderId();
             }
-            return -1;
+            else {
+                return folderId;
+            }
+        }
+
+        public void setFolderId(int folderId) {
+            this.folderId = folderId;
         }
     }
 
@@ -257,7 +265,12 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
             MailItem.Type type = entry.getKey();
             for (TypedIdList.ItemInfo iinfo : entry.getValue()) {
                 addChangedFolderId(iinfo.getFolderId());
-                delete(new ModificationKey(acctId, iinfo.getId()), type, null);
+                if (type == MailItem.Type.MESSAGE || type == MailItem.Type.FOLDER) {
+                    delete(new ModificationKey(acctId, iinfo.getId()), type, iinfo.getFolderId());
+                }
+                else {
+                    delete(new ModificationKey(acctId, iinfo.getId()), type, null);
+                }
             }
         }
     }
@@ -274,7 +287,13 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         }
     }
 
-    protected abstract void delete(ModificationKey key, MailItem.Type type, ZimbraMailItem itemSnapshot);
+    protected abstract void delete(ModificationKey key, MailItem.Type type, Object itemSnapshot);
+
+    protected void delete(PendingModifications.ModificationKey key, Type type, int folderId) {
+        Change chg = new Change(type, Change.NONE, null);
+        chg.setFolderId(folderId);
+        delete(key, chg);
+    }
 
     protected void delete(ModificationKey key, Change chg) {
         if (created != null && created.remove(key) != null)
