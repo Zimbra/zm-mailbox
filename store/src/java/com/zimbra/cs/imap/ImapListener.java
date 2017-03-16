@@ -44,7 +44,6 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
@@ -630,8 +629,7 @@ public abstract class ImapListener extends Session {
     @SuppressWarnings("rawtypes")
     @Override
     public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
-        PendingLocalModifications pns = (PendingLocalModifications) pnsIn;
-        if (!pns.hasNotifications()) {
+        if (!pnsIn.hasNotifications()) {
             return;
         }
 
@@ -639,14 +637,18 @@ public abstract class ImapListener extends Session {
         try {
             synchronized (this) {
                 AddedItems added = new AddedItems();
-                if (pns.deleted != null) {
-                    for (Map.Entry<ModificationKey, Change> entry : pns.deleted.entrySet()) {
+                if (pnsIn.deleted != null) {
+                    @SuppressWarnings("unchecked")
+                    Map<ModificationKey, Change> deleted = pnsIn.deleted;
+                    for (Map.Entry<ModificationKey, Change> entry : deleted.entrySet()) {
                         handleDelete(changeId, entry.getKey().getItemId(), entry.getValue());
                     }
                 }
                 notifyPendingCreates(pnsIn, changeId, added);
-                if (pns.modified != null) {
-                    for (Change chg : pns.modified.values()) {
+                if (pnsIn.modified != null) {
+                    @SuppressWarnings("unchecked")
+                    Map<ModificationKey, Change> modified = pnsIn.modified;
+                    for (Change chg : modified.values()) {
                         handleModify(changeId, chg, added);
                     }
                 }
