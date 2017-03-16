@@ -91,7 +91,7 @@ public class GetShareInfo  extends AccountDocumentHandler {
 
         Provisioning prov = Provisioning.getInstance();
 
-        GetShareInfoRequest req = JaxbUtil.elementToJaxb(request);
+        GetShareInfoRequest req = zsc.elementToJaxb(request);
         GranteeChooser granteeChooser = req.getGrantee();
         byte granteeType = getGranteeType(granteeChooser);
         String granteeId = granteeChooser == null ? null : granteeChooser.getId();
