@@ -63,12 +63,11 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
     // attributes of the folder itself, irrespective of the session state
     private transient ImapMailboxStore mailboxStore;
-    private transient ImapListener folderListener;
+    private transient ImapListener session;
     private transient ImapPath path;
     private transient SessionData sessionData;
     private transient Map<Integer, ImapMessage> messageIds;
 
-    private final String folderIdString;
     private final int folderId;
     private final int uidValidity;
     private String query;
@@ -107,7 +106,6 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     ImapFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
         this.path = path;
         FolderStore folder = path.getFolder();
-        this.folderIdString = folder.getFolderIdAsString();
         this.folderId = folder.getFolderIdInOwnerMailbox();
         // FIXME: Folder object may be stale since it's cached in ImapPath
         this.uidValidity = getUIDValidity(folder);
@@ -143,9 +141,9 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         imap.addAttribute("folder", path.asImapPath()).addAttribute("query", query);
     }
 
-    void setFolderListener(ImapListener value) {
-        assert(folderListener == null || folderListener == value || sessionData == null);
-        folderListener = value;
+    void setSession(ImapListener value) {
+        assert(session == null || session == value || sessionData == null);
+        session = value;
     }
 
     SessionData getSessionData() {
@@ -449,8 +447,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
                 idx--;
             } else {
                 ZimbraLog.imap.warn("message added out of order occurs before message which is already visible to client. Must renumber %s", i4msg);
-                folderListener.incrementRenumber(i4msg);
-                if (folderListener.isFailedRenumber(i4msg)) {
+                session.incrementRenumber(i4msg);
+                if (session.isFailedRenumber(i4msg)) {
                     throw new ImapRenumberException();
                 }
                 //prev has higher UID, but it has already been displayed to client
@@ -1076,15 +1074,15 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return removed;
     }
 
-    void restore(ImapListener listener, SessionData sdata) throws ImapSessionClosedException, ServiceException {
-        folderListener = listener;
-        MailboxStore sessMbox = folderListener.getMailbox();
+    void restore(ImapListener sess, SessionData sdata) throws ImapSessionClosedException, ServiceException {
+        session = sess;
+        MailboxStore sessMbox = session.getMailbox();
         if (sessMbox == null) {
             mailboxStore = null;
             throw new ImapSessionClosedException();
         }
         mailboxStore = ImapMailboxStore.get(sessMbox, sessMbox.getAccountId());
-        path = folderListener.getPath();
+        path = session.getPath();
         // FIXME: NOT RESTORING sequence.msg.sflags PROPERLY -- need to serialize it!!!
         sessionData = sdata;
     }
@@ -1125,7 +1123,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     }
 
     @Override
-    public void handleFolderRename(int changeId, Folder folder, Change chg) {
+    public void handleFolderRename(int changeId, FolderStore folder, Change chg) {
         updatePath(folder);
         // FIXME: can we change the folder's UIDVALIDITY?
         //        if not, how do we persist it for the session?
@@ -1170,11 +1168,11 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
         added.sort();
         boolean recent = true;
-        for (ImapListener i4listener : mailboxStore.getListeners()) {
+        for (ImapListener i4session : mailboxStore.getListeners()) {
             // added messages are only \Recent if we're the first IMAP session notified about them
-            if (i4listener == folderListener) {
+            if (i4session == session) {
                 break;
-            } else if (i4listener.isWritable() && (i4listener.getFolderId() == folderId)) {
+            } else if (i4session.isWritable() && (i4session.getFolderId() == folderId)) {
                 recent = false;
                 break;
             }
