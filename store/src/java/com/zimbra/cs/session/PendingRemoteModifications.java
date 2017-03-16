@@ -43,13 +43,6 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     public PendingRemoteModifications() {
     }
 
-    public static final class Change extends PendingModifications.Change {
-
-        Change(Object thing, int reason, Object preModifyObj) {
-            super(thing, reason, preModifyObj);
-        }
-    }
-
     @Override
     PendingModifications<ZBaseItem> add(PendingModifications<ZBaseItem> other) {
         if (other.deleted != null) {
@@ -79,7 +72,7 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     }
 
     @Override
-    protected void delete(PendingModifications.ModificationKey key, Type type, ZimbraMailItem itemSnapshot) {
+    protected void delete(PendingModifications.ModificationKey key, Type type, Object itemSnapshot) {
         delete(key, new Change(type, Change.NONE, itemSnapshot));
     }
 
