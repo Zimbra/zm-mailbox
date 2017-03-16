@@ -405,7 +405,7 @@ public class EditHeaderExtension {
      * @throws LookupException 
      * @throws MessagingException 
      */
-    public boolean matchCondition(ZimbraMailAdapter mailAdapter, Header header, int headerCount, String value, SieveContext context) throws LookupException, SieveException, MessagingException {
+    public boolean matchCondition(ZimbraMailAdapter mailAdapter, Header header, List<String> headerList, String value, SieveContext context) throws LookupException, SieveException, MessagingException {
         boolean matchFound = false;
         String unfoldedAndDecodedHeaderValue = "";
         try {
@@ -416,6 +416,7 @@ public class EditHeaderExtension {
             ZimbraLog.filter.debug("Failed to decode \"%s\"", MimeUtility.unfold(header.getValue()));
             throw new MessagingException("Exception occured while decoding header value.", uee);
         }
+<<<<<<< HEAD
 <<<<<<< HEAD
         if (this.valueTag) {
         	matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
@@ -501,6 +502,13 @@ public class EditHeaderExtension {
                 throw new SyntaxException(":value or :count not found for numeric operation in replaceheader.");
             }
 >>>>>>> 215d1e4eace39d8bba4963dce369b183199d0284
+=======
+
+        if (this.valueTag) {
+        	matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
+        } else if (this.countTag) {
+        	matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, headerList, value, context);
+>>>>>>> e92ff8e... ZCS-865: review comment changes
         } else if (this.is && ComparatorUtils.is(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
         } else if (this.contains && ComparatorUtils.contains(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
@@ -609,15 +617,17 @@ public class EditHeaderExtension {
      * @return
      * @throws OperationException 
      */
-    public int getHeaderCount(MimeMessage mm) throws OperationException {
-        int headerCount = 0;
+    public List<String> getMatchingHeaders(MimeMessage mm) throws OperationException {
+    	List<String> headerList = new ArrayList<String>();
         try {
             String[] headerValues = mm.getHeader(this.key);
-            headerCount = headerValues != null ? headerValues.length : 0;
+            if (headerValues != null) {
+            	headerList = Arrays.asList(headerValues);
+            }
         } catch (MessagingException e) {
             throw new OperationException("Error occured while fetching " + this.key + " headers from mime.", e);
         }
-        return headerCount;
+        return headerList;
     }
 
     /**
