@@ -35992,6 +35992,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @return zimbraOpenImapFolderRequestChunkSize, or 1000 if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3010)
+    public int getOpenImapFolderRequestChunkSize() {
+        return getIntAttr(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, 1000, true);
+    }
+
+    /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @param zimbraOpenImapFolderRequestChunkSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3010)
+    public void setOpenImapFolderRequestChunkSize(int zimbraOpenImapFolderRequestChunkSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, Integer.toString(zimbraOpenImapFolderRequestChunkSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @param zimbraOpenImapFolderRequestChunkSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3010)
+    public Map<String,Object> setOpenImapFolderRequestChunkSize(int zimbraOpenImapFolderRequestChunkSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, Integer.toString(zimbraOpenImapFolderRequestChunkSize));
+        return attrs;
+    }
+
+    /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3010)
+    public void unsetOpenImapFolderRequestChunkSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3010)
+    public Map<String,Object> unsetOpenImapFolderRequestChunkSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, "");
+        return attrs;
+    }
+
+    /**
      * whether stateless mode (not establishing an association with the
      * OpenID Provider) in OpenID Consumer is enabled
      *
