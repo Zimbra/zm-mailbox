@@ -268,7 +268,7 @@ final class ImapURL {
             } finally {
                 content.stream.close();
             }
-            InputStreamWithSize part = mPart.getContent(mm);
+            InputStreamWithSize part = mPart.getContentOctetRange(mm);
             if (part == null) {
                 throw new ImapUrlException(tag, mURL, "no such part");
             }
