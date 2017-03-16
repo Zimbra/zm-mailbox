@@ -44,7 +44,7 @@ import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.BuildInfo;
 
-final class ImapProxy {
+public final class ImapProxy {
     private static final Set<String> UNSTRUCTURED_CODES = ImmutableSet.of("OK", "NO", "BAD", "PREAUTH", "BYE");
     private static final AuthenticatorFactory AUTH_FACTORY = new AuthenticatorFactory();
     static {
