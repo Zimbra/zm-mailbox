@@ -251,8 +251,6 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         mSessions = new HashMap<String, WaitSetAccount>();
         mCurrentSignalledSessions.clear();
         mSentSignalledSessions.clear();
-        currentKnownChangedFolderIds.clear();
-        sentKnownChangedFolderIds.clear();
         mSentSignalledAccounts.clear();
         mCurrentSignalledAccounts.clear();
         mCurrentSeqNo = Long.MAX_VALUE;
@@ -275,7 +273,6 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         if (mSessions.containsKey(session.getTargetAccountId())) { // ...false if waitset is shutting down...
             mCurrentSignalledAccounts.remove(session.getTargetAccountId());
             mCurrentSignalledSessions.remove(session.getTargetAccountId());
-            currentKnownChangedFolderIds.remove(session.getTargetAccountId());
         }
     }
 
@@ -300,7 +297,6 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
             if (mCurrentSignalledAccounts.add(targetAccId)) {
                 mCurrentSignalledSessions.add(session);
                 if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 3");
-                addChangeFolderIds(currentKnownChangedFolderIds, targetAccId, pms == null ? Sets.newHashSetWithExpectedSize(0) : pms.getChangedFolders());
                 addMods(currentPendingModifications, targetAccId, pms);
                 trySendData();
             }
