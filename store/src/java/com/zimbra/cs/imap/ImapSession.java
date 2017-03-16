@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -48,7 +47,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.session.Session;
 
-public class ImapSession extends Session {
+public class ImapSession extends ImapListener {
     private static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
 
     interface ImapFolderData {
@@ -70,54 +69,18 @@ public class ImapSession extends Session {
         void finishNotification(int changeId) throws IOException;
     }
 
-    private final ImapPath mPath;
-    private final int      mFolderId;
-    private final boolean  mIsVirtual;
-    private ImapFolderData mFolder;
-    private ImapHandler handler;
-    private final Map<Integer, Integer> renumberCount = new ConcurrentHashMap<Integer, Integer>();
-
     ImapSession(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
-        super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
-        mPath      = i4folder.getPath();
-        mFolderId  = i4folder.getId();
-        mIsVirtual = i4folder.isVirtual();
-        mFolder    = i4folder;
-        this.handler = handler;
-
-        i4folder.setSession(this);
+        super(i4folder, handler);
     }
 
-    ImapHandler getHandler() {
-        return handler;
-    }
-
-    ImapFolder getImapFolder() throws ImapSessionClosedException {
+    @Override
+    public ImapFolder getImapFolder() throws ImapSessionClosedException {
         MANAGER.recordAccess(this);
         return reload();
     }
 
-    ImapPath getPath() {
-        return mPath;
-    }
-
-    boolean isInteractive() {
-        return handler != null;
-    }
-
-    public boolean isWritable() {
-        return isInteractive() && mFolder.isWritable();
-    }
-
-    boolean isVirtual() {
-        return mIsVirtual;
-    }
-
-    public int getFolderId() {
-        return mFolderId;
-    }
-
-    boolean hasNotifications() {
+    @Override
+    public boolean hasNotifications() {
         return mFolder.hasNotifications();
     }
 
@@ -151,40 +114,6 @@ public class ImapSession extends Session {
     boolean requiresReload() {
         ImapFolderData fdata = mFolder;
         return fdata instanceof ImapFolder ? false : ((PagedFolderData) fdata).notificationsFull();
-    }
-
-    int getRenumberCount(ImapMessage msg) {
-        Integer count = renumberCount.get(msg.msgId);
-        return (count == null ? 0 : count);
-    }
-
-    void incrementRenumber(ImapMessage msg) {
-        Integer count = renumberCount.get(msg.msgId);
-        count = (count != null ? count + 1 : 1);
-        renumberCount.put(msg.msgId, count);
-    }
-
-    void resetRenumber() {
-        renumberCount.clear();
-    }
-
-    boolean hasFailedRenumber() {
-        //check if any id has been repeatedly renumbered
-        for (Integer count : renumberCount.values()) {
-            if (count > 5) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    boolean isFailedRenumber(ImapMessage msg) {
-        Integer count = renumberCount.get(msg.msgId);
-        return (count == null ? false : isFailed(count));
-    }
-
-    private boolean isFailed(Integer count) {
-        return count > 5;
     }
 
     void inactivate() {
@@ -241,16 +170,16 @@ public class ImapSession extends Session {
         mFolder.doEncodeState(parent.addNonUniqueElement("imap"));
     }
 
-    @Override
-    protected long getSessionIdleLifetime() {
-        return handler.getConfig().getAuthenticatedMaxIdleTime() * 1000;
-    }
-
     // XXX: need to handle the abrupt disconnect case, the LOGOUT case, the timeout case, and the too-many-sessions disconnect case
     @Override
     public Session unregister() {
         MANAGER.closeFolder(this, true);
         return detach();
+    }
+
+    @Override
+    public void closeFolder(boolean isUnregistering) {
+        ImapSessionManager.getInstance().closeFolder(this, false);
     }
 
     Session detach() {
