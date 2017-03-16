@@ -16,13 +16,22 @@
  */
 
 package com.zimbra.qa.unittest;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.EnumSet;
+import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
@@ -37,22 +46,21 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
-
 /**
  * @author bburtin
  */
-public class TestUnread extends TestCase {
+public class TestUnread {
     private Mailbox mMbox;
     private Account mAccount;
 
-    private static String USER_NAME = "user1";
     private static String TEST_NAME = "TestUnread";
+    private static String USER_NAME = TEST_NAME+"-user1";
 
-    private static String FOLDER1_NAME = TEST_NAME + " Folder 1";
-    private static String FOLDER2_NAME = TEST_NAME + " Folder 2";
-    private static String TAG1_NAME = TEST_NAME + " Tag 1";
-    private static String TAG2_NAME = TEST_NAME + " Tag 2";
-    private static String TAG3_NAME = TEST_NAME + " Tag 3";
+    private static String FOLDER1_NAME =  "Folder 1";
+    private static String FOLDER2_NAME = "Folder 2";
+    private static String TAG1_NAME = "Tag 1";
+    private static String TAG2_NAME = "Tag 2";
+    private static String TAG3_NAME = "Tag 3";
 
     private int mMessage1Id;
     private int mMessage2Id;
@@ -63,15 +71,6 @@ public class TestUnread extends TestCase {
     private int mTag2Id;
     private int mTag3Id;
     private int mConvId;
-
-    /**
-     * Constructor used for instantiating a <code>TestCase</code> that runs a single test.
-     *
-     * @param testName the name of the method that will be called when the test is executed
-     */
-    public TestUnread(String testName) {
-        super(testName);
-    }
 
     private Message getMessage1() throws Exception { return mMbox.getMessageById(null, mMessage1Id); }
     private Message getMessage2() throws Exception { return mMbox.getMessageById(null, mMessage2Id); }
@@ -92,15 +91,13 @@ public class TestUnread extends TestCase {
      *   <li>T2 is assigned to M1 and M2</li>
      * </ul>
      */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        mAccount = TestUtil.getAccount(USER_NAME);
-        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
-
+    @Before
+    public void setUp() throws Exception {
         // Clean up data, in case a previous test didn't exit cleanly
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME);
+        cleanup();
+
+        mAccount = TestUtil.createAccount(USER_NAME);
+        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
 
         Message msg = TestUtil.addMessage(mMbox, TEST_NAME);
         mMessage1Id = msg.getId();
@@ -140,16 +137,27 @@ public class TestUnread extends TestCase {
         mMbox.alterTag(null, mMessage2Id, getMessage2().getType(), getTag2().getName(), true, null);
     }
 
-    public void testReadMessage1()
-    throws Exception {
+    @After
+    public void tearDown() throws Exception {
+        cleanup();
+    }
+
+    private void cleanup() throws Exception {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
+    }
+
+    @Test
+    public void testReadMessage1() throws Exception {
         ZimbraLog.test.debug("testReadMessage1");
         verifySetUp();
         setUnread(getMessage1(), false);
         verifyMessage1Read();
     }
 
-    public void testReadMessage2()
-    throws Exception {
+    @Test
+    public void testReadMessage2() throws Exception {
         ZimbraLog.test.debug("testReadMessage2");
         verifySetUp();
 
@@ -168,8 +176,8 @@ public class TestUnread extends TestCase {
         verifyAllUnreadFlags();
     }
 
-    public void testReadAllMessages()
-    throws Exception {
+    @Test
+    public void testReadAllMessages() throws Exception {
         ZimbraLog.test.debug("testReadAllMessages");
         verifySetUp();
 
@@ -179,23 +187,23 @@ public class TestUnread extends TestCase {
         verifyAllRead();
     }
 
-    public void testReadConversation()
-    throws Exception {
+    @Test
+    public void testReadConversation() throws Exception {
         ZimbraLog.test.debug("testReadConversation");
         setUnread(getConv(), false);
         verifyAllRead();
     }
 
-    public void testReadFolder1()
-    throws Exception {
+    @Test
+    public void testReadFolder1() throws Exception {
         ZimbraLog.test.debug("testReadFolder1");
         verifySetUp();
         setUnread(getFolder1(), false);
         verifyMessage1Read();
     }
 
-    public void testReadFolder2()
-    throws Exception {
+    @Test
+    public void testReadFolder2() throws Exception {
         ZimbraLog.test.debug("testReadFolder2");
         verifySetUp();
 
@@ -212,8 +220,8 @@ public class TestUnread extends TestCase {
         assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
-    public void testReadAllFolders()
-    throws Exception {
+    @Test
+    public void testReadAllFolders() throws Exception {
         ZimbraLog.test.debug("testReadAllMessages");
         verifySetUp();
 
@@ -222,16 +230,16 @@ public class TestUnread extends TestCase {
         verifyAllRead();
     }
 
-    public void testReadTag1()
-    throws Exception {
+    @Test
+    public void testReadTag1() throws Exception {
         ZimbraLog.test.debug("testReadTag1");
         verifySetUp();
         setUnread(getTag1(), false);
         verifyMessage1Read();
     }
 
-    public void testReadTag2()
-    throws Exception {
+    @Test
+    public void testReadTag2() throws Exception {
         ZimbraLog.test.debug("testReadTag2");
         verifySetUp();
 
@@ -250,8 +258,8 @@ public class TestUnread extends TestCase {
         verifyAllUnreadFlags();
     }
 
-    public void testMoveMessage()
-    throws Exception {
+    @Test
+    public void testMoveMessage() throws Exception {
         ZimbraLog.test.debug("testMoveMessage");
         verifySetUp();
 
@@ -274,8 +282,8 @@ public class TestUnread extends TestCase {
         assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
     }
 
-    public void testMoveConversation()
-    throws Exception {
+    @Test
+    public void testMoveConversation() throws Exception {
         ZimbraLog.test.debug("testMoveConversation");
         verifySetUp();
 
@@ -299,8 +307,8 @@ public class TestUnread extends TestCase {
         assertEquals("getFolder2().getUnreadCount()", 2, getFolder2().getUnreadCount());
     }
 
-    public void testTagMessage()
-    throws Exception {
+    @Test
+    public void testTagMessage() throws Exception {
         ZimbraLog.test.debug("testTagMessage");
         verifySetUp();
 
@@ -317,8 +325,8 @@ public class TestUnread extends TestCase {
         assertEquals("getTag3().getUnreadCount()", 1, getTag3().getUnreadCount());
     }
 
-    public void testTagConversation()
-    throws Exception {
+    @Test
+    public void testTagConversation() throws Exception {
         ZimbraLog.test.debug("testTagConversation");
         verifySetUp();
 
@@ -334,8 +342,8 @@ public class TestUnread extends TestCase {
     /**
      * Moves one read message and two unread messages to the trash.
      */
-    public void testMoveToTrash()
-    throws Exception {
+    @Test
+    public void testMoveToTrash() throws Exception {
         ZimbraLog.test.debug("testMoveToTrash");
         verifySetUp();
 
@@ -362,6 +370,7 @@ public class TestUnread extends TestCase {
     /**
      * Makes sure that something comes back when searching for unread items.
      */
+    @Test
     public void testSearch() throws Exception {
         ZimbraLog.test.debug("testSearch");
         verifySetUp();
@@ -372,8 +381,8 @@ public class TestUnread extends TestCase {
         results.close();
     }
 
-    public void testDeleteConversation()
-    throws Exception {
+    @Test
+    public void testDeleteConversation() throws Exception {
         ZimbraLog.test.debug("testDeleteConversation");
         verifySetUp();
 
@@ -386,8 +395,8 @@ public class TestUnread extends TestCase {
         assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
-    public void testDeleteFolder2()
-    throws Exception {
+    @Test
+    public void testDeleteFolder2() throws Exception {
         ZimbraLog.test.debug("testDeleteFolder2");
         verifySetUp();
 
@@ -401,8 +410,8 @@ public class TestUnread extends TestCase {
         assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
-    public void testDeleteFolder1()
-    throws Exception {
+    @Test
+    public void testDeleteFolder1() throws Exception {
         ZimbraLog.test.debug("testDeleteFolder1");
         verifySetUp();
 
@@ -413,8 +422,7 @@ public class TestUnread extends TestCase {
         assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
-    private void verifyMessage1Read()
-    throws Exception {
+    private void verifyMessage1Read() throws Exception {
         assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
         assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
         assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
@@ -428,8 +436,7 @@ public class TestUnread extends TestCase {
         verifyAllUnreadFlags();
     }
 
-    private void verifyAllUnreadFlags()
-    throws Exception {
+    private void verifyAllUnreadFlags() throws Exception {
         verifyUnreadFlag(getMessage1());
         verifyUnreadFlag(getMessage2());
         verifyUnreadFlag(getMessage3());
@@ -470,8 +477,7 @@ public class TestUnread extends TestCase {
         }
     }
 
-    private void verifyAllRead()
-    throws Exception {
+    private void verifyAllRead() throws Exception {
         assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
         assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
         assertEquals("getMessage3().getUnreadCount()", 0, getMessage3().getUnreadCount());
@@ -491,8 +497,7 @@ public class TestUnread extends TestCase {
         verifyUnreadFlag(item);
     }
 
-    private void verifySetUp()
-    throws Exception {
+    private void verifySetUp() throws Exception {
         assertEquals("getMessage1().getUnreadCount()", 1, getMessage1().getUnreadCount());
         assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
         assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
@@ -510,10 +515,5 @@ public class TestUnread extends TestCase {
         assertTrue("getMessage1().isTagged(getTag1())", getMessage1().isTagged(getTag1()));
         assertTrue("getMessage1().isTagged(getTag2())", getMessage1().isTagged(getTag2()));
         assertTrue("getMessage2().isTagged(getTag2())", getMessage2().isTagged(getTag2()));
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME);
     }
 }
