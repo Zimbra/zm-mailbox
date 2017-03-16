@@ -45,8 +45,11 @@ public abstract class ImapListener extends Session {
     }
 
     public abstract ImapFolder getImapFolder() throws ImapSessionClosedException;
-    public abstract boolean hasNotifications();
     public abstract void closeFolder(boolean isUnregistering);
+
+    public boolean hasNotifications() {
+        return mFolder.hasNotifications();
+    }
 
     ImapHandler getHandler() {
         return handler;
