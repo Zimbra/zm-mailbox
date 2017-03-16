@@ -32,7 +32,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.soap.mail.type.CreateItemNotification;
 import com.zimbra.soap.mail.type.DeleteItemNotification;
-import com.zimbra.soap.mail.type.ModifyNotification;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
 import com.zimbra.soap.mail.type.ModifyNotification.RenameFolderNotification;
@@ -184,25 +183,24 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         for (CreateItemNotification createSpec: mods.getCreated()) {
             prms.recordCreated(ModificationItem.itemUpdate(createSpec.getMessageInfo(), folderId, acctId));
         }
-        for (ModifyNotification modSpec: mods.getModified()) {
-            int change = modSpec.getChangeBitmask();
-            if (modSpec instanceof ModifyItemNotification) {
-                ModifyItemNotification modifyItem = (ModifyItemNotification) modSpec;
-                BaseItemInfo itemUpdate = ModificationItem.itemUpdate(modifyItem.getMessageInfo(), folderId, acctId);
-                prms.recordModified(itemUpdate, change);
-            } else if (modSpec instanceof ModifyTagNotification) {
-                ModifyTagNotification modifyTag = (ModifyTagNotification) modSpec;
-                int tagId = modifyTag.getId();
-                String tagName = modifyTag.getName();
-                ZimbraTag tagRename = ModificationItem.tagRename(tagId, tagName);
-                prms.recordModified(tagRename, acctId, change);
-            } else if (modSpec instanceof RenameFolderNotification) {
-                RenameFolderNotification renameFolder = (RenameFolderNotification) modSpec;
-                int renamedFolderId = renameFolder.getFolderId();
-                String newPath = renameFolder.getPath();
-                ModificationItem folderRename = ModificationItem.folderRename(renamedFolderId, newPath, acctId);
-                prms.recordModified(folderRename, change);
-            }
+        for (ModifyItemNotification modifyItem: mods.getModifiedMsgs()) {
+            int change = modifyItem.getChangeBitmask();
+            BaseItemInfo itemUpdate = ModificationItem.itemUpdate(modifyItem.getMessageInfo(), folderId, acctId);
+            prms.recordModified(itemUpdate, change);
+        }
+        for (ModifyTagNotification modifyTag: mods.getModifiedTags()) {
+            int change = modifyTag.getChangeBitmask();
+            int tagId = modifyTag.getId();
+            String tagName = modifyTag.getName();
+            ZimbraTag tagRename = ModificationItem.tagRename(tagId, tagName);
+            prms.recordModified(tagRename, acctId, change);
+        }
+        for (RenameFolderNotification renamedFolder: mods.getRenamedFolders()) {
+            int change = renamedFolder.getChangeBitmask();
+            int renamedFolderId = renamedFolder.getFolderId();
+            String newPath = renamedFolder.getPath();
+            ModificationItem folderRename = ModificationItem.folderRename(renamedFolderId, newPath, acctId);
+            prms.recordModified(folderRename, change);
         }
         for (DeleteItemNotification delSpec: mods.getDeleted()) {
           int id = delSpec.getId();
