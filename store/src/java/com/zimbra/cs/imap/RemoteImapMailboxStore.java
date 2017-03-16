@@ -245,5 +245,29 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     public List<ImapMessage> openImapFolder(OperationContext octxt, ItemIdentifier folderId) throws ServiceException {
         throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
     }
-}
 
+    @Override
+    public void registerWithImapServerListener(ImapListener listener) {
+        ImapServerListener svrListener;
+        try {
+            svrListener = ImapServerListenerPool.getInstance().get(zMailbox);
+            if (null != svrListener) {
+                svrListener.addListener((ImapRemoteSession)listener);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.imap.info("Problem registering with ImapServerListener", e);
+        }
+    }
+
+    @Override
+    public void unregisterWithImapServerListener(ImapListener listener) {
+        try {
+            ImapServerListener svrListener = ImapServerListenerPool.getInstance().get(zMailbox);
+            if (null != svrListener) {
+                svrListener.removeListener((ImapRemoteSession)listener);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.imap.info("Problem unregistering with ImapServerListener", e);
+        }
+    }
+}
