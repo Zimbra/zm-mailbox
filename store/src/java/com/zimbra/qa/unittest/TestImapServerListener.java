@@ -154,8 +154,10 @@ public class TestImapServerListener {
         ImapFolder i4folder = new ImapFolder(path, params, handler);
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(session);
+        //wait for waitset session to be created
+        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, remoteListener.getWSId(), remoteServer);
         session.doneSignal = new CountDownLatch(1);
-        String subject = "TestImapServerListener - testNotify - trigger message";
+        String subject = "TestImapServerListener - testNotifyInbox - trigger message";
         TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
         TestUtil.waitForMessages(mboxStore, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
         try {
@@ -182,6 +184,8 @@ public class TestImapServerListener {
         ImapFolder i4folder = new ImapFolder(path, params, handler);
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(session);
+        //wait for waitset session to be created
+        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, remoteListener.getWSId(), remoteServer);
         session.doneSignal = new CountDownLatch(1);
         String subject = "TestImapServerListener - testNotifyNewFolder";
         TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
@@ -211,6 +215,8 @@ public class TestImapServerListener {
         ImapFolder i4folder = new ImapFolder(path, params, handler);
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(session);
+        //wait for waitset session to be created
+        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, remoteListener.getWSId(), remoteServer);
         session.doneSignal = new CountDownLatch(1);
         String subject = "TestImapServerListener - testNotifyReadUnread";
         TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
@@ -263,6 +269,8 @@ public class TestImapServerListener {
         ImapFolder i4folder = new ImapFolder(path, params, handler);
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(session);
+        //wait for waitset session to be created
+        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, remoteListener.getWSId(), remoteServer);
         session.doneSignal = new CountDownLatch(1);
         String subject = "TestImapServerListener - testNotifyTagUntag";
         TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
@@ -316,6 +324,8 @@ public class TestImapServerListener {
         ImapFolder i4folder = new ImapFolder(path, params, handler);
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(session);
+        //wait for waitset session to be created
+        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, remoteListener.getWSId(), remoteServer);
         session.doneSignal = new CountDownLatch(1);
         String subject = "TestImapServerListener - testNotifyRenameTag";
         TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
@@ -369,10 +379,12 @@ public class TestImapServerListener {
         ImapHandler handler = new MockImapHandler().setCredentials(creds);
         ImapFolder i4folder = new ImapFolder(path, params, handler);
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
-        String subject = "TestImapServerListener - testNotify - trigger message";
+        String subject = "TestImapServerListener - testNotifyDeleteItemFromInbox - trigger message";
         TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), "randomUserTestImapServerListener@yahoo.com");
         ZMessage msg = TestUtil.waitForMessage(mboxStore, String.format("in:inbox subject:\"%s\"", subject));
         remoteListener.addListener(session);
+        //wait for waitset session to be created
+        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, remoteListener.getWSId(), remoteServer);
         session.doneSignal = new CountDownLatch(1);
         mboxStore.deleteMessage(msg.getId());
         try {
@@ -400,6 +412,8 @@ public class TestImapServerListener {
         MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         session.doneSignal = new CountDownLatch(1);
         remoteListener.addListener(session);
+        //wait for waitset session to be created
+        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, remoteListener.getWSId(), remoteServer);
         TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotifyWrongFolder", folder.getId());
         try {
             session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
@@ -428,7 +442,7 @@ public class TestImapServerListener {
         assertNotNull("ImapFolder.getCredentials() should not return null", i4folder.getCredentials());
         assertNotNull("ImapFolder.getPath() should not return null", i4folder.getPath());
         
-        ImapRemoteSession session = (ImapRemoteSession) imapStore.createListener(i4folder, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         assertNotNull("ImapListener instance should not be null", session);
         assertFalse("Expecting ImapServerListener::isListeningOn to return false before calling addListener", remoteListener.isListeningOn(session.getTargetAccountId(), session.getFolderId()));
         assertNull("Should not have a waitset before registering first listener", remoteListener.getWSId());
@@ -452,7 +466,7 @@ public class TestImapServerListener {
     }
 
     @Test
-    public void testGetListeners() throws ServiceException, IOException {
+    public void testGetListeners() throws Exception {
         Assume.assumeNotNull(remoteServer);
         Assume.assumeNotNull(remoteAccount);
         assertNotNull("ImapServerListener instance should not be null", remoteListener);
@@ -464,12 +478,14 @@ public class TestImapServerListener {
         ImapHandler handler = new MockImapHandler().setCredentials(creds);
         ImapFolder i4folder = new ImapFolder(path, params, handler);
 
-        ImapRemoteSession session = (ImapRemoteSession) imapStore.createListener(i4folder, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         assertNotNull("ImapListener instance should not be null", session);
         List<ImapRemoteSession> sessions = remoteListener.getListeners(remoteAccount.getId(), i4folder.getId());
         assertNotNull("getListeners should not return NULL before adding a listener", sessions);
         assertTrue("expecting an empty list before adding a listener", sessions.isEmpty());
         remoteListener.addListener(session);
+        //wait for waitset session to be created
+        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, remoteListener.getWSId(), remoteServer);
         sessions = remoteListener.getListeners(remoteAccount.getId(), i4folder.getId());
         assertNotNull("getListeners should not return NULL after adding a listener", sessions);
         assertFalse("expecting a non empty list after adding a listener", sessions.isEmpty());
@@ -477,10 +493,11 @@ public class TestImapServerListener {
         sessions = remoteListener.getListeners(remoteAccount.getId(), i4folder.getId());
         assertNotNull("getListeners should not return NULL after removing a listener", sessions);
         assertTrue("expecting an empty list after removing a listener", sessions.isEmpty());
+        assertNull("Should not have a waitset after removing last listener", remoteListener.getWSId());
     }
 
     @Test
-    public void testShutdown() throws ServiceException, IOException {
+    public void testShutdown() throws Exception {
         Assume.assumeNotNull(remoteServer);
         Assume.assumeNotNull(remoteAccount);
         RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
@@ -489,8 +506,10 @@ public class TestImapServerListener {
         byte params = 0;
         ImapHandler handler = new MockImapHandler().setCredentials(creds);
         ImapFolder i4folder = new ImapFolder(path, params, handler);
-        ImapRemoteSession session = (ImapRemoteSession) imapStore.createListener(i4folder, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(session);
+        //wait for waitset session to be created
+        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, remoteListener.getWSId(), remoteServer);
         assertNotNull("Should have a waitset after addig a listener", remoteListener.getWSId());
         remoteListener.shutdown();
         assertNull("Should not have a waitset after shutting down ImapServerListener", remoteListener.getWSId());
@@ -509,7 +528,7 @@ public class TestImapServerListener {
         byte params = 0;
         ImapHandler handler = new MockImapHandler().setCredentials(creds);
         ImapFolder i4folder = new ImapFolder(path, params, handler);
-        ImapRemoteSession inboxSession = (ImapRemoteSession) imapStore.createListener(i4folder, handler);
+        MockImapListener inboxSession = new MockImapListener(imapStore, i4folder, handler);
         remoteListener.addListener(inboxSession);
 
         //check created waitset
@@ -536,7 +555,7 @@ public class TestImapServerListener {
         i4folder = new ImapFolder(path, params, handler);
         ImapRemoteSession draftsSession = (ImapRemoteSession) imapStore.createListener(i4folder, handler);
         remoteListener.addListener(draftsSession);
-        Thread.sleep(5000);
+
         //check that waitset was updated
         resp = TestUtil.waitForSessions(1, 2, 6000, remoteListener.getWSId(), remoteServer);
         assertNotNull(resp);
@@ -626,10 +645,6 @@ public class TestImapServerListener {
 
         public boolean wasTriggered() {
             return triggered;
-        }
-
-        public void resetTrigger() {
-            triggered = false;
         }
 
         public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
