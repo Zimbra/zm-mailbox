@@ -28,8 +28,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Future;
 import java.util.Set;
 import java.util.TreeMap;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.concurrent.FutureCallback;
 
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
@@ -102,6 +106,7 @@ import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.account.message.CreateIdentityRequest;
 import com.zimbra.soap.account.message.CreateIdentityResponse;
 import com.zimbra.soap.account.message.DeleteIdentityRequest;
+import com.zimbra.soap.account.message.EndSessionRequest;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
@@ -429,6 +434,22 @@ public class SoapProvisioning extends Provisioning {
         soapAdminAuthenticate(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
     }
 
+    public void soapLogOut() throws ServiceException {
+        EndSessionRequest logout = new EndSessionRequest();
+        logout.setLogOff(true);
+        try {
+            invokeJaxb(logout);
+            mAuthTokenExpiration = 0;
+            mAuthTokenLifetime = 0;
+            mAuthToken = null;
+        } catch (ServiceException e) {
+            //do not thrown an exception if the authtoken has already expired
+            if(!ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
+                throw ZClientException.CLIENT_ERROR("Failed to log out", e);
+            }
+        }
+    }
+
     private String serverName() {
         try {
             return new URI(mTransport.getURI()).getHost();
@@ -447,6 +468,45 @@ public class SoapProvisioning extends Provisioning {
             return mTransport.invoke(request);
         } else {
             return mTransport.invokeWithoutSession(request);
+        }
+    }
+
+    private Future<HttpResponse> invokeRequestAsync(Element request, FutureCallback<HttpResponse> cb) throws ServiceException, IOException {
+        if (mNeedSession) {
+            return mTransport.invokeAsync(request, cb);
+        } else {
+            return mTransport.invokeWithoutSessionAsync(request, cb);
+        }
+    }
+
+    public Future<HttpResponse> invokeAsync(Element request, FutureCallback<HttpResponse> cb) throws ServiceException {
+        checkTransport();
+        try {
+            return invokeRequestAsync(request, cb);
+        } catch (SoapFaultException e) {
+            throw e; // for now, later, try to map to more specific exception
+        } catch (IOException e) {
+            throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
+        }
+    }
+
+    public Future<HttpResponse> invokeAsync(Element request, String serverName, FutureCallback<HttpResponse> cb) throws ServiceException {
+        checkTransport();
+
+        String oldUri = soapGetURI();
+        String newUri = URLUtil.getAdminURL(serverName);
+        boolean diff = !oldUri.equals(newUri);
+        try {
+            if (diff) {
+                soapSetURI(newUri);
+            }
+            return invokeAsync(request, cb);
+        } catch (SoapFaultException e) {
+            throw e; // for now, later, try to map to more specific exception
+        } finally {
+            if (diff) {
+                soapSetURI(oldUri);
+            }
         }
     }
 
@@ -498,6 +558,16 @@ public class SoapProvisioning extends Provisioning {
                 soapSetURI(oldUri);
             }
         }
+    }
+
+    public Future<HttpResponse> invokeJaxbAsync(Object jaxbObject, FutureCallback<HttpResponse> cb)
+    throws ServiceException {
+        return invokeAsync(JaxbUtil.jaxbToElement(jaxbObject), cb);
+    }
+
+    public Future<HttpResponse> invokeJaxbAsync(Object jaxbObject, String serverName, FutureCallback<HttpResponse> cb)
+    throws ServiceException {
+        return invokeAsync(JaxbUtil.jaxbToElement(jaxbObject), serverName, cb);
     }
 
     @SuppressWarnings("unchecked")

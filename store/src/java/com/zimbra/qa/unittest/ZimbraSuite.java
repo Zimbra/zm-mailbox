@@ -145,6 +145,7 @@ public class ZimbraSuite  {
         sClasses.add(TestImapClient.class);
         sClasses.add(TestDraftCount.class);
         sClasses.add(TestMinusOperator.class);
+        sClasses.add(TestImapServerListener.class);
     }
 
     /**
