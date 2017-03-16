@@ -9300,6 +9300,75 @@ TODO: delete them permanently from here
   <desc>enable OCSP support for SMIME.</desc>
 </attr>
 
+<attr id="2102" name="zimbraChatServiceEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>enable XMPP server</desc>
+</attr>
+
+<attr id="2103" name="zimbraChatHistoryEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.6">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>enable chat history saving</desc>
+</attr>
+
+<attr id="2104" name="zimbraChatConversationAuditEnabled" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.7.6">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>enable dedicated log for the chat conversation (needed by some jurisdictions)</desc>
+</attr>
+
+<attr id="2105" name="zimbraChatXmppSslPortEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>enable XMPP legacy SSL port</desc>
+</attr>
+
+<attr id="2106" name="zimbraChatAllowUnencryptedPassword" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.6">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>allow unencrypted password login via XMPP</desc>
+</attr>
+
+<attr id="2107" name="zimbraChatXmppPort" type="port" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
+  <globalConfigValue>5222</globalConfigValue>
+  <desc>XMPP plain port, usually used with startTLS</desc>
+</attr>
+
+<attr id="2108" name="zimbraChatXmppSslPort" type="port" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
+  <globalConfigValue>5223</globalConfigValue>
+  <desc>XMPP legacy SSL port</desc>
+</attr>
+
+<attr id="2109" name="zimbraChatAllowDlMemberAddAsFriend" type="boolean" cardinality="single" optionalIn="distributionList" since="8.7.6">
+  <desc>make distribution list members friends</desc>
+</attr>
+
+<attr id="2110" name="zimbraDriveOwnCloudURL" type="string" cardinality="single" optionalIn="domain" since="8.7.6">
+  <desc>Drive own or next cloud URL.</desc>
+</attr>
+
+<attr id="2111" name="zimbraSieveRejectMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<defaultCOSValue>TRUE</defaultCOSValue>
+<desc>Whether to enable the Sieve "reject" action defined in RFC 5429.</desc>
+</attr>
+
+<attr id="2112" name="zimbraSieveNotifyActionRFCCompliant" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<defaultCOSValue>FALSE</defaultCOSValue>
+<desc>Whether the RFC compliant 'notify' is used. If TRUE, ZCS parses the 'notify' action parameters based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS treats the 'notify' action parameters with Zimbra specific format</desc>
+</attr>
+
+<attr id="2113" name="zimbraAdminSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<desc>sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
+</attr>
+
+<attr id="2114" name="zimbraAdminSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<desc>sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
+</attr>
+
+<attr id="2115" name="zimbraAdminOutgoingSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
+</attr>
+
+<attr id="2116" name="zimbraAdminOutgoingSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
+</attr>
+
 <attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
   <desc>URL of ephemeral storage backend</desc>
   <globalConfigValue>ldap://default</globalConfigValue>
@@ -9423,72 +9492,9 @@ TODO: delete them permanently from here
   <desc>Specifies the amount of time a thread will wait for a JedisPool resource. A value of 0 will cause the thread to block indefinitely.</desc>
 </attr>
 
-<attr id="2102" name="zimbraChatServiceEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
-  <globalConfigValue>TRUE</globalConfigValue>
-  <desc>enable XMPP server</desc>
+<attr id="3010" name="zimbraOpenImapFolderRequestChunkSize" type="integer" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+  <globalConfigValue>1000</globalConfigValue>
+  <desc>The max number of IMAP messages returned by OpenImapFolderRequest before pagination begins</desc>
 </attr>
 
-<attr id="2103" name="zimbraChatHistoryEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.6">
-  <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>enable chat history saving</desc>
-</attr>
-
-<attr id="2104" name="zimbraChatConversationAuditEnabled" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.7.6">
-  <globalConfigValue>FALSE</globalConfigValue>
-  <desc>enable dedicated log for the chat conversation (needed by some jurisdictions)</desc>
-</attr>
-
-<attr id="2105" name="zimbraChatXmppSslPortEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
-  <globalConfigValue>FALSE</globalConfigValue>
-  <desc>enable XMPP legacy SSL port</desc>
-</attr>
-
-<attr id="2106" name="zimbraChatAllowUnencryptedPassword" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.6">
-  <globalConfigValue>FALSE</globalConfigValue>
-  <desc>allow unencrypted password login via XMPP</desc>
-</attr>
-
-<attr id="2107" name="zimbraChatXmppPort" type="port" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
-  <globalConfigValue>5222</globalConfigValue>
-  <desc>XMPP plain port, usually used with startTLS</desc>
-</attr>
-
-<attr id="2108" name="zimbraChatXmppSslPort" type="port" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
-  <globalConfigValue>5223</globalConfigValue>
-  <desc>XMPP legacy SSL port</desc>
-</attr>
-
-<attr id="2109" name="zimbraChatAllowDlMemberAddAsFriend" type="boolean" cardinality="single" optionalIn="distributionList" since="8.7.6">
-  <desc>make distribution list members friends</desc>
-</attr>
-
-<attr id="2110" name="zimbraDriveOwnCloudURL" type="string" cardinality="single" optionalIn="domain" since="8.7.6">
-  <desc>Drive own or next cloud URL.</desc>
-</attr>
-
-<attr id="2111" name="zimbraSieveRejectMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
-<defaultCOSValue>TRUE</defaultCOSValue>
-<desc>Whether to enable the Sieve "reject" action defined in RFC 5429.</desc>
-</attr>
-
-<attr id="2112" name="zimbraSieveNotifyActionRFCCompliant" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
-<defaultCOSValue>FALSE</defaultCOSValue>
-<desc>Whether the RFC compliant 'notify' is used. If TRUE, ZCS parses the 'notify' action parameters based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS treats the 'notify' action parameters with Zimbra specific format</desc>
-</attr>
-
-<attr id="2113" name="zimbraAdminSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
-<desc>sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
-</attr>
-
-<attr id="2114" name="zimbraAdminSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
-<desc>sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
-</attr>
-
-<attr id="2115" name="zimbraAdminOutgoingSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
-<desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
-</attr>
-
-<attr id="2116" name="zimbraAdminOutgoingSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
-<desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
-</attr>
 </attrs>
