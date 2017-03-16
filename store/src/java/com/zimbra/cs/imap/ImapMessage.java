@@ -203,6 +203,11 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         if (item instanceof Message) {
             return item.getSize();
         }
+        if (item instanceof ZMessage) {
+            /* TODO confirmed for raw and non-raw GetMsgRequest, this is correct. Need to confirm it is ok
+             * for other ways to construct a ZMessage */
+            return item.getSize();
+        }
         // FIXME: need to generate the representation of the item to do this correctly...
         return getContent(item).size;
     }
