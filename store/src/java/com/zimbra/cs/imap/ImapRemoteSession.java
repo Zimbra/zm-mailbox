@@ -16,12 +16,105 @@
  */
 package com.zimbra.cs.imap;
 
+import java.util.TreeMap;
+
+import com.zimbra.client.ZBaseItem;
+import com.zimbra.client.ZContact;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.session.PendingModifications;
-import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingRemoteModifications;
 
 public class ImapRemoteSession extends ImapListener {
+
+    protected class PagedRemoteFolderData extends ImapListener.PagedFolderData {
+
+        PagedRemoteFolderData(String cachekey, ImapFolder i4folder) {
+            super(cachekey, i4folder);
+        }
+
+        @SuppressWarnings("rawtypes")
+        @Override
+        protected PendingModifications getQueuedNotifications(int changeId) {
+            if (queuedChanges == null) {
+                queuedChanges = new TreeMap<Integer, PendingModifications>();
+            }
+            PendingModifications pns = queuedChanges.get(changeId);
+            if (pns == null) {
+                queuedChanges.put(changeId, pns = new PendingRemoteModifications());
+            }
+            return pns;
+        }
+
+        private PendingRemoteModifications getQueuedRemoteNotifications(int changeId) {
+            return (PendingRemoteModifications) getQueuedNotifications(changeId);
+        }
+
+        @Override
+        protected synchronized void queueCreate(int changeId, MailItem item) {
+            ZimbraLog.imap.warn("Unexpected call to queueCreate %s", ZimbraLog.getStackTrace(20));
+        }
+
+        @Override
+        protected synchronized void queueCreate(int changeId, ZBaseItem item) {
+            getQueuedRemoteNotifications(changeId).recordCreated(item);
+        }
+
+        @Override
+        protected synchronized void queueModify(int changeId, Change chg) {
+            getQueuedRemoteNotifications(changeId).recordModified((ZBaseItem) chg.what, chg.why, (ZBaseItem) chg.preModifyObj);
+        }
+    }
+
+    private void handleCreate(int changeId, ZBaseItem item, AddedItems added) {
+        try {
+            if (item == null || item.getIdInMailbox() <= 0) {
+                return;
+            } else if (item.getFolderIdInMailbox() == mFolderId && (item instanceof ZMessage || item instanceof ZContact)) {
+                mFolder.handleItemCreate(changeId, item, added);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("Error retrieving ID of item or folder", e);
+        }
+    }
+
+    /**
+     *
+     * @see com.zimbra.cs.imap.ImapSession#handleModify()
+     */
+    @Override
+    protected void handleModify(int changeId, Change chg, AddedItems added) {
+        if (chg.what instanceof ZTag && (chg.why & Change.NAME) != 0) {
+            mFolder.handleTagRename(changeId, (ZTag) chg.what, chg);
+        } else if (chg.what instanceof ZFolder && ((ZFolder) chg.what).getFolderIdInOwnerMailbox() == mFolderId) {
+            ZFolder folder = (ZFolder) chg.what;
+            if ((chg.why & Change.FLAGS) != 0 && (folder.getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
+                if (handler != null) {
+                    handler.close();
+                }
+            } else
+            if ((chg.why & (Change.FOLDER | Change.NAME)) != 0) {
+                mFolder.handleFolderRename(changeId, folder, chg);
+            }
+        } else if (chg.what instanceof ZMessage || chg.what instanceof ZContact) {
+            ZBaseItem item = (ZBaseItem) chg.what;
+            try {
+                boolean inFolder = mIsVirtual || item.getIdInMailbox() == mFolderId;
+                if (!inFolder && (chg.why & Change.FOLDER) == 0) {
+                    return;
+                }
+                mFolder.handleItemUpdate(changeId, chg, added);
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("Error retrieving ID of message or contact", e);
+            }
+        }
+    }
 
     protected ImapRemoteSession(ImapMailboxStore imapStore, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(imapStore, i4folder, handler);
@@ -38,25 +131,14 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    public ImapFolder getImapFolder() throws ImapSessionClosedException {
-        // ImapSession does:
-        //     MANAGER.recordAccess(this);
-        //     return reload();
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    public void closeFolder(boolean isUnregistering) {
-        // ImapSession does:
-        //     ImapSessionManager.getInstance().closeFolder(this, false);
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    public void updateAccessTime() {
-        /** Assuming we are using active and inactive session caches, similar to those in ImapSessionManager,
-         *  should update the access time in those */
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
+    protected void notifyPendingCreates(@SuppressWarnings("rawtypes") PendingModifications pnsIn,
+            int changeId, AddedItems added) {
+        PendingRemoteModifications pns = (PendingRemoteModifications) pnsIn;
+        if (pns.created != null) {
+            for (ZBaseItem item : pns.created.values()) {
+                handleCreate(changeId, item, added);
+            }
+        }
     }
 
     public void signalAccountChange() {
@@ -65,66 +147,19 @@ public class ImapRemoteSession extends ImapListener {
     }
 
     @Override
-    public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
-        ZimbraLog.imap.warn("Unexpected call to notifyPendingChanges %s", ZimbraLog.getStackTrace(20));
+    protected PagedFolderData createPagedFolderData(boolean active, ImapFolder folder) throws ServiceException {
+        return new PagedRemoteFolderData(serialize(active), folder);
     }
 
+    /**
+     * TODO - Determine what is required to update the folder's high-water change
+     * id as described in the <code>ImapSession</code> implementation of this method.
+     * @see com.zimbra.cs.imap.ImapSession#snapshotRECENT()
+     */
     @Override
-    protected int getEstimatedSize() {
-        return mFolder.getSize();
+    protected void snapshotRECENT() {
+        throw new UnsupportedOperationException("snapshotRECENT is not implemented yet");
     }
 
-    @Override
-    public boolean hasExpunges() {
-        return mFolder.hasExpunges();
-    }
 
-    @Override
-    protected void inactivate() {
-        mFolder.endSelect();
-        // removes this session from the global SessionCache, *not* from ImapSessionManager
-        removeFromSessionCache();
-        handler = null;
-        /* Above is some of the things that happen in ImapSession, but NOT all.
-         * TODO: Check what else needs doing.
-         */
-        throw new UnsupportedOperationException("ImapRemoteSession method not FULLY supported yet");
-    }
-
-    @Override
-    protected void cleanup() {
-        ImapHandler i4handler = handler;
-        if (i4handler != null) {
-            ZimbraLog.imap.debug("dropping connection because Session is closing %s", this);
-            i4handler.close();
-        }
-    }
-
-    @Override
-    protected ImapListener detach() {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    protected boolean isSerialized() {
-        /* ImapSession does:
-         *     return mFolder instanceof PagedFolderData;
-         */
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    protected void unload(boolean active) throws ServiceException {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    protected ImapFolder reload() throws ImapSessionClosedException {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
-
-    @Override
-    protected boolean requiresReload() {
-        throw new UnsupportedOperationException("ImapRemoteSession method not supported yet");
-    }
 }
