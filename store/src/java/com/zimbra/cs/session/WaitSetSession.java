@@ -33,6 +33,11 @@ import com.zimbra.cs.service.util.SyncToken;
 public class WaitSetSession extends Session {
     SomeAccountsWaitSet mWs = null;
     Set<MailItem.Type> interest;
+    /**
+     * The IDs of folders we are interested in changes for.
+     * null means interested in all folders
+     */
+    Set<Integer> folderInterest;
     int mHighestChangeId;
     SyncToken mSyncToken;
 
@@ -40,6 +45,7 @@ public class WaitSetSession extends Session {
         super(accountId, Session.Type.WAITSET);
         mWs = ws;
         this.interest = interest;
+        this.folderInterest = null;
         mSyncToken = lastKnownSyncToken;
     }
 
@@ -88,9 +94,10 @@ public class WaitSetSession extends Session {
     @Override
     public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
         boolean trace = ZimbraLog.session.isTraceEnabled();
-        if (trace)
-            ZimbraLog.session.trace("Notifying WaitSetSession: change id=" + changeId +
-                    ", highest change id=" + mHighestChangeId + ", sync token=" + mSyncToken);
+        if (trace) {
+            ZimbraLog.session.trace("Notifying WaitSetSession: change id=%s, highest change id=%s, sync token=%s",
+                    changeId, mHighestChangeId, mSyncToken);
+        }
         if (changeId > mHighestChangeId) {
             mHighestChangeId = changeId;
         }
@@ -98,12 +105,24 @@ public class WaitSetSession extends Session {
             if (trace) ZimbraLog.session.trace("Not signaling waitset; sync token is later than highest change id");
             return; // don't signal, sync token stopped us
         }
-        if (!Sets.intersection(interest, pns.changedTypes).isEmpty()) {
-            if (trace) ZimbraLog.session.trace("Signaling waitset");
-            mWs.signalDataReady(this);
-        } else {
-            if (trace) ZimbraLog.session.trace("Not signaling waitset; waitset is not interested in change type");
+        if (Sets.intersection(interest, pns.changedTypes).isEmpty()) {
+            if (trace) {
+                ZimbraLog.session.trace("Not signaling waitset; waitset is not interested in change type");
+            }
+            return;
         }
-        if (trace) ZimbraLog.session.trace("WaitSetSession.notifyPendingChanges done");
+        if ((this.folderInterest != null) && Sets.intersection(folderInterest, pns.getChangedFolders()).isEmpty()) {
+            if (trace) {
+                ZimbraLog.session.trace("Not signaling waitset; changes not in folders waitset is interested in");
+            }
+            return;
+        }
+        if (trace) {
+            ZimbraLog.session.trace("Signaling waitset");
+        }
+        mWs.signalDataReady(this);
+        if (trace) {
+            ZimbraLog.session.trace("WaitSetSession.notifyPendingChanges done");
+        }
     }
 }
