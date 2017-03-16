@@ -16,6 +16,13 @@
  */
 package com.zimbra.cs.mailbox.alerts;
 
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -30,12 +37,6 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 /**
  * @author vmahajan
  */
@@ -45,11 +46,12 @@ public class CalItemReminderService extends MailboxListener {
     public void notify(ChangeNotification notification) {
         Account account = notification.mailboxAccount;
         if (notification.mods.created != null) {
-            for (Map.Entry<ModificationKey, MailItem> entry : notification.mods.created.entrySet()) {
-                MailItem item = entry.getValue();
+            for (Map.Entry<ModificationKey, BaseItemInfo> entry : notification.mods.created.entrySet()) {
+                BaseItemInfo item = entry.getValue();
                 if (item instanceof CalendarItem) {
+                    CalendarItem calItem = (CalendarItem) item;
                     ZimbraLog.scheduler.debug("Handling creation of calendar item (id=%s,mailboxId=%s)",
-                            item.getId(), item.getMailboxId());
+                            calItem.getId(), calItem.getMailboxId());
                     scheduleNextReminders((CalendarItem) item, true, true);
                 }
             }
