@@ -16,7 +16,11 @@
  */
 package com.zimbra.cs.mailbox.acl;
 
+import java.util.Date;
+import java.util.Set;
+
 import com.google.common.collect.ImmutableSet;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -29,9 +33,6 @@ import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.ScheduledTask;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.session.PendingModifications.Change;
-
-import java.util.Date;
-import java.util.Set;
 
 /**
  * Listens to ACL changes on folder and document items and schedules an {@link ExpireGrantsTask} for the item
@@ -54,17 +55,18 @@ public class ShareExpirationListener extends MailboxListener {
             return;
         }
         if (notification.mods.created != null) {
-            for (MailItem created : notification.mods.created.values()) {
+            for (BaseItemInfo created : notification.mods.created.values()) {
                 if (created instanceof Folder || created instanceof Document) {
-                    if (created.getACL() != null) {
-                        scheduleExpireAccessOpIfReq(created);
+                    MailItem mi = (MailItem) created;
+                    if (mi.getACL() != null) {
+                        scheduleExpireAccessOpIfReq(mi);
                     }
                 }
             }
         }
         if (notification.mods.modified != null) {
             for (Change change : notification.mods.modified.values()) {
-                if ((change.what instanceof Folder || change.what instanceof Document) && 
+                if ((change.what instanceof Folder || change.what instanceof Document) &&
                         (change.why & Change.ACL) != 0) {
                     scheduleExpireAccessOpIfReq((MailItem) change.what);
                 }
@@ -77,7 +79,7 @@ public class ShareExpirationListener extends MailboxListener {
         try {
             ExpireGrantsTask.cancel(item.getMailboxId(), item.getId());
         } catch (ServiceException e) {
-            ZimbraLog.scheduler.warn("Error in canceling existing ExpireGrantsTask for (id=%s,mailboxId=%s)", 
+            ZimbraLog.scheduler.warn("Error in canceling existing ExpireGrantsTask for (id=%s,mailboxId=%s)",
                     item.getId(), item.getMailboxId(), e);
             return;
         }

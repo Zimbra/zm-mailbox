@@ -28,6 +28,7 @@ import java.util.Set;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -748,11 +749,12 @@ public class CalSummaryCache {
 
     void notifyCommittedChanges(PendingLocalModifications mods, int changeId) {
         if (mods.created != null) {
-            for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
-                MailItem item = entry.getValue();
+            for (Map.Entry<ModificationKey, BaseItemInfo> entry : mods.created.entrySet()) {
+                BaseItemInfo item = entry.getValue();
                 if (item instanceof CalendarItem) {
-                    int folderId = item.getFolderId();
-                    invalidateItem(item.getMailbox(), folderId, item.getId());
+                    CalendarItem calItem = (CalendarItem) item;
+                    int folderId = calItem.getFolderId();
+                    invalidateItem(calItem.getMailbox(), folderId, calItem.getId());
                 }
             }
         }
