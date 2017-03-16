@@ -25,20 +25,25 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
-import com.zimbra.client.ZBaseItem;
-import com.zimbra.client.ZTag;
+import com.zimbra.client.ZContact;
+import com.zimbra.client.ZMessage;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.BaseFolderInfo;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFolder.DirtyMessage;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -61,11 +66,18 @@ public abstract class ImapListener extends Session {
             return numbered == null && unnumbered == null;
         }
 
-        void add(MailItem item) {
+        void add(BaseItemInfo item) {
+            ImapMessage i4item;
+            try {
+                i4item = new ImapMessage(item);
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("unable to instantiate ImapMessage", e);
+                return;
+            }
             if (item.getImapUid() > 0) {
-                (numbered == null ? numbered = new ArrayList<ImapMessage>() : numbered).add(new ImapMessage(item));
+                (numbered == null ? numbered = new ArrayList<ImapMessage>() : numbered).add(i4item);
             } else {
-                (unnumbered == null ? unnumbered = new ArrayList<ImapMessage>() : unnumbered).add(new ImapMessage(item));
+                (unnumbered == null ? unnumbered = new ArrayList<ImapMessage>() : unnumbered).add(i4item);
             }
         }
 
@@ -89,12 +101,10 @@ public abstract class ImapListener extends Session {
         void endSelect();
 
         void handleTagDelete(int changeId, int tagId, Change chg);
-        void handleTagRename(int changeId, Tag tag, Change chg);
-        void handleTagRename(int changeId, ZTag tag, Change chg);
+        void handleTagRename(int changeId, ZimbraTag tag, Change chg);
         void handleItemDelete(int changeId, int itemId, Change chg);
-        void handleItemCreate(int changeId, MailItem item, AddedItems added);
-        void handleItemCreate(int changeId, ZBaseItem item, AddedItems added);
-        void handleFolderRename(int changeId, FolderStore folder, Change chg);
+        void handleItemCreate(int changeId, BaseItemInfo item, AddedItems added);
+        void handleFolderRename(int changeId, BaseFolderInfo folder, Change chg);
         void handleItemUpdate(int changeId, Change chg, AddedItems added);
         void handleAddedMessages(int changeId, AddedItems added);
         void finishNotification(int changeId) throws IOException;
@@ -206,10 +216,7 @@ public abstract class ImapListener extends Session {
         }
 
         // NOTE: synchronize implementations
-        protected abstract void queueCreate(int changeId, MailItem item);
-
-        // NOTE: synchronize implementations
-        protected abstract void queueCreate(int changeId, ZBaseItem item);
+        protected abstract void queueCreate(int changeId, BaseItemInfo item);
 
         // NOTE: synchronize implementations
         protected abstract void queueModify(int changeId, Change chg);
@@ -238,12 +245,7 @@ public abstract class ImapListener extends Session {
         }
 
         @Override
-        public void handleTagRename(int changeId, Tag tag, Change chg) {
-            queueModify(changeId, chg);
-        }
-
-        @Override
-        public void handleTagRename(int changeId, ZTag tag, Change chg) {
+        public void handleTagRename(int changeId, ZimbraTag tag, Change chg) {
             queueModify(changeId, chg);
         }
 
@@ -253,17 +255,12 @@ public abstract class ImapListener extends Session {
         }
 
         @Override
-        public void handleItemCreate(int changeId, MailItem item, AddedItems added) {
+        public void handleItemCreate(int changeId, BaseItemInfo item, AddedItems added) {
             queueCreate(changeId, item);
         }
 
         @Override
-        public void handleItemCreate(int changeId, ZBaseItem item, AddedItems added) {
-            queueCreate(changeId, item);
-        }
-
-        @Override
-        public void handleFolderRename(int changeId, FolderStore folder, Change chg) {
+        public void handleFolderRename(int changeId, BaseFolderInfo folder, Change chg) {
             queueModify(changeId, chg);
         }
 
@@ -480,7 +477,42 @@ public abstract class ImapListener extends Session {
         }
     }
 
-    protected abstract void handleModify(int changeId, Change chg, AddedItems added);
+    protected void handleModify(int changeId, Change chg, AddedItems added) {
+        if (chg.what instanceof ZimbraTag && (chg.why & Change.NAME) != 0) {
+            mFolder.handleTagRename(changeId, (ZimbraTag) chg.what, chg);
+        } else {
+            boolean isFolder = (chg.what instanceof BaseFolderInfo);
+            boolean isMsgOrContact = (chg.what instanceof Message || chg.what instanceof ZMessage
+                    || chg.what instanceof Contact || chg.what instanceof ZContact);
+            try {
+                if (isFolder && ((BaseFolderInfo) chg.what).getFolderIdInOwnerMailbox() == mFolderId) {
+                    FolderStore folder = (FolderStore) chg.what;
+                    //here we assume that the FolderStore object also implements BaseItemInfo
+                    if ((chg.why & Change.FLAGS) != 0 && (((BaseItemInfo) folder).getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
+                        // notify client that mailbox is deselected due to \Noselect?
+                        // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
+                        //                mailbox, but disconnect all other clients who have the
+                        //                mailbox accessed by sending a untagged BYE response."
+                        if (handler != null) {
+                            handler.close();
+                        }
+                    } else if ((chg.why & (Change.FOLDER | Change.NAME)) != 0) {
+                        mFolder.handleFolderRename(changeId, folder, chg);
+                    }
+                } else if (isMsgOrContact) {
+                    BaseItemInfo item = (BaseItemInfo) chg.what;
+                    boolean inFolder = mIsVirtual || item.getFolderIdInMailbox() == mFolderId;
+                    if (!inFolder && (chg.why & Change.FOLDER) == 0) {
+                        return;
+                    }
+                    mFolder.handleItemUpdate(changeId, chg, added);
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("error handling modified items for changeId %s", changeId, e);
+                return;
+            }
+        }
+    }
 
     ImapFolder handleRenumberError(String key) {
         resetRenumber();

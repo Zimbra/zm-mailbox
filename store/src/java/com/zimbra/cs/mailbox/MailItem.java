@@ -3955,4 +3955,14 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         return false;
     }
+
+    @Override
+    public int getFolderIdInMailbox() throws ServiceException {
+        return getFolderId();
+    }
+
+    @Override
+    public String getAccountId() throws ServiceException {
+        return getMailbox().getAccountId();
+    }
 }
