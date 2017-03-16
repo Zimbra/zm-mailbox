@@ -98,4 +98,6 @@ public abstract class ImapMailboxStore {
     public abstract int getImapRECENT(OperationContext ctxt, FolderStore folder) throws ServiceException;
     public abstract List<ImapMessage> openImapFolder(OperationContext octxt, ItemIdentifier folderId)
             throws ServiceException;
+    public abstract void registerWithImapServerListener(ImapListener listener);
+    public abstract void unregisterWithImapServerListener(ImapListener listener);
 }

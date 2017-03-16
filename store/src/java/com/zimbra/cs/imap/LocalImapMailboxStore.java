@@ -226,4 +226,14 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     public List<ImapMessage> openImapFolder(OperationContext octxt, ItemIdentifier folderId) throws ServiceException {
         return mailbox.openImapFolder(octxt, folderId.id);
     }
+
+    @Override
+    public void registerWithImapServerListener(ImapListener listener) {
+        // Do nothing - use mailbox NOT ImapServerListener to monitor changes
+    }
+
+    @Override
+    public void unregisterWithImapServerListener(ImapListener listener) {
+        // Do nothing - use mailbox NOT ImapServerListener to monitor changes
+    }
 }
