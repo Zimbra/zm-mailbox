@@ -17,6 +17,9 @@
 
 package com.zimbra.qa.unittest;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -25,9 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import com.zimbra.client.ZContact;
@@ -47,6 +48,7 @@ import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
@@ -66,6 +68,9 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.ItemActionResponse;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 public class TestZClient extends TestCase {
     private static String NAME_PREFIX = "TestZClient";
@@ -455,7 +460,7 @@ public class TestZClient extends TestCase {
         int folderId = folder.getId();
         int lastChange = mbox.getLastChangeID();
         List<Integer> modifiedIds = zmbox.getIdsOfModifiedItemsInFolder(null, lastChange, folderId);
-        assertNotNull("getIdsOfModifiedItemsInFolder should return null", modifiedIds);
+        assertNotNull("getIdsOfModifiedItemsInFolder should not return null", modifiedIds);
         assertTrue("getIdsOfModifiedItemsInFolder should return an empty list given the last change number", modifiedIds.isEmpty());
         List<Integer> expected = new LinkedList<Integer>();
         for (int i = 1; i <= 10; i++) {
@@ -504,6 +509,67 @@ public class TestZClient extends TestCase {
         catch (Exception e) {
             fail("getIMAPRecent should not fail");
         }
+    }
+
+    @Test
+    public void testGetMessageNotRaw() throws Exception {
+        String testNam = "testGetMessageNotRaw";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        int folderId = Mailbox.ID_FOLDER_INBOX;
+        Message msg = TestUtil.addMessage(mbox, folderId,
+                String.format("%s message %s", testNam, "hello"), System.currentTimeMillis());
+        ZMessage zmsg = zmbox.getMessageById(ItemIdentifier.fromAccountIdAndItemId(mbox.getAccountId(), msg.getId()));
+        compareMsgAndZMsg(testNam, msg, zmsg);
+    }
+
+    @Test
+    public void testGetMessageRaw() throws Exception {
+        String testNam = "testGetMessageRaw";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        int folderId = Mailbox.ID_FOLDER_INBOX;
+        Message msg = TestUtil.addMessage(mbox, folderId,
+                String.format("%s message %s", testNam, "hello"), System.currentTimeMillis());
+        ZMessage zmsg = zmbox.getMessageById(
+                ItemIdentifier.fromAccountIdAndItemId(mbox.getAccountId(), msg.getId()), true, null);
+        compareMsgAndZMsg(testNam, msg, zmsg);
+    }
+
+    @Test
+    public void testGetMessageRawUseURL() throws Exception {
+        String testNam = "testGetMessageRawUseURL";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        int folderId = Mailbox.ID_FOLDER_INBOX;
+        Message msg = TestUtil.addMessage(mbox, folderId,
+                String.format("%s message %s", testNam, "hello"), System.currentTimeMillis());
+        ZMessage zmsg = zmbox.getMessageById(
+                ItemIdentifier.fromAccountIdAndItemId(mbox.getAccountId(), msg.getId()), true, 0);
+        compareMsgAndZMsg(testNam, msg, zmsg);
+    }
+
+    private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
+        assertNotNull("Message is null", msg);
+        assertNotNull("ZMessage is null", zmsg);
+        String msgContent = null;
+        String zmsgContent = null;
+        try (InputStream msgContentStream = msg.getContentStream()) {
+            msgContent = IOUtils.toString(msgContentStream, StandardCharsets.UTF_8.name());
+        }
+        zmsgContent = zmsg.getContent();
+        if (null != zmsgContent) {
+            if (zmsgContent.equals(zmsgContent)) {
+                ZimbraLog.test.info("Pleasant surprise.  ZMessage.getContent() agrees with msg.getContentStream()");
+            } else {
+                ZimbraLog.test.debug("ZMessage.getContent() differs from contents of msg.getContentStream()" +
+                     " probably only in terms of line endings.");
+            }
+        }
+        try (InputStream zmsgContentStream = zmsg.getContentStream()) {
+            zmsgContent = IOUtils.toString(zmsgContentStream, StandardCharsets.UTF_8.name());
+        }
+        assertEquals("Comparing getContentStream() on msg and zmsg", msgContent, zmsgContent);
     }
 
     @Override
