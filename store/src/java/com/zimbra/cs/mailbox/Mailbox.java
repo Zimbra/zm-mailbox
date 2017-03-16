@@ -71,6 +71,7 @@ import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderConstants;
@@ -128,9 +129,6 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.iochannel.MailboxNotification;
-import com.zimbra.cs.iochannel.MessageChannel;
-import com.zimbra.cs.iochannel.MessageChannelException;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
@@ -2774,24 +2772,26 @@ public class Mailbox implements MailboxStore {
         }
 
         if (pms.created != null && !pms.created.isEmpty()) {
-            for (MailItem item : pms.created.values()) {
+            for (BaseItemInfo item : pms.created.values()) {
                 if (item instanceof Folder && folders != null) {
-                    Folder folder = folders.get(item.getId());
-                    if (folder == null) {
-                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
-                        folder = (Folder) item;
+                    Folder folder = (Folder) item;
+                    Folder snapshotted = folders.get(folder.getId());
+                    if (snapshotted == null) {
+                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", folder.getId());
+                        snapshotted = folder;
                     }
-                    snapshot.recordCreated(folder);
+                    snapshot.recordCreated(snapshotted);
                 } else if (item instanceof Tag) {
                     if (((Tag) item).isListed()) {
-                        snapshot.recordCreated(snapshotItem(item));
+                        snapshot.recordCreated(snapshotItem((Tag) item));
                     }
-                } else {
+                } else if (item instanceof MailItem){
+                    MailItem mi = (MailItem) item;
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (cache != null && cache.contains(item)) {
-                        item = snapshotItem(item);
+                    if (cache != null && cache.contains(mi)) {
+                        mi = snapshotItem(mi);
                     }
-                    snapshot.recordCreated(item);
+                    snapshot.recordCreated(mi);
                 }
             }
         }
@@ -9663,16 +9663,18 @@ public class Mailbox implements MailboxStore {
         if (currentChange().dirty != null && currentChange().dirty.hasNotifications()) {
             assert(currentChange().writeChange);
             if (currentChange().dirty.created != null) {
-                for (MailItem item : currentChange().dirty.created.values()) {
+                for (BaseItemInfo item : currentChange().dirty.created.values()) {
                     if (item instanceof Folder) {
+                        Folder folder = (Folder) item;
                         foldersTagsDirty = true;
-                        if (item.getSize() != 0) {
-                            ((Folder) item).saveFolderCounts(false);
+                        if (folder.getSize() != 0) {
+                            folder.saveFolderCounts(false);
                         }
                     } else if (item instanceof Tag) {
+                        Tag tag = (Tag) item;
                         foldersTagsDirty = true;
-                        if (item.isUnread()) {
-                            ((Tag) item).saveTagCounts();
+                        if (tag.isUnread()) {
+                            tag.saveTagCounts();
                         }
                     }
                 }
@@ -9717,8 +9719,11 @@ public class Mailbox implements MailboxStore {
         if (DebugConfig.checkMailboxCacheConsistency && currentChange().dirty != null
                         && currentChange().dirty.hasNotifications()) {
             if (currentChange().dirty.created != null) {
-                for (MailItem item : currentChange().dirty.created.values()) {
-                    DbMailItem.consistencyCheck(item, item.mData, item.encodeMetadata().toString());
+                for (BaseItemInfo item : currentChange().dirty.created.values()) {
+                    if (item instanceof MailItem) {
+                        MailItem mi = (MailItem) item;
+                        DbMailItem.consistencyCheck(mi, mi.mData, mi.encodeMetadata().toString());
+                    }
                 }
             }
             if (currentChange().dirty.modified != null) {
@@ -9827,35 +9832,6 @@ public class Mailbox implements MailboxStore {
                     session.notifyPendingChanges(notification.mods, notification.lastChangeId, source);
                 } catch (RuntimeException e) {
                     ZimbraLog.mailbox.error("ignoring error during notification", e);
-                }
-            }
-
-            // send to the message channel
-            DbConnection conn = null;
-            try {
-                if (Zimbra.isAlwaysOn()) {
-                    conn = DbPool.getConnection();
-                    List<String> serverids = DbSession.get(conn, getId());
-                    for (String serverid : serverids) {
-                        Server server = Provisioning.getInstance().getServerById(serverid);
-                        if (server.isLocalServer()) {
-                            continue;
-                        }
-                        MailboxNotification ntfn = MailboxNotification.create(getAccountId(), mData.lastChangeId, dirty.getSerializedBytes());
-                        MessageChannel.getInstance().sendMessage(server, ntfn);
-                    }
-                }
-            } catch (ServiceException e) {
-                ZimbraLog.session.warn("unable to get target server", e);
-            } catch (MessageChannelException e) {
-                ZimbraLog.session.warn("unable to create MailboxNotification", e);
-                return;
-            } catch (IOException e) {
-                ZimbraLog.session.warn("unable to create MailboxNotification", e);
-                return;
-            } finally {
-                if (conn != null) {
-                    conn.closeQuietly();
                 }
             }
             MailboxListener.notifyListeners(notification);

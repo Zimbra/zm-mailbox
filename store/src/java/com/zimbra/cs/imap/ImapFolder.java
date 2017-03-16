@@ -34,12 +34,13 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.zimbra.client.ZBaseItem;
-import com.zimbra.client.ZTag;
+import com.zimbra.common.mailbox.BaseFolderInfo;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.SearchFolderStore;
+import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
@@ -47,13 +48,11 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
-import com.zimbra.cs.imap.ImapListener.AddedItems;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
@@ -297,7 +296,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return path;
     }
 
-    void updatePath(FolderStore folder) {
+    void updatePath(BaseFolderInfo folder) {
         path = new ImapPath(null, folder.getPath(), path.getCredentials());
     }
 
@@ -535,14 +534,13 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         }
     }
 
-    ImapFlag cacheTag(Tag ltag) {
-        assert !(ltag instanceof Flag);
-        if (ltag instanceof Flag) {
+    ImapFlag cacheTag(ZimbraTag tag) {
+        assert !(tag instanceof Flag);
+        if (tag instanceof Flag) {
             return null;
         }
-
         setTagsDirty(true);
-        return tags.cache(new ImapFlag(ltag));
+        return tags.cache(new ImapFlag(tag));
     }
 
     void dirtyTag(ImapFlag i4flag, int modseq, String newName) {
@@ -1106,14 +1104,9 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     }
 
     @Override
-    public void handleTagRename(int changeId, Tag tag, Change chg) {
-        dirtyTag(tags.uncache(tag.getId()), changeId, tag.getName());
+    public void handleTagRename(int changeId, ZimbraTag tag, Change chg) {
+        dirtyTag(tags.uncache(tag.getTagId()), changeId, tag.getTagName());
         cacheTag(tag);
-    }
-
-    @Override
-    public void handleTagRename(int changeId, ZTag tag, Change chg) {
-        throw new UnsupportedOperationException("TODO - Implement handleTagRename(int, ZTag, Change)");
     }
 
     @Override
@@ -1126,8 +1119,14 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     }
 
     @Override
-    public void handleItemCreate(int changeId, MailItem item, ImapSession.AddedItems added) {
-        int msgId = item.getId();
+    public void handleItemCreate(int changeId, BaseItemInfo item, ImapSession.AddedItems added) {
+        int msgId;
+        try {
+            msgId = item.getIdInMailbox();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("error getting ID for item during item item creation", e);
+            return;
+        }
         // make sure this message hasn't already been detected in the folder
         if (getById(msgId) != null) {
             return;
@@ -1141,12 +1140,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     }
 
     @Override
-    public void handleItemCreate(int changeId, ZBaseItem item, AddedItems added) {
-        throw new UnsupportedOperationException("TODO - Implement handleItemCreate(ZBaseItem, AddedItems)");
-    }
-
-    @Override
-    public void handleFolderRename(int changeId, FolderStore folder, Change chg) {
+    public void handleFolderRename(int changeId, BaseFolderInfo folder, Change chg) {
         updatePath(folder);
         // FIXME: can we change the folder's UIDVALIDITY?
         //        if not, how do we persist it for the session?
@@ -1156,14 +1150,23 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     @Override
     public void handleItemUpdate(int changeId, Change chg, ImapSession.AddedItems added) {
-        MailItem item = (MailItem) chg.what;
-        boolean inFolder = isVirtual() || item.getFolderId() == folderId;
+        BaseItemInfo item = (BaseItemInfo) chg.what;
+        int itemId;
+        int fId;
+        try {
+            itemId = item.getIdInMailbox();
+            fId = item.getFolderIdInMailbox();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("unable to get item or folder ID during handling item update", e);
+            return;
+        }
+        boolean inFolder = isVirtual() || fId == folderId;
 
-        ImapMessage i4msg = getById(item.getId());
+        ImapMessage i4msg = getById(itemId);
         if (i4msg == null) {
             if (inFolder && !isVirtual()) {
                 added.add(item);
-                ZimbraLog.imap.debug("  ** moved (ntfn) {id: %d UID: %d}", item.getId(), item.getImapUid());
+                ZimbraLog.imap.debug("  ** moved (ntfn) {id: %d UID: %d}", itemId, item.getImapUid());
             }
         } else if (!inFolder && !isVirtual()) {
             markMessageExpunged(i4msg);
@@ -1172,14 +1175,14 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
             if (item.getImapUid() > 0 && i4msg.imapUid > item.getImapUid()) {
                 //this update was the result of renumber which occurred in other session
                 //we need to ignore it or we end up expunging the newest copy of the message (with current UID) and replacing it with an older UID
-                ZimbraLog.imap.debug("IMAP UID changed (ntfn) {id: %d UID: %d} but sequence already contains higher UID %s", item.getId(), item.getImapUid(), i4msg);
+                ZimbraLog.imap.debug("IMAP UID changed (ntfn) {id: %d UID: %d} but sequence already contains higher UID %s", itemId, item.getImapUid(), i4msg);
                 return;
             }
             markMessageExpunged(i4msg);
             if (!isVirtual()) {
                 added.add(item);
             }
-            ZimbraLog.imap.debug("  ** imap uid changed (ntfn) {id: %d UID: %d}", item.getId(), item.getImapUid());
+            ZimbraLog.imap.debug("  ** imap uid changed (ntfn) {id: %d UID: %d}", itemId, item.getImapUid());
         } else if ((chg.why & (Change.TAGS | Change.FLAGS | Change.UNREAD)) != 0) {
             i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTags(), changeId, this);
         }
