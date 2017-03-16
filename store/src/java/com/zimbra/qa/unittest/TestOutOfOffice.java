@@ -21,7 +21,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.client.ZEmailAddress;
 import com.zimbra.client.ZMailbox;
@@ -40,8 +43,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  * Tests out-of-office notification.  All tests must be run inside the server, because
  * the cleanup code needs to delete notification rows from the database table.
  */
-public class TestOutOfOffice
-extends TestCase {
+public class TestOutOfOffice {
 
     private DbConnection mConn;
     private Mailbox mMbox;
@@ -52,8 +54,8 @@ extends TestCase {
     private static String RECIPIENT1_ADDRESS = "TestOutOfOffice1@example.zimbra.com";
     private static String RECIPIENT2_ADDRESS = "TestOutOfOffice2@example.zimbra.com";
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         cleanupAccounts();
         TestUtil.createAccount(RECIPIENT_NAME);
         TestUtil.createAccount(SENDER_NAME);
@@ -63,25 +65,42 @@ extends TestCase {
         mConn = DbPool.getConnection();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        DbPool.quietClose(mConn);
+        cleanupAccounts();
+    }
+
+    private void cleanupAccounts() throws Exception {
+        if(TestUtil.accountExists(SENDER_NAME)) {
+            TestUtil.deleteAccount(SENDER_NAME);
+        }
+        if(TestUtil.accountExists(RECIPIENT_NAME)) {
+            TestUtil.deleteAccount(RECIPIENT_NAME);
+        }
+    }
+
+    @Test
     public void testRowExists() throws Exception {
         long fiveDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 5) - 100000;
 
         DbOutOfOffice.setSentTime(mConn, mMbox, RECIPIENT1_ADDRESS, fiveDaysAgo);
         mConn.commit();
-        assertFalse("1 day", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 1 * Constants.MILLIS_PER_DAY));
-        assertFalse("4 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 4 * Constants.MILLIS_PER_DAY));
-        assertFalse("5 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 5 * Constants.MILLIS_PER_DAY));
-        assertTrue("6 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 6 * Constants.MILLIS_PER_DAY));
-        assertTrue("100 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 100 * Constants.MILLIS_PER_DAY));
+        Assert.assertFalse("1 day", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 1 * Constants.MILLIS_PER_DAY));
+        Assert.assertFalse("4 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 4 * Constants.MILLIS_PER_DAY));
+        Assert.assertFalse("5 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 5 * Constants.MILLIS_PER_DAY));
+        Assert.assertTrue("6 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 6 * Constants.MILLIS_PER_DAY));
+        Assert.assertTrue("100 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 100 * Constants.MILLIS_PER_DAY));
     }
 
+    @Test
     public void testRowDoesntExist() throws Exception {
-        assertFalse("1 day", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 1 * Constants.MILLIS_PER_DAY));
-        assertFalse("5 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 5 * Constants.MILLIS_PER_DAY));
-        assertFalse("100 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 100 * Constants.MILLIS_PER_DAY));
+        Assert.assertFalse("1 day", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 1 * Constants.MILLIS_PER_DAY));
+        Assert.assertFalse("5 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 5 * Constants.MILLIS_PER_DAY));
+        Assert.assertFalse("100 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 100 * Constants.MILLIS_PER_DAY));
     }
 
-
+    @Test
     public void testPrune() throws Exception {
         long fiveDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 5) - 100000;
         long sixDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 6) - 100000;
@@ -95,14 +114,15 @@ extends TestCase {
         mConn.commit();
 
         // Make sure that the later entry is still there and the earlier one is gone
-        assertTrue("recipient1", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 6 * Constants.MILLIS_PER_DAY));
-        assertFalse("recipient2", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT2_ADDRESS, 7 * Constants.MILLIS_PER_DAY));
+        Assert.assertTrue("recipient1", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 6 * Constants.MILLIS_PER_DAY));
+        Assert.assertFalse("recipient2", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT2_ADDRESS, 7 * Constants.MILLIS_PER_DAY));
     }
 
     /**
      * Confirms that out-of-office notifications use the user's address preference
      * (bug 40869).
      */
+    @Test
     public void testPrefFromAddress()
     throws Exception {
         String newFromAddress = TestUtil.getAddress("testPrefFromAddress");
@@ -130,9 +150,9 @@ extends TestCase {
 
         // Validate addresses.
         ZEmailAddress fromAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_FROM);
-        assertEquals(recipient.getName(), fromAddress.getAddress());
-        assertEquals(newFromDisplay, fromAddress.getPersonal());
-        assertNull(getAddress(reply, ZEmailAddress.EMAIL_TYPE_REPLY_TO));
+        Assert.assertEquals(recipient.getName(), fromAddress.getAddress());
+        Assert.assertEquals(newFromDisplay, fromAddress.getPersonal());
+        Assert.assertNull(getAddress(reply, ZEmailAddress.EMAIL_TYPE_REPLY_TO));
 
         DbOutOfOffice.clear(mConn, mMbox);
         mConn.commit();
@@ -147,12 +167,12 @@ extends TestCase {
 
         // Validate addresses.
         fromAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_FROM);
-        assertEquals(recipient.getName(), fromAddress.getAddress());
-        assertEquals(recipient.getDisplayName(), fromAddress.getPersonal());
+        Assert.assertEquals(recipient.getName(), fromAddress.getAddress());
+        Assert.assertEquals(recipient.getDisplayName(), fromAddress.getPersonal());
 
         ZEmailAddress replyToAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_REPLY_TO);
-        assertEquals(newReplyToAddress, replyToAddress.getAddress());
-        assertEquals(newReplyToDisplay, replyToAddress.getPersonal());
+        Assert.assertEquals(newReplyToAddress, replyToAddress.getAddress());
+        Assert.assertEquals(newReplyToDisplay, replyToAddress.getPersonal());
 
         DbOutOfOffice.clear(mConn, mMbox);
         mConn.commit();
@@ -166,12 +186,12 @@ extends TestCase {
 
         // Validate addresses.
         fromAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_FROM);
-        assertEquals(newFromAddress, fromAddress.getAddress());
-        assertEquals(newFromDisplay, fromAddress.getPersonal());
+        Assert.assertEquals(newFromAddress, fromAddress.getAddress());
+        Assert.assertEquals(newFromDisplay, fromAddress.getPersonal());
 
         replyToAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_REPLY_TO);
-        assertEquals(newReplyToAddress, replyToAddress.getAddress());
-        assertEquals(newReplyToDisplay, replyToAddress.getPersonal());
+        Assert.assertEquals(newReplyToAddress, replyToAddress.getAddress());
+        Assert.assertEquals(newReplyToDisplay, replyToAddress.getPersonal());
     }
 
     /**
@@ -180,6 +200,7 @@ extends TestCase {
      *
      * @throws Exception
      */
+    @Test
     public void testOOOWhenForwardNoDelivery() throws Exception {
 
         Account recipientAcct = TestUtil.getAccount(RECIPIENT_NAME);
@@ -199,7 +220,7 @@ extends TestCase {
         TestUtil.sendMessage(senderMbox, RECIPIENT_NAME, subject, "testing");
 
         // Make sure message was not delivered since local delivery is disabled
-        assertEquals(0, TestUtil.search(recipMbox, "in:inbox subject:'" + subject + "'").size());
+        Assert.assertEquals(0, TestUtil.search(recipMbox, "in:inbox subject:'" + subject + "'").size());
 
         // But check for out-of-office reply
         TestUtil.waitForMessage(senderMbox, "in:inbox subject:'" + subject + "'");
@@ -212,17 +233,5 @@ extends TestCase {
             }
         }
         return null;
-    }
-
-    @Override
-    public void tearDown()
-    throws Exception {
-        DbPool.quietClose(mConn);
-        cleanupAccounts();
-    }
-
-    private void cleanupAccounts() throws Exception {
-        TestUtil.deleteAccount(SENDER_NAME);
-        TestUtil.deleteAccount(RECIPIENT_NAME);
     }
 }
