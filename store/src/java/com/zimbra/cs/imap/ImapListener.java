@@ -41,7 +41,7 @@ public abstract class ImapListener extends Session {
         mFolder    = i4folder;
         this.handler = handler;
 
-        i4folder.setFolderListener(this);
+        i4folder.setSession(this);
     }
 
     public abstract ImapFolder getImapFolder() throws ImapSessionClosedException;
