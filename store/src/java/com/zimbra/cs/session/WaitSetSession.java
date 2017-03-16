@@ -67,7 +67,7 @@ public class WaitSetSession extends Session {
                             "WaitSetSession must have an associated MailboxStore of class '%s' before calling update",
                             Mailbox.class.getName()));
             }
-            int mboxHighestChange = (getMailboxOrNull()).getLastChangeID();
+            int mboxHighestChange = mbox.getLastChangeID();
             if (mboxHighestChange > mHighestChangeId)
                 mHighestChangeId = mboxHighestChange;
             if (mSyncToken.after(mHighestChangeId))

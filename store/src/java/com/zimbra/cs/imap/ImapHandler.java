@@ -60,6 +60,7 @@ import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.AccessBoundedRegex;
@@ -91,7 +92,6 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.security.sasl.Authenticator;
@@ -126,7 +126,7 @@ abstract class ImapHandler {
     String lastCommand;
     int consecutiveError;
     private ImapProxy imapProxy;
-    ImapSession selectedFolder;
+    ImapListener selectedFolderListener;
     private String idleTag;
     private String origRemoteIp;
     private String via;
@@ -200,7 +200,7 @@ abstract class ImapHandler {
 
     void setLoggingContext() {
         ZimbraLog.clearContext();
-        ImapSession i4selected = selectedFolder;
+        ImapListener i4selected = selectedFolderListener;
         MailboxStore mbox = i4selected == null ? null : i4selected.getMailbox();
 
         if (credentials != null) {
@@ -322,7 +322,7 @@ abstract class ImapHandler {
         }
 
         // check target folder owner's account status before executing command
-        ImapSession i4selected = selectedFolder;
+        ImapListener i4selected = selectedFolderListener;
         if (i4selected == null) {
             return true;
         }
@@ -966,7 +966,7 @@ abstract class ImapHandler {
     State getState() {
         if (goodbyeSent) {
             return State.LOGOUT;
-        } else if (selectedFolder != null || imapProxy != null) {
+        } else if (selectedFolderListener != null || imapProxy != null) {
             return State.SELECTED;
         } else if (isAuthenticated()) {
             return State.AUTHENTICATED;
@@ -995,20 +995,20 @@ abstract class ImapHandler {
         }
     }
 
-    ImapSession getCurrentSession() {
-        return getState() == State.LOGOUT ? null : selectedFolder;
+    ImapListener getCurrentImapListener() {
+        return getState() == State.LOGOUT ? null : selectedFolderListener;
     }
 
     ImapFolder getSelectedFolder() throws ImapSessionClosedException {
-        ImapSession i4selected = getCurrentSession();
+        ImapListener i4selected = getCurrentImapListener();
         return i4selected == null ? null : i4selected.getImapFolder();
     }
 
     void unsetSelectedFolder(boolean sendClosed) throws IOException {
-        ImapSession i4selected = selectedFolder;
-        selectedFolder = null;
+        ImapListener i4selected = selectedFolderListener;
+        selectedFolderListener = null;
         if (i4selected != null) {
-            ImapSessionManager.getInstance().closeFolder(i4selected, false);
+            i4selected.closeFolder(false);
             if (sendClosed && sessionActivated(ImapExtension.QRESYNC)) {
                 sendUntagged("OK [CLOSED] mailbox closed");
             }
@@ -1030,7 +1030,7 @@ abstract class ImapHandler {
             return new Pair<ImapSession, InitialFolderValues>(null, null);
         }
         Pair<ImapSession, InitialFolderValues> selectdata = ImapSessionManager.getInstance().openFolder(path, params, this);
-        selectedFolder = selectdata.getFirst();
+        selectedFolderListener = selectdata.getFirst();
 
         ZimbraLog.imap.info("selected folder " + selectdata.getFirst().getPath());
         return selectdata;
@@ -1044,7 +1044,9 @@ abstract class ImapHandler {
         if (!isAuthenticated()) {
             throw ServiceException.AUTH_REQUIRED();
         }
-        return credentials.getContext().setSession(selectedFolder);
+        OperationContext oc = credentials.getContext();
+        oc.setSession(selectedFolderListener);
+        return oc;
     }
 
     OperationContext getContextOrNull() {
@@ -1634,7 +1636,7 @@ abstract class ImapHandler {
             }
             // don't want the DELETE to cause *this* connection to drop if the deleted folder is currently selected
             if (getState() == State.SELECTED) {
-                ImapSession i4selected = getCurrentSession();
+                ImapListener i4selected = getCurrentImapListener();
                 if (i4selected != null && path.isEquivalent(i4selected.getPath())) {
                     unsetSelectedFolder(true);
                 } else if (imapProxy != null && path.isEquivalent(imapProxy.getPath())) {
@@ -2158,7 +2160,8 @@ abstract class ImapHandler {
                     attrs.append(attrs.length() == 0 ? "" : " ").append(returnXList ? "\\Spam" : "\\Junk");
                     break;
                 default:
-                    String query = path.getFolder() instanceof SearchFolder ? ((SearchFolder) path.getFolder()).getQuery() : null;
+                    String query = path.getFolder() instanceof SearchFolderStore ?
+                            ((SearchFolderStore) path.getFolder()).getQuery() : null;
                     if (query != null) {
                         if (query.equalsIgnoreCase("is:flagged")) {
                             attrs.append(attrs.length() == 0 ? "" : " ").append(returnXList ? "\\Starred" : "\\Flagged");
@@ -3129,7 +3132,7 @@ abstract class ImapHandler {
 
         boolean changed = false;
         long checkpoint = System.currentTimeMillis();
-        MailboxStore selectedMailbox = selectedFolder.getMailbox();
+        MailboxStore selectedMailbox = selectedFolderListener.getMailbox();
         for (int i = 1, max = i4folder.getSize(); i <= max; i++) {
             ImapMessage i4msg = i4folder.getBySequence(i);
             if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.BITMASK_DELETED) > 0) {
@@ -3871,7 +3874,7 @@ abstract class ImapHandler {
 
         String command = (byUID ? "UID STORE" : "STORE");
         List<Tag> newTags = (operation != StoreAction.REMOVE ? new ArrayList<Tag>() : null);
-        Mailbox mbox = (Mailbox) selectedFolder.getMailbox();
+        Mailbox mbox = (Mailbox) selectedFolderListener.getMailbox();
 
         Set<ImapMessage> i4set;
         mbox.lock.lock();
@@ -4111,7 +4114,7 @@ abstract class ImapHandler {
             List<ImapMessage> i4list = new ArrayList<ImapMessage>(SUGGESTED_COPY_BATCH_SIZE);
             List<Integer> idlist = new ArrayList<Integer>(SUGGESTED_COPY_BATCH_SIZE);
             List<Integer> createdList = new ArrayList<Integer>(SUGGESTED_COPY_BATCH_SIZE);
-            String selectedFldrAcctId = selectedFolder.getAuthenticatedAccountId();
+            String selectedFldrAcctId = selectedFolderListener.getAuthenticatedAccountId();
             for (ImapMessage i4msg : i4set) {
                 // we're sending 'em off in batches of 50
                 i4list.add(i4msg);  idlist.add(i4msg.msgId);
@@ -4221,7 +4224,7 @@ abstract class ImapHandler {
             return;
         }
 
-        ImapSession i4selected = getCurrentSession();
+        ImapListener i4selected = getCurrentImapListener();
         if (i4selected == null || !i4selected.hasNotifications()) {
             return;
         }
