@@ -22,11 +22,21 @@ import java.util.Map;
 
 import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.soap.mail.type.CreateItemNotification;
+import com.zimbra.soap.mail.type.DeleteItemNotification;
+import com.zimbra.soap.mail.type.ModifyNotification;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
+import com.zimbra.soap.mail.type.ModifyNotification.RenameFolderNotification;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
 
 public final class PendingRemoteModifications extends PendingModifications<ZBaseItem> {
 
@@ -37,44 +47,6 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
 
         Change(Object thing, int reason, Object preModifyObj) {
             super(thing, reason, preModifyObj);
-        }
-
-        @Override
-        protected void toStringInit(StringBuilder sb) {
-            if (what instanceof ZBaseItem) {
-                ZBaseItem item = (ZBaseItem) what;
-                int idInMbox = 0;
-                try {
-                    idInMbox = item.getIdInMailbox();
-                } catch (ServiceException e) {
-                }
-                sb.append(getItemType(item)).append(' ').append(idInMbox).append(":");
-            } else if (what instanceof ZMailbox) {
-                sb.append("mailbox:");
-            }
-        }
-
-    }
-
-    public static final class ModificationKey extends PendingModifications.ModificationKey {
-
-        /*
-         * TODO - Looks like we will be having to deal with ServiceExceptions in
-         * numerous places in PendingRemoteModifications. See if there is a
-         * cleaner way to handle them.
-         */
-        public ModificationKey(ZBaseItem item) {
-            super("", 0);
-            String actId = null;
-            int idInMbox = 0;
-            try {
-                actId = item.getMailbox().getAccountId();
-                idInMbox = item.getIdInMailbox();
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("error retrieving account id or id in mailbox", e);
-            }
-            setAccountId(actId);
-            setItemId(Integer.valueOf(idInMbox));
         }
     }
 
@@ -88,15 +60,15 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         }
 
         if (other.created != null) {
-            for (ZBaseItem item : other.created.values()) {
+            for (BaseItemInfo item : other.created.values()) {
                 recordCreated(item);
             }
         }
 
         if (other.modified != null) {
             for (PendingModifications.Change chg : other.modified.values()) {
-                if (chg.what instanceof ZBaseItem) {
-                    recordModified((ZBaseItem) chg.what, chg.why, (ZBaseItem) chg.preModifyObj);
+                if (chg.what instanceof ZimbraMailItem) {
+                    recordModified((ZimbraMailItem) chg.what, chg.why, (ZimbraMailItem) chg.preModifyObj);
                 } else if (chg.what instanceof ZMailbox) {
                     recordModified((ZMailbox) chg.what, chg.why);
                 }
@@ -106,19 +78,15 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
         return this;
     }
 
-    public static MailItem.Type getItemType(ZBaseItem item) {
-        return MailItem.Type.fromCommon(item.getMailItemType());
-    }
-
     @Override
-    protected void delete(PendingModifications.ModificationKey key, Type type, ZBaseItem itemSnapshot) {
+    protected void delete(PendingModifications.ModificationKey key, Type type, ZimbraMailItem itemSnapshot) {
         delete(key, new Change(type, Change.NONE, itemSnapshot));
     }
 
     @Override
-    public void recordCreated(ZBaseItem item) {
+    public void recordCreated(BaseItemInfo item) {
         if (created == null) {
-            created = new LinkedHashMap<PendingModifications.ModificationKey, ZBaseItem>();
+            created = new LinkedHashMap<PendingModifications.ModificationKey, BaseItemInfo>();
         }
         changedTypes.add(getItemType(item));
         /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
@@ -127,13 +95,20 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     }
 
     @Override
-    public void recordDeleted(ZBaseItem itemSnapshot) {
+    public void recordDeleted(ZimbraMailItem itemSnapshot) {
         MailItem.Type type = getItemType(itemSnapshot);
-        changedTypes.add(type);
-        /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
-        delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
+        try {
+            recordDeleted(type, itemSnapshot.getAccountId(), itemSnapshot.getIdInMailbox());
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("unable to record deleted message", e);
+        }
     }
 
+    public void recordDeleted(MailItem.Type type, String accountId, int itemId) {
+        changedTypes.add(type);
+        /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
+        delete(new ModificationKey(accountId, itemId), type, null);
+    }
     @Override
     public void recordModified(PendingModifications.ModificationKey mkey, PendingModifications.Change chg) {
         recordModified(mkey, chg.what, chg.why, chg.preModifyObj, false);
@@ -152,25 +127,30 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     }
 
     @Override
-    public void recordModified(ZBaseItem item, int reason) {
+    public void recordModified(BaseItemInfo item, int reason) {
         changedTypes.add(getItemType(item));
         /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
         recordModified(new ModificationKey(item), item, reason, null, true);
     }
 
     @Override
-    public void recordModified(ZBaseItem item, int reason, ZBaseItem preModifyItem) {
+    public void recordModified(BaseItemInfo item, int reason, ZimbraMailItem preModifyItem) {
         changedTypes.add(getItemType(item));
         /* assumption - don't care about tracking folder IDs for PendingRemoteModifications */
         recordModified(new ModificationKey(item), item, reason, preModifyItem, false);
+    }
+
+    public void recordModified(ZimbraTag tag, String acctId, int reason) {
+        ModificationKey key = new ModificationKey(acctId, tag.getTagId());
+        recordModified(key, tag, reason, null, false);
     }
 
     private void recordModified(PendingModifications.ModificationKey key, Object item, int reason, Object preModifyObj,
             boolean snapshotItem) {
         PendingModifications.Change chg = null;
         if (created != null && created.containsKey(key)) {
-            if (item instanceof ZBaseItem) {
-                recordCreated((ZBaseItem) item);
+            if (item instanceof ZimbraMailItem) {
+                recordCreated((ZimbraMailItem) item);
             }
             return;
         } else if (deleted != null && deleted.containsKey(key)) {
@@ -203,5 +183,39 @@ public final class PendingRemoteModifications extends PendingModifications<ZBase
     private static Object snapshotItemIgnoreEx(Object item) {
         // TODO - Do we need to be able to snapshot ZBaseItems?
         return null;
+    }
+
+    public static PendingRemoteModifications fromSOAP(PendingFolderModifications mods, String acctId) {
+
+        PendingRemoteModifications prms = new PendingRemoteModifications();
+        for (CreateItemNotification createSpec: mods.getCreated()) {
+            prms.recordCreated(ModificationItem.itemUpdate(createSpec.getMessageInfo(), acctId));
+        }
+        for (ModifyNotification modSpec: mods.getModified()) {
+            int change = modSpec.getChangeBitmask();
+            if (modSpec instanceof ModifyItemNotification) {
+                ModifyItemNotification modifyItem = (ModifyItemNotification) modSpec;
+                BaseItemInfo itemUpdate = ModificationItem.itemUpdate(modifyItem.getMessageInfo(), acctId);
+                prms.recordModified(itemUpdate, change);
+            } else if (modSpec instanceof ModifyTagNotification) {
+                ModifyTagNotification modifyTag = (ModifyTagNotification) modSpec;
+                int tagId = modifyTag.getId();
+                String tagName = modifyTag.getName();
+                ZimbraTag tagRename = ModificationItem.tagRename(tagId, tagName);
+                prms.recordModified(tagRename, acctId, change);
+            } else if (modSpec instanceof RenameFolderNotification) {
+                RenameFolderNotification renameFolder = (RenameFolderNotification) modSpec;
+                int folderId = renameFolder.getFolderId();
+                String newPath = renameFolder.getPath();
+                ModificationItem folderRename = ModificationItem.folderRename(folderId, newPath, acctId);
+                prms.recordModified(folderRename, change);
+            }
+        }
+        for (DeleteItemNotification delSpec: mods.getDeleted()) {
+          int id = delSpec.getId();
+          MailItem.Type type = MailItem.Type.of(delSpec.getType());
+          prms.recordDeleted(type, acctId, id);
+        }
+        return prms;
     }
 }
