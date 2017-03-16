@@ -19,12 +19,12 @@ package com.zimbra.cs.imap;
 import java.util.TreeMap;
 
 import com.zimbra.client.ZBaseItem;
-import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMessage;
 import com.zimbra.common.mailbox.BaseItemInfo;
+import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.session.ModificationItem;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingRemoteModifications;
@@ -69,8 +69,9 @@ public class ImapRemoteSession extends ImapListener {
         try {
             if (item == null || item.getIdInMailbox() <= 0) {
                 return;
-            } else if (item.getFolderIdInMailbox() == mFolderId && (item instanceof ZMessage || item instanceof ZContact)) {
-                mFolder.handleItemCreate(changeId, item, added);
+            } else if (item.getFolderIdInMailbox() == mFolderId &&
+                (item.getMailItemType() == MailItemType.MESSAGE || item.getMailItemType() == MailItemType.CONTACT)) {
+                    mFolder.handleItemCreate(changeId, item, added);
             }
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("Error retrieving ID of item or folder", e);
