@@ -29,6 +29,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.service.mail.OpenImapFolder;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 
@@ -112,6 +113,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.LIST_IMAP_SUBSCRIPTIONS_REQUEST, new ListIMAPSubscriptions());
         dispatcher.registerHandler(AccountConstants.SAVE_IMAP_SUBSCRIPTIONS_REQUEST, new SaveIMAPSubscriptions());
         dispatcher.registerHandler(AccountConstants.RESET_RECENT_MESSAGE_COUNT_REQUEST, new ResetRecentMessageCount());
+        dispatcher.registerHandler(AccountConstants.OPEN_IMAP_FOLDER_REQUEST, new OpenImapFolder());
     }
 
     /**
