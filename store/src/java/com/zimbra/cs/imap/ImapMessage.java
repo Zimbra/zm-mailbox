@@ -50,6 +50,7 @@ import org.apache.commons.codec.net.QCodec;
 import com.google.common.base.Objects;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMessage;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mailbox.ZimbraQueryHit;
@@ -135,7 +136,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         this.tags    = tags;
     }
 
-    public ImapMessage(ZimbraMailItem item) throws ServiceException {
+    public ImapMessage(BaseItemInfo item) throws ServiceException {
         this(item.getIdInMailbox(), item.getMailItemType(), item.getImapUid(), item.getFlagBitmask(), item.getTags());
     }
 
