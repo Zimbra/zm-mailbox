@@ -16,13 +16,11 @@ import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -88,7 +86,6 @@ public class TestImapServerListener {
         cleanup();
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
-        attrs.put(Provisioning.A_zimbraFeatureIMEnabled, ProvisioningConstants.TRUE);
         localAccount = TestUtil.createAccount(LOCAL_USER_NAME, attrs);
         Provisioning.getInstance().setPassword(localAccount, PASS);
         imapServersForLocalHost = localServer.getReverseProxyUpstreamImapServers();
@@ -97,7 +94,6 @@ public class TestImapServerListener {
             localServer.setReverseProxyUpstreamImapServers(new String[]{remoteServer.getServiceHostname()});
             attrs = Maps.newHashMap();
             attrs.put(Provisioning.A_zimbraMailHost, remoteServer.getServiceHostname());
-            attrs.put(Provisioning.A_zimbraFeatureIMEnabled, ProvisioningConstants.TRUE);
             remoteAccount = TestUtil.createAccount(REMOTE_USER_NAME, attrs);
             Provisioning.getInstance().setPassword(remoteAccount, PASS);
             imapServersForRemoteHost = remoteServer.getReverseProxyUpstreamImapServers();
