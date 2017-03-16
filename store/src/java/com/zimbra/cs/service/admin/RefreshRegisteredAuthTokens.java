@@ -51,10 +51,10 @@ public class RefreshRegisteredAuthTokens extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         Server localServer = prov.getLocalServer();
         if(localServer.getLowestSupportedAuthVersion() < 2) {
-            return JaxbUtil.jaxbToElement( new RefreshRegisteredAuthTokensResponse());
+            return zsc.jaxbToElement(new RefreshRegisteredAuthTokensResponse());
         }
 
-        RefreshRegisteredAuthTokensRequest req = JaxbUtil.elementToJaxb(request);
+        RefreshRegisteredAuthTokensRequest req = zsc.elementToJaxb(request);
         List<String> tokens = req.getTokens();
         if(tokens != null && !tokens.isEmpty()) {
             for(String token : tokens) {
@@ -70,7 +70,7 @@ public class RefreshRegisteredAuthTokens extends AdminDocumentHandler {
                 }
             }
         }
-        return JaxbUtil.jaxbToElement( new RefreshRegisteredAuthTokensResponse());
+        return zsc.jaxbToElement(new RefreshRegisteredAuthTokensResponse());
     }
 
     @Override

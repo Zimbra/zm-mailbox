@@ -66,7 +66,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        CreateGalSyncAccountRequest cgaRequest = JaxbUtil.elementToJaxb(request);
+        CreateGalSyncAccountRequest cgaRequest = zsc.elementToJaxb(request);
 
         String name = cgaRequest.getName();
         String domainStr = cgaRequest.getDomain();

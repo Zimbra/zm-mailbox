@@ -37,7 +37,7 @@ public final class SetCurrentVolume extends AdminDocumentHandler {
     @Override
     public Element handle(Element req, Map<String, Object> ctx) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
-        return zsc.jaxbToElement(handle((SetCurrentVolumeRequest) JaxbUtil.elementToJaxb(req), ctx));
+        return zsc.jaxbToElement(handle((SetCurrentVolumeRequest) zsc.elementToJaxb(req), ctx));
     }
 
     private SetCurrentVolumeResponse handle(SetCurrentVolumeRequest req, Map<String, Object> ctx)
