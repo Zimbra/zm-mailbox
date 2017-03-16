@@ -207,7 +207,7 @@ public final class AllAccountsWaitSet extends WaitSetBase {
             // no more buffering!
             mBufferedCommits = null;
 
-            if (mCurrentSignalledSessions.size() > 0) {
+            if (mCurrentSignalledAccounts.size() > 0) {
                 trySendData();
             }
         }
@@ -246,6 +246,10 @@ public final class AllAccountsWaitSet extends WaitSetBase {
             }
             interestTypes = types;
         }
+        mCurrentSignalledSessions.clear();
+        mSentSignalledSessions.clear();
+        mSentSignalledAccounts.clear();
+        mCurrentSignalledAccounts.clear();
         return null;
     }
 
