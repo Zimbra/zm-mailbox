@@ -241,7 +241,7 @@ public class TestUtil extends Assert {
         if (port > 0) {
             scheme = "https";
         } else {
-            port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);    
+            port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
             scheme = "http";
         }
         return scheme + "://" + hostname + ":" + port;
@@ -616,7 +616,7 @@ public class TestUtil extends Assert {
             }
             try {
                 if (timeout_millis > 500) {
-                    Thread.sleep(1000);
+                    Thread.sleep(500);
                     timeout_millis = timeout_millis - 500;
                 } else {
                     Thread.sleep(timeout_millis);
@@ -707,7 +707,7 @@ public class TestUtil extends Assert {
         adminMbox.emptyDumpster();
     }
 
-    private static void deleteMessages(ZMailbox mbox, String query) throws ServiceException {
+    static void deleteMessages(ZMailbox mbox, String query) throws ServiceException {
         // Delete messages
         ZSearchParams params = new ZSearchParams(query);
         params.setTypes(ZSearchParams.TYPE_MESSAGE);
