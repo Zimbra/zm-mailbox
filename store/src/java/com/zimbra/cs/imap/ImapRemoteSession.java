@@ -118,6 +118,7 @@ public class ImapRemoteSession extends ImapListener {
 
     protected ImapRemoteSession(ImapMailboxStore imapStore, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(imapStore, i4folder, handler);
+        mailbox = imapStore.getMailboxStore();
     }
 
     @Override
@@ -158,7 +159,7 @@ public class ImapRemoteSession extends ImapListener {
      */
     @Override
     protected void snapshotRECENT() {
-        throw new UnsupportedOperationException("snapshotRECENT is not implemented yet");
+        return;
     }
 
 
