@@ -13,17 +13,13 @@ import java.sql.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.mail.MessagingException;
 import javax.security.auth.login.LoginException;
-
-import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -53,22 +49,21 @@ import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.BodyStructure;
-import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
-import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MessageData;
-import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.AuthProviderException;
 import com.zimbra.cs.util.BuildInfo;
+
+import junit.framework.Assert;
 
 public class TestRemoteImap {
     private static final String USER = "TestRemoteImap-user";
@@ -136,6 +131,28 @@ public class TestRemoteImap {
             imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
         }
         sp.flushCache("all", null, true);
+    }
+
+    private ImapConnection connect(Server server) throws IOException {
+        ImapConfig config = new ImapConfig(server.getServiceHostname());
+        config.setPort(server.getImapBindPort());
+        config.setAuthenticationId(USER);
+        config.getLogger().setLevel(Log.Level.trace);
+        ImapConnection connection = new ImapConnection(config);
+        connection.connect();
+        return connection;
+    }
+
+    private ImapConnection connectAsProxy(Server server) throws IOException {
+        ImapConfig config = new ImapConfig(server.getServiceHostname());
+        config.setPort(server.getImapBindPort());
+        config.setAuthenticationId(USER);
+        config.setAuthenticatorFactory(ZIMBRA_AUTH_FACTORY);
+        config.setMechanism(ZimbraAuthenticator.MECHANISM);
+        config.getLogger().setLevel(Log.Level.trace);
+        ImapConnection connection = new ImapConnection(config);
+        connection.connect();
+        return connection;
     }
 
     @Test
@@ -360,28 +377,6 @@ public class TestRemoteImap {
         assertFalse("IMAP connection should not be authenticated after sending LOGOUT", connection.isAuthenticated());
     }
 
-    private ImapConnection connect(Server server) throws IOException {
-        ImapConfig config = new ImapConfig(server.getServiceHostname());
-        config.setPort(server.getImapBindPort());
-        config.setAuthenticationId(USER);
-        config.getLogger().setLevel(Log.Level.trace);
-        ImapConnection connection = new ImapConnection(config);
-        connection.connect();
-        return connection;
-    }
-
-    private ImapConnection connectAsProxy(Server server) throws IOException {
-        ImapConfig config = new ImapConfig(server.getServiceHostname());
-        config.setPort(server.getImapBindPort());
-        config.setAuthenticationId(USER);
-        config.setAuthenticatorFactory(ZIMBRA_AUTH_FACTORY);
-        config.setMechanism(ZimbraAuthenticator.MECHANISM);
-        config.getLogger().setLevel(Log.Level.trace);
-        ImapConnection connection = new ImapConnection(config);
-        connection.connect();
-        return connection;
-    }
-
     @Test
     public void testListFolderContents() throws IOException, ServiceException, MessagingException {
         Assume.assumeTrue(servers.size() > 1);
@@ -412,54 +407,6 @@ public class TestRemoteImap {
         assertNotNull(body);
         Literal imapData = (Literal) body.getData();
         assertEquals(MessageBuilder.DEFAULT_MESSAGE_BODY, imapData.toString());
-    }
-
-    @Test
-    public void testIdleNotification() throws Exception {
-        ImapConnection connection1 = connect(imapServer);
-        connection1.select("INBOX");
-
-        ImapConnection connection2 = connect(imapServer);
-
-        Flags flags = Flags.fromSpec("afs");
-        Date date = new Date(System.currentTimeMillis());
-        String subject = "TestRemoteImap-testIdleNotification";
-        ZMailbox zmbox = TestUtil.getZMailbox(USER);
-        TestUtil.addMessage(zmbox, subject, "1", null);
-        Literal msg = TestImap.message(100000);
-        final AtomicLong exists = new AtomicLong(-1);
-        final AtomicLong recent = new AtomicLong(-1);
-        final CountDownLatch doneSignal = new CountDownLatch(1);
-
-        connection1.idle(new ResponseHandler() {
-            @Override
-            public void handleResponse(ImapResponse res) {
-                if (res.getCCode() == CAtom.EXISTS) {
-                    exists.set(res.getNumber());
-                }
-                if (res.getCCode() == CAtom.RECENT) {
-                    recent.set(1);
-                }
-            }
-        });
-        Assert.assertTrue("Connection is not idling when it should be", connection1.isIdling());
-
-        try {
-	        AppendResult res = connection2.append("INBOX", flags, date, msg);
-	        Assert.assertNotNull(res);
-
-	        try {
-	            doneSignal.await(5, TimeUnit.SECONDS);
-	        } catch (Exception e) {
-	            Assert.fail("Wait interrupted. ");
-	        }
-
-	        Assert.assertEquals("Connection was not notified of new items", 1, recent.get());
-	        Assert.assertEquals("Connection was not notified of existing items", 1, exists.get());
-
-        } finally {
-            msg.dispose();
-        }
     }
 
     @Test
