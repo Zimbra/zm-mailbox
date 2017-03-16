@@ -127,6 +127,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -1147,6 +1148,25 @@ public class TestUtil extends Assert {
         if (remoteMbox != null) {
             remoteMbox.noOp();
         }
+    }
+
+    /**
+     * Returns an authenticated transport for the <tt>zimbra</tt> account.
+     */
+    public static SoapTransport getAdminSoapTransport(Server targetServer) throws SoapFaultException, IOException, ServiceException {
+        SoapHttpTransport transport = new SoapHttpTransport(URLUtil.getAdminURL(targetServer));
+
+        // Create auth element
+        Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
+        auth.addElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
+        auth.addElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());
+
+        // Authenticate and get auth token
+        Element response = transport.invoke(auth);
+        String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+        transport.setAuthToken(authToken);
+        transport.setAdmin(true);
+        return transport;
     }
 
     /**
