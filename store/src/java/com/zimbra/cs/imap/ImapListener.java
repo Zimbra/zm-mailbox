@@ -32,19 +32,18 @@ import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFolder.DirtyMessage;
-import com.zimbra.cs.imap.ImapListener.AddedItems;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.common.util.ArrayUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
+import com.zimbra.cs.session.Session;
 
 public abstract class ImapListener extends Session {
     protected static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
@@ -517,7 +516,7 @@ public abstract class ImapListener extends Session {
         try {
             synchronized (this) {
                 MANAGER.uncacheSession(this);
-                return isRegistered() ? (ImapSession)super.unregister() : this;
+                return isRegistered() ? (ImapListener)super.unregister() : this;
             }
         } finally {
             if (mbox != null) {
