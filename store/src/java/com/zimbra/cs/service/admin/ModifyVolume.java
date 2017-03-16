@@ -38,7 +38,7 @@ public final class ModifyVolume extends AdminDocumentHandler {
     @Override
     public Element handle(Element req, Map<String, Object> ctx) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
-        return zsc.jaxbToElement(handle((ModifyVolumeRequest) JaxbUtil.elementToJaxb(req), ctx));
+        return zsc.jaxbToElement(handle((ModifyVolumeRequest) zsc.elementToJaxb(req), ctx));
     }
 
     private ModifyVolumeResponse handle(ModifyVolumeRequest req, Map<String, Object> ctx) throws ServiceException {
