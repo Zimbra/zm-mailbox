@@ -862,8 +862,8 @@ public class TestCalDav {
         doDeleteMethod(getLocalServerRoot().append(inboxhref).toString(), dav4, HttpStatus.SC_NO_CONTENT);
 
         // Test that iTip handling still happens when some of the attendees no longer exist.
-        users[3].cleanup();
-        users[4].cleanup(); // attendee via DL
+        TestUtil.deleteAccount(DAV3);
+        TestUtil.deleteAccount(DAV4); // attendee via DL
         vCal = simpleMeeting(dav1, attendees, uid, "3", 10);
         doIcalPut(url, dav1, zvcalendarToBytes(vCal), HttpStatus.SC_CREATED);
         inboxhref = TestCalDav.waitForNewSchedulingRequestByUID(dav2, uid);
@@ -1598,7 +1598,7 @@ public class TestCalDav {
         searchRequest.setLimit(8);
         searchRequest.setSearchTypes("contact");
         searchRequest.setQuery("in:Contacts");
-        ZMailbox mbox = users[1].getZMailbox();
+        ZMailbox mbox = TestUtil.getZMailbox(DAV1);
         SearchResponse searchResp = mbox.invokeJaxb(searchRequest);
         assertNotNull("JAXB SearchResponse object", searchResp);
         List<SearchHit> hits = searchResp.getSearchHits();
@@ -1699,7 +1699,7 @@ public class TestCalDav {
         searchRequest.setLimit(8);
         searchRequest.setSearchTypes("contact");
         searchRequest.setQuery("in:Contacts");
-        ZMailbox mbox = users[1].getZMailbox();
+        ZMailbox mbox = TestUtil.getZMailbox(DAV1);
         SearchResponse searchResp = mbox.invokeJaxb(searchRequest);
         assertNotNull("JAXB SearchResponse object", searchResp);
         List<SearchHit> hits = searchResp.getSearchHits();
