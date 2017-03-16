@@ -19,6 +19,7 @@ package com.zimbra.qa.unittest;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.client.ZFolder;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -28,7 +29,6 @@ import com.zimbra.cs.session.IWaitSet;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
-import com.zimbra.client.ZFolder;
 
 import junit.framework.TestCase;
 
@@ -38,8 +38,8 @@ import junit.framework.TestCase;
 public class TestWaitSet extends TestCase {
 
     private static final String WS_USER_NAME = "ws_test_user";
-    private static final String USER_1_NAME = "user1";
-    private static final String USER_2_NAME = "user3";
+    private static final String USER_1_NAME = "waitsetuser1";
+    private static final String USER_2_NAME = "waitsetuser2";
     private static final String NAME_PREFIX = TestWaitSet.class.getSimpleName();
 
     private static final String FAKE_ACCOUNT_ID = "fake";
@@ -51,16 +51,21 @@ public class TestWaitSet extends TestCase {
 
     public void cleanUp()
     throws Exception {
-        TestUtil.deleteTestData(USER_1_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(USER_2_NAME, NAME_PREFIX);
-        try {
-            Mailbox wsMbox = TestUtil.getMailbox(WS_USER_NAME);
-            wsMbox.deleteMailbox();
-        } catch (Exception e) { }
-        try { TestUtil.deleteAccount(WS_USER_NAME); } catch (Exception e) {}
+        String acctNames[] = { USER_1_NAME, USER_2_NAME, WS_USER_NAME };
+        for (String acctName : acctNames) {
+            try {
+                Mailbox wsMbox = TestUtil.getMailbox(acctName);
+                wsMbox.deleteMailbox();
+            } catch (Exception e) { }
+            try {
+                TestUtil.deleteAccount(acctName);
+            } catch (Exception e) {}
+        }
     }
 
     public void testWaitSets() throws Exception {
+        TestUtil.createAccount(USER_1_NAME);
+        TestUtil.createAccount(USER_2_NAME);
         runMeFirst();
         runMeSecond();
     }
