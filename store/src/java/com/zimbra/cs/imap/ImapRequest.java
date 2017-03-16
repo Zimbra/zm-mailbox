@@ -820,15 +820,17 @@ abstract class ImapRequest {
 
         Map<String, String> params = new HashMap<String, String>();
         skipChar('(');
-        do {
-            String name = readString(Charsets.UTF_8);
-            skipSpace();
-            params.put(name, readNstring(Charsets.UTF_8));
-            if (peekChar() == ')') {
-                break;
-            }
-            skipSpace();
-        } while (true);
+        if (peekChar() != ')') {//skip over empty parameters
+            do {
+                String name = readString(Charsets.UTF_8);
+                skipSpace();
+                params.put(name, readNstring(Charsets.UTF_8));
+                if (peekChar() == ')') {
+                    break;
+                }
+                skipSpace();
+            } while (true);
+        }
         skipChar(')');
         return params;
     }
