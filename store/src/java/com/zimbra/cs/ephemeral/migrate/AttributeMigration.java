@@ -217,6 +217,14 @@ public class AttributeMigration {
             errorReport.close();
         }
 
+        public void flush() {
+            if (dummyReport) {
+                return;
+            }
+            fullReport.flush();
+            errorReport.flush();
+        }
+
         private class Report {
             final String name;
             CSVPrinter csvPrinter = null;
@@ -288,6 +296,18 @@ public class AttributeMigration {
                         outputStream.close();
                     } catch (IOException e) {
                         ZimbraLog.ephemeral.error("Problem closing Stream for CSVPrinter for file %s", name, e);
+                    }
+                }
+            }
+
+            void flush() {
+                if (csvPrinter != null) {
+                    try {
+                        synchronized(this) {
+                            csvPrinter.flush();
+                        }
+                    } catch (IOException e) {
+                        ZimbraLog.ephemeral.debug("Problem flushing csvPrinter for %s", name, e.getMessage());
                     }
                 }
             }
@@ -686,8 +706,10 @@ public class AttributeMigration {
                 String attrName = input.getEphemeralKey().getKey();
                 Object origValue = pair.getSecond();
                 try {
-                    if (Thread.interrupted()) {
+                    if ((Thread.interrupted()) || (null != exceptionWhileMigrating)) {
                         //another thread encountered an error during migration
+                        csvReports.log(entry.getLabel(), start, false, attrsMigrated,
+                                "migration stopped before completing");
                         return;
                     }
                     if (callback.setEphemeralData(input, location, attrName, origValue)) {
@@ -754,6 +776,8 @@ public class AttributeMigration {
                     migration.migrateAttributes();
                 } catch (Exception e) {
                     // async migration will re-raise the exception after all threads have been shut down
+                } finally {
+                    csvReports.flush();
                 }
             }
             ZimbraLog.ephemeral.debug("Finishing Thread %s", Thread.currentThread().getName());
