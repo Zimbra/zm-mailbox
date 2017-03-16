@@ -79,7 +79,7 @@ public class Search extends MailDocumentHandler  {
         Account account = getRequestedAccount(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         fixBooleanRecipients(request);
-        SearchRequest req = JaxbUtil.elementToJaxb(request);
+        SearchRequest req = zsc.elementToJaxb(request);
         if (Objects.firstNonNull(req.getWarmup(), false)) {
             mbox.index.getIndexStore().warmup();
             return zsc.createElement(MailConstants.SEARCH_RESPONSE);

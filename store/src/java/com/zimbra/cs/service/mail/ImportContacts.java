@@ -79,7 +79,7 @@ public class ImportContacts extends MailDocumentHandler  {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        ImportContactsRequest req = JaxbUtil.elementToJaxb(request);
+        ImportContactsRequest req = zsc.elementToJaxb(request);
         String ct = req.getContentType();
         if (!ZMailbox.CONTACT_IMPORT_TYPE_CSV.equals(ct))
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);

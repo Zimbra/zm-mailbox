@@ -38,7 +38,7 @@ public final class ModifyOutgoingFilterRules extends MailDocumentHandler {
             throw ServiceException.PERM_DENIED("cannot modify options");
         }
 
-        ModifyOutgoingFilterRulesRequest req = JaxbUtil.elementToJaxb(request);
+        ModifyOutgoingFilterRulesRequest req = zsc.elementToJaxb(request);
         RuleManager.setOutgoingXMLRules(account, req.getFilterRules());
         return zsc.jaxbToElement(new ModifyOutgoingFilterRulesResponse());
     }
