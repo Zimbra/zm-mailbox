@@ -15,39 +15,39 @@ class MockImapHandler extends ImapHandler {
     }
 
     @Override
-    String getRemoteIp() {
+    protected String getRemoteIp() {
         return "127.0.0.1";
     }
 
     @Override
-    void sendLine(String line, boolean flush) throws IOException {
+    protected void sendLine(String line, boolean flush) throws IOException {
         output.write(line.getBytes(Charsets.UTF_8));
         output.write(LINE_SEPARATOR_BYTES);
     }
 
     @Override
-    void dropConnection(boolean sendBanner) {
+    protected void dropConnection(boolean sendBanner) {
     }
 
     @Override
-    void close() {
+    protected void close() {
     }
 
     @Override
-    void enableInactivityTimer() throws IOException {
+    protected void enableInactivityTimer() throws IOException {
     }
 
     @Override
-    void completeAuthentication() throws IOException {
+    protected void completeAuthentication() throws IOException {
     }
 
     @Override
-    boolean doSTARTTLS(String tag) throws IOException {
+    protected boolean doSTARTTLS(String tag) throws IOException {
         return false;
     }
 
     @Override
-    InetSocketAddress getLocalAddress() {
+    protected InetSocketAddress getLocalAddress() {
         return new InetSocketAddress("localhost", 0);
     }
 }

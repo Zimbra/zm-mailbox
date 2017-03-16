@@ -208,12 +208,12 @@ final class TcpImapHandler extends ProtocolHandler {
         }
 
         @Override
-        String getRemoteIp() {
+        protected String getRemoteIp() {
             return remoteIp;
         }
 
         @Override
-        void sendLine(String line, boolean flush) throws IOException {
+        protected void sendLine(String line, boolean flush) throws IOException {
             ZimbraLog.imap.trace("S: %s", line);
             OutputStream os = output;
             if (os == null) {
@@ -296,7 +296,7 @@ final class TcpImapHandler extends ProtocolHandler {
          * concurrency issues.
          */
         @Override
-        void close() {
+        protected void close() {
             try {
                 socket.close(); // blocking read from this socket will throw SocketException
             } catch (Throwable e) {
@@ -305,12 +305,12 @@ final class TcpImapHandler extends ProtocolHandler {
         }
 
         @Override
-        void enableInactivityTimer() throws SocketException {
+        protected void enableInactivityTimer() throws SocketException {
             connection.setSoTimeout(config.getAuthenticatedMaxIdleTime() * 1000);
         }
 
         @Override
-        void completeAuthentication() throws IOException {
+        protected void completeAuthentication() throws IOException {
             delegate.setLoggingContext();
             authenticator.sendSuccess();
             if (authenticator.isEncryptionEnabled()) {
@@ -321,7 +321,7 @@ final class TcpImapHandler extends ProtocolHandler {
         }
 
         @Override
-        boolean doSTARTTLS(String tag) throws IOException {
+        protected boolean doSTARTTLS(String tag) throws IOException {
             if (!checkState(tag, State.NOT_AUTHENTICATED)) {
                 return true;
             } else if (startedTLS) {
@@ -345,7 +345,7 @@ final class TcpImapHandler extends ProtocolHandler {
         }
 
         @Override
-        InetSocketAddress getLocalAddress() {
+        protected InetSocketAddress getLocalAddress() {
             return (InetSocketAddress) socket.getLocalSocketAddress();
         }
     }
