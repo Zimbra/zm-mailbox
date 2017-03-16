@@ -38,7 +38,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.AccountUtil;
 
-class ImapCredentials implements java.io.Serializable {
+public class ImapCredentials implements java.io.Serializable {
     private static final long serialVersionUID = -3323076274740054770L;
 
     /** The various special modes the server can be thrown into in order to
@@ -63,6 +63,10 @@ class ImapCredentials implements java.io.Serializable {
     private final boolean     mIsLocal;
     private final EnabledHack mEnabledHack;
     private Set<ImapPath>     mHiddenFolders;
+
+    public ImapCredentials(Account acct) throws ServiceException {
+        this(acct, EnabledHack.NONE);
+    }
 
     ImapCredentials(Account acct, EnabledHack hack) throws ServiceException {
         mAccountId = acct.getId();
