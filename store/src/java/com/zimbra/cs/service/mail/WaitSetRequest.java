@@ -53,7 +53,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.base.WaitSetReq;
 import com.zimbra.soap.base.WaitSetResp;
 import com.zimbra.soap.mail.message.WaitSetResponse;
-import com.zimbra.soap.type.AccountIdAndFolderIds;
 import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.IdAndType;
 import com.zimbra.soap.type.WaitSetAddSpec;
@@ -268,9 +267,10 @@ public class WaitSetRequest extends MailDocumentHandler {
         } else if (cb.completed) {
             resp.setSeqNo(cb.seqNo);
             for (String signalledAcct : cb.signalledAccounts) {
-                AccountIdAndFolderIds info = new AccountIdAndFolderIds(signalledAcct);
+                //TODO: update this with classes introduced for zms-286
+                /* AccountIdAndFolderIds info = new AccountIdAndFolderIds(signalledAcct);
                 info.setFolderIds(cb.changedFolderIds.get(signalledAcct));
-                resp.addSignalledAccount(info);
+                resp.addSignalledAccount(info); */
             }
         } else {
             // timed out....they should try again
