@@ -36,6 +36,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
@@ -48,10 +49,8 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.session.Session;
 
 /**
  * @since Apr 30, 2005
@@ -64,11 +63,12 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
     // attributes of the folder itself, irrespective of the session state
     private transient ImapMailboxStore mailboxStore;
-    private transient ImapSession session;
+    private transient ImapListener folderListener;
     private transient ImapPath path;
     private transient SessionData sessionData;
     private transient Map<Integer, ImapMessage> messageIds;
 
+    private final String folderIdString;
     private final int folderId;
     private final int uidValidity;
     private String query;
@@ -106,19 +106,20 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
      * @param handler  The authenticated user's current IMAP session. */
     ImapFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
         this.path = path;
-        Folder folder = (Folder) path.getFolder();
-        this.folderId = folder.getId();
+        FolderStore folder = path.getFolder();
+        this.folderIdString = folder.getFolderIdAsString();
+        this.folderId = folder.getFolderIdInOwnerMailbox();
         // FIXME: Folder object may be stale since it's cached in ImapPath
         this.uidValidity = getUIDValidity(folder);
-        if (folder instanceof SearchFolder) {
-            this.query = ((SearchFolder) folder).getQuery();
-            this.typeConstraint = getTypeConstraint((SearchFolder) folder);
+        if (folder instanceof SearchFolderStore) {
+            this.query = ((SearchFolderStore) folder).getQuery();
+            this.typeConstraint = getTypeConstraint((SearchFolderStore) folder);
         }
 
         if (handler != null) {
             this.sessionData = new SessionData(path, params, handler);
         }
-        this.mailboxStore = new LocalImapMailboxStore(folder.getMailbox());
+        this.mailboxStore = ImapMailboxStore.get(folder.getMailboxStore());
         this.tags = new ImapFlagCache();
     }
 
@@ -142,9 +143,9 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         imap.addAttribute("folder", path.asImapPath()).addAttribute("query", query);
     }
 
-    void setSession(ImapSession value) {
-        assert(session == null || session == value || sessionData == null);
-        session = value;
+    void setFolderListener(ImapListener value) {
+        assert(folderListener == null || folderListener == value || sessionData == null);
+        folderListener = value;
     }
 
     SessionData getSessionData() {
@@ -216,7 +217,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     /**
      * Constrain the search to the actually-requested types.
      */
-    static Set<MailItem.Type> getTypeConstraint(SearchFolder search) {
+    static Set<MailItem.Type> getTypeConstraint(SearchFolderStore search) {
         String typestr = search.getReturnTypes().toLowerCase();
         Set<MailItem.Type> types;
         if (!typestr.isEmpty()) {
@@ -448,8 +449,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
                 idx--;
             } else {
                 ZimbraLog.imap.warn("message added out of order occurs before message which is already visible to client. Must renumber %s", i4msg);
-                session.incrementRenumber(i4msg);
-                if (session.isFailedRenumber(i4msg)) {
+                folderListener.incrementRenumber(i4msg);
+                if (folderListener.isFailedRenumber(i4msg)) {
                     throw new ImapRenumberException();
                 }
                 //prev has higher UID, but it has already been displayed to client
@@ -1075,15 +1076,15 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return removed;
     }
 
-    void restore(ImapSession sess, SessionData sdata) throws ImapSessionClosedException, ServiceException {
-        session = sess;
-        MailboxStore sessMbox = session.getMailbox();
+    void restore(ImapListener listener, SessionData sdata) throws ImapSessionClosedException, ServiceException {
+        folderListener = listener;
+        MailboxStore sessMbox = folderListener.getMailbox();
         if (sessMbox == null) {
             mailboxStore = null;
             throw new ImapSessionClosedException();
         }
         mailboxStore = ImapMailboxStore.get(sessMbox, sessMbox.getAccountId());
-        path = session.getPath();
+        path = folderListener.getPath();
         // FIXME: NOT RESTORING sequence.msg.sflags PROPERLY -- need to serialize it!!!
         sessionData = sdata;
     }
@@ -1169,12 +1170,11 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
         added.sort();
         boolean recent = true;
-        for (Session s : mailboxStore.getListeners()) {
+        for (ImapListener i4listener : mailboxStore.getListeners()) {
             // added messages are only \Recent if we're the first IMAP session notified about them
-            ImapSession i4session = (ImapSession) s;
-            if (i4session == session) {
+            if (i4listener == folderListener) {
                 break;
-            } else if (i4session.isWritable() && i4session.getFolderId() == folderId) {
+            } else if (i4listener.isWritable() && (i4listener.getFolderId() == folderId)) {
                 recent = false;
                 break;
             }
