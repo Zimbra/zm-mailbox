@@ -17,7 +17,6 @@
 
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.assertArrayEquals;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -29,23 +28,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.lang.StringUtils;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.AppendMessage;
@@ -67,46 +73,64 @@ import com.zimbra.cs.mailclient.imap.ResponseHandler;
 /**
  * IMAP server tests.
  */
-public class TestImap extends TestCase {
-    private static final String HOST = "localhost";
-    private static final int PORT = 7143;
+public class TestImap {
     private static final String USER = "imap-test-user";
     private static final String PASS = "test123";
 
     private ImapConnection connection;
-    private boolean mDisplayMailFoldersOnly;
+    private static SoapProvisioning sp;
+    private static Provisioning prov;
+    private static Server homeServer;
 
-    @Override
+    private static boolean mDisplayMailFoldersOnly;
+    private static String[] imapServersForLocalhost = null;
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        sp = new SoapProvisioning();
+        prov = Provisioning.getInstance();
+        homeServer = prov.getLocalServer();
+        sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + homeServer.getServiceHostname() + ":" + homeServer.getAdminPort()
+                + AdminConstants.ADMIN_SERVICE_URI);
+        sp.soapZimbraAdminAuthenticate();
+
+        //preserve settings
+        mDisplayMailFoldersOnly = homeServer.isImapDisplayMailFoldersOnly();
+        homeServer.setImapDisplayMailFoldersOnly(false);
+        imapServersForLocalhost = homeServer.getReverseProxyUpstreamImapServers();
+        homeServer.setReverseProxyUpstreamImapServers(new String[] {});
+        sp.flushCache("all", null, true);
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        if(homeServer != null) {
+            homeServer.setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
+            homeServer.setReverseProxyUpstreamImapServers(imapServersForLocalhost);
+        }
+    }
+
+    @Before
     public void setUp() throws Exception {
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
         }
-        TestUtil.deleteAccount(USER);
-        TestUtil.createAccount(USER);
-        mDisplayMailFoldersOnly = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
-        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(false);
+        cleanup();
+
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraMailHost, homeServer.getServiceHostname());
+        attrs.put(Provisioning.A_zimbraFeatureIMEnabled, ProvisioningConstants.TRUE);
+        TestUtil.createAccount(USER, attrs);
+
         connection = connect();
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER); //funky, but somehow it gets us around SSL
-
-        if (connection != null) {
-            connection.close();
-        }
-        TestUtil.deleteAccount(USER);
-        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
-    }
-
-    private void checkRegex(String regexPatt, String target, Boolean expected, int maxAccesses, Boolean timeoutOk) {
-        try {
-            Pattern patt = Pattern.compile(regexPatt);
-            AccessBoundedRegex re = new AccessBoundedRegex(patt, maxAccesses);
-            assertEquals(String.format("matching '%s' against pattern '%s'", target, patt),
-                    expected, new Boolean(re.matches(target)));
-        } catch (AccessBoundedRegex.TooManyAccessesToMatchTargetException se) {
-            assertTrue("Throwing exception considered OK", timeoutOk);
+        cleanup();
+        homeServer.setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
+        if(homeServer != null) {
+            homeServer.setReverseProxyUpstreamImapServers(imapServersForLocalhost);
         }
     }
 
@@ -295,7 +319,7 @@ public class TestImap extends TestCase {
     public void testList93114DosWithWildcards() throws Exception {
         try {
             List<ListData> listResult = connection.list("", "**************** HELLO");
-            assertNotNull(listResult);
+            Assert.assertNotNull(listResult);
         } catch (CommandFailedException cfe) {
             ZimbraLog.test.info("Expected CommandFailedException", cfe);
         }
@@ -305,7 +329,7 @@ public class TestImap extends TestCase {
     public void testList93114DosWithPercents() throws Exception {
         try {
             List<ListData> listResult = connection.list("", "%%%%%%%%%%%%%%%% HELLO");
-            assertNotNull(listResult);
+            Assert.assertNotNull(listResult);
         } catch (CommandFailedException cfe) {
             ZimbraLog.test.info("Expected CommandFailedException", cfe);
         }
@@ -320,7 +344,7 @@ public class TestImap extends TestCase {
         mboxPatt.append(" HELLO");
         try {
             List<ListData> listResult = connection.list("", mboxPatt.toString());
-            assertNotNull(listResult);
+            Assert.assertNotNull(listResult);
         } catch (CommandFailedException cfe) {
             ZimbraLog.test.info("Expected CommandFailedException", cfe);
         }
@@ -329,21 +353,22 @@ public class TestImap extends TestCase {
     @Test
     public void testListInbox() throws Exception {
         List<ListData> listResult = connection.list("", "INBOX");
-        assertNotNull(listResult);
-        assertEquals("List result should have this number of entries", 1, listResult.size());
+        Assert.assertNotNull(listResult);
+        Assert.assertEquals("List result should have this number of entries", 1, listResult.size());
     }
-@Test
+
+    @Test
     public void testMailfoldersOnlyList() throws Exception {
     	ZMailbox mbox = TestUtil.getZMailbox(USER);
         String folderName = "newfolder1";
-        ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
+        mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
         Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(true);
         List<ListData> listResult = connection.list("", "*");
-        assertNotNull(listResult);
-	assertTrue("List result should have atleast 5  entries", listResult.size() >= 5);
-	boolean hasContacts = false;
-	boolean hasChats = false;
-	boolean hasEmailedContacts = false;
+        Assert.assertNotNull(listResult);
+        Assert.assertTrue("List result should have atleast 5  entries", listResult.size() >= 5);
+	    boolean hasContacts = false;
+	    boolean hasChats = false;
+	    boolean hasEmailedContacts = false;
         boolean hasTrash = false;
         boolean hasDrafts = false;
         boolean hasInbox = false;
@@ -379,88 +404,47 @@ public class TestImap extends TestCase {
 	        hasJunk= true;
 	    }
         }
-        assertFalse("MailonlyfolderList * contains chats",hasChats);
-	assertFalse("MailonlyfolderList * contains contacts",hasContacts);
-	assertFalse("MailonlyfolderList * contains emailed contacts",hasEmailedContacts);
-	assertTrue("MailonlyfolderList * contains Trash",hasTrash);
-	assertTrue("MailonlyfolderList * contains Drafts ",hasDrafts);
-	assertTrue("MailonlyfolderList * contains Inbox",hasInbox);
-	assertTrue("MailonlyfolderList * contains Sent",hasSent);
-	assertTrue("MailonlyfolderList * contains Junk",hasJunk);
-	assertTrue("MailonlyfolderList * contains unknown sub folders",hasUnknown);
+        Assert.assertFalse("MailonlyfolderList * contains chats",hasChats);
+        Assert.assertFalse("MailonlyfolderList * contains contacts",hasContacts);
+        Assert.assertFalse("MailonlyfolderList * contains emailed contacts",hasEmailedContacts);
+        Assert.assertTrue("MailonlyfolderList * contains Trash",hasTrash);
+        Assert.assertTrue("MailonlyfolderList * contains Drafts ",hasDrafts);
+        Assert.assertTrue("MailonlyfolderList * contains Inbox",hasInbox);
+        Assert.assertTrue("MailonlyfolderList * contains Sent",hasSent);
+        Assert.assertTrue("MailonlyfolderList * contains Junk",hasJunk);
+        Assert.assertTrue("MailonlyfolderList * contains unknown sub folders",hasUnknown);
 	}
     @Test
     public void testFoldersList() throws Exception {
         List<ListData> listResult = connection.list("", "*");
-        assertNotNull(listResult);
-        assertTrue("List result should have atleast 5  entries", listResult.size() >= 5);
-        boolean hasContacts = false;
-        boolean hasChats = false;
-        boolean hasEmailedContacts = false;
-        boolean hasTrash = false;
-        boolean hasDrafts = false;
-        boolean hasInbox = false;
-        boolean hasJunk = false;
-        boolean hasSent = false;
-        for (ListData ld : listResult) {
-            if((ld.getMailbox().equalsIgnoreCase("Contacts"))){
-                hasContacts = true;
-	    }
-	    else if((ld.getMailbox().equalsIgnoreCase("Chats"))){
-		hasChats = true;
-	    }
-	    else if((ld.getMailbox().equalsIgnoreCase("Emailed Contacts"))){
-		hasEmailedContacts = true;
-	    }
-	    else if((ld.getMailbox().equalsIgnoreCase("Trash"))){
-		hasTrash = true;
-	    }
-	    else if((ld.getMailbox().equalsIgnoreCase("Drafts"))){
-		hasDrafts= true;
-	    }
-	    else if((ld.getMailbox().equalsIgnoreCase("Inbox"))){
-		hasInbox= true;
-	    }
-	    else if((ld.getMailbox().equalsIgnoreCase("Sent"))){
-		hasSent= true;
-	    }
-	    else if((ld.getMailbox().equalsIgnoreCase("Junk"))){
-		hasJunk= true;
-	    }
-        }
-        assertTrue("folderList * contains chats",hasChats);
-	assertTrue("folderList * contains contacts",hasContacts);
-	assertTrue("folderList * contains emailed contacts",hasEmailedContacts);
-	assertTrue("folderList * contains Trash",hasTrash);
-	assertTrue("folderList * contains Drafts ",hasDrafts);
-	assertTrue("folderList * contains Inbox",hasInbox);
-	assertTrue("folderList * contains Sent",hasSent);
-	assertTrue("folderList * contains Junk",hasJunk);
+        Assert.assertNotNull(listResult);
+        Assert.assertTrue("List result should have atleast 8  entries", listResult.size() >= 8);
+        verifyFolderList(listResult);
     }
 
     @Test
     public void testListContacts() throws Exception {
     List<ListData> listResult = connection.list("", "*Contacts*");
-         assertNotNull(listResult);
+         Assert.assertNotNull(listResult);
          // 'Contacts' and 'Emailed Contacts'
-         assertTrue("List result should have at least 2 entries", listResult.size() >= 2);
+         Assert.assertTrue("List result should have at least 2 entries", listResult.size() >= 2);
          for (ListData le : listResult) {
-            assertTrue(String.format("mailbox '%s' contains 'Contacts'", le.getMailbox()),
+            Assert.assertTrue(String.format("mailbox '%s' contains 'Contacts'", le.getMailbox()),
                     le.getMailbox().contains("Contacts"));
             }
          }
 
     @Test
     public void testAppend() throws Exception {
-        assertTrue(connection.hasCapability("UIDPLUS"));
+        Assert.assertTrue(connection.hasCapability("UIDPLUS"));
         Flags flags = Flags.fromSpec("afs");
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(100000);
         try {
             AppendResult res = connection.append("INBOX", flags, date, msg);
-            assertNotNull(res);
+            Assert.assertNotNull(res);
             byte[] b = fetchBody(res.getUid());
-            assertArrayEquals("content mismatch", msg.getBytes(), b);
+            Assert.assertArrayEquals("content mismatch", msg.getBytes(), b);
         } finally {
             msg.dispose();
         }
@@ -468,7 +452,7 @@ public class TestImap extends TestCase {
 
     @Test
     public void testOverflowAppend() throws Exception {
-        assertTrue(connection.hasCapability("UIDPLUS"));
+        Assert.assertTrue(connection.hasCapability("UIDPLUS"));
         int oldReadTimeout = connection.getConfig().getReadTimeout();
         try {
             connection.setReadTimeout(10);
@@ -477,12 +461,12 @@ public class TestImap extends TestCase {
             ImapRequest req = connection.newRequest(CAtom.APPEND, new MailboxName("INBOX"));
             req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"+}");
             ImapResponse resp = req.send();
-            assertTrue(resp.isNO() || resp.isBAD());
+            Assert.assertTrue(resp.isNO() || resp.isBAD());
 
             req = connection.newRequest(CAtom.APPEND, new MailboxName("INBOX"));
             req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"}");
             resp = req.send();
-            assertTrue(resp.isNO() || resp.isBAD());
+            Assert.assertTrue(resp.isNO() || resp.isBAD());
         } finally {
             connection.setReadTimeout(oldReadTimeout);
         }
@@ -498,7 +482,7 @@ public class TestImap extends TestCase {
             ImapRequest req = connection.newRequest(CAtom.FETCH, "1:*");
             req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"+}");
             ImapResponse resp = req.send();
-            assertTrue(resp.isNO() || resp.isBAD());
+            Assert.assertTrue(resp.isNO() || resp.isBAD());
         } finally {
             connection.setReadTimeout(oldReadTimeout);
         }
@@ -518,7 +502,7 @@ public class TestImap extends TestCase {
     public void testStoreTags() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         List<ZTag> tags = mbox.getAllTags();
-        assertTrue(tags == null || tags.size() == 0);
+        Assert.assertTrue(tags == null || tags.size() == 0);
 
         String tagName = "T1";
         ZTag tag = mbox.getTag(tagName);
@@ -526,8 +510,8 @@ public class TestImap extends TestCase {
             tag = mbox.createTag(tagName, Color.blue);
         }
         tags = mbox.getAllTags();
-        assertTrue(tags != null && tags.size() == 1);
-        assertEquals("T1", tags.get(0).getName());
+        Assert.assertTrue(tags != null && tags.size() == 1);
+        Assert.assertEquals("T1", tags.get(0).getName());
 
         String folderName = "newfolder1";
         ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
@@ -535,105 +519,105 @@ public class TestImap extends TestCase {
         mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", "", System.currentTimeMillis(), simpleMessage("foo2"), true);
 
         MailboxInfo info = connection.select("INBOX");
-        assertTrue("INBOX does not contain expected flag "+tagName, info.getFlags().isSet(tagName));
+        Assert.assertTrue("INBOX does not contain expected flag "+tagName, info.getFlags().isSet(tagName));
 
         Map<Long, MessageData> data = connection.fetch("1:*", "FLAGS");
-        assertEquals(2, data.size());
+        Assert.assertEquals(2, data.size());
         Iterator<Long> it = data.keySet().iterator();
         Long seq = it.next();
-        assertTrue("flag not set on first message", data.get(seq).getFlags().isSet(tagName));
+        Assert.assertTrue("flag not set on first message", data.get(seq).getFlags().isSet(tagName));
 
         seq = it.next();
-        assertFalse("flag unexpectedly set on second message", data.get(seq).getFlags().isSet(tagName));
+        Assert.assertFalse("flag unexpectedly set on second message", data.get(seq).getFlags().isSet(tagName));
 
         connection.store(seq+"", "+FLAGS", tagName);
         data = connection.fetch(seq+"", "FLAGS");
-        assertEquals(1, data.size());
+        Assert.assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        assertTrue("flag not set after STORE in INBOX", data.get(seq).getFlags().isSet(tagName));
+        Assert.assertTrue("flag not set after STORE in INBOX", data.get(seq).getFlags().isSet(tagName));
 
         mbox.addMessage(folder.getId(), "u", "", System.currentTimeMillis(), simpleMessage("bar"), true);
         info = connection.select(folderName);
-        assertFalse(folderName+" contains unexpected flag "+tagName, info.getFlags().isSet(tagName));
+        Assert.assertFalse(folderName+" contains unexpected flag "+tagName, info.getFlags().isSet(tagName));
 
         data = connection.fetch("*", "FLAGS");
-        assertEquals(1, data.size());
+        Assert.assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        assertFalse("flag unexpectedly set on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
+        Assert.assertFalse("flag unexpectedly set on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
 
         connection.store(seq+"", "+FLAGS", tagName);
         data = connection.fetch(seq+"", "FLAGS");
-        assertEquals(1, data.size());
+        Assert.assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
+        Assert.assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
 
         info = connection.select(folderName);
-        assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
+        Assert.assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
 
         String tagName2 = "T2";
         connection.store(seq+"", "+FLAGS", tagName2);
         data = connection.fetch(seq+"", "FLAGS");
-        assertEquals(1, data.size());
+        Assert.assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
-        assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName2));
+        Assert.assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
+        Assert.assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName2));
 
         info = connection.select(folderName);
-        assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
-        assertTrue("new tag not set in new folder", info.getFlags().isSet(tagName2));
+        Assert.assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
+        Assert.assertTrue("new tag not set in new folder", info.getFlags().isSet(tagName2));
 
         tags = mbox.getAllTags(); //should not have created T2 as a visible tag
-        assertTrue(tags != null && tags.size() == 1);
-        assertEquals("T1", tags.get(0).getName());
+        Assert.assertTrue(tags != null && tags.size() == 1);
+        Assert.assertEquals("T1", tags.get(0).getName());
 
         String tagName3 = "T3";
         connection.store(seq+"", "FLAGS", tagName3);
         data = connection.fetch(seq+"", "FLAGS");
-        assertEquals(1, data.size());
+        Assert.assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        assertFalse("flag unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
-        assertFalse("flag unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName2));
-        assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName3));
+        Assert.assertFalse("flag unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
+        Assert.assertFalse("flag unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName2));
+        Assert.assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName3));
 
         info = connection.select(folderName);
-        assertTrue("new tag not set in new folder", info.getFlags().isSet(tagName3));
-        assertFalse("old tag unexpectedly set in new folder", info.getFlags().isSet(tagName));
-        assertFalse("old tag unexpectedly set in new folder", info.getFlags().isSet(tagName2));
+        Assert.assertTrue("new tag not set in new folder", info.getFlags().isSet(tagName3));
+        Assert.assertFalse("old tag unexpectedly set in new folder", info.getFlags().isSet(tagName));
+        Assert.assertFalse("old tag unexpectedly set in new folder", info.getFlags().isSet(tagName2));
 
         tags = mbox.getAllTags(); //should not have created T2 or T3 as a visible tag
-        assertTrue(tags != null && tags.size() == 1);
-        assertEquals("T1", tags.get(0).getName());
+        Assert.assertTrue(tags != null && tags.size() == 1);
+        Assert.assertEquals("T1", tags.get(0).getName());
 
 
         connection.store(seq+"", "-FLAGS", tagName3);
         data = connection.fetch(seq+"", "FLAGS");
-        assertEquals(1, data.size());
+        Assert.assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        assertTrue("flags unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isEmpty());
+        Assert.assertTrue("flags unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isEmpty());
 
         info = connection.select("INBOX");
-        assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
-        assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tagName2));
+        Assert.assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
+        Assert.assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tagName2));
     }
 
     private void storeInvalidFlag(String flag, Long seq) throws IOException {
         try {
             connection.store(seq+"", "FLAGS", flag);
-            fail("server allowed client to set system flag "+flag);
+            Assert.fail("server allowed client to set system flag "+flag);
         } catch (CommandFailedException e) {
             //expected
         }
 
         Map<Long, MessageData> data = connection.fetch(seq+":"+seq, "FLAGS");
-        assertFalse(data.get(seq).getFlags().isSet(flag));
+        Assert.assertFalse(data.get(seq).getFlags().isSet(flag));
         try {
             connection.store(seq+"", "+FLAGS", flag);
-            fail("server allowed client to set system flag "+flag);
+            Assert.fail("server allowed client to set system flag "+flag);
         } catch (CommandFailedException e) {
             //expected
         }
         data = connection.fetch(seq+":"+seq, "FLAGS");
-        assertFalse(data.get(seq).getFlags().isSet(flag));
+        Assert.assertFalse(data.get(seq).getFlags().isSet(flag));
     }
 
     @Test
@@ -642,7 +626,7 @@ public class TestImap extends TestCase {
         mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", "", System.currentTimeMillis(), simpleMessage("foo"), true);
         MailboxInfo info = connection.select("INBOX");
         Map<Long, MessageData> data = connection.fetch("1:*", "FLAGS");
-        assertEquals(1, data.size());
+        Assert.assertEquals(1, data.size());
         Iterator<Long> it = data.keySet().iterator();
         Long seq = it.next();
 
@@ -655,7 +639,7 @@ public class TestImap extends TestCase {
     public void testStoreTagsDirty() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         List<ZTag> tags = mbox.getAllTags();
-        assertTrue(tags == null || tags.size() == 0);
+        Assert.assertTrue(tags == null || tags.size() == 0);
 
         String tagName = "T1";
         final String tagName2 = "T2";
@@ -664,22 +648,22 @@ public class TestImap extends TestCase {
             tag = mbox.createTag(tagName, Color.blue);
         }
         tags = mbox.getAllTags();
-        assertTrue(tags != null && tags.size() == 1);
-        assertEquals("T1", tags.get(0).getName());
+        Assert.assertTrue(tags != null && tags.size() == 1);
+        Assert.assertEquals("T1", tags.get(0).getName());
 
         String folderName = "newfolder1";
         ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
         mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", tag.getId(), System.currentTimeMillis(), simpleMessage("foo1"), true);
 
         MailboxInfo info = connection.select("INBOX");
-        assertTrue("INBOX does not contain expected flag "+tagName, info.getFlags().isSet(tagName));
-        assertFalse("INBOX contain unexpected flag "+tagName2, info.getFlags().isSet(tagName2));
+        Assert.assertTrue("INBOX does not contain expected flag "+tagName, info.getFlags().isSet(tagName));
+        Assert.assertFalse("INBOX contain unexpected flag "+tagName2, info.getFlags().isSet(tagName2));
 
         Map<Long, MessageData> data = connection.fetch("1:*", "FLAGS");
-        assertEquals(1, data.size());
+        Assert.assertEquals(1, data.size());
         Iterator<Long> it = data.keySet().iterator();
         Long seq = it.next();
-        assertTrue("flag not set on first message", data.get(seq).getFlags().isSet(tagName));
+        Assert.assertTrue("flag not set on first message", data.get(seq).getFlags().isSet(tagName));
 
         ImapRequest req = connection.newRequest("STORE", seq+"", "+FLAGS", tagName2);
         req.setResponseHandler(new ResponseHandler() {
@@ -687,7 +671,7 @@ public class TestImap extends TestCase {
             public void handleResponse(ImapResponse res) throws Exception {
                 if (res.isUntagged() && res.getCCode() == CAtom.FLAGS) {
                     Flags flags = (Flags) res.getData();
-                    assertTrue(flags.isSet(tagName2));
+                    Assert.assertTrue(flags.isSet(tagName2));
                 }
             }
         });
@@ -704,7 +688,7 @@ public class TestImap extends TestCase {
         try {
             AppendResult res = connection.append("INBOX", flags, date, msg);
             MessageData data = connection.uidFetch(res.getUid(), "FLAGS");
-            assertTrue(data.getFlags().isSet(tag1));
+            Assert.assertTrue(data.getFlags().isSet(tag1));
         } finally {
             msg.dispose();
         }
@@ -712,7 +696,7 @@ public class TestImap extends TestCase {
         //should not have created a visible tag
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         List<ZTag> tags = mbox.getAllTags();
-        assertTrue("APPEND created new visible tag", tags == null || tags.size() == 0);
+        Assert.assertTrue("APPEND created new visible tag", tags == null || tags.size() == 0);
 
         //now create a visible tag, add it to a message in inbox then try append to message in different folder
         String tag2 = "APPENDTAG2";
@@ -721,18 +705,18 @@ public class TestImap extends TestCase {
             tag = mbox.createTag(tag2, Color.blue);
         }
         tags = mbox.getAllTags();
-        assertTrue(tags != null && tags.size() == 1);
-        assertEquals(tag2, tags.get(0).getName());
+        Assert.assertTrue(tags != null && tags.size() == 1);
+        Assert.assertEquals(tag2, tags.get(0).getName());
 
         mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", tag.getId(), System.currentTimeMillis(), simpleMessage("foo1"), true);
         MailboxInfo info = connection.select("INBOX");
-        assertTrue("INBOX does not contain expected flag "+tag2, info.getFlags().isSet(tag2));
+        Assert.assertTrue("INBOX does not contain expected flag "+tag2, info.getFlags().isSet(tag2));
 
         String folderName = "newfolder1";
         ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
 
         info = connection.select(folderName);
-        assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tag2));
+        Assert.assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tag2));
 
         msg = message(10);
         flags = Flags.fromSpec("afs");
@@ -740,13 +724,13 @@ public class TestImap extends TestCase {
         try {
             AppendResult res = connection.append(folderName, flags, date, msg);
             MessageData data = connection.uidFetch(res.getUid(), "FLAGS");
-            assertTrue(data.getFlags().isSet(tag2));
+            Assert.assertTrue(data.getFlags().isSet(tag2));
         } finally {
             msg.dispose();
         }
 
         info = connection.select(folderName);
-        assertTrue("new tag not set in new folder", info.getFlags().isSet(tag2));
+        Assert.assertTrue("new tag not set in new folder", info.getFlags().isSet(tag2));
     }
 
     private void appendInvalidFlag(String flag) throws IOException {
@@ -756,7 +740,7 @@ public class TestImap extends TestCase {
         Date date = new Date(System.currentTimeMillis());
         try {
             AppendResult res = connection.append("INBOX", flags, date, msg);
-            fail("server allowed client to set system flag "+flag);
+            Assert.fail("server allowed client to set system flag "+flag);
         } catch (CommandFailedException e) {
             //expected
         } finally {
@@ -778,7 +762,7 @@ public class TestImap extends TestCase {
         Flags flags = Flags.fromSpec("afs");
         final String tag1 = "NEWDIRTYTAG"; //new tag; does not exist in mbox
         MailboxInfo info = connection.select("INBOX");
-        assertFalse("INBOX contains unexpected flag "+tag1, info.getFlags().isSet(tag1));
+        Assert.assertFalse("INBOX contains unexpected flag "+tag1, info.getFlags().isSet(tag1));
 
         flags.set(tag1);
         Date date = new Date(System.currentTimeMillis());
@@ -790,7 +774,7 @@ public class TestImap extends TestCase {
                 public void handleResponse(ImapResponse res) throws Exception {
                     if (res.isUntagged() && res.getCCode() == CAtom.FLAGS) {
                         Flags flags = (Flags) res.getData();
-                        assertTrue(flags.isSet(tag1));
+                        Assert.assertTrue(flags.isSet(tag1));
                     }
                 }
             });
@@ -803,8 +787,8 @@ public class TestImap extends TestCase {
 
     @Test
     public void testCatenateSimple() throws Exception {
-        assertTrue(connection.hasCapability("CATENATE"));
-        assertTrue(connection.hasCapability("UIDPLUS"));
+        Assert.assertTrue(connection.hasCapability("CATENATE"));
+        Assert.assertTrue(connection.hasCapability("UIDPLUS"));
         String part1 = simpleMessage("test message");
         String part2 = "more text\r\n";
         AppendMessage am = new AppendMessage(
@@ -812,9 +796,8 @@ public class TestImap extends TestCase {
         AppendResult res = connection.append("INBOX", am);
         connection.select("INBOX");
         byte[] body = fetchBody(res.getUid());
-        assertArrayEquals("content mismatch", bytes(part1 + part2), body);
+        Assert.assertArrayEquals("content mismatch", bytes(part1 + part2), body);
     }
-
 
     @Test
     public void testCatenateSimpleNoLiteralPlus() throws Exception {
@@ -828,8 +811,8 @@ public class TestImap extends TestCase {
 
     @Test
     public void testCatenateUrl() throws Exception {
-        assertTrue(connection.hasCapability("CATENATE"));
-        assertTrue(connection.hasCapability("UIDPLUS"));
+        Assert.assertTrue(connection.hasCapability("CATENATE"));
+        Assert.assertTrue(connection.hasCapability("UIDPLUS"));
         String msg1 = simpleMessage("test message");
         AppendResult res1 = connection.append("INBOX", null, null, literal(msg1));
         String s1 = "first part\r\n";
@@ -840,18 +823,80 @@ public class TestImap extends TestCase {
         AppendResult res2 = connection.append("INBOX", am);
         connection.select("INBOX");
         byte[] b2 = fetchBody(res2.getUid());
-        assertArrayEquals("content mismatch", bytes(msg2), b2);
+        Assert.assertArrayEquals("content mismatch", bytes(msg2), b2);
     }
 
     @Test
     public void testMultiappend() throws Exception {
-        assertTrue(connection.hasCapability("MULTIAPPEND"));
-        assertTrue(connection.hasCapability("UIDPLUS"));
+        Assert.assertTrue(connection.hasCapability("MULTIAPPEND"));
+        Assert.assertTrue(connection.hasCapability("UIDPLUS"));
         AppendMessage msg1 = new AppendMessage(null, null, literal("test 1"));
         AppendMessage msg2 = new AppendMessage(null, null, literal("test 2"));
         AppendResult res = connection.append("INBOX", msg1, msg2);
-        assertNotNull(res);
-        assertEquals("expecting 2 uids", 2, res.getUids().length);
+        Assert.assertNotNull(res);
+        Assert.assertEquals("expecting 2 uids", 2, res.getUids().length);
+    }
+
+    @Test
+    public void testSubscribe() throws IOException, ServiceException {
+        String folderName = "TestImap-testSubscribe";
+        TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
+        List<ListData> listResult = connection.lsub("", "*");
+        Assert.assertNotNull(listResult);
+        Assert.assertEquals("Should have 0 subscriptions at this point", 0, listResult.size());
+        try {
+            connection.subscribe(folderName);
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+        listResult = connection.lsub("", "*");
+        Assert.assertNotNull(listResult);
+        Assert.assertEquals(1, listResult.size());
+        Assert.assertTrue("Should be subscribed to " + folderName + ". Instead got " + listResult.get(0).getMailbox(), folderName.equalsIgnoreCase(listResult.get(0).getMailbox()));
+    }
+
+    @Test
+    public void testSubscribeNested() throws IOException, ServiceException {
+        String folderName = "TestImap-testSubscribeNested";
+        ZFolder folder = TestUtil.createFolder(TestUtil.getZMailbox(USER),Integer.toString(Mailbox.ID_FOLDER_INBOX), folderName);
+        List<ListData> listResult = connection.lsub("", "*");
+        Assert.assertNotNull(listResult);
+        Assert.assertEquals("Should have 0 subscriptions before subscribing", 0, listResult.size());
+        try {
+            connection.subscribe(folder.getPath());
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+        listResult = connection.lsub("", "*");
+        Assert.assertNotNull(listResult);
+        Assert.assertEquals("Should have 1 subscription after subscribing", 1, listResult.size());
+        Assert.assertTrue("Should be subscribed to " + folder.getPath().substring(1) + ". Instead got " + listResult.get(0).getMailbox(), folder.getPath().substring(1).equalsIgnoreCase(listResult.get(0).getMailbox()));
+    }
+
+    @Test
+    public void testUnSubscribe() throws IOException, ServiceException {
+        String folderName = "TestImap-testUnSubscribe";
+        TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
+        List<ListData> listResult = connection.lsub("", "*");
+        Assert.assertNotNull(listResult);
+        Assert.assertEquals("Should have 0 subscriptions before subscribing", 0, listResult.size());
+        try {
+            connection.subscribe(folderName);
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+        listResult = connection.lsub("", "*");
+        Assert.assertNotNull(listResult);
+        Assert.assertEquals("Should have 1 subscription after subscribing", 1, listResult.size());
+        Assert.assertTrue("Should be subscribed to " + folderName + ". Instead got " + listResult.get(0).getMailbox(), folderName.equalsIgnoreCase(listResult.get(0).getMailbox()));
+        try {
+            connection.unsubscribe(folderName);
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+        listResult = connection.lsub("", "*");
+        Assert.assertNotNull(listResult);
+        Assert.assertEquals("Should have 0 subscriptions after unsubscribing", 0, listResult.size());
     }
 
     @Test
@@ -877,22 +922,22 @@ public class TestImap extends TestCase {
         try {
             return s.getBytes("UTF8");
         } catch (UnsupportedEncodingException e) {
-            fail("UTF8 encoding not supported");
+            Assert.fail("UTF8 encoding not supported");
         }
         return null;
     }
 
     private byte[] fetchBody(long uid) throws IOException {
         MessageData md = connection.uidFetch(uid, "(BODY.PEEK[])");
-        assertNotNull("message not found", md);
-        assertEquals(uid, md.getUid());
+        Assert.assertNotNull("message not found", md);
+        Assert.assertEquals(uid, md.getUid());
         Body[] bs = md.getBodySections();
-        assertNotNull(bs);
-        assertEquals(1, bs.length);
+        Assert.assertNotNull(bs);
+        Assert.assertEquals(1, bs.length);
         return bs[0].getImapData().getBytes();
     }
 
-    private static Literal message(int size) throws IOException {
+    public static Literal message(int size) throws IOException {
         File file = File.createTempFile("msg", null);
         file.deleteOnExit();
         FileWriter out = new FileWriter(file);
@@ -934,8 +979,8 @@ public class TestImap extends TestCase {
     }
 
     private ImapConnection connect() throws IOException {
-        ImapConfig config = new ImapConfig(HOST);
-        config.setPort(PORT);
+        ImapConfig config = new ImapConfig(homeServer.getServiceHostname());
+        config.setPort(homeServer.getImapBindPort());
         config.setAuthenticationId(USER);
         config.getLogger().setLevel(Log.Level.trace);
         ImapConnection connection = new ImapConnection(config);
@@ -948,5 +993,63 @@ public class TestImap extends TestCase {
     public static void amain(String[] args) throws Exception {
         TestUtil.cliSetup();
         TestUtil.runTest(TestImapImport.class);
+    }
+    
+    public static void verifyFolderList(List<ListData> listResult) {
+        boolean hasContacts = false;
+        boolean hasChats = false;
+        boolean hasEmailedContacts = false;
+        boolean hasTrash = false;
+        boolean hasDrafts = false;
+        boolean hasInbox = false;
+        boolean hasJunk = false;
+        boolean hasSent = false;
+        for (ListData ld : listResult) {
+            if ((ld.getMailbox().equalsIgnoreCase("Contacts"))) {
+                hasContacts = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Chats"))) {
+                hasChats = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Emailed Contacts"))) {
+                hasEmailedContacts = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Trash"))) {
+                hasTrash = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Drafts"))) {
+                hasDrafts = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Inbox"))) {
+                hasInbox = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Sent"))) {
+                hasSent = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Junk"))) {
+                hasJunk = true;
+            }
+        }
+        Assert.assertTrue("folderList * contains chats", hasChats);
+        Assert.assertTrue("folderList * contains contacts", hasContacts);
+        Assert.assertTrue("folderList * contains emailed contacts", hasEmailedContacts);
+        Assert.assertTrue("folderList * contains Trash", hasTrash);
+        Assert.assertTrue("folderList * contains Drafts ", hasDrafts);
+        Assert.assertTrue("folderList * contains Inbox", hasInbox);
+        Assert.assertTrue("folderList * contains Sent", hasSent);
+        Assert.assertTrue("folderList * contains Junk", hasJunk);
+    }
+
+    private void cleanup() throws Exception {
+        if (connection != null) {
+            connection.close();
+        }
+        if(TestUtil.accountExists(USER)) {
+            TestUtil.deleteAccount(USER);
+        }
+    }
+
+    private void checkRegex(String regexPatt, String target, Boolean expected, int maxAccesses, Boolean timeoutOk) {
+        try {
+            Pattern patt = Pattern.compile(regexPatt);
+            AccessBoundedRegex re = new AccessBoundedRegex(patt, maxAccesses);
+            Assert.assertEquals(String.format("matching '%s' against pattern '%s'", target, patt),
+                    expected, new Boolean(re.matches(target)));
+        } catch (AccessBoundedRegex.TooManyAccessesToMatchTargetException se) {
+            Assert.assertTrue("Throwing exception considered OK", timeoutOk);
+        }
     }
 }
