@@ -54,14 +54,14 @@ import com.zimbra.soap.admin.type.MailboxWithMailboxId;
  */
 public class PurgeMessages extends AdminDocumentHandler {
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element mreq = request.getOptionalElement(AdminConstants.E_MAILBOX);
         String[] accounts;
         if (mreq != null) {
             accounts = new String[] { mreq.getAttribute(AdminConstants.A_ACCOUNTID) };
-            
+
             // accounts are specified, check right or each account
             Provisioning prov = Provisioning.getInstance();
             for (String acctId : accounts) {
@@ -70,14 +70,14 @@ public class PurgeMessages extends AdminDocumentHandler {
                     throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
                 checkAccountRight(zsc, acct, Admin.R_purgeMessages);
             }
-            
+
         } else {
             // all accounts on the system, has to be a system admin
             checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
-            
+
             accounts = MailboxManager.getInstance().getAccountIds();
         }
-        
+
         PurgeMessagesResponse purgeResponse = new PurgeMessagesResponse();
         for (int i = 0; i < accounts.length; i++) {
             Account account = Provisioning.getInstance().getAccountById(accounts[i]);
@@ -89,7 +89,7 @@ public class PurgeMessages extends AdminDocumentHandler {
                 if (mbox == null)
                     continue;
                 mbox.purgeMessages(null);
-                mboxResp = new MailboxWithMailboxId(mbox.getId(), account.getId(), Long.valueOf(mbox.getSize()));                
+                mboxResp = new MailboxWithMailboxId(mbox.getId(), account.getId(), Long.valueOf(mbox.getSize()));
             } else { // remote
                 Server server = account.getServer();
                 if (server == null)
@@ -102,9 +102,9 @@ public class PurgeMessages extends AdminDocumentHandler {
             }
             purgeResponse.addMailbox(mboxResp);
         }
-        return JaxbUtil.jaxbToElement(purgeResponse);
-	}
-    
+        return zsc.jaxbToElement(purgeResponse);
+    }
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_purgeMessages);
