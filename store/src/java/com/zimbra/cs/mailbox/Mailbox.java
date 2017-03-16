@@ -241,6 +241,7 @@ import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 import com.zimbra.cs.session.AllAccountsRedoCommitCallback;
 import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -385,7 +386,7 @@ public class Mailbox implements MailboxStore {
         int recent = NO_CHANGE;
         Pair<String, Metadata> config = null;
 
-        PendingModifications dirty = new PendingModifications();
+        PendingLocalModifications dirty = new PendingLocalModifications();
         final List<Object> otherDirtyStuff = new LinkedList<Object>();
         PendingDelete deletes = null;
         private boolean writeChange;
@@ -1312,7 +1313,7 @@ public class Mailbox implements MailboxStore {
         return currentChange().recorder;
     }
 
-    PendingModifications getPendingModifications() {
+    PendingLocalModifications getPendingModifications() {
         return currentChange().dirty;
     }
 
@@ -1614,11 +1615,11 @@ public class Mailbox implements MailboxStore {
      *              Change#MODIFIED_FLAGS}).
      * @see Change */
     public boolean isItemModified(MailItem item, int how) {
-        PendingModifications dirty = currentChange().dirty;
+        PendingLocalModifications dirty = currentChange().dirty;
         if (!dirty.hasNotifications()) {
             return false;
         }
-        PendingModifications.ModificationKey mkey = new PendingModifications.ModificationKey(item);
+        PendingLocalModifications.ModificationKey mkey = new PendingLocalModifications.ModificationKey(item);
         if (dirty.created != null && dirty.created.containsKey(mkey)) {
             return true;
         }
@@ -2746,17 +2747,17 @@ public class Mailbox implements MailboxStore {
     private static Set<MailItem.Type> FOLDER_TYPES = EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.SEARCHFOLDER,
                     MailItem.Type.MOUNTPOINT);
 
-    /** Makes a deep copy of the {@code PendingModifications} object with
+    /** Makes a deep copy of the {@code PendingLocalModifications} object with
      *  {@link Flag#BITMASK_UNCACHED} set on each {@code MailItem} present in
      *  the {@code created} and {@code modified} hashes.  These copied {@code
      *  MailItem}s are not linked to their {@code Mailbox} and thus will not
      *  change when modifications are subsequently made to the contents of the
-     *  {@code Mailbox}.  The original {@code PendingModifications} object and
+     *  {@code Mailbox}.  The original {@code PendingLocalModifications} object and
      *  the {@code MailItem}s it references are unchanged.
      *  <p>
      *  This method should only be called <i>immediately</i> before notifying
      *  listeners of the changes from the currently-ending transaction. */
-    private PendingModifications snapshotModifications(PendingModifications pms) throws ServiceException {
+    private PendingLocalModifications snapshotModifications(PendingLocalModifications pms) throws ServiceException {
         if (pms == null) {
             return null;
         }
@@ -2766,7 +2767,7 @@ public class Mailbox implements MailboxStore {
         FolderCache folders = mFolderCache == null || Collections.disjoint(pms.changedTypes, FOLDER_TYPES) ? mFolderCache
                         : snapshotFolders();
 
-        PendingModifications snapshot = new PendingModifications();
+        PendingLocalModifications snapshot = new PendingLocalModifications();
 
         if (pms.deleted != null && !pms.deleted.isEmpty()) {
             snapshot.recordDeleted(pms.deleted);
@@ -9738,12 +9739,12 @@ public class Mailbox implements MailboxStore {
         ChangeNotification notification = null;
 
         // save for notifications (below)
-        PendingModifications dirty = null;
+        PendingLocalModifications dirty = null;
         if (change.dirty != null && change.dirty.hasNotifications()) {
             assert (lock.isWriteLockedByCurrentThread());
             assert(currentChange().writeChange);
             dirty = change.dirty;
-            change.dirty = new PendingModifications();
+            change.dirty = new PendingLocalModifications();
         }
 
         Session source = change.octxt == null ? null : change.octxt.getSession();
