@@ -26,11 +26,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-
-import junit.framework.TestCase;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -43,7 +42,6 @@ import org.dom4j.io.DocumentResult;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -83,11 +81,12 @@ public class TestWaitSetRequest {
     Account acc1 = null;
     Account acc2 = null;
     private boolean cbCalled = false;
-    private String lastKnownSeq = "0";
     private Marshaller marshaller;
     private String waitSetId = null;
     private String failureMessage = null;
     private boolean success = false;
+    private AtomicInteger numSignalledAccounts = new AtomicInteger(0);
+    private AtomicInteger lastSeqNum = new AtomicInteger(0);
     private final SoapProvisioning soapProv = new SoapProvisioning();
 
     @Before
@@ -118,7 +117,8 @@ public class TestWaitSetRequest {
             acc2 = null;
         }
         cbCalled = false;
-        lastKnownSeq = "0";
+        numSignalledAccounts.set(0);
+        lastSeqNum.set(0);
         if(waitSetId != null) {
             WaitSetMgr.destroy(null, null, waitSetId);
             waitSetId = null;
@@ -589,6 +589,24 @@ public class TestWaitSetRequest {
         }
         Assert.assertTrue("callback was not triggered.", cbCalled);
         Assert.assertTrue(failureMessage, success);
+        if(numSignalledAccounts.intValue() < 2) {
+            cbCalled = false;
+            success = false;
+            failureMessage = null;
+            //the waitset may get return both accounts at once or be triggered for each account separately
+            waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
+            waitSetReq.setBlock(true);
+            final CountDownLatch doneSignal1 = new CountDownLatch(1);
+            waitForAccounts(Arrays.asList(mbox.getAccountId(), mbox2.getAccountId()), doneSignal1, waitSetReq, "testBlockingAdminWait2Accounts");
+            try {
+                doneSignal1.await(5, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                Assert.fail("Wait interrupted.");
+            }
+            Assert.assertTrue("callback was not triggered.", cbCalled);
+            Assert.assertTrue(failureMessage, success);
+            Assert.assertEquals("If WaitSet was triggered again, it should have returned only one account", 1, numSignalledAccounts.intValue());
+        }
     }
 
     @Test
@@ -664,7 +682,7 @@ public class TestWaitSetRequest {
         success = false;
         failureMessage = null;
         cbCalled = false;
-        waitSetReq = new AdminWaitSetRequest(waitSetId, lastKnownSeq);
+        waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
         waitSetReq.setBlock(true);
 
         //add user2 to the same waitset
@@ -696,7 +714,7 @@ public class TestWaitSetRequest {
         failureMessage = null;
         cbCalled = false;
         final CountDownLatch doneSignal3 = new CountDownLatch(1);
-        waitSetReq = new AdminWaitSetRequest(waitSetId, lastKnownSeq);
+        waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
         waitSetReq.setBlock(true);
 
         //both accounts should get signaled at this time
@@ -711,13 +729,33 @@ public class TestWaitSetRequest {
         Assert.assertTrue("callback3 was not triggered.", cbCalled);
         Assert.assertTrue(failureMessage, success);
 
+        if(numSignalledAccounts.intValue() < 2) {
+            cbCalled = false;
+            success = false;
+            failureMessage = null;
+            ZimbraLog.test.info("Sending followup to 3rd AdminWaitSetRequest");
+            //the waitset may get return both accounts at once or be triggered for each account separately
+            waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
+            waitSetReq.setBlock(true);
+            final CountDownLatch doneSignal1 = new CountDownLatch(1);
+            waitForAccounts(Arrays.asList(mbox1.getAccountId(), mbox2.getAccountId()), doneSignal1, waitSetReq, "testBlockingAdminAddAccount - 3.5");
+            try {
+                doneSignal1.await(5, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                Assert.fail("Wait interrupted.");
+            }
+            Assert.assertTrue("callback3.5 was not triggered.", cbCalled);
+            Assert.assertTrue(failureMessage, success);
+            Assert.assertEquals("If WaitSet was triggered again, it should have returned only one account", 1, numSignalledAccounts.intValue());
+        }
+
         //4th request
-        ZimbraLog.test.info("Sending 4rd AdminWaitSetRequest");
+        ZimbraLog.test.info("Sending 4th AdminWaitSetRequest");
         success = false;
         failureMessage = null;
         cbCalled = false;
         final CountDownLatch doneSignal4 = new CountDownLatch(1);
-        waitSetReq = new AdminWaitSetRequest(waitSetId, lastKnownSeq);
+        waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
         waitSetReq.setBlock(true);
 
         //only second account should get signaled this time
@@ -844,11 +882,13 @@ public class TestWaitSetRequest {
                         if(!success) {
                             failureMessage = "wrong squence number. Sequence #" + wsResp.getSeqNo();
                         }
+                        lastSeqNum.set(Integer.parseInt(wsResp.getSeqNo()));
                         if(success) {
-                            success = (wsResp.getSignalledAccounts().size() == accountIds.size());
+                            success = (wsResp.getSignalledAccounts().size() <= accountIds.size());
                             if(!success) {
                                 failureMessage = "wrong number of signaled accounts " + wsResp.getSignalledAccounts().size();
                             }
+                            numSignalledAccounts.set(wsResp.getSignalledAccounts().size());
                         }
                         if(success) {
                             for(int i=0; i < wsResp.getSignalledAccounts().size(); i++) {
@@ -859,7 +899,6 @@ public class TestWaitSetRequest {
                                 }
                             }
                         }
-                        lastKnownSeq = wsResp.getSeqNo();
                     } catch (UnsupportedOperationException | IOException | ServiceException e) {
                         success = false;
                         failureMessage = e.getMessage();
