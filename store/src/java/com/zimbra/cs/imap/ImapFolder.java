@@ -104,7 +104,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
      * @param path     The target folder's path.
      * @param params   Optional SELECT parameters (e.g. READONLY).
      * @param handler  The authenticated user's current IMAP session. */
-    ImapFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
+    public ImapFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
         this.path = path;
         FolderStore folder = path.getFolder();
         this.folderId = folder.getFolderIdInOwnerMailbox();
@@ -168,7 +168,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
     /** Returns the {@link ImapCredentials} with which this ImapFolder was
      *  created. */
-    ImapCredentials getCredentials() {
+    public ImapCredentials getCredentials() {
         SessionData sdata = sessionData;
         return sdata == null ? null : sdata.credentials;
     }
@@ -290,7 +290,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         }
     }
 
-    ImapPath getPath() {
+    public ImapPath getPath() {
         return path;
     }
 
