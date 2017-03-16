@@ -19,7 +19,12 @@ package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -35,6 +40,7 @@ import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
 import com.zimbra.client.ZSignature;
 import com.zimbra.common.account.Key.AccountBy;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
@@ -42,13 +48,15 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.imap.RemoteImapMailboxStore;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.MetadataList;
+
 import com.zimbra.soap.mail.message.ItemActionResponse;
 
-public class TestZClient
-extends TestCase {
+public class TestZClient extends TestCase {
     private static String NAME_PREFIX = "TestZClient";
-    private static String RECIPIENT_USER_NAME = "user2";
-    private static final String USER_NAME = "user1";
+    private static String RECIPIENT_USER_NAME = NAME_PREFIX + "_user2";
+    private static final String USER_NAME = NAME_PREFIX + "_user1";
     private static final String FOLDER_NAME = "testfolder";
     private static ZFolder folder;
 
@@ -56,13 +64,14 @@ extends TestCase {
     public void setUp()
     throws Exception {
         cleanUp();
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(RECIPIENT_USER_NAME);
     }
 
     /**
      * Confirms that the prefs accessor works (bug 51384).
      */
-    public void testPrefs()
-    throws Exception {
+    public void testPrefs() throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZPrefs prefs = mbox.getPrefs();
@@ -72,15 +81,13 @@ extends TestCase {
     /**
      * Confirms that the features accessor doesn't throw NPE (bug 51384).
      */
-    public void testFeatures()
-    throws Exception {
+    public void testFeatures() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFeatures features = mbox.getFeatures();
         features.getPop3Enabled();
     }
 
-    public void testChangePassword()
-    throws Exception {
+    public void testChangePassword() throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
         Options options = new Options();
         options.setAccount(account.getName());
@@ -101,8 +108,7 @@ extends TestCase {
      * Confirms that the {@code List} of signatures returned by {@link ZMailbox#getSignatures}
      * is modifiable (see bug 51842).
      */
-    public void testModifySignatures()
-    throws Exception {
+    public void testModifySignatures() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZSignature> signatures = mbox.getSignatures();
         try {
@@ -180,24 +186,65 @@ extends TestCase {
         RemoteImapMailboxStore store = new RemoteImapMailboxStore(mbox, TestUtil.getAccount(USER_NAME).getId());
         store.resetImapUid(ids);
     }
+
+    @Test
+    public void testListIMAPSubscriptions() throws Exception {
+        String path = NAME_PREFIX + "_testPath";
+        MetadataList slist = new MetadataList();
+        slist.add(path);
+
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        //imitate subscription
+        mbox.setConfig(null, "imap", new Metadata().put("subs", slist));
+
+        //check that subscription was saved in mailbox configuration
+        Metadata config = mbox.getConfig(null, "imap");
+        Assert.assertNotNull(config);
+        MetadataList rlist = config.getList("subs", true);
+        Assert.assertNotNull(rlist);
+        Assert.assertNotNull(rlist.get(0));
+        Assert.assertTrue(rlist.get(0).equalsIgnoreCase(path));   
+
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Set<String> subs = zmbox.listIMAPSubscriptions();
+        Assert.assertNotNull(subs);
+        Assert.assertFalse(subs.isEmpty());
+        Assert.assertTrue(path.equalsIgnoreCase(subs.iterator().next()));
+    }
+
+    public void testSaveIMAPSubscriptions() throws Exception {
+        //check that no subscriptions are saved yet
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Set<String> subs = zmbox.listIMAPSubscriptions();
+        Assert.assertNotNull(subs);
+        Assert.assertTrue(subs.isEmpty());
+
+        //save new subscription
+        String path = NAME_PREFIX + "_testPath";
+        HashSet<String> newSubs = new HashSet<String>();
+        newSubs.add(path);
+        zmbox.saveIMAPsubscriptions(newSubs);
+
+        //verify
+        Set<String> savedSubs = zmbox.listIMAPSubscriptions();
+        Assert.assertNotNull(savedSubs);
+        Assert.assertFalse(savedSubs.isEmpty());
+        Assert.assertTrue(path.equalsIgnoreCase(savedSubs.iterator().next()));
+    }
+
     @Override
     public void tearDown()
     throws Exception {
         cleanUp();
     }
 
-    private void cleanUp()
-    throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        if (folder != null) {
-            try {
-                mbox.deleteFolder(folder.getId());
-            } catch (ServiceException e) {}
+    private void cleanUp() throws Exception {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
         }
-        Account account = TestUtil.getAccount(USER_NAME);
-        account.setPassword(TestUtil.DEFAULT_PASSWORD);
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(RECIPIENT_USER_NAME, NAME_PREFIX);
+        if(TestUtil.accountExists(RECIPIENT_USER_NAME)) {
+            TestUtil.deleteAccount(RECIPIENT_USER_NAME);
+        }
     }
 
     public static void main(String[] args)
