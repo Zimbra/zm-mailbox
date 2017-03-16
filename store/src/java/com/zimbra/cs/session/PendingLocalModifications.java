@@ -25,8 +25,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
@@ -69,6 +69,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     @Override
     PendingModifications<MailItem> add(PendingModifications<MailItem> other) {
         changedTypes.addAll(other.changedTypes);
+        addChangedFolderIds(other.getChangedFolders());
 
         if (other.deleted != null) {
             for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : other.deleted
@@ -107,6 +108,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             created = new LinkedHashMap<PendingModifications.ModificationKey, MailItem>();
         }
         changedTypes.add(item.getType());
+        addChangedFolderId(item.getFolderId());
         created.put(new ModificationKey(item), item);
 
     }
@@ -115,6 +117,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     public void recordDeleted(MailItem itemSnapshot) {
         MailItem.Type type = itemSnapshot.getType();
         changedTypes.add(type);
+        addChangedFolderId(itemSnapshot.getFolderId());
         delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
     }
 
@@ -135,12 +138,14 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     @Override
     public void recordModified(MailItem item, int reason) {
         changedTypes.add(item.getType());
+        addChangedFolderId(item.getFolderId());
         recordModified(new ModificationKey(item), item, reason, null, true);
     }
 
     @Override
     public void recordModified(MailItem item, int reason, MailItem preModifyItem) {
         changedTypes.add(item.getType());
+        addChangedFolderId(item.getFolderId());
         recordModified(new ModificationKey(item), item, reason, preModifyItem, false);
     }
 
@@ -259,6 +264,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(bos);
         oos.writeObject(changedTypes);
+        oos.writeObject(getChangedFolders());
         oos.writeObject(metaCreated);
         oos.writeObject(metaModified);
         oos.writeObject(metaDeleted);
@@ -330,6 +336,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         PendingLocalModifications pms = new PendingLocalModifications();
         try (ObjectInputStream ois = new ObjectInputStream(bis)) {
             pms.changedTypes = (Set<Type>) ois.readObject();
+            pms.addChangedFolderIds((Set<Integer>) ois.readObject());
 
             LinkedHashMap<ModificationKeyMeta, String> metaCreated = (LinkedHashMap<ModificationKeyMeta, String>) ois
                     .readObject();
@@ -362,4 +369,8 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         return pms;
     }
 
+    @Override
+    boolean trackingFolderIds() {
+        return true;
+    }
 }

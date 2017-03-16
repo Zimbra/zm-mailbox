@@ -3210,7 +3210,8 @@ public class DbMailItem {
             MailItem.Type type = MailItem.Type.of(rs.getByte(LEAF_CI_TYPE));
 
             Integer itemId = Integer.valueOf(id);
-            info.itemIds.add(type, itemId, uuid);
+            Integer folderId = rs.getInt(LEAF_CI_FOLDER_ID);
+            info.itemIds.add(type, itemId, folderId, uuid);
             info.size += size;
 
             if (rs.getBoolean(LEAF_CI_IS_UNREAD)) {
@@ -3243,7 +3244,6 @@ public class DbMailItem {
                 versioned.add(id);
             }
 
-            Integer folderId = rs.getInt(LEAF_CI_FOLDER_ID);
             boolean isDeleted = (flags & Flag.BITMASK_DELETED) != 0;
             LocationCount fcount = info.folderCounts.get(folderId);
             if (fcount == null) {
@@ -3381,7 +3381,9 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                info.itemIds.add(MailItem.Type.of(rs.getByte(1)), rs.getInt(2), rs.getString(3));
+                // Assumption - comments are always in the Comments folder
+                info.itemIds.add(MailItem.Type.of(rs.getByte(1)), rs.getInt(2), Mailbox.ID_FOLDER_COMMENTS,
+                        rs.getString(3));
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting Comment deletion info for items: " + documents, e);
