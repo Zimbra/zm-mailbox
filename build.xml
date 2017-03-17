@@ -2,7 +2,7 @@
    <property name="build.dir" location="build" />
 
    <target name="all">
-      <exec dir="./native" executable="make"></exec>
+      <exec dir="./native" executable="make" failonerror="true"></exec>
       <ant dir="./common" target="publish-local" inheritAll="false"/>
       <ant dir="./soap"   target="publish-local" inheritAll="false"/>
       <ant dir="./client" target="publish-local" inheritAll="false"/>
@@ -12,7 +12,7 @@
    </target>
 
    <target name="clean">
-      <exec dir="./native" executable="make"><arg value="clean"/></exec>
+      <exec dir="./native" executable="make" failonerror="true"><arg value="clean"/></exec>
       <ant dir="./common" target="clean" inheritAll="false"/>
       <ant dir="./soap"   target="clean" inheritAll="false"/>
       <ant dir="./client" target="clean" inheritAll="false"/>
