@@ -88,7 +88,7 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
         if (isPosInfLHS && !isPosInfRHS) {
             switch (operator) {
             case GT_OP: return true;
-            case GE_OP: return false;
+            case GE_OP: return true;
             case LT_OP: return false;
             case LE_OP: return false;
             case EQ_OP: return false;
@@ -100,7 +100,7 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
             case GT_OP: return false;
             case GE_OP: return false;
             case LT_OP: return true;
-            case LE_OP: return false;
+            case LE_OP: return true;
             case EQ_OP: return false;
             case NE_OP: return true;
             }
