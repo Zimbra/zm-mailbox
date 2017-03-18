@@ -743,6 +743,7 @@ public final class MailConstants {
     public static final String A_INVALID = "invalid";
     public static final String A_REMINDER = "reminder";
     public static final String A_RETURN_HIDDEN_ATTRS = "returnHiddenAttrs";
+    public static final String A_RETURN_CERT_INFO = "returnCertInfo";
     public static final String A_MAX_MEMBERS = "maxMembers";
     public static final String A_TOO_MANY_MEMBERS = "tooManyMembers";
     public static final String A_ACTIVESYNC_DISABLED = "activesyncdisabled";
