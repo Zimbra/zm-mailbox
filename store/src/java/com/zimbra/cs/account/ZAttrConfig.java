@@ -62001,6 +62001,206 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
+     * sizes allow for more simultaneous connections to SSDB. A value of 0
+     * will cause the pool size to be unlimited.
+     *
+     * @return zimbraSSDBResourcePoolSize, or 0 if unset
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3010)
+    public int getSSDBResourcePoolSize() {
+        return getIntAttr(Provisioning.A_zimbraSSDBResourcePoolSize, 0, true);
+    }
+
+    /**
+     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
+     * sizes allow for more simultaneous connections to SSDB. A value of 0
+     * will cause the pool size to be unlimited.
+     *
+     * @param zimbraSSDBResourcePoolSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3010)
+    public void setSSDBResourcePoolSize(int zimbraSSDBResourcePoolSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSDBResourcePoolSize, Integer.toString(zimbraSSDBResourcePoolSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
+     * sizes allow for more simultaneous connections to SSDB. A value of 0
+     * will cause the pool size to be unlimited.
+     *
+     * @param zimbraSSDBResourcePoolSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3010)
+    public Map<String,Object> setSSDBResourcePoolSize(int zimbraSSDBResourcePoolSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSDBResourcePoolSize, Integer.toString(zimbraSSDBResourcePoolSize));
+        return attrs;
+    }
+
+    /**
+     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
+     * sizes allow for more simultaneous connections to SSDB. A value of 0
+     * will cause the pool size to be unlimited.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3010)
+    public void unsetSSDBResourcePoolSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSDBResourcePoolSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
+     * sizes allow for more simultaneous connections to SSDB. A value of 0
+     * will cause the pool size to be unlimited.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3010)
+    public Map<String,Object> unsetSSDBResourcePoolSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSDBResourcePoolSize, "");
+        return attrs;
+    }
+
+    /**
+     * Specifies the amount of time a thread will wait for a JedisPool
+     * resource. A value of 0 will cause the thread to block indefinitely..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getSSDBResourcePoolTimeoutAsString to access value as a string.
+     *
+     * @see #getSSDBResourcePoolTimeoutAsString()
+     *
+     * @return zimbraSSDBResourcePoolTimeout in millseconds, or 0 (0)  if unset
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3011)
+    public long getSSDBResourcePoolTimeout() {
+        return getTimeInterval(Provisioning.A_zimbraSSDBResourcePoolTimeout, 0L, true);
+    }
+
+    /**
+     * Specifies the amount of time a thread will wait for a JedisPool
+     * resource. A value of 0 will cause the thread to block indefinitely..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraSSDBResourcePoolTimeout, or "0" if unset
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3011)
+    public String getSSDBResourcePoolTimeoutAsString() {
+        return getAttr(Provisioning.A_zimbraSSDBResourcePoolTimeout, "0", true);
+    }
+
+    /**
+     * Specifies the amount of time a thread will wait for a JedisPool
+     * resource. A value of 0 will cause the thread to block indefinitely..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraSSDBResourcePoolTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3011)
+    public void setSSDBResourcePoolTimeout(String zimbraSSDBResourcePoolTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSDBResourcePoolTimeout, zimbraSSDBResourcePoolTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the amount of time a thread will wait for a JedisPool
+     * resource. A value of 0 will cause the thread to block indefinitely..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraSSDBResourcePoolTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3011)
+    public Map<String,Object> setSSDBResourcePoolTimeout(String zimbraSSDBResourcePoolTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSDBResourcePoolTimeout, zimbraSSDBResourcePoolTimeout);
+        return attrs;
+    }
+
+    /**
+     * Specifies the amount of time a thread will wait for a JedisPool
+     * resource. A value of 0 will cause the thread to block indefinitely..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3011)
+    public void unsetSSDBResourcePoolTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSDBResourcePoolTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the amount of time a thread will wait for a JedisPool
+     * resource. A value of 0 will cause the thread to block indefinitely..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3011)
+    public Map<String,Object> unsetSSDBResourcePoolTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSDBResourcePoolTimeout, "");
+        return attrs;
+    }
+
+    /**
      * SSL certificate
      *
      * @return zimbraSSLCertificate, or null if unset
