@@ -21,12 +21,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
@@ -41,6 +45,7 @@ import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
 import com.zimbra.client.ZSignature;
+import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
@@ -68,9 +73,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.ItemActionResponse;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
 
 public class TestZClient extends TestCase {
     private static String NAME_PREFIX = "TestZClient";
@@ -547,6 +549,24 @@ public class TestZClient extends TestCase {
         ZMessage zmsg = zmbox.getMessageById(
                 ItemIdentifier.fromAccountIdAndItemId(mbox.getAccountId(), msg.getId()), true, 0);
         compareMsgAndZMsg(testNam, msg, zmsg);
+    }
+
+    @Test
+    public void testAlterTag() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Message msg = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "testAlterTag message", System.currentTimeMillis());
+        ZTag tag = zmbox.createTag("testAlterTag tag", ZTag.Color.blue);
+        Collection<ItemIdentifier> ids = new ArrayList<ItemIdentifier>(1);
+        ids.add(new ItemIdentifier(mbox.getAccountId(), msg.getId()));
+
+        //add tag via zmailbox
+        zmbox.alterTag(null, ids, tag.getName(), true);
+        assertTrue(msg.isTagged(tag.getName()));
+
+        //remove tag via zmailbox
+        zmbox.alterTag(null, ids, tag.getName(), false);
+        assertFalse(msg.isTagged(tag.getName()));
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
