@@ -9405,4 +9405,13 @@ TODO: delete them permanently from here
   <desc>Determines the load-balancing algorithm used to select an IMAP server from the pool of available zimbraReverseProxyUpstreamImapServers. Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2 ...]</desc>
 </attr>
 
+<attr id="3010" name="zimbraSSDBResourcePoolSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool sizes allow for more simultaneous connections to SSDB. A value of 0 will cause the pool size to be unlimited.</desc>
+</attr>
+
+<attr id="3011" name="zimbraSSDBResourcePoolTimeout" type="duration" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Specifies the amount of time a thread will wait for a JedisPool resource. A value of 0 will cause the thread to block indefinitely.</desc>
+</attr>
 </attrs>

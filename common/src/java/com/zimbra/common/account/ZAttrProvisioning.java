@@ -15774,6 +15774,29 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSpnegoAuthTargetName = "zimbraSpnegoAuthTargetName";
 
     /**
+     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
+     * sizes allow for more simultaneous connections to SSDB. A value of 0
+     * will cause the pool size to be unlimited.
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3010)
+    public static final String A_zimbraSSDBResourcePoolSize = "zimbraSSDBResourcePoolSize";
+
+    /**
+     * Specifies the amount of time a thread will wait for a JedisPool
+     * resource. A value of 0 will cause the thread to block indefinitely..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=3011)
+    public static final String A_zimbraSSDBResourcePoolTimeout = "zimbraSSDBResourcePoolTimeout";
+
+    /**
      * Public key of this server, used by other hosts to authorize this
      * server to login.
      */
