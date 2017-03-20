@@ -190,11 +190,12 @@ public class ItemAction extends MailDocumentHandler {
                 localResults = ItemActionHelper.RENAME(octxt, mbox, responseProto, local, type, tcon, name, iidFolder).getResult();
             } else if (opStr.equals(MailConstants.OP_UPDATE)) {
                 String folderId = action.getAttribute(MailConstants.A_FOLDER, null);
-                ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
-                if (!iidFolder.belongsTo(mbox)) {
-                    throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
-                } else if (folderId != null && iidFolder.getId() <= 0) {
-                    throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
+                ItemId iidFolder = null;
+                if (folderId != null) {
+                    iidFolder = new ItemId(folderId, zsc);
+                    if (!iidFolder.belongsTo(mbox)) {
+                        throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+                    }
                 }
                 String name = action.getAttribute(MailConstants.A_NAME, null);
                 String flags = action.getAttribute(MailConstants.A_FLAGS, null);
