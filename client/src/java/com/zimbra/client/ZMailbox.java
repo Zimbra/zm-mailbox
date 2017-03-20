@@ -6103,8 +6103,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @Override
     public void alterTag(OpContext octxt, Collection<ItemIdentifier> ids, String tagName, boolean addTag)
             throws ServiceException {
-        // Probably need to get the items and then do a tag operation on them
-        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+        String idStr = itemIdsToString(ids);
+        doAction(itemAction(addTag ? "tag" : "!tag", idStr, null).addAttribute(MailConstants.A_TAG_NAMES, tagName));
     }
 
     @Override
@@ -6112,6 +6112,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             throws ServiceException {
         // Probably need to get the items and then do a tag operation on them
         throw new UnsupportedOperationException("ZMailbox does not support method yet");
+    }
+
+    private static String itemIdsToString(Collection<ItemIdentifier> ids) {
+        List<String> itemIds = new ArrayList<String>();
+        for (ItemIdentifier itemIdentifer: ids) {
+            itemIds.add(itemIdentifer.toString());
+        }
+        return Joiner.on(",").join(itemIds);
     }
 
     @Override
