@@ -1492,11 +1492,6 @@ public class SetVariableTest {
                   + "if string :count \"lt\" \"${number}\" \"\" {"
                   + "  addheader :last \"X-New-Header-47\" \"string test count numeric lt positive infinity\";\n"
                   + "}"
-                  // Negative value (digit with a minus sign) is treated as positive infinity
-                  // because "strings that do not start with a digit represent positive".
-                  + "if string :value \"lt\" \"${number}\" \"-1\" {"
-                  + "  addheader :last \"X-New-Header-48\" \"string test value numeric lt with minus sign\";\n"
-                  + "}"
                   ;
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -1567,8 +1562,6 @@ public class SetVariableTest {
             Assert.assertEquals("string test value numeric eq positive infinity", value[0]);
             value = msg.getMimeMessage().getHeader("X-New-Header-47");
             Assert.assertEquals("string test count numeric lt positive infinity", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-48");
-            Assert.assertEquals("string test value numeric lt with minus sign", value[0]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
