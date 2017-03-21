@@ -2079,7 +2079,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraAdminSieveFeatureVariablesEnabled, or true if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2098)
     public boolean isAdminSieveFeatureVariablesEnabled() {
@@ -2093,7 +2093,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraAdminSieveFeatureVariablesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2098)
     public void setAdminSieveFeatureVariablesEnabled(boolean zimbraAdminSieveFeatureVariablesEnabled) throws com.zimbra.common.service.ServiceException {
@@ -2110,7 +2110,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2098)
     public Map<String,Object> setAdminSieveFeatureVariablesEnabled(boolean zimbraAdminSieveFeatureVariablesEnabled, Map<String,Object> attrs) {
@@ -2125,7 +2125,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2098)
     public void unsetAdminSieveFeatureVariablesEnabled() throws com.zimbra.common.service.ServiceException {
@@ -2141,7 +2141,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2098)
     public Map<String,Object> unsetAdminSieveFeatureVariablesEnabled(Map<String,Object> attrs) {
@@ -9039,7 +9039,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraChatAllowUnencryptedPassword, or false if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2106)
     public boolean isChatAllowUnencryptedPassword() {
@@ -9052,7 +9052,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraChatAllowUnencryptedPassword new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2106)
     public void setChatAllowUnencryptedPassword(boolean zimbraChatAllowUnencryptedPassword) throws com.zimbra.common.service.ServiceException {
@@ -9068,7 +9068,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2106)
     public Map<String,Object> setChatAllowUnencryptedPassword(boolean zimbraChatAllowUnencryptedPassword, Map<String,Object> attrs) {
@@ -9082,7 +9082,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2106)
     public void unsetChatAllowUnencryptedPassword() throws com.zimbra.common.service.ServiceException {
@@ -9097,7 +9097,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2106)
     public Map<String,Object> unsetChatAllowUnencryptedPassword(Map<String,Object> attrs) {
@@ -9112,7 +9112,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraChatConversationAuditEnabled, or false if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2104)
     public boolean isChatConversationAuditEnabled() {
@@ -9126,7 +9126,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraChatConversationAuditEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2104)
     public void setChatConversationAuditEnabled(boolean zimbraChatConversationAuditEnabled) throws com.zimbra.common.service.ServiceException {
@@ -9143,7 +9143,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2104)
     public Map<String,Object> setChatConversationAuditEnabled(boolean zimbraChatConversationAuditEnabled, Map<String,Object> attrs) {
@@ -9158,7 +9158,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2104)
     public void unsetChatConversationAuditEnabled() throws com.zimbra.common.service.ServiceException {
@@ -9174,7 +9174,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2104)
     public Map<String,Object> unsetChatConversationAuditEnabled(Map<String,Object> attrs) {
@@ -9188,7 +9188,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraChatServiceEnabled, or true if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2102)
     public boolean isChatServiceEnabled() {
@@ -9201,7 +9201,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraChatServiceEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2102)
     public void setChatServiceEnabled(boolean zimbraChatServiceEnabled) throws com.zimbra.common.service.ServiceException {
@@ -9217,7 +9217,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2102)
     public Map<String,Object> setChatServiceEnabled(boolean zimbraChatServiceEnabled, Map<String,Object> attrs) {
@@ -9231,7 +9231,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2102)
     public void unsetChatServiceEnabled() throws com.zimbra.common.service.ServiceException {
@@ -9246,7 +9246,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2102)
     public Map<String,Object> unsetChatServiceEnabled(Map<String,Object> attrs) {
@@ -9264,7 +9264,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraChatXmppPort, or 5222 if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2107)
     public int getChatXmppPort() {
@@ -9276,7 +9276,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraChatXmppPort, or "5222" if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2107)
     public String getChatXmppPortAsString() {
@@ -9289,7 +9289,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraChatXmppPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2107)
     public void setChatXmppPort(int zimbraChatXmppPort) throws com.zimbra.common.service.ServiceException {
@@ -9305,7 +9305,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2107)
     public Map<String,Object> setChatXmppPort(int zimbraChatXmppPort, Map<String,Object> attrs) {
@@ -9320,7 +9320,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraChatXmppPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2107)
     public void setChatXmppPortAsString(String zimbraChatXmppPort) throws com.zimbra.common.service.ServiceException {
@@ -9336,7 +9336,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2107)
     public Map<String,Object> setChatXmppPortAsString(String zimbraChatXmppPort, Map<String,Object> attrs) {
@@ -9350,7 +9350,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2107)
     public void unsetChatXmppPort() throws com.zimbra.common.service.ServiceException {
@@ -9365,7 +9365,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2107)
     public Map<String,Object> unsetChatXmppPort(Map<String,Object> attrs) {
@@ -9383,7 +9383,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraChatXmppSslPort, or 5223 if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2108)
     public int getChatXmppSslPort() {
@@ -9395,7 +9395,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraChatXmppSslPort, or "5223" if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2108)
     public String getChatXmppSslPortAsString() {
@@ -9408,7 +9408,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraChatXmppSslPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2108)
     public void setChatXmppSslPort(int zimbraChatXmppSslPort) throws com.zimbra.common.service.ServiceException {
@@ -9424,7 +9424,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2108)
     public Map<String,Object> setChatXmppSslPort(int zimbraChatXmppSslPort, Map<String,Object> attrs) {
@@ -9439,7 +9439,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraChatXmppSslPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2108)
     public void setChatXmppSslPortAsString(String zimbraChatXmppSslPort) throws com.zimbra.common.service.ServiceException {
@@ -9455,7 +9455,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2108)
     public Map<String,Object> setChatXmppSslPortAsString(String zimbraChatXmppSslPort, Map<String,Object> attrs) {
@@ -9469,7 +9469,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2108)
     public void unsetChatXmppSslPort() throws com.zimbra.common.service.ServiceException {
@@ -9484,7 +9484,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2108)
     public Map<String,Object> unsetChatXmppSslPort(Map<String,Object> attrs) {
@@ -9498,7 +9498,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraChatXmppSslPortEnabled, or false if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2105)
     public boolean isChatXmppSslPortEnabled() {
@@ -9511,7 +9511,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraChatXmppSslPortEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2105)
     public void setChatXmppSslPortEnabled(boolean zimbraChatXmppSslPortEnabled) throws com.zimbra.common.service.ServiceException {
@@ -9527,7 +9527,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2105)
     public Map<String,Object> setChatXmppSslPortEnabled(boolean zimbraChatXmppSslPortEnabled, Map<String,Object> attrs) {
@@ -9541,7 +9541,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2105)
     public void unsetChatXmppSslPortEnabled() throws com.zimbra.common.service.ServiceException {
@@ -9556,7 +9556,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2105)
     public Map<String,Object> unsetChatXmppSslPortEnabled(Map<String,Object> attrs) {
@@ -22081,7 +22081,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraImapLoadBalancingAlgorithm, or "ClientIpHash" if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3009)
     public String getImapLoadBalancingAlgorithm() {
@@ -22097,7 +22097,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraImapLoadBalancingAlgorithm new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3009)
     public void setImapLoadBalancingAlgorithm(String zimbraImapLoadBalancingAlgorithm) throws com.zimbra.common.service.ServiceException {
@@ -22116,7 +22116,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3009)
     public Map<String,Object> setImapLoadBalancingAlgorithm(String zimbraImapLoadBalancingAlgorithm, Map<String,Object> attrs) {
@@ -22133,7 +22133,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3009)
     public void unsetImapLoadBalancingAlgorithm() throws com.zimbra.common.service.ServiceException {
@@ -22151,7 +22151,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3009)
     public Map<String,Object> unsetImapLoadBalancingAlgorithm(Map<String,Object> attrs) {
@@ -28232,7 +28232,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraMailSieveNotifyActionRFCCompliant, or false if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public boolean isMailSieveNotifyActionRFCCompliant() {
@@ -28248,7 +28248,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMailSieveNotifyActionRFCCompliant new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public void setMailSieveNotifyActionRFCCompliant(boolean zimbraMailSieveNotifyActionRFCCompliant) throws com.zimbra.common.service.ServiceException {
@@ -28267,7 +28267,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public Map<String,Object> setMailSieveNotifyActionRFCCompliant(boolean zimbraMailSieveNotifyActionRFCCompliant, Map<String,Object> attrs) {
@@ -28284,7 +28284,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public void unsetMailSieveNotifyActionRFCCompliant() throws com.zimbra.common.service.ServiceException {
@@ -28302,7 +28302,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public Map<String,Object> unsetMailSieveNotifyActionRFCCompliant(Map<String,Object> attrs) {
@@ -54354,7 +54354,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraReverseProxyIPThrottleWhitelist, or empty array if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3000)
     public String[] getReverseProxyIPThrottleWhitelist() {
@@ -54369,7 +54369,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraReverseProxyIPThrottleWhitelist new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3000)
     public void setReverseProxyIPThrottleWhitelist(String[] zimbraReverseProxyIPThrottleWhitelist) throws com.zimbra.common.service.ServiceException {
@@ -54387,7 +54387,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3000)
     public Map<String,Object> setReverseProxyIPThrottleWhitelist(String[] zimbraReverseProxyIPThrottleWhitelist, Map<String,Object> attrs) {
@@ -54404,7 +54404,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraReverseProxyIPThrottleWhitelist new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3000)
     public void addReverseProxyIPThrottleWhitelist(String zimbraReverseProxyIPThrottleWhitelist) throws com.zimbra.common.service.ServiceException {
@@ -54422,7 +54422,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3000)
     public Map<String,Object> addReverseProxyIPThrottleWhitelist(String zimbraReverseProxyIPThrottleWhitelist, Map<String,Object> attrs) {
@@ -54439,7 +54439,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraReverseProxyIPThrottleWhitelist existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3000)
     public void removeReverseProxyIPThrottleWhitelist(String zimbraReverseProxyIPThrottleWhitelist) throws com.zimbra.common.service.ServiceException {
@@ -54457,7 +54457,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3000)
     public Map<String,Object> removeReverseProxyIPThrottleWhitelist(String zimbraReverseProxyIPThrottleWhitelist, Map<String,Object> attrs) {
@@ -54473,7 +54473,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3000)
     public void unsetReverseProxyIPThrottleWhitelist() throws com.zimbra.common.service.ServiceException {
@@ -54490,7 +54490,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3000)
     public Map<String,Object> unsetReverseProxyIPThrottleWhitelist(Map<String,Object> attrs) {
@@ -54512,7 +54512,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraReverseProxyIPThrottleWhitelistTime in millseconds, or 300000 (300s)  if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3007)
     public long getReverseProxyIPThrottleWhitelistTime() {
@@ -54528,7 +54528,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraReverseProxyIPThrottleWhitelistTime, or "300s" if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3007)
     public String getReverseProxyIPThrottleWhitelistTimeAsString() {
@@ -54545,7 +54545,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraReverseProxyIPThrottleWhitelistTime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3007)
     public void setReverseProxyIPThrottleWhitelistTime(String zimbraReverseProxyIPThrottleWhitelistTime) throws com.zimbra.common.service.ServiceException {
@@ -54565,7 +54565,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3007)
     public Map<String,Object> setReverseProxyIPThrottleWhitelistTime(String zimbraReverseProxyIPThrottleWhitelistTime, Map<String,Object> attrs) {
@@ -54583,7 +54583,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3007)
     public void unsetReverseProxyIPThrottleWhitelistTime() throws com.zimbra.common.service.ServiceException {
@@ -54602,7 +54602,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3007)
     public Map<String,Object> unsetReverseProxyIPThrottleWhitelistTime(Map<String,Object> attrs) {
@@ -58576,7 +58576,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraReverseProxyUpstreamImapServers, or empty array if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3008)
     public String[] getReverseProxyUpstreamImapServers() {
@@ -58591,7 +58591,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraReverseProxyUpstreamImapServers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3008)
     public void setReverseProxyUpstreamImapServers(String[] zimbraReverseProxyUpstreamImapServers) throws com.zimbra.common.service.ServiceException {
@@ -58609,7 +58609,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3008)
     public Map<String,Object> setReverseProxyUpstreamImapServers(String[] zimbraReverseProxyUpstreamImapServers, Map<String,Object> attrs) {
@@ -58626,7 +58626,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraReverseProxyUpstreamImapServers new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3008)
     public void addReverseProxyUpstreamImapServers(String zimbraReverseProxyUpstreamImapServers) throws com.zimbra.common.service.ServiceException {
@@ -58644,7 +58644,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3008)
     public Map<String,Object> addReverseProxyUpstreamImapServers(String zimbraReverseProxyUpstreamImapServers, Map<String,Object> attrs) {
@@ -58661,7 +58661,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraReverseProxyUpstreamImapServers existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3008)
     public void removeReverseProxyUpstreamImapServers(String zimbraReverseProxyUpstreamImapServers) throws com.zimbra.common.service.ServiceException {
@@ -58679,7 +58679,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3008)
     public Map<String,Object> removeReverseProxyUpstreamImapServers(String zimbraReverseProxyUpstreamImapServers, Map<String,Object> attrs) {
@@ -58695,7 +58695,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3008)
     public void unsetReverseProxyUpstreamImapServers() throws com.zimbra.common.service.ServiceException {
@@ -58712,7 +58712,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3008)
     public Map<String,Object> unsetReverseProxyUpstreamImapServers(Map<String,Object> attrs) {
@@ -65368,7 +65368,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraSieveFeatureVariablesEnabled, or false if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2096)
     public boolean isSieveFeatureVariablesEnabled() {
@@ -65382,7 +65382,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSieveFeatureVariablesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2096)
     public void setSieveFeatureVariablesEnabled(boolean zimbraSieveFeatureVariablesEnabled) throws com.zimbra.common.service.ServiceException {
@@ -65399,7 +65399,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2096)
     public Map<String,Object> setSieveFeatureVariablesEnabled(boolean zimbraSieveFeatureVariablesEnabled, Map<String,Object> attrs) {
@@ -65414,7 +65414,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2096)
     public void unsetSieveFeatureVariablesEnabled() throws com.zimbra.common.service.ServiceException {
@@ -65430,7 +65430,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2096)
     public Map<String,Object> unsetSieveFeatureVariablesEnabled(Map<String,Object> attrs) {
@@ -65445,7 +65445,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraSieveRejectEnabled, or true if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public boolean isSieveRejectEnabled() {
@@ -65459,7 +65459,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSieveRejectEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public void setSieveRejectEnabled(boolean zimbraSieveRejectEnabled) throws com.zimbra.common.service.ServiceException {
@@ -65476,7 +65476,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public Map<String,Object> setSieveRejectEnabled(boolean zimbraSieveRejectEnabled, Map<String,Object> attrs) {
@@ -65491,7 +65491,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public void unsetSieveRejectEnabled() throws com.zimbra.common.service.ServiceException {
@@ -65507,7 +65507,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public Map<String,Object> unsetSieveRejectEnabled(Map<String,Object> attrs) {

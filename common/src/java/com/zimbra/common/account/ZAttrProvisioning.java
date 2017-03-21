@@ -3038,7 +3038,7 @@ public class ZAttrProvisioning {
      * Whether to enable the Sieve &quot;Variables&quot; extension defined in
      * RFC 5229 in the admin-defined sieve rules.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2098)
     public static final String A_zimbraAdminSieveFeatureVariablesEnabled = "zimbraAdminSieveFeatureVariablesEnabled";
@@ -4435,7 +4435,7 @@ public class ZAttrProvisioning {
     /**
      * make distribution list members friends
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2109)
     public static final String A_zimbraChatAllowDlMemberAddAsFriend = "zimbraChatAllowDlMemberAddAsFriend";
@@ -4443,7 +4443,7 @@ public class ZAttrProvisioning {
     /**
      * allow unencrypted password login via XMPP
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2106)
     public static final String A_zimbraChatAllowUnencryptedPassword = "zimbraChatAllowUnencryptedPassword";
@@ -4452,7 +4452,7 @@ public class ZAttrProvisioning {
      * enable dedicated log for the chat conversation (needed by some
      * jurisdictions)
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2104)
     public static final String A_zimbraChatConversationAuditEnabled = "zimbraChatConversationAuditEnabled";
@@ -4460,7 +4460,7 @@ public class ZAttrProvisioning {
     /**
      * enable chat history saving
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2103)
     public static final String A_zimbraChatHistoryEnabled = "zimbraChatHistoryEnabled";
@@ -4468,7 +4468,7 @@ public class ZAttrProvisioning {
     /**
      * enable XMPP server
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2102)
     public static final String A_zimbraChatServiceEnabled = "zimbraChatServiceEnabled";
@@ -4476,7 +4476,7 @@ public class ZAttrProvisioning {
     /**
      * XMPP plain port, usually used with startTLS
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2107)
     public static final String A_zimbraChatXmppPort = "zimbraChatXmppPort";
@@ -4484,7 +4484,7 @@ public class ZAttrProvisioning {
     /**
      * XMPP legacy SSL port
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2108)
     public static final String A_zimbraChatXmppSslPort = "zimbraChatXmppSslPort";
@@ -4492,7 +4492,7 @@ public class ZAttrProvisioning {
     /**
      * enable XMPP legacy SSL port
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2105)
     public static final String A_zimbraChatXmppSslPortEnabled = "zimbraChatXmppSslPortEnabled";
@@ -5755,7 +5755,7 @@ public class ZAttrProvisioning {
     /**
      * Drive own or next cloud URL.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2110)
     public static final String A_zimbraDriveOwnCloudURL = "zimbraDriveOwnCloudURL";
@@ -7859,7 +7859,7 @@ public class ZAttrProvisioning {
      * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
      * ...]
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3009)
     public static final String A_zimbraImapLoadBalancingAlgorithm = "zimbraImapLoadBalancingAlgorithm";
@@ -8425,7 +8425,7 @@ public class ZAttrProvisioning {
      * outgoing sieve script defined by admin (not able to edit and view from
      * the end user) applied after the end user filter rule
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2093)
     public static final String A_zimbraMailAdminOutgoingSieveScriptAfter = "zimbraMailAdminOutgoingSieveScriptAfter";
@@ -8434,7 +8434,7 @@ public class ZAttrProvisioning {
      * outgoing sieve script defined by admin (not able to edit and view from
      * the end user) applied before the end user filter rule
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2092)
     public static final String A_zimbraMailAdminOutgoingSieveScriptBefore = "zimbraMailAdminOutgoingSieveScriptBefore";
@@ -8443,7 +8443,7 @@ public class ZAttrProvisioning {
      * sieve script defined by admin (not able to edit and view from the end
      * user) applied after the end user filter rule
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2091)
     public static final String A_zimbraMailAdminSieveScriptAfter = "zimbraMailAdminSieveScriptAfter";
@@ -8452,7 +8452,7 @@ public class ZAttrProvisioning {
      * sieve script defined by admin (not able to edit and view from the end
      * user) applied before the end user filter rule
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2090)
     public static final String A_zimbraMailAdminSieveScriptBefore = "zimbraMailAdminSieveScriptBefore";
@@ -8934,7 +8934,7 @@ public class ZAttrProvisioning {
      * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
      * &#039;notify&#039; action parameters with Zimbra specific format
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public static final String A_zimbraMailSieveNotifyActionRFCCompliant = "zimbraMailSieveNotifyActionRFCCompliant";
@@ -14402,7 +14402,7 @@ public class ZAttrProvisioning {
      * may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.
      * IPV6 is supported as well.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3000)
     public static final String A_zimbraReverseProxyIPThrottleWhitelist = "zimbraReverseProxyIPThrottleWhitelist";
@@ -14414,7 +14414,7 @@ public class ZAttrProvisioning {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3007)
     public static final String A_zimbraReverseProxyIPThrottleWhitelistTime = "zimbraReverseProxyIPThrottleWhitelistTime";
@@ -14722,7 +14722,7 @@ public class ZAttrProvisioning {
      * sessions. If empty, the NginxLookupExtension will select the mailbox
      * server that hosts the account.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=3008)
     public static final String A_zimbraReverseProxyUpstreamImapServers = "zimbraReverseProxyUpstreamImapServers";
@@ -15279,7 +15279,7 @@ public class ZAttrProvisioning {
      * Whether to enable the Sieve &quot;Variables&quot; extension defined in
      * RFC 5229 in the user-defined sieve rule.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2096)
     public static final String A_zimbraSieveFeatureVariablesEnabled = "zimbraSieveFeatureVariablesEnabled";
@@ -15288,7 +15288,7 @@ public class ZAttrProvisioning {
      * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
      * 5429.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public static final String A_zimbraSieveRejectEnabled = "zimbraSieveRejectEnabled";

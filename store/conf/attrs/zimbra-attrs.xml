@@ -9227,33 +9227,33 @@ TODO: delete them permanently from here
   <desc>Value for postconf postscreen_upstream_proxy_protocol.</desc>
 </attr>
 
-<attr id="2090" name="zimbraMailAdminSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.8.0">
+<attr id="2090" name="zimbraMailAdminSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.7.6">
   <desc>sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
 </attr>
 
-<attr id="2091" name="zimbraMailAdminSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.8.0">
+<attr id="2091" name="zimbraMailAdminSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.7.6">
   <desc>sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
 </attr>
 
-<attr id="2092" name="zimbraMailAdminOutgoingSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.8.0">
+<attr id="2092" name="zimbraMailAdminOutgoingSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.7.6">
   <desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
 </attr>
 
-<attr id="2093" name="zimbraMailAdminOutgoingSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.8.0">
+<attr id="2093" name="zimbraMailAdminOutgoingSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.7.6">
   <desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
 </attr>
 
-<attr id="2094" name="zimbraSieveRejectEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0">
+<attr id="2094" name="zimbraSieveRejectEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.6">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to enable the Sieve "reject" action defined in RFC 5429.</desc>
 </attr>
 
-<attr id="2095" name="zimbraMailSieveNotifyActionRFCCompliant" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="8.8.0">
+<attr id="2095" name="zimbraMailSieveNotifyActionRFCCompliant" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="8.7.6">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether the RFC compliant 'notify' is used.  If TRUE, ZCS parses the 'notify' action parameters based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS treats the 'notify' action parameters with Zimbra specific format</desc>
 </attr>
 
-<attr id="2096" name="zimbraSieveFeatureVariablesEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0">
+<attr id="2096" name="zimbraSieveFeatureVariablesEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.6">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable the Sieve "Variables" extension defined in RFC 5229 in the user-defined sieve rule.</desc>
 </attr>
@@ -9263,7 +9263,7 @@ TODO: delete them permanently from here
   <desc>Page size control for SyncGalRequest. By default not more than 30000 entries will be returned for every SyncGalRequest</desc>
 </attr>
 
-<attr id="2098" name="zimbraAdminSieveFeatureVariablesEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0">
+<attr id="2098" name="zimbraAdminSieveFeatureVariablesEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.6">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to enable the Sieve "Variables" extension defined in RFC 5229 in the admin-defined sieve rules.</desc>
 </attr>
@@ -9357,7 +9357,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="3000" name="zimbraReverseProxyIPThrottleWhitelist" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+<attr id="3000" name="zimbraReverseProxyIPThrottleWhitelist" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.7.6">
   <desc>Client IP/IPRange whitelist for exclusion from IP throttling. Value may be either an IP or an IPRange in CIDR notation e.g:192.168.1.0/24.  IPV6 is supported as well.</desc>
 </attr>
 
@@ -9391,16 +9391,16 @@ TODO: delete them permanently from here
   <desc> Ehcache: the maximum amount of disk space the imap inactive session cache will consume in Bytes before eviction. By default this value is 100 gigabytes. This is a rough limit,Due to internals of ehcache actual size in memory will often exceed this limit by a modest margin. </desc>
 </attr>
 
-<attr id="3007" name="zimbraReverseProxyIPThrottleWhitelistTime" type="duration" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+<attr id="3007" name="zimbraReverseProxyIPThrottleWhitelistTime" type="duration" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.7.6">
   <globalConfigValue>300s</globalConfigValue>
   <desc>Sets the time-to-live for mail_whitelist_ip_ttl in nginx</desc>
 </attr>
 
-<attr id="3008" name="zimbraReverseProxyUpstreamImapServers" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+<attr id="3008" name="zimbraReverseProxyUpstreamImapServers" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.7.6">
   <desc>The pool of servers that are available to the proxy for handling IMAP sessions. If empty, the NginxLookupExtension will select the mailbox server that hosts the account.</desc>
 </attr>
 
-<attr id="3009" name="zimbraImapLoadBalancingAlgorithm" type="string" max="512" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" callback="ImapLBMech" since="8.8.0">
+<attr id="3009" name="zimbraImapLoadBalancingAlgorithm" type="string" max="512" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" callback="ImapLBMech" since="8.7.6">
   <globalConfigValue>ClientIpHash</globalConfigValue>
   <desc>Determines the load-balancing algorithm used to select an IMAP server from the pool of available zimbraReverseProxyUpstreamImapServers. Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2 ...]</desc>
 </attr>
@@ -9415,46 +9415,46 @@ TODO: delete them permanently from here
   <desc>Specifies the amount of time a thread will wait for a JedisPool resource. A value of 0 will cause the thread to block indefinitely.</desc>
 </attr>
 
-<attr id="2102" name="zimbraChatServiceEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.8.0">
+<attr id="2102" name="zimbraChatServiceEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>enable XMPP server</desc>
 </attr>
 
-<attr id="2103" name="zimbraChatHistoryEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.0">
+<attr id="2103" name="zimbraChatHistoryEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.6">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>enable chat history saving</desc>
 </attr>
 
-<attr id="2104" name="zimbraChatConversationAuditEnabled" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.8.0">
+<attr id="2104" name="zimbraChatConversationAuditEnabled" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.7.6">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>enable dedicated log for the chat conversation (needed by some jurisdictions)</desc>
 </attr>
 
-<attr id="2105" name="zimbraChatXmppSslPortEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.8.0">
+<attr id="2105" name="zimbraChatXmppSslPortEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>enable XMPP legacy SSL port</desc>
 </attr>
 
-<attr id="2106" name="zimbraChatAllowUnencryptedPassword" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0">
+<attr id="2106" name="zimbraChatAllowUnencryptedPassword" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.6">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>allow unencrypted password login via XMPP</desc>
 </attr>
 
-<attr id="2107" name="zimbraChatXmppPort" type="port" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.8.0">
+<attr id="2107" name="zimbraChatXmppPort" type="port" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
   <globalConfigValue>5222</globalConfigValue>
   <desc>XMPP plain port, usually used with startTLS</desc>
 </attr>
 
-<attr id="2108" name="zimbraChatXmppSslPort" type="port" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.8.0">
+<attr id="2108" name="zimbraChatXmppSslPort" type="port" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mailbox" flags="serverInherited" since="8.7.6">
   <globalConfigValue>5223</globalConfigValue>
   <desc>XMPP legacy SSL port</desc>
 </attr>
 
-<attr id="2109" name="zimbraChatAllowDlMemberAddAsFriend" type="boolean" cardinality="single" optionalIn="distributionList" since="8.8.0">
+<attr id="2109" name="zimbraChatAllowDlMemberAddAsFriend" type="boolean" cardinality="single" optionalIn="distributionList" since="8.7.6">
   <desc>make distribution list members friends</desc>
 </attr>
 
-<attr id="2110" name="zimbraDriveOwnCloudURL" type="string" cardinality="single" optionalIn="domain" since="8.8.0">
+<attr id="2110" name="zimbraDriveOwnCloudURL" type="string" cardinality="single" optionalIn="domain" since="8.7.6">
   <desc>Drive own or next cloud URL.</desc>
 </attr>
 </attrs>

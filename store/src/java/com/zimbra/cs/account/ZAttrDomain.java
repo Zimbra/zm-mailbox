@@ -4286,7 +4286,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraChatConversationAuditEnabled, or false if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2104)
     public boolean isChatConversationAuditEnabled() {
@@ -4300,7 +4300,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraChatConversationAuditEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2104)
     public void setChatConversationAuditEnabled(boolean zimbraChatConversationAuditEnabled) throws com.zimbra.common.service.ServiceException {
@@ -4317,7 +4317,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2104)
     public Map<String,Object> setChatConversationAuditEnabled(boolean zimbraChatConversationAuditEnabled, Map<String,Object> attrs) {
@@ -4332,7 +4332,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2104)
     public void unsetChatConversationAuditEnabled() throws com.zimbra.common.service.ServiceException {
@@ -4348,7 +4348,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2104)
     public Map<String,Object> unsetChatConversationAuditEnabled(Map<String,Object> attrs) {
@@ -6989,7 +6989,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraDriveOwnCloudURL, or null if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2110)
     public String getDriveOwnCloudURL() {
@@ -7002,7 +7002,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraDriveOwnCloudURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2110)
     public void setDriveOwnCloudURL(String zimbraDriveOwnCloudURL) throws com.zimbra.common.service.ServiceException {
@@ -7018,7 +7018,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2110)
     public Map<String,Object> setDriveOwnCloudURL(String zimbraDriveOwnCloudURL, Map<String,Object> attrs) {
@@ -7032,7 +7032,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2110)
     public void unsetDriveOwnCloudURL() throws com.zimbra.common.service.ServiceException {
@@ -7047,7 +7047,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2110)
     public Map<String,Object> unsetDriveOwnCloudURL(Map<String,Object> attrs) {
@@ -14658,7 +14658,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraMailAdminOutgoingSieveScriptAfter, or null if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2093)
     public String getMailAdminOutgoingSieveScriptAfter() {
@@ -14672,7 +14672,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraMailAdminOutgoingSieveScriptAfter new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2093)
     public void setMailAdminOutgoingSieveScriptAfter(String zimbraMailAdminOutgoingSieveScriptAfter) throws com.zimbra.common.service.ServiceException {
@@ -14689,7 +14689,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2093)
     public Map<String,Object> setMailAdminOutgoingSieveScriptAfter(String zimbraMailAdminOutgoingSieveScriptAfter, Map<String,Object> attrs) {
@@ -14704,7 +14704,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2093)
     public void unsetMailAdminOutgoingSieveScriptAfter() throws com.zimbra.common.service.ServiceException {
@@ -14720,7 +14720,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2093)
     public Map<String,Object> unsetMailAdminOutgoingSieveScriptAfter(Map<String,Object> attrs) {
@@ -14735,7 +14735,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraMailAdminOutgoingSieveScriptBefore, or null if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2092)
     public String getMailAdminOutgoingSieveScriptBefore() {
@@ -14749,7 +14749,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraMailAdminOutgoingSieveScriptBefore new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2092)
     public void setMailAdminOutgoingSieveScriptBefore(String zimbraMailAdminOutgoingSieveScriptBefore) throws com.zimbra.common.service.ServiceException {
@@ -14766,7 +14766,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2092)
     public Map<String,Object> setMailAdminOutgoingSieveScriptBefore(String zimbraMailAdminOutgoingSieveScriptBefore, Map<String,Object> attrs) {
@@ -14781,7 +14781,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2092)
     public void unsetMailAdminOutgoingSieveScriptBefore() throws com.zimbra.common.service.ServiceException {
@@ -14797,7 +14797,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2092)
     public Map<String,Object> unsetMailAdminOutgoingSieveScriptBefore(Map<String,Object> attrs) {
@@ -14812,7 +14812,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraMailAdminSieveScriptAfter, or null if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2091)
     public String getMailAdminSieveScriptAfter() {
@@ -14826,7 +14826,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraMailAdminSieveScriptAfter new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2091)
     public void setMailAdminSieveScriptAfter(String zimbraMailAdminSieveScriptAfter) throws com.zimbra.common.service.ServiceException {
@@ -14843,7 +14843,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2091)
     public Map<String,Object> setMailAdminSieveScriptAfter(String zimbraMailAdminSieveScriptAfter, Map<String,Object> attrs) {
@@ -14858,7 +14858,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2091)
     public void unsetMailAdminSieveScriptAfter() throws com.zimbra.common.service.ServiceException {
@@ -14874,7 +14874,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2091)
     public Map<String,Object> unsetMailAdminSieveScriptAfter(Map<String,Object> attrs) {
@@ -14889,7 +14889,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraMailAdminSieveScriptBefore, or null if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2090)
     public String getMailAdminSieveScriptBefore() {
@@ -14903,7 +14903,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraMailAdminSieveScriptBefore new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2090)
     public void setMailAdminSieveScriptBefore(String zimbraMailAdminSieveScriptBefore) throws com.zimbra.common.service.ServiceException {
@@ -14920,7 +14920,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2090)
     public Map<String,Object> setMailAdminSieveScriptBefore(String zimbraMailAdminSieveScriptBefore, Map<String,Object> attrs) {
@@ -14935,7 +14935,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2090)
     public void unsetMailAdminSieveScriptBefore() throws com.zimbra.common.service.ServiceException {
@@ -14951,7 +14951,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2090)
     public Map<String,Object> unsetMailAdminSieveScriptBefore(Map<String,Object> attrs) {

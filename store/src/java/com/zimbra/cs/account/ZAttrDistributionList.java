@@ -675,7 +675,7 @@ public abstract class ZAttrDistributionList extends Group {
      *
      * @return zimbraChatAllowDlMemberAddAsFriend, or false if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2109)
     public boolean isChatAllowDlMemberAddAsFriend() {
@@ -688,7 +688,7 @@ public abstract class ZAttrDistributionList extends Group {
      * @param zimbraChatAllowDlMemberAddAsFriend new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2109)
     public void setChatAllowDlMemberAddAsFriend(boolean zimbraChatAllowDlMemberAddAsFriend) throws com.zimbra.common.service.ServiceException {
@@ -704,7 +704,7 @@ public abstract class ZAttrDistributionList extends Group {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2109)
     public Map<String,Object> setChatAllowDlMemberAddAsFriend(boolean zimbraChatAllowDlMemberAddAsFriend, Map<String,Object> attrs) {
@@ -718,7 +718,7 @@ public abstract class ZAttrDistributionList extends Group {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2109)
     public void unsetChatAllowDlMemberAddAsFriend() throws com.zimbra.common.service.ServiceException {
@@ -733,7 +733,7 @@ public abstract class ZAttrDistributionList extends Group {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2109)
     public Map<String,Object> unsetChatAllowDlMemberAddAsFriend(Map<String,Object> attrs) {
