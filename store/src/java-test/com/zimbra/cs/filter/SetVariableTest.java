@@ -1864,9 +1864,19 @@ public class SetVariableTest {
                   + "if string :count \"eq\" \"${number}\" \"1\" {"
                   + "  addheader :last \"X-New-Header-45\" \"string test count numeric eq\";\n"
                   + "}"
+<<<<<<< HEAD
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
 =======
 >>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
+=======
+                  // Compare the empty string with ascii-numeric comparator
+                  + "if string :value \"eq\" :comparator \"i;ascii-numeric\" \"${sample}\" \"${undefined}\" {"
+                  + "  addheader :last \"X-New-Header-46\" \"string test value numeric eq positive infinity\";\n"
+                  + "}"
+                  + "if string :count \"lt\" \"${number}\" \"\" {"
+                  + "  addheader :last \"X-New-Header-47\" \"string test count numeric lt positive infinity\";\n"
+                  + "}"
+>>>>>>> 03d69f1757b6856ab9d253282535758a573b1a7a
                   ;
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -2058,6 +2068,10 @@ public class SetVariableTest {
             Assert.assertEquals("string test value numeric gt", value[0]);
             value = msg.getMimeMessage().getHeader("X-New-Header-45");
             Assert.assertEquals("string test count numeric eq", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-46");
+            Assert.assertEquals("string test value numeric eq positive infinity", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-47");
+            Assert.assertEquals("string test count numeric lt positive infinity", value[0]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
 >>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
