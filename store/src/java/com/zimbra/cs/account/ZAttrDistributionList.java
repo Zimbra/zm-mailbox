@@ -671,6 +671,78 @@ public abstract class ZAttrDistributionList extends Group {
     }
 
     /**
+     * make distribution list members friends
+     *
+     * @return zimbraChatAllowDlMemberAddAsFriend, or false if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2109)
+    public boolean isChatAllowDlMemberAddAsFriend() {
+        return getBooleanAttr(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, false);
+    }
+
+    /**
+     * make distribution list members friends
+     *
+     * @param zimbraChatAllowDlMemberAddAsFriend new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2109)
+    public void setChatAllowDlMemberAddAsFriend(boolean zimbraChatAllowDlMemberAddAsFriend) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, zimbraChatAllowDlMemberAddAsFriend ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * make distribution list members friends
+     *
+     * @param zimbraChatAllowDlMemberAddAsFriend new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2109)
+    public Map<String,Object> setChatAllowDlMemberAddAsFriend(boolean zimbraChatAllowDlMemberAddAsFriend, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, zimbraChatAllowDlMemberAddAsFriend ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * make distribution list members friends
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2109)
+    public void unsetChatAllowDlMemberAddAsFriend() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * make distribution list members friends
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2109)
+    public Map<String,Object> unsetChatAllowDlMemberAddAsFriend(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, "");
+        return attrs;
+    }
+
+    /**
      * time object was created
      *
      * <p>Use getCreateTimestampAsString to access value as a string.

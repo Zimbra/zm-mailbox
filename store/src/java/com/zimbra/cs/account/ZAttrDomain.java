@@ -4281,6 +4281,83 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * enable dedicated log for the chat conversation (needed by some
+     * jurisdictions)
+     *
+     * @return zimbraChatConversationAuditEnabled, or false if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2104)
+    public boolean isChatConversationAuditEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraChatConversationAuditEnabled, false);
+    }
+
+    /**
+     * enable dedicated log for the chat conversation (needed by some
+     * jurisdictions)
+     *
+     * @param zimbraChatConversationAuditEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2104)
+    public void setChatConversationAuditEnabled(boolean zimbraChatConversationAuditEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatConversationAuditEnabled, zimbraChatConversationAuditEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable dedicated log for the chat conversation (needed by some
+     * jurisdictions)
+     *
+     * @param zimbraChatConversationAuditEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2104)
+    public Map<String,Object> setChatConversationAuditEnabled(boolean zimbraChatConversationAuditEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatConversationAuditEnabled, zimbraChatConversationAuditEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable dedicated log for the chat conversation (needed by some
+     * jurisdictions)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2104)
+    public void unsetChatConversationAuditEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatConversationAuditEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable dedicated log for the chat conversation (needed by some
+     * jurisdictions)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2104)
+    public Map<String,Object> unsetChatConversationAuditEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatConversationAuditEnabled, "");
+        return attrs;
+    }
+
+    /**
      * API Client ID for accessing with Zimbra Community API
      *
      * @return zimbraCommunityAPIClientID, or null if unset
@@ -6904,6 +6981,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetDomainType(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDomainType, "");
+        return attrs;
+    }
+
+    /**
+     * Drive own or next cloud URL.
+     *
+     * @return zimbraDriveOwnCloudURL, or null if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2110)
+    public String getDriveOwnCloudURL() {
+        return getAttr(Provisioning.A_zimbraDriveOwnCloudURL, null);
+    }
+
+    /**
+     * Drive own or next cloud URL.
+     *
+     * @param zimbraDriveOwnCloudURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2110)
+    public void setDriveOwnCloudURL(String zimbraDriveOwnCloudURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDriveOwnCloudURL, zimbraDriveOwnCloudURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Drive own or next cloud URL.
+     *
+     * @param zimbraDriveOwnCloudURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2110)
+    public Map<String,Object> setDriveOwnCloudURL(String zimbraDriveOwnCloudURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDriveOwnCloudURL, zimbraDriveOwnCloudURL);
+        return attrs;
+    }
+
+    /**
+     * Drive own or next cloud URL.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2110)
+    public void unsetDriveOwnCloudURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDriveOwnCloudURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Drive own or next cloud URL.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2110)
+    public Map<String,Object> unsetDriveOwnCloudURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDriveOwnCloudURL, "");
         return attrs;
     }
 
