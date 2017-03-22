@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.Header;
@@ -36,6 +37,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+
+import org.apache.jsieve.exception.SyntaxException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -830,14 +833,16 @@ public final class FilterUtil {
      * @param matchedVariables a list of Matched Variables
      * @param sourceStr text string that may contain "variable-ref" (RFC 5229 Section 3.)
      * @return Replaced text string
+     * @throws SyntaxException 
      */
-    public static String replaceVariables(ZimbraMailAdapter mailAdapter, String sourceStr) {
+    public static String replaceVariables(ZimbraMailAdapter mailAdapter, String sourceStr) throws SyntaxException {
         if (null == mailAdapter || !SetVariable.isVariablesExtAvailable(mailAdapter)) {
             return sourceStr;
         }
         if (sourceStr.indexOf("${") == -1) {
             return sourceStr;
         }
+        validateVariableIndex(sourceStr);
         Map<String, String> variables = mailAdapter.getVariables();
         List<String> matchedVariables = mailAdapter.getMatchedValues();
         ZimbraLog.filter.debug("Variable: %s " , sourceStr);
@@ -847,7 +852,7 @@ public final class FilterUtil {
         // (1) Resolve the Matched Variables (numeric variables; "${N}" (N=0,1,...9)
         int i = 0;
         for (; i < matchedVariables.size() && i < 10; i++) {
-            String keyName = "(?i)" + "\\$\\{" + String.valueOf(i) + "\\}";
+            String keyName = "(?i)" + "\\$\\{0*" + String.valueOf(i) + "\\}";
             resultStr = resultStr.replaceAll(keyName, Matcher.quoteReplacement(matchedVariables.get(i)));
         }
         // (2) Replace the empty string to Matched Variables whose index is out of range
@@ -997,6 +1002,24 @@ public final class FilterUtil {
      */
     private static boolean isSieveMatcherSpecialChar(char ch) {
         return (ch == '*' || ch == '?' || ch == '\\');
+    }
+
+    private static void validateVariableIndex(String srcStr) throws SyntaxException {
+       boolean match = false;
+       String negativeIndexPattern = "\\$\\{-\\d*\\}";
+       String exceedsIndexPattern = "\\$\\{0*[1-9]{1,}\\d{1,}\\}";
+       Pattern pattern = Pattern.compile(negativeIndexPattern);
+       Matcher matcher = pattern.matcher(srcStr);
+       match = matcher.find();
+       if (!match) {
+          pattern = Pattern.compile(exceedsIndexPattern);
+          matcher = pattern.matcher(srcStr);
+          match = matcher.find();
+       }
+       if (match) {
+           ZimbraLog.filter.debug("Invalid variable index %s ", srcStr);
+           throw new SyntaxException("Invalid variable index " + srcStr);
+       }
     }
 }
 
