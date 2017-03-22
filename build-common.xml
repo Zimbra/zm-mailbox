@@ -225,7 +225,7 @@
               value="Version: ${zimbra.buildinfo.version}; Type: ${zimbra.buildinfo.type}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
     </target>
 
-    <target name="set-dev-version">
+    <target name="set-dev-version" depends="setversion">
       <if>
         <not>
           <isset property="jar.file"/>
