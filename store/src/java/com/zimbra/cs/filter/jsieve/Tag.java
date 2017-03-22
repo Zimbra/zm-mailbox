@@ -39,7 +39,7 @@ import com.zimbra.cs.filter.ZimbraMailAdapter;
 public class Tag extends AbstractActionCommand {
 
     @Override
-    protected Object executeBasic(MailAdapter mail, Arguments args, Block block, SieveContext context) {
+    protected Object executeBasic(MailAdapter mail, Arguments args, Block block, SieveContext context) throws SyntaxException {
         if (!(mail instanceof ZimbraMailAdapter)) {
             return null;
         }
