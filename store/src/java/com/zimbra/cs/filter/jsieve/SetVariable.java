@@ -206,7 +206,7 @@ public class SetVariable extends AbstractCommand {
                         } else {
                             throw new SyntaxException("Cannot use two or more modifiers of the same"
                                 + " precedence in a single \"set\" action. Modifiers used: " + tagValue
-                                + "and "  + operations[index]);
+                                + " and "  + operations[index]);
                         }
                     }
                 } else {
