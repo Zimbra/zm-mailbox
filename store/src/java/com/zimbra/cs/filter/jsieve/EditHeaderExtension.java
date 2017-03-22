@@ -391,6 +391,10 @@ public class EditHeaderExtension {
                 ZimbraLog.filter.info("Unknown argument provided: " + arg.getValue());
             }
         }
+
+        if (!(isIs() || isContains() || isMatches() || isCountTag() || isValueTag())) {
+           this.is = true;
+        }
     }
 
     /**
