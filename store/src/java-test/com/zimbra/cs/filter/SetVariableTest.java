@@ -2069,7 +2069,7 @@ public class SetVariableTest {
     }
 
     @Test
-    public void testVarIndexWithLaedingZeroes() {
+    public void testVarIndexWithLeadingZeroes() {
         try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             RuleManager.clearCachedRules(account);
