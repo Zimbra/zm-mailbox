@@ -2295,5 +2295,129 @@ public class SetVariableTest {
             fail("No exception should be thrown");
         }
     }
+
+    @Test
+    public void testVarIndexWithLaedingZeroes() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
+                       + "tag \"${001}\";}";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: test C-51 abc sample foo bar hoge piyo 123 456 789 sieve test";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("test", msg.getTags()[0]);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testNegativeVarIndex() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
+                       + "tag \"${-1}\";}";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: test C-51 abc sample foo bar hoge piyo 123 456 789 sieve test";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            String tag = msg.getTags()[0];
+            // ${-1} is not valid variable index. So, no tag will be set because of a Sieve syntax Exception
+            fail("Should not reach here");
+
+        } catch (ArrayIndexOutOfBoundsException e) {
+            assertTrue(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testOutofRangeVarIndex() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
+                       + "tag \"${10}\";}";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: test C-51 abc sample foo bar hoge piyo 123 456 789 sieve test";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            String tag = msg.getTags()[0];
+            // ${10} is not valid variable index. So, no tag will be set because of a Sieve syntax Exception
+            fail("Should not reach here");
+
+        } catch (ArrayIndexOutOfBoundsException e) {
+            assertTrue(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testOutofRangeVarIndexWithLeadingZeroes() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
+                       + "tag \"${0010}\";}";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: test C-51 abc sample foo bar hoge piyo 123 456 789 sieve test";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            String tag = msg.getTags()[0];
+            // ${0010} is not valid variable index. So, no tag will be set because of a Sieve syntax Exception
+            fail("Should not reach here");
+
+        } catch (ArrayIndexOutOfBoundsException e) {
+            assertTrue(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
 }
 
