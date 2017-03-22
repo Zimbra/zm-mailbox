@@ -2,7 +2,7 @@
 
    <target name="all">
       <ant dir="./native" target="publish-local" inheritAll="true"/>
-      <exec dir="./native" executable="make"></exec>
+      <exec dir="./native" executable="make"     failonerror="true"/>
       <ant dir="./common" target="publish-local" inheritAll="true"/>
       <ant dir="./soap"   target="publish-local" inheritAll="true"/>
       <ant dir="./client" target="publish-local" inheritAll="true"/>
