@@ -1004,4 +1004,41 @@ public class ReplaceHeaderTest {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
+
+    /*
+     * Replace header without match-type
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderWithoutMatchType() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + " replaceheader :newname \"X-Test2-Header\" :newvalue \"0\" \"X-Test-Header\" \"test2\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String match = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Test2-Header".equals(header.getName())) {
+                    match = header.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals("0", match);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
 }
