@@ -545,8 +545,9 @@ public class EditHeaderExtension {
     /**
      * Replace sieve variables with their values in <b>valueList</b>
      * @param mailAdapter : Object of <b>ZimbraMailAdapter</b>
+     * @throws SyntaxException 
      */
-    public void replaceVariablesInValueList(ZimbraMailAdapter mailAdapter) {
+    public void replaceVariablesInValueList(ZimbraMailAdapter mailAdapter) throws SyntaxException {
         List<String> temp = new ArrayList<String>();
         if (this.valueList != null && !this.valueList.isEmpty()) {
             for (String value : this.valueList) {
@@ -561,8 +562,9 @@ public class EditHeaderExtension {
 =======
      * Replace sieve variables with their value in <b>key</b>
      * @param mailAdapter : Object of <b>ZimbraMailAdapter</b>
+     * @throws SyntaxException 
      */
-    public void replaceVariablesInKey(ZimbraMailAdapter mailAdapter) {
+    public void replaceVariablesInKey(ZimbraMailAdapter mailAdapter) throws SyntaxException {
         if (this.key != null) {
             this.key = FilterUtil.replaceVariables(mailAdapter, key);
         }

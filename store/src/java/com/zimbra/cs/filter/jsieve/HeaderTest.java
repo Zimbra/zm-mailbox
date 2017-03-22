@@ -52,6 +52,7 @@ import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.comparators.MatchTypeTags;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SievePatternException;
+import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.SieveMailException;
 import org.apache.jsieve.tests.Header;
@@ -197,8 +198,9 @@ public class HeaderTest extends Header {
      * @param keys
      * @param mail
      * @return
+     * @throws SyntaxException 
      */
-    public static List<String> replaceVariables(List<String> keys, MailAdapter mail) {
+    public static List<String> replaceVariables(List<String> keys, MailAdapter mail) throws SyntaxException {
         List<String> replacedVariables = new ArrayList<String>();
         if (!(mail instanceof ZimbraMailAdapter)) {
             return replacedVariables;
