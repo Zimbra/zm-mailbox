@@ -145,10 +145,6 @@ public class ReplaceHeader extends AbstractCommand {
             throws SieveException {
         ZimbraLog.filter.debug("replaceheader: %s", arguments.getArgumentList().toString());
         ehe.setupEditHeaderData(arguments, this);
-        // Match type or Comparator type condition must be present
-        if (!(ehe.isIs() || ehe.isContains() || ehe.isMatches() || ehe.isCountTag() || ehe.isValueTag())) {
-            throw new SyntaxException("replaceheader: Match type or Comparator type must be present in replaceheader.");
-        }
 
         // Key and value both must be present at a time
         if (ehe.getKey() == null || ehe.getValueList() == null) {
