@@ -47,6 +47,7 @@ import org.apache.jsieve.tests.ComparatorTags;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CharsetUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 <<<<<<< HEAD
@@ -301,7 +302,11 @@ public class EditHeaderExtension {
                         arg = itr.next();
                         if (arg instanceof StringListArgument) {
                             StringListArgument sla = (StringListArgument) arg;
-                            this.newName = sla.getList().get(0);
+                            String newName = sla.getList().get(0);
+                            if (StringUtil.isNullOrEmpty(newName)) {
+                                throw new SyntaxException("New name must be present with :newname in replaceheader : " + arg);
+                            }
+                            this.newName = newName;
                         } else {
                             throw new SyntaxException("New name not provided with :newname in replaceheader : " + arg);
                         }
