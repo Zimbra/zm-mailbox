@@ -496,6 +496,94 @@ public class SetVariableTest {
             fail("No exception should be thrown");
         }
     }
+    
+    //    set :upperfirst lowerfirst "b" "${a}";            => "JuMBlEd lETteRS"
+    @Test
+    public void testModifierSamePrecendenceInSingleSet() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            filterScript = "require [\"variables\"];\n"
+                         + "set \"a\" \"juMBlEd lETteRS\" ;\n"
+                         + "set :upperfirst :lowerfirst \"c\" \"${b}\";"
+                         + "if header :matches \"Subject\" \"*\" {\n"
+                         + "  tag \"${d}\";\n"
+                         + "}\n";
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: Test\n"
+                       + "\n"
+                       + "Hello World.";
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertTrue(ArrayUtil.getFirstElement(msg.getTags()) == null);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+    
+    
+    //    set :upperfirst lowerfirst "b" "${a}";            => "JuMBlEd lETteRS"
+    @Test
+    public void testModifierSamePrecendenceInSingleSet2() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            filterScript = "require [\"variables\"];\n"
+                         + "set \"a\" \"juMBlEd lETteRS\" ;\n"
+                         + "set :upperfirst :lower :lowerfirst :lower \"c\" \"${b}\";"
+                         + "if header :matches \"Subject\" \"*\" {\n"
+                         + "  tag \"${d}\";\n"
+                         + "}\n";
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: Test\n"
+                       + "\n"
+                       + "Hello World.";
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertTrue(ArrayUtil.getFirstElement(msg.getTags()) == null);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+    
+//  set :upperfirst lowerfirst "b" "${a}";            => "JuMBlEd lETteRS"
+  @Test
+  public void testModifierDiffPrecendenceInSingleSet() {
+      try {
+          Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+          RuleManager.clearCachedRules(account);
+          Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+          filterScript = "require [\"variables\"];\n"
+                       + "set \"a\" \"juMBlEd lETteRS\" ;\n"
+                       + "set :upperfirst :lower \"d\" \"${a}\"; "
+                       + "if header :matches \"Subject\" \"*\" {\n"
+                       + "  tag \"${d}\";\n"
+                       + "}\n";
+          account.setMailSieveScript(filterScript);
+          String raw = "From: sender@zimbra.com\n"
+                     + "To: test1@zimbra.com\n"
+                     + "Subject: Test\n"
+                     + "\n"
+                     + "Hello World.";
+          List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                  new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                  Mailbox.ID_FOLDER_INBOX, true);
+          Message msg = mbox.getMessageById(null, ids.get(0).getId());
+          Assert.assertEquals("Jumbled letters", ArrayUtil.getFirstElement(msg.getTags()));
+      } catch (Exception e) {
+          fail("No exception should be thrown");
+      }
+  }
 
     @Test
     public void testVariablesCombo() {
