@@ -17,31 +17,43 @@
 
 package com.zimbra.qa.unittest;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import com.google.common.base.Strings;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 
-public class TestFolders extends TestCase
-{
-    private static String USER_NAME = "user1";
+public class TestFolders {
+    private static String USER_NAME = TestFolders.class.getSimpleName();
     private static String NAME_PREFIX = "TestFolders";
 
     private String mOriginalEmptyFolderBatchSize;
 
-    @Override
-    protected void setUp()
-    throws Exception {
+
+    @BeforeClass
+    public static void init() throws Exception {
+        TestUtil.deleteAccount(USER_NAME);
+        TestUtil.createAccount(USER_NAME);
+    }
+
+    @Before
+    public void setUp() throws Exception {
         cleanUp();
         mOriginalEmptyFolderBatchSize = TestUtil.getServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize);
     }
 
-
-    public void testEmptyLargeFolder()
-    throws Exception {
+    @Test
+    public void testEmptyLargeFolder() throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize, Integer.toString(3));
 
         // Create folders.
@@ -81,7 +93,8 @@ public class TestFolders extends TestCase
         assertEquals(0, parent.getMessageCount());
         assertNull(mbox.getFolderByPath(childPath));
     }
-    
+
+    @Test
     public void testCreateManyFolders() throws Exception {
         //normally skip this test since it takes a long time to complete. just keep it around for quick perf checks
         boolean skip = true;
@@ -125,10 +138,15 @@ public class TestFolders extends TestCase
         }
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         cleanUp();
         TestUtil.setServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize, mOriginalEmptyFolderBatchSize);
+    }
+
+    @AfterClass
+    public static void shutdown() throws Exception {
+        TestUtil.deleteAccount(USER_NAME);
     }
 
     public static void main(String[] args)
