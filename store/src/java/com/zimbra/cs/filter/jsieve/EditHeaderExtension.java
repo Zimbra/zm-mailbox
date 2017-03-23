@@ -371,8 +371,6 @@ public class EditHeaderExtension {
                         arg = itr.next();
                         sla = (StringListArgument) arg;
                         this.valueList = sla.getList();
-                    } else {
-                        throw new SyntaxException("Value for " + this.key + " is not provided in replaceheader.");
                     }
                 } else if (ac instanceof DeleteHeader) {
                     StringListArgument sla = (StringListArgument) arg;
