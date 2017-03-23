@@ -115,17 +115,17 @@ public class SetVariable extends AbstractCommand {
             operation = operation.toLowerCase();
         }
         if (operation.equals(STRING_LENGTH)) {         // Precedence: 10
-            index = 6;
-        } else if (operation.equals(ENCODE_URL)) {     // Precedence: 15
-            index = 5;
-        } else if (operation.equals(QUOTE_WILDCARD)) { // Precedence: 20
             index = 4;
-        } else if (operation.equals(LOWERCASE_FIRST)) {// Precedence: 30
+        } else if (operation.equals(ENCODE_URL)) {     // Precedence: 15
             index = 3;
-        } else if (operation.equals(UPPERCASE_FIRST)) {// Precedence: 30
+        } else if (operation.equals(QUOTE_WILDCARD)) { // Precedence: 20
             index = 2;
-        } else if (operation.equals(ALL_LOWER_CASE)) { // Precedence: 40
+        } else if (operation.equals(LOWERCASE_FIRST)) {// Precedence: 30
             index = 1;
+        } else if (operation.equals(UPPERCASE_FIRST)) {// Precedence: 30
+            index = 1;
+        } else if (operation.equals(ALL_LOWER_CASE)) { // Precedence: 40
+            index = 0;
         } else if (operation.equals(ALL_UPPER_CASE)) { // Precedence: 40
             index =0;
         } 
@@ -190,6 +190,7 @@ public class SetVariable extends AbstractCommand {
         //    set :encodeurl "body_param" "Safe body&evil=evilbody"; => "safe+body%26evil%3Devilbody"
         int varArgCount = 0;
         String key = null;
+        String [] operations = new String[OPERATIONS_IDX];
         if (args.size() >= 2) {
             for (Argument arg: arguments.getArgumentList()) {
                 
@@ -198,7 +199,16 @@ public class SetVariable extends AbstractCommand {
                     String tagValue = tag.getTag();
                     if (!isValidModifier(tagValue)) {
                         throw new SyntaxException("Invalid variable modifier:" + tagValue);
-                    }            
+                    } else {
+                        int index = getIndex(tagValue);
+                        if (StringUtil.isNullOrEmpty(operations[index])) {
+                            operations[index] = tagValue.toLowerCase();
+                        } else {
+                            throw new SyntaxException("Cannot use two or more modifiers of the same"
+                                + " precedence in a single \"set\" action. Modifiers used: " + tagValue
+                                + " and "  + operations[index]);
+                        }
+                    }
                 } else {
                     String argument = ((StringListArgument) arg).getList().get(0);
                     ZimbraLog.filter.debug("set variable argument: " + argument);
