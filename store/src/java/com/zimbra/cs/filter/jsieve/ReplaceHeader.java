@@ -65,6 +65,9 @@ public class ReplaceHeader extends AbstractCommand {
         // replace sieve variables
         ehe.replaceVariablesInValueList(mailAdapter);
         ehe.replaceVariablesInKey(mailAdapter);
+        if(ehe.getValueList() == null || ehe.getValueList().isEmpty()) {
+            ehe.setValueList(Arrays.asList("*"));
+        }
         MimeMessage mm = mailAdapter.getMimeMessage();
         Enumeration<Header> headers;
         try {
@@ -147,11 +150,14 @@ public class ReplaceHeader extends AbstractCommand {
         ehe.setupEditHeaderData(arguments, this);
 
         // Key and value both must be present at a time
-        if (ehe.getKey() == null || ehe.getValueList() == null) {
-            throw new SyntaxException("replaceheader: key or value not found in replaceheader.");
+        if (ehe.getKey() == null) {
+            throw new SyntaxException("replaceheader: key not found in replaceheader.");
         }
         ZimbraLog.filter.debug("replaceheader: header key in sieve script = %s", ehe.getKey());
-        ZimbraLog.filter.debug("replaceheader: header values in sieve script = %s", Arrays.toString(ehe.getValueList().toArray()));
+        if (null != ehe.getValueList()) {
+            ZimbraLog.filter.debug("replaceheader: header values in sieve script = %s",
+                Arrays.toString(ehe.getValueList().toArray()));
+        }
 
         // character set validation
         if (ehe.getNewName() != null) {
