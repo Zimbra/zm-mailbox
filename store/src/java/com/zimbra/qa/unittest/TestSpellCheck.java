@@ -49,7 +49,7 @@ import com.zimbra.soap.mail.type.Misspelling;
  */
 public class TestSpellCheck {
     private static final String USER_NAME = "TestSpellCheck-user1";
-    
+
     private static final String TEXT =
         "On a cycle the fram is gone. You're completly in cotnact with it all.\n" +
         "You're in the scene, not just watching it anmore, and the sense of presence\n" +
@@ -58,7 +58,7 @@ public class TestSpellCheck {
         "focus on it, yet you can put your foot down and touch it anytime, and the\n" +
         "whole thing, the whole experience, is nevr removed from immediate\n" +
         "consciousness.";
-        
+
     private static String[] originalDictionaries;
     private boolean available = false;
     private String[] originalDomainIgnoreWords;
@@ -114,7 +114,7 @@ public class TestSpellCheck {
         assertTrue("nevr", hasSuggestion(result, "nevr", "never"));
         ZimbraLog.test.debug("Successfully tested spell checking");
     }
-    
+
     /**
      * Tests the <tt>ignore</tt> attribute for <tt>CheckSpellingRequest</tt>.
      */
@@ -126,11 +126,11 @@ public class TestSpellCheck {
         assertEquals("Number of misspelled words", 1, getNumMisspellings(result));
         assertTrue(hasSuggestion(result, "forr", "four"));
     }
-    
+
     private int getNumMisspellings(CheckSpellingResponse result) {
         return result.getMisspelledWords().size();
     }
-    
+
     private boolean hasSuggestion(CheckSpellingResponse result, String misspelled, String expectedSuggestion) {
         for (Misspelling mis : result.getMisspelledWords()) {
             if (mis.getWord().equals(misspelled)) {
@@ -143,7 +143,7 @@ public class TestSpellCheck {
         }
         return false;
     }
-    
+
     /**
      * Confirms that <tt>GetSpellDictionaries</tt> returns the current list of
      * dictionaries from <tt>zimbraSpellAvailableDictionary</tt>.
@@ -169,7 +169,7 @@ public class TestSpellCheck {
         actual.removeAll(expected);
         assertEquals(0, actual.size());
     }
-    
+
     /**
      * Confirms that spell checking doesn't bomb on unexpected characters.
      */
@@ -181,7 +181,7 @@ public class TestSpellCheck {
         CheckSpellingResponse result = mbox.checkSpelling("one \u00a0tuo two");
         assertEquals(1, result.getMisspelledWords().size());
     }
-    
+
     /**
      * Confirms that accented characters are returned correctly (bug 41394).
      */
@@ -195,7 +195,7 @@ public class TestSpellCheck {
         assertEquals("reunion", misspelling.getWord());
         assertTrue(misspelling.getSuggestionsList().contains("reuni\u00f3n"));
     }
-    
+
     /**
      * Confirms that accented characters are sent correctly (bug 43626).
      */
@@ -209,7 +209,7 @@ public class TestSpellCheck {
         assertEquals("esst\u00e1", misspelling.getWord());
         assertTrue(misspelling.getSuggestionsList().contains("est\u00e1"));
     }
-    
+
     @Test
     public void testRussian() throws Exception {
         Assume.assumeTrue(available);
@@ -224,7 +224,7 @@ public class TestSpellCheck {
         assertEquals(krokodilMisspelled, misspelling.getWord());
         assertTrue(misspelling.getSuggestionsList().contains(krokodil));
     }
-    
+
     @Test
     public void testAllCaps() throws Exception {
         Assume.assumeTrue(available);
