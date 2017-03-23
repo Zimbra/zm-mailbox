@@ -1,5 +1,4 @@
-/*
- * ***** BEGIN LICENSE BLOCK *****
+N LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2016, 2017 Synacor, Inc.
  *
