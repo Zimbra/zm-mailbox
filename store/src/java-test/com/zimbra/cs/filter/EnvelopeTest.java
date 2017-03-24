@@ -33,7 +33,6 @@ import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
@@ -197,6 +196,216 @@ public class EnvelopeTest {
 
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("From", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testMailFromBackslash() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :all :is \"from\" \"ti\\\\m@example.com\" {\n"
+                + "  tag \"From\";\n"
+                + "}";
+
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<\"ti\\\\m\"@example.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("From", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testMailFromDot() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :all :is \"from\" \"ti.m@example.com\" {\n"
+                + "  tag \"From\";\n"
+                + "}";
+
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<ti.m@example.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("From", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testMailFromDoubleQuote() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :all :is \"from\" \"ti\\\"m@example.com\" {\n"
+                + "  tag \"From\";\n"
+                + "}";
+
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<\"ti\\\"m\"@example.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("From", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testMailFromSingleQuote() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :all :is \"from\" \"ti'm@example.com\" {\n"
+                + "  tag \"From\";\n"
+                + "}";
+
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<ti'm@example.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("From", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testMailFromQuestionMark() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :all :is \"from\" \"ti?m@example.com\" {\n"
+                + "  tag \"From\";\n"
+                + "}";
+
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<ti?m@example.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("From", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testMailFromComma() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :all :is \"from\" \"ti,m@example.com\" {\n"
+                + "  tag \"From\";\n"
+                + "}";
+
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<\"ti,m\"@example.com>", new String[] { "BODY", "SIZE" }, null);
         LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
         env.setSender(sender);
         env.addLocalRecipient(recipient);
