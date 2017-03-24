@@ -1259,7 +1259,7 @@ public class ZimletUtil {
         }
 	}
 
-    private static void undeployZimletRemotely(String zimlet) throws ServiceException {
+    private static void undeployZimletRemotely(String zimlet) throws ServiceException, IOException {
         ZimletSoapUtil soapUtil = null;
         List<Server> allServers = Provisioning.getInstance().getAllServers();
         for (Server server : allServers) {
@@ -1495,7 +1495,7 @@ public class ZimletUtil {
 		}
 
         public void deployZimletRemotely(Server server, String zimlet, byte[] data, DeployListener listener,
-                boolean flushCache) throws ServiceException {
+                boolean flushCache) throws ServiceException, IOException {
             if (server.hasMailClientService()) {
                 ZimbraLog.zimlet.info("Deploying on service node %s", server.getName());
                 deployZimletOnServiceNode(zimlet, data, server, listener, flushCache);
@@ -1505,7 +1505,7 @@ public class ZimletUtil {
             }
 		}
 
-		public void undeployZimletRemotely(Server server, String zimlet) throws ServiceException {
+		public void undeployZimletRemotely(Server server, String zimlet) throws ServiceException, IOException {
             ZimbraLog.zimlet.info("Undeploying on %s", server.getName());
             if (server.hasMailClientService()) {
                 undeployZimletOnServiceNode(server, zimlet);
@@ -1550,10 +1550,6 @@ public class ZimletUtil {
 				String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
 				mTransport = new SoapHttpTransport(adminUrl);
 
-				// auth if necessary
-				if (mAuth == null) {
-                    auth();
-                }
 				mTransport.setAuthToken(mAuth);
 
 				// upload
@@ -1591,7 +1587,11 @@ public class ZimletUtil {
 		void deployZimletOnUiNode(String zimlet, byte[] data, Server server, DeployListener listener, boolean flushCache)
 		        throws ServiceException {
 		    try {
-		        WebClientServiceUtil.sendDeployZimletRequestToUiNode(server, zimlet, data);
+	            // auth if necessary
+	            if (mAuth == null) {
+	                auth();
+	            }
+		        WebClientServiceUtil.sendDeployZimletRequestToUiNode(server, zimlet, mAuth.getValue(), data);
                 if (mSynchronous) {
                     ZimbraLog.zimlet.info("Deploy status: %s", mStatus);
                 } else {
@@ -1659,7 +1659,10 @@ public class ZimletUtil {
 
 		public void undeployZimletOnUiNode(Server server, String zimlet) throws ServiceException {
             try {
-                WebClientServiceUtil.sendUndeployZimletRequestToUiNode(server, zimlet);
+                if (mAuth == null) {
+                    auth();
+                }
+                WebClientServiceUtil.sendUndeployZimletRequestToUiNode(server, zimlet, mAuth.getValue());
             } catch (Exception e) {
                 ZimbraLog.zimlet.warn("undeployment failed on ui node %s", server.getName(), e);
                 if (e instanceof ServiceException) {
