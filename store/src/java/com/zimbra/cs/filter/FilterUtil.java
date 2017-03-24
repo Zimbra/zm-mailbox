@@ -684,6 +684,8 @@ public final class FilterUtil {
                   "subject".equalsIgnoreCase(headerName) ||
                   "auto-submitted".equalsIgnoreCase(headerName) ||
                   "x-zimbra-forwarded".equalsIgnoreCase(headerName) ||
+                  "message-id".equalsIgnoreCase(headerName) ||
+                  "date".equalsIgnoreCase(headerName) ||
                   "body".equalsIgnoreCase(headerName))) {
                 List<String> values = mailtoParams.get(headerName);
                 for (String value : values) {
