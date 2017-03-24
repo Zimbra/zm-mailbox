@@ -218,18 +218,11 @@ public class WebClientServiceUtil {
         sendServiceRequestToUiNode(server, "/fromservice/flushzimlets");
     }
 
-    private static void postToUiNode(Server server, PostMethod method) throws ServiceException {
-        AuthToken authToken = AuthProvider.getAdminAuthToken();
-        ZimbraLog.zimlet.debug("got admin auth token");
+    private static void postToUiNode(Server server, PostMethod method, String authToken) throws ServiceException {
         HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         HttpProxyUtil.configureProxy(client);
         try {
-            try {
-                method.addRequestHeader(PARAM_AUTHTOKEN, authToken.getEncoded());
-            } catch (AuthTokenException e) {
-                ZimbraLog.zimlet.warn(e);
-                return;
-            }
+            method.addRequestHeader(PARAM_AUTHTOKEN, authToken);
             ZimbraLog.zimlet.debug("connecting to ui node %s", server.getName());
             int respCode = HttpClientUtil.executeMethod(client, method);
             if (respCode != 200) {
@@ -242,17 +235,9 @@ public class WebClientServiceUtil {
                 method.releaseConnection();
             }
         }
-        if (authToken != null && authToken.isRegistered()) {
-            try {
-                authToken.deRegister();
-                ZimbraLog.zimlet.debug("de-registered auth token, isRegistered?%s", authToken.isRegistered());
-            } catch (AuthTokenException e) {
-                ZimbraLog.zimlet.warn("failed to de-register auth token", e);
-            }
-        }
     }
 
-    public static void sendDeployZimletRequestToUiNode(Server server, String zimlet, byte[] data)
+    public static void sendDeployZimletRequestToUiNode(Server server, String zimlet, String authToken, byte[] data)
             throws ServiceException {
         if (isServerAtLeast8dot5(server)) {
             HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
@@ -261,7 +246,7 @@ public class WebClientServiceUtil {
             method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, zimlet);
             ZimbraLog.zimlet.info("connecting to ui node %s, data size %d", server.getName(), data.length);
             method.setRequestBody(new ByteArrayInputStream(data));
-            postToUiNode(server, method);
+            postToUiNode(server, method, authToken);
         }
     }
 
@@ -273,14 +258,14 @@ public class WebClientServiceUtil {
         return true;
     }
 
-    public static void sendUndeployZimletRequestToUiNode(Server server, String zimlet)
+    public static void sendUndeployZimletRequestToUiNode(Server server, String zimlet, String authToken)
             throws ServiceException {
         if (isServerAtLeast8dot5(server)) {
             HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
             HttpProxyUtil.configureProxy(client);
             PostMethod method = new PostMethod(URLUtil.getServiceURL(server, "/fromservice/undeployzimlet", false));
             method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, zimlet);
-            postToUiNode(server, method);
+            postToUiNode(server, method, authToken);
         }
     }
 }

@@ -1259,7 +1259,7 @@ public class ZimletUtil {
         }
     }
 
-    private static void undeployZimletRemotely(String zimlet) throws ServiceException {
+    private static void undeployZimletRemotely(String zimlet) throws ServiceException, IOException {
         ZimletSoapUtil soapUtil = null;
         List<Server> allServers = Provisioning.getInstance().getAllServers();
         for (Server server : allServers) {
@@ -1495,7 +1495,7 @@ public class ZimletUtil {
         }
 
         public void deployZimletRemotely(Server server, String zimlet, byte[] data, DeployListener listener,
-                boolean flushCache) throws ServiceException {
+                boolean flushCache) throws ServiceException, IOException {
             if (server.hasMailClientService()) {
                 ZimbraLog.zimlet.info("Deploying on service node %s", server.getName());
                 deployZimletOnServiceNode(zimlet, data, server, listener, flushCache);
@@ -1662,7 +1662,11 @@ public class ZimletUtil {
 
         public void undeployZimletOnUiNode(Server server, String zimlet) throws ServiceException {
             try {
-                WebClientServiceUtil.sendUndeployZimletRequestToUiNode(server, zimlet);
+                // auth if necessary
+                if (mAuth == null) {
+                    auth();
+                }
+                WebClientServiceUtil.sendUndeployZimletRequestToUiNode(server, zimlet, mAuth.getValue());
             } catch (Exception e) {
                 ZimbraLog.zimlet.warn("undeployment failed on ui node %s", server.getName(), e);
                 if (e instanceof ServiceException) {
@@ -1733,6 +1737,10 @@ public class ZimletUtil {
             XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
             req.addElement(AdminConstants.E_NAME).setText(mUsername);
             req.addElement(AdminConstants.E_PASSWORD).setText(mPassword);
+            if(mTransport == null) {
+                String adminUrl = URLUtil.getAdminURL(LC.zimbra_zmprov_default_soap_server.value());
+                mTransport = new SoapHttpTransport(adminUrl);
+            }
             Element resp = mTransport.invoke(req);
             // mAuth = resp.getElement(AccountConstants.E_AUTH_TOKEN).getText();
             mAuth = new ZAuthToken(resp.getElement(AccountConstants.E_AUTH_TOKEN), true);
