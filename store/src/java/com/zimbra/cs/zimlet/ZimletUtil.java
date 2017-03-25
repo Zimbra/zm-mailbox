@@ -1549,6 +1549,7 @@ public class ZimletUtil {
 			try {
 				String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
 				mTransport = new SoapHttpTransport(adminUrl);
+				// auth if necessary
                 if (mAuth == null) {
                     auth();
                 }
@@ -1661,6 +1662,7 @@ public class ZimletUtil {
 
 		public void undeployZimletOnUiNode(Server server, String zimlet) throws ServiceException {
             try {
+                // auth if necessary
                 if (mAuth == null) {
                     auth();
                 }
