@@ -1549,7 +1549,9 @@ public class ZimletUtil {
 			try {
 				String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
 				mTransport = new SoapHttpTransport(adminUrl);
-
+                if (mAuth == null) {
+                    auth();
+                }
 				mTransport.setAuthToken(mAuth);
 
 				// upload
