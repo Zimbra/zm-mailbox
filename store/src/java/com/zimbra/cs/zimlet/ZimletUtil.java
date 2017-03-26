@@ -514,9 +514,6 @@ public class ZimletUtil {
         attrs.put(Provisioning.A_zimbraZimletDescription,     zd.getDescription());
         attrs.put(Provisioning.A_zimbraZimletHandlerClass,    zd.getServerExtensionClass());
         attrs.put(Provisioning.A_zimbraZimletServerIndexRegex, zd.getRegexString());
-        //attrs.put(Provisioning.A_zimbraZimletContentObject,   zd.getContentObjectAsXML());
-        //attrs.put(Provisioning.A_zimbraZimletPanelItem,       zd.getPanelItemAsXML());
-        //attrs.put(Provisioning.A_zimbraZimletScript,          zd.getScripts());
         return attrs;
     }
 
@@ -1742,7 +1739,6 @@ public class ZimletUtil {
                 mTransport = new SoapHttpTransport(adminUrl);
             }
             Element resp = mTransport.invoke(req);
-            // mAuth = resp.getElement(AccountConstants.E_AUTH_TOKEN).getText();
             mAuth = new ZAuthToken(resp.getElement(AccountConstants.E_AUTH_TOKEN), true);
         }
 
