@@ -1737,6 +1737,10 @@ public class ZimletUtil {
             XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
             req.addElement(AdminConstants.E_NAME).setText(mUsername);
             req.addElement(AdminConstants.E_PASSWORD).setText(mPassword);
+            if(mTransport == null) {
+                String adminUrl = URLUtil.getAdminURL(LC.zimbra_zmprov_default_soap_server.value());
+                mTransport = new SoapHttpTransport(adminUrl);
+            }
             Element resp = mTransport.invoke(req);
             // mAuth = resp.getElement(AccountConstants.E_AUTH_TOKEN).getText();
             mAuth = new ZAuthToken(resp.getElement(AccountConstants.E_AUTH_TOKEN), true);
