@@ -505,9 +505,9 @@ public class TestCalDav {
                 ZimbraLog.test.debug("xpath problem", e1);
             }
             try {
-                if (timeout_millis > 100) {
-                    Thread.sleep(100);
-                    timeout_millis = timeout_millis - 100;
+                if (timeout_millis > TestUtil.DEFAULT_WAIT) {
+                    Thread.sleep(TestUtil.DEFAULT_WAIT);
+                    timeout_millis = timeout_millis - TestUtil.DEFAULT_WAIT;
                 } else {
                     Thread.sleep(timeout_millis);
                     timeout_millis = 0;

@@ -165,7 +165,7 @@ import junit.framework.Assert;
  * @author bburtin
  */
 public class TestUtil extends Assert {
-
+    public static int DEFAULT_WAIT = 200;
     public static final String DEFAULT_PASSWORD = "test123";
     public static boolean fromRunUnitTests = false; /* set if run from within RunUnitTestsRequest */
 
@@ -537,9 +537,9 @@ public class TestUtil extends Assert {
                 Assert.fail("Unexpected number of messages (" + msgs.size() + ") returned by query '" + query + "'");
             }
             try {
-                if (timeout_millis > 100) {
-                    Thread.sleep(100);
-                    timeout_millis = timeout_millis - 100;
+                if (timeout_millis > DEFAULT_WAIT) {
+                    Thread.sleep(DEFAULT_WAIT);
+                    timeout_millis = timeout_millis - DEFAULT_WAIT;
                 } else {
                     Thread.sleep(timeout_millis);
                     timeout_millis = 0;
