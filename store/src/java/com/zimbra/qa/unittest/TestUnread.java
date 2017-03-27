@@ -22,7 +22,9 @@ import java.util.EnumSet;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -45,11 +47,14 @@ import com.zimbra.cs.mailbox.Tag;
  * @author bburtin
  */
 public class TestUnread {
+    @Rule
+    public TestName name = new TestName();
+
     private Mailbox mMbox;
     private Account mAccount;
 
-    private static String USER_NAME = "auser1";
     private static String TEST_NAME = "TestUnread";
+    private static String USER_NAME = TEST_NAME.toLowerCase() + "user1";
 
     private static String FOLDER1_NAME = TEST_NAME + " Folder 1";
     private static String FOLDER2_NAME = TEST_NAME + " Folder 2";
@@ -87,13 +92,11 @@ public class TestUnread {
      * </ul>
      */
     @Before
-    protected void setUp() throws Exception {
+    public void setUp() throws Exception {
 
-        mAccount = TestUtil.getAccount(USER_NAME);
+        mAccount = TestUtil.createAccount(USER_NAME);
+        Assert.assertNotNull(String.format("Unable to create account for user '%s'", USER_NAME), mAccount);
         mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
-
-        // Clean up data, in case a previous test didn't exit cleanly
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME);
 
         Message msg = TestUtil.addMessage(mMbox, TEST_NAME);
         mMessage1Id = msg.getId();
@@ -131,6 +134,11 @@ public class TestUnread {
         mMbox.alterTag(null, mMessage1Id, getMessage1().getType(), getTag1().getName(), true, null);
         mMbox.alterTag(null, mMessage1Id, getMessage1().getType(), getTag2().getName(), true, null);
         mMbox.alterTag(null, mMessage2Id, getMessage2().getType(), getTag2().getName(), true, null);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        TestUtil.deleteAccount(USER_NAME);
     }
 
     @Test
@@ -521,10 +529,5 @@ public class TestUnread {
         Assert.assertTrue("getMessage1().isTagged(getTag1())", getMessage1().isTagged(getTag1()));
         Assert.assertTrue("getMessage1().isTagged(getTag2())", getMessage1().isTagged(getTag2()));
         Assert.assertTrue("getMessage2().isTagged(getTag2())", getMessage2().isTagged(getTag2()));
-    }
-
-    @After
-    protected void tearDown() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME);
     }
 }
