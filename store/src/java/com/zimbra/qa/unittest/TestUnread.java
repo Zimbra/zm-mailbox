@@ -144,7 +144,7 @@ public class TestUnread {
     @Test
     public void testReadMessage1()
     throws Exception {
-        ZimbraLog.test.debug("testReadMessage1");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
         setUnread(getMessage1(), false);
         verifyMessage1Read();
@@ -153,7 +153,7 @@ public class TestUnread {
     @Test
     public void testReadMessage2()
     throws Exception {
-        ZimbraLog.test.debug("testReadMessage2");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         setUnread(getMessage2(), false);
@@ -174,7 +174,7 @@ public class TestUnread {
     @Test
     public void testReadAllMessages()
     throws Exception {
-        ZimbraLog.test.debug("testReadAllMessages");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         setUnread(getMessage1(), false);
@@ -186,7 +186,7 @@ public class TestUnread {
     @Test
     public void testReadConversation()
     throws Exception {
-        ZimbraLog.test.debug("testReadConversation");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         setUnread(getConv(), false);
         verifyAllRead();
     }
@@ -194,7 +194,7 @@ public class TestUnread {
     @Test
     public void testReadFolder1()
     throws Exception {
-        ZimbraLog.test.debug("testReadFolder1");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
         setUnread(getFolder1(), false);
         verifyMessage1Read();
@@ -203,7 +203,7 @@ public class TestUnread {
     @Test
     public void testReadFolder2()
     throws Exception {
-        ZimbraLog.test.debug("testReadFolder2");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         setUnread(getFolder2(), false);
@@ -222,7 +222,7 @@ public class TestUnread {
     @Test
     public void testReadAllFolders()
     throws Exception {
-        ZimbraLog.test.debug("testReadAllMessages");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         setUnread(getFolder1(), false);
@@ -233,7 +233,7 @@ public class TestUnread {
     @Test
     public void testReadTag1()
     throws Exception {
-        ZimbraLog.test.debug("testReadTag1");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
         setUnread(getTag1(), false);
         verifyMessage1Read();
@@ -242,7 +242,7 @@ public class TestUnread {
     @Test
     public void testReadTag2()
     throws Exception {
-        ZimbraLog.test.debug("testReadTag2");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         setUnread(getTag2(), false);
@@ -263,7 +263,7 @@ public class TestUnread {
     @Test
     public void testMoveMessage()
     throws Exception {
-        ZimbraLog.test.debug("testMoveMessage");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         // Move M2 from F2 to F1
@@ -288,7 +288,7 @@ public class TestUnread {
     @Test
     public void testMoveConversation()
     throws Exception {
-        ZimbraLog.test.debug("testMoveConversation");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         // Read M1 and move the whole conversation to F1
@@ -314,7 +314,7 @@ public class TestUnread {
     @Test
     public void testTagMessage()
     throws Exception {
-        ZimbraLog.test.debug("testTagMessage");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         // Add T3 to M3
@@ -333,7 +333,7 @@ public class TestUnread {
     @Test
     public void testTagConversation()
     throws Exception {
-        ZimbraLog.test.debug("testTagConversation");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         // Add T3 to C
@@ -351,7 +351,7 @@ public class TestUnread {
     @Test
     public void testMoveToTrash()
     throws Exception {
-        ZimbraLog.test.debug("testMoveToTrash");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         Folder inbox = mMbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
@@ -379,7 +379,7 @@ public class TestUnread {
      */
     @Test
     public void testSearch() throws Exception {
-        ZimbraLog.test.debug("testSearch");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         ZimbraQueryResults results = mMbox.index.search(new OperationContext(mMbox), "is:unread",
@@ -391,7 +391,7 @@ public class TestUnread {
     @Test
     public void testDeleteConversation()
     throws Exception {
-        ZimbraLog.test.debug("testDeleteConversation");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         mMbox.delete(null, getConv().getId(), getConv().getType());
@@ -406,7 +406,7 @@ public class TestUnread {
     @Test
     public void testDeleteFolder2()
     throws Exception {
-        ZimbraLog.test.debug("testDeleteFolder2");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         mMbox.delete(null, mFolder2Id, getFolder2().getType());
@@ -422,7 +422,7 @@ public class TestUnread {
     @Test
     public void testDeleteFolder1()
     throws Exception {
-        ZimbraLog.test.debug("testDeleteFolder1");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         mMbox.delete(null, mFolder1Id, getFolder1().getType());
