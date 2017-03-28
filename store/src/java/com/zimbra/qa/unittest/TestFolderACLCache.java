@@ -16,12 +16,20 @@
  */
 package com.zimbra.qa.unittest;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGrant;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
@@ -29,9 +37,10 @@ import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.acl.FolderACL;
 
-import junit.framework.TestCase;
+public class TestFolderACLCache {
 
-public class TestFolderACLCache extends TestCase {
+    @Rule
+    public TestName testName = new TestName();
 
     /*
      * setup owner(user1) folders and grants with zmmailbox or webclient:
@@ -83,16 +92,16 @@ public class TestFolderACLCache extends TestCase {
      */
 
     String OWNER_ACCT_ID;
-    Account USER1;
-    Account USER2;
-    Account USER3;
+    Account USER1 = null;
+    Account USER2 = null;
+    Account USER3 = null;
 
     int INBOX_FID;
     int SUB1_FID;
     int SUB2_FID;
     int SUB3_FID;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
 
         Provisioning prov = Provisioning.getInstance();
@@ -133,6 +142,10 @@ public class TestFolderACLCache extends TestCase {
         SUB3_FID = Integer.valueOf(sub3.getId());
     }
 
+    @After
+    public void cleanUp() throws Exception {
+    }
+
     private String formatRights(short rights) {
         return ACL.rightsToString(rights) + "(" + rights + ")";
     }
@@ -171,18 +184,17 @@ public class TestFolderACLCache extends TestCase {
         if (expected == -1)
             expected = ACL.stringToRights(ACL.rightsToString(expected));
 
-        assertEquals(expected, actual);
-        assertEquals(expectedCanAccess, canAccess);
+        Assert.assertEquals(expected, actual);
+        Assert.assertEquals(expectedCanAccess, canAccess);
 
         good = true;
-        /*
-        System.out.println();
-        System.out.println("authedAcctName=" + authedAcctName + "  targetFolderId=" + targetFolderId + " " + (!good?"***FAILED***":""));
-        System.out.println("    effectivePermissions: " + formatRights(effectivePermissions) + " (expected: " + formatRights(expectedEffectivePermissions) + ")");
-        System.out.println("    canAccess:            " + canAccess                          + " (expected: " + expectedCanAccess + ")");
-        */
+        ZimbraLog.test.info("authedAcct='%s' targetFolderId='%s' %s\n effectivePermissions: %s  (expected: %s)\n" +
+                             "    canAccess:            %s (expected: %s)", authedAcct, targetFolderId,
+                             (!good?"***FAILED***":""), formatRights(effectivePermissions),
+                             formatRights(expectedEffectivePermissions), canAccess, expectedCanAccess);
     }
 
+    @Test
     public void testPublicUser() throws Exception {
         doTest(GuestAccount.ANONYMOUS_ACCT,    OWNER_ACCT_ID, INBOX_FID, (short)0,       ACL.RIGHT_READ, false);
         doTest(GuestAccount.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB1_FID,  (short)0,       ACL.RIGHT_READ, false);
@@ -192,6 +204,7 @@ public class TestFolderACLCache extends TestCase {
         doTest(GuestAccount.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_WRITE, false);
     }
 
+    @Test
     public void testOwner() throws Exception {
         // pass a null authed account
         // the owner itself accessing, should have all rights
@@ -201,6 +214,7 @@ public class TestFolderACLCache extends TestCase {
         doTest(null, OWNER_ACCT_ID, SUB3_FID,  (short)~0, (short)~0, true);
     }
 
+    @Test
     public void testUser1() throws Exception {
         // the owner itself accessing, should have all rights
         doTest(USER1, OWNER_ACCT_ID, INBOX_FID, (short)~0, (short)~0, true);
@@ -209,6 +223,7 @@ public class TestFolderACLCache extends TestCase {
         doTest(USER1, OWNER_ACCT_ID, SUB3_FID,  (short)~0, (short)~0, true);
     }
 
+    @Test
     public void testUser2() throws Exception {
         doTest(USER2, OWNER_ACCT_ID, INBOX_FID, (short)0,         ACL.RIGHT_WRITE, false);
         doTest(USER2, OWNER_ACCT_ID, SUB1_FID,  ACL.RIGHT_WRITE,  ACL.RIGHT_WRITE, true);
@@ -218,6 +233,7 @@ public class TestFolderACLCache extends TestCase {
         doTest(USER2, OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_WRITE, false);
    }
 
+    @Test
     public void testUser3() throws Exception {
         doTest(USER3, OWNER_ACCT_ID, INBOX_FID, (short)0,                                ACL.RIGHT_WRITE, false);
         doTest(USER3, OWNER_ACCT_ID, SUB1_FID,  (short)(ACL.RIGHT_READ|ACL.RIGHT_WRITE), ACL.RIGHT_WRITE, true);
