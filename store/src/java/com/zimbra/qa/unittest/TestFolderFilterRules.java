@@ -37,17 +37,16 @@ import com.zimbra.client.ZMessage;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 
 public class TestFolderFilterRules {
 
     private static String NAME_PREFIX = "TestFolderFilterRules";
     private static String USER_NAME = NAME_PREFIX + "-user1";
     
-    private static String FOLDER1_NAME = NAME_PREFIX + "1";
-    private static String FOLDER2_NAME = NAME_PREFIX + "2";
-    private static String FOLDER3_NAME = NAME_PREFIX + "3";
-    private static String FOLDER4_NAME = NAME_PREFIX + "4";
+    private static String FOLDER1_NAME = "folder1";
+    private static String FOLDER2_NAME = "folder2";
+    private static String FOLDER3_NAME = "folder3";
+    private static String FOLDER4_NAME = "folder4";
     
     private static String SUBJECT1 = NAME_PREFIX + " 1";
     private static String SUBJECT2 = NAME_PREFIX + " 2";
@@ -61,12 +60,11 @@ public class TestFolderFilterRules {
 
     private Account account;
 
-    private static final Provisioning prov = Provisioning.getInstance();
-    private static Server localServer = null;
+    private static String localServer = null;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        localServer = prov.getLocalServer();
+        localServer = Provisioning.getInstance().getLocalServer().getServiceHostname();
     }
     /**
      * Creates the following folder hierarchies:
@@ -79,7 +77,7 @@ public class TestFolderFilterRules {
     public void setUp() throws Exception {
         cleanUp();
         Map<String, Object> attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
+        attrs.put(Provisioning.A_zimbraMailHost, localServer);
         attrs.put(Provisioning.A_zimbraMailSieveScript, FILTER_RULES);
         account = TestUtil.createAccount(USER_NAME, attrs);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
