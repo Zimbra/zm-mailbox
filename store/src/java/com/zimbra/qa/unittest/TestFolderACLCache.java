@@ -16,6 +16,8 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -23,10 +25,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGrant;
 import com.zimbra.client.ZMailbox;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -40,7 +42,9 @@ import com.zimbra.cs.mailbox.acl.FolderACL;
 public class TestFolderACLCache {
 
     @Rule
-    public TestName testName = new TestName();
+    public TestName testInfo = new TestName();
+    private String testName = null;
+    private String userNamePrefix = null;
 
     /*
      * setup owner(user1) folders and grants with zmmailbox or webclient:
@@ -91,10 +95,12 @@ public class TestFolderACLCache {
      *    ==> run the test
      */
 
-    String OWNER_ACCT_ID;
-    Account USER1 = null;
+    Account ownerAcct = null;
     Account USER2 = null;
     Account USER3 = null;
+    String OWNER_ACCT_ID = null;
+    static List<Account> accts = Lists.newArrayList();
+    Provisioning prov = Provisioning.getInstance();
 
     int INBOX_FID;
     int SUB1_FID;
@@ -103,10 +109,12 @@ public class TestFolderACLCache {
 
     @Before
     public void setUp() throws Exception {
+        testName = testInfo.getMethodName();
+        userNamePrefix = "testfolderaclcache-" + testName + "-user-";
 
-        Provisioning prov = Provisioning.getInstance();
-
-        Account ownerAcct = prov.get(AccountBy.name, "user1");
+        ownerAcct = createAcct(userNamePrefix + "1");
+        USER2 = createAcct(userNamePrefix + "haswriteaccess");
+        USER3 = createAcct(userNamePrefix + "hasreadwriteaccess");
         ZMailbox ownerMbx = TestUtil.getZMailbox(ownerAcct.getName());
 
         ZFolder inbox = ownerMbx.getFolderByPath("inbox");
@@ -115,8 +123,8 @@ public class TestFolderACLCache {
         ZFolder sub1 = ownerMbx.getFolderByPath(sub1Path);
         if (sub1 == null) {
             sub1 = TestUtil.createFolder(ownerMbx, sub1Path);
-            ownerMbx.modifyFolderGrant(sub1.getId(), ZGrant.GranteeType.usr, "user2", "w", null);
-            ownerMbx.modifyFolderGrant(sub1.getId(), ZGrant.GranteeType.usr, "user3", "rw", null);
+            ownerMbx.modifyFolderGrant(sub1.getId(), ZGrant.GranteeType.usr, USER2.getName(), "w", null);
+            ownerMbx.modifyFolderGrant(sub1.getId(), ZGrant.GranteeType.usr, USER3.getName(), "rw", null);
         }
 
         String sub2Path = "/inbox/sub1/sub2";
@@ -132,9 +140,6 @@ public class TestFolderACLCache {
         }
 
         OWNER_ACCT_ID = ownerAcct.getId();
-        USER1 = prov.get(AccountBy.name, "user1");
-        USER2 = prov.get(AccountBy.name, "user2");
-        USER3 = prov.get(AccountBy.name, "user3");
 
         INBOX_FID = Integer.valueOf(inbox.getId());
         SUB1_FID = Integer.valueOf(sub1.getId());
@@ -144,6 +149,19 @@ public class TestFolderACLCache {
 
     @After
     public void cleanUp() throws Exception {
+        for (Account acct : accts) {
+            if (acct != null) {
+                prov.deleteAccount(acct.getId());
+            }
+        }
+        accts.clear();
+    }
+
+    private Account createAcct(String name) throws ServiceException {
+        Account acct = TestUtil.createAccount(name);
+        Assert.assertNotNull(String.format("Unable to create account for %s", name), acct);
+        accts.add(acct);
+        return acct;
     }
 
     private String formatRights(short rights) {
@@ -188,14 +206,16 @@ public class TestFolderACLCache {
         Assert.assertEquals(expectedCanAccess, canAccess);
 
         good = true;
-        ZimbraLog.test.info("authedAcct='%s' targetFolderId='%s' %s\n effectivePermissions: %s  (expected: %s)\n" +
-                             "    canAccess:            %s (expected: %s)", authedAcct, targetFolderId,
-                             (!good?"***FAILED***":""), formatRights(effectivePermissions),
-                             formatRights(expectedEffectivePermissions), canAccess, expectedCanAccess);
+        ZimbraLog.test.debug(
+                "Test %s:authedAcct='%s' targetFolderId='%s' %s\n effectivePermissions: %s  (expected: %s)\n" +
+                "    canAccess:            %s (expected: %s)", testName, authedAcct, targetFolderId,
+                (!good?"***FAILED***":""),
+                formatRights(effectivePermissions), formatRights(expectedEffectivePermissions),
+                canAccess, expectedCanAccess);
     }
 
     @Test
-    public void testPublicUser() throws Exception {
+    public void publicUser() throws Exception {
         doTest(GuestAccount.ANONYMOUS_ACCT,    OWNER_ACCT_ID, INBOX_FID, (short)0,       ACL.RIGHT_READ, false);
         doTest(GuestAccount.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB1_FID,  (short)0,       ACL.RIGHT_READ, false);
         doTest(GuestAccount.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB2_FID,  (short)0,       ACL.RIGHT_READ, false);
@@ -205,7 +225,7 @@ public class TestFolderACLCache {
     }
 
     @Test
-    public void testOwner() throws Exception {
+    public void nullAuthedAcct() throws Exception {
         // pass a null authed account
         // the owner itself accessing, should have all rights
         doTest(null, OWNER_ACCT_ID, INBOX_FID, (short)~0, (short)~0, true);
@@ -215,16 +235,16 @@ public class TestFolderACLCache {
     }
 
     @Test
-    public void testUser1() throws Exception {
+    public void authedAcctIsOwner() throws Exception {
         // the owner itself accessing, should have all rights
-        doTest(USER1, OWNER_ACCT_ID, INBOX_FID, (short)~0, (short)~0, true);
-        doTest(USER1, OWNER_ACCT_ID, SUB1_FID,  (short)~0, (short)~0, true);
-        doTest(USER1, OWNER_ACCT_ID, SUB2_FID,  (short)~0, (short)~0, true);
-        doTest(USER1, OWNER_ACCT_ID, SUB3_FID,  (short)~0, (short)~0, true);
+        doTest(ownerAcct, OWNER_ACCT_ID, INBOX_FID, (short)~0, (short)~0, true);
+        doTest(ownerAcct, OWNER_ACCT_ID, SUB1_FID,  (short)~0, (short)~0, true);
+        doTest(ownerAcct, OWNER_ACCT_ID, SUB2_FID,  (short)~0, (short)~0, true);
+        doTest(ownerAcct, OWNER_ACCT_ID, SUB3_FID,  (short)~0, (short)~0, true);
     }
 
     @Test
-    public void testUser2() throws Exception {
+    public void authedAcctHasWriteAccess() throws Exception {
         doTest(USER2, OWNER_ACCT_ID, INBOX_FID, (short)0,         ACL.RIGHT_WRITE, false);
         doTest(USER2, OWNER_ACCT_ID, SUB1_FID,  ACL.RIGHT_WRITE,  ACL.RIGHT_WRITE, true);
         doTest(USER2, OWNER_ACCT_ID, SUB2_FID,  ACL.RIGHT_WRITE,  ACL.RIGHT_WRITE, true);
@@ -234,7 +254,7 @@ public class TestFolderACLCache {
    }
 
     @Test
-    public void testUser3() throws Exception {
+    public void authedAcctHasReadWriteAccess() throws Exception {
         doTest(USER3, OWNER_ACCT_ID, INBOX_FID, (short)0,                                ACL.RIGHT_WRITE, false);
         doTest(USER3, OWNER_ACCT_ID, SUB1_FID,  (short)(ACL.RIGHT_READ|ACL.RIGHT_WRITE), ACL.RIGHT_WRITE, true);
         doTest(USER3, OWNER_ACCT_ID, SUB2_FID,  (short)(ACL.RIGHT_READ|ACL.RIGHT_WRITE), ACL.RIGHT_WRITE, true);
