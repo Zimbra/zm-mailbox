@@ -19,8 +19,11 @@ package com.zimbra.cs.filter;
 
 import static org.junit.Assert.*;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
+
+import javax.mail.internet.MimeMessage;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,6 +31,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -38,10 +42,9 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.JMSession;
 
 /**
  * @author zimbra
@@ -142,6 +145,186 @@ public class AddressTest {
             Assert.assertEquals(1, ids.size());
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
             Assert.assertEquals("noComparator", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testAddressContainingBackslash() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            String filterScript = "if address :comparator \"i;ascii-casemap\" :matches \"from\" \"\\\"user\\\\1\\\"@cosmonaut.zimbra.com\" {"
+                                + "  tag \"TestBackslash\";"
+                                + "}";
+
+            account.setMailSieveScript(filterScript);
+            InputStream is = getClass().getResourceAsStream("TestFilter-testBackslashDotInAddress.msg");
+            MimeMessage mm = new ZMimeMessage(JMSession.getSession(), is);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(mm, false),
+                    0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("TestBackslash", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testAddressContainingDot() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            String filterScript = "if address :comparator \"i;ascii-casemap\" :matches \"to\" \"user.1@cosmonaut.zimbra.com\" {"
+                                + "  tag \"TestDot\";"
+                                + "}";
+
+            account.setMailSieveScript(filterScript);
+            InputStream is = getClass().getResourceAsStream("TestFilter-testBackslashDotInAddress.msg");
+            MimeMessage mm = new ZMimeMessage(JMSession.getSession(), is);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(mm, false),
+                    0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("TestDot", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testAddressContainingDoubleQuote() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            String filterScript = "if address :comparator \"i;ascii-casemap\" :matches \"to\" \"\\\"user\\\"1\\\"@cosmonaut.zimbra.com\" {"
+                                + "  tag \"TestDoubleQuote\";"
+                                + "}";
+
+            account.setMailSieveScript(filterScript);
+            InputStream is = getClass().getResourceAsStream("TestFilter-testQuotesInAddress.msg");
+            MimeMessage mm = new ZMimeMessage(JMSession.getSession(), is);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(mm, false),
+                    0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("TestDoubleQuote", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testAddressContainingSingleQuote() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            String filterScript = "if address :comparator \"i;ascii-casemap\" :matches \"from\" \"user'1@cosmonaut.zimbra.com\" {"
+                                + "  tag \"TestSingleQuote\";"
+                                + "}";
+
+            account.setMailSieveScript(filterScript);
+            InputStream is = getClass().getResourceAsStream("TestFilter-testQuotesInAddress.msg");
+            MimeMessage mm = new ZMimeMessage(JMSession.getSession(), is);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(mm, false),
+                    0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("TestSingleQuote", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testAddressContainingQuestionMark() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            String filterScript = "if address :comparator \"i;ascii-casemap\" :matches \"from\" \"user?1@cosmonaut.zimbra.com\" {"
+                                + "  tag \"TestQuestionMark\";"
+                                + "}";
+
+            account.setMailSieveScript(filterScript);
+            InputStream is = getClass().getResourceAsStream("TestFilter-testQuestionMarkCommaInAddress.msg");
+            MimeMessage mm = new ZMimeMessage(JMSession.getSession(), is);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(mm, false),
+                    0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("TestQuestionMark", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testAddressContainingComma() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            String filterScript = "if address :comparator \"i;ascii-casemap\" :matches \"to\" \"\\\"user,1\\\"@cosmonaut.zimbra.com\" {"
+                                + "  tag \"TestComma\";"
+                                + "}";
+
+            account.setMailSieveScript(filterScript);
+            InputStream is = getClass().getResourceAsStream("TestFilter-testQuestionMarkCommaInAddress.msg");
+            MimeMessage mm = new ZMimeMessage(JMSession.getSession(), is);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(mm, false),
+                    0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("TestComma", ArrayUtil.getFirstElement(msg.getTags()));
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
         }
