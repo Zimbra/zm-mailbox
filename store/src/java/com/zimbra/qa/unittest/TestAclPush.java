@@ -16,10 +16,15 @@
  */
 package com.zimbra.qa.unittest;
 
-import java.util.Collections;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.cs.account.Account;
@@ -36,30 +41,48 @@ import com.zimbra.soap.type.ShareInfo;
 
 /**
  */
-public class TestAclPush extends TestCase {
-
-    private static final String NAME_PREFIX = "TestAclPush";
-    private static final String USER1_NAME = "user1";
-    private static final String USER2_NAME = "user2";
+public class TestAclPush {
+    private static final String NAME_PREFIX = "TestAclPush_";
+    private static final String USER1_NAME = NAME_PREFIX + "user1";
+    private static final String USER2_NAME = NAME_PREFIX + "user2";
+    private static final String DL_NAME = NAME_PREFIX + "dl";
     private Account acct1;
-    private String[] origSharedItem;
     private DistributionList dl;
 
-    @Override
-    protected void setUp() throws Exception {
-        acct1 = Provisioning.getInstance().getAccountByName(TestUtil.getAddress(USER1_NAME));
-        origSharedItem = acct1.getSharedItem();
-        acct1.unsetSharedItem();
-        dl = Provisioning.getInstance().createDistributionList(TestUtil.getAddress(NAME_PREFIX + "-dl"),
-                                                               Collections.<String, Object>emptyMap());
+    @Before
+    public void setUp() throws Exception {
+        cleanUp();
+        acct1 = TestUtil.createAccount(USER1_NAME);
+        TestUtil.createAccount(USER2_NAME);
+        dl = TestUtil.createDistributionList(DL_NAME);
         dl.addMembers(new String[] { TestUtil.getAddress(USER2_NAME) });
     }
 
+    private void cleanUp() throws Exception {
+        if(TestUtil.accountExists(USER1_NAME)) {
+            TestUtil.deleteAccount(USER1_NAME);
+        }
+        if(TestUtil.accountExists(USER2_NAME)) {
+            TestUtil.deleteAccount(USER2_NAME);
+        }
+        if(TestUtil.DLExists(DL_NAME)) {
+            TestUtil.deleteDistributionList(DL_NAME);
+        }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        cleanUp();
+        dl = null;
+        acct1 = null;
+    }
+
+    @Test
     public void testAclPushAndDiscovery() throws Exception {
         // create a folder in user1's mailbox
         Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
         Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT);
-        Folder folder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-folder1", fopt);
+        Folder folder = mbox1.createFolder(null, "/folder1", fopt);
 
         // grant access to the created folder to user2
         Account acct2 = Provisioning.getInstance().getAccountByName(TestUtil.getAddress(USER2_NAME));
@@ -72,7 +95,7 @@ public class TestAclPush extends TestCase {
         GetShareInfoRequest req = new GetShareInfoRequest();
         GetShareInfoResponse resp = zMailbox2.invokeJaxb(req);
         List<ShareInfo> shares = resp.getShares();
-        ShareInfo share = getShare(shares, "/" + NAME_PREFIX + "-folder1");
+        ShareInfo share = getShare(shares, "/folder1");
         assertNotNull(share);
         assertEquals(acct2.getId(), share.getGranteeId());
         assertEquals(ACL.typeToString(ACL.GRANTEE_USER), share.getGranteeType());
@@ -84,19 +107,19 @@ public class TestAclPush extends TestCase {
         assertEquals(acct1.getId(), share.getOwnerId());
 
         // rename folder
-        mbox1.rename(null, folder.getId(), MailItem.Type.FOLDER, "/" + NAME_PREFIX + "-folder2");
+        mbox1.rename(null, folder.getId(), MailItem.Type.FOLDER, "/folder2");
         Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
-        assertNotNull(getShare(shares, "/" + NAME_PREFIX + "-folder2"));
+        assertNotNull(getShare(shares, "/folder2"));
 
         // create another folder and share with DL
-        Folder dlFolder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-dl", fopt);
+        Folder dlFolder = mbox1.createFolder(null, "/" + DL_NAME, fopt);
         mbox1.grantAccess(null, dlFolder.getId(), dl.getId(), ACL.GRANTEE_GROUP, ACL.stringToRights("rwi"), null);
         Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
-        ShareInfo dlShare = getShare(shares, "/" + NAME_PREFIX + "-dl");
+        ShareInfo dlShare = getShare(shares, "/" + DL_NAME);
         assertNotNull(dlShare);
         assertEquals(dl.getId(), dlShare.getGranteeId());
         assertEquals(dlFolder.getPath(), dlShare.getFolderPath());
@@ -105,12 +128,12 @@ public class TestAclPush extends TestCase {
         assertEquals(acct1.getId(), dlShare.getOwnerId());
 
         // create another folder and share with "public"
-        Folder pubFolder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-public", fopt);
+        Folder pubFolder = mbox1.createFolder(null, "/public", fopt);
         mbox1.grantAccess(null, pubFolder.getId(), null, ACL.GRANTEE_PUBLIC, ACL.stringToRights("rw"), null);
         Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
-        ShareInfo pubShare = getShare(shares, "/" + NAME_PREFIX + "-public");
+        ShareInfo pubShare = getShare(shares, "/public");
         assertNotNull(pubShare);
         assertEquals(pubFolder.getPath(), pubShare.getFolderPath());
         assertEquals(pubFolder.getDefaultView().toString(), pubShare.getDefaultView());
@@ -122,9 +145,9 @@ public class TestAclPush extends TestCase {
         Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
-        assertNull(getShare(shares, "/" + NAME_PREFIX + "-folder2"));
-        assertNotNull(getShare(shares, "/" + NAME_PREFIX + "-dl"));
-        assertNotNull(getShare(shares, "/" + NAME_PREFIX + "-public"));
+        assertNull(getShare(shares, "/folder2"));
+        assertNotNull(getShare(shares, "/" + DL_NAME));
+        assertNotNull(getShare(shares, "/public"));
 
         // delete dlFolder and pubFolder
         mbox1.delete(null, dlFolder.getId(), MailItem.Type.FOLDER);
@@ -132,8 +155,8 @@ public class TestAclPush extends TestCase {
         Thread.sleep(100);
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
-        assertNull(getShare(shares, "/" + NAME_PREFIX + "-dl"));
-        assertNull(getShare(shares, "/" + NAME_PREFIX + "-public"));
+        assertNull(getShare(shares, "/" + DL_NAME));
+        assertNull(getShare(shares, "/public"));
     }
 
     private static ShareInfo getShare(List<ShareInfo> shares, String folderPath) {
@@ -143,12 +166,5 @@ public class TestAclPush extends TestCase {
             }
         }
         return null;
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        TestUtil.deleteTestData(USER1_NAME, NAME_PREFIX);
-        acct1.setSharedItem(origSharedItem);
-        Provisioning.getInstance().deleteDistributionList(dl.getId());
     }
 }
