@@ -20,7 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.Assert;
-import junit.framework.TestCase;
+
+import org.junit.After;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -37,32 +41,51 @@ import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.znative.IO;
 
-public final class TestBlobDeduper extends TestCase {
+public final class TestBlobDeduper {
 
-    private static String USER_NAME = "user1";
     private static String TEST_NAME = "TestBlobDeduper";
+    private static String USER_NAME = TEST_NAME + "-user1";
     private Mailbox mbox;
     private Account account;
 
-    public TestBlobDeduper(String testName) {
-        super(testName);
-    }
-
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
-        account = TestUtil.getAccount(USER_NAME);
-        mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        // Clean up data, in case a previous test didn't exit cleanly
-        cleanUp();
-    }
-
-
-    public void testBlobDeduper() throws Exception {
-        if (!(StoreManager.getInstance() instanceof FileBlobStore)) {
+        if(!(StoreManager.getInstance() instanceof FileBlobStore)) {
             ZimbraLog.test.info("Skipping deduper test for non-FileBlobStore");
             return;
         }
+        cleanUp();
+        account = TestUtil.createAccount(USER_NAME);
+        mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        try {
+            cleanUp();
+        } catch (Throwable t) {
+            // Catch exceptions during cleanup, so that the original test error
+            // isn't lost
+            if (t instanceof OutOfMemoryError) {
+                Zimbra.halt("TestBlobDeduper ran out of memory", t);
+            }
+            ZimbraLog.test.error("", t);
+        }
+    }
+
+    /**
+     * Moves all items back to the primary volume and deletes the temporary
+     * volume created for the test.
+     */
+    private void cleanUp() throws Exception {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
+    }
+
+    @Test
+    public void testBlobDeduper() throws Exception {
+        Assume.assumeTrue(StoreManager.getInstance() instanceof FileBlobStore); 
         DeliveryOptions opt = new DeliveryOptions();
         opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
         String[] paths = new String[5];
@@ -89,27 +112,4 @@ public final class TestBlobDeduper extends TestCase {
             Assert.assertTrue(IO.fileInfo(paths[i]).getInodeNum() == IO.fileInfo(paths[i+1]).getInodeNum());
         }
     }
-
-    @Override public void tearDown()
-    throws Exception {
-        try {
-            cleanUp();
-        } catch (Throwable t) {
-            // Catch exceptions during cleanup, so that the original test error
-            // isn't lost
-            if (t instanceof OutOfMemoryError) {
-                Zimbra.halt("TestBlobDeduper ran out of memory", t);
-            }
-            ZimbraLog.test.error("", t);
-        }
-    }
-
-    /**
-     * Moves all items back to the primary volume and deletes the temporary
-     * volume created for the test.
-     */
-    private void cleanUp() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME);
-    }
 }
-
