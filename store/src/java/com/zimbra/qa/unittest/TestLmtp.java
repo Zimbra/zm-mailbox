@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import com.zimbra.client.ZEmailAddress;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGetMessageParams;
@@ -46,8 +44,9 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.handler.MessageRFC822Handler;
 
-public class TestLmtp
-extends TestCase {
+import junit.framework.TestCase;
+
+public class TestLmtp extends TestCase {
 
     private static final String USER_NAME = "user1";
     private static final String USER2_NAME = "user2";
@@ -73,8 +72,8 @@ extends TestCase {
     private class LmtpClientThread
     implements Runnable {
 
-        private String mRecipient;
-        private String mContent;
+        private final String mRecipient;
+        private final String mContent;
 
         private LmtpClientThread(String recipient, String content) {
             mRecipient = recipient;
@@ -666,9 +665,9 @@ extends TestCase {
         assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
 
         if (lmtpClient.getResponse().contains(STARTTLS)) {
-        	lmtpClient.startTLS();
-        	lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
-        	assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+            lmtpClient.startTLS();
+            lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+            assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         }
         lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
         assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
@@ -694,9 +693,9 @@ extends TestCase {
         lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
         assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         if (lmtpClient.getResponse().contains(STARTTLS)) {
-        	lmtpClient.startTLS();
-        	lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
-        	assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+            lmtpClient.startTLS();
+            lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+            assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         }
         lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
         assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
@@ -787,18 +786,16 @@ extends TestCase {
              LmtpClient lmtpClient =
                      new LmtpClient("localhost",
                                     Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
-        	 assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+             assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
              lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
              assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
              if(lmtpClient.getResponse().contains("STARTTLS")) {
-             	lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
-             	assertTrue(lmtpClient.getResponse(), !lmtpClient.replyOk());
+                 lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
+                 assertTrue(lmtpClient.getResponse(), !lmtpClient.replyOk());
              }
              lmtpClient.abruptClose();
         }
     }
-
-
 
     @Override
     public void tearDown()
