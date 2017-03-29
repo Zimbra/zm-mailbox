@@ -162,6 +162,8 @@ import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore;
+import com.zimbra.cs.ephemeral.migrate.AttributeConverter;
+import com.zimbra.cs.ephemeral.migrate.AttributeMigration;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
@@ -554,10 +556,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String key = e.getKey();
             Object value = e.getValue();
             AttributeInfo ai = ephemeralAttrMap.get(key.toLowerCase());
+            AttributeConverter converter = null;
             if (ai == null) { continue; }
             if (ai.isDynamic()) {
-                ZimbraLog.ephemeral.warn("Ephemeral attribute %s expects a dynamic key component; it cannot be modified with modifyAttrs", key);
-                continue;
+                converter = AttributeMigration.getConverter(key);
+                if (converter == null) {
+                    ZimbraLog.ephemeral.warn("Dynamic ephemeral attribute %s has no registered AttributeConverter, so cannot be modified with modifyAttrs", key);
+                    continue;
+                }
             }
 
             boolean doAdd = key.charAt(0) == '+';
@@ -577,41 +583,41 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     for (Object v : values) {
                         if (v == null) { continue; }
                         String s = v.toString();
-                        EphemeralInput input = null;
-                        EphemeralKey ephemeralKey = new EphemeralKey(key);
-                        if (doAdd || !doRemove) {
-                            input = new EphemeralInput(ephemeralKey, s);
-                        }
-                        if (doAdd) {
-                            store.update(input, location);
-                        } else if (doRemove) {
-                            store.delete(ephemeralKey, s, location);
-                        } else {
-                            store.set(input, location);
-                        }
+                        handleEphemeralAttrChange(store, key, s, location, ai, converter, doAdd, doRemove);
                     }
                 }
             } else if (value instanceof Map) {
                 throw ServiceException.FAILURE("Map is not a supported value type", null);
             } else if (value != null) {
                 String s = value.toString();
-                EphemeralKey ephemeralKey = new EphemeralKey(key);
-                EphemeralInput input = null;
-                if (doAdd || !doRemove) {
-                    input = new EphemeralInput(ephemeralKey, s);
-                }
-                if (doAdd) {
-                    store.update(input, location);
-                }
-                else if (doRemove) {
-                    store.delete(ephemeralKey, s, location);
-                }
-                else {
-                    store.set(input, location);
-                }
+                handleEphemeralAttrChange(store, key, s, location, ai, converter, doAdd, doRemove);
             } else {
                 ZimbraLog.ephemeral.warn("Ephemeral attribute %s doesn't support deletion by key; only deletion by key+value is supported", key);
             }
+        }
+    }
+
+    private void handleEphemeralAttrChange(EphemeralStore store, String key, String value, EphemeralLocation location,
+            AttributeInfo ai, AttributeConverter converter, boolean doAdd, boolean doRemove)
+    throws ServiceException {
+        EphemeralInput input;
+        if (ai.isDynamic()) {
+            input = converter.convert(key, value);
+            if (input == null) {
+                ZimbraLog.ephemeral.warn("LDAP-formatted value %s for ephemeral attribute %s cannot be converted to an ephemeral input", value, key);
+                return;
+            }
+        } else {
+            input = new EphemeralInput(new EphemeralKey(key), value.toString());
+        }
+        if (doAdd) {
+            store.update(input, location);
+        }
+        else if (doRemove) {
+            store.delete(input.getEphemeralKey(), (String) input.getValue(), location);
+        }
+        else {
+            store.set(input, location);
         }
     }
 
