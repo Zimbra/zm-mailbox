@@ -16,8 +16,6 @@
  */
 package com.zimbra.qa.unittest;
 
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,7 +23,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
-import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGrant;
 import com.zimbra.client.ZMailbox;
@@ -95,11 +92,13 @@ public class TestFolderACLCache {
      *    ==> run the test
      */
 
+    String ownerName = null;
+    String user2Name = null;
+    String user3Name = null;
     Account ownerAcct = null;
     Account USER2 = null;
     Account USER3 = null;
     String OWNER_ACCT_ID = null;
-    static List<Account> accts = Lists.newArrayList();
     Provisioning prov = Provisioning.getInstance();
 
     int INBOX_FID;
@@ -111,10 +110,14 @@ public class TestFolderACLCache {
     public void setUp() throws Exception {
         testName = testInfo.getMethodName();
         userNamePrefix = "testfolderaclcache-" + testName + "-user-";
+        ownerName = userNamePrefix + "owner";
+        user2Name = userNamePrefix + "haswriteaccess";
+        user3Name = userNamePrefix + "hasreadwriteaccess";
+        cleanUp();
 
-        ownerAcct = createAcct(userNamePrefix + "1");
-        USER2 = createAcct(userNamePrefix + "haswriteaccess");
-        USER3 = createAcct(userNamePrefix + "hasreadwriteaccess");
+        ownerAcct = createAcct(ownerName);
+        USER2 = createAcct(user2Name);
+        USER3 = createAcct(user3Name);
         ZMailbox ownerMbx = TestUtil.getZMailbox(ownerAcct.getName());
 
         ZFolder inbox = ownerMbx.getFolderByPath("inbox");
@@ -149,18 +152,14 @@ public class TestFolderACLCache {
 
     @After
     public void cleanUp() throws Exception {
-        for (Account acct : accts) {
-            if (acct != null) {
-                prov.deleteAccount(acct.getId());
-            }
-        }
-        accts.clear();
+        TestUtil.deleteAccountIfExists(ownerName);
+        TestUtil.deleteAccountIfExists(user2Name);
+        TestUtil.deleteAccountIfExists(user3Name);
     }
 
     private Account createAcct(String name) throws ServiceException {
         Account acct = TestUtil.createAccount(name);
         Assert.assertNotNull(String.format("Unable to create account for %s", name), acct);
-        accts.add(acct);
         return acct;
     }
 
