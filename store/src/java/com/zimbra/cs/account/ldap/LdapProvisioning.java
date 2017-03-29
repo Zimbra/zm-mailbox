@@ -529,7 +529,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             List<String> toRemove = null; // remove after iteration to avoid ConcurrentModificationException
             for (Map.Entry<String, ? extends Object> e: attrs.entrySet()) {
                 String key = e.getKey();
-                if (ephemeralAttrMap.containsKey(key.toLowerCase())) {
+                String attrName;
+                if (key.startsWith("+") || key.startsWith("-")) {
+                    attrName = key.substring(1);
+                } else {
+                    attrName = key;
+                }
+                if (ephemeralAttrMap.containsKey(attrName.toLowerCase())) {
                     ephemeralAttrs.put(key, e.getValue());
                     if (null == toRemove) {
                         toRemove = Lists.newArrayListWithExpectedSize(3); // only 3 ephemeral attrs currently
@@ -555,6 +561,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         for (Map.Entry<String, Object> e: attrs.entrySet()) {
             String key = e.getKey();
             Object value = e.getValue();
+            boolean doAdd = key.charAt(0) == '+';
+            boolean doRemove = key.charAt(0) == '-';
+            if (doAdd || doRemove) {
+                key = key.substring(1);
+                if (attrs.containsKey(key))
+                    throw ServiceException.INVALID_REQUEST("can't mix +attrName/-attrName with attrName", null);
+            }
             AttributeInfo ai = ephemeralAttrMap.get(key.toLowerCase());
             AttributeConverter converter = null;
             if (ai == null) { continue; }
@@ -565,15 +578,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     continue;
                 }
             }
-
-            boolean doAdd = key.charAt(0) == '+';
-            boolean doRemove = key.charAt(0) == '-';
-            if (doAdd || doRemove) {
-                key = key.substring(1);
-                if (attrs.containsKey(key))
-                    throw ServiceException.INVALID_REQUEST("can't mix +attrName/-attrName with attrName", null);
-            }
-
             if (value instanceof Collection) {
                 Collection values = (Collection) value;
                 if (values.size() == 0) {
