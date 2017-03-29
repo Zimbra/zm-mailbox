@@ -38,6 +38,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
@@ -709,6 +710,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         for (String hdrValue : hdrValues) {
             for (InternetAddress addr : InternetAddress.parseHeader(hdrValue)) {
                 String emailAddr = addr.getAddress();
+                emailAddr = StringEscapeUtils.unescapeJava(emailAddr);
                 if (emailAddr != null && emailAddr.contains("@"))
                     retVal.add(new FilterAddress(emailAddr));
             }
