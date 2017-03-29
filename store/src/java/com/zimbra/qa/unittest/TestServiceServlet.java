@@ -75,7 +75,7 @@ public class TestServiceServlet {
                 com.zimbra.soap.type.TargetType.fromString(com.zimbra.cs.account.accesscontrol.TargetType.server.toString()),
                 localServer.getName(), delegatedAdminWithRights.getName(), Admin.R_flushCache.getName());
 
-        GetMethod method = new GetMethod(String.format("%sflushall",baseURL));
+        GetMethod method = new GetMethod(String.format("%sflushacl",baseURL));
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
         HttpClient client = new HttpClient();
         int code = HttpClientUtil.executeMethod(client, method);
