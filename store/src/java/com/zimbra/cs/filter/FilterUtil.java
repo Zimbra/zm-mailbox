@@ -883,7 +883,6 @@ public final class FilterUtil {
         if (variables == null || sourceStr == null || sourceStr.length() == 0) {
             return sourceStr;
         }
-        sourceStr = FilterUtil.handleQuotedAndEncodedVar(sourceStr);
         StringBuilder resultStr = new StringBuilder();
         int start1 = 0;
         int end = -1;
@@ -900,6 +899,7 @@ public final class FilterUtil {
                     } else {
                         // a variable name found
                         String key = sourceStr.substring(start2 + 2, end).toLowerCase();
+                        key = FilterUtil.handleQuotedAndEncodedVar(key);
                         if (SetVariable.isValidIdentifier(key)) {
                             // the variable name is valid
                             String value = variables.get(key);
@@ -927,13 +927,17 @@ public final class FilterUtil {
     }
 
     /**
+     * Remove the extra backslash. Any undefined escape sequences
+     * specified as a string text in the sieve filter are supposed to be
+     * removed before parsing the sieve filter. So, this method is mainly
+     * called to verify the variable name whose label is generated at runtime
+     * via another variable.
+     *
      * @param varName
      * @return
-     * "${fo\o}"  => ${foo}  => the expansion of variable foo.
-     * "${fo\\o}" => ${fo\o} => illegal identifier => left verbatim.
-     * "\${foo}"  => ${foo}  => the expansion of variable foo.
-     * "\\${foo}" => \${foo} => a backslash character followed by the
-     *                           expansion of variable foo.
+     * "${fo\o}"  => ${foo}  => the expansion of variable foo. <br>
+     * "${fo\\o}" => ${fo\o} => illegal identifier => left verbatim.<br>
+     * "${foo\}"  => ${foo}  => the expansion of variable foo.
 	 */
 	public static String handleQuotedAndEncodedVar(String varName) {
 		String processedStr  = varName;
@@ -941,8 +945,10 @@ public final class FilterUtil {
 		char [] charArray = varName.toCharArray();
 		for (int i = 0; i < charArray.length; ++i) {
 			if (charArray[i] == '\\') {
-				if (charArray[i] == '\\' && (i+1 <= charArray.length -1) && (charArray[i + 1] == '\\' || charArray[i + 1] == '*')) {
-					sb.append('\\');
+                if (i == charArray.length -1) {
+                    // remove the last backslash of the variable name because it doesn't escape anything.
+                } else if (charArray[i + 1] == '\\') {
+                    sb.append(charArray[++i]);
 				}
 			} else {
 				sb.append(charArray[i]);
@@ -1003,7 +1009,7 @@ public final class FilterUtil {
      * Returns true if the char is a special char for sieve matching
      */
     private static boolean isSieveMatcherSpecialChar(char ch) {
-        return (ch == '*' || ch == '?' || ch == '\\');
+        return (ch == '*' || ch == '?');
     }
 
     private static void validateVariableIndex(String srcStr) throws SyntaxException {

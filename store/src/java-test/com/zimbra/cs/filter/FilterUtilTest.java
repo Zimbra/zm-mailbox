@@ -142,7 +142,7 @@ public class FilterUtilTest {
             Assert.assertEquals("${testhello", varValue);
 
             varValue = FilterUtil.replaceVariables(mailAdapter, "\\\\${President, ${var} Inc.}");
-            Assert.assertEquals("\\${President, hello Inc.}", varValue);
+            Assert.assertEquals("\\\\${President, hello Inc.}", varValue);
 
             // set "company" "ACME";
             // set "a.b" "おしらせ"; (or any non-ascii characters)
@@ -195,15 +195,6 @@ public class FilterUtilTest {
 
             String varValue = FilterUtil.replaceVariables(mailAdapter, "${va\\r}");
             Assert.assertEquals("hello", varValue);
-
-            varValue = FilterUtil.replaceVariables(mailAdapter, "${va\\\\r}");
-            Assert.assertEquals("${va\\r}", varValue);
-
-            varValue = FilterUtil.replaceVariables(mailAdapter, "\\${var}");
-            Assert.assertEquals("hello", varValue);
-
-            varValue = FilterUtil.replaceVariables(mailAdapter, "\\\\${var}");
-            Assert.assertEquals("\\hello", varValue);
 
             varValue = FilterUtil.replaceVariables(mailAdapter, "${}");
             Assert.assertEquals("${}", varValue);
