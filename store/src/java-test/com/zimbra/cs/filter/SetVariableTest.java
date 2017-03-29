@@ -212,9 +212,12 @@ public class SetVariableTest {
         testCases.put("&%${}!", "&%${}!");
         testCases.put("${doh!}", "${doh!}");
         testCases.put("${fo\\o}",   "bar");   /* ${foo}   */
-        testCases.put("${fo\\\\o}", "${fo\\o}"); /* ${fo\o} */
-        testCases.put("\\${foo}",   "bar");   /* ${foo}   */
-        testCases.put("\\\\${foo}", "\\bar"); /* \\${foo} */
+        testCases.put("${fo\\\\o}", "${fo\\\\o}"); /* First it is converted to ${fo\o}, which is an illegal identifier ==> left verbatim. */
+        /* For the following two cases, the backslash ouside the variable name
+         * should be handled at the separate place */
+        /* testCases.put("\\${foo}",   "bar");   /* ${foo}   */
+        /* testCases.put("\\\\${foo}", "\\bar"); /* \\${foo} */
+        testCases.put("${foo\\}", "bar");
 
         // More examples from RFC 5229 Section 3. and RFC 5228 Section 8.1.
         // variable-ref        =  "${" [namespace] variable-name "}"
