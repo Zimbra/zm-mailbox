@@ -173,6 +173,12 @@ public class TestUtil extends Assert {
         return AccountTestUtil.accountExists(userName);
     }
 
+    public static boolean DLExists(String dlName) throws ServiceException {
+        String address = getAddress(dlName);
+        DistributionList dl = Provisioning.getInstance().get(DistributionListBy.name, address);
+        return (dl != null);
+    }
+
     /**
      * @return the <code>Account</code>, or <code>null</code> if account does not exist.
      * @throws ServiceException if name is invalid or can't determine the default domain
