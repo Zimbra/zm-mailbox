@@ -628,6 +628,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private void modifyLdapAttrs(Entry entry, ZLdapContext initZlc,
             Map<String, ? extends Object> attrs)
             throws ServiceException {
+        if (null == entry) {
+            throw ServiceException.FAILURE("unable to modify attrs on null Entry", null);
+        }
         ZLdapContext zlc = initZlc;
         try {
             if (zlc == null) {
@@ -642,8 +645,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             throw AccountServiceException.INVALID_ATTR_VALUE(
                     "invalid attr value: " + e.getMessage(), e);
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to modify attrs: "
-                    + e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to modify attrs: " + e.getMessage(), e);
         } finally {
             if (zlc != null) {
                 refreshEntry(entry, zlc);
