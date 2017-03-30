@@ -35,21 +35,19 @@ import com.zimbra.cs.account.Provisioning;
 
 public class TestFolders {
     private static String USER_NAME = TestFolders.class.getSimpleName();
-    private static String NAME_PREFIX = "TestFolders";
 
-    private String mOriginalEmptyFolderBatchSize;
+    private static String mOriginalEmptyFolderBatchSize;
 
 
     @BeforeClass
     public static void init() throws Exception {
-        TestUtil.deleteAccount(USER_NAME);
-        TestUtil.createAccount(USER_NAME);
+        mOriginalEmptyFolderBatchSize = TestUtil.getServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize);
     }
 
     @Before
     public void setUp() throws Exception {
-        cleanUp();
-        mOriginalEmptyFolderBatchSize = TestUtil.getServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize);
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.createAccount(USER_NAME);
     }
 
     @Test
@@ -57,15 +55,15 @@ public class TestFolders {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize, Integer.toString(3));
 
         // Create folders.
-        String parentPath = "/" + NAME_PREFIX + "-parent";
+        String parentPath = "/parent";
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder parent = TestUtil.createFolder(mbox, parentPath);
         ZFolder child = TestUtil.createFolder(mbox, parent.getId(), "child");
 
         // Add messages.
         for (int i = 1; i <= 5; i++) {
-            TestUtil.addMessage(mbox, NAME_PREFIX + " parent " + i, parent.getId());
-            TestUtil.addMessage(mbox, NAME_PREFIX + " child " + i, child.getId());
+            TestUtil.addMessage(mbox, "parent " + i, parent.getId());
+            TestUtil.addMessage(mbox, "child " + i, child.getId());
         }
         mbox.noOp();
         assertEquals(5, parent.getMessageCount());
@@ -79,7 +77,7 @@ public class TestFolders {
 
         // Add more messages to the parent folder.
         for (int i = 6; i <= 10; i++) {
-            TestUtil.addMessage(mbox, NAME_PREFIX + " parent " + i, parent.getId());
+            TestUtil.addMessage(mbox, "parent " + i, parent.getId());
         }
         mbox.noOp();
         assertEquals(5, parent.getMessageCount());
@@ -103,7 +101,7 @@ public class TestFolders {
         }
 
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        String parentPath = "/" + NAME_PREFIX + "-parent";
+        String parentPath = "/parent";
 
         ZFolder parent = TestUtil.createFolder(mbox, parentPath);
         int max = 10000;
@@ -128,25 +126,14 @@ public class TestFolders {
         }
     }
 
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        ZFolder f = mbox.getFolderByPath("/f1");
-        if (f != null) {
-            mbox.deleteFolder(f.getId());
-        }
-    }
-
     @After
     public void tearDown() throws Exception {
-        cleanUp();
-        TestUtil.setServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize, mOriginalEmptyFolderBatchSize);
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     @AfterClass
     public static void shutdown() throws Exception {
-        TestUtil.deleteAccount(USER_NAME);
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize, mOriginalEmptyFolderBatchSize);
     }
 
     public static void main(String[] args)
