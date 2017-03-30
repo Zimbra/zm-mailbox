@@ -30,7 +30,6 @@ import org.junit.rules.TestName;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
@@ -44,27 +43,23 @@ public class TestMailItem {
 
     @Rule
     public TestName testInfo = new TestName();
-    private Account account = null;
-    private static final int TEST_CONTACT_ID = 9999;
-    private static final Provisioning prov = Provisioning.getInstance();
+    private String USER_NAME = null;
 
     @Before
     public void setUp() throws Exception {
+        USER_NAME = "testmailitem-" + testInfo.getMethodName() + "-user";
+        tearDown();
     }
 
     @After
     public void tearDown() throws Exception {
-        if (null != account) {
-            prov.deleteAccount(account.getId());
-            account = null;
-        }
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     @Test
     public void testListItemIds()
     throws Exception {
-        String USER_NAME = "testmailitem-" + testInfo.getMethodName() + "-user";
-        account = TestUtil.createAccount(USER_NAME);
+        Account account = TestUtil.createAccount(USER_NAME);
         // Mailbox.ID_FOLDER_INBOX;
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         TestUtil.addMessage(mbox, testInfo.getMethodName() + "missive 1");
