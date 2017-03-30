@@ -21,9 +21,8 @@ public class TestModifyDynamicEphemeralAttrs {
 
     @BeforeClass
     public static void init() throws Exception {
-        if (!TestUtil.accountExists(acctName)) {
-            acct = TestUtil.createAccount(acctName);
-        }
+        TestUtil.deleteAccount(acctName);
+        acct = TestUtil.createAccount(acctName);
     }
 
     @AfterClass
