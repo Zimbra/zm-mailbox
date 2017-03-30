@@ -765,8 +765,9 @@ public class TestUtil extends Assert {
         }
     }
 
-    /*
-     * Deletes the account for the given username.
+    /**
+     * Deletes the account for the given username. Consider using {@link deleteAccountIfExists} as alternative
+     * to reduce logging where the account may not exist.
      */
     public static void deleteAccount(String username) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
@@ -798,6 +799,17 @@ public class TestUtil extends Assert {
             if (!sfe.getMessage().contains("no such account")) {
                 ZimbraLog.test.error("GetAccountResponse for '%s' hit unexpected problem", username, sfe);
             }
+        }
+    }
+
+    /**
+     * Less chatty than deleteAccount if the account doesn't already exist.  Useful for cleanUp()
+     * methods which are called before running a test to delete any accounts left over from previous
+     * failed runs without spouting lots of logging to mailbox.log
+     */
+    public static void deleteAccountIfExists(String username) throws ServiceException {
+        if (TestUtil.accountExists(username)) {
+            deleteAccount(username);
         }
     }
 
