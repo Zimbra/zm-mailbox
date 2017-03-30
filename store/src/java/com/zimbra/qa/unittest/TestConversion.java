@@ -44,12 +44,13 @@ public class TestConversion {
     public void setUp() throws Exception {
         testName = testInfo.getMethodName();
         USER_NAME = NAME_PREFIX + "-" + testName + "-user";
+        tearDown();
         TestUtil.createAccount(USER_NAME);
     }
 
     @After
     public void tearDown() throws Exception {
-        TestUtil.deleteAccount(USER_NAME);
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     /**
