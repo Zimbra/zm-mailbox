@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -524,19 +525,49 @@ public class TestUtil extends Assert {
         return null;
     }
 
-    /**
-     * @param numMsgsExpected
-     *            - 0 means don't expect a message to arrive before timeout_millis
-     * @param timeout_millis
-     * @throws ServiceException
-     */
-    public static List<ZMessage> waitForMessages(ZMailbox mbox, String query, int numMsgsExpected, int timeout_millis)
-            throws ServiceException {
-        int orig_timeout_millis = timeout_millis;
-        List<ZMessage> msgs = Lists.newArrayListWithExpectedSize(0);
+    private static void logInputStream(InputStream is, String prefix) {
+        try (InputStreamReader isr = new InputStreamReader(is);
+                BufferedReader ir = new BufferedReader(isr)) {
+            String line;
+            while ((line = ir.readLine()) != null) {
+                ZimbraLog.test.info("mailq STDOUT:%s", line);
+            }
+        } catch (IOException e) {
+            ZimbraLog.test.error("Problem logging stream with prefix '%s'", prefix, e);
+        }
+    }
+
+    private static void execMailq(boolean attemptToDeliverAllQueuedMail) {
+        Runtime rt = Runtime.getRuntime();
+        String mailq = "mailq";
+        try {
+            mailq = getServerAttr(Provisioning.A_zimbraMtaMailqPath);
+            StringBuilder cmd = new StringBuilder(mailq);
+            if (attemptToDeliverAllQueuedMail) {
+                cmd.append(" -q");
+            }
+            ZimbraLog.test.info("Executing ", cmd);
+            Process ps = rt.exec(cmd.toString());
+            ps.waitFor();
+            logInputStream(ps.getInputStream(), cmd + " STDOUT:");
+            logInputStream(ps.getErrorStream(), cmd + " STDERR:");
+        } catch (IOException | ServiceException e) {
+            ZimbraLog.test.error("Problem executing '%s'", mailq, e);
+        } catch (InterruptedException e) {
+            ZimbraLog.test.info("Interrupted executing '%s'", mailq, e);
+        }
+    }
+
+    private static List<ZMessage> helpWait4Msgs(ZMailbox mbox, String query, int numMsgsExpected, int timeout_millis)
+    throws ServiceException
+    {
+        long start = System.currentTimeMillis();
+        List<ZMessage> msgs = Lists.newArrayListWithExpectedSize(numMsgsExpected);
         while (timeout_millis > 0) {
             msgs = search(mbox, query);
             if ((numMsgsExpected > 0) && (msgs.size() == numMsgsExpected)) {
+                ZimbraLog.test.debug("helpWait4Msgs succeeded %s",
+                        ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
                 return msgs;
             }
             if (msgs.size() > numMsgsExpected) {
@@ -553,6 +584,45 @@ public class TestUtil extends Assert {
                 }
             } catch (InterruptedException e) {
                 ZimbraLog.test.debug("sleep got interrupted", e);
+            }
+        }
+        ZimbraLog.test.debug("helpWait4Msgs finished %s",
+                ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
+        return msgs;
+    }
+
+    /**
+     * @param numMsgsExpected
+     *            - 0 means don't expect a message to arrive before timeout_millis
+     * @param timeout_millis
+     * @throws ServiceException
+     */
+    public static List<ZMessage> waitForMessages(ZMailbox mbox, String query, int numMsgsExpected, int timeout_millis)
+            throws ServiceException {
+        int orig_timeout_millis = timeout_millis;
+        List<ZMessage> msgs;
+        // Just wait for half the time initially.  If hasn't arrived in that time, poke postfix to process
+        // its queue and wait up to the other half of the time
+        msgs = helpWait4Msgs(mbox, query, numMsgsExpected, timeout_millis / 2);
+        if ((numMsgsExpected > 0) && (msgs.size() == numMsgsExpected)) {
+            return msgs;
+        }
+        if (numMsgsExpected > 0) {
+            /* One last try.  See if got stuck in Postfix mailq - seen mailq entries like this before now:
+             * E980B183AF8     2622 Thu Mar 30 14:49:54  user1@example.com
+             * (delivery temporarily suspended: connect to example.com[XXX.XXX.XXX.XXX]:7025: Connection refused)
+             *                           user1@example.com
+             * and:
+             * DD410183B37     2619 Thu Mar 30 15:59:31  user1@example.com
+             * (host example.com[XXX.XXX.XXX.XXX] said:
+             *     451 4.0.0 Temporary message delivery failure try again (in reply to end of DATA command))
+             *                           user1@example.com
+             */
+            execMailq(false);
+            execMailq(true);
+            msgs = helpWait4Msgs(mbox, query, numMsgsExpected, timeout_millis / 2);
+            if ((numMsgsExpected > 0) && (msgs.size() == numMsgsExpected)) {
+                return msgs;
             }
         }
         if (numMsgsExpected > 0) {
