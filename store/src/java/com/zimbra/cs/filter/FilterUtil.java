@@ -975,7 +975,7 @@ public final class FilterUtil {
                 buffer.append("(.*)?");
                 break;
             case '?':
-                buffer.append('.');
+                buffer.append("(.)");
                 break;
             case '\\':
                 buffer.append('\\');

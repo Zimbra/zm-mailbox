@@ -50,10 +50,7 @@ import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
-<<<<<<< HEAD
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
-=======
->>>>>>> 215d1e4eace39d8bba4963dce369b183199d0284
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 public class EditHeaderExtension {
@@ -423,99 +420,11 @@ public class EditHeaderExtension {
             ZimbraLog.filter.debug("Failed to decode \"%s\"", MimeUtility.unfold(header.getValue()));
             throw new MessagingException("Exception occured while decoding header value.", uee);
         }
-<<<<<<< HEAD
-<<<<<<< HEAD
-        if (this.valueTag) {
-        	matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
-        } else if (this.countTag) {
-        	List<String> temp = new ArrayList<String>();
-            for (int i = 0; i < headerCount; i++) {
-            	temp.add("");
-            }
-        	matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, temp, value, context);
-=======
-        if (this.comparator.equals(I_ASCII_NUMERIC)) {
-            if (this.valueTag) {
-                switch (this.relationalComparator) {
-                case MatchRelationalOperators.GT_OP:
-                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) > Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                case MatchRelationalOperators.GE_OP:
-                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) >= Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                case MatchRelationalOperators.LT_OP:
-                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) < Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                case MatchRelationalOperators.LE_OP:
-                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) <= Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                case MatchRelationalOperators.EQ_OP:
-                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) == Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                case MatchRelationalOperators.NE_OP:
-                    if (Integer.valueOf(unfoldedAndDecodedHeaderValue) != Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                default:
-                    throw new SyntaxException("Invalid relational comparator provided in replaceheader.");
-                }
-            } else if (this.countTag) {
-                switch (this.relationalComparator) {
-                case MatchRelationalOperators.GT_OP:
-                    if (headerCount > Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                case MatchRelationalOperators.GE_OP:
-                    if (headerCount >= Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                case MatchRelationalOperators.LT_OP:
-                    if (headerCount < Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                case MatchRelationalOperators.LE_OP:
-                    if (headerCount <= Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                case MatchRelationalOperators.EQ_OP:
-                    if (headerCount == Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                case MatchRelationalOperators.NE_OP:
-                    if (headerCount != Integer.valueOf(value)) {
-                        matchFound = true;
-                    }
-                    break;
-                default:
-                    throw new SyntaxException("Invalid relational comparator provided in replaceheader.");
-                }
-            } else {
-                throw new SyntaxException(":value or :count not found for numeric operation in replaceheader.");
-            }
->>>>>>> 215d1e4eace39d8bba4963dce369b183199d0284
-=======
 
         if (this.valueTag) {
         	matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
         } else if (this.countTag) {
         	matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, headerList, value, context);
->>>>>>> e92ff8e... ZCS-865: review comment changes
         } else if (this.is && ComparatorUtils.is(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
         } else if (this.contains && ComparatorUtils.contains(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
@@ -536,11 +445,7 @@ public class EditHeaderExtension {
      * @param headerCount : <b>int</b>
      */
     public void setEffectiveIndex(int headerCount) {
-<<<<<<< HEAD
         if (this.last && headerCount >= this.index) {
-=======
-        if (this.last && headerCount > this.index) {
->>>>>>> 215d1e4eace39d8bba4963dce369b183199d0284
             if (this.index == 0) {
                 this.index = headerCount - this.index;
             } else  {
@@ -565,8 +470,6 @@ public class EditHeaderExtension {
     }
 
     /**
-<<<<<<< HEAD
-=======
      * Replace sieve variables with their value in <b>key</b>
      * @param mailAdapter : Object of <b>ZimbraMailAdapter</b>
      * @throws SyntaxException 
@@ -578,7 +481,6 @@ public class EditHeaderExtension {
     }
 
     /**
->>>>>>> 215d1e4eace39d8bba4963dce369b183199d0284
      * Common validation for replaceheader and deleteheader
      * @throws SyntaxException
      */
