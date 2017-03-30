@@ -54,7 +54,6 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -101,7 +100,6 @@ public class TestJaxb {
     @Rule
     public TestName testInfo = new TestName();
 
-    private static final Provisioning prov = Provisioning.getInstance();
     private String USER_NAME = null;
     private String ATTENDEE1 = null;
     private String ATTENDEE2 = null;
@@ -123,10 +121,10 @@ public class TestJaxb {
 
     @After
     public void tearDown() throws Exception {
-        TestUtil.deleteAccount(USER_NAME);
-        TestUtil.deleteAccount(ATTENDEE1);
-        TestUtil.deleteAccount(ATTENDEE2);
-        TestUtil.deleteAccount(ORGANIZER);
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(ATTENDEE1);
+        TestUtil.deleteAccountIfExists(ATTENDEE2);
+        TestUtil.deleteAccountIfExists(ORGANIZER);
     }
 
     private static String getCN(ZMailbox mbox) throws ServiceException {
