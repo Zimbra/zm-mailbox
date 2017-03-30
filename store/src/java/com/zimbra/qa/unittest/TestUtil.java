@@ -848,6 +848,11 @@ public class TestUtil extends Assert {
     public static void setAccountAttr(String userName, String attrName, String attrValue) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, getAddress(userName));
+        if (null == account) {
+            throw ServiceException.FAILURE(
+                    String.format("Trying to setAccountAttr(%s,%s,%s) on non-existent account %s",
+                            userName, attrName, attrValue, userName), null);
+        }
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(attrName, attrValue);
         prov.modifyAttrs(account, attrs);
