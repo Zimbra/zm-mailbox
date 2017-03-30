@@ -25,6 +25,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Strings;
@@ -92,14 +93,10 @@ public class TestFolders {
         assertNull(mbox.getFolderByPath(childPath));
     }
 
+    @Ignore
     @Test
     public void testCreateManyFolders() throws Exception {
         //normally skip this test since it takes a long time to complete. just keep it around for quick perf checks
-        boolean skip = true;
-        if (skip) {
-            return;
-        }
-
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String parentPath = "/parent";
 
