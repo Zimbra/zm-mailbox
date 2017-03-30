@@ -16,6 +16,8 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.*;
+
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +29,10 @@ import javax.mail.util.ByteArrayDataSource;
 
 import junit.framework.TestCase;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMailbox;
@@ -49,24 +54,57 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
 
-public class TestContacts
-extends TestCase {
+public class TestContacts {
 
     private static final String NAME_PREFIX = TestContacts.class.getSimpleName();
-    private static final String USER_NAME = "user1";
-    String mOriginalMaxContacts;
+    private static final String USER2_NAME = NAME_PREFIX + "_user2";
+    private static final String USER_NAME = NAME_PREFIX + "_user1";
 
-    @Override public void setUp()
-    throws Exception {
+    @Before
+    public void setUp() throws Exception {
         cleanUp();
-        mOriginalMaxContacts = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries);
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(USER2_NAME);
     }
 
+    @After
+    public void tearDown() throws Exception {
+        cleanUp();
+    }
+
+    private void cleanUp() throws Exception {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
+        if(TestUtil.accountExists(USER2_NAME)) {
+            TestUtil.deleteAccount(USER2_NAME);
+        }
+    }
+
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.cliSetup();
+        TestUtil.runTest(TestContacts.class);
+    }
+
+    private byte[] getAttachmentData(ZContact contact, String attachmentName) throws Exception {
+        InputStream in = contact.getAttachmentData(attachmentName);
+        return ByteUtil.getContent(in, 0);
+    }
+
+    private void checkServerAttachment(byte[] expected, Attachment attach) throws Exception {
+        TestUtil.assertEquals(expected, attach.getContent());
+        TestUtil.assertEquals(expected, ByteUtil.getContent(attach.getInputStream(), 4));
+        assertEquals(expected.length, attach.getSize());
+        assertEquals("text/plain", attach.getContentType());
+        assertEquals("attachment", attach.getName());
+        assertEquals("attachment.txt", attach.getFilename());
+    }
     /**
      * Confirms that {@link Provisioning#A_zimbraContactMaxNumEntries} is enforced (bug 29627).
      */
-    public void testMaxContacts()
-    throws Exception {
+    @Test
+    public void testMaxContacts() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZContact> contacts = mbox.getAllContacts(null, ContactSortBy.nameAsc, false, null);
         int max = contacts.size() + 2;
@@ -88,8 +126,8 @@ extends TestCase {
     /**
      * Tests the server-side {@link Attachment} class.
      */
-    public void testServerAttachment()
-    throws Exception {
+    @Test
+    public void testServerAttachment() throws Exception {
         // Specify the attachment size.
         byte[] data = "test".getBytes();
         ByteArrayDataSource ds = new ByteArrayDataSource(data, "text/plain");
@@ -106,18 +144,8 @@ extends TestCase {
         checkServerAttachment(data, attach);
     }
 
-    private void checkServerAttachment(byte[] expected, Attachment attach)
-    throws Exception {
-        TestUtil.assertEquals(expected, attach.getContent());
-        TestUtil.assertEquals(expected, ByteUtil.getContent(attach.getInputStream(), 4));
-        assertEquals(expected.length, attach.getSize());
-        assertEquals("text/plain", attach.getContentType());
-        assertEquals("attachment", attach.getName());
-        assertEquals("attachment.txt", attach.getFilename());
-    }
-
-    public void testContactAttachments()
-    throws Exception {
+    @Test
+    public void testContactAttachments() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
 
         // Create a contact with an attachment.
@@ -211,9 +239,8 @@ extends TestCase {
         assertEquals(attachment4Text, new String(data));
     }
 
-    public void testMoveContact()
-    throws Exception {
-        String USER2_NAME = "user2";
+    @Test
+    public void testMoveContact() throws Exception {
         ZMailbox zmbx = TestUtil.getZMailbox(USER_NAME);
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER_NAME));
 
@@ -273,17 +300,11 @@ extends TestCase {
         Assert.assertEquals("attachment 1", new String(att.getContent()));
     }
 
-    private byte[] getAttachmentData(ZContact contact, String attachmentName)
-    throws Exception {
-        InputStream in = contact.getAttachmentData(attachmentName);
-        return ByteUtil.getContent(in, 0);
-    }
-
     /**
      * test zclient contact import
      */
-    public void testImportContacts()
-    throws Exception {
+    @Test
+    public void testImportContacts() throws Exception {
         int timeout = (int) Constants.MILLIS_PER_MINUTE;
         long contactNum = 1;
         String folderId = Integer.toString(Mailbox.ID_FOLDER_CONTACTS);
@@ -293,22 +314,5 @@ extends TestCase {
 
         ZImportContactsResult res = mbox.importContacts(folderId, ZMailbox.CONTACT_IMPORT_TYPE_CSV, attachmentId);
         Assert.assertEquals("Number of contacts imported", contactNum, res.getCount());
-    }
-
-    @Override public void tearDown()
-    throws Exception {
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries, mOriginalMaxContacts);
-        cleanUp();
-    }
-
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-    }
-
-    public static void main(String[] args)
-    throws Exception {
-        TestUtil.cliSetup();
-        TestUtil.runTest(TestContacts.class);
     }
 }
