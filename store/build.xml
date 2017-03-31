@@ -170,8 +170,7 @@
   <target name="clean" description="Deletes classes from build directories">
     <delete dir="${build.dir}"/>
   </target>
-  <target name="undeploy">
-    <antcall target="stop-webserver"/>
+  <target name="undeploy-no-stop">
     <delete>
       <fileset dir="${common.jars.dir}" includes="zm-store*.jar,zimbrastore*.jar"/>
     </delete>
@@ -199,6 +198,9 @@
         </delete>
       </then>
     </if>
+  </target>
+  <target name="undeploy" depends="stop-webserver">
+    <antcall target="undeploy-no-stop"/>
   </target>
   <target name="deploy" depends="jar,set-dev-version,undeploy">
     <copy file="${build.dir}/${jar.file}" tofile="${common.jars.dir}/zimbrastore.jar"/>
