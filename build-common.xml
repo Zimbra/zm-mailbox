@@ -578,4 +578,13 @@
       <ant dir="${client.dir}" target="deploy" inheritAll="false"/>
       <ant dir="${server.dir}" target="deploy" inheritAll="false"/>
     </target>
+
+    <target name="stop-webserver">
+      <ant dir="${server.dir}" target="stop-webserver" inheritAll="false"/>
+    </target>
+
+    <target name="start-webserver">
+      <ant  dir="${server.dir}" target="start-webserver" inheritAll="false"/>
+    </target>
+
 </project>
