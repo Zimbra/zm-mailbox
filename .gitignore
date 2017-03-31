@@ -5,3 +5,6 @@
 build/
 bin/
 .DS_Store
+.metadata/
+.recommenders/
+
