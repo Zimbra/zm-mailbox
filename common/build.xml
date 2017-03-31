@@ -10,19 +10,26 @@
   </target>
 
   <!-- mailboxd will not start without zm-common library, so this target does not attempt to start it -->
-  <target name="undeploy">
-    <ant dir="${server.dir}" target="stop-webserver" inheritAll="false"/>
+  <target name="undeploy-no-stop">
     <delete quiet="true" verbose="true">
       <fileset dir="${common.jars.dir}" includes="zm-common*.jar,zimbracommon*.jar"/>
       <fileset dir="${jetty.common.jars.dir}" includes="zm-common*.jar,zimbracommon*.jar"/>
     </delete>
   </target>
 
+  <target name="undeploy" depends="stop-webserver">
+    <antcall target="undeploy-no-stop"/>
+  </target>
+
   <!-- relies on undeploy to stop the webserver -->
-  <target name="deploy" depends="jar,set-dev-version,undeploy">
+  <target name="deploy-no-start" depends="jar,set-dev-version,undeploy">
     <!-- until zm* scripts are fixed to use versioned zm* jars, we have to deploy this jar with a fixed name -->
     <copy file="${build.dir}/${jar.file}" tofile="${common.jars.dir}/zimbracommon.jar"/>
     <copy file="${build.dir}/${jar.file}" tofile="${jetty.common.jars.dir}/${jar.file}"/>
-    <ant dir="${server.dir}" target="start-webserver" inheritAll="false"/>
   </target>
+
+  <target name="deploy" depends="deploy-no-start">
+    <antcall target="start-webserver"/>
+  </target>
+
 </project>
