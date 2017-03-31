@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLDecoder;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -814,6 +815,8 @@ public class DavServlet extends ZimbraServlet {
                         }
                         Element href = ((Element)responseObj).element(DavElements.E_HREF);
                         String v = href.getText();
+                        v = URLDecoder.decode(v);
+                        // Bug:106438, because v contains URL encoded value(%40) for '@' the comparison fails
                         if (v.startsWith(newPrefix)) {
                             href.setText(prefix + v.substring(newPrefix.length()+1));
                         }
