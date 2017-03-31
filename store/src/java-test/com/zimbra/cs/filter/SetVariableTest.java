@@ -28,16 +28,6 @@ import java.util.TreeMap;
 
 import javax.mail.Header;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-import com.google.common.collect.Maps;
-
->>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
-=======
-import com.google.common.collect.Maps;
-
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
 import org.apache.jsieve.exception.SyntaxException;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,13 +35,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 import com.google.common.collect.Maps;
-=======
->>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
-=======
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -62,18 +46,8 @@ import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
-<<<<<<< HEAD
-<<<<<<< HEAD
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
-=======
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.MailItem;
->>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
-=======
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.MailItem;
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -84,11 +58,7 @@ import com.zimbra.cs.service.util.ItemId;
 
 public class SetVariableTest {
     private String filterScript = "";
-<<<<<<< HEAD
-   
-=======
 
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -226,8 +196,6 @@ public class SetVariableTest {
         // variable-name       =  num-variable / identifier
         // num-variable        =  1*DIGIT
         // identifier          = (ALPHA / "_") *(ALPHA / DIGIT / "_")
-<<<<<<< HEAD
-<<<<<<< HEAD
         variables.put("a_b", "\u304a\u3057\u3089\u305b");
         variables.put("c_d", "C");
         variables.put("_1", "One");
@@ -235,36 +203,12 @@ public class SetVariableTest {
         variables.put("uppercase", "upper case");
 
         testCases.put("${a_b}", "\u304a\u3057\u3089\u305b");
-=======
-=======
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
-        variables.put("a.b", "おしらせ");
-        variables.put("c_d", "C");
-        variables.put("1", "One");
-        variables.put("23", "twenty three");
-        variables.put("uppercase", "upper case");
-
-        testCases.put("${a.b}", "おしらせ");
-<<<<<<< HEAD
->>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
-=======
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
         testCases.put("${c_d}", "C");
         testCases.put("${1}", "${1}");       // Invalid variable name
         testCases.put("${23}", "${23}");     // Not defined
         testCases.put("${123}", "${123}");   // Invalid variable name
-<<<<<<< HEAD
-<<<<<<< HEAD
         testCases.put("${a_b} ${COMpANY} ${c_d}hao!", "\u304a\u3057\u3089\u305b ACME Chao!");
         testCases.put("${a_b} ${def} ${c_d}hao!", "\u304a\u3057\u3089\u305b  Chao!"); // 1st valid variable, 2nd undefined, 3rd valid variable
-=======
-        testCases.put("${a.b} ${COMpANY} ${c_d}hao!", "おしらせ ACME Chao!");
-        testCases.put("${a.b} ${def} ${c_d}hao!", "おしらせ  Chao!"); // 1st valid variable, 2nd undefined, 3rd valid variable
->>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
-=======
-        testCases.put("${a.b} ${COMpANY} ${c_d}hao!", "おしらせ ACME Chao!");
-        testCases.put("${a.b} ${def} ${c_d}hao!", "おしらせ  Chao!"); // 1st valid variable, 2nd undefined, 3rd valid variable
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
         testCases.put("${upperCase}", "upper case");
         testCases.put("${UPPERCASE}", "upper case");
         testCases.put("${uppercase}", "upper case");
@@ -595,35 +539,14 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             // set "company" "ACME";
-<<<<<<< HEAD
-<<<<<<< HEAD
             // set "a.b" "おしらせ"; (or any non-ascii characters [\u304a\u3057\u3089\u305b])
-=======
-            // set "a.b" "おしらせ"; (or any non-ascii characters)
->>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
-=======
-            // set "a.b" "おしらせ"; (or any non-ascii characters)
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
             // set "c_d" "C";
             // set "1" "One"; ==> Should be ignored or error [Note 1]
             // set "23" "twenty three"; ==> Should be ignored or error [Note 1]
             // set "combination" "Hello ${company}!!";
             filterScript = "require [\"variables\"];\n"
-<<<<<<< HEAD
-<<<<<<< HEAD
                          + "set \"company\" \"\u304a\u3057\u3089\u305b\" ;\n"
                          + "set  \"c_d\" \"C\";\n"
-=======
-=======
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
-                         + "set \"company\" \"おしらせ\" ;\n"
-                         + "set  \"a.b\" \"${a}\";\n"
-                         + "set  \"c_d\" \"C\";\n"
-                         + "set  \"1\" \"One\";"
-<<<<<<< HEAD
->>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
-=======
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
                          + "set  \"combination\" \"Hello ${company}!!\"; "
                          + "if header :matches \"Subject\" \"*\" {\n"
                          + "  tag \"${combination}\";\n"
@@ -638,15 +561,7 @@ public class SetVariableTest {
                     new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
                     Mailbox.ID_FOLDER_INBOX, true);
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
-<<<<<<< HEAD
-<<<<<<< HEAD
             Assert.assertEquals("Hello \u304a\u3057\u3089\u305b!!", ArrayUtil.getFirstElement(msg.getTags()));
-=======
-            Assert.assertEquals("Hello おしらせ!!", ArrayUtil.getFirstElement(msg.getTags()));
->>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
-=======
-            Assert.assertEquals("Hello おしらせ!!", ArrayUtil.getFirstElement(msg.getTags()));
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
         } catch (Exception e) {
             fail("No exception should be thrown");
         }
@@ -850,8 +765,6 @@ public class SetVariableTest {
     }
 
     @Test
-<<<<<<< HEAD
-=======
     public void testVariables_Address_HeaderList_KeyList() {
         try {
             String raw = "From: user2@ykomiyam.local\n"
@@ -1137,7 +1050,6 @@ public class SetVariableTest {
     }
 
     @Test
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
     public void testSetVarSieveFeatureDisabled() {
         try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -1805,14 +1717,8 @@ public class SetVariableTest {
             filterScript =
                     "set \"dollar\" \"$\";\n"
                   + "set \"sample\" \"test text\";\n"
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
                   + "set \"hello\" \"world\";\n"
                   + "set \"number\" \"7\";\n"
->>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
-=======
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
                   + "# set \"abc${dollar}{sample}\" in source\n"
                   + "if string :matches :comparator \"i;ascii-casemap\" \"abc${dollar}{sample}\" \"*${sample}\" {\n"
                   + "  addheader :last \"X-New-Header-1\" \"${1}\";\n"
@@ -1844,9 +1750,6 @@ public class SetVariableTest {
                   + "if string :is :comparator \"i;ascii-casemap\" \"${dollar}{sample}\" \"${dollar}{sample}\" {\n"
                   + "  addheader :last \"X-New-Header-11\" \"is\";\n"
                   + "}"
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
                   // String comparison of "test text" ?? "M:middle of alphabet list"
                   + "if string :value \"gt\" :comparator \"i;ascii-casemap\" \"${sample}\" \"M\" {"
                   + "  addheader :last \"X-New-Header-12\" \"string test value gt\";\n"
@@ -1955,11 +1858,6 @@ public class SetVariableTest {
                   + "if string :count \"eq\" \"${number}\" \"1\" {"
                   + "  addheader :last \"X-New-Header-45\" \"string test count numeric eq\";\n"
                   + "}"
-<<<<<<< HEAD
->>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
-=======
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
-=======
                   // Compare the empty string with ascii-numeric comparator
                   + "if string :value \"eq\" :comparator \"i;ascii-numeric\" \"${sample}\" \"${undefined}\" {"
                   + "  addheader :last \"X-New-Header-46\" \"string test value numeric eq positive infinity\";\n"
@@ -1967,7 +1865,6 @@ public class SetVariableTest {
                   + "if string :count \"lt\" \"${number}\" \"\" {"
                   + "  addheader :last \"X-New-Header-47\" \"string test count numeric lt positive infinity\";\n"
                   + "}"
->>>>>>> 03d69f1757b6856ab9d253282535758a573b1a7a
                   ;
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -1986,8 +1883,58 @@ public class SetVariableTest {
             Assert.assertEquals("contains", value[0]);
             value = msg.getMimeMessage().getHeader("X-New-Header-11");
             Assert.assertEquals("is", value[0]);
-<<<<<<< HEAD
-<<<<<<< HEAD
+
+            value = msg.getMimeMessage().getHeader("X-New-Header-12");
+            Assert.assertEquals("string test value gt", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-13");
+            Assert.assertEquals("string test value ge", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-17");
+            Assert.assertEquals("string test value ne", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-18");
+            Assert.assertEquals("string test value (case insensitive) eq", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-21");
+            Assert.assertEquals("string test value lt", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-22");
+            Assert.assertEquals("string test value le", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-24");
+            Assert.assertEquals("string test value ne", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-25");
+            Assert.assertEquals("string test value (case insensitive) eq", value[0]);
+
+            value = msg.getMimeMessage().getHeader("X-New-Header-26");
+            Assert.assertEquals("string test value gt", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-27");
+            Assert.assertEquals("string test value ge", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-31");
+            Assert.assertEquals("string test value ne", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-32");
+            Assert.assertEquals("string test value (case insensitive) eq", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-35");
+            Assert.assertEquals("string test value lt", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-36");
+            Assert.assertEquals("string test value le", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-38");
+            Assert.assertEquals("string test value ne", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-39");
+            Assert.assertEquals("string test value (case insensitive) eq", value[0]);
+
+            value = msg.getMimeMessage().getHeader("X-New-Header-40");
+            Assert.assertEquals("string test count eq empty", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-41");
+            Assert.assertEquals("string test count eq one", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-42");
+            Assert.assertEquals("string test count eq two", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-43");
+            Assert.assertEquals("string test count eq one or two", value[0]);
+
+            value = msg.getMimeMessage().getHeader("X-New-Header-44");
+            Assert.assertEquals("string test value numeric gt", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-45");
+            Assert.assertEquals("string test count numeric eq", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-46");
+            Assert.assertEquals("string test value numeric eq positive infinity", value[0]);
+            value = msg.getMimeMessage().getHeader("X-New-Header-47");
+            Assert.assertEquals("string test count numeric lt positive infinity", value[0]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
@@ -2110,66 +2057,6 @@ public class SetVariableTest {
         } catch (Exception e) {
             e.printStackTrace();
             fail("No exception should be thrown");
-=======
-
-            value = msg.getMimeMessage().getHeader("X-New-Header-12");
-            Assert.assertEquals("string test value gt", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-13");
-            Assert.assertEquals("string test value ge", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-17");
-            Assert.assertEquals("string test value ne", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-18");
-            Assert.assertEquals("string test value (case insensitive) eq", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-21");
-            Assert.assertEquals("string test value lt", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-22");
-            Assert.assertEquals("string test value le", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-24");
-            Assert.assertEquals("string test value ne", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-25");
-            Assert.assertEquals("string test value (case insensitive) eq", value[0]);
-
-            value = msg.getMimeMessage().getHeader("X-New-Header-26");
-            Assert.assertEquals("string test value gt", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-27");
-            Assert.assertEquals("string test value ge", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-31");
-            Assert.assertEquals("string test value ne", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-32");
-            Assert.assertEquals("string test value (case insensitive) eq", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-35");
-            Assert.assertEquals("string test value lt", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-36");
-            Assert.assertEquals("string test value le", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-38");
-            Assert.assertEquals("string test value ne", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-39");
-            Assert.assertEquals("string test value (case insensitive) eq", value[0]);
-
-            value = msg.getMimeMessage().getHeader("X-New-Header-40");
-            Assert.assertEquals("string test count eq empty", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-41");
-            Assert.assertEquals("string test count eq one", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-42");
-            Assert.assertEquals("string test count eq two", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-43");
-            Assert.assertEquals("string test count eq one or two", value[0]);
-
-            value = msg.getMimeMessage().getHeader("X-New-Header-44");
-            Assert.assertEquals("string test value numeric gt", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-45");
-            Assert.assertEquals("string test count numeric eq", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-46");
-            Assert.assertEquals("string test value numeric eq positive infinity", value[0]);
-            value = msg.getMimeMessage().getHeader("X-New-Header-47");
-            Assert.assertEquals("string test count numeric lt positive infinity", value[0]);
-        } catch (Exception e) {
-            fail("No exception should be thrown: " + e.getMessage());
->>>>>>> 6bcea0ee340601cc20a00f38d0b3d3496438a093
-=======
-        } catch (Exception e) {
-            fail("No exception should be thrown: " + e.getMessage());
->>>>>>> db4f76e78a2612bf127b02a679ab2c160ac69328
         }
     }
 
