@@ -434,4 +434,92 @@ public class AddHeaderTest {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
+
+    /*
+     * Try adding new header with space as header name, which should fail
+     */
+    @Test
+    public void testAddHeaderNameAsSingleSpace() {
+        try {
+           String filterScript = "require [\"editheader\"];\n"
+                    + " addheader \" \" \"my-new-header-value\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                Assert.assertFalse(temp.getValue().equals("my-new-header-value"));
+            }
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Try adding new header with multiple spaces as header name, which should fail
+     */
+    @Test
+    public void testAddHeaderNameAsMultipleSpace() {
+        try {
+           String filterScript = "require [\"editheader\"];\n"
+                    + " addheader \"    \" \"my-new-header-value\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                Assert.assertFalse(temp.getValue().equals("my-new-header-value"));
+            }
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Try adding new header with header name starting with space, which should fail
+     */
+    @Test
+    public void testAddHeaderNameStartingWithSpace() {
+        try {
+           String filterScript = "require [\"editheader\"];\n"
+                    + " addheader \" X-My-Test\" \"my-new-header-value\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                Assert.assertFalse(temp.getName().equals("X-My-Test"));
+                Assert.assertFalse(temp.getValue().equals("my-new-header-value"));
+            }
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
 }

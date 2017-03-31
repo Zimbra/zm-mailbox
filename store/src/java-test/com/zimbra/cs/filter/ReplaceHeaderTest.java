@@ -1116,4 +1116,144 @@ public class ReplaceHeaderTest {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
+
+    /*
+     * Replace header with single space as new name, should not replace the original header
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderWithSinlgeSpaceAsHeaderNewName() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + " replaceheader :newname \" \" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-casemap\" \"X-Test-Header\" \"test2\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean found = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                Assert.assertFalse(header.getName().equals(""));
+                if (header.getName().equals("X-Test-Header") && header.getValue().equals("test2")) {
+                    found = true;
+                }
+            }
+            Assert.assertTrue(found);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace header with multiple spaces as new name, should not replace the original header
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderWithMultipleSpacesAsHeaderNewName() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + " replaceheader :newname \"    \" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-casemap\" \"X-Test-Header\" \"test2\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean found = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                Assert.assertFalse(header.getName().equals(""));
+                if (header.getName().equals("X-Test-Header") && header.getValue().equals("test2")) {
+                    found = true;
+                }
+            }
+            Assert.assertTrue(found);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace header with name starting with spaces as new name, should not replace the original header
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderStartingWithSpacesAsHeaderNewName() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + " replaceheader :newname \" asdf\" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-casemap\" \"X-Test-Header\" \"test2\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean found = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                Assert.assertFalse(header.getName().equals(""));
+                if (header.getName().equals("X-Test-Header") && header.getValue().equals("test2")) {
+                    found = true;
+                }
+            }
+            Assert.assertTrue(found);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace header with name starting with spaces as name, should not replace the original header
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderStartingWithSpacesAsHeaderName() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + " replaceheader :newname \"X-Test-New-Name\" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-casemap\" \" X-Test-Header\" \"test2\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean found = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                Assert.assertFalse(header.getName().equals(""));
+                if (header.getName().equals("X-Test-Header") && header.getValue().equals("test2")) {
+                    found = true;
+                }
+            }
+            Assert.assertTrue(found);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
 }
