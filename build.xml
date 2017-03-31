@@ -18,4 +18,21 @@
       <ant dir="./client" target="clean" inheritAll="false"/>
       <ant dir="./store"  target="clean" inheritAll="false"/>
    </target>
+
+   <target name="undeploy-all">
+      <ant dir="./native" target="undeploy" inheritAll="false"/>
+      <ant dir="./common" target="undeploy-no-stop" inheritAll="false"/>
+      <ant dir="./soap" target="undeploy-no-stop" inheritAll="false"/>
+      <ant dir="./client" target="undeploy-no-stop" inheritAll="false"/>
+      <ant dir="./store" target="undeploy-no-stop" inheritAll="false"/>
+   </target>
+
+   <target name="deploy-all">
+      <ant dir="./native" target="deploy-no-start" inheritAll="false"/>
+      <ant dir="./common" target="deploy-no-start" inheritAll="false"/>
+      <ant dir="./soap"   target="deploy-no-start" inheritAll="false"/>
+      <ant dir="./client" target="deploy-no-start" inheritAll="false"/>
+      <ant dir="./store"  target="deploy" inheritAll="false"/>
+   </target>
+
 </project>
