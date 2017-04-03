@@ -195,6 +195,8 @@ public class ItemAction extends MailDocumentHandler {
                     iidFolder = new ItemId(folderId, zsc);
                     if (!iidFolder.belongsTo(mbox)) {
                         throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+                    } else if (iidFolder.getId() <= 0) {
+                        throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
                     }
                 }
                 String name = action.getAttribute(MailConstants.A_NAME, null);
