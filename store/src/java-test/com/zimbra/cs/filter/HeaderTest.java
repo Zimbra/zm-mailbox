@@ -272,4 +272,55 @@ public class HeaderTest {
             fail("No exception should be thrown");
         }
     }
+
+    @Test
+    public void testHeaderMatchWithItself() throws Exception {
+        String script =
+                "if header :matches \"X-Header1\" \"*\" {"
+                + "    if header :matches \"X-Header1\" \"${1}\" {"
+                + "        tag \"01\";"
+                + "    }"
+                + "}"
+                + "if header :matches \"X-Header1\" \"*\" {"
+                + "    if header :is \"X-Header1\" \"${1}\" {"
+                + "        tag \"02\";"
+                + "    }"
+                + "}"
+                + "if header :matches \"X-Header1\" \"*\" {"
+                + "    set \"myvar1\" \"${1}\";"
+                + "    if header :matches \"X-Header1\" \"${myvar1}\" {"
+                + "        tag \"03\";"
+                + "    }"
+                + "}"
+                + "if header :matches \"X-Header1\" \"*\" {"
+                + "    set :quotewildcard \"myvar2\" \"${1}\";"
+                + "    if string :matches \"sample\\\\\\\\\\\\\\\\pattern\" \"${myvar2}\" {"
+                + "        tag \"04\";"
+                + "    }"
+                + "}"
+                ;
+        String sourceMsg =
+            "X-Header1: sample\\\\pattern\n";
+            try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            account.setMailAdminSieveScriptBefore(script);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(sourceMsg.getBytes(), false),
+                    0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(4, msg.getTags().length);
+            Assert.assertEquals("01", msg.getTags()[0]);
+            Assert.assertEquals("02", msg.getTags()[1]);
+            Assert.assertEquals("03", msg.getTags()[2]);
+            Assert.assertEquals("04", msg.getTags()[3]);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
 }
