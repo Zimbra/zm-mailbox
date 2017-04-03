@@ -154,8 +154,12 @@ public class RemoteManager {
             result.mStdout = ByteUtil.getContent(stdout, -1);
             result.mStderr = ByteUtil.getContent(stderr, -1);
             if (ZimbraLog.rmgmt.isTraceEnabled()) {
-                ZimbraLog.rmgmt.trace("stdout content for cmd:\n%s", new String(result.mStdout, "UTF-8"));
-                ZimbraLog.rmgmt.trace("stderr content for cmd:\n%s", new String(result.mStderr, "UTF-8"));
+                try {
+                    ZimbraLog.rmgmt.trace("stdout content for cmd:\n%s", new String(result.mStdout, "UTF-8"));
+                    ZimbraLog.rmgmt.trace("stderr content for cmd:\n%s", new String(result.mStderr, "UTF-8"));
+                } catch (Exception ex) {
+                    ZimbraLog.rmgmt.trace("Problem logging stdout or stderr for cmd - probably not UTF-8");
+                }
             }
             try {
                 result.mExitStatus = s.getExitStatus();
