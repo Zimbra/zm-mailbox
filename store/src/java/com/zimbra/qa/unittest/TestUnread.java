@@ -98,6 +98,7 @@ public class TestUnread {
     public void setUp() throws Exception {
 
         Map<String, Object> attrs = Maps.newHashMap();
+        Server localServer = Provisioning.getInstance().getLocalServer();
         attrs.put(Provisioning.A_zimbraMailHost, localServer.getServiceHostname());
 
         mAccount = TestUtil.createAccount(USER_NAME, attrs);
