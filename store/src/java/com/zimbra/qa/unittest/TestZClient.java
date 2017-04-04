@@ -575,6 +575,29 @@ public class TestZClient extends TestCase {
         assertFalse(msg.isUnread());
     }
 
+    @Test
+    public void testSetTags() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Message msg = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "testAlterTag message", System.currentTimeMillis());
+        ZTag tag1 = zmbox.createTag("testSetTags tag1", ZTag.Color.blue);
+        Collection<ItemIdentifier> ids = new ArrayList<ItemIdentifier>(1);
+        ids.add(new ItemIdentifier(mbox.getAccountId(), msg.getId()));
+
+        //add tag via zmailbox
+        zmbox.alterTag(null, ids, tag1.getName(), true);
+        assertTrue(msg.isTagged(tag1.getName()));
+
+        //override via setTags
+        Collection<String> newTags = new ArrayList<String>();
+        newTags.add("testSetTags tag2");
+        newTags.add("testSetTags tag3");
+        zmbox.setTags(null, ids, 0, newTags);
+        assertFalse(msg.isTagged("testSetTags tag1"));
+        assertTrue(msg.isTagged("testSetTags tag2"));
+        assertTrue(msg.isTagged("testSetTags tag3"));
+    }
+
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
         assertNotNull("Message is null", msg);
         assertNotNull("ZMessage is null", zmsg);

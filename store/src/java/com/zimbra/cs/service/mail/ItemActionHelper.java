@@ -422,7 +422,7 @@ public class ItemActionHelper {
     protected OperationContext getOpCtxt() { return mOpCtxt; }
 
     protected void schedule() throws ServiceException {
-        boolean targeted = mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE;
+        boolean targeted = mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || (mOperation == Op.UPDATE && mIidFolder != null);
 
         // deal with local mountpoints pointing at local folders here
         if (targeted && mIidFolder.belongsTo(mMailbox) && mIidFolder.getId() > 0 && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH && mIidFolder.getId() != Mailbox.ID_FOLDER_SPAM) {
@@ -508,7 +508,7 @@ public class ItemActionHelper {
                     for (int id : ids) {
                         getMailbox().rename(getOpCtxt(), id, type, mName, mIidFolder.getId());
                     }
-                } else if (mIidFolder.getId() > 0) {
+                } else if (mIidFolder != null && mIidFolder.getId() > 0) {
                     getMailbox().move(getOpCtxt(), ids, type, mIidFolder.getId(), mTargetConstraint);
                 }
                 if (mTags != null || mFlags != null) {
