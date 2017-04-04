@@ -32,7 +32,9 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.auth.ZAuthToken;
@@ -67,33 +69,42 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.SearchHit;
 
 public class TestCookieReuse {
+
+    @Rule
+    public TestName testInfo = new TestName();
+
     private static final String NAME_PREFIX = TestUserServlet.class.getSimpleName();
-    private static final String USER_NAME = "user1";
-    private static final String UNAUTHORIZED_USER = "unauthorized@example.com";
-    private final int currentSupportedAuthVersion = 2;
+    private static String USER_NAME;
+    private static String UNAUTHORIZED_USER;
+    private int currentSupportedAuthVersion;
 
     @Before
     public void setUp()
     throws Exception {
+        currentSupportedAuthVersion =
+            Provisioning.getInstance().getLocalServer().getLowestSupportedAuthVersion();
+
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName().toLowerCase() + "-";
+        USER_NAME = prefix + "user1";
+        UNAUTHORIZED_USER = AccountTestUtil.getAddress(prefix + "unauthorized");
         cleanUp();
-        // Add a test message, in case the account is empty.
+        TestUtil.createAccount(USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        // Add a test message, to make sure the account isn't empty
         TestUtil.addMessage(mbox, NAME_PREFIX);
-        if(TestUtil.accountExists(UNAUTHORIZED_USER)) {
-            TestUtil.deleteAccount(UNAUTHORIZED_USER);
-        }
     }
 
     @After
     public void tearDown()
     throws Exception {
         cleanUp();
+        Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(currentSupportedAuthVersion);
     }
 
     private void cleanUp()
     throws Exception {
-        Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(currentSupportedAuthVersion);
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(UNAUTHORIZED_USER);
     }
 
     public static void main(String[] args)
@@ -277,7 +288,7 @@ public class TestCookieReuse {
         Account a = TestUtil.getAccount(USER_NAME);
         a.setForceClearCookies(false);
 
-        URI logoutUri = new URI("http://" + uri.getHost() +  (uri.getPort() > 80 ? (":" + uri.getPort()) : "") + "/?loginOp=logout");
+        URI logoutUri = new URI("https://" + uri.getHost() +  (uri.getPort() > 80 ? (":" + uri.getPort()) : "") + "/?loginOp=logout");
         GetMethod logoutMethod = new GetMethod(logoutUri.toString());
         int statusCode = alice.executeMethod(logoutMethod);
         Assert.assertEquals("Log out request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
@@ -404,7 +415,7 @@ public class TestCookieReuse {
      * Verify that we CANNOT make an unauthorized admin GET request without an admin cookie
      */
     @Test
-    public static void testGetWithoutAdminCookie() throws Exception {
+    public void testGetWithoutAdminCookie() throws Exception {
         int port = 7071;
         try {
             port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
@@ -422,7 +433,7 @@ public class TestCookieReuse {
      * Verify that we CAN make an admin GET request by re-using a valid non-csrf-enabled cookie
      */
     @Test
-    public static void testReuseAdminCookieWithoutCsrf() throws Exception {
+    public void testReuseAdminCookieWithoutCsrf() throws Exception {
         AuthToken at = AuthProvider.getAdminAuthToken();
         at.setCsrfTokenEnabled(false);
         int port = 7071;
@@ -446,7 +457,7 @@ public class TestCookieReuse {
      * Verify that we CAN make a GET request by reusing a valid non-csrf-enabled cookie
      */
     @Test
-    public static void testReuseUserCookieWithoutCsrf() throws Exception {
+    public void testReuseUserCookieWithoutCsrf() throws Exception {
         AuthToken at = AuthProvider.getAuthToken(TestUtil.getAccount(USER_NAME));
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss&thief=false");
@@ -464,7 +475,7 @@ public class TestCookieReuse {
      * Verify that we CAN make a GET request by reusing a valid CSRF-enabled cookie
      */
     @Test
-    public static void testReuseUserCookieWithCsrf() throws Exception {
+    public void testReuseUserCookieWithCsrf() throws Exception {
         AuthToken at = AuthProvider.getAuthToken(TestUtil.getAccount(USER_NAME));
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss&thief=true");
@@ -482,7 +493,7 @@ public class TestCookieReuse {
      * Verify that we CAN make an admin GET request by reusing a valid csrf-enabled cookie
      */
     @Test
-    public static void testReuseAdminCookieWithCsrf() throws Exception {
+    public void testReuseAdminCookieWithCsrf() throws Exception {
         AuthToken at = AuthProvider.getAdminAuthToken();
         at.setCsrfTokenEnabled(true);
         int port = 7071;
@@ -506,7 +517,7 @@ public class TestCookieReuse {
      * Verify that we CANNOT make an admin POST request by reusing a valid csrf-enabled cookie without a csrf token
      */
     @Test
-    public static void testUnauthorizedAdminPostWithCsrf() throws Exception {
+    public void testUnauthorizedAdminPostWithCsrf() throws Exception {
         AuthToken at = AuthProvider.getAdminAuthToken();
         at.setCsrfTokenEnabled(true);
         SoapTransport transport = TestUtil.getAdminSoapTransport();
