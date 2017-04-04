@@ -22,18 +22,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
 
-import ch.ethz.ssh2.Connection;
-import ch.ethz.ssh2.Session;
-import ch.ethz.ssh2.StreamGobbler;
-
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.util.Zimbra;
+
+import ch.ethz.ssh2.Connection;
+import ch.ethz.ssh2.Session;
+import ch.ethz.ssh2.StreamGobbler;
 
 public class RemoteManager {
 
@@ -41,7 +41,7 @@ public class RemoteManager {
     private static final String DEFAULT_REMOTE_MANAGEMENT_USER = "zimbra";
     private static final String DEFAULT_REMOTE_MANAGEMENT_COMMAND = "/opt/zimbra/libexec/zmrcd";
 
-    private File mPrivateKey;
+    private final File mPrivateKey;
 
     private final String mUser;
     private final String mHost;
@@ -85,6 +85,7 @@ public class RemoteManager {
         return mPrivateKey.getAbsolutePath();
     }
 
+    @Override
     public String toString() {
         return mDescription;
     }
@@ -120,6 +121,7 @@ public class RemoteManager {
 
     public void executeBackground(final String command, final RemoteBackgroundHandler handler) {
         Runnable r = new Runnable() {
+            @Override
             public void run() {
                 executeBackground0(command, handler);
             }
@@ -139,7 +141,9 @@ public class RemoteManager {
             s.execCommand(mShimCommand);
             OutputStream os = s.getStdin();
             String send = "HOST:" + mHost + " " + command;
-            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("sending mgmt command '" + send + "' on " + this);
+            if (ZimbraLog.rmgmt.isDebugEnabled()) {
+                ZimbraLog.rmgmt.debug("sending mgmt command '%s' on %s", send, this);
+            }
             os.write(send.getBytes());
             os.close();
 
@@ -149,6 +153,14 @@ public class RemoteManager {
             InputStream stderr = new StreamGobbler(s.getStderr());
             result.mStdout = ByteUtil.getContent(stdout, -1);
             result.mStderr = ByteUtil.getContent(stderr, -1);
+            if (ZimbraLog.rmgmt.isTraceEnabled()) {
+                try {
+                    ZimbraLog.rmgmt.trace("stdout content for cmd:\n%s", new String(result.mStdout, "UTF-8"));
+                    ZimbraLog.rmgmt.trace("stderr content for cmd:\n%s", new String(result.mStderr, "UTF-8"));
+                } catch (Exception ex) {
+                    ZimbraLog.rmgmt.trace("Problem logging stdout or stderr for cmd - probably not UTF-8");
+                }
+            }
             try {
                 result.mExitStatus = s.getExitStatus();
             } catch (NullPointerException npe) {
