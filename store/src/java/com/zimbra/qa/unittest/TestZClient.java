@@ -567,6 +567,12 @@ public class TestZClient extends TestCase {
         //remove tag via zmailbox
         zmbox.alterTag(null, ids, tag.getName(), false);
         assertFalse(msg.isTagged(tag.getName()));
+
+        //test setting/unsetting unread flag
+        zmbox.alterTag(null, ids, "\\Unread", true);
+        assertTrue(msg.isUnread());
+        zmbox.alterTag(null, ids, "\\Unread", false);
+        assertFalse(msg.isUnread());
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
