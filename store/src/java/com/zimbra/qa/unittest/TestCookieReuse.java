@@ -287,8 +287,8 @@ public class TestCookieReuse {
         eve.setState(state);
         Account a = TestUtil.getAccount(USER_NAME);
         a.setForceClearCookies(false);
-
-        URI logoutUri = new URI("https://" + uri.getHost() +  (uri.getPort() > 80 ? (":" + uri.getPort()) : "") + "/?loginOp=logout");
+        URI logoutUri = new URI(String.format("%s://%s%s/?loginOp=logout",
+                uri.getScheme(), uri.getHost(), (uri.getPort() > 80 ? (":" + uri.getPort()) : "")));
         GetMethod logoutMethod = new GetMethod(logoutUri.toString());
         int statusCode = alice.executeMethod(logoutMethod);
         Assert.assertEquals("Log out request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
