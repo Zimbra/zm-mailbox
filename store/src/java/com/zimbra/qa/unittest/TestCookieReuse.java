@@ -23,16 +23,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.auth.ZAuthToken;
@@ -66,33 +68,43 @@ import com.zimbra.soap.mail.message.SearchResponse;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.SearchHit;
 
-public class TestCookieReuse extends TestCase {
+public class TestCookieReuse {
+
+    @Rule
+    public TestName testInfo = new TestName();
+
     private static final String NAME_PREFIX = TestUserServlet.class.getSimpleName();
-    private static final String USER_NAME = "user1";
-    private static final String UNAUTHORIZED_USER = "unauthorized@example.com";
-    private int currentSupportedAuthVersion = 2;
-    @Override
+    private static String USER_NAME;
+    private static String UNAUTHORIZED_USER;
+    private int currentSupportedAuthVersion;
+
+    @Before
     public void setUp()
     throws Exception {
+        currentSupportedAuthVersion =
+            Provisioning.getInstance().getLocalServer().getLowestSupportedAuthVersion();
+
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName().toLowerCase() + "-";
+        USER_NAME = prefix + "user1";
+        UNAUTHORIZED_USER = AccountTestUtil.getAddress(prefix + "unauthorized");
         cleanUp();
-        // Add a test message, in case the account is empty.
+        TestUtil.createAccount(USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        // Add a test message, to make sure the account isn't empty
         TestUtil.addMessage(mbox, NAME_PREFIX);
-        if(TestUtil.accountExists(UNAUTHORIZED_USER)) {
-            TestUtil.deleteAccount(UNAUTHORIZED_USER);
-        }
     }
 
-    @Override
+    @After
     public void tearDown()
     throws Exception {
         cleanUp();
+        Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(currentSupportedAuthVersion);
     }
 
     private void cleanUp()
     throws Exception {
-        Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(currentSupportedAuthVersion);
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(UNAUTHORIZED_USER);
     }
 
     public static void main(String[] args)
@@ -112,7 +124,8 @@ public class TestCookieReuse extends TestCase {
         HttpClient client = mbox.getHttpClient(uri);
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(client, get);
-        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
+                HttpStatus.SC_OK, statusCode);
     }
 
     /**
@@ -135,7 +148,8 @@ public class TestCookieReuse extends TestCase {
         eve.setState(state);
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
+                HttpStatus.SC_OK, statusCode);
     }
 
     /**
@@ -165,11 +179,13 @@ public class TestCookieReuse extends TestCase {
         mbox.invokeJaxb(esr);
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        assertEquals("This request should not succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
+        Assert.assertEquals("This request should not succeed. Getting status code " + statusCode,
+                HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
 
     /**
-     * Verify that we canNOT RE-use the cookie taken from a legitimate HTTP session for a REST request after ending the original session
+     * Verify that we canNOT RE-use the cookie taken from a legitimate HTTP session for a REST request
+     * after ending the original session
      */
     @Test
     public void testForceEndSession() throws ServiceException, IOException {
@@ -196,11 +212,13 @@ public class TestCookieReuse extends TestCase {
         mbox.invokeJaxb(esr);
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        assertEquals("This request should not succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
+        Assert.assertEquals("This request should not succeed. Getting status code " + statusCode,
+                HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
 
     /**
-     * Verify that we canNOT RE-use the cookie taken from a legitimate HTTP session for a SOAP request after ending the original session
+     * Verify that we canNOT RE-use the cookie taken from a legitimate HTTP session for a SOAP request after
+     * ending the original session
      */
     @Test
     public void testInvalidSearchRequest() throws ServiceException, IOException {
@@ -224,7 +242,7 @@ public class TestCookieReuse extends TestCase {
         Element res = transport.invoke(req);
         SearchResponse searchResp = JaxbUtil.elementToJaxb(res);
         List<SearchHit> searchHits = searchResp.getSearchHits();
-        assertFalse("this search request should return some conversations", searchHits.isEmpty());
+        Assert.assertFalse("this search request should return some conversations", searchHits.isEmpty());
 
 
         //explicitely end cookie session
@@ -245,9 +263,10 @@ public class TestCookieReuse extends TestCase {
             res = transport.invoke(req);
             searchResp = JaxbUtil.elementToJaxb(res);
             searchHits = searchResp.getSearchHits();
-            assertTrue("this search request should fail", searchHits.isEmpty());
+            Assert.assertTrue("this search request should fail", searchHits.isEmpty());
         } catch (SoapFaultException ex) {
-            assertEquals("Should be getting 'auth required' exception", ServiceException.AUTH_EXPIRED, ex.getCode());
+            Assert.assertEquals("Should be getting 'auth required' exception",
+                    ServiceException.AUTH_EXPIRED, ex.getCode());
         }
     }
 
@@ -275,14 +294,16 @@ public class TestCookieReuse extends TestCase {
         eve.setState(state);
         Account a = TestUtil.getAccount(USER_NAME);
         a.setForceClearCookies(false);
-
-        URI logoutUri = new URI("http://" + uri.getHost() +  (uri.getPort() > 80 ? (":" + uri.getPort()) : "") + "/?loginOp=logout");
+        URI logoutUri = new URI(String.format("%s://%s%s/?loginOp=logout",
+                uri.getScheme(), uri.getHost(), (uri.getPort() > 80 ? (":" + uri.getPort()) : "")));
         GetMethod logoutMethod = new GetMethod(logoutUri.toString());
         int statusCode = alice.executeMethod(logoutMethod);
-        assertEquals("Log out request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("Log out request should succeed. Getting status code " + statusCode,
+                HttpStatus.SC_OK, statusCode);
         GetMethod get = new GetMethod(uri.toString());
         statusCode = HttpClientUtil.executeMethod(eve, get);
-        assertEquals("This request should not succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
+        Assert.assertEquals("This request should not succeed. Getting status code " + statusCode,
+                HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
 
     /**
@@ -337,7 +358,8 @@ public class TestCookieReuse extends TestCase {
     }
 
     /**
-     * Test old behavior: tokens appear to be registered even when they are not registered when lowest supported auth version is set to 1
+     * Test old behavior: tokens appear to be registered even when they are not registered when lowest
+     * supported auth version is set to 1
      * @throws Exception
      */
     @Test
@@ -379,9 +401,9 @@ public class TestCookieReuse extends TestCase {
     public void testLoginClearAuthTokensException() throws Exception {
         Account a = TestUtil.getAccount(USER_NAME);
         ZimbraAuthToken at1 = new ZimbraAuthToken(a, System.currentTimeMillis() + 1000);
-        assertFalse("token should not be expired yet", at1.isExpired());
+        Assert.assertFalse("token should not be expired yet", at1.isExpired());
         Thread.sleep(2000);
-        assertTrue("token should have expired by now", at1.isExpired());
+        Assert.assertTrue("token should have expired by now", at1.isExpired());
 
         //explicitely clean up expired auth tokens
         a.purgeAuthTokens();
@@ -393,35 +415,37 @@ public class TestCookieReuse extends TestCase {
         Element resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
         AuthResponse authResp = JaxbUtil.elementToJaxb(resp);
         String newAuthToken = authResp.getAuthToken();
-        assertNotNull("should have received a new authtoken", newAuthToken);
+        Assert.assertNotNull("should have received a new authtoken", newAuthToken);
         AuthToken at = ZimbraAuthToken.getAuthToken(newAuthToken);
-        assertTrue("new auth token should be registered", at.isRegistered());
-        assertFalse("new auth token should not be expired yet", at.isExpired());
+        Assert.assertTrue("new auth token should be registered", at.isRegistered());
+        Assert.assertFalse("new auth token should not be expired yet", at.isExpired());
     }
 
     /**
      * Verify that we CANNOT make an unauthorized admin GET request without an admin cookie
      */
     @Test
-    public static void testGetWithoutAdminCookie() throws Exception {
+    public void testGetWithoutAdminCookie() throws Exception {
         int port = 7071;
         try {
             port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
         } catch (ServiceException e) {
             ZimbraLog.test.error("Unable to get admin SOAP port", e);
         }
-        String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host=" + Provisioning.getInstance().getLocalServer().getName();
+        String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host="
+                                        + Provisioning.getInstance().getLocalServer().getName();
         HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         GetMethod get = new GetMethod(getServerConfigURL);
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        assertEquals("This request should NOT succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
+        Assert.assertEquals("This request should NOT succeed. Getting status code " + statusCode,
+                HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
 
     /**
      * Verify that we CAN make an admin GET request by re-using a valid non-csrf-enabled cookie
      */
     @Test
-    public static void testReuseAdminCookieWithoutCsrf() throws Exception {
+    public void testReuseAdminCookieWithoutCsrf() throws Exception {
         AuthToken at = AuthProvider.getAdminAuthToken();
         at.setCsrfTokenEnabled(false);
         int port = 7071;
@@ -438,14 +462,15 @@ public class TestCookieReuse extends TestCase {
         eve.setState(state);
         GetMethod get = new GetMethod(getServerConfigURL);
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
+                HttpStatus.SC_OK, statusCode);
     }
 
     /**
      * Verify that we CAN make a GET request by reusing a valid non-csrf-enabled cookie
      */
     @Test
-    public static void testReuseUserCookieWithoutCsrf() throws Exception {
+    public void testReuseUserCookieWithoutCsrf() throws Exception {
         AuthToken at = AuthProvider.getAuthToken(TestUtil.getAccount(USER_NAME));
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss&thief=false");
@@ -456,14 +481,16 @@ public class TestCookieReuse extends TestCase {
         eve.setState(state);
         eve.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        assertEquals("This request should succeed. Getting status code " + statusCode + " Response: " + get.getResponseBodyAsString(), HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code "
+                    + statusCode + " Response: " + get.getResponseBodyAsString(),
+                    HttpStatus.SC_OK, statusCode);
     }
 
     /**
      * Verify that we CAN make a GET request by reusing a valid CSRF-enabled cookie
      */
     @Test
-    public static void testReuseUserCookieWithCsrf() throws Exception {
+    public void testReuseUserCookieWithCsrf() throws Exception {
         AuthToken at = AuthProvider.getAuthToken(TestUtil.getAccount(USER_NAME));
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss&thief=true");
@@ -474,14 +501,16 @@ public class TestCookieReuse extends TestCase {
         eve.setState(state);
         eve.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        assertEquals("This request should succeed. Getting status code " + statusCode + " Response: " + get.getResponseBodyAsString(), HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code "
+                + statusCode + " Response: " + get.getResponseBodyAsString(),
+                HttpStatus.SC_OK, statusCode);
     }
 
     /**
      * Verify that we CAN make an admin GET request by reusing a valid csrf-enabled cookie
      */
     @Test
-    public static void testReuseAdminCookieWithCsrf() throws Exception {
+    public void testReuseAdminCookieWithCsrf() throws Exception {
         AuthToken at = AuthProvider.getAdminAuthToken();
         at.setCsrfTokenEnabled(true);
         int port = 7071;
@@ -498,14 +527,15 @@ public class TestCookieReuse extends TestCase {
         eve.setState(state);
         GetMethod get = new GetMethod(getServerConfigURL);
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
+                HttpStatus.SC_OK, statusCode);
     }
 
     /**
      * Verify that we CANNOT make an admin POST request by reusing a valid csrf-enabled cookie without a csrf token
      */
     @Test
-    public static void testUnauthorizedAdminPostWithCsrf() throws Exception {
+    public void testUnauthorizedAdminPostWithCsrf() throws Exception {
         AuthToken at = AuthProvider.getAdminAuthToken();
         at.setCsrfTokenEnabled(true);
         SoapTransport transport = TestUtil.getAdminSoapTransport();
@@ -515,14 +545,15 @@ public class TestCookieReuse extends TestCase {
         try {
             transport.invoke(JaxbUtil.jaxbToElement(request));
         } catch (ServiceException e) {
-            assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
+            Assert.assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
             return;
         }
-        fail("should have caught an exception");
+        Assert.fail("should have caught an exception");
     }
 
     /**
-     * Verify that we CANNOT make an POST request with a non-CSRF-enabled auth token if the auth token has an associated CSRF token
+     * Verify that we CANNOT make an POST request with a non-CSRF-enabled auth token if the auth token
+     * has an associated CSRF token
      */
     @Test
     public void testForgedNonCSRFPost() throws Exception {
@@ -535,15 +566,16 @@ public class TestCookieReuse extends TestCase {
         try {
             transport.invoke(JaxbUtil.jaxbToElement(request));
         } catch (ServiceException e) {
-            assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
+            Assert.assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
             return;
         }
-        fail("should have caught an exception");
+        Assert.fail("should have caught an exception");
     }
 
 
     /**
-     * Verify that we CANNOT make an admin POST request with a non-CSRF-enabled auth token if the auth token has an associated CSRF token
+     * Verify that we CANNOT make an admin POST request with a non-CSRF-enabled auth token if
+     * the auth token has an associated CSRF token
      */
     @Test
     public void testForgedNonCSRFAdminPost() throws Exception {
@@ -557,10 +589,10 @@ public class TestCookieReuse extends TestCase {
         try {
             transport.invoke(JaxbUtil.jaxbToElement(request));
         } catch (ServiceException e) {
-            assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
+            Assert.assertEquals("should be catching AUTH EXPIRED here", ServiceException.AUTH_REQUIRED,e.getCode());
             return;
         }
-        fail("should have caught an exception");
+        Assert.fail("should have caught an exception");
     }
 
     /**
@@ -597,7 +629,8 @@ public class TestCookieReuse extends TestCase {
                     if (noSession) {
                         SoapUtil.disableNotificationOnCtxt(context);
                     } else {
-                        SoapUtil.addSessionToCtxt(context, getAuthToken() == null ? null : getSessionId(), getMaxNotifySeq());
+                        SoapUtil.addSessionToCtxt(context, getAuthToken() == null ? null : getSessionId(),
+                                getMaxNotifySeq());
                     }
                     SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
                     SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
