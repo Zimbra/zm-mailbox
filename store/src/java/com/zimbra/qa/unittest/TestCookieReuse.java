@@ -124,7 +124,8 @@ public class TestCookieReuse {
         HttpClient client = mbox.getHttpClient(uri);
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(client, get);
-        Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
+                HttpStatus.SC_OK, statusCode);
     }
 
     /**
@@ -147,7 +148,8 @@ public class TestCookieReuse {
         eve.setState(state);
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
+                HttpStatus.SC_OK, statusCode);
     }
 
     /**
@@ -177,11 +179,13 @@ public class TestCookieReuse {
         mbox.invokeJaxb(esr);
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        Assert.assertEquals("This request should not succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
+        Assert.assertEquals("This request should not succeed. Getting status code " + statusCode,
+                HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
 
     /**
-     * Verify that we canNOT RE-use the cookie taken from a legitimate HTTP session for a REST request after ending the original session
+     * Verify that we canNOT RE-use the cookie taken from a legitimate HTTP session for a REST request
+     * after ending the original session
      */
     @Test
     public void testForceEndSession() throws ServiceException, IOException {
@@ -208,11 +212,13 @@ public class TestCookieReuse {
         mbox.invokeJaxb(esr);
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        Assert.assertEquals("This request should not succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
+        Assert.assertEquals("This request should not succeed. Getting status code " + statusCode,
+                HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
 
     /**
-     * Verify that we canNOT RE-use the cookie taken from a legitimate HTTP session for a SOAP request after ending the original session
+     * Verify that we canNOT RE-use the cookie taken from a legitimate HTTP session for a SOAP request after
+     * ending the original session
      */
     @Test
     public void testInvalidSearchRequest() throws ServiceException, IOException {
@@ -259,7 +265,8 @@ public class TestCookieReuse {
             searchHits = searchResp.getSearchHits();
             Assert.assertTrue("this search request should fail", searchHits.isEmpty());
         } catch (SoapFaultException ex) {
-            Assert.assertEquals("Should be getting 'auth required' exception", ServiceException.AUTH_EXPIRED, ex.getCode());
+            Assert.assertEquals("Should be getting 'auth required' exception",
+                    ServiceException.AUTH_EXPIRED, ex.getCode());
         }
     }
 
@@ -291,10 +298,12 @@ public class TestCookieReuse {
                 uri.getScheme(), uri.getHost(), (uri.getPort() > 80 ? (":" + uri.getPort()) : "")));
         GetMethod logoutMethod = new GetMethod(logoutUri.toString());
         int statusCode = alice.executeMethod(logoutMethod);
-        Assert.assertEquals("Log out request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("Log out request should succeed. Getting status code " + statusCode,
+                HttpStatus.SC_OK, statusCode);
         GetMethod get = new GetMethod(uri.toString());
         statusCode = HttpClientUtil.executeMethod(eve, get);
-        Assert.assertEquals("This request should not succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
+        Assert.assertEquals("This request should not succeed. Getting status code " + statusCode,
+                HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
 
     /**
@@ -349,7 +358,8 @@ public class TestCookieReuse {
     }
 
     /**
-     * Test old behavior: tokens appear to be registered even when they are not registered when lowest supported auth version is set to 1
+     * Test old behavior: tokens appear to be registered even when they are not registered when lowest
+     * supported auth version is set to 1
      * @throws Exception
      */
     @Test
@@ -422,11 +432,13 @@ public class TestCookieReuse {
         } catch (ServiceException e) {
             ZimbraLog.test.error("Unable to get admin SOAP port", e);
         }
-        String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host=" + Provisioning.getInstance().getLocalServer().getName();
+        String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host="
+                                        + Provisioning.getInstance().getLocalServer().getName();
         HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         GetMethod get = new GetMethod(getServerConfigURL);
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        Assert.assertEquals("This request should NOT succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
+        Assert.assertEquals("This request should NOT succeed. Getting status code " + statusCode,
+                HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
 
     /**
@@ -450,7 +462,8 @@ public class TestCookieReuse {
         eve.setState(state);
         GetMethod get = new GetMethod(getServerConfigURL);
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
+                HttpStatus.SC_OK, statusCode);
     }
 
     /**
@@ -468,7 +481,9 @@ public class TestCookieReuse {
         eve.setState(state);
         eve.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        Assert.assertEquals("This request should succeed. Getting status code " + statusCode + " Response: " + get.getResponseBodyAsString(), HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code "
+                    + statusCode + " Response: " + get.getResponseBodyAsString(),
+                    HttpStatus.SC_OK, statusCode);
     }
 
     /**
@@ -486,7 +501,9 @@ public class TestCookieReuse {
         eve.setState(state);
         eve.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        Assert.assertEquals("This request should succeed. Getting status code " + statusCode + " Response: " + get.getResponseBodyAsString(), HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code "
+                + statusCode + " Response: " + get.getResponseBodyAsString(),
+                HttpStatus.SC_OK, statusCode);
     }
 
     /**
@@ -510,7 +527,8 @@ public class TestCookieReuse {
         eve.setState(state);
         GetMethod get = new GetMethod(getServerConfigURL);
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
+                HttpStatus.SC_OK, statusCode);
     }
 
     /**
@@ -534,7 +552,8 @@ public class TestCookieReuse {
     }
 
     /**
-     * Verify that we CANNOT make an POST request with a non-CSRF-enabled auth token if the auth token has an associated CSRF token
+     * Verify that we CANNOT make an POST request with a non-CSRF-enabled auth token if the auth token
+     * has an associated CSRF token
      */
     @Test
     public void testForgedNonCSRFPost() throws Exception {
@@ -555,7 +574,8 @@ public class TestCookieReuse {
 
 
     /**
-     * Verify that we CANNOT make an admin POST request with a non-CSRF-enabled auth token if the auth token has an associated CSRF token
+     * Verify that we CANNOT make an admin POST request with a non-CSRF-enabled auth token if
+     * the auth token has an associated CSRF token
      */
     @Test
     public void testForgedNonCSRFAdminPost() throws Exception {
@@ -609,7 +629,8 @@ public class TestCookieReuse {
                     if (noSession) {
                         SoapUtil.disableNotificationOnCtxt(context);
                     } else {
-                        SoapUtil.addSessionToCtxt(context, getAuthToken() == null ? null : getSessionId(), getMaxNotifySeq());
+                        SoapUtil.addSessionToCtxt(context, getAuthToken() == null ? null : getSessionId(),
+                                getMaxNotifySeq());
                     }
                     SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
                     SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
