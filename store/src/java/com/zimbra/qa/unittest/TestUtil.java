@@ -22,7 +22,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -528,18 +527,6 @@ public class TestUtil extends Assert {
             return mimeStructure;
         }
         return null;
-    }
-
-    private static void logInputStream(InputStream is, String prefix) {
-        try (InputStreamReader isr = new InputStreamReader(is);
-                BufferedReader ir = new BufferedReader(isr)) {
-            String line;
-            while ((line = ir.readLine()) != null) {
-                ZimbraLog.test.info("mailq STDOUT:%s", line);
-            }
-        } catch (IOException e) {
-            ZimbraLog.test.error("Problem logging stream with prefix '%s'", prefix, e);
-        }
     }
 
     /**
@@ -1157,8 +1144,8 @@ public class TestUtil extends Assert {
 
         // Create auth element
         Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
-        auth.addElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
-        auth.addElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());
+        auth.addNonUniqueElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
+        auth.addNonUniqueElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());
 
         // Authenticate and get auth token
         Element response = transport.invoke(auth);
@@ -1177,8 +1164,8 @@ public class TestUtil extends Assert {
 
         // Create auth element
         Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
-        auth.addElement(AdminConstants.E_NAME).setText(adminName);
-        auth.addElement(AdminConstants.E_PASSWORD).setText(adminPassword);
+        auth.addNonUniqueElement(AdminConstants.E_NAME).setText(adminName);
+        auth.addNonUniqueElement(AdminConstants.E_PASSWORD).setText(adminPassword);
 
         // Authenticate and get auth token
         Element response = transport.invoke(auth);
@@ -1257,9 +1244,11 @@ public class TestUtil extends Assert {
         }
         if (expected == null) {
             Assert.fail("expected was null but actual was not.");
+            return; // shuts up warnings in Eclipse
         }
         if (actual == null) {
             Assert.fail("expected was not null but actual was.");
+            return; // shuts up warnings in Eclipse
         }
         assertEquals("Arrays have different length.", expected.length, actual.length);
         for (int i = 0; i < expected.length; i++) {
