@@ -481,7 +481,7 @@ public final class RuleManager {
 
     private static void setXMLRules(Account account,List<FilterRule> rules, String sieveScriptAttrName,
             String rulesCacheKey) throws ServiceException {
-        SoapToSieve soapToSieve = new SoapToSieve(rules);
+        SoapToSieve soapToSieve = new SoapToSieve(rules, account);
         String script = soapToSieve.getSieveScript();
         setRules(account, script, sieveScriptAttrName, rulesCacheKey);
     }
@@ -707,7 +707,7 @@ public final class RuleManager {
                 List<String> ruleNames = getRuleNames(script);
                 SieveToSoap sieveToSoap = new SieveToSoap(ruleNames);
                 sieveToSoap.accept(node);
-                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules());
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules(), account);
                 String newScript = soapToSieve.getSieveScript();
                 setRules(account, newScript, sieveScriptAttrName, rulesCacheKey);
                 ZimbraLog.filter.info("Updated %s due to folder move or rename from %s to %s.",
@@ -748,7 +748,7 @@ public final class RuleManager {
                 List<String> ruleNames = getRuleNames(script);
                 SieveToSoap sieveToSoap = new SieveToSoap(ruleNames);
                 sieveToSoap.accept(node);
-                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules());
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules(), account);
                 String newScript = soapToSieve.getSieveScript();
                 setRules(account, newScript, sieveScriptAttrName, rulesCacheKey);
                 ZimbraLog.filter.info("Updated %s filter rules after folder %s was deleted.", sieveScriptAttrName, originalPath);
@@ -809,7 +809,7 @@ public final class RuleManager {
                 List<String> ruleNames = getRuleNames(script);
                 SieveToSoap sieveToSoap = new SieveToSoap(ruleNames);
                 sieveToSoap.accept(node);
-                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules());
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules(), account);
                 String newScript = soapToSieve.getSieveScript();
                 setRules(account, newScript, sieveScriptAttrName, rulesCacheKey);
                 ZimbraLog.filter.info("Updated %s after tag %s was deleted.", sieveScriptAttrName, tagName);
