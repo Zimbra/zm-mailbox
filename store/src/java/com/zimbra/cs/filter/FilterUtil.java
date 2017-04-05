@@ -38,6 +38,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.exception.SyntaxException;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -964,15 +965,21 @@ public final class FilterUtil {
      */
     public static String sieveToJavaRegex(String pattern) {
         int ch;
+        int starWildCardCount = StringUtils.countMatches(pattern, "*");
+
         StringBuffer buffer = new StringBuffer(2 * pattern.length());
         for (ch = 0; ch < pattern.length(); ch++) {
             final char nextChar = pattern.charAt(ch);
             switch (nextChar) {
             case '*':
-                //
-                // Java Matcher has issues with repeated stars
-                //
-                buffer.append("(.*)?");
+                //If there are two or more wildcards,all wildcards should be non-greedy except the last wildcard.
+                //If there is only one wildcard in the sieve pattern, it is set as a greedy wildcard.
+                if (starWildCardCount > 1) {
+                    buffer.append("(.*?)");
+                } else {
+                    buffer.append("(.*)");
+                }
+                starWildCardCount--;
                 break;
             case '?':
                 buffer.append("(.)");

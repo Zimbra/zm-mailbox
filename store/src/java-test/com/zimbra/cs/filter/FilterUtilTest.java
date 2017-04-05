@@ -233,8 +233,7 @@ public class FilterUtilTest {
 
     @Test
     public void testToJavaRegex() {
-    	String regex = FilterUtil.sieveToJavaRegex("coyote@**.com");
-    	Assert.assertEquals("coyote@(.*)?(.*)?\\.com", regex);
-    	
+        String regex = FilterUtil.sieveToJavaRegex("coyote@**.com");
+        Assert.assertEquals("coyote@(.*?)(.*)\\.com", regex);
     }
 }
