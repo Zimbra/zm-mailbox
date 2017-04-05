@@ -11639,7 +11639,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=3010)
+    @ZAttr(id=3012)
     public static final String A_zimbraOpenImapFolderRequestChunkSize = "zimbraOpenImapFolderRequestChunkSize";
 
     /**
