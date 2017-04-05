@@ -5836,7 +5836,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=2103)
     public boolean isChatHistoryEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraChatHistoryEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraChatHistoryEnabled, true, true);
     }
 
     /**

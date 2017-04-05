@@ -4290,7 +4290,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=2104)
     public boolean isChatConversationAuditEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraChatConversationAuditEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraChatConversationAuditEnabled, false, true);
     }
 
     /**
@@ -6993,7 +6993,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=2110)
     public String getDriveOwnCloudURL() {
-        return getAttr(Provisioning.A_zimbraDriveOwnCloudURL, null);
+        return getAttr(Provisioning.A_zimbraDriveOwnCloudURL, null, true);
     }
 
     /**

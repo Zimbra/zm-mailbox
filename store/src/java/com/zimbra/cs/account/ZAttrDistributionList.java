@@ -679,7 +679,7 @@ public abstract class ZAttrDistributionList extends Group {
      */
     @ZAttr(id=2109)
     public boolean isChatAllowDlMemberAddAsFriend() {
-        return getBooleanAttr(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, false);
+        return getBooleanAttr(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, false, true);
     }
 
     /**
