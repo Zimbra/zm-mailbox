@@ -683,7 +683,7 @@ public class SetVariableTest {
             filterScript = "require [\"variables\"];\n"
                          + "if header :matches [\"To\", \"Cc\"] [\"coyote@**.com\",\"wile@**.com\"]{\n"
                          + "  log \"Match 1 ${1}\";\n"
-                         + "  tag \"${1}\";\n"
+                         + "  tag \"${2}\";\n"
                          + "}\n";
             account.setMailSieveScript(filterScript);
             String raw = "From: sender@zimbra.com\n"
@@ -1326,7 +1326,7 @@ public class SetVariableTest {
 
             filterScript = "require [\"variables\"];\n" 
                          + "if address :comparator \"i;ascii-casemap\" :matches \"To\" \"coyote@**.com\"{\n"
-                         + "  tag \"${1}\";\n"
+                         + "  tag \"${2}\";\n"
                          + "}";
 
             account.setMailSieveScript(filterScript);
@@ -2178,6 +2178,118 @@ public class SetVariableTest {
 
         } catch (ArrayIndexOutOfBoundsException e) {
             assertTrue(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testWildCardGreedyMatch() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"sample*test\" { "
+                       + "tag \"${1}\";}";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: sample abc test 123 test ABC test";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("abc test 123 test ABC", msg.getTags()[0]);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testMultipleWildCardMatch() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"[*] *\" { "
+                       + "tag \"${1}\";}";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: [acme-users] [fwd] version 1.0 is out";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("acme-users", msg.getTags()[0]);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testMultipleWildCardMatch2() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"[*] *\" { "
+                       + "tag \"${2}\";}";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: [acme-users] [fwd] version 1.0 is out";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("[fwd] version 1.0 is out", msg.getTags()[0]);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testMultipleWildCardMatch3() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"test*sample*\" { "
+                       + "tag \"${2}\";}";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: test sample message abc sample foo";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("message abc sample foo", msg.getTags()[0]);
+
         } catch (Exception e) {
             e.printStackTrace();
             fail("No exception should be thrown");
