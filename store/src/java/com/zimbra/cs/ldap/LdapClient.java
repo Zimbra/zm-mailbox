@@ -35,14 +35,13 @@ public abstract class LdapClient {
     private static LdapClient ldapClient;
     private static boolean ALWAYS_USE_MASTER = false;
 
-     static synchronized LdapClient getInstance() {
+     static synchronized LdapClient getInstanceIfLDAPavailable() throws LdapException {
         if (ldapClient == null) {
-
             if (InMemoryLdapServer.isOn()) {
                 try {
                     InMemoryLdapServer.start(InMemoryLdapServer.ZIMBRA_LDAP_SERVER,
-                            new InMemoryLdapServer.ServerConfig(
-                            Lists.newArrayList(LdapConstants.ATTR_dc + "=" + InMemoryLdapServer.UNITTEST_BASE_DOMAIN_SEGMENT)));
+                            new InMemoryLdapServer.ServerConfig(Lists.newArrayList(LdapConstants.ATTR_dc + "=" +
+                                                                InMemoryLdapServer.UNITTEST_BASE_DOMAIN_SEGMENT)));
                 } catch (Exception e) {
                     ZimbraLog.system.error("could not start InMemoryLdapServer", e);
                 }
@@ -60,15 +59,19 @@ public abstract class LdapClient {
             if (ldapClient == null) {
                 ldapClient = new UBIDLdapClient();
             }
-
-            try {
-                ldapClient.init(ALWAYS_USE_MASTER);
-            } catch (LdapException e) {
-                Zimbra.halt("failed to initialize LDAP client", e);
-            }
+            ldapClient.init(ALWAYS_USE_MASTER);
         }
         return ldapClient;
     }
+
+     static synchronized LdapClient getInstance() {
+         try {
+             LdapClient.getInstanceIfLDAPavailable();
+         } catch (LdapException e) {
+             Zimbra.halt("failed to initialize LDAP client", e);
+         }
+         return ldapClient;
+     }
 
     private static synchronized void unsetInstance() {
         ldapClient = null;
@@ -81,6 +84,10 @@ public abstract class LdapClient {
             // already initialized
             ldapClient.alwaysUseMaster();
         }
+    }
+
+    public static void initializeIfLDAPAvailable() throws LdapException {
+        LdapClient.getInstanceIfLDAPavailable();
     }
 
     public static void initialize() {
