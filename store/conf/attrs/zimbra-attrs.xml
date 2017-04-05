@@ -9458,7 +9458,7 @@ TODO: delete them permanently from here
   <desc>Specifies the amount of time a thread will wait for a JedisPool resource. A value of 0 will cause the thread to block indefinitely.</desc>
 </attr>
 
-<attr id="3010" name="zimbraOpenImapFolderRequestChunkSize" type="integer" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+<attr id="3012" name="zimbraOpenImapFolderRequestChunkSize" type="integer" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
   <globalConfigValue>1000</globalConfigValue>
   <desc>The max number of IMAP messages returned by OpenImapFolderRequest before pagination begins</desc>
 </attr>
