@@ -965,11 +965,7 @@ public final class FilterUtil {
      */
     public static String sieveToJavaRegex(String pattern) {
         int ch;
-        boolean singleOccurrence = false;
         int starWildCardCount = StringUtils.countMatches(pattern, "*");
-        if (starWildCardCount == 1) {
-            singleOccurrence = true;
-        }
 
         StringBuffer buffer = new StringBuffer(2 * pattern.length());
         for (ch = 0; ch < pattern.length(); ch++) {
@@ -978,9 +974,7 @@ public final class FilterUtil {
             case '*':
                 //If there are two or more wildcards,all wildcards should be non-greedy except the last wildcard.
                 //If there is only one wildcard in the sieve pattern, it is set as a greedy wildcard.
-                if (singleOccurrence) {
-                    buffer.append("(.*)");
-                } else if (starWildCardCount > 1) {
+                if (starWildCardCount > 1) {
                     buffer.append("(.*?)");
                 } else {
                     buffer.append("(.*)");
