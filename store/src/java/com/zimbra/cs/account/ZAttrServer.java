@@ -5932,7 +5932,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2106)
     public boolean isChatAllowUnencryptedPassword() {
-        return getBooleanAttr(Provisioning.A_zimbraChatAllowUnencryptedPassword, false);
+        return getBooleanAttr(Provisioning.A_zimbraChatAllowUnencryptedPassword, false, true);
     }
 
     /**
@@ -6004,7 +6004,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2102)
     public boolean isChatServiceEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraChatServiceEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraChatServiceEnabled, true, true);
     }
 
     /**
@@ -6080,7 +6080,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2107)
     public int getChatXmppPort() {
-        return getIntAttr(Provisioning.A_zimbraChatXmppPort, 5222);
+        return getIntAttr(Provisioning.A_zimbraChatXmppPort, 5222, true);
     }
 
     /**
@@ -6092,7 +6092,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2107)
     public String getChatXmppPortAsString() {
-        return getAttr(Provisioning.A_zimbraChatXmppPort, "5222");
+        return getAttr(Provisioning.A_zimbraChatXmppPort, "5222", true);
     }
 
     /**
@@ -6199,7 +6199,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2108)
     public int getChatXmppSslPort() {
-        return getIntAttr(Provisioning.A_zimbraChatXmppSslPort, 5223);
+        return getIntAttr(Provisioning.A_zimbraChatXmppSslPort, 5223, true);
     }
 
     /**
@@ -6211,7 +6211,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2108)
     public String getChatXmppSslPortAsString() {
-        return getAttr(Provisioning.A_zimbraChatXmppSslPort, "5223");
+        return getAttr(Provisioning.A_zimbraChatXmppSslPort, "5223", true);
     }
 
     /**
@@ -6314,7 +6314,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2105)
     public boolean isChatXmppSslPortEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraChatXmppSslPortEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraChatXmppSslPortEnabled, false, true);
     }
 
     /**
@@ -35999,7 +35999,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=3010)
+    @ZAttr(id=3012)
     public int getOpenImapFolderRequestChunkSize() {
         return getIntAttr(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, 1000, true);
     }
@@ -36013,7 +36013,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=3010)
+    @ZAttr(id=3012)
     public void setOpenImapFolderRequestChunkSize(int zimbraOpenImapFolderRequestChunkSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, Integer.toString(zimbraOpenImapFolderRequestChunkSize));
@@ -36030,7 +36030,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=3010)
+    @ZAttr(id=3012)
     public Map<String,Object> setOpenImapFolderRequestChunkSize(int zimbraOpenImapFolderRequestChunkSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, Integer.toString(zimbraOpenImapFolderRequestChunkSize));
@@ -36045,7 +36045,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=3010)
+    @ZAttr(id=3012)
     public void unsetOpenImapFolderRequestChunkSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, "");
@@ -36061,7 +36061,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=3010)
+    @ZAttr(id=3012)
     public Map<String,Object> unsetOpenImapFolderRequestChunkSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, "");
