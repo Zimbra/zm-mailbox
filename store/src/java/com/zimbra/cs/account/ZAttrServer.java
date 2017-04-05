@@ -36049,7 +36049,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=3010)
+    @ZAttr(id=3012)
     public int getOpenImapFolderRequestChunkSize() {
         return getIntAttr(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, 1000, true);
     }
@@ -36063,7 +36063,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=3010)
+    @ZAttr(id=3012)
     public void setOpenImapFolderRequestChunkSize(int zimbraOpenImapFolderRequestChunkSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, Integer.toString(zimbraOpenImapFolderRequestChunkSize));
@@ -36080,7 +36080,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=3010)
+    @ZAttr(id=3012)
     public Map<String,Object> setOpenImapFolderRequestChunkSize(int zimbraOpenImapFolderRequestChunkSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, Integer.toString(zimbraOpenImapFolderRequestChunkSize));
@@ -36095,7 +36095,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=3010)
+    @ZAttr(id=3012)
     public void unsetOpenImapFolderRequestChunkSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, "");
@@ -36111,7 +36111,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=3010)
+    @ZAttr(id=3012)
     public Map<String,Object> unsetOpenImapFolderRequestChunkSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, "");
