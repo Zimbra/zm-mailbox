@@ -387,7 +387,8 @@ public class TestUtil extends Assert {
     public static String addMessage(ZMailbox mbox, String subject, String folderId, String flags)
             throws ServiceException, IOException, MessagingException {
         String message = getTestMessage(subject);
-        return mbox.addMessage(folderId, flags, null, 0, message, true);
+        long millis = System.currentTimeMillis() % 1000;
+        return mbox.addMessage(folderId, flags, null, millis, message, true);
     }
 
     public static String addRawMessage(ZMailbox mbox, String rawMessage) throws ServiceException {
