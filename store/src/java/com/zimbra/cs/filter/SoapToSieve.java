@@ -518,9 +518,7 @@ public final class SoapToSieve {
         } else if (action instanceof FilterAction.TagAction) {
             FilterAction.TagAction tag = (FilterAction.TagAction) action;
             String tagName = tag.getTag();
-            if (StringUtil.isNullOrEmpty(tagName)) {
-                throw ServiceException.INVALID_REQUEST("Missing tag", null);
-            }
+            validateTag(tagName, rule);
             return String.format("tag \"%s\"", FilterUtil.escape(tagName));
         } else if (action instanceof FilterAction.FlagAction) {
             FilterAction.FlagAction flag = (FilterAction.FlagAction) action;
@@ -655,6 +653,18 @@ public final class SoapToSieve {
             ZimbraLog.soap.debug("Ignoring unexpected action: %s", action);
         }
         return null;
+    }
+
+    private void validateTag(String tagName, FilterRule rule) throws ServiceException {
+        if (StringUtil.isNullOrEmpty(tagName)) {
+            throw ServiceException.INVALID_REQUEST("Missing tag", null);
+        }
+        if (account != null && rule != null && rule.isActive()) {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            if (mbox != null) {
+                mbox.getTagByName(null, tagName);
+            }
+        }
     }
 
     private void validateFolderPath(String folderPath, FilterRule rule) throws ServiceException {
