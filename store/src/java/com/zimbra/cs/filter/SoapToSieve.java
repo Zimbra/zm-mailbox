@@ -401,17 +401,13 @@ public final class SoapToSieve {
         try {
             Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            if (isCount) {
-                throw ServiceException.INVALID_REQUEST("Invalid Value: " + value, e);
-            } else {
-                numeric = false;
-            }
+            numeric = false;
         }
         //for :count, iasciinumeric comparator will be used always.
         //for :value, iasciinumeric comparator will be used if value is numeric else
-        //iasciicasemap will be used.
+        //iasciicasemap will be used until comparator value can be set from soap api.
         Sieve.Comparator comparator= Sieve.Comparator.iasciinumeric;
-        if (!numeric) {
+        if (!numeric && !isCount) {
             comparator= Sieve.Comparator.iasciicasemap;
         }
         if (part == null) {
