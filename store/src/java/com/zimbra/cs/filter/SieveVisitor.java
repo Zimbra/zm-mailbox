@@ -338,7 +338,6 @@ public abstract class SieveVisitor {
                 String value;
                 Sieve.ValueComparison valueComparison = null;
                 boolean isCount = false;
-                boolean valueComparator = false;
                 Sieve.StringComparison comparison = null;
                 Sieve.Comparator comparator = null;
                 int headersArgIndex = 0;
@@ -357,9 +356,6 @@ public abstract class SieveVisitor {
                             secondTagArgNode = (SieveNode) getNode(node, 0 , 2);
                             if (secondTagArgNode.getValue() instanceof TagArgument) {
                                comparator = Sieve.Comparator.fromString(getValue(node, 0, 3, 0, 0));
-                               if (Sieve.Comparator.iasciinumeric.equals(comparator)) {
-                                   valueComparator = true;
-                               }
                                headersArgIndex += 2;
                             }
                          } else {
@@ -388,7 +384,7 @@ public abstract class SieveVisitor {
 
                 headers = getMultiValue(node, 0, headersArgIndex, 0);
                 value = getValue(node, 0, headersArgIndex + 1, 0, 0);
-                validateComparator(value, isCount, valueComparator, comparator);
+                validateCountComparator(isCount, comparator);
 
                 if ("header".equalsIgnoreCase(nodeName)) {
                     if (valueComparison != null) {
@@ -414,7 +410,6 @@ public abstract class SieveVisitor {
 
                 int nextArgIndex = 0;
                 boolean isCount = false;
-                boolean valueComparator = false;
                 Sieve.ValueComparison valueComparison = null;
                 Sieve.Comparator comparator = null;
                 SieveNode firstTagArgNode;
@@ -436,9 +431,6 @@ public abstract class SieveVisitor {
                     if (tagArg.isComparator()) {
                         comparator = Sieve.Comparator.fromString(getValue(node, 0, nextArgIndex + 1, 0, 0));
                         caseSensitive = Sieve.Comparator.ioctet == comparator;
-                        if (Sieve.Comparator.iasciinumeric.equals(comparator)) {
-                            valueComparator = true;
-                        }
                         nextArgIndex += 2;
                     } else {
                         String argStr = stripLeadingColon(argNode.getValue().toString());
@@ -456,7 +448,7 @@ public abstract class SieveVisitor {
 
                 headers = getMultiValue(node, 0, nextArgIndex, 0);
                 value = getValue(node, 0, nextArgIndex + 1, 0, 0);
-                validateComparator(value, isCount, valueComparator, comparator);
+                validateCountComparator(isCount, comparator);
                 if (valueComparison != null) { 
                     visitAddressTest(node, VisitPhase.begin, props, headers, part, valueComparison, isCount, value);
                     accept(node, props);
@@ -955,20 +947,9 @@ public abstract class SieveVisitor {
         }
     }
 
-    private void validateComparator(String value, boolean isCount, boolean numericComparator, Sieve.Comparator comparator) throws ServiceException {
-        boolean numeric = true;
-        try {
-            Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            if (isCount) {
-                throw ServiceException.PARSE_ERROR("Invalid Value: " + value, e);
-            } else {
-                numeric = false;
-            }
-        }
-
-        if ((numeric && !numericComparator) || (!numeric && numericComparator)) {
-            throw ServiceException.PARSE_ERROR("Invalid Comparator: " + comparator.toString(), null);
+    private void validateCountComparator(boolean isCount, Sieve.Comparator comparator) throws ServiceException {
+        if (isCount && comparator != null && !Sieve.Comparator.iasciinumeric.equals(comparator)) {
+            throw ServiceException.PARSE_ERROR("Invalid Comparator For Count: " + comparator.toString(), null);
         }
     }
 }
