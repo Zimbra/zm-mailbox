@@ -340,11 +340,11 @@ public class ItemAction extends MailDocumentHandler {
         return localResults;
     }
 
-    protected String handleMoveOperation(ZimbraSoapContext zsc, OperationContext octxt,
+    protected ItemActionResult handleMoveOperation(ZimbraSoapContext zsc, OperationContext octxt,
             Element request, Element action, Mailbox mbox,
             SoapProtocol responseProto, List<Integer> local, MailItem.Type type, TargetConstraint tcon)
                     throws ServiceException {
-        String localResults;
+        ItemActionResult localResults = new ItemActionResult();
         String acctRelativePath = action.getAttribute(MailConstants.A_ACCT_RELATIVE_PATH, null);
         if (acctRelativePath == null) {
             ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
@@ -355,17 +355,10 @@ public class ItemAction extends MailDocumentHandler {
             }
             List<ItemActionHelper> actionHelpers =
                     ItemActionHelper.MOVE(octxt, mbox, responseProto, local, tcon, acctRelativePath);
-            if (actionHelpers.isEmpty()) {
-                localResults = "";
-            } else {
-                StringBuilder resultsBuilder = new StringBuilder(actionHelpers.get(0).getResult());
-                for (int i = 1; i < actionHelpers.size(); i++) {
-                    String result = actionHelpers.get(i).getResult();
-                    if (!result.isEmpty()) {
-                        resultsBuilder.append(',').append(result);
-                    }
+            if (!actionHelpers.isEmpty()) {
+                for (int i = 0; i < actionHelpers.size(); i++) {
+                    localResults.appendSuccessIds(actionHelpers.get(i).getResult().getSuccessIds());
                 }
-                localResults = resultsBuilder.toString();
             }
         } else {
             throw ServiceException.INVALID_REQUEST(MailConstants.A_ACCT_RELATIVE_PATH +
