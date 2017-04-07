@@ -367,7 +367,6 @@ public class ItemAction extends MailDocumentHandler {
         return localResults;
     }
 
-
     private String getDataSourceOfItem(OperationContext octxt, Mailbox mbox, MailItem item) throws ServiceException {
         Folder folder = mbox.getFolderById(octxt, item.getFolderId());
         Map<Integer, String> dataSources = new HashMap<Integer, String>();
