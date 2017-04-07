@@ -304,9 +304,8 @@ public class EditHeaderExtension {
                             if (StringUtil.isNullOrEmpty(origNewName)) {
                                 throw new SyntaxException("New name must be present with :newname in replaceheader : " + arg);
                             }
-                            String newName2 = StringUtils.stripStart(origNewName, null);
-                            if (!newName2.equals(origNewName)) {
-                                throw new SyntaxException("New name must not start with spaces in :newname in replaceheader : " + arg);
+                            if (origNewName.contains(" ")) {
+                                throw new SyntaxException("New name must not have space(s) in :newname in replaceheader : " + arg);
                             }
                             this.newName = origNewName;
                         } else {
@@ -491,9 +490,8 @@ public class EditHeaderExtension {
      */
     public void commonValidation() throws SyntaxException {
         if (!StringUtil.isNullOrEmpty(this.key)) {
-            String tempKey = StringUtils.stripStart(this.key, null);
-            if (!tempKey.equals(this.key)) {
-                throw new SyntaxException("Header name must not start with spaces : \"" + this.key + "\"");
+            if (this.key.contains(" ")) {
+                throw new SyntaxException("Header name must not have space(s) : \"" + this.key + "\"");
             }
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(this.key, CharsetUtil.US_ASCII))) {
                 throw new SyntaxException("key must be printable ASCII only.");

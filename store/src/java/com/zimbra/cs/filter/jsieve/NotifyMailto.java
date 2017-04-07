@@ -243,6 +243,9 @@ public class NotifyMailto extends AbstractActionCommand {
                         if (StringUtils.isEmpty(token[0])) {
                             throw new SyntaxException("'mailto' method syntax error: empty parameter name");
                         }
+                        if (token[0].contains(" ")) {
+                            throw new SyntaxException("mailto : Header name must not have space(s) : \"" + token[0] + "\"");
+                        }
                     }
                     // If the value or parameter name is URL encoded, it should be
                     // decoded.  If it is not even URL encoded, more or less decoding

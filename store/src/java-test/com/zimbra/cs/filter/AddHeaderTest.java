@@ -499,9 +499,16 @@ public class AddHeaderTest {
     @Test
     public void testAddHeaderNameStartingWithSpace() {
         try {
-           String filterScript = "require [\"editheader\"];\n"
-                    + " addheader \" X-My-Test\" \"my-new-header-value\" \r\n"
-                    + "  ;\n";
+//           String filterScript = "require [\"editheader\"];\n"
+//                    + " addheader \" X-My-Test\" \"my-new-header-value\" \r\n"
+//                    + "  ;\n";
+            String filterScript =
+                    "require [\"log\",\"fileinto\",\"tag\"];"
+                    + "addheader \"X-ZCS860-Header8\" \"  Val13\";"
+                    + "if header :comparator \"i;ascii-casemap\" :contains \"Subject\" \"sub12\" {"
+                    + "      deleteheader :comparator \"i;ascii-casemap\" :matches \"X-ZCS860-Header8\" \"  Val13\";"
+                    + "      tag \"tag12\";"
+                    + "}";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             RuleManager.clearCachedRules(acct1);

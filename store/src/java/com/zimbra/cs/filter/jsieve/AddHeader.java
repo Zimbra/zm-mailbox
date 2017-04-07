@@ -154,9 +154,8 @@ public class AddHeader extends AbstractCommand {
         }
 
         if (!StringUtil.isNullOrEmpty(headerName)) {
-            String tempHeaderName = StringUtils.stripStart(headerName, null);
-            if (!tempHeaderName.equals(headerName)) {
-                throw new SyntaxException("Header name must not start with spaces : \"" + headerName + "\"");
+            if (headerName.contains(" ")) {
+                throw new SyntaxException("Header name must not have space(s) : \"" + headerName + "\"");
             }
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(headerName, CharsetUtil.US_ASCII))) {
                 throw new SyntaxException("AddHeader:Header name must be printable ASCII only.");

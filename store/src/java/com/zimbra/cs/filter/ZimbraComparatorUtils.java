@@ -156,6 +156,11 @@ public class ZimbraComparatorUtils {
             throw context.getCoordinate().syntaxException(
                     "Expecting a StringList of header names");
         }
+        for (String headerName : headerNames) {
+            if (headerName != null && headerName.contains(" ")) {
+                throw new SyntaxException("ZimbraComparatorUtils : Header name must not have space(s) : \"" + headerName + "\"");
+            }
+        }
 
         // The next argument MUST be a string-list of keys
         if (argumentsIter.hasNext()) {
