@@ -210,7 +210,7 @@ public class ItemAction extends MailDocumentHandler {
                 localResults = ItemActionHelper.UNLOCK(octxt, mbox, responseProto, local, type, tcon).getResult();
             } else if (opStr.equals(MailConstants.OP_INHERIT)) {
                 mbox.alterTag(octxt, ArrayUtil.toIntArray(local), type, Flag.FlagInfo.NO_INHERIT, false, tcon);
-                localResults = Joiner.on(",").join(local);
+                localResults = new ItemActionResult(local);
             } else if (opStr.equals(MailConstants.OP_MUTE) && type == MailItem.Type.CONVERSATION) {
                 // note that "mute" ignores the tcon value
                 localResults = ItemActionHelper.TAG(octxt, mbox, responseProto, local, type, Flag.FlagInfo.MUTED.toString(), flagValue, null).getResult();
