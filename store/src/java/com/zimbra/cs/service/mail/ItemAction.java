@@ -518,7 +518,7 @@ public class ItemAction extends MailDocumentHandler {
         }
     }
 
-    protected StringBuilder proxyRemoteItems(Element action, Map<String, StringBuilder> remote, Element request, Map<String, Object> context)
+    protected ItemActionResult proxyRemoteItems(Element action, Map<String, StringBuilder> remote, Element request, Map<String, Object> context)
     throws ServiceException {
         String folderStr = action.getAttribute(MailConstants.A_FOLDER, null);
         if (folderStr != null) {
@@ -527,7 +527,7 @@ public class ItemAction extends MailDocumentHandler {
             action.addAttribute(MailConstants.A_FOLDER, iidFolder.toString());
         }
 
-        StringBuilder successes = new StringBuilder();
+        ItemActionResult successes = new ItemActionResult();
         for (Map.Entry<String, StringBuilder> entry : remote.entrySet()) {
             // update the <action> element to reference the subset of target items belonging to this user...
             String itemIds = entry.getValue().toString();
@@ -538,7 +538,7 @@ public class ItemAction extends MailDocumentHandler {
             // ... and try to extract the list of items affected by the operation
             try {
                 String completed = response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
-                successes.append(completed.length() > 0 && successes.length() > 0 ? "," : "").append(completed);
+                successes.appendSuccessIds(completed.split(","));
             } catch (ServiceException e) {
                 ZimbraLog.misc.warn("could not extract ItemAction successes from proxied response", e);
             }
