@@ -1036,5 +1036,11 @@ public final class FilterUtil {
            throw new SyntaxException("Invalid variable index " + srcStr);
        }
     }
+
+    public static void headerNameHasSpace(String headerName) throws SyntaxException {
+        if (headerName.contains(" ")) {
+            throw new SyntaxException("ZimbraComparatorUtils : Header name must not have space(s) : \"" + headerName + "\"");
+        }
+    }
 }
 

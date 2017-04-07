@@ -27,7 +27,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
@@ -154,10 +153,7 @@ public class AddHeader extends AbstractCommand {
         }
 
         if (!StringUtil.isNullOrEmpty(headerName)) {
-            String tempHeaderName = StringUtils.stripStart(headerName, null);
-            if (!tempHeaderName.equals(headerName)) {
-                throw new SyntaxException("Header name must not start with spaces : \"" + headerName + "\"");
-            }
+            FilterUtil.headerNameHasSpace(headerName);
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(headerName, CharsetUtil.US_ASCII))) {
                 throw new SyntaxException("AddHeader:Header name must be printable ASCII only.");
             }
