@@ -296,7 +296,7 @@ public class ItemActionHelper {
         }
     }
 
-    protected String mResult;
+    protected ItemActionResult mResult;
     protected List<String> mCreatedIds;
 
     protected SoapProtocol mResponseProtocol;
@@ -446,13 +446,13 @@ public class ItemActionHelper {
             throw ServiceException.FAILURE("exception reading item blob", ioe);
         }
 
-        StringBuilder successes = new StringBuilder();
+        List<String> successes = new ArrayList<String>(itemIds.length);
         for (int id : itemIds)
-            successes.append(successes.length() > 0 ? "," : "").append(mIdFormatter.formatItemId(id));
-        mResult = successes.toString();
+            successes.add(mIdFormatter.formatItemId(id));
+        mResult = new ItemActionResult(successes);
     }
 
-    public String getResult() {
+    public ItemActionResult getResult() {
         return mResult;
     }
 
