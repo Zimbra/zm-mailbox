@@ -235,10 +235,10 @@ public class ItemAction extends MailDocumentHandler {
         return successes.toString();
     }
 
-    protected String handleTrashOperation(OperationContext octxt, Element request, Mailbox mbox,
+    protected ItemActionResult handleTrashOperation(OperationContext octxt, Element request, Mailbox mbox,
             SoapProtocol responseProto, List<Integer> local, MailItem.Type type, TargetConstraint tcon)
     throws ServiceException {
-        String localResults;
+        ItemActionResult localResults = new ItemActionResult();
         // determine if any of the items should be moved to an IMAP trash folder
         Map<String, LinkedList<Integer>> remoteTrashIds = new HashMap<String, LinkedList<Integer>>();
         LinkedList<Integer> localTrashIds = new LinkedList<Integer>();
@@ -305,11 +305,11 @@ public class ItemAction extends MailDocumentHandler {
         }
         // move non-IMAP items to local trash
         ItemId iidTrash = new ItemId(mbox, Mailbox.ID_FOLDER_TRASH);
-        List<String> trashResults = new LinkedList<String>();
-        String localTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, localTrashIds, type, tcon, iidTrash).getResult();
-        if (!Strings.isNullOrEmpty(localTrashResults)) {
-            trashResults.add(localTrashResults);
-        }
+
+        ItemActionResult trashResults = new ItemActionResult();
+        ItemActionResult localTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, localTrashIds, type, tcon, iidTrash).getResult();
+        trashResults.appendSuccessIds(localTrashResults.getSuccessIds());
+
         for (String dataSourceId: remoteTrashIds.keySet()) {
             List<Integer> imapTrashIds = remoteTrashIds.get(dataSourceId);
             Integer imapTrashId = getImapTrashFolder(mbox, dataSourceId);
@@ -317,12 +317,9 @@ public class ItemAction extends MailDocumentHandler {
                 imapTrashId = Mailbox.ID_FOLDER_TRASH;
             }
             ItemId iidImapTrash = new ItemId(mbox, imapTrashId);
-            String imapTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, imapTrashIds, type, tcon, iidImapTrash).getResult();
-            if (!Strings.isNullOrEmpty(imapTrashResults)) {
-                trashResults.add(imapTrashResults);
-            }
+            ItemActionResult imapTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, imapTrashIds, type, tcon, iidImapTrash).getResult();
+            trashResults.appendSuccessIds(imapTrashResults.getSuccessIds());
         }
-        localResults = Joiner.on(",").join(trashResults);
         if (!msgToConvId.isEmpty()) {
             String[] ids = localResults.split(",");
             Set<String> reconstructedConvIds = new HashSet<String>();
@@ -334,7 +331,7 @@ public class ItemAction extends MailDocumentHandler {
                     reconstructedConvIds.add(id);
                 }
             }
-            localResults = Joiner.on(",").join(reconstructedConvIds);
+            localResults.appendSuccessIds(reconstructedConvIds.toArray());
         }
 
         return localResults;
