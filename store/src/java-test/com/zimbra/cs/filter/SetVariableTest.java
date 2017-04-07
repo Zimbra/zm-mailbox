@@ -2295,4 +2295,37 @@ public class SetVariableTest {
             fail("No exception should be thrown");
         }
     }
+
+    @Test
+    public void testStringNumericNegativeTest() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            
+            filterScript = "require [\"variables\", \"tag\"];\n"
+                    + "set \"negative\" \"-123\";\n"
+                    + "if string :is :comparator \"i;ascii-numeric\" \"${negative}\" \"-123\" {\n"
+                    + "  tag \"negative\";\n"
+                    + "}"
+                    + "tag \"123\";";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@in.telligent.com\n" 
+                       + "To: coyote@ACME.Example.COM\n"
+                       + "Subject: hello version 1.0 is out\n"
+                       + "\n"
+                       + "Hello World.";
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
+
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
 }

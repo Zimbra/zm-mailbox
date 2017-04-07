@@ -70,4 +70,12 @@ public class ZimbraOctet extends Octet implements ZimbraComparator {
             throws SievePatternException {
         return ZimbraComparatorUtils.matches(string, glob);
     }
+
+    /**
+     * @see org.apache.jsieve.comparators.Octet#equals(String, String)
+     */
+    @Override
+    public boolean equals2(String string1, String string2) throws FeatureException {
+        return equals(string1, string2);
+    }
 }

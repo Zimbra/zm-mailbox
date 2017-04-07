@@ -50,6 +50,7 @@ public class RelationalExtensionTest {
             + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
             + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
             + "x-priority: 1\n"
+            + "X-Spam-score: -5\n"
             + "from: xyz@example.com\n"
             + "Subject: =?ISO-2022-JP?B?GyRCJDMkcyRLJEEkTxsoQg==?=\n"
             + "to: foo@example.com, baz@example.com\n"
@@ -117,10 +118,18 @@ public class RelationalExtensionTest {
     @Test
     public void testValueAddressNumericGT() {
         // invalid comparison
+        // RFC 4790 Section 9.1.1.  ASCII Numeric Collation Description
+        // | ... Before converting from string to integer, the input
+        // | string is truncated at the first non-digit character. All input is
+        // | valid; strings that do not start with a digit represent positive
+        // | infinity.
+        // So the email address string of the To address (foo@example.com, baz@example.com)
+        // will be treated as an empty string "", and it represents positive infinity.
+        // Positive infinity is definitely grater than 1, so this test should return TRUE.
         String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
                 + "if address :value \"gt\" :comparator \"i;ascii-numeric\" "
                 + "[\"to\"] [\"0\"] {" + "tag \"Priority\";}";
-        doTest(filterScript, null);
+        doTest(filterScript, "Priority");
     }
 
     @Test
@@ -245,9 +254,10 @@ public class RelationalExtensionTest {
     @Test
     public void testValueEnvelopeFromNumericGT() {
         // invalid comparison
+        // See the comment on testValueAddressNumericGT.
         String filterScript = "if envelope :value \"gt\" :comparator \"i;ascii-numeric\" "
                 + "[\"from\"] [\"1\"] {" + "tag \"Priority\";}";
-        doTest(filterScript, null);
+        doTest(filterScript, "Priority");
     }
 
     @Test
@@ -293,6 +303,71 @@ public class RelationalExtensionTest {
         String filterScript = "IF ENVELOPE :COUNT \"EQ\" :COMPARATOR \"I;ASCII-NUMERIC\" "
                 + "[\"TO\"] [\"1\"] {" + "TAG \"Priority\";}";
         doTest(filterScript, "Priority");
+    }
+
+    // Due to the negative value test, the filter execution is cancelled;
+    // and none of tag commands should be executed.
+    @Test
+    public void testValueHeaderNumericNegativeValue() {
+        String filterScript = "require [\"tag\", \"relational\"];\n"
+                + "if header :value \"lt\" :comparator \"i;ascii-numeric\" "
+                + "[\"x-priority\"] [\"-1\"] { tag \"Priority\"; }"
+                + "tag \"Negative\"";
+        doTest(filterScript, null);
+    }
+
+    // Due to the negative value test, the filter execution is cancelled;
+    // and none of tag commands should be executed.
+    @Test
+    public void testValueAddressNumericNegativeValue() {
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+                + "if address :value \"lt\" :comparator \"i;ascii-numeric\" "
+                + "[\"to\"] [\"-1\"] { tag \"to\"; }"
+                + "tag \"Negative\";";
+        doTest(filterScript, null);
+    }
+
+    // Due to the negative value test, the filter execution is cancelled;
+    // and none of tag commands should be executed.
+    @Test
+    public void testValueEnvelopeFromNumericNegativeValue() {
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+                + "if envelope :value \"lt\" :comparator \"i;ascii-numeric\" "
+                + "[\"from\"] [\"-1\"] { tag \"from\"; }"
+                + "tag \"Negative\";";
+        doTest(filterScript, null);
+    }
+
+    // Due to the negative value test, the filter execution is cancelled;
+    // and none of tag commands should be executed.
+    @Test
+    public void testCountHeaderNumericNegativeValue() {
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+                + "if header :count \"le\" :comparator \"i;ascii-numeric\" "
+                + "[\"received\"] [\"-3\"] { tag \"received\";}"
+                + "tag \"Negative\";";
+        doTest(filterScript, null);
+    }
+
+    // Due to the negative value test, the filter execution is cancelled;
+    // and the tag command should not be executed.
+    @Test
+    public void testCountAddressNumericNegativeValue() {
+        String filterScript = "require [\"tag\", \"relational\"];\n"
+                + "if address :count \"le\" :comparator \"i;ascii-numeric\" "
+                + "[\"to\", \"cc\"] [\"-1\"] { tag \"Priority\"; }";
+        doTest(filterScript, null);
+    }
+
+    // Due to the negative value test, the filter execution is cancelled;
+    // and the tag command should not be executed.
+    @Test
+    public void testCountEnvelopeToNumericNegativeValue() {
+        String filterScript = "require [\"tag\", \"relational\"];\n"
+                + "if envelope :count \"gt\" :comparator \"i;ascii-numeric\" "
+                + "[\"to\"] [\"-1\"] { }"
+                + "tag \"Priority\";";
+        doTest(filterScript, null);
     }
 
     private void doTest(String filterScript, String expectedResult) {

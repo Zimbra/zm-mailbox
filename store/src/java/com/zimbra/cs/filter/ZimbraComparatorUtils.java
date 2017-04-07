@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter;
 
+import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.MATCHES_TAG;
@@ -23,6 +24,7 @@ import static org.apache.jsieve.tests.AddressPartTags.ALL_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.DOMAIN_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.LOCALPART_TAG;
 import static org.apache.jsieve.tests.ComparatorTags.COMPARATOR_TAG;
+import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.EQ_OP;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GE_OP;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GT_OP;
@@ -54,6 +56,7 @@ import org.apache.jsieve.mail.MailAdapter;
 
 import com.zimbra.cs.filter.jsieve.Counts;
 import com.zimbra.cs.filter.jsieve.Values;
+import com.zimbra.cs.filter.jsieve.Equals2;
 
 public class ZimbraComparatorUtils {
 
@@ -197,7 +200,7 @@ public class ZimbraComparatorUtils {
             throws SieveException {
         boolean isMatched = false;
         if (IS_TAG.equals(matchType)) {
-            isMatched = ComparatorUtils.is(comparatorName, matchTarget, matchArgument, context);
+            isMatched = is(comparatorName, matchTarget, matchArgument, context);
         } else if (CONTAINS_TAG.equals(matchType)) {
             isMatched = ComparatorUtils.contains(comparatorName, matchTarget, matchArgument,
                     context);
@@ -316,5 +319,39 @@ public class ZimbraComparatorUtils {
         } catch (PatternSyntaxException e) {
             throw new SievePatternException(e.getMessage());
         }
+    }
+
+    /**
+     * Method <code>is<code> answers a boolean indicating if the parameter
+     * <code>container</code> is equal to the parameter <code>contents</code> using
+     * an instance of <code>comparatorName</code>.
+     * @param comparatorName
+     * @param string1 not null
+     * @param string2 not null
+     * @param context not null
+     * @return boolean
+     * @throws FeatureException the number is negative value
+     */
+    public static boolean is(String comparatorName, String string1,
+            String string2, SieveContext context) throws LookupException, FeatureException {
+        Equals2 comparatorObj = (Equals2) context.getComparatorManager().getComparator(comparatorName);
+        return comparatorObj.equals2(string1, string2);
+    }
+
+    /**
+     * Get default comparator corresponding to the match type
+     * @param comparator comparator label or null
+     * @param matchType :is :contains :matches :count :value
+     * @return default comparator
+     */
+    public static String getComparator(String comparator, String matchType) {
+        if (null == comparator) {
+            if (COUNT_TAG.equalsIgnoreCase(matchType) || VALUE_TAG.equalsIgnoreCase(matchType)) {
+                return ASCII_NUMERIC_COMPARATOR;
+            } else {
+                return ASCII_CASEMAP_COMPARATOR;
+            }
+        }
+        return comparator;
     }
 }

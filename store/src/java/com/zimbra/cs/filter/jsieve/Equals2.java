@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -14,18 +14,15 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.filter;
 
-import org.apache.jsieve.comparators.Comparator;
+package com.zimbra.cs.filter.jsieve;
 
-import com.zimbra.cs.filter.jsieve.Counts;
-import com.zimbra.cs.filter.jsieve.Values;
-import com.zimbra.cs.filter.jsieve.Equals2;
+import org.apache.jsieve.exception.FeatureException;
 
 /**
- * Class ZimbraComparator enhances the jsieve's Comparator to support
- * the RFC 5231: Relational Extension
+ * Interface of the match type :is for the comparator i;ascii-numeric.
+ * For other comparator's :is, see {@link org.apache.jsieve.comparators.Equals#equals(String, String)}
  */
-public interface ZimbraComparator extends Comparator, Values, Counts, Equals2 {
-
+public interface Equals2 {
+    public boolean equals2(String string1, String string2) throws FeatureException;
 }

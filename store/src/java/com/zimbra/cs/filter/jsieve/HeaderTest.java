@@ -182,13 +182,13 @@ public class HeaderTest extends Header {
         }
 
         if (matchType != null
-           && (COUNT_TAG.equalsIgnoreCase(matchType) || VALUE_TAG.equalsIgnoreCase(matchType))) {
+           && (COUNT_TAG.equalsIgnoreCase(matchType) || VALUE_TAG.equalsIgnoreCase(matchType) || IS_TAG.equalsIgnoreCase(matchType))) {
             return match(mail,
-                         (comparator == null ? ASCII_NUMERIC_COMPARATOR : comparator),
+                    ZimbraComparatorUtils.getComparator(comparator, matchType),
                          matchType, operator, headerNames, keys, context);
         } else {
             return match(mail,
-                         (comparator == null ? ASCII_CASEMAP_COMPARATOR : comparator),
+                    ZimbraComparatorUtils.getComparator(comparator, matchType),
                          (matchType == null ? IS_TAG : matchType),
                          headerNames, keys, context);
         }

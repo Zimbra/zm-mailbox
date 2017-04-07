@@ -26,6 +26,7 @@ import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LE_OP;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LT_OP;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.NE_OP;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.comparators.AsciiNumeric;
 import org.apache.jsieve.exception.FeatureException;
 
@@ -33,7 +34,11 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator {
 
-    public boolean values(String operator, String lhs, String rhs) {
+    public boolean values(String operator, String lhs, String rhs) throws FeatureException {
+        if (getNumericType(lhs) == NumericType.NEGATIVE_NUMBER || getNumericType(rhs) == NumericType.NEGATIVE_NUMBER) {
+            throw new FeatureException(":values found negative value: lhs[" + lhs + "] rhs[" + rhs + "]");
+        }
+
         BigInteger left = null, right = null;
         try {
             left = toInteger(lhs);
@@ -149,6 +154,9 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
     @Override
     public boolean counts(String operator, List<String> targetList, String value)
             throws FeatureException {
+        if (getNumericType(value) == NumericType.NEGATIVE_NUMBER) {
+            throw new FeatureException(":counts found negative value: [" + value + "]");
+        }
         BigInteger filterValue = null;
         BigInteger count = BigInteger.valueOf(targetList.size());
         try {
@@ -199,27 +207,70 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
         return false;
     }
 
-    /**
-     * @see org.apache.jsieve.comparators.AsciiNumeric#equals(String, String)
+    /** 
+     * Match type :is for i;ascii-numeric.
      */
-    @Override
-    public boolean equals(String string1, String string2) {
-        final boolean result;
-        if (isPositiveInfinity(string1)) {
-            if (isPositiveInfinity(string2)) {
-                result = true;
-            } else {
-                result = false;
-            }
-        } else {
-            if (isPositiveInfinity(string2)) {
-                result = false;
-            } else {
-                final BigInteger integer1 = toInteger(string1);
-                final BigInteger integer2 = toInteger(string2);
-                result = integer1.equals(integer2);
-            }
+    public boolean equals2(String lhs, String rhs) throws FeatureException{
+        NumericType lhsType = getNumericType(lhs);
+        NumericType rhsType = getNumericType(rhs);
+
+        if (lhsType == NumericType.NEGATIVE_NUMBER || rhsType == NumericType.NEGATIVE_NUMBER) {
+            throw new FeatureException(":is found negative value: lhs[" + lhs + "] rhs[" + rhs + "]");
         }
-        return result;
+        if (lhsType == NumericType.POSITIVEINFINITY && rhsType == NumericType.POSITIVEINFINITY) {
+            return true;
+        }
+        if (lhsType == NumericType.POSITIVEINFINITY || rhsType == NumericType.POSITIVEINFINITY) {
+            return false;
+        }
+
+        BigInteger intLhs = toInteger(lhs);
+        BigInteger intRhs = toInteger(rhs);
+        return intLhs.equals(intRhs);
+    }
+
+    public enum NumericType {POSITIVE_NUMBER, NEGATIVE_NUMBER, POSITIVEINFINITY};
+    /** 
+     * Check the string type
+     * <ul>
+     * <li> If the value has a '-' (0x2d) followed by one or more digits, then it is negative number.
+     * <li> If the value is empty or does not starts with number, then it is positive infinity (RFC 4790 Section 9.1.1)
+     * <li> If the value starts with digit, then it is positive number
+     * </ul>
+     */
+    public NumericType getNumericType(String value) {
+        if (StringUtils.isEmpty(value)) {
+            return NumericType.POSITIVEINFINITY;
+        }
+        if (value.length() > 1 && value.startsWith("-") && isDigit(value.charAt(1))) {
+            return NumericType.NEGATIVE_NUMBER;
+        }
+        if (isPositiveInfinity(value)) {
+            return NumericType.POSITIVEINFINITY;
+        }
+        return NumericType.POSITIVE_NUMBER;
+    }
+
+    /**
+     * Unsupported, see <a href='http://tools.ietf.org/html/rfc4790#section-9.1.1'>RFC4790</a>.
+     * @see org.apache.jsieve.comparators.Contains#contains(String, String)
+     */
+    public boolean contains(String container, String content) throws FeatureException {
+        // TODO: Consider using finer grained exception
+        throw new FeatureException("Substring contains unsupported by ascii-numeric");
+    }
+
+    /**
+     * Unsupported operation.
+     * <a href='http://tools.ietf.org/html/rfc5228#section-2.7.1'>RFC5228</a> limits
+     * support to comparators that support <code>:contains</code>.
+     * <a href='http://tools.ietf.org/html/rfc4790#section-9.1.1'>RFC4790</a> states
+     * that substring matches are not supported.
+     * @see org.apache.jsieve.comparators.Matches#matches(String, String)
+     */
+    public boolean matches(String string, String glob)
+            throws FeatureException {
+        // TODO: Consider using finer grained exception
+        throw new FeatureException("Substring match unsupported by ascii-numeric");
     }
 }

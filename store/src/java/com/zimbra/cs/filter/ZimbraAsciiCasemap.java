@@ -72,4 +72,12 @@ public class ZimbraAsciiCasemap extends AsciiCasemap implements ZimbraComparator
         return ZimbraComparatorUtils
                 .matches(string.toUpperCase(), glob.toUpperCase());
     }
+
+    /**
+     * @see org.apache.jsieve.comparators.AsciiCasemap#equals(String, String)
+     */
+    @Override
+    public boolean equals2(String string1, String string2) throws FeatureException {
+        return equals(string1, string2);
+    }
 }

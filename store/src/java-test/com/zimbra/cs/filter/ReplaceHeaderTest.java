@@ -1256,4 +1256,50 @@ public class ReplaceHeaderTest {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
+
+    /*
+     * Replace header with numeric comparator :value
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderValueNegative() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                    + "replaceheader :newname \"X-Numeric2-Header\" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"-3\";\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Numeric2-Header".equals(header.getName())) {
+                    matchFound = true;
+                }
+            }
+            Assert.assertFalse(matchFound);
+
+            matchFound = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage()
+                    .getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("X-Numeric-Header".equals(header.getName())) {
+                    matchFound = true;
+                }
+            }
+            Assert.assertTrue(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
 }

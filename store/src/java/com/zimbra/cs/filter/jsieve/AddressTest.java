@@ -77,10 +77,10 @@ public class AddressTest extends Address {
                 throw new SieveException("Exception occured while evaluating variable expression.", e);
             }
         }
-        if (COUNT_TAG.equals(params.getMatchType()) || VALUE_TAG.equals(params.getMatchType())) {
+        if (COUNT_TAG.equals(params.getMatchType()) || VALUE_TAG.equals(params.getMatchType()) || IS_TAG.equalsIgnoreCase(params.getMatchType())) {
             return match(mail,
                          (params.getAddressPart() == null ? ALL_TAG : params.getAddressPart()),
-                         (params.getComparator() == null ? ASCII_NUMERIC_COMPARATOR : params.getComparator()),
+                         ZimbraComparatorUtils.getComparator(params.getComparator(), params.getMatchType()),
                          params.getMatchType(),
                          params.getOperator(),
                          params.getHeaderNames(),
@@ -88,7 +88,7 @@ public class AddressTest extends Address {
         } else {
             return match(mail,
                          (params.getAddressPart() == null ? ALL_TAG : params.getAddressPart()),
-                         (params.getComparator() == null ? ASCII_CASEMAP_COMPARATOR : params.getComparator()),
+                         ZimbraComparatorUtils.getComparator(params.getComparator(), params.getMatchType()),
                          (params.getMatchType() == null ? IS_TAG : params.getMatchType()),
                          params.getHeaderNames(),
                          params.getKeys(), context);

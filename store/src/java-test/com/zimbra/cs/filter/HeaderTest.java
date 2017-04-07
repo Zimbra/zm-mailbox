@@ -58,6 +58,8 @@ public class HeaderTest {
             + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
             + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
             + "x-priority: 1\n"
+            + "X-Spam-score: -5\n"
+            + "X-Minus: -abc\n"
             + "from: xyz@example.com\n"
             + "Subject: =?ISO-2022-JP?B?GyRCJDMkcyRLJEEkTxsoQg==?=\n"
             + "to: foo@example.com, baz@example.com\n"
@@ -108,6 +110,59 @@ public class HeaderTest {
         String filterScript = "require [\"tag\", \"flag\"];\n"
                 + "if header :contains [\"\"] [\"\"] { tag \"zimbra\"; }";
         doTest(filterScript, null);
+    }
+
+    // Due to the negative value test, the filter execution is cancelled;
+    // and none of tag commands should be executed.
+    @Test
+    public void testNumericNegativeValueValue() {
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+                + "if header :value \"ge\" :comparator \"i;ascii-numeric\" "
+                + "[\"X-Spam-score\"] [\"500\"] { tag \"XSpamScore\";}"
+                + "tag \"Negative\";";
+        doTest(filterScript, null);
+    }
+
+    // Due to the negative value test, the filter execution is cancelled;
+    // and none of tag commands should be executed.
+    @Test
+    public void testNumericNegativeValueCounts() {
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+                + "if header :counts \"ge\" :comparator \"i;ascii-numeric\" "
+                + "[\"Received\"] [\"-1\"] { tag \"Received\";}"
+                + "tag \"Negative\";";
+        doTest(filterScript, null);
+    }
+
+    // Due to the negative value test, the filter execution is cancelled;
+    // and none of tag commands should be executed.
+    @Test
+    public void testNumericNegativeValueIs() {
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+                + "if header :is :comparator \"i;ascii-numeric\" "
+                + "[\"X-Spam-score\"] [\"-5\"] { tag \"XSpamScore\";}"
+                + "tag \"Negative\";";
+        doTest(filterScript, null);
+    }
+
+    // The "X-Minus: -abc" is not a negative value, but positive infinity as it is just a string.
+    @Test
+    public void testNumericMinusCharacterValueIs() {
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+                + "if header :is :comparator \"i;ascii-numeric\" "
+                + "[\"X-Minus\"] [\"\"] { tag \"Xminus\";}";
+        doTest(filterScript, "Xminus");
+    }
+
+    // RFC 4790 Section 9.1.1.
+    // | strings that do not start with a digit represent positive infinity.
+    // Hence the Subject text is treated as positive infinity, and so is an empty string
+    @Test
+    public void testNumericEmptyIs() {
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+                + "if header :is :comparator \"i;ascii-numeric\" "
+                + "[\"Subject\"] [\"\"] { tag \"subject\";}";
+        doTest(filterScript, "subject");
     }
 
     private void doTest(String filterScript, String expectedResult) {

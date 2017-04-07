@@ -352,4 +352,28 @@ public class AddressTest {
             fail("No exception should be thrown");
         }
     }
+
+    @Test
+    public void testNumericNegativeValueIs() {
+        try {
+            Account acct = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(acct);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+            String filterScript = "require \"tag\";\n"
+                    + "if address :count \"lt\" :comparator \"i;ascii-numeric\" \"To\" \"-1\" {"
+                    + "  tag \"compareAsciiNumericNegativeValue\";"
+                    + "}";
+
+            acct.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox, new ParsedMessage("To: test1@zimbra.com".getBytes(), false), 0,
+                    acct.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
 }
