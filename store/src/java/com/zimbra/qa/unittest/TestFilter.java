@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,7 +50,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
 import com.zimbra.client.ZEmailAddress;
 import com.zimbra.client.ZFilterAction;
 import com.zimbra.client.ZFilterAction.MarkOp;
@@ -97,27 +97,6 @@ import com.zimbra.cs.filter.SoapToSieve;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.Util;
-import junit.framework.TestCase;
-import org.apache.jsieve.parser.generated.Node;
-import org.apache.jsieve.parser.generated.ParseException;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
 
 public final class TestFilter {
 
@@ -136,6 +115,9 @@ public final class TestFilter {
 
     private Account user1;
     private ZMailbox mMbox;
+    private ZFilterRules mOriginalIncomingRules;
+    private ZFilterRules mOriginalOutgoingRules;
+    private String mOriginalSpamApplyUserFilters;
     private static Integer mOriginalSmtpPort = null;
     private static Boolean mOriginalSetEnvelopeSender = null;
     private ZTag mTag1;
@@ -179,9 +161,6 @@ public final class TestFilter {
         saveOutgoingRules(mMbox, getTestOutgoingRules());
 
         mOriginalSpamApplyUserFilters = account.getAttr(Provisioning.A_zimbraSpamApplyUserFilters);
-        mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPortAsString();
-        mOriginalSetEnvelopeSender = TestUtil.getServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender);
-
         mAvailableRFCCompliantNotify  = Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, false);
     }
 
