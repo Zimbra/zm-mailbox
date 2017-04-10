@@ -460,8 +460,15 @@ public class ItemActionHelper {
         return mCreatedIds;
     }
 
-    private void executeLocalBatch(int[] ids) throws ServiceException {
+    private ItemActionResult executeLocalBatch(int[] ids) throws ServiceException {
         // iterate over the local items and perform the requested operation
+
+        List<String> originalIds = new ArrayList<String>(ids.length);
+        for (int id : ids)
+            originalIds.add(mIdFormatter.formatItemId(id));
+        ItemActionResult result = new ItemActionResult();
+        result.setSuccessIds(originalIds);
+
         switch (mOperation) {
             case FLAG:
                 getMailbox().alterTag(getOpCtxt(), ids, type, Flag.FlagInfo.FLAGGED, mFlagValue, mTargetConstraint);
@@ -479,7 +486,13 @@ public class ItemActionHelper {
                 getMailbox().setColor(getOpCtxt(), ids, type, mColor);
                 break;
             case HARD_DELETE:
-                getMailbox().delete(getOpCtxt(), ids, type, mTargetConstraint);
+                List<Integer> nonExistentItems = new ArrayList<Integer>();
+                getMailbox().delete(getOpCtxt(), ids, type, mTargetConstraint, nonExistentItems);
+                List<String> nonExistentIds = new ArrayList<String>();
+                for (Integer id: nonExistentItems) {
+                    nonExistentIds.add(id.toString());
+                }
+                result = new DeleteActionResult(result.getSuccessIds(), nonExistentIds);
                 break;
             case RECOVER:
                 getMailbox().recover(getOpCtxt(), ids, type, mIidFolder.getId());
@@ -493,10 +506,11 @@ public class ItemActionHelper {
                 break;
             case COPY:
                 List<MailItem> copies = getMailbox().copy(getOpCtxt(), ids, type, mIidFolder.getId());
-                mCreatedIds = new ArrayList<String>(ids.length);
+                List<String> createdIds = new ArrayList<String>(ids.length);
                 for (MailItem item : copies) {
                     mCreatedIds.add(mIdFormatter.formatItemId(item));
                 }
+                result = new CopyActionResult(originalIds, createdIds);
                 break;
             case RENAME:
                 for (int id : ids) {
@@ -539,6 +553,8 @@ public class ItemActionHelper {
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
         }
+
+     return result;
     }
 
     private void executeLocal() throws ServiceException {
@@ -550,9 +566,24 @@ public class ItemActionHelper {
         }
         int offset = 0;
         while (offset < itemIds.length) {
+            ItemActionResult batchResult = null;
             int[] batchOfIds = Arrays.copyOfRange(itemIds, offset,
                     (offset + batchSize < itemIds.length) ? offset + batchSize : itemIds.length);
-            executeLocalBatch(batchOfIds);
+            switch (mOperation)
+            {
+            case COPY:
+                batchResult = executeLocalBatch(batchOfIds);
+                localResult.appendSuccessIds(batchResult.getSuccessIds());
+                ((CopyActionResult)localResult).appendCreatedIds(((CopyActionResult)batchResult).getCreatedIds());
+                break;
+            case HARD_DELETE:
+                batchResult = executeLocalBatch(batchOfIds);
+                localResult.appendSuccessIds(batchResult.getSuccessIds());
+                ((DeleteActionResult)localResult).appendNonExistentIds(((DeleteActionResult)batchResult).getNonExistentIds());
+                break;
+            default:
+                localResult.appendSuccessIds(executeLocalBatch(batchOfIds).getSuccessIds());
+            }
             offset += batchSize;
             if (offset < itemIds.length) {
                 Thread.yield();
