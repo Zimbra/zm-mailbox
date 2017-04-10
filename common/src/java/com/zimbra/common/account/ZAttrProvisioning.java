@@ -3035,15 +3035,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminSavedSearches = "zimbraAdminSavedSearches";
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2098)
-    public static final String A_zimbraAdminSieveFeatureVariablesEnabled = "zimbraAdminSieveFeatureVariablesEnabled";
-
-    /**
      * URL prefix for where the zimbraAdmin app resides on this server
      */
     @ZAttr(id=497)
@@ -8425,7 +8416,7 @@ public class ZAttrProvisioning {
      * outgoing sieve script defined by admin (not able to edit and view from
      * the end user) applied after the end user filter rule
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2093)
     public static final String A_zimbraMailAdminOutgoingSieveScriptAfter = "zimbraMailAdminOutgoingSieveScriptAfter";
@@ -8434,7 +8425,7 @@ public class ZAttrProvisioning {
      * outgoing sieve script defined by admin (not able to edit and view from
      * the end user) applied before the end user filter rule
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2092)
     public static final String A_zimbraMailAdminOutgoingSieveScriptBefore = "zimbraMailAdminOutgoingSieveScriptBefore";
@@ -8443,7 +8434,7 @@ public class ZAttrProvisioning {
      * sieve script defined by admin (not able to edit and view from the end
      * user) applied after the end user filter rule
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2091)
     public static final String A_zimbraMailAdminSieveScriptAfter = "zimbraMailAdminSieveScriptAfter";
@@ -8452,7 +8443,7 @@ public class ZAttrProvisioning {
      * sieve script defined by admin (not able to edit and view from the end
      * user) applied before the end user filter rule
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2090)
     public static final String A_zimbraMailAdminSieveScriptBefore = "zimbraMailAdminSieveScriptBefore";
@@ -8934,7 +8925,7 @@ public class ZAttrProvisioning {
      * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
      * &#039;notify&#039; action parameters with Zimbra specific format
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2095)
     public static final String A_zimbraMailSieveNotifyActionRFCCompliant = "zimbraMailSieveNotifyActionRFCCompliant";
@@ -15276,19 +15267,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2096)
-    public static final String A_zimbraSieveFeatureVariablesEnabled = "zimbraSieveFeatureVariablesEnabled";
-
-    /**
      * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
      * 5429.
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2094)
     public static final String A_zimbraSieveRejectEnabled = "zimbraSieveRejectEnabled";

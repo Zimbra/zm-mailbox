@@ -239,7 +239,6 @@ public class AddHeaderTest {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Map<String, Object> attrs = Maps.newHashMap();
             attrs = Maps.newHashMap();
-            attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "TRUE");
             Provisioning.getInstance().getServer(acct1).modify(attrs);
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 

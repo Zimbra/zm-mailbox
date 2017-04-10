@@ -509,7 +509,6 @@ public class EnvelopeTest {
                     MockProvisioning.DEFAULT_ACCOUNT_ID);
             Map<String, Object> attrs = Maps.newHashMap();
             attrs = Maps.newHashMap();
-            attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "TRUE");
             Provisioning.getInstance().getServer(account).modify(attrs);
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
