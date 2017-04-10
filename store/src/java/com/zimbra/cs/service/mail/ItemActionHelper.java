@@ -439,17 +439,12 @@ public class ItemActionHelper {
 
         try {
             if (!targeted || mIidFolder.belongsTo(mMailbox))
-                executeLocal();
+                mResult = executeLocal();
             else
-                executeRemote();
+                mResult = executeRemote();
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("exception reading item blob", ioe);
         }
-
-        List<String> successes = new ArrayList<String>(itemIds.length);
-        for (int id : itemIds)
-            successes.add(mIdFormatter.formatItemId(id));
-        mResult = new ItemActionResult(successes);
     }
 
     public ItemActionResult getResult() {
