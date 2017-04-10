@@ -29,7 +29,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.NumberArgument;
@@ -304,9 +303,7 @@ public class EditHeaderExtension {
                             if (StringUtil.isNullOrEmpty(origNewName)) {
                                 throw new SyntaxException("New name must be present with :newname in replaceheader : " + arg);
                             }
-                            if (origNewName.contains(" ")) {
-                                throw new SyntaxException("New name must not have space(s) in :newname in replaceheader : " + arg);
-                            }
+                            FilterUtil.headerNameHasSpace(origNewName);
                             this.newName = origNewName;
                         } else {
                             throw new SyntaxException("New name not provided with :newname in replaceheader : " + arg);
@@ -426,9 +423,9 @@ public class EditHeaderExtension {
         }
 
         if (this.valueTag) {
-        	matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
+            matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
         } else if (this.countTag) {
-        	matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, headerList, value, context);
+            matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, headerList, value, context);
         } else if (this.is && ComparatorUtils.is(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
         } else if (this.contains && ComparatorUtils.contains(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
@@ -490,9 +487,7 @@ public class EditHeaderExtension {
      */
     public void commonValidation() throws SyntaxException {
         if (!StringUtil.isNullOrEmpty(this.key)) {
-            if (this.key.contains(" ")) {
-                throw new SyntaxException("Header name must not have space(s) : \"" + this.key + "\"");
-            }
+            FilterUtil.headerNameHasSpace(this.key);
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(this.key, CharsetUtil.US_ASCII))) {
                 throw new SyntaxException("key must be printable ASCII only.");
             }
@@ -538,11 +533,11 @@ public class EditHeaderExtension {
      * @throws OperationException 
      */
     public List<String> getMatchingHeaders(MimeMessage mm) throws OperationException {
-    	List<String> headerList = new ArrayList<String>();
+        List<String> headerList = new ArrayList<String>();
         try {
             String[] headerValues = mm.getHeader(this.key);
             if (headerValues != null) {
-            	headerList = Arrays.asList(headerValues);
+                headerList = Arrays.asList(headerValues);
             }
         } catch (MessagingException e) {
             throw new OperationException("Error occured while fetching " + this.key + " headers from mime.", e);

@@ -162,8 +162,8 @@ public class HeaderTest extends Header {
         }
         headerNames = replaceVariables(headerNames, mail);
         for (String headerName : headerNames) {
-            if (headerName != null && headerName.contains(" ")) {
-                throw new SyntaxException("HeaderTest : Header name must not have space(s) : \"" + headerName + "\"");
+            if (headerName != null) {
+                FilterUtil.headerNameHasSpace(headerName);
             }
         }
 

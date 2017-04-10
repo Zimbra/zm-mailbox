@@ -326,8 +326,8 @@ public class HeaderTest {
 
     @Test
     public void testHeaderNamesWithSpaces() throws Exception {
-        String script =
-                "if header :matches \" X-Header1\" \"*\" {"
+        String script = "require [\"tag\"];\n"
+                + "if header :matches \" X-Header1\" \"*\" {"
                 + "    tag \"01\";"
                 + "}"
                 + "if header :matches \"X-Header1 \" \"*\" {"
@@ -363,8 +363,8 @@ public class HeaderTest {
 
     @Test
     public void ttt() throws Exception {
-        String script =
-                "if anyof (header :contains [\"X_Header\"] \"123\") { "
+        String script = "require [\"tag\"];\n"
+                + "if anyof (header :contains [\"X_Header\"] \"123\") { "
                 + "    tag \"321321\";"
                 + "    stop;"
                 + "}"

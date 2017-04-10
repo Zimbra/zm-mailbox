@@ -157,8 +157,8 @@ public class ZimbraComparatorUtils {
                     "Expecting a StringList of header names");
         }
         for (String headerName : headerNames) {
-            if (headerName != null && headerName.contains(" ")) {
-                throw new SyntaxException("ZimbraComparatorUtils : Header name must not have space(s) : \"" + headerName + "\"");
+            if (headerName != null) {
+                FilterUtil.headerNameHasSpace(headerName);
             }
         }
 
