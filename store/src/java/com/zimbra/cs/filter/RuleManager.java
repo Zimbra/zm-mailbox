@@ -261,12 +261,7 @@ public final class RuleManager {
                 } else {
                     List<String> splits = splitScript(adminRuleBefore);
                     requiresPart.append(splits.get(0));
-                    debugAdminRuleBefore = splits.get(1);;
-                    if (SetVariable.getZimbraAdminSieveFeatureVariablesEnabled(account)) {
-                        adminRuleBefore = "\nzimbravariablesctrl :on;\n" + splits.get(1);
-                    } else {
-                        adminRuleBefore = "\nzimbravariablesctrl :off;\n" + splits.get(1);
-                    }
+                    debugAdminRuleBefore = adminRuleBefore = splits.get(1);
                 }
                 if (script == null) {
                     debugScript = "";
@@ -274,12 +269,7 @@ public final class RuleManager {
                 } else {
                     List<String> splits = splitScript(script);
                     requiresPart.append(splits.get(0));
-                    debugScript = splits.get(1);
-                    if (SetVariable.getZimbraSieveFeatureVariablesEnabled(account)) {
-                        script = "\nzimbravariablesctrl :reset :on;\n" + splits.get(1);
-                    } else {
-                        script = "\nzimbravariablesctrl :reset :off;\n" + splits.get(1);
-                    }
+                    debugScript = script = splits.get(1);
                 }
                 if (adminRuleAfter == null) {
                     debugAdminRuleAfter = "";
@@ -287,12 +277,7 @@ public final class RuleManager {
                 } else {
                     List<String> splits = splitScript(adminRuleAfter);
                     requiresPart.append(splits.get(0));
-                    debugAdminRuleAfter = splits.get(1);
-                    if (SetVariable.getZimbraAdminSieveFeatureVariablesEnabled(account)) {
-                        adminRuleAfter = "\nzimbravariablesctrl :reset :on;\n" + splits.get(1);
-                    } else {
-                        adminRuleAfter = "\nzimbravariablesctrl :reset :off;\n" + splits.get(1);
-                    }
+                    debugAdminRuleAfter = adminRuleAfter = splits.get(1);
                 }
                 /*
                  * Since "require" is only allowed before other commands,
@@ -531,6 +516,7 @@ public final class RuleManager {
         mailAdapter.setEnvelope(env);
         mailAdapter.setAllowFilterToMountpoint(allowFilterToMountpoint);
 
+
         try {
             Account account = mailbox.getAccount();
             Node node = getRulesNode(account, FilterType.INCOMING, true);
@@ -580,6 +566,7 @@ public final class RuleManager {
         OutgoingMessageHandler handler = new OutgoingMessageHandler(
             mailbox, pm, sentFolderId, noICal, flags, tags, convId, octxt);
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
+
         try {
             Account account = mailbox.getAccount();
             Node node = getRulesNode(account, FilterType.OUTGOING, true);
@@ -888,10 +875,6 @@ public final class RuleManager {
             StringBuilder requiresPart = new StringBuilder();
             String adminRule = entry.getAttr(adminRuleAttrName);
             String debugAdminRule  = adminRule;
-            boolean zimbraAdminSieveFeatureVariablesEnabled = true;
-            if (entry instanceof Server) {
-                zimbraAdminSieveFeatureVariablesEnabled = entry.getBooleanAttr(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, false);
-            }
 
             if (adminRule == null) {
                 debugAdminRule = "";
@@ -900,11 +883,6 @@ public final class RuleManager {
                 List<String> splits = splitScript(adminRule);
                 requiresPart.append(splits.get(0));
                 debugAdminRule = splits.get(1);
-                if (entry instanceof Server && !zimbraAdminSieveFeatureVariablesEnabled) {
-                    adminRule = "\nzimbravariablesctrl :off;\n" + splits.get(1);
-                } else {
-                    adminRule = "\nzimbravariablesctrl :on;\n" + splits.get(1);
-                }
             }
             /*
              * Since "require" is only allowed before other commands,

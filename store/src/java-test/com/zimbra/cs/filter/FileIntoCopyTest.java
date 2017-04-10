@@ -53,7 +53,6 @@ public class FileIntoCopyTest {
         Account acct = prov.createAccount("test@zimbra.com", "secret",
             new HashMap<String, Object>());
         Server server = Provisioning.getInstance().getServer(acct);
-        server.setSieveFeatureVariablesEnabled(true);
     }
 
     @Before

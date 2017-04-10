@@ -840,7 +840,7 @@ public final class FilterUtil {
      * @throws SyntaxException 
      */
     public static String replaceVariables(ZimbraMailAdapter mailAdapter, String sourceStr) throws SyntaxException {
-        if (null == mailAdapter || !SetVariable.isVariablesExtAvailable(mailAdapter)) {
+        if (null == mailAdapter) {
             return sourceStr;
         }
         if (sourceStr.indexOf("${") == -1) {

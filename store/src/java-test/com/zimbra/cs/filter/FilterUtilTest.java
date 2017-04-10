@@ -51,7 +51,6 @@ public class FilterUtilTest {
         Provisioning prov = Provisioning.getInstance();
         Account acct1 = prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Server server = Provisioning.getInstance().getServer(acct1);
-        server.setSieveFeatureVariablesEnabled(true);
     }
 
     @Before
@@ -205,27 +204,6 @@ public class FilterUtilTest {
 
             varValue = FilterUtil.replaceVariables(mailAdapter, "hello${test}");
             Assert.assertEquals("hello", varValue);
-        } catch (Exception e) {
-            fail("No exception should be thrown: " + e);
-        }
-    }
-    
-    @Test
-    public void testVariableReplacementVariableOff() {
-        try {
-            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
-            Server server = Provisioning.getInstance().getServer(account);
-            server.setSieveFeatureVariablesEnabled(false);
-
-            ZimbraMailAdapter mailAdapter = initZimbraMailAdapter();
-            mailAdapter.setVariablesExtAvailable(ZimbraMailAdapter.VARIABLEFEATURETYPE.OFF);
-
-            // Variable feature: OFF
-            String varValue = FilterUtil.replaceVariables(mailAdapter, "${var}");
-            Assert.assertEquals("${var}", varValue);
-
-            varValue = FilterUtil.replaceVariables(mailAdapter, "${0}");
-            Assert.assertEquals("${0}", varValue);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e);
         }

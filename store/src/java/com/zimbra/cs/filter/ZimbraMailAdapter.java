@@ -135,13 +135,6 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
         try {
             Account account = getMailbox().getAccount();
-            boolean variablesExtAvailable = Provisioning.getInstance().getServer(account)
-                    .getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false);
-            if (variablesExtAvailable) {
-                this.setVariablesExtAvailable(VARIABLEFEATURETYPE.AVAILABLE);
-            } else {
-                this.setVariablesExtAvailable(VARIABLEFEATURETYPE.OFF);
-            }
         } catch (ServiceException e) {
             ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
         }

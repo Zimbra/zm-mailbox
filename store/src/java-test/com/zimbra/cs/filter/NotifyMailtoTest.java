@@ -71,7 +71,6 @@ public class NotifyMailtoTest {
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         Account account = prov.createAccount("test1@zimbra.com", "secret", attrs);
         Server server = Provisioning.getInstance().getServer(account);
-        server.setSieveFeatureVariablesEnabled(true);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
