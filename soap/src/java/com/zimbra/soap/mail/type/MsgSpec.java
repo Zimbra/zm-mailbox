@@ -97,6 +97,13 @@ public class MsgSpec {
     private ZmBoolean wantHtml;
 
     /**
+     * @zm-api-field-tag want-imap-uid
+     * @zm-api-field-description Set to return IMAP UID.  (default is unset.)
+     */
+    @XmlAttribute(name=MailConstants.A_WANT_IMAP_UID /* wantImapUid */, required=false)
+    private ZmBoolean wantImapUid;
+
+    /**
      * @zm-api-field-tag neuter-img-tags
      * @zm-api-field-description Set to "neuter" <b>&lt;IMG></b> tags returned in HTML content; this involves
      * switching the <b>"src"</b> attribute to <b>"dfsrc"</b> so that images don't display by default (default is set.)
@@ -160,6 +167,7 @@ public class MsgSpec {
     }
     public void setUseContentUrl(Boolean useUrl) { this.useContentUrl = ZmBoolean.fromBool(useUrl); }
     public void setWantHtml(Boolean wantHtml) { this.wantHtml = ZmBoolean.fromBool(wantHtml); }
+    public void setWantImapUid(Boolean wantImapUid) { this.wantImapUid = ZmBoolean.fromBool(wantImapUid); }
     public void setNeuter(Boolean neuter) { this.neuter = ZmBoolean.fromBool(neuter); }
     public void setRecurIdZ(String recurIdZ) { this.recurIdZ = recurIdZ; }
     public void setWantContent(MsgContent msgContent) { this.wantContent = msgContent; }
@@ -182,6 +190,7 @@ public class MsgSpec {
     public Integer getMaxInlinedLength() { return maxInlinedLength; }
     public Boolean getUseContentUrl() { return ZmBoolean.toBool(useContentUrl); }
     public Boolean getWantHtml() { return ZmBoolean.toBool(wantHtml); }
+    public Boolean getWantImapUid() { return ZmBoolean.toBool(wantImapUid); }
     public Boolean getNeuter() { return ZmBoolean.toBool(neuter); }
     public String getRecurIdZ() { return recurIdZ; }
     public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
@@ -199,6 +208,7 @@ public class MsgSpec {
             .add("maxInlinedLength", maxInlinedLength)
             .add("useContentUrl", useContentUrl)
             .add("wantHtml", wantHtml)
+            .add("wantImapUid", wantImapUid)
             .add("neuter", neuter)
             .add("recurIdZ", recurIdZ)
             .add("needCanExpand", needCanExpand)
