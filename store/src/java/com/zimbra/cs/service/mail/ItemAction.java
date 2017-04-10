@@ -114,7 +114,7 @@ public class ItemAction extends MailDocumentHandler {
         return (opAttr.startsWith("!") ? opAttr.substring(1) : opAttr).toLowerCase();
     }
 
-    protected String handleCommon(Map<String, Object> context, Element request, String opAttr, MailItem.Type type)
+    protected ItemActionResult handleCommon(Map<String, Object> context, Element request, String opAttr, MailItem.Type type)
     throws ServiceException {
         Element action = request.getElement(MailConstants.E_ACTION);
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -131,21 +131,21 @@ public class ItemAction extends MailDocumentHandler {
         Map<String, StringBuilder> remote = new HashMap<String, StringBuilder>();
         partitionItems(zsc, action.getAttribute(MailConstants.A_ID), local, remote);
         if (remote.isEmpty() && local.isEmpty()) {
-            return "";
+            return new ItemActionResult();
         }
 
         // for moves/copies, make sure that we're going to receive notifications from the target folder
         Account remoteNotify = forceRemoteSession(zsc, context, octxt, opStr, action);
 
         // handle referenced items living on other servers
-        StringBuilder successes = proxyRemoteItems(action, remote, request, context);
+        ItemActionResult successes = proxyRemoteItems(action, remote, request, context);
 
         // handle referenced items living on this server
         if (!local.isEmpty()) {
             String constraint = action.getAttribute(MailConstants.A_TARGET_CONSTRAINT, null);
             TargetConstraint tcon = TargetConstraint.parseConstraint(mbox, constraint);
 
-            String localResults;
+            ItemActionResult localResults;
 
             // set additional parameters (depends on op type)
             if (opStr.equals(MailConstants.OP_TAG)) {
@@ -220,11 +220,12 @@ public class ItemAction extends MailDocumentHandler {
                 }
             } else if (opStr.equals(MailConstants.OP_RESET_IMAP_UID)) {
                 mbox.resetImapUid(octxt, local);
-                localResults = Joiner.on(",").join(local);
+
+                localResults = new ItemActionResult(local);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + opStr, null);
             }
-            successes.append(successes.length() > 0 ? "," : "").append(localResults);
+            successes.appendSuccessIds(localResults.getSuccessIds());
         }
 
         // for moves/copies, make sure that we received notifications from the target folder
@@ -232,7 +233,7 @@ public class ItemAction extends MailDocumentHandler {
             proxyRequest(zsc.createElement(MailConstants.NO_OP_REQUEST), context, remoteNotify.getId());
         }
 
-        return successes.toString();
+        return successes;
     }
 
     protected ItemActionResult handleTrashOperation(OperationContext octxt, Element request, Mailbox mbox,
@@ -534,11 +535,15 @@ public class ItemAction extends MailDocumentHandler {
             action.addAttribute(MailConstants.A_ID, itemIds);
             // ... proxy to the target items' owner's server...
             String accountId = entry.getKey();
+            // TODO: Add 'advanced' option to trigger Create / Delete additional information response
+
+            request.setAttribute("", "");
             Element response = proxyRequest(request, context, accountId);
             // ... and try to extract the list of items affected by the operation
             try {
                 String completed = response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
                 successes.appendSuccessIds(completed.split(","));
+                // TODO: Handle Copy createdIds and Delete: non-existent IDs
             } catch (ServiceException e) {
                 ZimbraLog.misc.warn("could not extract ItemAction successes from proxied response", e);
             }
