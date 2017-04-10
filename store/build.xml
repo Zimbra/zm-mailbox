@@ -80,7 +80,7 @@
       <param name="base.dir" value="${dist.dir}"/>
     </antcall>
   </target>
-  <target name="generate-buildinfo" depends="build-init">
+  <target name="generate-buildinfo" depends="build-init,setversion">
     <mkdir dir="${build.dir}/buildinfo/com/zimbra/cs/util"/>
     <echo file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java">
             package com.zimbra.cs.util;
