@@ -2296,4 +2296,3 @@ public class SetVariableTest {
         }
     }
 }
-

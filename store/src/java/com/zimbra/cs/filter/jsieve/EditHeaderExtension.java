@@ -574,4 +574,3 @@ public class EditHeaderExtension {
         return matcher.matches();
     }
 }
-
