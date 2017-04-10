@@ -566,6 +566,15 @@ public class ItemActionHelper {
         }
         int offset = 0;
         ItemActionResult localResult = new ItemActionResult();
+        switch (mOperation)
+        {
+        case COPY:
+            localResult = new CopyActionResult();
+        case HARD_DELETE:
+            localResult = new DeleteActionResult();
+            break;
+        }
+
         while (offset < itemIds.length) {
             ItemActionResult batchResult = null;
             int[] batchOfIds = Arrays.copyOfRange(itemIds, offset,
