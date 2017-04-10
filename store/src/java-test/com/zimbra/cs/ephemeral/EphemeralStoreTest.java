@@ -133,6 +133,21 @@ public class EphemeralStoreTest {
     }
 
     @Test
+    public void testDeleteData() throws Exception {
+        EphemeralLocation location1 = new TestLocation("location1");
+        EphemeralLocation location2 = new TestLocation("location2");
+        EphemeralKey key1 = new EphemeralKey("attr1");
+        EphemeralInput input1 = new EphemeralInput(key1, "value1");
+        EphemeralKey key2 = new EphemeralKey("attr2");
+        EphemeralInput input2 = new EphemeralInput(key2, "value2");
+        store.set(input1, location1);
+        store.set(input2, location2);
+        store.deleteData(location1);
+        assertTrue(store.get(key1, location1).isEmpty());
+        assertEquals(store.get(key2, location2).getValue(), "value2");
+    }
+
+    @Test
     public void testHas() throws Exception {
         EphemeralLocation target = new TestLocation();
 
@@ -281,9 +296,19 @@ public class EphemeralStoreTest {
 
     static class TestLocation extends EphemeralLocation {
 
+        private String locationName;
+
+        public TestLocation(String locationName) {
+            this.locationName = locationName;
+        }
+
+        public TestLocation() {
+            this("test");
+        }
+
         @Override
         public String[] getLocation() {
-            return new String[] { "test" };
+            return new String[] { locationName };
         }
     }
 }
