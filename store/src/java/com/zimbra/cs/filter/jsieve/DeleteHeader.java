@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import java.util.List;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
@@ -74,7 +75,8 @@ public class DeleteHeader extends AbstractCommand {
             throw new OperationException("deleteheader: Error occured while fetching all headers from mime.", e);
         }
 
-        int headerCount = ehe.getHeaderCount(mm);
+        List <String> matchingeHeaderList = ehe.getMatchingHeaders(mm);
+        int headerCount = matchingeHeaderList.size();
         if (headerCount < 1) {
             ZimbraLog.filter.info("deleteheader: No headers found matching with \"%s\" in mime.", ehe.getKey());
             return null;
@@ -94,7 +96,7 @@ public class DeleteHeader extends AbstractCommand {
                             deleteCurrentHeader = true;
                         } else {
                             for (String value : ehe.getValueList()) {
-                                deleteCurrentHeader = ehe.matchCondition(mailAdapter, header, headerCount, value, sieveContext);
+                                deleteCurrentHeader = ehe.matchCondition(mailAdapter, header, matchingeHeaderList, value, sieveContext);
                                 if (deleteCurrentHeader) {
                                     break;
                                 }

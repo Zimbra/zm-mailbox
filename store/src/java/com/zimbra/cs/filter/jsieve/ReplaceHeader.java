@@ -79,7 +79,9 @@ public class ReplaceHeader extends AbstractCommand {
         } catch (MessagingException e) {
             throw new OperationException("replaceheader: Error occured while fetching all headers from mime.", e);
         }
-        int headerCount = ehe.getHeaderCount(mm);
+
+        List <String> matchingeHeaderList = ehe.getMatchingHeaders(mm);
+        int headerCount = matchingeHeaderList.size();
         if (headerCount < 1) {
             ZimbraLog.filter.info("replaceheader: No headers found matching with \"%s\" in mime.", ehe.getKey());
             return null;
@@ -99,7 +101,7 @@ public class ReplaceHeader extends AbstractCommand {
                         ZimbraLog.filter.debug("replaceheader: header before processing\n%d  %s: %s", matchIndex, header.getName(), header.getValue());
                         for (String value : ehe.getValueList()) {
                             ZimbraLog.filter.debug("replaceheader: working with %s value", value);
-                            replace = ehe.matchCondition(mailAdapter, header, headerCount, value, sieveContext);
+                            replace = ehe.matchCondition(mailAdapter, header, matchingeHeaderList, value, sieveContext);
                             if (replace) {
                                 if (ehe.getNewName() != null) {
                                     newHeaderName = ehe.getNewName();
