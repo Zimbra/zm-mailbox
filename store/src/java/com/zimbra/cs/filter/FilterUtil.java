@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import org.apache.commons.lang.StringEscapeUtils;
 import javax.mail.Address;
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -590,7 +590,8 @@ public final class FilterUtil {
             // Whenever the envelope FROM of the original message is <>, set <> to the notification message too
             mailSender.setEnvelopeFrom("<>");
         } else if (!StringUtil.isNullOrEmpty(from)) {
-            mailSender.setEnvelopeFrom(from);
+            String escapedFrom = StringEscapeUtils.escapeJava(from);
+            mailSender.setEnvelopeFrom(escapedFrom);
         } else {
             // System default value
             mailSender.setEnvelopeFrom("<>");
