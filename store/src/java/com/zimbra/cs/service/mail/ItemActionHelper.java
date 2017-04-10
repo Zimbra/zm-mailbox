@@ -558,18 +558,19 @@ public class ItemActionHelper {
      return result;
     }
 
-    private void executeLocal() throws ServiceException {
+    private ItemActionResult executeLocal() throws ServiceException {
         int batchSize = Provisioning.getInstance().getLocalServer().getItemActionBatchSize();
         ZimbraLog.mailbox.debug("ItemAction batchSize=%d", batchSize);
         if (itemIds.length <= batchSize) {
-            executeLocalBatch(itemIds);
-            return;
+            return executeLocalBatch(itemIds);
         }
         int offset = 0;
+        ItemActionResult localResult = new ItemActionResult();
         while (offset < itemIds.length) {
             ItemActionResult batchResult = null;
             int[] batchOfIds = Arrays.copyOfRange(itemIds, offset,
                     (offset + batchSize < itemIds.length) ? offset + batchSize : itemIds.length);
+
             switch (mOperation)
             {
             case COPY:
@@ -585,11 +586,13 @@ public class ItemActionHelper {
             default:
                 localResult.appendSuccessIds(executeLocalBatch(batchOfIds).getSuccessIds());
             }
+
             offset += batchSize;
             if (offset < itemIds.length) {
                 Thread.yield();
             }
         }
+        return localResult;
     }
 
     private AuthToken getAuthToken() throws ServiceException {
