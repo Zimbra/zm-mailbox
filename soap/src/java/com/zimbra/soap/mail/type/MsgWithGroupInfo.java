@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -30,11 +26,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.KeyValuePair;
-import com.zimbra.soap.type.UrlAndValue;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
+import com.zimbra.soap.type.KeyValuePair;
+import com.zimbra.soap.type.UrlAndValue;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class MsgWithGroupInfo extends MessageCommon {
@@ -45,6 +44,13 @@ public class MsgWithGroupInfo extends MessageCommon {
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
+
+    /**
+     * @zm-api-field-tag imap-uid
+     * @zm-api-field-description IMAP UID
+     */
+    @XmlAttribute(name=MailConstants.A_IMAP_UID /* i4uid */, required=false)
+    private Integer imapUid;
 
     /**
      * @zm-api-field-tag X-Zimbra-Calendar-Intended-For
@@ -122,7 +128,7 @@ public class MsgWithGroupInfo extends MessageCommon {
      * @zm-api-field-description Email addresses
      */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
-    private List<EmailInfo> emails = Lists.newArrayList();
+    private final List<EmailInfo> emails = Lists.newArrayList();
 
     /**
      * @zm-api-field-tag msg-subject
@@ -155,7 +161,7 @@ public class MsgWithGroupInfo extends MessageCommon {
      * @zm-api-field-description Headers
      */
     @XmlElement(name=MailConstants.A_HEADER /* header */, required=false)
-    private List<KeyValuePair> headers = Lists.newArrayList();
+    private final List<KeyValuePair> headers = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Content elements
@@ -165,7 +171,7 @@ public class MsgWithGroupInfo extends MessageCommon {
         @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION /* shr */, type=ShareNotification.class),
         @XmlElement(name=MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION /* dlSubs */, type=DLSubscriptionNotification.class)
     })
-    private List<Object> contentElems = Lists.newArrayList();
+    private final List<Object> contentElems = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Content
@@ -178,6 +184,7 @@ public class MsgWithGroupInfo extends MessageCommon {
     }
 
     public void setId(String id) { this.id = id; }
+    public void setImapUid(Integer imapUid) { this.imapUid = imapUid; }
     public void setCalendarIntendedFor(String calendarIntendedFor) {
         this.calendarIntendedFor = calendarIntendedFor;
     }
@@ -239,6 +246,7 @@ public class MsgWithGroupInfo extends MessageCommon {
 
     public void setContent(UrlAndValue content) { this.content = content; }
     public String getId() { return id; }
+    public Integer getImapUid() { return imapUid; }
     public String getCalendarIntendedFor() { return calendarIntendedFor; }
     public String getOrigId() { return origId; }
     public String getDraftReplyType() { return draftReplyType; }
@@ -264,10 +272,12 @@ public class MsgWithGroupInfo extends MessageCommon {
     }
     public UrlAndValue getContent() { return content; }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("id", id)
+            .add("imapUid", imapUid)
             .add("calendarIntendedFor", calendarIntendedFor)
             .add("origId", origId)
             .add("draftReplyType", draftReplyType)
