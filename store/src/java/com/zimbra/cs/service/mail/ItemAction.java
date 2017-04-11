@@ -100,11 +100,11 @@ public class ItemAction extends MailDocumentHandler {
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
 
-        String successes = handleCommon(context, request, operation, MailItem.Type.UNKNOWN);
+        ItemActionResult result = handleCommon(context, request, operation, MailItem.Type.UNKNOWN);
 
         Element response = zsc.createElement(MailConstants.ITEM_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailConstants.E_ACTION);
-        act.addAttribute(MailConstants.A_ID, successes);
+        act.addAttribute(MailConstants.A_ID, Joiner.on(",").join(result.getSuccessIds()));
         act.addAttribute(MailConstants.A_OPERATION, operation);
         return response;
     }
