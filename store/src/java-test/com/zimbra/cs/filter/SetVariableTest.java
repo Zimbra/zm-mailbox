@@ -65,7 +65,6 @@ public class SetVariableTest {
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test1@zimbra.com", "secret", new HashMap<String, Object>());
         Server server = Provisioning.getInstance().getServer(acct);
-        server.setSieveFeatureVariablesEnabled(true);
     }
 
     @Before
@@ -1050,46 +1049,12 @@ public class SetVariableTest {
     }
 
     @Test
-    public void testSetVarSieveFeatureDisabled() {
-        try {
-            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
-            Server server = Provisioning.getInstance().getServer(account);
-            server.setSieveFeatureVariablesEnabled(false);
-            RuleManager.clearCachedRules(account);
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
-            filterScript = "require [\"variables\"];\n"
-                         + "set \"var\" \"hello\";\n"
-                         + "if header :matches \"Subject\" \"*\" {\n"
-                         + "  tag \"${var}\";\n"
-                         + "}\n";
-            account.setMailSieveScript(filterScript);
-            String raw = "From: sender@zimbra.com\n"
-                       + "To: test1@zimbra.com\n"
-                       + "Subject: Test\n"
-                       + "\n"
-                       + "Hello World.";
-            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
-                    Mailbox.ID_FOLDER_INBOX, true);
-            Assert.assertEquals(1, ids.size());
-            Message msg = mbox.getMessageById(null, ids.get(0).getId());
-            Assert.assertEquals("${var}", ArrayUtil.getFirstElement(msg.getTags()));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("No exception should be thrown");
-        }
-    }
-
-    @Test
     public void testSetMatchVarAndUseInHeader2() {
         try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
             Map<String, Object> attrs = Maps.newHashMap();
             attrs = Maps.newHashMap();
-            attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "TRUE");
             Provisioning.getInstance().getServer(account).modify(attrs);
 
             RuleManager.clearCachedRules(account);
@@ -1417,7 +1382,6 @@ public class SetVariableTest {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             Map<String, Object> attrs = Maps.newHashMap();
             attrs = Maps.newHashMap();
-            attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "TRUE");
             Provisioning.getInstance().getServer(account).modify(attrs);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
@@ -1518,7 +1482,6 @@ public class SetVariableTest {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             Map<String, Object> attrs = Maps.newHashMap();
             attrs = Maps.newHashMap();
-            attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "TRUE");
             Provisioning.getInstance().getServer(account).modify(attrs);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 

@@ -81,9 +81,6 @@ public class StringTest extends Header {
         }
 
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
-        if (!SetVariable.isVariablesExtAvailable(mailAdapter)) {
-            return false;
-        }
 
         String matchType = null;
         String comparator = null;

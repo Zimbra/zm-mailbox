@@ -188,7 +188,6 @@ public class ReplaceHeaderTest {
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         Account acct = prov.createAccount("test@zimbra.com", "secret", attrs);
         Server server = Provisioning.getInstance().getServer(acct);
-        server.setSieveFeatureVariablesEnabled(true);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());

@@ -58,7 +58,6 @@ public class RedirectCopyTest {
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         prov.createAccount("test3@zimbra.com", "secret", attrs);
         Server server = Provisioning.getInstance().getServer(acct);
-        server.setSieveFeatureVariablesEnabled(true);
         // this MailboxManager does everything except actually send mail
         MailboxManager.setInstance(new DirectInsertionMailboxManager());
     }

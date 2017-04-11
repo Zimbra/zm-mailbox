@@ -378,4 +378,70 @@ public class HeaderTest {
             fail("No exception should be thrown");
         }
     }
+
+    @Test
+    public void testHeaderNamesWithSpaces() throws Exception {
+        String script = "require [\"tag\"];\n"
+                + "if header :matches \" X-Header1\" \"*\" {"
+                + "    tag \"01\";"
+                + "}"
+                + "if header :matches \"X-Header1 \" \"*\" {"
+                + "    tag \"02\";"
+                + "}"
+                + "if header :matches \" X-Header1 \" \"*\" {"
+                + "    tag \"03\";"
+                + "}"
+                + "if header :matches \"X-He ader1\" \"*\" {"
+                + "    tag \"04\";"
+                + "}"
+                ;
+        String sourceMsg =
+            "X-Header1: sample\\\\pattern\n";
+            try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            account.setMailAdminSieveScriptBefore(script);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(sourceMsg.getBytes(), false),
+                    0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(0, msg.getTags().length);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void ttt() throws Exception {
+        String script = "require [\"tag\"];\n"
+                + "if anyof (header :contains [\"X_Header\"] \"123\") { "
+                + "    tag \"321321\";"
+                + "    stop;"
+                + "}"
+                ;
+        String sourceMsg =
+            "X_Header: sample\\\\pattern\n";
+            try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            account.setMailAdminSieveScriptBefore(script);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(sourceMsg.getBytes(), false),
+                    0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(0, msg.getTags().length);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
 }

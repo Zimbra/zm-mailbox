@@ -138,6 +138,8 @@ public class ZimbraSuite  {
         sClasses.add(TestChangeEphemeralStore.class);
         sClasses.add(TestDeployZimlet.class);
         sClasses.add(TestServiceServlet.class);
+        sClasses.add(TestModifyDynamicEphemeralAttrs.class);
+        sClasses.add(TestSearchTask.class);
     }
 
     /**

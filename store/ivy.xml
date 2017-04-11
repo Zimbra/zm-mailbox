@@ -76,5 +76,7 @@
   <dependency org="zimbra" name="zm-soap" rev="latest.integration" /> 
   <dependency org="zimbra" name="zm-client" rev="latest.integration" /> 
   <dependency org="zimbra" name="zm-native" rev="latest.integration"/>
+  <!-- need to run unit tests from eclipse -->
+  <dependency org="commons-logging" name="commons-logging" rev="1.2"/>
  </dependencies>
 </ivy-module>

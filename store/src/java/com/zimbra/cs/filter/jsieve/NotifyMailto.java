@@ -74,8 +74,6 @@ public class NotifyMailto extends AbstractActionCommand {
             return null;
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
-        Map<String, String> variables = mailAdapter.getVariables();
-        List<String> matchedVariables = mailAdapter.getMatchedValues();
 
         /*
          * RFC 5435 3.1. Notify Action
@@ -243,6 +241,7 @@ public class NotifyMailto extends AbstractActionCommand {
                         if (StringUtils.isEmpty(token[0])) {
                             throw new SyntaxException("'mailto' method syntax error: empty parameter name");
                         }
+                        FilterUtil.headerNameHasSpace(token[0]);
                     }
                     // If the value or parameter name is URL encoded, it should be
                     // decoded.  If it is not even URL encoded, more or less decoding

@@ -177,6 +177,11 @@ public class ZimletFile implements Comparable<ZimletFile> {
 
     @SuppressWarnings("unchecked")
     private void initialize(String name) throws IOException, ZimletException {
+        if(!name.matches(ZimletUtil.ZIMLET_NAME_REGEX)) {
+            //a bad zimlet name will result in an invalid or non-existent path for description file,
+            //so there is no need to try and load a zimlet with a bad name 
+            throw ZimletException.INVALID_ZIMLET_NAME();
+        }
         if (name.endsWith(ZIP_SUFFIX)) {
             name = name.substring(0, name.length() - 4);
         }

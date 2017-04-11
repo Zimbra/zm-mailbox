@@ -312,7 +312,8 @@ public abstract class EphemeralStore {
         try {
             theFactory.test(url);
         } catch (ServiceException e) {
-            ZimbraLog.ephemeral.error("cannot set '%s' to '%s'", Provisioning.A_zimbraEphemeralBackendURL, url);
+            ZimbraLog.ephemeral.error("cannot set '%s' to '%s' (%s)", Provisioning.A_zimbraEphemeralBackendURL,
+                    url, e.getMessage());
             return false;
         }
         ZimbraLog.ephemeral.debug("Successfully connected to URL '%s'.  Valid value for '%s'",

@@ -38,14 +38,16 @@ import com.zimbra.soap.type.SearchSortBy;
 
 
 public class TestSearchTask {
-    private static String USER_NAME = "user1";
+    private static String USER_NAME = TestSearchTask.class.getSimpleName();
     private static ZMailbox mbox;
     private static ArrayList<String> ids = new ArrayList<String>();
     private static final int numTasks = 60;
     private static final int limit = 50;
 
     @BeforeClass
-    public static void populate() throws ServiceException{
+    public static void init() throws ServiceException{
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.createAccount(USER_NAME);
         mbox = TestUtil.getZMailbox(USER_NAME);
         for (int i = 0; i < numTasks; i++) {
             ZOutgoingMessage msg = TestUtil.getOutgoingMessage(USER_NAME, null, String.format("task body %d",i), null);
@@ -87,8 +89,6 @@ public class TestSearchTask {
 
     @AfterClass
     public static void destroy() throws ServiceException {
-        for (String id: ids) {
-            mbox.cancelTask(id, "0", null, null, null, null);
-        }
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 }

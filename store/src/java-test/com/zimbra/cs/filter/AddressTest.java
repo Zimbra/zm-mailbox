@@ -376,4 +376,79 @@ public class AddressTest {
             fail("No exception should be thrown");
         }
     }
+
+    @Test
+    public void compareHeaderNameWithLeadingSpaces() {
+        try {
+            Account acct = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(acct);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+            String filterScript = "require [\"tag\"];\n"
+                    + "if address :is :comparator \"i;ascii-numeric\" \" To\" \"test1@zimbra.com\" {"
+                    + "  tag \"t1\";"
+                    + "}"
+                    ;
+
+            acct.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox, new ParsedMessage("To: test1@zimbra.com".getBytes(), false), 0,
+                    acct.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(0, msg.getTags().length);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void compareHeaderNameWithTrailingSpaces() {
+        try {
+            Account acct = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(acct);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+            String filterScript = "require [\"tag\"];\n"
+                    + "if address :is :comparator \"i;ascii-numeric\" \"To \" \"test1@zimbra.com\" {"
+                    + "  tag \"t2\";"
+                    + "}"
+                    ;
+
+            acct.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox, new ParsedMessage("To: test1@zimbra.com".getBytes(), false), 0,
+                    acct.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(0, msg.getTags().length);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void compareHeaderNameWithLeadingAndTrailingSpaces() {
+        try {
+            Account acct = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(acct);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+            String filterScript = "require [\"tag\"];\n"
+                    + "if address :is :comparator \"i;ascii-numeric\" \" To \" \"test1@zimbra.com\" {"
+                    + "  tag \"t3\";"
+                    + "}"
+                    ;
+
+            acct.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox, new ParsedMessage("To: test1@zimbra.com".getBytes(), false), 0,
+                    acct.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(0, msg.getTags().length);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
 }
