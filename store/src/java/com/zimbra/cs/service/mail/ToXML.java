@@ -1388,8 +1388,9 @@ public final class ToXML {
         int changeId = msg.getSavedSequence();
         while (true) {
             try {
-                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
-                        serializeType, wantExpandGroupInfo, false /* bestEffort */, encodeMissingBlobs, wantContent, fields);
+                return encodeMessageAsMPHelper(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
+                        serializeType, wantExpandGroupInfo, false /* bestEffort */, encodeMissingBlobs, wantContent,
+                        fields);
             } catch (ServiceException e) {
                 // problem writing the message structure to the response
                 //   (this case generally means that the blob backing the MimeMessage disappeared halfway through)
@@ -1406,11 +1407,12 @@ public final class ToXML {
                     // the message has been deleted, so don't include draft data in the response
                     throw nsie;
                 }
-                // we're kinda screwed here -- we weren't able to write the message structure and it's not clear what went wrong.
-                //   best we can do now is send back what we got and apologize.
+                // We weren't able to write the message structure and it's not clear what went wrong.
+                // best we can do now is send back what we got and apologize.
                 ZimbraLog.soap.warn("could not serialize full message structure in response", e);
-                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
-                        serializeType, wantExpandGroupInfo, true, wantContent, fields);
+                return encodeMessageAsMPHelper(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
+                        serializeType, wantExpandGroupInfo, true /* bestEffort */, encodeMissingBlobs, wantContent,
+                        fields);
             }
         }
     }
@@ -1434,7 +1436,7 @@ public final class ToXML {
      * @return The newly-created <tt>&lt;m></tt> Element, which has already
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
-    private static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
+    private static Element encodeMessageAsMPHelper(Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
             boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
             boolean bestEffort, boolean encodeMissingBlobs, MsgContent wantContent, int fields)
