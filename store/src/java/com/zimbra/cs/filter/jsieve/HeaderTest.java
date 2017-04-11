@@ -37,7 +37,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -157,10 +156,15 @@ public class HeaderTest extends Header {
                 headerNames = ((StringListArgument) argument).getList();
             }
         }
-        headerNames = replaceVariables(headerNames, mail);
         if (null == headerNames) {
             throw context.getCoordinate().syntaxException(
                     "Expecting a StringListof header names");
+        }
+        headerNames = replaceVariables(headerNames, mail);
+        for (String headerName : headerNames) {
+            if (headerName != null) {
+                FilterUtil.headerNameHasSpace(headerName);
+            }
         }
 
         // The next argument MUST be a string-list of keys

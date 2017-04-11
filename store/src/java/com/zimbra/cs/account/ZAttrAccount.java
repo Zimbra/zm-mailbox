@@ -5836,7 +5836,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=2103)
     public boolean isChatHistoryEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraChatHistoryEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraChatHistoryEnabled, true, true);
     }
 
     /**
@@ -23328,7 +23328,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraMailAdminOutgoingSieveScriptAfter, or null if unset
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2093)
     public String getMailAdminOutgoingSieveScriptAfter() {
@@ -23342,7 +23342,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraMailAdminOutgoingSieveScriptAfter new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2093)
     public void setMailAdminOutgoingSieveScriptAfter(String zimbraMailAdminOutgoingSieveScriptAfter) throws com.zimbra.common.service.ServiceException {
@@ -23359,7 +23359,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2093)
     public Map<String,Object> setMailAdminOutgoingSieveScriptAfter(String zimbraMailAdminOutgoingSieveScriptAfter, Map<String,Object> attrs) {
@@ -23374,7 +23374,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2093)
     public void unsetMailAdminOutgoingSieveScriptAfter() throws com.zimbra.common.service.ServiceException {
@@ -23390,7 +23390,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2093)
     public Map<String,Object> unsetMailAdminOutgoingSieveScriptAfter(Map<String,Object> attrs) {
@@ -23405,7 +23405,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraMailAdminOutgoingSieveScriptBefore, or null if unset
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2092)
     public String getMailAdminOutgoingSieveScriptBefore() {
@@ -23419,7 +23419,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraMailAdminOutgoingSieveScriptBefore new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2092)
     public void setMailAdminOutgoingSieveScriptBefore(String zimbraMailAdminOutgoingSieveScriptBefore) throws com.zimbra.common.service.ServiceException {
@@ -23436,7 +23436,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2092)
     public Map<String,Object> setMailAdminOutgoingSieveScriptBefore(String zimbraMailAdminOutgoingSieveScriptBefore, Map<String,Object> attrs) {
@@ -23451,7 +23451,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2092)
     public void unsetMailAdminOutgoingSieveScriptBefore() throws com.zimbra.common.service.ServiceException {
@@ -23467,7 +23467,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2092)
     public Map<String,Object> unsetMailAdminOutgoingSieveScriptBefore(Map<String,Object> attrs) {
@@ -23482,7 +23482,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraMailAdminSieveScriptAfter, or null if unset
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2091)
     public String getMailAdminSieveScriptAfter() {
@@ -23496,7 +23496,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraMailAdminSieveScriptAfter new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2091)
     public void setMailAdminSieveScriptAfter(String zimbraMailAdminSieveScriptAfter) throws com.zimbra.common.service.ServiceException {
@@ -23513,7 +23513,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2091)
     public Map<String,Object> setMailAdminSieveScriptAfter(String zimbraMailAdminSieveScriptAfter, Map<String,Object> attrs) {
@@ -23528,7 +23528,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2091)
     public void unsetMailAdminSieveScriptAfter() throws com.zimbra.common.service.ServiceException {
@@ -23544,7 +23544,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2091)
     public Map<String,Object> unsetMailAdminSieveScriptAfter(Map<String,Object> attrs) {
@@ -23559,7 +23559,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraMailAdminSieveScriptBefore, or null if unset
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2090)
     public String getMailAdminSieveScriptBefore() {
@@ -23573,7 +23573,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraMailAdminSieveScriptBefore new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2090)
     public void setMailAdminSieveScriptBefore(String zimbraMailAdminSieveScriptBefore) throws com.zimbra.common.service.ServiceException {
@@ -23590,7 +23590,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2090)
     public Map<String,Object> setMailAdminSieveScriptBefore(String zimbraMailAdminSieveScriptBefore, Map<String,Object> attrs) {
@@ -23605,7 +23605,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2090)
     public void unsetMailAdminSieveScriptBefore() throws com.zimbra.common.service.ServiceException {
@@ -23621,7 +23621,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.6
+     * @since ZCS 8.7.7
      */
     @ZAttr(id=2090)
     public Map<String,Object> unsetMailAdminSieveScriptBefore(Map<String,Object> attrs) {
@@ -25428,6 +25428,93 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetMailQuota(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailQuota, "");
+        return attrs;
+    }
+
+    /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @return zimbraMailSieveNotifyActionRFCCompliant, or false if unset
+     *
+     * @since ZCS 8.7.7
+     */
+    @ZAttr(id=2095)
+    public boolean isMailSieveNotifyActionRFCCompliant() {
+        return getBooleanAttr(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, false, true);
+    }
+
+    /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @param zimbraMailSieveNotifyActionRFCCompliant new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.7
+     */
+    @ZAttr(id=2095)
+    public void setMailSieveNotifyActionRFCCompliant(boolean zimbraMailSieveNotifyActionRFCCompliant) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, zimbraMailSieveNotifyActionRFCCompliant ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @param zimbraMailSieveNotifyActionRFCCompliant new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.7
+     */
+    @ZAttr(id=2095)
+    public Map<String,Object> setMailSieveNotifyActionRFCCompliant(boolean zimbraMailSieveNotifyActionRFCCompliant, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, zimbraMailSieveNotifyActionRFCCompliant ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.7
+     */
+    @ZAttr(id=2095)
+    public void unsetMailSieveNotifyActionRFCCompliant() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.7
+     */
+    @ZAttr(id=2095)
+    public Map<String,Object> unsetMailSieveNotifyActionRFCCompliant(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, "");
         return attrs;
     }
 
@@ -55110,6 +55197,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetSharedItem(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSharedItem, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @return zimbraSieveRejectEnabled, or false if unset
+     *
+     * @since ZCS 8.7.7
+     */
+    @ZAttr(id=2094)
+    public boolean isSieveRejectEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSieveRejectEnabled, false, true);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @param zimbraSieveRejectEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.7
+     */
+    @ZAttr(id=2094)
+    public void setSieveRejectEnabled(boolean zimbraSieveRejectEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, zimbraSieveRejectEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @param zimbraSieveRejectEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.7
+     */
+    @ZAttr(id=2094)
+    public Map<String,Object> setSieveRejectEnabled(boolean zimbraSieveRejectEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, zimbraSieveRejectEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.7
+     */
+    @ZAttr(id=2094)
+    public void unsetSieveRejectEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.7
+     */
+    @ZAttr(id=2094)
+    public Map<String,Object> unsetSieveRejectEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, "");
         return attrs;
     }
 

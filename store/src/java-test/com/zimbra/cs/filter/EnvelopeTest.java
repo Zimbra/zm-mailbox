@@ -509,7 +509,6 @@ public class EnvelopeTest {
                     MockProvisioning.DEFAULT_ACCOUNT_ID);
             Map<String, Object> attrs = Maps.newHashMap();
             attrs = Maps.newHashMap();
-            attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "TRUE");
             Provisioning.getInstance().getServer(account).modify(attrs);
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
@@ -784,4 +783,227 @@ public class EnvelopeTest {
         }
     }
 
+    @Test
+    public void testHeaderNameWithLeadingSpace() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :matches \" TO\" \"*@zimbra.com\" {\n"
+                + "    tag \"t1\";\n"
+                + "}\n"
+                ;
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Account account = prov.createAccount("xyz@zimbra.com", "secret", new HashMap<String, Object>());
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(0, msg.getTags().length);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testHeaderNameWithTrailingSpace() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :matches \"TO \" \"*@zimbra.com\" {\n"
+                + "    tag \"t1\";\n"
+                + "}\n"
+                ;
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Account account = prov.createAccount("xyz@zimbra.com", "secret", new HashMap<String, Object>());
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(0, msg.getTags().length);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testHeaderNameWithLeadingAndTrailingSpace() {
+        String filterScript = "require \"envelope\";\n"
+                + "if envelope :matches \" TO \" \"*@zimbra.com\" {\n"
+                + "    tag \"t1\";\n"
+                + "}\n"
+                ;
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Account account = prov.createAccount("xyz@zimbra.com", "secret", new HashMap<String, Object>());
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(0, msg.getTags().length);
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testInvalidHeaderName() {
+        String filterScript = "require  \"envelope\";\n"
+                + "if anyof envelope :matches \"to123\" \"t1@zimbra.com\" {\n"
+                + "    fileinto \"Junk\";\n"
+                + "}\n"
+                ;
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<t1@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Account account = prov.createAccount("xyz@zimbra.com", "secret", new HashMap<String, Object>());
+            account.setMail("xyz@zimbra.com");
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, msg.getFolderId());
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testInvalidHeaderName2() {
+        String filterScript = "require  \"envelope\";\n"
+                + "if anyof envelope :matches \"from123\" \"t1@zimbra.com\" {\n"
+                + "    fileinto \"Junk\";\n"
+                + "}\n"
+                ;
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<t1@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Account account = prov.createAccount("xyz@zimbra.com", "secret", new HashMap<String, Object>());
+            account.setMail("xyz@zimbra.com");
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, msg.getFolderId());
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testAllDomainLocalIs() {
+        String filterScript = "require  [\"envelope\", \"tag\"];\n"
+                + "if envelope :domain :is \"to\" \"zimbra.com\" {\n"
+                + "    tag \"is-domain\";\n"
+                + "}\n"
+                + "if envelope :localpart :is \"to\" \"xyz\" {\n"
+                + "    tag \"is-local\";\n"
+                + "}\n"
+                + "if envelope :all :is \"to\" \"xyz@zimbra.com\" {"
+                + "    tag \"is-all\";\n"
+                + "}";
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<t1@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Account account = prov.createAccount("xyz@zimbra.com", "secret", new HashMap<String, Object>());
+            account.setMail("xyz@zimbra.com");
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+
+            String[] tags = msg.getTags();
+            Assert.assertTrue(tags != null);
+            Assert.assertEquals(3, tags.length);
+            Assert.assertEquals("is-domain", tags[0]);
+            Assert.assertEquals("is-local", tags[1]);
+            Assert.assertEquals("is-all", tags[2]);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e);
+        }
+    }
 }

@@ -60,7 +60,6 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("copy", com.zimbra.cs.filter.jsieve.Copy.class.getName());
         mCommandMap.put("log", com.zimbra.cs.filter.jsieve.VariableLog.class.getName());
         mCommandMap.put("deleteheader", com.zimbra.cs.filter.jsieve.DeleteHeader.class.getName());
-        mCommandMap.put("zimbravariablesctrl", com.zimbra.cs.filter.jsieve.ZimbraVariablesCtrl.class.getName());
 
         if (isNotifyActionRFCCompliantAvailable()) {
             mCommandMap.put("notify",  com.zimbra.cs.filter.jsieve.NotifyMailto.class.getName());
@@ -83,7 +82,7 @@ public class JsieveConfigMapHandler {
             // Disable the 'reject' action defined by the jSieve library
             mCommandMap.remove("reject");
         }
-        
+
 		mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
 		ZimbraLog.filter.info("Variables extension is loaded");
 
@@ -138,7 +137,7 @@ public class JsieveConfigMapHandler {
      * Register action name with action class name of that.
      * This is supposed to be invoked from the init() method of ZimbraExtension.
      */
-    public static void registerCommand(String actionName, String actionClassName) {
+	public static void registerCommand(String actionName, String actionClassName) {
 
         //  sanity check
         String registeredClassName = mCommandMap.get(actionName);

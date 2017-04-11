@@ -16,28 +16,41 @@
  */
 package com.zimbra.qa.unittest;
 
-import com.google.common.base.Strings;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import com.zimbra.common.filter.Sieve;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.MimeMessage;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.filter.FilterUtil;
-import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.filter.RuleRewriter;
-import com.zimbra.cs.filter.SieveToSoap;
-import com.zimbra.cs.filter.SoapToSieve;
-import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.calendar.Util;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+
+import org.apache.jsieve.parser.generated.Node;
+import org.apache.jsieve.parser.generated.ParseException;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.zimbra.client.ZEmailAddress;
 import com.zimbra.client.ZFilterAction;
 import com.zimbra.client.ZFilterAction.MarkOp;
@@ -61,61 +74,73 @@ import com.zimbra.client.ZFilterCondition.ZMimeHeaderCondition;
 import com.zimbra.client.ZFilterRule;
 import com.zimbra.client.ZFilterRules;
 import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZItem.Flag;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
-import com.zimbra.client.ZItem.Flag;
 import com.zimbra.client.ZTag;
-import junit.framework.TestCase;
-import org.apache.jsieve.parser.generated.Node;
-import org.apache.jsieve.parser.generated.ParseException;
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeMessage;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.filter.FilterUtil;
+import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.filter.RuleRewriter;
+import com.zimbra.cs.filter.SieveToSoap;
+import com.zimbra.cs.filter.SoapToSieve;
+import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.calendar.Util;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
+public final class TestFilter {
 
-public final class TestFilter extends TestCase {
-
-    private static String USER_NAME = "user1";
-    private static String REMOTE_USER_NAME = "user2";
     private static String NAME_PREFIX = "TestFilter";
-    private static String FOLDER1_NAME = NAME_PREFIX + "-folder1";
-    private static String FOLDER2_NAME = NAME_PREFIX + "-folder2";
+    private static String USER_NAME = NAME_PREFIX + "-user1";
+    private static String REMOTE_USER_NAME = NAME_PREFIX + "-user2";
+    private static String FOLDER1_NAME = "folder1";
+    private static String FOLDER2_NAME = "folder2";
     private static String FOLDER1_PATH = "/" + FOLDER1_NAME;
     private static String FOLDER2_PATH = "/" + FOLDER2_NAME;
-    private static String TAG1_NAME = NAME_PREFIX + "-tag1";
-    private static String TAG2_NAME = NAME_PREFIX + "-tag2";
+    private static String TAG1_NAME = "tag1";
+    private static String TAG2_NAME = "tag2";
     private static String MOUNTPOINT_FOLDER_NAME = NAME_PREFIX + " mountpoint";
     private static String MOUNTPOINT_SUBFOLDER_NAME = NAME_PREFIX + " mountpoint subfolder";
     private static String MOUNTPOINT_SUBFOLDER_PATH = "/" + MOUNTPOINT_FOLDER_NAME + "/" + MOUNTPOINT_SUBFOLDER_NAME;
 
+    private Account user1;
     private ZMailbox mMbox;
     private ZFilterRules mOriginalIncomingRules;
     private ZFilterRules mOriginalOutgoingRules;
     private String mOriginalSpamApplyUserFilters;
-    private String mOriginalSmtpPort = null;
-    private String mOriginalSetEnvelopeSender = null;
+    private static Integer mOriginalSmtpPort = null;
+    private static Boolean mOriginalSetEnvelopeSender = null;
     private ZTag mTag1;
     private ZTag mTag2;
+    private static Server localServer = null;
+    private static final Provisioning prov = Provisioning.getInstance();
     private boolean mAvailableRFCCompliantNotify = false;
 
-    @Override
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        localServer = prov.getLocalServer();
+        mOriginalSmtpPort = localServer.getSmtpPort();
+        mOriginalSetEnvelopeSender = localServer.isMailRedirectSetEnvelopeSender();
+    }
+
+    @Before
     public void setUp() throws Exception {
         cleanUp();
 
+        user1 = TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         mMbox = TestUtil.getZMailbox(USER_NAME);
         mTag1 = mMbox.createTag(TAG1_NAME, null);
         mTag2 = mMbox.createTag(TAG2_NAME, null);
@@ -130,24 +155,21 @@ public final class TestFilter extends TestCase {
         ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         TestUtil.createMountpoint(remoteMbox, "/" + MOUNTPOINT_FOLDER_NAME, mMbox, MOUNTPOINT_FOLDER_NAME);
         TestUtil.createFolder(remoteMbox, MOUNTPOINT_SUBFOLDER_PATH);
-
+        
         mOriginalIncomingRules = mMbox.getIncomingFilterRules();
         saveIncomingRules(mMbox, getTestIncomingRules());
         mOriginalOutgoingRules = mMbox.getOutgoingFilterRules();
         saveOutgoingRules(mMbox, getTestOutgoingRules());
 
         mOriginalSpamApplyUserFilters = account.getAttr(Provisioning.A_zimbraSpamApplyUserFilters);
-        mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPortAsString();
-        mOriginalSetEnvelopeSender = TestUtil.getServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender);
-
         mAvailableRFCCompliantNotify  = Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, false);
     }
 
     /**
      * Confirms that outgoing filters are applied as expected when a message is sent via SendMsgRequest.
      */
-    public void testOutgoingFiltersWithSendMsg()
-    throws Exception {
+    @Test
+    public void testOutgoingFiltersWithSendMsg() throws Exception {
         String sender = TestUtil.getAddress(USER_NAME);
         String recipient = TestUtil.getAddress(REMOTE_USER_NAME);
         String subject = NAME_PREFIX + " outgoing";
@@ -567,9 +589,9 @@ public final class TestFilter extends TestCase {
         assertTrue("message should have been tagged with tag1", tagIds.contains(mTag1.getId()));
     }
 
-    public void testCurrentTimeTest()
-    throws Exception {
-        TimeZone userTz = Util.getAccountTimeZone(TestUtil.getAccount(USER_NAME));
+    @Test
+    public void testCurrentTimeTest() throws Exception {
+        TimeZone userTz = Util.getAccountTimeZone(user1);
         Calendar calendar = Calendar.getInstance(userTz);
         // Add 5 mins to current time
         calendar.add(Calendar.MINUTE, 5);
@@ -608,9 +630,9 @@ public final class TestFilter extends TestCase {
         assertTrue("message should have been tagged with tag1", tagIds.contains(mTag1.getId()));
     }
 
-    public void testCurrentDayOfWeekTest()
-    throws Exception {
-        TimeZone userTz = Util.getAccountTimeZone(TestUtil.getAccount(USER_NAME));
+    @Test
+    public void testCurrentDayOfWeekTest() throws Exception {
+        TimeZone userTz = Util.getAccountTimeZone(user1);
         Calendar calendar = Calendar.getInstance(userTz);
         int dayToday = calendar.get(Calendar.DAY_OF_WEEK) - 1;
         int dayYesterday = dayToday == 0 ? 6 : dayToday - 1;
@@ -646,8 +668,8 @@ public final class TestFilter extends TestCase {
         assertTrue("message should have been tagged with tag1", tagIds.contains(mTag1.getId()));
     }
 
-    public void testAddressTest()
-    throws Exception {
+    @Test
+    public void testAddressTest() throws Exception {
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
@@ -678,8 +700,8 @@ public final class TestFilter extends TestCase {
         assertTrue("Unexpected message flag state", msg.isFlagged());
     }
 
-    public void testAddressTestPart()
-    throws Exception {
+    @Test
+    public void testAddressTestPart() throws Exception {
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
@@ -711,8 +733,8 @@ public final class TestFilter extends TestCase {
         assertTrue("Unexpected message flag state", msg.isFlagged());
     }
 
-    public void testReplyAction()
-    throws Exception {
+    @Test
+    public void testReplyAction() throws Exception {
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
@@ -742,13 +764,13 @@ public final class TestFilter extends TestCase {
                 mimeStructure.getContentType().contains(MimeConstants.P_CHARSET_ASCII));
     }
 
+    @Test
     /**
      * Tests the Zimbra-specifict 'notify' action format (not RFC compliant format)
      *
      * Note: please set the global config key 'zimbraMailSieveNotifyActionRFCCompliant' to FALSE.
-     */
-    public void testNotifyAction()
-    throws Exception {
+     */    
+    public void testNotifyAction() throws Exception {
         if (mAvailableRFCCompliantNotify) {
             fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to TRUE");
             return;
@@ -784,8 +806,8 @@ public final class TestFilter extends TestCase {
                 mimeStructure.getContentType().contains(MimeConstants.P_CHARSET_ASCII));
     }
 
-    public void testNotifyActionUseOrigHeaders()
-    throws Exception {
+    @Test
+    public void testNotifyActionUseOrigHeaders() throws Exception {
         if (mAvailableRFCCompliantNotify) {
             fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to TRUE");
             return;
@@ -842,8 +864,8 @@ public final class TestFilter extends TestCase {
         assertEquals(subject, zMessage.getSubject());
     }
 
-    public void testNotifyActionCopyAllOrigHeaders()
-    throws Exception {
+    @Test
+    public void testNotifyActionCopyAllOrigHeaders() throws Exception {
         if (mAvailableRFCCompliantNotify) {
             fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to TRUE");
             return;
@@ -876,8 +898,8 @@ public final class TestFilter extends TestCase {
         assertTrue(content.contains("Subject: " + subject));
     }
 
-    public void testNotifyWithDiscard()
-    throws Exception {
+    @Test
+    public void testNotifyWithDiscard() throws Exception {
         if (mAvailableRFCCompliantNotify) {
             fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to TRUE");
             return;
@@ -908,8 +930,8 @@ public final class TestFilter extends TestCase {
     /**
      * Tests fix for bug 57890 (https://issues.apache.org/jira/browse/JSIEVE-75).
      */
-    public void testMultipleMultilineText()
-    throws Exception {
+    @Test
+    public void testMultipleMultilineText() throws Exception {
         if (mAvailableRFCCompliantNotify) {
             fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to TRUE");
             return;
@@ -947,8 +969,8 @@ public final class TestFilter extends TestCase {
         assertEquals(((ZFilterAction.ZReplyAction) rules.get(1).getActions().get(0)).getBodyTemplate(), replyMsg);
     }
 
-    public void testMarkRead()
-    throws Exception {
+    @Test
+    public void testMarkRead() throws Exception {
         String folderName = NAME_PREFIX + " testMarkRead";
 
         // if the subject contains "testMarkRead", file into a folder and mark read
@@ -977,8 +999,8 @@ public final class TestFilter extends TestCase {
      * Confirms that the header test works with headers that are folded.
      * See section 2.2.3 of RFC 2822 and bug 14942.
      */
-    public void testHeaderFolding()
-    throws Exception {
+    @Test
+    public void testHeaderFolding() throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
@@ -999,8 +1021,8 @@ public final class TestFilter extends TestCase {
         assertTrue("Message was not flagged", msg.isFlagged());
     }
 
-    public void testInvite()
-    throws Exception {
+    @Test
+    public void testInvite() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
 
         // Create tags.
@@ -1084,8 +1106,8 @@ public final class TestFilter extends TestCase {
     /**
      * Make sure we disallow more than four asterisks in a :matches condition (bug 35983).
      */
-    public void testManyAsterisks()
-    throws Exception {
+    @Test
+    public void testManyAsterisks() throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
@@ -1106,8 +1128,8 @@ public final class TestFilter extends TestCase {
         }
     }
 
-    public void testDateFiltering()
-    throws Exception {
+    @Test
+    public void testDateFiltering() throws Exception {
         // Before tomorrow.
         ZTag tagBeforeTomorrow = mMbox.createTag(NAME_PREFIX + " before tomorrow", null);
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
@@ -1198,8 +1220,8 @@ public final class TestFilter extends TestCase {
     /**
      * Tests matching a header against a wildcard expression.  See bug 21701.
      */
-    public void testHeaderMatches()
-    throws Exception {
+    @Test
+    public void testHeaderMatches() throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
@@ -1225,8 +1247,9 @@ public final class TestFilter extends TestCase {
      * Confirms that the body test looks for text in the main message
      * body and attached message bodies, but not in attachments.
      */
-    public void testBodyContains()
-    throws Exception {
+    @Test
+    public void testBodyContains() throws Exception {
+        assertTrue("To run this test copy data/unittest/TestFilter-testBodyContains.msg to /opt/zimbra/unittest", Files.exists(Paths.get("/opt/zimbra/unittest/TestFilter-testBodyContains.msg")));
         doBodyContainsTest("text version of the main body", true);
         doBodyContainsTest("HTML version of the main body", true);
         doBodyContainsTest("text attachment", false);
@@ -1273,8 +1296,8 @@ public final class TestFilter extends TestCase {
     /**
      * Tests fix for bug 55927.
      */
-    public void testFullMatchAfterPartialMatch()
-    throws Exception {
+    @Test
+    public void testFullMatchAfterPartialMatch() throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
@@ -1297,8 +1320,9 @@ public final class TestFilter extends TestCase {
     /**
      * Tests fix for bug 56019.
      */
-    public void testSpecialCharInBody()
-    throws Exception {
+    @Test
+    public void testSpecialCharInBody() throws Exception {
+        assertTrue("To run this test copy data/unittest/TestFilter-testSpecialCharInBody.msg to /opt/zimbra/unittest", Files.exists(Paths.get("/opt/zimbra/unittest/TestFilter-testSpecialCharInBody.msg")));
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
@@ -1324,8 +1348,8 @@ public final class TestFilter extends TestCase {
      * Tests the redirect filter action and confirms that the X-ZimbraForwarded
      * header is set on the redirected message.
      */
-    public void testRedirect()
-    throws Exception {
+    @Test
+    public void testRedirect() throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
@@ -1353,23 +1377,21 @@ public final class TestFilter extends TestCase {
         ZMessage msg = TestUtil.waitForMessage(remoteMbox, "in:inbox subject:\"" + subject + "\"");
         byte[] content = TestUtil.getContent(remoteMbox, msg.getId()).getBytes();
         MimeMessage mimeMsg = new MimeMessage(new ByteArrayInputStream(content));
-        Account user1 = TestUtil.getAccount(USER_NAME);
         assertEquals(user1.getName(), mimeMsg.getHeader(FilterUtil.HEADER_FORWARDED));
         assertEquals(from, mimeMsg.getHeader("From"));
 
         // Check zimbraMailRedirectSetEnvelopeSender=FALSE.
         int port = 6025;
         DummySmtpServer smtp = startSmtpServer(port);
-        Server server = Provisioning.getInstance().getLocalServer();
-        server.setSmtpPort(port);
-        server.setMailRedirectSetEnvelopeSender(false);
+        localServer.setSmtpPort(port);
+        localServer.setMailRedirectSetEnvelopeSender(false);
 
         TestUtil.addMessageLmtp(subject, USER_NAME, from);
         assertEquals(from, smtp.getMailFrom());
 
         // Check zimbraMailRedirectSetEnvelopeSender=TRUE.
         smtp = startSmtpServer(port);
-        server.setMailRedirectSetEnvelopeSender(true);
+        localServer.setMailRedirectSetEnvelopeSender(true);
         subject = NAME_PREFIX + " testRedirect 2";
         TestUtil.addMessageLmtp(subject, USER_NAME, from);
         String userAddress = Strings.nullToEmpty(
@@ -1417,8 +1439,8 @@ public final class TestFilter extends TestCase {
     /**
      * Confirms that the message gets delivered even when a mail loop occurs.
      */
-    public void testRedirectMailLoop()
-    throws Exception {
+    @Test
+    public void testRedirectMailLoop() throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
@@ -1439,12 +1461,11 @@ public final class TestFilter extends TestCase {
         ZMessage msg = TestUtil.waitForMessage(mMbox, "subject:\"" + subject + "\"");
         byte[] content = TestUtil.getContent(mMbox, msg.getId()).getBytes();
         MimeMessage mimeMsg = new MimeMessage(new ByteArrayInputStream(content));
-        Account user1 = TestUtil.getAccount(USER_NAME);
         assertEquals(user1.getName(), mimeMsg.getHeader(FilterUtil.HEADER_FORWARDED));
     }
 
-    public void testAttachment()
-    throws Exception {
+    @Test
+    public void testAttachment() throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
@@ -1493,8 +1514,8 @@ public final class TestFilter extends TestCase {
     /**
      * Tests {@link FilterUtil#parseSize}.
      */
-    public void testParseSize()
-    throws Exception {
+    @Test
+    public void testParseSize() throws Exception {
         assertEquals(10, FilterUtil.parseSize("10"));
         assertEquals(10 * 1024, FilterUtil.parseSize("10k"));
         assertEquals(10 * 1024, FilterUtil.parseSize("10K"));
@@ -1522,8 +1543,8 @@ public final class TestFilter extends TestCase {
         return soapToSieve.getSieveScript();
     }
 
-    public void testStripBracketsAndQuotes()
-    throws Exception {
+    @Test
+    public void testStripBracketsAndQuotes() throws Exception {
         assertEquals(null, RuleRewriter.stripBracketsAndQuotes(null));
         assertEquals("", RuleRewriter.stripBracketsAndQuotes(""));
         assertEquals("x", RuleRewriter.stripBracketsAndQuotes("x"));
@@ -1537,8 +1558,9 @@ public final class TestFilter extends TestCase {
      * Confirms that we handle the negative test flag properly with multiple
      * tests (bug 46007).
      */
-    public void testPositiveAndNegative()
-    throws Exception {
+    @Test
+    public void testPositiveAndNegative() throws Exception {
+        assertTrue("To run this test copy data/unittest/bug46007.sieve to /opt/zimbra/unittest", Files.exists(Paths.get("/opt/zimbra/unittest/bug46007.sieve")));
         String script = new String(ByteUtil.getContent(new File("/opt/zimbra/unittest/bug46007.sieve")));
         String normalized = normalize(script); // Convert to XML and back again.
         assertEquals(normalizeWhiteSpace(script), normalizeWhiteSpace(normalized));
@@ -1562,26 +1584,19 @@ public final class TestFilter extends TestCase {
         return buf.toString();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        mMbox.saveIncomingFilterRules(mOriginalIncomingRules);
-        mMbox.saveOutgoingFilterRules(mOriginalOutgoingRules);
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, mOriginalSpamApplyUserFilters);
-        TestUtil.setServerAttr(Provisioning.A_zimbraSmtpPort, mOriginalSmtpPort);
-        TestUtil.setServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, mOriginalSetEnvelopeSender);
+    @After
+    public void tearDown() throws Exception {
+        localServer.setSmtpPort(mOriginalSmtpPort);
+        localServer.setMailRedirectSetEnvelopeSender(mOriginalSetEnvelopeSender);
         cleanUp();
     }
 
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
-
-        // Clean up messages created by testBase64Subject()
-        // bug 36705 for (ZMessage msg : TestUtil.search(mMbox, "villanueva")) {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        for (ZMessage msg : TestUtil.search(mbox, "cortes de luz")) {
-            mbox.deleteMessage(msg.getId());
+    private void cleanUp() throws Exception {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
+        if(TestUtil.accountExists(REMOTE_USER_NAME)) {
+            TestUtil.deleteAccount(REMOTE_USER_NAME);
         }
     }
 

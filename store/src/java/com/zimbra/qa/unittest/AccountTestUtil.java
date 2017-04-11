@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
@@ -62,6 +63,15 @@ public class AccountTestUtil {
     throws ServiceException {
         Account account = getAccount(userName);
         return MailboxManager.getInstance().getMailboxByAccount(account);
+    }
+
+    public static Server getServer(String userName)
+    throws ServiceException {
+        Account account = getAccount(userName);
+        if (null == account) {
+            return null;
+        }
+        return account.getServer();
     }
 
     public static String getAddress(String userName)

@@ -16,7 +16,6 @@
  */
 
 package com.zimbra.qa.unittest;
-
 import java.util.EnumSet;
 
 import org.junit.After;
@@ -42,7 +41,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
-
 /**
  * @author bburtin
  */
@@ -56,11 +54,11 @@ public class TestUnread {
     private static String TEST_NAME = "TestUnread";
     private static String USER_NAME = TEST_NAME.toLowerCase() + "user1";
 
-    private static String FOLDER1_NAME = TEST_NAME + " Folder 1";
-    private static String FOLDER2_NAME = TEST_NAME + " Folder 2";
-    private static String TAG1_NAME = TEST_NAME + " Tag 1";
-    private static String TAG2_NAME = TEST_NAME + " Tag 2";
-    private static String TAG3_NAME = TEST_NAME + " Tag 3";
+    private static String FOLDER1_NAME =  "Folder 1";
+    private static String FOLDER2_NAME = "Folder 2";
+    private static String TAG1_NAME = "Tag 1";
+    private static String TAG2_NAME = "Tag 2";
+    private static String TAG3_NAME = "Tag 3";
 
     private int mMessage1Id;
     private int mMessage2Id;
@@ -352,6 +350,7 @@ public class TestUnread {
     public void testMoveToTrash()
     throws Exception {
         ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
+
         verifySetUp();
 
         Folder inbox = mMbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
@@ -392,6 +391,7 @@ public class TestUnread {
     public void testDeleteConversation()
     throws Exception {
         ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
+
         verifySetUp();
 
         mMbox.delete(null, getConv().getId(), getConv().getType());
@@ -407,6 +407,7 @@ public class TestUnread {
     public void testDeleteFolder2()
     throws Exception {
         ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
+
         verifySetUp();
 
         mMbox.delete(null, mFolder2Id, getFolder2().getType());
@@ -423,6 +424,7 @@ public class TestUnread {
     public void testDeleteFolder1()
     throws Exception {
         ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
+
         verifySetUp();
 
         mMbox.delete(null, mFolder1Id, getFolder1().getType());
@@ -447,8 +449,7 @@ public class TestUnread {
         verifyAllUnreadFlags();
     }
 
-    private void verifyAllUnreadFlags()
-    throws Exception {
+    private void verifyAllUnreadFlags() throws Exception {
         verifyUnreadFlag(getMessage1());
         verifyUnreadFlag(getMessage2());
         verifyUnreadFlag(getMessage3());
@@ -531,3 +532,4 @@ public class TestUnread {
         Assert.assertTrue("getMessage2().isTagged(getTag2())", getMessage2().isTagged(getTag2()));
     }
 }
+

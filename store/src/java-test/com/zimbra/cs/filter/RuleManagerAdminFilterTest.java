@@ -195,15 +195,13 @@ public final class RuleManagerAdminFilterTest {
               "require [\"tag\", \"log\", \"variables\"];"
             + "tag \"after-${var}\";"};
 
-    @Test
+/*    @Test
     public void variableAdminOnUserOff() throws Exception {
         Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
         RuleManager.clearCachedRules(account);
 
         Map<String, Object> attrs = Maps.newHashMap();
         attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "FALSE");
-        attrs.put(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, "TRUE");
         Provisioning.getInstance().getServer(account).modify(attrs);
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -235,8 +233,6 @@ public final class RuleManagerAdminFilterTest {
 
         Map<String, Object> attrs = Maps.newHashMap();
         attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "TRUE");
-        attrs.put(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, "TRUE");
         Provisioning.getInstance().getServer(account).modify(attrs);
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -268,8 +264,6 @@ public final class RuleManagerAdminFilterTest {
 
         Map<String, Object> attrs = Maps.newHashMap();
         attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "TRUE");
-        attrs.put(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, "TRUE");
         Provisioning.getInstance().getServer(account).modify(attrs);
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -295,7 +289,7 @@ public final class RuleManagerAdminFilterTest {
         Assert.assertEquals("before-foo", tags[0]); // "foo" is assigned in admin-defined filter
         Assert.assertEquals("enduser-bar", tags[1]);// "bar" is assigned in user-defined filter
         Assert.assertEquals("after-", tags[2]);     // Variable feature is on but no definition of ${var}
-    }
+    }*/
 
     @Test
     public void stopAtAdminBefore() throws Exception {

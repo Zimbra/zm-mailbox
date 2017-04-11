@@ -1096,83 +1096,6 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
-     *
-     * @return zimbraAdminSieveFeatureVariablesEnabled, or true if unset
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2098)
-    public boolean isAdminSieveFeatureVariablesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, true, true);
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
-     *
-     * @param zimbraAdminSieveFeatureVariablesEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2098)
-    public void setAdminSieveFeatureVariablesEnabled(boolean zimbraAdminSieveFeatureVariablesEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, zimbraAdminSieveFeatureVariablesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
-     *
-     * @param zimbraAdminSieveFeatureVariablesEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2098)
-    public Map<String,Object> setAdminSieveFeatureVariablesEnabled(boolean zimbraAdminSieveFeatureVariablesEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, zimbraAdminSieveFeatureVariablesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2098)
-    public void unsetAdminSieveFeatureVariablesEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2098)
-    public Map<String,Object> unsetAdminSieveFeatureVariablesEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAdminSieveFeatureVariablesEnabled, "");
-        return attrs;
-    }
-
-    /**
      * URL prefix for where the zimbraAdmin app resides on this server
      *
      * @return zimbraAdminURL, or "/zimbraAdmin" if unset
@@ -5932,7 +5855,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2106)
     public boolean isChatAllowUnencryptedPassword() {
-        return getBooleanAttr(Provisioning.A_zimbraChatAllowUnencryptedPassword, false);
+        return getBooleanAttr(Provisioning.A_zimbraChatAllowUnencryptedPassword, false, true);
     }
 
     /**
@@ -6004,7 +5927,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2102)
     public boolean isChatServiceEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraChatServiceEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraChatServiceEnabled, true, true);
     }
 
     /**
@@ -6080,7 +6003,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2107)
     public int getChatXmppPort() {
-        return getIntAttr(Provisioning.A_zimbraChatXmppPort, 5222);
+        return getIntAttr(Provisioning.A_zimbraChatXmppPort, 5222, true);
     }
 
     /**
@@ -6092,7 +6015,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2107)
     public String getChatXmppPortAsString() {
-        return getAttr(Provisioning.A_zimbraChatXmppPort, "5222");
+        return getAttr(Provisioning.A_zimbraChatXmppPort, "5222", true);
     }
 
     /**
@@ -6199,7 +6122,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2108)
     public int getChatXmppSslPort() {
-        return getIntAttr(Provisioning.A_zimbraChatXmppSslPort, 5223);
+        return getIntAttr(Provisioning.A_zimbraChatXmppSslPort, 5223, true);
     }
 
     /**
@@ -6211,7 +6134,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2108)
     public String getChatXmppSslPortAsString() {
-        return getAttr(Provisioning.A_zimbraChatXmppSslPort, "5223");
+        return getAttr(Provisioning.A_zimbraChatXmppSslPort, "5223", true);
     }
 
     /**
@@ -6314,7 +6237,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=2105)
     public boolean isChatXmppSslPortEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraChatXmppSslPortEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraChatXmppSslPortEnabled, false, true);
     }
 
     /**
@@ -15027,314 +14950,6 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetLowestSupportedAuthVersion(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLowestSupportedAuthVersion, "");
-        return attrs;
-    }
-
-    /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied after the end user filter rule
-     *
-     * @return zimbraMailAdminOutgoingSieveScriptAfter, or null if unset
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2093)
-    public String getMailAdminOutgoingSieveScriptAfter() {
-        return getAttr(Provisioning.A_zimbraMailAdminOutgoingSieveScriptAfter, null, true);
-    }
-
-    /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied after the end user filter rule
-     *
-     * @param zimbraMailAdminOutgoingSieveScriptAfter new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2093)
-    public void setMailAdminOutgoingSieveScriptAfter(String zimbraMailAdminOutgoingSieveScriptAfter) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminOutgoingSieveScriptAfter, zimbraMailAdminOutgoingSieveScriptAfter);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied after the end user filter rule
-     *
-     * @param zimbraMailAdminOutgoingSieveScriptAfter new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2093)
-    public Map<String,Object> setMailAdminOutgoingSieveScriptAfter(String zimbraMailAdminOutgoingSieveScriptAfter, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminOutgoingSieveScriptAfter, zimbraMailAdminOutgoingSieveScriptAfter);
-        return attrs;
-    }
-
-    /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied after the end user filter rule
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2093)
-    public void unsetMailAdminOutgoingSieveScriptAfter() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminOutgoingSieveScriptAfter, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied after the end user filter rule
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2093)
-    public Map<String,Object> unsetMailAdminOutgoingSieveScriptAfter(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminOutgoingSieveScriptAfter, "");
-        return attrs;
-    }
-
-    /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied before the end user filter rule
-     *
-     * @return zimbraMailAdminOutgoingSieveScriptBefore, or null if unset
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2092)
-    public String getMailAdminOutgoingSieveScriptBefore() {
-        return getAttr(Provisioning.A_zimbraMailAdminOutgoingSieveScriptBefore, null, true);
-    }
-
-    /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied before the end user filter rule
-     *
-     * @param zimbraMailAdminOutgoingSieveScriptBefore new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2092)
-    public void setMailAdminOutgoingSieveScriptBefore(String zimbraMailAdminOutgoingSieveScriptBefore) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminOutgoingSieveScriptBefore, zimbraMailAdminOutgoingSieveScriptBefore);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied before the end user filter rule
-     *
-     * @param zimbraMailAdminOutgoingSieveScriptBefore new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2092)
-    public Map<String,Object> setMailAdminOutgoingSieveScriptBefore(String zimbraMailAdminOutgoingSieveScriptBefore, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminOutgoingSieveScriptBefore, zimbraMailAdminOutgoingSieveScriptBefore);
-        return attrs;
-    }
-
-    /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied before the end user filter rule
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2092)
-    public void unsetMailAdminOutgoingSieveScriptBefore() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminOutgoingSieveScriptBefore, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied before the end user filter rule
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2092)
-    public Map<String,Object> unsetMailAdminOutgoingSieveScriptBefore(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminOutgoingSieveScriptBefore, "");
-        return attrs;
-    }
-
-    /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied after the end user filter rule
-     *
-     * @return zimbraMailAdminSieveScriptAfter, or null if unset
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2091)
-    public String getMailAdminSieveScriptAfter() {
-        return getAttr(Provisioning.A_zimbraMailAdminSieveScriptAfter, null, true);
-    }
-
-    /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied after the end user filter rule
-     *
-     * @param zimbraMailAdminSieveScriptAfter new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2091)
-    public void setMailAdminSieveScriptAfter(String zimbraMailAdminSieveScriptAfter) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminSieveScriptAfter, zimbraMailAdminSieveScriptAfter);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied after the end user filter rule
-     *
-     * @param zimbraMailAdminSieveScriptAfter new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2091)
-    public Map<String,Object> setMailAdminSieveScriptAfter(String zimbraMailAdminSieveScriptAfter, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminSieveScriptAfter, zimbraMailAdminSieveScriptAfter);
-        return attrs;
-    }
-
-    /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied after the end user filter rule
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2091)
-    public void unsetMailAdminSieveScriptAfter() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminSieveScriptAfter, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied after the end user filter rule
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2091)
-    public Map<String,Object> unsetMailAdminSieveScriptAfter(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminSieveScriptAfter, "");
-        return attrs;
-    }
-
-    /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied before the end user filter rule
-     *
-     * @return zimbraMailAdminSieveScriptBefore, or null if unset
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2090)
-    public String getMailAdminSieveScriptBefore() {
-        return getAttr(Provisioning.A_zimbraMailAdminSieveScriptBefore, null, true);
-    }
-
-    /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied before the end user filter rule
-     *
-     * @param zimbraMailAdminSieveScriptBefore new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2090)
-    public void setMailAdminSieveScriptBefore(String zimbraMailAdminSieveScriptBefore) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminSieveScriptBefore, zimbraMailAdminSieveScriptBefore);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied before the end user filter rule
-     *
-     * @param zimbraMailAdminSieveScriptBefore new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2090)
-    public Map<String,Object> setMailAdminSieveScriptBefore(String zimbraMailAdminSieveScriptBefore, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminSieveScriptBefore, zimbraMailAdminSieveScriptBefore);
-        return attrs;
-    }
-
-    /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied before the end user filter rule
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2090)
-    public void unsetMailAdminSieveScriptBefore() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminSieveScriptBefore, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied before the end user filter rule
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2090)
-    public Map<String,Object> unsetMailAdminSieveScriptBefore(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailAdminSieveScriptBefore, "");
         return attrs;
     }
 
@@ -47192,160 +46807,6 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetShortTermGranteeCacheSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraShortTermGranteeCacheSize, "");
-        return attrs;
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
-     *
-     * @return zimbraSieveFeatureVariablesEnabled, or false if unset
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2096)
-    public boolean isSieveFeatureVariablesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false, true);
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
-     *
-     * @param zimbraSieveFeatureVariablesEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2096)
-    public void setSieveFeatureVariablesEnabled(boolean zimbraSieveFeatureVariablesEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, zimbraSieveFeatureVariablesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
-     *
-     * @param zimbraSieveFeatureVariablesEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2096)
-    public Map<String,Object> setSieveFeatureVariablesEnabled(boolean zimbraSieveFeatureVariablesEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, zimbraSieveFeatureVariablesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2096)
-    public void unsetSieveFeatureVariablesEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2096)
-    public Map<String,Object> unsetSieveFeatureVariablesEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "");
-        return attrs;
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
-     *
-     * @return zimbraSieveRejectEnabled, or true if unset
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2094)
-    public boolean isSieveRejectEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraSieveRejectEnabled, true, true);
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
-     *
-     * @param zimbraSieveRejectEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2094)
-    public void setSieveRejectEnabled(boolean zimbraSieveRejectEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, zimbraSieveRejectEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
-     *
-     * @param zimbraSieveRejectEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2094)
-    public Map<String,Object> setSieveRejectEnabled(boolean zimbraSieveRejectEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, zimbraSieveRejectEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2094)
-    public void unsetSieveRejectEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.6
-     */
-    @ZAttr(id=2094)
-    public Map<String,Object> unsetSieveRejectEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, "");
         return attrs;
     }
 

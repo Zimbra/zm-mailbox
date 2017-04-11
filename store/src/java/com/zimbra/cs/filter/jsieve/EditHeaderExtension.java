@@ -29,7 +29,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.NumberArgument;
@@ -304,10 +303,6 @@ public class EditHeaderExtension {
                             if (StringUtil.isNullOrEmpty(origNewName)) {
                                 throw new SyntaxException("New name must be present with :newname in replaceheader : " + arg);
                             }
-                            String newName2 = StringUtils.stripStart(origNewName, null);
-                            if (!newName2.equals(origNewName)) {
-                                throw new SyntaxException("New name must not start with spaces in :newname in replaceheader : " + arg);
-                            }
                             this.newName = origNewName;
                         } else {
                             throw new SyntaxException("New name not provided with :newname in replaceheader : " + arg);
@@ -427,9 +422,9 @@ public class EditHeaderExtension {
         }
 
         if (this.valueTag) {
-        	matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
+            matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
         } else if (this.countTag) {
-        	matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, headerList, value, context);
+            matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, headerList, value, context);
         } else if (this.is && ComparatorUtils.is(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
         } else if (this.contains && ComparatorUtils.contains(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
@@ -491,10 +486,6 @@ public class EditHeaderExtension {
      */
     public void commonValidation() throws SyntaxException {
         if (!StringUtil.isNullOrEmpty(this.key)) {
-            String tempKey = StringUtils.stripStart(this.key, null);
-            if (!tempKey.equals(this.key)) {
-                throw new SyntaxException("Header name must not start with spaces : \"" + this.key + "\"");
-            }
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(this.key, CharsetUtil.US_ASCII))) {
                 throw new SyntaxException("key must be printable ASCII only.");
             }
@@ -540,11 +531,11 @@ public class EditHeaderExtension {
      * @throws OperationException 
      */
     public List<String> getMatchingHeaders(MimeMessage mm) throws OperationException {
-    	List<String> headerList = new ArrayList<String>();
+        List<String> headerList = new ArrayList<String>();
         try {
             String[] headerValues = mm.getHeader(this.key);
             if (headerValues != null) {
-            	headerList = Arrays.asList(headerValues);
+                headerList = Arrays.asList(headerValues);
             }
         } catch (MessagingException e) {
             throw new OperationException("Error occured while fetching " + this.key + " headers from mime.", e);

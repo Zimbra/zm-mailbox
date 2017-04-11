@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import org.apache.commons.lang.StringEscapeUtils;
 import javax.mail.Address;
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -590,7 +590,8 @@ public final class FilterUtil {
             // Whenever the envelope FROM of the original message is <>, set <> to the notification message too
             mailSender.setEnvelopeFrom("<>");
         } else if (!StringUtil.isNullOrEmpty(from)) {
-            mailSender.setEnvelopeFrom(from);
+            String escapedFrom = StringEscapeUtils.escapeJava(from);
+            mailSender.setEnvelopeFrom(escapedFrom);
         } else {
             // System default value
             mailSender.setEnvelopeFrom("<>");
@@ -839,7 +840,7 @@ public final class FilterUtil {
      * @throws SyntaxException 
      */
     public static String replaceVariables(ZimbraMailAdapter mailAdapter, String sourceStr) throws SyntaxException {
-        if (null == mailAdapter || !SetVariable.isVariablesExtAvailable(mailAdapter)) {
+        if (null == mailAdapter) {
             return sourceStr;
         }
         if (sourceStr.indexOf("${") == -1) {
@@ -1035,6 +1036,12 @@ public final class FilterUtil {
            ZimbraLog.filter.debug("Invalid variable index %s ", srcStr);
            throw new SyntaxException("Invalid variable index " + srcStr);
        }
+    }
+
+    public static void headerNameHasSpace(String headerName) throws SyntaxException {
+        if (headerName.contains(" ")) {
+            throw new SyntaxException("ZimbraComparatorUtils : Header name must not have space(s) : \"" + headerName + "\"");
+        }
     }
 }
 

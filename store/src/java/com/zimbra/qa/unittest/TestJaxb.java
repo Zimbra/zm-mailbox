@@ -27,16 +27,18 @@ import java.util.TimeZone;
 
 import javax.xml.bind.Marshaller;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.dom4j.Document;
 import org.dom4j.io.DocumentResult;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZDateTime;
 import com.zimbra.client.ZFolder;
@@ -93,31 +95,36 @@ import com.zimbra.soap.mail.type.RecurrenceInfo;
 import com.zimbra.soap.mail.type.SimpleRepeatingRule;
 import com.zimbra.soap.type.SearchHit;
 
-public class TestJaxb extends TestCase {
+public class TestJaxb {
 
-    private static final String USER_NAME = "user1";
-    private static final String ATTENDEE1 = USER_NAME;
-    private static final String ATTENDEE2 = "user2";
-    private static final String ORGANIZER = "user3";
+    @Rule
+    public TestName testInfo = new TestName();
+
+    private String USER_NAME = null;
+    private String ATTENDEE1 = null;
+    private String ATTENDEE2 = null;
+    private String ORGANIZER = null;
     private static final String NAME_PREFIX = TestJaxb.class.getSimpleName();
 
     private Marshaller marshaller;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
-        cleanUp();
         marshaller = JaxbUtil.createMarshaller();
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user1";
+        ATTENDEE1 = USER_NAME;
+        ATTENDEE2 = prefix + "attendee2";
+        ORGANIZER = prefix + "organizer";
+        tearDown();
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp() throws Exception {
-        TestUtil.deleteTestData(ORGANIZER, NAME_PREFIX);
-        TestUtil.deleteTestData(ATTENDEE1, NAME_PREFIX);
-        TestUtil.deleteTestData(ATTENDEE2, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(ATTENDEE1);
+        TestUtil.deleteAccountIfExists(ATTENDEE2);
+        TestUtil.deleteAccountIfExists(ORGANIZER);
     }
 
     private static String getCN(ZMailbox mbox) throws ServiceException {
@@ -140,6 +147,8 @@ public class TestJaxb extends TestCase {
     public void testProposeNewTimeWorkflow()
     throws Exception
     {
+        TestUtil.createAccount(ORGANIZER);
+        TestUtil.createAccount(ATTENDEE1);
         String subject = NAME_PREFIX + " attendee will cause time to change";
         ZMailbox organizerBox = TestUtil.getZMailbox(ORGANIZER);
         ZMailbox attendeeBox = TestUtil.getZMailbox(ATTENDEE1);
@@ -355,6 +364,9 @@ public class TestJaxb extends TestCase {
     @Test
     public void testAcceptSeriesDeclineInstance()
     throws Exception {
+        TestUtil.createAccount(ORGANIZER);
+        TestUtil.createAccount(ATTENDEE1);
+        TestUtil.createAccount(ATTENDEE2);
         String subject = NAME_PREFIX + " Daily";
         ZMailbox organizerBox = TestUtil.getZMailbox(ORGANIZER);
         ZMailbox attendeeBox = TestUtil.getZMailbox(ATTENDEE1);
@@ -627,6 +639,7 @@ public class TestJaxb extends TestCase {
 
     @Test
     public void testBrowseRequestDomains() throws Exception {
+        TestUtil.createAccount(USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         TestUtil.addMessage(mbox, NAME_PREFIX);
         BrowseRequest browseRequest = new BrowseRequest("domains" /* browseBy */, "" /* regex */, 10);
@@ -638,29 +651,37 @@ public class TestJaxb extends TestCase {
 
     @Test
     public void testBrowseRequestAttachments() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        TestUtil.addMessage(mbox, NAME_PREFIX);
+        TestUtil.createAccount(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        MessageBuilder mb = new MessageBuilder();
+        String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
+                .withContentType(MimeConstants.CT_APPLICATION_PDF).create();
+        TestUtil.addRawMessage(zmbox, raw);
+        forceIndexing(USER_NAME);
         BrowseRequest browseRequest = new BrowseRequest("attachments" /* browseBy */, "" /* regex */, 10);
         BrowseResponse browseResponse = doBrowseRequest(browseRequest);
         Assert.assertNotNull("JAXB BrowseResponse object", browseResponse);
         List<BrowseData> datas = browseResponse.getBrowseDatas();
         Assert.assertNotNull("JAXB BrowseResponse datas", datas);
+        Assert.assertTrue("JAXB BrowseResponse datas", datas.size() >=1);
     }
 
     static String bodyWithObject = "contains http://www.example.com/fun so treat as containing com_zimbra_url object";
     @Test
     public void testBrowseRequestObjects() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.createAccount(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         MessageBuilder mb = new MessageBuilder();
         String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
                 .withContentType(MimeConstants.CT_TEXT_PLAIN).create();
-        TestUtil.addRawMessage(mbox, raw);
+        TestUtil.addRawMessage(zmbox, raw);
+        forceIndexing(USER_NAME);
         BrowseRequest browseRequest = new BrowseRequest("objects" /* browseBy */, "" /* regex */, 10);
         BrowseResponse browseResponse = doBrowseRequest(browseRequest);
         Assert.assertNotNull("JAXB BrowseResponse object", browseResponse);
         List<BrowseData> datas = browseResponse.getBrowseDatas();
         Assert.assertNotNull("JAXB BrowseResponse datas", datas);
-        Assert.assertTrue("BrowseDatas size should be greater than 1", datas.size() >= 1);
+        Assert.assertTrue("BrowseDatas size should be greater than 0", datas.size() >= 1);
     }
 
     public Element doBadBrowseRequest(BrowseRequest browseRequest) throws Exception {
@@ -677,8 +698,12 @@ public class TestJaxb extends TestCase {
     /** BrowseRequest should fail as regex is too complex */
     @Test
     public void testBrowseRequestDomainsBadRegex() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        TestUtil.addMessage(mbox, NAME_PREFIX);
+        TestUtil.createAccount(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        // If there are no messages to match at all, the browse will pass because the regex doesn't get
+        // used.  Need some messages containing email addresses with domains in to match against
+        TestUtil.addMessage(zmbox, NAME_PREFIX);
+        forceIndexing(USER_NAME);
         BrowseRequest browseRequest = new BrowseRequest("domains" /* browseBy */, BAD_REGEX /* regex */, 10);
         Element envelope = doBadBrowseRequest(browseRequest);
         Assert.assertNotNull("Envelope", envelope);
@@ -689,11 +714,13 @@ public class TestJaxb extends TestCase {
     /** BrowseRequest should fail as regex is too complex */
     @Test
     public void testBrowseRequestObjectsBadRegex() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.createAccount(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         MessageBuilder mb = new MessageBuilder();
         String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
                 .withContentType(MimeConstants.CT_TEXT_PLAIN).create();
-        TestUtil.addRawMessage(mbox, raw);
+        TestUtil.addRawMessage(zmbox, raw);
+        forceIndexing(USER_NAME);
         BrowseRequest browseRequest = new BrowseRequest("objects" /* browseBy */, "" /* regex */, 10);
         BrowseResponse browseResponse = doBrowseRequest(browseRequest);
         Assert.assertTrue("BrowseDatas size should be greater than 1", browseResponse.getBrowseDatas().size() >= 1);
@@ -707,8 +734,13 @@ public class TestJaxb extends TestCase {
     /** BrowseRequest should fail as regex is too complex */
     @Test
     public void testBrowseRequestAttachmentsBadRegex() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        TestUtil.addMessage(mbox, NAME_PREFIX);
+        TestUtil.createAccount(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        MessageBuilder mb = new MessageBuilder();
+        String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
+                .withContentType(MimeConstants.CT_APPLICATION_PDF).create();
+        TestUtil.addRawMessage(zmbox, raw);
+        forceIndexing(USER_NAME);
         BrowseRequest browseRequest = new BrowseRequest("attachments" /* browseBy */, BAD_REGEX /* regex */, 10);
         Element envelope = doBadBrowseRequest(browseRequest);
         Assert.assertNotNull("Envelope", envelope);
@@ -721,6 +753,7 @@ public class TestJaxb extends TestCase {
 
     @Test
     public void testGetFolderWithCacheContainingNullParent() throws Exception {
+        TestUtil.createAccount(USER_NAME);
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder f1 = TestUtil.createFolder(zmbox, FOLDER_F1);
         ZFolder f2 = TestUtil.createFolder(zmbox, SUB_FOLDER_F2);
@@ -738,5 +771,15 @@ public class TestJaxb extends TestCase {
         f2folder.setParent(null);
         GetFolderResponse gfResp = zmbox.invokeJaxb(new GetFolderRequest());
         Assert.assertNotNull("GetFolderResponse null", gfResp);
+    }
+
+    /**
+     * Newly created items don't seem to be seen immediately by BrowseRequest, unless we do this.
+     * TODO: Should BrowseRequest do this itself?
+     * @throws ServiceException
+     */
+    private void forceIndexing(String acctName) throws ServiceException {
+        Mailbox mbox = TestUtil.getMailbox(acctName);
+        mbox.index.indexDeferredItems();
     }
 }
