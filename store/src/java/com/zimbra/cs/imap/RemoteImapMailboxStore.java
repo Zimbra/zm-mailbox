@@ -50,6 +50,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 
 public class RemoteImapMailboxStore extends ImapMailboxStore {
@@ -187,7 +188,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        return (AccountUtil.addressMatchesAccountOrSendAs(getAccount(), givenAddress));
     }
 
     @Override
