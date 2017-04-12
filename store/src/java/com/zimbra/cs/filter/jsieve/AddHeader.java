@@ -61,6 +61,7 @@ public class AddHeader extends AbstractCommand {
 
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
         headerName = FilterUtil.replaceVariables(mailAdapter, headerName);
+        FilterUtil.headerNameHasSpace(headerName);
         headerValue = FilterUtil.replaceVariables(mailAdapter, headerValue);
         try {
             headerValue = MimeUtility.fold(headerName.length() + 2, MimeUtility.encodeText(headerValue));
@@ -153,7 +154,6 @@ public class AddHeader extends AbstractCommand {
         }
 
         if (!StringUtil.isNullOrEmpty(headerName)) {
-            FilterUtil.headerNameHasSpace(headerName);
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(headerName, CharsetUtil.US_ASCII))) {
                 throw new SyntaxException("AddHeader:Header name must be printable ASCII only.");
             }

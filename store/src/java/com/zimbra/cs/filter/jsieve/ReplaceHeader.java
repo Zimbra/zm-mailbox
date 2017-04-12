@@ -68,6 +68,9 @@ public class ReplaceHeader extends AbstractCommand {
         if(ehe.getValueList() == null || ehe.getValueList().isEmpty()) {
             ehe.setValueList(Arrays.asList("*"));
         }
+        FilterUtil.headerNameHasSpace(ehe.getNewName());
+        FilterUtil.headerNameHasSpace(ehe.getKey());
+
         MimeMessage mm = mailAdapter.getMimeMessage();
         Enumeration<Header> headers;
         try {
