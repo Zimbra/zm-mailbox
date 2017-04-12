@@ -116,7 +116,8 @@ public class GetMsg extends MailDocumentHandler {
             Message msg = getMsg(octxt, mbox, iid, read);
             if (raw) {
                 ToXML.encodeMessageAsMIME(response, ifmt, octxt, msg, part,
-                        false /* mustInline */, alwaysUseContentUrl /* mustNotInline */, false /* serializeType */);
+                        false /* mustInline */, alwaysUseContentUrl /* mustNotInline */, false /* serializeType */,
+                        msgSpec.getWantImapUid());
             } else {
                 ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
                         false /* serializeType */, needGroupInfo,
