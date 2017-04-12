@@ -161,14 +161,18 @@ public final class MessageTest {
         Assert.assertEquals(msg.getId(), ids.get(0).intValue());
 
         // Make sure that the post flag is serialized to XML.
-        Element eMsg = ToXML.encodeMessageAsMIME(new XMLElement("test"), new ItemIdFormatter(), null, msg, null, false);
+        Element eMsg = ToXML.encodeMessageAsMIME(new XMLElement("test"), new ItemIdFormatter(), (OperationContext)null,
+                msg, (String)null /* part */, false /* mustInline */, false /* mustNotInline */,
+                false /* serializeType */, false /* wantImapUid */);
+
         Assert.assertEquals("^", eMsg.getAttribute(MailConstants.A_FLAGS));
 
         // Try unsetting the post flag.
         mbox.setTags(null, msg.getId(), MailItem.Type.MESSAGE, 0, null);
         msg = mbox.getMessageById(null, msg.getId());
         // make sure post flag is still set
-        Assert.assertTrue((msg.getFlagBitmask() & Flag.FlagInfo.POST.toBitmask()) != 0);
+        Assert.assertTrue("POST flag set", (msg.getFlagBitmask() & Flag.FlagInfo.POST.toBitmask()) != 0);
+        Assert.assertEquals("IMAP UID should be same as ID", msg.getIdInMailbox(), msg.getImapUid());
     }
 
     @Test
