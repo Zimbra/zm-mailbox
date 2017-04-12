@@ -3277,6 +3277,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             // eat the exception and continue
             ZimbraLog.account.warn("cannot revoke grants", e);
         }
+        // if ephemeral backend is not LDAP, need to explicitly delete ephemeral data
+        EphemeralStore.Factory factory = EphemeralStore.getFactory();
+        if (!(factory instanceof LdapEphemeralStore.Factory)) {
+            factory.getStore().deleteData(new LdapEntryLocation(acc));
+        }
         final Map<String, Object> attrs = new HashMap<String, Object>(acc.getAttrs());
         ZLdapContext zlc = null;
         try {
