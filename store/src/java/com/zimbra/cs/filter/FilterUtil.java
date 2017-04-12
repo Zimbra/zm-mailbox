@@ -584,13 +584,25 @@ public final class FilterUtil {
 
         // Envelope FROM
         // RFC 5436 2.7. (1st item of the 'guidelines')
-        String envelopeFrom = null;
         String originalEnvelopeFrom = envelope == null ? null : envelope.getSender().getEmailAddress();
         if (originalEnvelopeFrom == null) {
             // Whenever the envelope FROM of the original message is <>, set <> to the notification message too
             mailSender.setEnvelopeFrom("<>");
         } else if (!StringUtil.isNullOrEmpty(from)) {
-            String escapedFrom = StringEscapeUtils.escapeJava(from);
+            List<com.zimbra.common.mime.InternetAddress> addr = com.zimbra.common.mime.InternetAddress
+                .parseHeader(from);
+            String escapedFrom = StringEscapeUtils.escapeJava(addr.get(0).getAddress());
+            boolean matches;
+            do {
+                // if address contains single backslash, don't escape it
+                String patternString = ".*([\\p{ASCII}&&[^\\\\]])([\\\\][\\\\])([^\\\\])(.*)@.*";
+                Pattern pattern = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+                Matcher matcher = pattern.matcher(escapedFrom);
+                matches = matcher.matches();
+                if (matches)
+                    escapedFrom = new StringBuilder(escapedFrom)
+                        .replace(matcher.start(2), matcher.end(2), "\\").toString();
+            } while (matches);
             mailSender.setEnvelopeFrom(escapedFrom);
         } else {
             // System default value
