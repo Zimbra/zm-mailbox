@@ -2597,6 +2597,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 msgEl.addAttribute(MailConstants.A_WANT_HTML, params.isWantHtml());
                 msgEl.addAttribute(MailConstants.A_NEUTER, params.isNeuterImages());
                 msgEl.addAttribute(MailConstants.A_RAW, params.isRawContent());
+                msgEl.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
                 Integer max = params.getMax();
                 if (max != null) {
                     msgEl.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, max);
@@ -4395,6 +4396,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             if (message.getIdentityId() != null) {
                 m.addAttribute(MailConstants.A_IDENTITY_ID, message.getIdentityId());
             }
+            m.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
 
             String requestedAccountId = mountpoint == null ? null : mGetInfoResult.getId();
             return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG), this);
