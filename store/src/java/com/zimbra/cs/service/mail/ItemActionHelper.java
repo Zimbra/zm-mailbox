@@ -56,6 +56,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.service.mail.ItemActionResult;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
@@ -605,7 +606,7 @@ public class ItemActionHelper {
         return authToken;
     }
 
-    private void executeRemote() throws ServiceException, IOException {
+    private ItemActionResult executeRemote() throws ServiceException, IOException {
         Account target = Provisioning.getInstance().get(Key.AccountBy.id, mIidFolder.getAccountId());
 
         AuthToken at = getAuthToken();
@@ -633,13 +634,14 @@ public class ItemActionHelper {
                 if (++mHopCount > com.zimbra.soap.ZimbraSoapContext.MAX_HOP_COUNT)
                     throw MailServiceException.TOO_MANY_HOPS(mIidRequestedFolder);
                 schedule();
-                return;
+                return new ItemActionResult();
             }
         }
 
         boolean deleteOriginal = mOperation != Op.COPY;
         String folderStr = mIidFolder.toString();
         List<String> createdIds = new ArrayList<String>(itemIds.length);
+        List<String> nonExistentIds = new ArrayList<String>();
 
         boolean toSpam = mIidFolder.getId() == Mailbox.ID_FOLDER_SPAM;
         boolean toMailbox = !toSpam && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH;
@@ -839,11 +841,18 @@ public class ItemActionHelper {
 
             try {
                 if (deleteOriginal && !mIdFormatter.formatItemId(item).equals(createdId)) {
+                    List<Integer> nonExistentItems = new ArrayList<Integer>();
+
                     if (msgs == null) {
-                        mMailbox.delete(mOpCtxt, item.getId(), item.getType());
+                        mMailbox.delete(mOpCtxt, new int[] { item.getId() }, item.getType(), null, nonExistentItems);
                     } else {
                         for (Message msg : msgs)
-                            mMailbox.delete(mOpCtxt, msg.getId(), msg.getType());
+                            mMailbox.delete(mOpCtxt, new int[] { msg.getId() }, msg.getType(), null, nonExistentItems);
+                    }
+
+                    for (Integer id: nonExistentItems)
+                    {
+                        nonExistentIds.add(id.toString());
                     }
                 }
             } catch (ServiceException e) {
@@ -853,6 +862,10 @@ public class ItemActionHelper {
                 ZimbraLog.misc.info("could not delete original item " + item.getId() + "; treating operation as a copy instead");
             }
         }
+
+        ItemActionResult result = new ItemActionResult();
+        result.setSuccessIds(createdIds);
+        return result;
     }
 
     private void addCalendarPart(Element parent, CalendarItem cal, Invite inv, ZMailbox zmbx, Account target, boolean takeoverAsOrganizer)
