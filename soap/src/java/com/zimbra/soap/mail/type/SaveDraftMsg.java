@@ -17,12 +17,13 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class SaveDraftMsg extends Msg {
@@ -77,6 +78,13 @@ public class SaveDraftMsg extends Msg {
     @XmlAttribute(name=MailConstants.A_AUTO_SEND_TIME /* autoSendTime */, required=false)
     private Long autoSendTime;
 
+    /**
+     * @zm-api-field-tag want-imap-uid
+     * @zm-api-field-description Set to return IMAP UID.  (default is unset.)
+     */
+    @XmlAttribute(name=MailConstants.A_WANT_IMAP_UID /* wantImapUid */, required=false)
+    private ZmBoolean wantImapUid;
+
     public SaveDraftMsg() {
     }
 
@@ -102,12 +110,16 @@ public class SaveDraftMsg extends Msg {
     public Byte getColor() { return color; }
     public Long getAutoSendTime() { return autoSendTime; }
 
+    public void setWantImapUid(Boolean wantImapUid) { this.wantImapUid = ZmBoolean.fromBool(wantImapUid); }
+    public boolean getWantImapUid() { return ZmBoolean.toBool(wantImapUid, false); }
+
     @Override
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("id", id)
             .add("draftAccountId", draftAccountId)
+            .add("wantImapUid", wantImapUid)
             .add("tags", tags)
             .add("tagNames", tagNames)
             .add("rgb", rgb)
