@@ -297,7 +297,6 @@ public class ItemActionHelper {
     }
 
     protected ItemActionResult mResult;
-    protected List<String> mCreatedIds;
 
     protected SoapProtocol mResponseProtocol;
     protected Op mOperation;
@@ -451,10 +450,6 @@ public class ItemActionHelper {
         return mResult;
     }
 
-    public List<String> getCreatedIds() {
-        return mCreatedIds;
-    }
-
     private ItemActionResult executeLocalBatch(int[] ids) throws ServiceException {
         // iterate over the local items and perform the requested operation
 
@@ -503,7 +498,7 @@ public class ItemActionHelper {
                 List<MailItem> copies = getMailbox().copy(getOpCtxt(), ids, type, mIidFolder.getId());
                 List<String> createdIds = new ArrayList<String>(ids.length);
                 for (MailItem item : copies) {
-                    mCreatedIds.add(mIdFormatter.formatItemId(item));
+                     createdIds.add(mIdFormatter.formatItemId(item));
                 }
                 result = new CopyActionResult(originalIds, createdIds);
                 break;
@@ -644,7 +639,7 @@ public class ItemActionHelper {
 
         boolean deleteOriginal = mOperation != Op.COPY;
         String folderStr = mIidFolder.toString();
-        mCreatedIds = new ArrayList<String>(itemIds.length);
+        List<String> createdIds = new ArrayList<String>(itemIds.length);
 
         boolean toSpam = mIidFolder.getId() == Mailbox.ID_FOLDER_SPAM;
         boolean toMailbox = !toSpam && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH;
@@ -732,7 +727,7 @@ public class ItemActionHelper {
                 fields.remove(ContactConstants.A_groupMember);
                 ZContact contact = zmbx.createContact(folderStr, null, fields, attachments, members);
                 createdId = contact.getId();
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             case MESSAGE:
                 try {
@@ -741,7 +736,7 @@ public class ItemActionHelper {
                 } finally {
                     ByteUtil.closeStream(in);
                 }
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             case VIRTUAL_CONVERSATION:
             case CONVERSATION:
@@ -753,7 +748,7 @@ public class ItemActionHelper {
                     } finally {
                         ByteUtil.closeStream(in);
                     }
-                    mCreatedIds.add(createdId);
+                    createdIds.add(createdId);
                 }
                 break;
             case DOCUMENT:
@@ -781,7 +776,7 @@ public class ItemActionHelper {
                     ByteUtil.closeStream(in);
                     transport.shutdown();
                 }
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             case APPOINTMENT:
             case TASK:
@@ -836,7 +831,7 @@ public class ItemActionHelper {
                 ToXML.encodeCalendarReplies(request, cal);
 
                 createdId = zmbx.invoke(request).getAttribute(MailConstants.A_CAL_ID);
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             default:
                 throw MailServiceException.CANNOT_COPY(item.getId());
