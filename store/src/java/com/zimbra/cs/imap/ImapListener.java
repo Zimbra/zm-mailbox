@@ -569,12 +569,14 @@ public abstract class ImapListener extends Session {
      * @param active true to use active session cache, otherwise use inactive session cache
      */
     protected void unload(boolean active) throws ServiceException {
-        if (mailbox == null) {
+        //mailbox reference is volatile, so we need to acquire a local reference to avoid an NPE
+        MailboxStore mbox = getMailbox();
+        if (mbox == null) {
             return;
         }
         // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
         // Need to lock in the same order here, otherwise can result in deadlock.
-        mailbox.lock(true); // serialize() locks Mailbox deep inside of it
+        mbox.lock(true); // serialize() locks Mailbox deep inside of it
         try {
             synchronized (this) {
                 if (mFolder instanceof ImapFolder) { // if the data's already paged out, we can short-circuit
@@ -602,7 +604,7 @@ public abstract class ImapListener extends Session {
                 }
             }
         } finally {
-            mailbox.unlock();
+            mbox.unlock();
         }
     }
 
