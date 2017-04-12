@@ -41,6 +41,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.filter.DummyMailAdapter;
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
@@ -67,6 +68,9 @@ public class EnvelopeTest extends Envelope {
         ZimbraComparatorUtils.TestParameters params = ZimbraComparatorUtils.parseTestArguments(mail, arguments, context);
         params.setKeys(HeaderTest.replaceVariables(params.getKeys(), mail));
         params.setHeaderNames(HeaderTest.replaceVariables(params.getHeaderNames(), mail));
+        for (String headerName : params.getHeaderNames()) {
+            FilterUtil.headerNameHasSpace(headerName);
+        }
 
         if (MatchTypeTags.MATCHES_TAG.equals(params.getMatchType())) {
             ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;

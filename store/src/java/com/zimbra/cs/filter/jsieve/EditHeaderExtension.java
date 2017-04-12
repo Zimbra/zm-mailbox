@@ -303,7 +303,6 @@ public class EditHeaderExtension {
                             if (StringUtil.isNullOrEmpty(origNewName)) {
                                 throw new SyntaxException("New name must be present with :newname in replaceheader : " + arg);
                             }
-                            FilterUtil.headerNameHasSpace(origNewName);
                             this.newName = origNewName;
                         } else {
                             throw new SyntaxException("New name not provided with :newname in replaceheader : " + arg);
@@ -487,7 +486,6 @@ public class EditHeaderExtension {
      */
     public void commonValidation() throws SyntaxException {
         if (!StringUtil.isNullOrEmpty(this.key)) {
-            FilterUtil.headerNameHasSpace(this.key);
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(this.key, CharsetUtil.US_ASCII))) {
                 throw new SyntaxException("key must be printable ASCII only.");
             }

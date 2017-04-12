@@ -35,6 +35,7 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 public class DeleteHeader extends AbstractCommand {
@@ -63,6 +64,7 @@ public class DeleteHeader extends AbstractCommand {
         // replace sieve variables
         ehe.replaceVariablesInValueList(mailAdapter);
         ehe.replaceVariablesInKey(mailAdapter);
+        FilterUtil.headerNameHasSpace(ehe.getKey());
         MimeMessage mm = mailAdapter.getMimeMessage();
         Enumeration<Header> headers;
         try {

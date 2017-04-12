@@ -34,6 +34,7 @@ import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -231,7 +232,7 @@ public class AddHeaderTest {
     @Test
     public void testAddHeaderWithVariables() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"variables\"];\n"
                     + " set \"nm\" \"X-New-Header\"; \r\n"
                     + " set \"vl\" \"test\"; \r\n"
                     + " addheader :last \"${nm}\" \"${vl}\" \r\n"
@@ -515,6 +516,38 @@ public class AddHeaderTest {
             for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
                 Header temp = e.nextElement();
                 Assert.assertFalse(temp.getName().equals("X-My-Test"));
+                Assert.assertFalse(temp.getValue().equals("my-new-header-value"));
+            }
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Try adding new header with header name starting with space, which should fail
+     */
+    @Test
+    public void testAddHeaderNameWithSpaceFromVariable() {
+        try {
+           String filterScript = "require [\"editheader\",\"variables\"];\n"
+                    + "set \"var1\" \" X-My-Test \";\n"
+                    + "addheader \"${var1}\" \"my-new-header-value\" \r\n"
+                    + "  ;\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                Assert.assertFalse(temp.getName().equals("X-My-Test"));
+                Assert.assertFalse(temp.getName().equals(" X-My-Test"));
                 Assert.assertFalse(temp.getValue().equals("my-new-header-value"));
             }
         } catch (Exception e) {
