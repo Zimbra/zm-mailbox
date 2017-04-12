@@ -120,7 +120,7 @@ public class GetMsg extends MailDocumentHandler {
             } else {
                 ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
                         false /* serializeType */, needGroupInfo,
-                        LC.mime_encode_missing_blob.booleanValue(), wantContent);
+                        LC.mime_encode_missing_blob.booleanValue(), msgSpec.getWantImapUid(), wantContent);
             }
         }
         return response;
