@@ -60,10 +60,12 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
     private final String mIdentityId;
     private final long mAutoSendTime;
     private final int mModifiedSequence;
+    private Integer imapUid;
 
     public ZMessage(Element e, ZMailbox zmailbox) throws ServiceException {
         mMailbox = zmailbox;
         mId = e.getAttribute(MailConstants.A_ID);
+        imapUid = e.getAttributeInt(MailConstants.A_IMAP_UID, -1);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
         mReplyType = e.getAttribute(MailConstants.A_REPLY_TYPE, null);
@@ -216,6 +218,9 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         zjo.put("isSentByMe", isSentByMe());
         zjo.put("isUnread", isUnread());
         zjo.put("idnt", mIdentityId);
+        if ((null != imapUid) && (imapUid >= 0)) {
+            zjo.put("imapUid", imapUid);
+        }
         zjo.putMap("requestHeaders", mReqHdrs);
         return zjo;
     }
@@ -561,9 +566,29 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         return MailItemType.MESSAGE;
     }
 
+    /**
+     * @return the UID the item is referenced by in the IMAP server.  Returns <tt>0</tt> for items that require
+     * renumbering because of moves.
+     * The "IMAP UID" will be the same as the item ID unless the item has been moved after the mailbox owner's first
+     * IMAP session. */
     @Override
     public int getImapUid() {
-        throw new UnsupportedOperationException("ZMessage method not supported yet");
+        if ((null != imapUid) && (imapUid >= 0)) {
+            return imapUid;
+        }
+        ZimbraLog.mailbox.debug("ZMessage getImapUid() - regetting UID");
+        ZMessage zm = null;
+        try {
+            zm = getMailbox().getMessageById(mId);
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.debug("ZMessage getImapUid() - getMessageById failed", e);
+            return 0;
+        }
+        if (null == zm) {
+            return 0;
+        }
+        imapUid = (zm.imapUid == null) ? 0 : zm.imapUid;
+        return imapUid;
     }
 
     @Override
