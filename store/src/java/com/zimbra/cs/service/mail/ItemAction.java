@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -322,9 +323,8 @@ public class ItemAction extends MailDocumentHandler {
             trashResults.appendSuccessIds(imapTrashResults.getSuccessIds());
         }
         if (!msgToConvId.isEmpty()) {
-            String[] ids = localResults.split(",");
             Set<String> reconstructedConvIds = new HashSet<String>();
-            for (String id: ids) {
+            for (String id: localResults.getSuccessIds()) {
                 String convId = msgToConvId.get(id);
                 if (convId != null) {
                     reconstructedConvIds.add(convId);
@@ -332,7 +332,11 @@ public class ItemAction extends MailDocumentHandler {
                     reconstructedConvIds.add(id);
                 }
             }
-            localResults.appendSuccessIds(reconstructedConvIds.toArray());
+            List<String> reconstructedIds = new ArrayList<String>();
+            for (String id: reconstructedConvIds) {
+                reconstructedConvIds.add(id);
+            }
+            localResults.setSuccessIds(reconstructedIds);
         }
 
         return localResults;
@@ -537,12 +541,14 @@ public class ItemAction extends MailDocumentHandler {
             String accountId = entry.getKey();
             // TODO: Add 'advanced' option to trigger Create / Delete additional information response
 
-            request.setAttribute("", "");
             Element response = proxyRequest(request, context, accountId);
             // ... and try to extract the list of items affected by the operation
             try {
                 String completed = response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
-                successes.appendSuccessIds(completed.split(","));
+                for (String id: completed.split(","))
+                {
+                    result.appendSuccessId(id);
+                }
                 // TODO: Handle Copy createdIds and Delete: non-existent IDs
             } catch (ServiceException e) {
                 ZimbraLog.misc.warn("could not extract ItemAction successes from proxied response", e);
