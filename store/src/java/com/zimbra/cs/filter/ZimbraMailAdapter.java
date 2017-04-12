@@ -752,7 +752,8 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             return result;
         }
 
-        if (name.compareToIgnoreCase("to") == 0) {
+        switch (name.toLowerCase()) {
+        case "to":
             /* RFC 5228 5.4. Test envelope
              * ---
              * If the SMTP transaction involved several RCPT commands, only the data
@@ -784,13 +785,18 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             } catch (ServiceException e) {
                 // nothing to do with this exception. Just return an empty list
             }
-        } else {
+            break;
+
+        case "from":
             LmtpAddress sender = envelope.getSender();
             result.add(sender.getEmailAddress());
+            break;
+
         }
+
         return result;
     }
-    
+
     public String getVariable(String key) {
         return variables.get(key);
     }
