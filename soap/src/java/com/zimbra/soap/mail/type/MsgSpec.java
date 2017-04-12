@@ -190,7 +190,7 @@ public class MsgSpec {
     public Integer getMaxInlinedLength() { return maxInlinedLength; }
     public Boolean getUseContentUrl() { return ZmBoolean.toBool(useContentUrl); }
     public Boolean getWantHtml() { return ZmBoolean.toBool(wantHtml); }
-    public Boolean getWantImapUid() { return ZmBoolean.toBool(wantImapUid); }
+    public boolean getWantImapUid() { return ZmBoolean.toBool(wantImapUid, false); }
     public Boolean getNeuter() { return ZmBoolean.toBool(neuter); }
     public String getRecurIdZ() { return recurIdZ; }
     public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
