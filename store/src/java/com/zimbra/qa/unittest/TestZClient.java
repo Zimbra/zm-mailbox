@@ -202,6 +202,20 @@ public class TestZClient extends TestCase {
     }
 
     @Test
+    public void imapUID() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String sender = TestUtil.getAddress(USER_NAME);
+        String recipient = TestUtil.getAddress(RECIPIENT_USER_NAME);
+        String subject = NAME_PREFIX + " imapUID";
+        String content = new MessageBuilder().withSubject(subject).withFrom(sender).withToRecipient(recipient).create();
+
+        mbox.addMessage(Integer.toString(Mailbox.ID_FOLDER_DRAFTS), null, null,
+                System.currentTimeMillis(), content, false, false);
+        ZMessage msg = TestUtil.waitForMessage(mbox, "in:drafts " + subject);
+        Assert.assertEquals("IMAP UID should be same as ID", msg.getIdInMailbox(), msg.getImapUid());
+    }
+
+    @Test
     public void testSubscribeFolder() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder = null;
