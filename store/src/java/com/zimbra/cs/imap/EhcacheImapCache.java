@@ -45,7 +45,10 @@ final class EhcacheImapCache implements ImapSessionManager.Cache<String, ImapFol
 
     @SuppressWarnings("serial")
     EhcacheImapCache(String name, boolean active) {
-        ehcache = EhcacheManager.getInstance().getEhcache(name);
+        // If running inside mailboxd, share mailboxd cache, else use separate imap cache.  This avoids issues when running
+        // decoupled IMAP service on same host as mailbox.
+        EhcacheManager.Service service = System.getProperty("jetty.home", null) == null ? EhcacheManager.Service.IMAP : EhcacheManager.Service.MAILBOX;
+        ehcache = EhcacheManager.getInstance(service).getEhcache(name);
         this.active = active;
         if (active) {
             activeCacheUpdateTimes = new LinkedHashMap<String, Long>(ACTIVE_CACHE_THRESHOLD, 0.75f, true) {
