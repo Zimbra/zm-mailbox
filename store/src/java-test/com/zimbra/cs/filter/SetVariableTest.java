@@ -2291,4 +2291,62 @@ public class SetVariableTest {
             fail("No exception should be thrown");
         }
     }
+
+    @Test
+    public void testNonExistingVarIndexWithLeadingZeroes() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"t*t*\" { "
+                       + "addheader :last \"X-New-Header\" \"${009}\";}";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: test 123";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            String[] value = msg.getMimeMessage().getHeader("X-New-Header");
+            Assert.assertEquals("", value[0]);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testNonExistingVarIndexWithLeadingZeroesForQuestionMark() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"t??t\" { "
+                       + "addheader :last \"X-New-Header\" \"${005}\";}";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: test";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            String[] value = msg.getMimeMessage().getHeader("X-New-Header");
+            Assert.assertEquals("", value[0]);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
 }
