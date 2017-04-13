@@ -864,7 +864,19 @@ public class ItemActionHelper {
             }
         }
 
-        ItemActionResult result = new ItemActionResult();
+        ItemActionResult result = null;
+
+        if (Op.HARD_DELETE.equals(mOperation)) {
+            result = new DeleteActionResult();
+            result.setNonExistentIds(nonExistentIds);
+        }
+        else if (Op.COPY.equals(mOperation)) {
+            result = new CopyActionResult();
+            result.setCreatedIds(createdIds);
+        }
+        else
+            result = new ItemActionResult();
+
         result.setSuccessIds(createdIds);
         return result;
     }
