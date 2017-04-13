@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.common.mailbox.Color;
@@ -86,11 +87,12 @@ public class ContactActionHelper extends ItemActionHelper {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
         }
 
-        StringBuilder successes = new StringBuilder();
+        List<String> successes = new ArrayList<String>();
         for (int id : itemIds) {
-            successes.append(successes.length() > 0 ? "," : "").append(mIdFormatter.formatItemId(id));
+            successes.add(mIdFormatter.formatItemId(id));
         }
-        mResult = successes.toString();
+        mResult = new ItemActionResult();
+        mResult.appendSuccessIds(successes);
     }
 
     @Override
