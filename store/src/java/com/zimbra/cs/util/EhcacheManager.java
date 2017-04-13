@@ -46,7 +46,7 @@ import com.zimbra.cs.memcached.MemcachedConnector;
  * @author ysasaki
  */
 public final class EhcacheManager {
-    private static final EhcacheManager SINGLETON = new EhcacheManager();
+    private static EhcacheManager SINGLETON = null;
 
     private CacheManager cacheManager;
 
@@ -54,9 +54,9 @@ public final class EhcacheManager {
     public static final String IMAP_INACTIVE_SESSION_CACHE = "imap-inactive-session-cache";
     public static final String SYNC_STATE_ITEM_CACHE = "sync-state-item-cache";
 
-    private EhcacheManager() {
+    private EhcacheManager(Service service) {
         cacheManager = CacheManagerBuilder.newCacheManagerBuilder()
-                .with(CacheManagerBuilder.persistence(LC.zimbra_home.value() + File.separator + "data" + File.separator + "mailboxd"))
+                .with(CacheManagerBuilder.persistence(LC.zimbra_home.value() + File.separator + "data" + File.separator + service.val))
                 .withCache(IMAP_ACTIVE_SESSION_CACHE, createImapActiveSessionCache())
                 .build(true);
 
@@ -69,6 +69,13 @@ public final class EhcacheManager {
     }
 
     public static EhcacheManager getInstance() {
+        return getInstance(Service.MAILBOX);
+    }
+
+    public static EhcacheManager getInstance(Service service) {
+        if(SINGLETON == null) {
+            SINGLETON = new EhcacheManager(service);
+        }
         return SINGLETON;
     }
 
@@ -151,12 +158,22 @@ public final class EhcacheManager {
     public Cache<String, ImapFolder> getEhcache(String cacheName) {
         return cacheManager.getCache(cacheName, String.class, ImapFolder.class);
     }
-    
+
     public Cache<String, String> getSyncStateEhcache() {
         return cacheManager.getCache(SYNC_STATE_ITEM_CACHE, String.class, String.class);
     }
 
     public void shutdown() {
         cacheManager.close();
+    }
+
+    public static enum Service {
+        MAILBOX("mailboxd"),
+        IMAP("imap");
+        private String val;
+
+        private Service(String val) {
+            this.val = val;
+        }
     }
 }
