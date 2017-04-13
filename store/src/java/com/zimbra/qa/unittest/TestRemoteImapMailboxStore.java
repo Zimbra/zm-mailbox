@@ -15,6 +15,7 @@ import org.junit.Test;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.imap.RemoteImapMailboxStore;
 import com.zimbra.cs.mailbox.DeliveryOptions;
@@ -153,5 +154,13 @@ public class TestRemoteImapMailboxStore extends TestCase {
             fail("beginTrackingImap should succeed");
         }
         assertTrue(mbox.isTrackingImap());
+    }
+
+    @Test
+    public void testAddressMatchesAccountOrSendAs() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Account acct = TestUtil.getAccount(USER_NAME);
+        RemoteImapMailboxStore remoteStore = new RemoteImapMailboxStore(zmbox, acct.getId());
+        assertTrue(remoteStore.addressMatchesAccountOrSendAs(acct.getMail()));
     }
 }
