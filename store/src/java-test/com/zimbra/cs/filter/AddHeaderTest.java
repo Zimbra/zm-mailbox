@@ -524,7 +524,7 @@ public class AddHeaderTest {
     }
 
     /*
-     * Try adding new header with header name starting with space, which should fail
+     * Try adding new header with header name with space, which should not be added in mime.
      */
     @Test
     public void testAddHeaderNameWithSpaceFromVariable() {
@@ -547,7 +547,7 @@ public class AddHeaderTest {
             for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
                 Header temp = e.nextElement();
                 Assert.assertFalse(temp.getName().equals("X-My-Test"));
-                Assert.assertFalse(temp.getName().equals(" X-My-Test"));
+                Assert.assertFalse(temp.getName().equals(" X-My-Test "));
                 Assert.assertFalse(temp.getValue().equals("my-new-header-value"));
             }
         } catch (Exception e) {

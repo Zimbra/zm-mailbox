@@ -1039,8 +1039,8 @@ public final class FilterUtil {
     }
 
     public static void headerNameHasSpace(String headerName) throws SyntaxException {
-        if (headerName == null) {
-            return;
+        if (StringUtil.isNullOrEmpty(headerName)) {
+            throw new SyntaxException("ZimbraComparatorUtils : Header name must not be null or empty");
         }
         if (headerName.contains(" ")) {
             throw new SyntaxException("ZimbraComparatorUtils : Header name must not have space(s) : \"" + headerName + "\"");
