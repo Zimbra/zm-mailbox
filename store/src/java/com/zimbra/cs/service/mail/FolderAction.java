@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
@@ -118,7 +119,7 @@ public class FolderAction extends ItemAction {
         if (FOLDER_OPS.contains(operation)) {
             successes = handleFolder(context, request, operation, result);
         } else {
-            successes = handleCommon(context, request, operation, MailItem.Type.FOLDER);
+            successes = Joiner.on(",").join(handleCommon(context, request, operation, MailItem.Type.FOLDER).getSuccessIds());
         }
         result.addAttribute(MailConstants.A_ID, successes);
         result.addAttribute(MailConstants.A_OPERATION, operation);
