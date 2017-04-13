@@ -873,7 +873,7 @@ public final class FilterUtil {
         }
         // (2) Replace the empty string to Matched Variables whose index is out of range
         for (; i < 10; i++) {
-            String keyName = "(?i)" + "\\$\\{" + String.valueOf(i) + "\\}";
+            String keyName = "(?i)" + "\\$\\{0*" + String.valueOf(i) + "\\}";
             resultStr = resultStr.replaceAll(keyName, Matcher.quoteReplacement(""));
         }
 
