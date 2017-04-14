@@ -107,10 +107,10 @@ public class TestImapServerListener {
             Provisioning.getInstance().setPassword(remoteAccount, PASS);
             imapServersForRemoteHost = remoteServer.getReverseProxyUpstreamImapServers();
             remoteServer.setReverseProxyUpstreamImapServers(new String[]{localServer.getServiceHostname()});
+            mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
+            remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
         }
         sp.flushCache("all", null, true);
-        mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
-        remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
     }
 
     @After
