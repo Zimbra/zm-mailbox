@@ -761,6 +761,7 @@ public final class MailConstants {
     public static final String A_ACTIVESYNC_DISABLED = "activesyncdisabled";
     public static final String A_WEB_OFFLINE_SYNC_DAYS = "webOfflineSyncDays";
     public static final String A_NUM_DAYS = "numDays";
+    public static final String A_NON_EXISTENT_IDS = "nei";
 
     // contact group
     public static final String E_CONTACT_GROUP_MEMBER = "m";
