@@ -6021,7 +6021,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     @Override
     public void delete(OpContext octxt, List<Integer> itemIds, List<Integer> nonExistingItems) throws ServiceException {
-        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+         String ids = Joiner.on(",").join(itemIds);
+         ActionSelector action = ActionSelector.createForIdsAndOperation(ids, MailConstants.OP_HARD_DELETE);
+         ItemActionRequest req = new ItemActionRequest(action);
+         ItemActionResponse resp = invokeJaxb(req);
+         // TODO: Parse response and update nonExistingItems
     }
 
     /** Resets the mailbox's "recent message count" to 0.  A message is considered "recent" if:
