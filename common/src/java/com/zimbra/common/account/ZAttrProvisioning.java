@@ -8416,7 +8416,7 @@ public class ZAttrProvisioning {
      * outgoing sieve script defined by admin (not able to edit and view from
      * the end user) applied after the end user filter rule
      *
-     * @since ZCS 8.7.7
+     * @since ZCS 8.7.8
      */
     @ZAttr(id=2093)
     public static final String A_zimbraMailAdminOutgoingSieveScriptAfter = "zimbraMailAdminOutgoingSieveScriptAfter";
@@ -8425,7 +8425,7 @@ public class ZAttrProvisioning {
      * outgoing sieve script defined by admin (not able to edit and view from
      * the end user) applied before the end user filter rule
      *
-     * @since ZCS 8.7.7
+     * @since ZCS 8.7.8
      */
     @ZAttr(id=2092)
     public static final String A_zimbraMailAdminOutgoingSieveScriptBefore = "zimbraMailAdminOutgoingSieveScriptBefore";
@@ -8434,7 +8434,7 @@ public class ZAttrProvisioning {
      * sieve script defined by admin (not able to edit and view from the end
      * user) applied after the end user filter rule
      *
-     * @since ZCS 8.7.7
+     * @since ZCS 8.7.8
      */
     @ZAttr(id=2091)
     public static final String A_zimbraMailAdminSieveScriptAfter = "zimbraMailAdminSieveScriptAfter";
@@ -8443,7 +8443,7 @@ public class ZAttrProvisioning {
      * sieve script defined by admin (not able to edit and view from the end
      * user) applied before the end user filter rule
      *
-     * @since ZCS 8.7.7
+     * @since ZCS 8.7.8
      */
     @ZAttr(id=2090)
     public static final String A_zimbraMailAdminSieveScriptBefore = "zimbraMailAdminSieveScriptBefore";
@@ -8925,7 +8925,7 @@ public class ZAttrProvisioning {
      * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
      * &#039;notify&#039; action parameters with Zimbra specific format
      *
-     * @since ZCS 8.7.7
+     * @since ZCS 8.7.8
      */
     @ZAttr(id=2095)
     public static final String A_zimbraMailSieveNotifyActionRFCCompliant = "zimbraMailSieveNotifyActionRFCCompliant";
@@ -15270,7 +15270,7 @@ public class ZAttrProvisioning {
      * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
      * 5429.
      *
-     * @since ZCS 8.7.7
+     * @since ZCS 8.7.8
      */
     @ZAttr(id=2094)
     public static final String A_zimbraSieveRejectEnabled = "zimbraSieveRejectEnabled";
