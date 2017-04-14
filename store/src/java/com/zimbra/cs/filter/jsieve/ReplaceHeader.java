@@ -68,7 +68,6 @@ public class ReplaceHeader extends AbstractCommand {
         if(ehe.getValueList() == null || ehe.getValueList().isEmpty()) {
             ehe.setValueList(Arrays.asList("*"));
         }
-        FilterUtil.headerNameHasSpace(ehe.getNewName());
         FilterUtil.headerNameHasSpace(ehe.getKey());
 
         MimeMessage mm = mailAdapter.getMimeMessage();
@@ -107,7 +106,8 @@ public class ReplaceHeader extends AbstractCommand {
                             replace = ehe.matchCondition(mailAdapter, header, matchingeHeaderList, value, sieveContext);
                             if (replace) {
                                 if (ehe.getNewName() != null) {
-                                    newHeaderName = ehe.getNewName();
+                                    newHeaderName = FilterUtil.replaceVariables(mailAdapter, ehe.getNewName());
+                                    FilterUtil.headerNameHasSpace(newHeaderName);
                                 } else {
                                     newHeaderName = header.getName();
                                 }
