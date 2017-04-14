@@ -868,11 +868,11 @@ public class ItemActionHelper {
 
         if (Op.HARD_DELETE.equals(mOperation)) {
             result = new DeleteActionResult();
-            result.setNonExistentIds(nonExistentIds);
+            ((DeleteActionResult)result).setNonExistentIds(nonExistentIds);
         }
         else if (Op.COPY.equals(mOperation)) {
             result = new CopyActionResult();
-            result.setCreatedIds(createdIds);
+            ((CopyActionResult)result).setCreatedIds(createdIds);
         }
         else
             result = new ItemActionResult();
