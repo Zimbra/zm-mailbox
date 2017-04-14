@@ -107,6 +107,11 @@ public class ItemAction extends MailDocumentHandler {
         Element act = response.addUniqueElement(MailConstants.E_ACTION);
         act.addAttribute(MailConstants.A_ID, Joiner.on(",").join(result.getSuccessIds()));
         act.addAttribute(MailConstants.A_OPERATION, operation);
+        String opStr = getOperation(operation);
+        if (opStr.equals(MailConstants.OP_HARD_DELETE))
+        {
+            act.addAttribute(MailConstants.A_NON_EXISTENT_IDS, Joiner.on(",").join(((DeleteActionResult)result).getNonExistentIds()));
+        }
         return response;
     }
 
