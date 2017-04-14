@@ -1,14 +1,14 @@
 <project name="zm-mailbox" default="all">
-   <property name="build.dir" location="build" />
 
    <target name="all">
-      <exec dir="./native" executable="make" failonerror="true"></exec>
-      <ant dir="./common" target="publish-local" inheritAll="false"/>
-      <ant dir="./soap"   target="publish-local" inheritAll="false"/>
-      <ant dir="./client" target="publish-local" inheritAll="false"/>
-      <ant dir="./store"  target="publish-local" inheritAll="false"/>
-      <ant dir="./store"  target="war"           inheritAll="false"/>
-      <ant dir="./store"  target="create-version-sql" inheritAll="false"/>
+      <ant dir="./native" target="publish-local" inheritAll="true"/>
+      <exec dir="./native" executable="make"     failonerror="true"/>
+      <ant dir="./common" target="publish-local" inheritAll="true"/>
+      <ant dir="./soap"   target="publish-local" inheritAll="true"/>
+      <ant dir="./client" target="publish-local" inheritAll="true"/>
+      <ant dir="./store"  target="publish-local" inheritAll="true"/>
+      <ant dir="./store"  target="war"           inheritAll="true"/>
+      <ant dir="./store"  target="create-version-sql" inheritAll="true"/>
    </target>
 
    <target name="clean">

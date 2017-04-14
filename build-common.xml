@@ -97,7 +97,6 @@
     <!-- ZimbraNative -->
     <property name="native.dir" location="${zm-mailbox.basedir}/native" />
     <property name="native.classes.dir" location="${native.dir}/build/classes" />
-    <property name="native.jarfile" location="${native.dir}/build/zimbra-native.jar" />
 
     <!-- ZimbraServer -->
     <property name="server.dir" location="${zm-mailbox.basedir}/store"/>
@@ -172,80 +171,61 @@
     </taskdef>
     <tstamp/>
 
-    <condition property="zimbra.version.dir" value="${zimbra.root.dir}/zm-build/RE" else="${zimbra.root.dir}/zimbra-package-stub/version">
-        <available file="${zimbra.root.dir}/zm-build/RE" type="dir"/>
-    </condition>
+    <target name="setversion">
+      <fail message="Missing build version. use ant proper ZCS version like -Dzimbra.buildinfo.version=8.7.6_GA">
+       <condition>
+         <not>
+           <isset property="zimbra.buildinfo.version"/>
+         </not>
+       </condition>
+      </fail>
+      <echo message="Using version ${zimbra.buildinfo.version}"/>
 
-    <condition property="zimbra.buildinfo.platform" value="${native.os}">
-        <not><isset property="${zimbra.buildinfo.platform}"/></not>
-    </condition>
+      <propertyregex property="zimbra.buildinfo.majorversion"
+                     input="${zimbra.buildinfo.version}"
+                     regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+                     select="\1"
+                     casesensitive="false" />
 
-    <loadfile property="zimbra.buildinfo.majorversion" srcFile="${zimbra.version.dir}/MAJOR">
-      <filterchain>
-        <striplinebreaks/>
-      </filterchain>
-    </loadfile>
+      <propertyregex property="zimbra.buildinfo.minorversion"
+                     input="${zimbra.buildinfo.version}"
+                     regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+                     select="\2"
+                     casesensitive="false" />
 
-    <loadfile property="zimbra.buildinfo.minorversion" srcFile="${zimbra.version.dir}/MINOR">
-      <filterchain>
-        <striplinebreaks/>
-      </filterchain>
-    </loadfile>
+      <propertyregex property="zimbra.buildinfo.microversion"
+                     input="${zimbra.buildinfo.version}"
+                     regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+                     select="\3"
+                     casesensitive="false" />
 
-    <loadfile property="zimbra.buildinfo.microtag" srcFile="${zimbra.version.dir}/MICRO">
-      <filterchain>
-        <striplinebreaks/>
-      </filterchain>
-    </loadfile>
+      <propertyregex property="zimbra.buildinfo.relclass"
+                     input="${zimbra.buildinfo.version}"
+                     regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)"
+                     select="\4"
+                     casesensitive="false" />
 
-    <property name="zimbra.buildinfo.version" value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microtag}_${zimbra.buildinfo.buildnum}.${user.name}"/>
+      <condition property="zimbra.buildinfo.relnum" value="0">
+          <not><isset property="${zimbra.buildinfo.relnum}"/></not>
+      </condition>
 
-    <echo message="Using version from ${zimbra.version.dir}, ${zimbra.buildinfo.version}"/>
-
-    <propertyregex property="zimbra.buildinfo.majorversion"
-                   input="${zimbra.buildinfo.version}"
-                   regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
-                   select="\1"
-                   casesensitive="false" />
-
-    <propertyregex property="zimbra.buildinfo.minorversion"
-                   input="${zimbra.buildinfo.version}"
-                   regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
-                   select="\2"
-                   casesensitive="false" />
-
-    <propertyregex property="zimbra.buildinfo.microversion"
-                   input="${zimbra.buildinfo.version}"
-                   regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
-                   select="\3"
-                   casesensitive="false" />
-
-    <propertyregex property="zimbra.buildinfo.relclass"
-                   input="${zimbra.buildinfo.version}"
-                   regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)"
-                   select="\4"
-                   casesensitive="false" />
-
-    <condition property="zimbra.buildinfo.relnum" value="0">
-        <not><isset property="${zimbra.buildinfo.relnum}"/></not>
-    </condition>
-
-    <condition property="zimbra.buildinfo.type" value="">
-        <not><isset property="${zimbra.buildinfo.type}"/></not>
-    </condition>
-    <condition property="zimbra.buildinfo.release" value="${user.name}">
-        <not><isset property="${zimbra.buildinfo.release}"/></not>
-    </condition>
-    <condition property="zimbra.buildinfo.date" value="${DSTAMP}-${TSTAMP}">
-        <not><isset property="${zimbra.buildinfo.date}"/></not>
-    </condition>
-    <condition property="zimbra.buildinfo.host" value="${zimbra.server.hostname}">
-        <not><isset property="${zimbra.buildinfo.host}"/></not>
-    </condition>
-    <property name="zimbra.buildinfo.all"
+      <condition property="zimbra.buildinfo.type" value="">
+          <not><isset property="${zimbra.buildinfo.type}"/></not>
+      </condition>
+      <condition property="zimbra.buildinfo.release" value="${user.name}">
+          <not><isset property="${zimbra.buildinfo.release}"/></not>
+      </condition>
+      <condition property="zimbra.buildinfo.date" value="${DSTAMP}-${TSTAMP}">
+          <not><isset property="${zimbra.buildinfo.date}"/></not>
+      </condition>
+      <condition property="zimbra.buildinfo.host" value="${zimbra.server.hostname}">
+          <not><isset property="${zimbra.buildinfo.host}"/></not>
+      </condition>
+      <property name="zimbra.buildinfo.all"
               value="Version: ${zimbra.buildinfo.version}; Type: ${zimbra.buildinfo.type}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
+    </target>
 
-    <target name="set-dev-version">
+    <target name="set-dev-version" depends="setversion">
       <if>
         <not>
           <isset property="jar.file"/>
@@ -267,7 +247,7 @@
         <delete dir="${dist.dir}"/>
     </target>
 
-    <target name="build-init">
+    <target name="build-init" depends="setversion">
       <mkdir dir="${build.classes.dir}"/>
       <mkdir dir="${dist.dir}"/>
     </target>

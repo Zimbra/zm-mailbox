@@ -2,23 +2,19 @@
 <ivysettings>
 <settings defaultResolver="chain-resolver" />
   <caches defaultCacheDir="${dev.home}/.ivy2/cache"/>
-<!--
-<credentials host="http://myarchiva/archiva/" realm="Repository Archiva Managed internal Repository"
-    username="user" passwd="pwd" />
--->
-<property name="archiva-internal"
-    value="http://zdev-vm007.eng.zimbra.com:8082/repository/internal" />
   <resolvers>
     <chain name="chain-resolver" returnFirst="true">
       <filesystem name="local">
-        <!-- zm*** jar files that have not been published to internal Archiva repo or public maven repo live in ~/.zcs-deps/zimbra/ -->
         <artifact pattern= "${dev.home}/.zcs-deps/[organisation]/[module]/[module]-[revision].[ext]" />
-        <!-- TODO: the next 3 patterns should be removed once all zm-*** repos produce versioned artifacts and publish them to local repo -->
         <artifact pattern= "${dev.home}/.zcs-deps/[organisation]-[revision].[ext]" />
         <artifact pattern= "${dev.home}/.zcs-deps/[organisation].[ext]" />
       </filesystem>
-      <ibiblio name="zimbra-internal" m2compatible="true" usepoms="false" root="${archiva-internal}" />
       <ibiblio name="maven" m2compatible="true" usepoms="false"/>
+      <url name="zimbra">
+        <artifact pattern="https://files.zimbra.com/repository/[module]/[artifact]-[revision].[ext]" />
+        <artifact pattern="https://files.zimbra.com/repository/[module]/[artifact].[ext]" />
+        <artifact pattern="https://files.zimbra.com/repository/[organisation]/[module]/[module]-[revision].[ext]" />
+      </url>
     </chain>
     <!-- 'build-tmp' resolver is not part of the chain and is used only for packaging war files -->
     <filesystem name="build-tmp">

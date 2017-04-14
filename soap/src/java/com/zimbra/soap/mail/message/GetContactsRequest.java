@@ -148,6 +148,14 @@ public class GetContactsRequest {
     private ZmBoolean returnHiddenAttrs;
 
     /**
+     * @zm-api-field-tag return-certificate-info
+     * @zm-api-field-description Whether to return smime certificate info
+     * <br />
+     */
+    @XmlAttribute(name=MailConstants.A_RETURN_CERT_INFO /* returnCertInfo */, required=false)
+    private ZmBoolean returnCertInfo;
+
+    /**
      * @zm-api-field-tag max-members
      * @zm-api-field-description Max members
      */
@@ -184,6 +192,9 @@ public class GetContactsRequest {
     }
     public void setReturnHiddenAttrs(Boolean returnHiddenAttrs) {
         this.returnHiddenAttrs = ZmBoolean.fromBool(returnHiddenAttrs);
+    }
+    public void setReturnCertInfo(Boolean returnCertInfo) {
+        this.returnCertInfo = ZmBoolean.fromBool(returnCertInfo);
     }
     public void setMaxMembers(Long maxMembers) {
         this.maxMembers = maxMembers;
@@ -226,6 +237,7 @@ public class GetContactsRequest {
     public String getSortBy() { return sortBy; }
     public Boolean getDerefGroupMember() { return ZmBoolean.toBool(derefGroupMember); }
     public Boolean getReturnHiddenAttrs() { return ZmBoolean.toBool(returnHiddenAttrs); }
+    public Boolean getReturnCertInfo() { return ZmBoolean.toBool(returnCertInfo); }
     public Long getMaxMembers() { return maxMembers; }
     public List<AttributeName> getAttributes() {
         return Collections.unmodifiableList(attributes);

@@ -13,7 +13,7 @@ PROXY_INFO := DefaultProxyInfo
 CC := gcc
 
 all: FORCE
-	ant
+	ant -Dzimbra.buildinfo.version="" generate-native-headers
 	$(MAKE) $(BUILD)/libzimbra-native.$(SHARED_EXT)
 	$(MAKE) $(BUILD)/libsetuid.$(SHARED_EXT)
 

@@ -115,6 +115,8 @@ public final class GetContacts extends MailDocumentHandler  {
             maxMembers = request.getAttributeLong(MailConstants.A_MAX_MEMBERS, DEFAULT_MAX_MEMBERS);
         }
 
+        boolean returnCertInfo = request.getAttributeBool(MailConstants.A_RETURN_CERT_INFO, false);
+
         Element response = zsc.createElement(MailConstants.GET_CONTACTS_RESPONSE);
 
         // want to return modified date only on sync-related requests
@@ -165,7 +167,7 @@ public final class GetContacts extends MailDocumentHandler  {
                         }
                         ToXML.encodeContact(response, ifmt, octxt, con, contactGroup,
                                 memberAttrs, false, attrs, fields, migratedDlist,
-                                returnHiddenAttrs, maxMembers);
+                                returnHiddenAttrs, maxMembers, returnCertInfo);
                     }
                 }
             }
@@ -173,7 +175,7 @@ public final class GetContacts extends MailDocumentHandler  {
             for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
                 if (con != null) {
                     ToXML.encodeContact(response, ifmt, octxt, con, null, null,
-                            false, attrs, fields, null, returnHiddenAttrs, maxMembers);
+                            false, attrs, fields, null, returnHiddenAttrs, maxMembers, returnCertInfo);
                 }
             }
         }

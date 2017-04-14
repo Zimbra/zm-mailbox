@@ -720,13 +720,13 @@ public final class ToXML {
             boolean summary, Collection<String> attrFilter, int fields)
     throws ServiceException {
         return encodeContact(parent, ifmt, octxt, contact, null, null, summary,
-                attrFilter, fields, null, false, GetContacts.NO_LIMIT_MAX_MEMBERS);
+                attrFilter, fields, null, false, GetContacts.NO_LIMIT_MAX_MEMBERS, true);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
             Collection<String> attrFilter, int fields, String migratedDlist,
-            boolean returnHiddenAttrs, long maxMembers)
+            boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo)
     throws ServiceException {
         Element el = parent.addElement(MailConstants.E_CONTACT);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
@@ -785,7 +785,7 @@ public final class ToXML {
                 //      an existing attribute with null or empty string value?
                 String value = contact.get(name);
                 if (!Strings.isNullOrEmpty(value)) {
-                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt);
+                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt, returnCertInfo);
                 } else if (attachments != null) {
                     for (Attachment attach : attachments) {
                         if (attach.getName().equals(name)) {
@@ -814,7 +814,7 @@ public final class ToXML {
                 }
 
                 if (name != null && !name.trim().isEmpty() && !Strings.isNullOrEmpty(value)) {
-                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt);
+                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt, returnCertInfo);
                 }
             }
             if (attachments != null) {
@@ -825,7 +825,7 @@ public final class ToXML {
         }
 
         if (migratedDlist != null) {
-            encodeContactAttr(el, ContactConstants.A_dlist, migratedDlist, contact, false, octxt);
+            encodeContactAttr(el, ContactConstants.A_dlist, migratedDlist, contact, false, octxt, returnCertInfo);
         } else if (contactGroup != null) {
             encodeContactGroup(el, contactGroup, memberAttrFilter, ifmt, octxt, summary, fields);
         }
@@ -834,14 +834,14 @@ public final class ToXML {
     }
 
     private static void encodeContactAttr(Element elem, String name, String value,
-            Contact contact, boolean encodeContactGroupMembers, OperationContext octxt) {
+            Contact contact, boolean encodeContactGroupMembers, OperationContext octxt, boolean returnCertInfo) {
         if (Contact.isMultiValueAttr(value)) {
             try {
                 for (String v : Contact.parseMultiValueAttr(value)) {
                     if (Contact.isUrlField(name)) {
                         v = DefangFilter.sanitize(v, true);
                     } else if (Contact.isSMIMECertField(name)) {
-                        encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses());
+                        encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses(), returnCertInfo);
                         continue;
                     }
                     elem.addKeyValuePair(name, v);
@@ -866,17 +866,17 @@ public final class ToXML {
             if (Contact.isUrlField(name)) {
                 value = DefangFilter.sanitize(value, true);
             } else if (Contact.isSMIMECertField(name)) {
-                encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses());
+                encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses(), returnCertInfo);
                 return;
             }
             elem.addKeyValuePair(name, value);
         }
     }
 
-    private static void encodeCertificate(OperationContext octxt, Element elem, String name, String value, List<String> emailAddresses) {
+    private static void encodeCertificate(OperationContext octxt, Element elem, String name, String value, List<String> emailAddresses, boolean returnCertInfo) {
         Account account = octxt.getAuthenticatedUser();
         elem.addKeyValuePair(name, value);
-        if (SmimeHandler.getHandler() != null) {
+        if (SmimeHandler.getHandler() != null && returnCertInfo) {
             SmimeHandler.getHandler().encodeCertificate(account, elem, value, octxt.getmResponseProtocol(), emailAddresses);
         }
     }

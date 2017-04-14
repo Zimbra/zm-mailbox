@@ -16,10 +16,14 @@
  */
 
 package com.zimbra.qa.unittest;
-
 import java.util.EnumSet;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -37,22 +41,24 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
-
 /**
  * @author bburtin
  */
-public class TestUnread extends TestCase {
+public class TestUnread {
+    @Rule
+    public TestName name = new TestName();
+
     private Mailbox mMbox;
     private Account mAccount;
 
-    private static String USER_NAME = "user1";
     private static String TEST_NAME = "TestUnread";
+    private static String USER_NAME = TEST_NAME.toLowerCase() + "user1";
 
-    private static String FOLDER1_NAME = TEST_NAME + " Folder 1";
-    private static String FOLDER2_NAME = TEST_NAME + " Folder 2";
-    private static String TAG1_NAME = TEST_NAME + " Tag 1";
-    private static String TAG2_NAME = TEST_NAME + " Tag 2";
-    private static String TAG3_NAME = TEST_NAME + " Tag 3";
+    private static String FOLDER1_NAME =  "Folder 1";
+    private static String FOLDER2_NAME = "Folder 2";
+    private static String TAG1_NAME = "Tag 1";
+    private static String TAG2_NAME = "Tag 2";
+    private static String TAG3_NAME = "Tag 3";
 
     private int mMessage1Id;
     private int mMessage2Id;
@@ -63,15 +69,6 @@ public class TestUnread extends TestCase {
     private int mTag2Id;
     private int mTag3Id;
     private int mConvId;
-
-    /**
-     * Constructor used for instantiating a <code>TestCase</code> that runs a single test.
-     *
-     * @param testName the name of the method that will be called when the test is executed
-     */
-    public TestUnread(String testName) {
-        super(testName);
-    }
 
     private Message getMessage1() throws Exception { return mMbox.getMessageById(null, mMessage1Id); }
     private Message getMessage2() throws Exception { return mMbox.getMessageById(null, mMessage2Id); }
@@ -92,15 +89,12 @@ public class TestUnread extends TestCase {
      *   <li>T2 is assigned to M1 and M2</li>
      * </ul>
      */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
 
-        mAccount = TestUtil.getAccount(USER_NAME);
+        mAccount = TestUtil.createAccount(USER_NAME);
+        Assert.assertNotNull(String.format("Unable to create account for user '%s'", USER_NAME), mAccount);
         mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
-
-        // Clean up data, in case a previous test didn't exit cleanly
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME);
 
         Message msg = TestUtil.addMessage(mMbox, TEST_NAME);
         mMessage1Id = msg.getId();
@@ -140,37 +134,45 @@ public class TestUnread extends TestCase {
         mMbox.alterTag(null, mMessage2Id, getMessage2().getType(), getTag2().getName(), true, null);
     }
 
+    @After
+    public void tearDown() throws Exception {
+        TestUtil.deleteAccount(USER_NAME);
+    }
+
+    @Test
     public void testReadMessage1()
     throws Exception {
-        ZimbraLog.test.debug("testReadMessage1");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
         setUnread(getMessage1(), false);
         verifyMessage1Read();
     }
 
+    @Test
     public void testReadMessage2()
     throws Exception {
-        ZimbraLog.test.debug("testReadMessage2");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         setUnread(getMessage2(), false);
 
-        assertEquals("getMessage1().getUnreadCount()", 1, getMessage1().getUnreadCount());
-        assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
-        assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
-        assertEquals("getConv().getUnreadCount()", 2, getConv().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
-        assertEquals("getTag1().getUnreadCount()", 1, getTag1().getUnreadCount());
-        assertEquals("getTag2().getUnreadCount()", 1, getTag2().getUnreadCount());
-        assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
+        Assert.assertEquals("getMessage1().getUnreadCount()", 1, getMessage1().getUnreadCount());
+        Assert.assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
+        Assert.assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
+        Assert.assertEquals("getConv().getUnreadCount()", 2, getConv().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
+        Assert.assertEquals("getTag1().getUnreadCount()", 1, getTag1().getUnreadCount());
+        Assert.assertEquals("getTag2().getUnreadCount()", 1, getTag2().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
 
         verifyAllUnreadFlags();
     }
 
+    @Test
     public void testReadAllMessages()
     throws Exception {
-        ZimbraLog.test.debug("testReadAllMessages");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         setUnread(getMessage1(), false);
@@ -179,42 +181,46 @@ public class TestUnread extends TestCase {
         verifyAllRead();
     }
 
+    @Test
     public void testReadConversation()
     throws Exception {
-        ZimbraLog.test.debug("testReadConversation");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         setUnread(getConv(), false);
         verifyAllRead();
     }
 
+    @Test
     public void testReadFolder1()
     throws Exception {
-        ZimbraLog.test.debug("testReadFolder1");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
         setUnread(getFolder1(), false);
         verifyMessage1Read();
     }
 
+    @Test
     public void testReadFolder2()
     throws Exception {
-        ZimbraLog.test.debug("testReadFolder2");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         setUnread(getFolder2(), false);
 
-        assertEquals("getMessage1().getUnreadCount()", 1, getMessage1().getUnreadCount());
-        assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
-        assertEquals("getMessage3().getUnreadCount()", 0, getMessage3().getUnreadCount());
-        assertEquals("getConv().getUnreadCount()", 1, getConv().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 0, getFolder2().getUnreadCount());
-        assertEquals("getTag1().getUnreadCount()", 1, getTag1().getUnreadCount());
-        assertEquals("getTag2().getUnreadCount()", 1, getTag2().getUnreadCount());
-        assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
+        Assert.assertEquals("getMessage1().getUnreadCount()", 1, getMessage1().getUnreadCount());
+        Assert.assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
+        Assert.assertEquals("getMessage3().getUnreadCount()", 0, getMessage3().getUnreadCount());
+        Assert.assertEquals("getConv().getUnreadCount()", 1, getConv().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 0, getFolder2().getUnreadCount());
+        Assert.assertEquals("getTag1().getUnreadCount()", 1, getTag1().getUnreadCount());
+        Assert.assertEquals("getTag2().getUnreadCount()", 1, getTag2().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
+    @Test
     public void testReadAllFolders()
     throws Exception {
-        ZimbraLog.test.debug("testReadAllMessages");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         setUnread(getFolder1(), false);
@@ -222,121 +228,129 @@ public class TestUnread extends TestCase {
         verifyAllRead();
     }
 
+    @Test
     public void testReadTag1()
     throws Exception {
-        ZimbraLog.test.debug("testReadTag1");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
         setUnread(getTag1(), false);
         verifyMessage1Read();
     }
 
+    @Test
     public void testReadTag2()
     throws Exception {
-        ZimbraLog.test.debug("testReadTag2");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         setUnread(getTag2(), false);
 
-        assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
-        assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
-        assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
-        assertEquals("getConv().getUnreadCount()", 1, getConv().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 0, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
-        assertEquals("getTag1().getUnreadCount()", 0, getTag1().getUnreadCount());
-        assertEquals("getTag2().getUnreadCount()", 0, getTag2().getUnreadCount());
-        assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
+        Assert.assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
+        Assert.assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
+        Assert.assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
+        Assert.assertEquals("getConv().getUnreadCount()", 1, getConv().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 0, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
+        Assert.assertEquals("getTag1().getUnreadCount()", 0, getTag1().getUnreadCount());
+        Assert.assertEquals("getTag2().getUnreadCount()", 0, getTag2().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
 
         verifyAllUnreadFlags();
     }
 
+    @Test
     public void testMoveMessage()
     throws Exception {
-        ZimbraLog.test.debug("testMoveMessage");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         // Move M2 from F2 to F1
         mMbox.move(null, mMessage2Id, getMessage2().getType(), mFolder1Id);
-        assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 2, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
+        Assert.assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 2, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
 
         // Mark M2 as read
         setUnread(getMessage2(), false);
-        assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
+        Assert.assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
 
         // Move M2 back to F2 and verify that the counts are unchanged
         mMbox.move(null, mMessage2Id, getMessage2().getType(), mFolder2Id);
-        assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
+        Assert.assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
     }
 
+    @Test
     public void testMoveConversation()
     throws Exception {
-        ZimbraLog.test.debug("testMoveConversation");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         // Read M1 and move the whole conversation to F1
         setUnread(getMessage1(), false);
         mMbox.move(null, getConv().getId(), getConv().getType(), mFolder1Id);
-        assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
-        assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
-        assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
-        assertEquals("getConv().getUnreadCount()", 2, getConv().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 2, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 0, getFolder2().getUnreadCount());
+        Assert.assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
+        Assert.assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
+        Assert.assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
+        Assert.assertEquals("getConv().getUnreadCount()", 2, getConv().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 2, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 0, getFolder2().getUnreadCount());
 
         // Move the conversation to F2
         mMbox.move(null, getConv().getId(), getConv().getType(), mFolder2Id);
-        assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
-        assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
-        assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
-        assertEquals("getConv().getUnreadCount()", 2, getConv().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 0, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 2, getFolder2().getUnreadCount());
+        Assert.assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
+        Assert.assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
+        Assert.assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
+        Assert.assertEquals("getConv().getUnreadCount()", 2, getConv().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 0, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 2, getFolder2().getUnreadCount());
     }
 
+    @Test
     public void testTagMessage()
     throws Exception {
-        ZimbraLog.test.debug("testTagMessage");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         // Add T3 to M3
         mMbox.alterTag(null, mMessage3Id, getMessage3().getType(), getTag3().getName(), true, null);
-        assertEquals("getTag3().getUnreadCount()", 1, getTag3().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 1, getTag3().getUnreadCount());
 
         // Add T3 to M2
         mMbox.alterTag(null, mMessage2Id, getMessage2().getType(), getTag3().getName(), true, null);
-        assertEquals("getTag3().getUnreadCount()", 2, getTag3().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 2, getTag3().getUnreadCount());
 
         // Remove T3 from M3
         mMbox.alterTag(null, mMessage3Id, getMessage3().getType(), getTag3().getName(), false, null);
-        assertEquals("getTag3().getUnreadCount()", 1, getTag3().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 1, getTag3().getUnreadCount());
     }
 
+    @Test
     public void testTagConversation()
     throws Exception {
-        ZimbraLog.test.debug("testTagConversation");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         // Add T3 to C
         mMbox.alterTag(null, getConv().getId(), getConv().getType(), getTag3().getName(), true, null);
-        assertEquals("getTag3().getUnreadCount()", 3, getTag3().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 3, getTag3().getUnreadCount());
 
         // Remove T3 from C
         mMbox.alterTag(null, getConv().getId(), getConv().getType(), getTag3().getName(), false, null);
-        assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
     /**
      * Moves one read message and two unread messages to the trash.
      */
+    @Test
     public void testMoveToTrash()
     throws Exception {
-        ZimbraLog.test.debug("testMoveToTrash");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
+
         verifySetUp();
 
         Folder inbox = mMbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
@@ -344,92 +358,98 @@ public class TestUnread extends TestCase {
 
         // Move conversation to Inbox
         mMbox.move(null, getConv().getId(), getConv().getType(), Mailbox.ID_FOLDER_INBOX);
-        assertEquals("Move conversation to inbox", unreadCount + 3, inbox.getUnreadCount());
+        Assert.assertEquals("Move conversation to inbox", unreadCount + 3, inbox.getUnreadCount());
 
         // Read message 2
         setUnread(getMessage2(), false);
-        assertEquals("Read message 2", unreadCount + 2, inbox.getUnreadCount());
+        Assert.assertEquals("Read message 2", unreadCount + 2, inbox.getUnreadCount());
 
         // Move message 1
         mMbox.move(null, mMessage1Id, getMessage1().getType(), Mailbox.ID_FOLDER_TRASH);
-        assertEquals("Move message to trash", unreadCount + 1, inbox.getUnreadCount());
+        Assert.assertEquals("Move message to trash", unreadCount + 1, inbox.getUnreadCount());
 
         // Move the rest of the conversation
         mMbox.move(null, getConv().getId(), getConv().getType(), Mailbox.ID_FOLDER_TRASH);
-        assertEquals("Move conversation to trash", unreadCount, inbox.getUnreadCount());
+        Assert.assertEquals("Move conversation to trash", unreadCount, inbox.getUnreadCount());
     }
 
     /**
      * Makes sure that something comes back when searching for unread items.
      */
+    @Test
     public void testSearch() throws Exception {
-        ZimbraLog.test.debug("testSearch");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
         verifySetUp();
 
         ZimbraQueryResults results = mMbox.index.search(new OperationContext(mMbox), "is:unread",
                 EnumSet.of(MailItem.Type.MESSAGE), SortBy.DATE_DESC, 100);
-        assertTrue("No search results found", results.hasNext());
+        Assert.assertTrue("No search results found", results.hasNext());
         results.close();
     }
 
+    @Test
     public void testDeleteConversation()
     throws Exception {
-        ZimbraLog.test.debug("testDeleteConversation");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
+
         verifySetUp();
 
         mMbox.delete(null, getConv().getId(), getConv().getType());
 
-        assertEquals("getFolder1().getUnreadCount()", 0, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 0, getFolder2().getUnreadCount());
-        assertEquals("getTag1().getUnreadCount()", 0, getTag1().getUnreadCount());
-        assertEquals("getTag2().getUnreadCount()", 0, getTag2().getUnreadCount());
-        assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 0, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 0, getFolder2().getUnreadCount());
+        Assert.assertEquals("getTag1().getUnreadCount()", 0, getTag1().getUnreadCount());
+        Assert.assertEquals("getTag2().getUnreadCount()", 0, getTag2().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
+    @Test
     public void testDeleteFolder2()
     throws Exception {
-        ZimbraLog.test.debug("testDeleteFolder2");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
+
         verifySetUp();
 
         mMbox.delete(null, mFolder2Id, getFolder2().getType());
 
-        assertEquals("getMessage1().getUnreadCount()", 1, getMessage1().getUnreadCount());
-        assertEquals("getConv().getUnreadCount()", 1, getConv().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
-        assertEquals("getTag1().getUnreadCount()", 1, getTag1().getUnreadCount());
-        assertEquals("getTag2().getUnreadCount()", 1, getTag2().getUnreadCount());
-        assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
+        Assert.assertEquals("getMessage1().getUnreadCount()", 1, getMessage1().getUnreadCount());
+        Assert.assertEquals("getConv().getUnreadCount()", 1, getConv().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
+        Assert.assertEquals("getTag1().getUnreadCount()", 1, getTag1().getUnreadCount());
+        Assert.assertEquals("getTag2().getUnreadCount()", 1, getTag2().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
+    @Test
     public void testDeleteFolder1()
     throws Exception {
-        ZimbraLog.test.debug("testDeleteFolder1");
+        ZimbraLog.test.debug("Starting Test %s", name.getMethodName());
+
         verifySetUp();
 
         mMbox.delete(null, mFolder1Id, getFolder1().getType());
 
-        assertEquals("getTag1().getUnreadCount()", 0, getTag1().getUnreadCount());
-        assertEquals("getTag2().getUnreadCount()", 0, getTag2().getUnreadCount());
-        assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
+        Assert.assertEquals("getTag1().getUnreadCount()", 0, getTag1().getUnreadCount());
+        Assert.assertEquals("getTag2().getUnreadCount()", 0, getTag2().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
     private void verifyMessage1Read()
     throws Exception {
-        assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
-        assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
-        assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
-        assertEquals("getConv().getUnreadCount()", 2, getConv().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 0, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 2, getFolder2().getUnreadCount());
-        assertEquals("getTag1().getUnreadCount()", 0, getTag1().getUnreadCount());
-        assertEquals("getTag2().getUnreadCount()", 1, getTag2().getUnreadCount());
-        assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
+        Assert.assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
+        Assert.assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
+        Assert.assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
+        Assert.assertEquals("getConv().getUnreadCount()", 2, getConv().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 0, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 2, getFolder2().getUnreadCount());
+        Assert.assertEquals("getTag1().getUnreadCount()", 0, getTag1().getUnreadCount());
+        Assert.assertEquals("getTag2().getUnreadCount()", 1, getTag2().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
 
         verifyAllUnreadFlags();
     }
 
-    private void verifyAllUnreadFlags()
-    throws Exception {
+    private void verifyAllUnreadFlags() throws Exception {
         verifyUnreadFlag(getMessage1());
         verifyUnreadFlag(getMessage2());
         verifyUnreadFlag(getMessage3());
@@ -446,17 +466,17 @@ public class TestUnread extends TestCase {
             " WHERE mailbox_id = " + mMbox.getId() +
             " AND flags & " + Flag.BITMASK_UNREAD + " > 0");
         int numRows = results.getInt(1);
-        assertEquals("Found " + numRows + " items with old unread flag set", 0, numRows);
+        Assert.assertEquals("Found " + numRows + " items with old unread flag set", 0, numRows);
     }
 
     private void verifyUnreadFlag(MailItem item) throws Exception {
         String flagString = item.getFlagString();
         if (item.isUnread()) {
-            assertTrue("unread bit test: " + item.getFlagBitmask(), (item.getFlagBitmask() & Flag.BITMASK_UNREAD) > 0);
-            assertTrue("unread flag string: " + flagString, flagString.indexOf(Flag.toChar(Flag.ID_UNREAD)) >= 0);
+            Assert.assertTrue("unread bit test: " + item.getFlagBitmask(), (item.getFlagBitmask() & Flag.BITMASK_UNREAD) > 0);
+            Assert.assertTrue("unread flag string: " + flagString, flagString.indexOf(Flag.toChar(Flag.ID_UNREAD)) >= 0);
         } else {
-            assertTrue("read bit test: " + item.getFlagBitmask(), (item.getFlagBitmask() & Flag.BITMASK_UNREAD) == 0);
-            assertTrue("read flag string: " + flagString, flagString.indexOf(Flag.toChar(Flag.ID_UNREAD)) == -1);
+            Assert.assertTrue("read bit test: " + item.getFlagBitmask(), (item.getFlagBitmask() & Flag.BITMASK_UNREAD) == 0);
+            Assert.assertTrue("read flag string: " + flagString, flagString.indexOf(Flag.toChar(Flag.ID_UNREAD)) == -1);
         }
 
 //        if (item.getType() == MailItem.TYPE_MESSAGE || item.getType() == MailItem.TYPE_INVITE) {
@@ -466,21 +486,21 @@ public class TestUnread extends TestCase {
                 "FROM " + DbMailItem.getMailItemTableName(item) +
                 " WHERE mailbox_id = " + item.getMailboxId() +
                 " AND id = " + item.getId());
-            assertEquals("Verify unread flag in the database", item.isUnread(), results.getBoolean(1));
+            Assert.assertEquals("Verify unread flag in the database", item.isUnread(), results.getBoolean(1));
         }
     }
 
     private void verifyAllRead()
     throws Exception {
-        assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
-        assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
-        assertEquals("getMessage3().getUnreadCount()", 0, getMessage3().getUnreadCount());
-        assertEquals("getConv().getUnreadCount()", 0, getConv().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 0, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 0, getFolder2().getUnreadCount());
-        assertEquals("getTag1().getUnreadCount()", 0, getTag1().getUnreadCount());
-        assertEquals("getTag2().getUnreadCount()", 0, getTag2().getUnreadCount());
-        assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
+        Assert.assertEquals("getMessage1().getUnreadCount()", 0, getMessage1().getUnreadCount());
+        Assert.assertEquals("getMessage2().getUnreadCount()", 0, getMessage2().getUnreadCount());
+        Assert.assertEquals("getMessage3().getUnreadCount()", 0, getMessage3().getUnreadCount());
+        Assert.assertEquals("getConv().getUnreadCount()", 0, getConv().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 0, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 0, getFolder2().getUnreadCount());
+        Assert.assertEquals("getTag1().getUnreadCount()", 0, getTag1().getUnreadCount());
+        Assert.assertEquals("getTag2().getUnreadCount()", 0, getTag2().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
 
         verifyAllUnreadFlags();
     }
@@ -493,27 +513,23 @@ public class TestUnread extends TestCase {
 
     private void verifySetUp()
     throws Exception {
-        assertEquals("getMessage1().getUnreadCount()", 1, getMessage1().getUnreadCount());
-        assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
-        assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
-        assertEquals("getConv().getUnreadCount()", 3, getConv().getUnreadCount());
-        assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
-        assertEquals("getFolder2().getUnreadCount()", 2, getFolder2().getUnreadCount());
-        assertEquals("getTag1().getUnreadCount()", 1, getTag1().getUnreadCount());
-        assertEquals("getTag2().getUnreadCount()", 2, getTag2().getUnreadCount());
-        assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
+        Assert.assertEquals("getMessage1().getUnreadCount()", 1, getMessage1().getUnreadCount());
+        Assert.assertEquals("getMessage2().getUnreadCount()", 1, getMessage2().getUnreadCount());
+        Assert.assertEquals("getMessage3().getUnreadCount()", 1, getMessage3().getUnreadCount());
+        Assert.assertEquals("getConv().getUnreadCount()", 3, getConv().getUnreadCount());
+        Assert.assertEquals("getFolder1().getUnreadCount()", 1, getFolder1().getUnreadCount());
+        Assert.assertEquals("getFolder2().getUnreadCount()", 2, getFolder2().getUnreadCount());
+        Assert.assertEquals("getTag1().getUnreadCount()", 1, getTag1().getUnreadCount());
+        Assert.assertEquals("getTag2().getUnreadCount()", 2, getTag2().getUnreadCount());
+        Assert.assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
 
-        assertEquals("getMessage1().getFolderId()", mFolder1Id, getMessage1().getFolderId());
-        assertEquals("getMessage2().getFolderId()", mFolder2Id, getMessage2().getFolderId());
-        assertEquals("getMessage3().getFolderId()", mFolder2Id, getMessage3().getFolderId());
+        Assert.assertEquals("getMessage1().getFolderId()", mFolder1Id, getMessage1().getFolderId());
+        Assert.assertEquals("getMessage2().getFolderId()", mFolder2Id, getMessage2().getFolderId());
+        Assert.assertEquals("getMessage3().getFolderId()", mFolder2Id, getMessage3().getFolderId());
 
-        assertTrue("getMessage1().isTagged(getTag1())", getMessage1().isTagged(getTag1()));
-        assertTrue("getMessage1().isTagged(getTag2())", getMessage1().isTagged(getTag2()));
-        assertTrue("getMessage2().isTagged(getTag2())", getMessage2().isTagged(getTag2()));
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME);
+        Assert.assertTrue("getMessage1().isTagged(getTag1())", getMessage1().isTagged(getTag1()));
+        Assert.assertTrue("getMessage1().isTagged(getTag2())", getMessage1().isTagged(getTag2()));
+        Assert.assertTrue("getMessage2().isTagged(getTag2())", getMessage2().isTagged(getTag2()));
     }
 }
+

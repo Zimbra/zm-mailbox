@@ -24,7 +24,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZEmailAddress;
 import com.zimbra.client.ZFolder;
@@ -46,35 +51,33 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.handler.MessageRFC822Handler;
 
-public class TestLmtp
-extends TestCase {
+public class TestLmtp {
 
-    private static final String USER_NAME = "user1";
-    private static final String USER2_NAME = "user2";
-    private static final String NAME_PREFIX = TestLmtp.class.getSimpleName();
+    @Rule
+    public TestName testInfo = new TestName();
+
+    private String USER_NAME = null;
+    private String USER2_NAME = null;
+    private static final String NAME_PREFIX = TestLmtp.class.getSimpleName().toLowerCase();
 
     private static final String STARTTLS = "STARTTLS";
     private static final String NOOP = "NOOP";
     private static final String RSET = "RSET";
     private static final String VRFY = "VRFY";
 
-    private ZMailbox mbox;
+    private ZMailbox zmbox;
     private Account account;
-    private String originalWarnInterval;
-    private int originalWarnPercent;
     private String originalServerDiskThreshold;
     private String originalConfigDiskThreshold;
     private String originalQuota;
-    private String originalAllowReceiveButNotSendWhenOverQuota;
     private String originalDedupeCacheSize;
     private String originalDedupeCacheTimeout;
-    private String originalDedupingEnabled;
 
     private class LmtpClientThread
     implements Runnable {
 
-        private String mRecipient;
-        private String mContent;
+        private final String mRecipient;
+        private final String mContent;
 
         private LmtpClientThread(String recipient, String content) {
             mRecipient = recipient;
@@ -91,45 +94,60 @@ extends TestCase {
         }
     }
 
-    @Override
+    @Before
     public void setUp()
     throws Exception {
-        mbox = TestUtil.getZMailbox("user1");
-        account = TestUtil.getAccount("user1");
-        originalWarnInterval = account.getAttr(Provisioning.A_zimbraQuotaWarnInterval);
-        originalWarnPercent = account.getIntAttr(Provisioning.A_zimbraQuotaWarnPercent, 0);
-        originalServerDiskThreshold =
-            TestUtil.getServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold);
-        originalConfigDiskThreshold = TestUtil.getConfigAttr(
-            Provisioning.A_zimbraMailDiskStreamingThreshold);
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName().toLowerCase() + "-";
+        USER_NAME = prefix + "user1";
+        USER2_NAME = prefix + "user2";
+        cleanUp();
+        TestUtil.createAccount(USER_NAME);
+        zmbox = TestUtil.getZMailbox(USER_NAME);
+        account = TestUtil.getAccount(USER_NAME);
+        originalServerDiskThreshold = TestUtil.getServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold);
+        originalConfigDiskThreshold = TestUtil.getConfigAttr( Provisioning.A_zimbraMailDiskStreamingThreshold);
         originalQuota = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota);
-        originalAllowReceiveButNotSendWhenOverQuota =
-            TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota);
         originalDedupeCacheSize = TestUtil.getConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize);
         originalDedupeCacheTimeout = TestUtil.getConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheTimeout);
-        originalDedupingEnabled = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraPrefMessageIdDedupingEnabled);
+    }
+
+    @After
+    public void tearDown()
+    throws Exception {
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, originalServerDiskThreshold);
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, originalConfigDiskThreshold);
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, originalDedupeCacheSize);
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, originalDedupeCacheTimeout);
         cleanUp();
     }
+
+    private void cleanUp()
+    throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(USER2_NAME);
+    }
+
 
     /**
      * Tests reading data with various valid/invalid
      * values for the size hint and disk threshold.
      */
+    @Test
     public void testReadLmtpData()
     throws Exception {
         // Entire string
-        assertEquals("123", read("123", 3, 3));
-        assertEquals("123", read("123", -1, 3));
-        assertEquals("123", read("123", 0, 3));
-        assertEquals("123", read("123", 10, 3));
-        assertEquals("123", read("123", 3, 10));
+        Assert.assertEquals("123", read("123", 3, 3));
+        Assert.assertEquals("123", read("123", -1, 3));
+        Assert.assertEquals("123", read("123", 0, 3));
+        Assert.assertEquals("123", read("123", 10, 3));
+        Assert.assertEquals("123", read("123", 3, 10));
 
         // First two bytes
-        assertEquals("12", read("123", -1, 2));
-        assertEquals("12", read("123", 0, 2));
-        assertEquals("12", read("123", 1, 2));
-        assertEquals("12", read("123", 2, 2));
-        assertEquals("12", read("123", 10, 2));
+        Assert.assertEquals("12", read("123", -1, 2));
+        Assert.assertEquals("12", read("123", 0, 2));
+        Assert.assertEquals("12", read("123", 1, 2));
+        Assert.assertEquals("12", read("123", 2, 2));
+        Assert.assertEquals("12", read("123", 10, 2));
     }
 
     private String read(String dataString, int sizeHint, int limit)
@@ -142,17 +160,18 @@ extends TestCase {
         InputStream in = new ByteArrayInputStream(data);
 
         byte[] bytesRead = ByteUtil.readInput(in, sizeHint, limit);
-        assertEquals(numToRead, bytesRead.length);
-        assertEquals(numRemaining, in.available());
-        assertEquals(new String(expected), new String(bytesRead));
+        Assert.assertEquals(numToRead, bytesRead.length);
+        Assert.assertEquals(numRemaining, in.available());
+        Assert.assertEquals(new String(expected), new String(bytesRead));
         if (numRemaining == 0) {
-            assertEquals(-1, in.read());
+            Assert.assertEquals(-1, in.read());
         } else {
-            assertTrue(in.read() >= 0);
+            Assert.assertTrue(in.read() >= 0);
         }
         return new String(bytesRead);
     }
 
+    @Test
     public void testQuotaWarning()
     throws Exception {
         // Initialize
@@ -205,8 +224,8 @@ extends TestCase {
 
     private void validateNumWarnings(int numWarnings)
     throws Exception {
-        List<ZMessage> messages = TestUtil.search(mbox, "Quota warning");
-        assertEquals("Number of quota warnings", numWarnings, messages.size());
+        List<ZMessage> messages = TestUtil.search(zmbox, "Quota warning");
+        Assert.assertEquals("Number of quota warnings", numWarnings, messages.size());
     }
 
     private void setQuotaWarnPercent(int percent)
@@ -223,6 +242,7 @@ extends TestCase {
         Provisioning.getInstance().modifyAttrs(account, attrs);
     }
 
+    @Test
     public void testLmtpMessageInputStream()
     throws Exception {
         String prefix = "12345678\r\n";
@@ -283,13 +303,14 @@ extends TestCase {
         if (prefix == null) {
             prefix = "";
         }
-        assertEquals(prefix + expectedOutput, readContent.toString());
-        assertEquals(expectedOutput.length() + prefix.length(), lin.getMessageSize());
+        Assert.assertEquals(prefix + expectedOutput, readContent.toString());
+        Assert.assertEquals(expectedOutput.length() + prefix.length(), lin.getMessageSize());
     }
 
     /**
      * Confirms that mail can successfully be delivered to one user when streaming to disk.
      */
+    @Test
     public void testDiskStreamingOneRecipient()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "0");
@@ -302,8 +323,10 @@ extends TestCase {
     /**
      * Confirms that mail can successfully be delivered to multiple users when streaming to disk.
      */
+    @Test
     public void testDiskStreamingMultipleRecipients()
     throws Exception {
+        TestUtil.createAccount(USER2_NAME);
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "0");
         String[] recipients = {
             TestUtil.getAddress(USER_NAME),
@@ -329,8 +352,10 @@ extends TestCase {
      * Another test for bug 25484.  Delivers a message to user1 and user2, then confirms that
      * user1 can still read the message after user2 empties the folder that contains the message.
      */
+    @Test
     public void testDiskStreamingEmptyFolder()
     throws Exception {
+        TestUtil.createAccount(USER2_NAME);
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "0");
         String[] recipients = {
             TestUtil.getAddress(USER_NAME),
@@ -361,6 +386,7 @@ extends TestCase {
     /**
      * Confirms that a message gets delivered regardless of what the size hint is set to.
      */
+    @Test
     public void testSizeHint()
     throws Exception {
         // Send the same message 5 times with different size hints
@@ -380,7 +406,7 @@ extends TestCase {
 
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZMessage> messages = TestUtil.search(mbox, subject);
-        assertEquals(5, messages.size());
+        Assert.assertEquals(5, messages.size());
 
         // Check message bodies
         ZGetMessageParams params = new ZGetMessageParams();
@@ -396,6 +422,7 @@ extends TestCase {
      * of the attached message is indexed.
      * @see MessageRFC822Handler
      */
+    @Test
     public void testAttachedMessage()
     throws Exception {
         String outerSubject = NAME_PREFIX + " testAttachedMessage outer";
@@ -423,21 +450,22 @@ extends TestCase {
 
         // Test search for message subject
         List<ZMessage> msgs = TestUtil.search(mbox, "in:inbox " + innerSubject);
-        assertEquals(1, msgs.size());
+        Assert.assertEquals(1, msgs.size());
         msgs = TestUtil.search(mbox, "in:sent " + innerSubject);
-        assertEquals(1, msgs.size());
+        Assert.assertEquals(1, msgs.size());
 
         // Test search for message body
         msgs = TestUtil.search(mbox, "in:inbox " + NAME_PREFIX + " waves");
-        assertEquals(1, msgs.size());
+        Assert.assertEquals(1, msgs.size());
         msgs = TestUtil.search(mbox, "in:sent " + NAME_PREFIX + " waves");
-        assertEquals(1, msgs.size());
+        Assert.assertEquals(1, msgs.size());
     }
 
     /**
      * Confirms that delivery succeeds when <tt>zimbraMailDiskStreamingThreshold</tt>
      * isn't set (bug 22536).
      */
+    @Test
     public void testMissingDiskThreshold()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "");
@@ -453,6 +481,7 @@ extends TestCase {
      * same message to the same message to the same mailbox simultaneously.  Confirms
      * that only one copy got delivered.  Bug 38898.
      */
+    @Test
     public void testConcurrentDedupe()
     throws Exception {
         String subject = NAME_PREFIX + " testConcurrentDedupe";
@@ -471,7 +500,7 @@ extends TestCase {
         }
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZMessage> messages = TestUtil.search(mbox, "in:inbox subject:\"" + subject + "\"");
-        assertEquals(1, messages.size());
+        Assert.assertEquals(1, messages.size());
     }
 
     /**
@@ -480,6 +509,7 @@ extends TestCase {
      * failure occurs.  Bug 38898.
      * @throws Exception
      */
+    @Test
     public void testDeliveryAfterFailure()
     throws Exception {
         String subject = NAME_PREFIX + " testDeliveryAfterFailure";
@@ -489,7 +519,7 @@ extends TestCase {
 
         // Set quota to 1 byte and make sure delivery fails.
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, "1");
-        assertFalse("LMTP should not have succeeded", TestUtil.addMessageLmtp(recipients, USER_NAME, content));
+        Assert.assertFalse("LMTP should not have succeeded", TestUtil.addMessageLmtp(recipients, USER_NAME, content));
 
         // Reset quota, retry, and make sure the delivery succeeds.
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, originalQuota);
@@ -501,6 +531,7 @@ extends TestCase {
     /**
      * Verifies the behavior of {@code zimbraPrefMessageIdDedupingEnabled}.
      */
+    @Test
     public void testDedupePref()
     throws Exception {
         String subject = NAME_PREFIX + " testDedupePref";
@@ -518,12 +549,12 @@ extends TestCase {
         // Redeliver with deduping enabled.
         account.setPrefMessageIdDedupingEnabled(true);
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
-        assertEquals(1, TestUtil.search(mbox, query).size());
+        Assert.assertEquals(1, TestUtil.search(mbox, query).size());
 
         // Redeliver with deduping disabled;
         account.setPrefMessageIdDedupingEnabled(false);
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
-        assertEquals(2, TestUtil.search(mbox, query).size());
+        Assert.assertEquals(2, TestUtil.search(mbox, query).size());
     }
 
     /**
@@ -541,21 +572,21 @@ extends TestCase {
                 withMessageIdHeader().create();
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
         String query = "in:inbox subject:\"" + subject + "\"";
-        assertEquals("message should have been delivered", 1, TestUtil.search(mbox, query).size());
+        Assert.assertEquals("message should have been delivered", 1, TestUtil.search(mbox, query).size());
 
         // Set deduping cache timeout to 0.5 sec
         TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, "500ms");
 
         // Redeliver same message immediately
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
-        assertEquals("deduping should have happened", 1, TestUtil.search(mbox, query).size());
+        Assert.assertEquals("deduping should have happened", 1, TestUtil.search(mbox, query).size());
 
         // sleep for just over 0.5 sec
         Thread.sleep(501);
 
         // Redeliver
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
-        assertEquals("dedupe cache entry should have timed out", 2, TestUtil.search(mbox, query).size());
+        Assert.assertEquals("dedupe cache entry should have timed out", 2, TestUtil.search(mbox, query).size());
     }
 
     /**
@@ -563,19 +594,21 @@ extends TestCase {
      * than the limit specified by {@link LC#zimbra_lmtp_max_line_length}.
      * Bug 42214.
      */
+    @Test
     public void testValidation()
     throws Exception {
         StringBuilder buf = new StringBuilder();
         for (int i = 0; i <= LC.zimbra_lmtp_max_line_length.longValue(); i++) {
             buf.append('x');
         }
-        assertFalse(TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, buf.toString()));
+        Assert.assertFalse(TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, buf.toString()));
     }
 
+    @Test
     public void testTransparency() throws Exception {
         String subject = NAME_PREFIX + " LMTPTransparency1";
         String body = "line1\r\n.line2\r\n..line3\r\n...line4\r\n";
-        assertTrue(TestUtil.addMessageLmtp(subject, new String[] { USER_NAME } , USER_NAME, body));
+        Assert.assertTrue(TestUtil.addMessageLmtp(subject, new String[] { USER_NAME } , USER_NAME, body));
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZMessage msg = TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         String currentBody = msg.getMimeStructure().getContent();
@@ -585,6 +618,7 @@ extends TestCase {
     /**
      * Verifies send/receive behavior for {@code zimbraMailAllowReceiveButNotSendWhenOverQuota}.
      */
+    @Test
     public void testAllowReceiveButNotSendWhenOverQuota()
     throws Exception {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, LdapConstants.LDAP_TRUE);
@@ -599,18 +633,18 @@ extends TestCase {
         // Verify that send is disallowed.
         try {
             TestUtil.sendMessage(mbox, USER_NAME, subject);
-            fail("Send should have failed");
+            Assert.fail("Send should have failed");
         } catch (ServiceException e) {
-            assertEquals(MailServiceException.QUOTA_EXCEEDED, e.getCode());
+            Assert.assertEquals(MailServiceException.QUOTA_EXCEEDED, e.getCode());
         }
 
         // Verify that adding a document is disallowed.
         try {
             byte[] data = new byte[1024];
             TestUtil.createDocument(mbox, Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE), NAME_PREFIX + " receivenosend.bin", "application/content-stream", data);
-            fail("Document creation should have failed");
+            Assert.fail("Document creation should have failed");
         } catch (ServiceException e) {
-            assertEquals(MailServiceException.QUOTA_EXCEEDED, e.getCode());
+            Assert.assertEquals(MailServiceException.QUOTA_EXCEEDED, e.getCode());
         }
 
         // Verify that saving a draft is allowed (bug 51457).
@@ -626,6 +660,7 @@ extends TestCase {
      * Verifies that duplicate suppression recognizes the {@code Resent-Message-ID} header
      * (bug 36297).
      */
+    @Test
     public void testResentMessageId()
     throws Exception {
         Provisioning.getInstance().getConfig().setMessageIdDedupeCacheSize(1000);
@@ -638,97 +673,101 @@ extends TestCase {
         String[] recipients = new String[] { USER_NAME };
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
         String query = "in:inbox subject:\"" + subject + "\"";
-        assertEquals(1, TestUtil.search(mbox, query).size());
+        Assert.assertEquals(1, TestUtil.search(mbox, query).size());
 
         // Set Resent-Message-ID header and redeliver.
         content = "Resent-Message-ID: " + System.currentTimeMillis() + "\r\n" + content;
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
-        assertEquals(2, TestUtil.search(mbox, query).size());
+        Assert.assertEquals(2, TestUtil.search(mbox, query).size());
 
         // Prepend a second Resent-Message-ID header and redeliver.
         content = "Resent-Message-ID: " + System.currentTimeMillis() + "\r\n" + content;
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
-        assertEquals(3, TestUtil.search(mbox, query).size());
+        Assert.assertEquals(3, TestUtil.search(mbox, query).size());
 
         // Redeliver the same message, make sure it gets deduped.
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
-        assertEquals(3, TestUtil.search(mbox, query).size());
+        Assert.assertEquals(3, TestUtil.search(mbox, query).size());
     }
 
     // bug 53058
+    @Test
     public void testFinalDotNotSent() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         LmtpClient lmtpClient =
                 new LmtpClient("localhost",
                                Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
 
         if (lmtpClient.getResponse().contains(STARTTLS)) {
-        	lmtpClient.startTLS();
-        	lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
-        	assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+            lmtpClient.startTLS();
+            lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+            Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         }
         lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         lmtpClient.sendLine("RCPT TO:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         lmtpClient.sendLine("DATA");
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         String subject = NAME_PREFIX + " testFinalDotNotSent";
         lmtpClient.sendLine("Subject: " + subject);
         lmtpClient.abruptClose();
         // wait for some time
         Thread.sleep(1000);
         List<ZMessage> msgs = TestUtil.search(mbox, "in:inbox " + subject);
-        assertTrue("msg got delivered via LMTP even though <CRLF>.<CRLF> was not received", msgs.isEmpty());
+        Assert.assertTrue("msg got delivered via LMTP even though <CRLF>.<CRLF> was not received", msgs.isEmpty());
     }
 
+    @Test
     public void testStartTLSSuccess() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         LmtpClient lmtpClient =
                 new LmtpClient("localhost",
                                Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         if (lmtpClient.getResponse().contains(STARTTLS)) {
-        	lmtpClient.startTLS();
-        	lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
-        	assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+            lmtpClient.startTLS();
+            lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+            Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         }
         lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         lmtpClient.sendLine("RCPT TO:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         lmtpClient.sendLine("DATA");
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         String subject = NAME_PREFIX + " testFinalDotNotSent";
         lmtpClient.sendLine("Subject: " + subject);
         lmtpClient.abruptClose();
         // wait for some time
         Thread.sleep(1000);
         List<ZMessage> msgs = TestUtil.search(mbox, "in:inbox " + subject);
-        assertTrue("msg got delivered via LMTP even though <CRLF>.<CRLF> was not received", msgs.isEmpty());
+        Assert.assertTrue("msg got delivered via LMTP even though <CRLF>.<CRLF> was not received", msgs.isEmpty());
     }
 
+    @Test
     public void testServeShouldNotPublishStartTlsOnSecondLlhoCommand() throws Exception {
         LmtpClient lmtpClient =
                 new LmtpClient("localhost",
                                Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
-        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         if(lmtpClient.getResponse().contains("STARTTLS")) {
             lmtpClient.startTLS();
             lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
-            assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
-            assertTrue(lmtpClient.getResponse(), !lmtpClient.getResponse().contains(STARTTLS));
+            Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+            Assert.assertTrue(lmtpClient.getResponse(), !lmtpClient.getResponse().contains(STARTTLS));
         }
         lmtpClient.abruptClose();
     }
 
+    @Test
     public void testLhloNotSendByClient() throws Exception {
         String [] commands = new String []{
                 NOOP,
@@ -744,14 +783,15 @@ extends TestCase {
         for (String command : commands) {
             lmtpClient = new LmtpClient("localhost",
                                    Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
-            assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+            Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
             lmtpClient.sendLine(command);
             replyOk = lmtpClient.replyOk();
-            assertTrue("Response :"+ lmtpClient.getResponse() + " for command :" + command, lhloRequired? !replyOk : replyOk);
+            Assert.assertTrue("Response :"+ lmtpClient.getResponse() + " for command :" + command, lhloRequired? !replyOk : replyOk);
             lmtpClient.abruptClose();
         }
     }
 
+    @Test
     public void testLhloNotSendByClientAfterStartTLS() throws Exception {
         String [] commands = new String []{
                 NOOP,
@@ -768,59 +808,35 @@ extends TestCase {
             lmtpClient = new LmtpClient("localhost", Provisioning.getInstance()
                     .getLocalServer()
                     .getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
-            assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+            Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
             lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
-            assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+            Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
             if (lmtpClient.getResponse().contains("STARTTLS")) {
                 lmtpClient.startTLS();
                 lmtpClient.sendLine(command);
                 replyOk = lmtpClient.replyOk();
-                assertTrue("Response :"+ lmtpClient.getResponse() + " for command :" + command, lhloRequired? !replyOk : replyOk);
+                Assert.assertTrue("Response :"+ lmtpClient.getResponse() + " for command :" + command, lhloRequired? !replyOk : replyOk);
             }
             lmtpClient.abruptClose();
         }
     }
 
+    @Test
     public void testErrorWhenNoStartTlsOnSslEnforcedByServer() throws Exception {
         boolean tlsEnforcedByServer = LC.zimbra_require_interprocess_security.booleanValue();
         if (tlsEnforcedByServer) {
              LmtpClient lmtpClient =
                      new LmtpClient("localhost",
                                     Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
-        	 assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+             Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
              lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
-             assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+             Assert.assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
              if(lmtpClient.getResponse().contains("STARTTLS")) {
-             	lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
-             	assertTrue(lmtpClient.getResponse(), !lmtpClient.replyOk());
+                 lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
+                 Assert.assertTrue(lmtpClient.getResponse(), !lmtpClient.replyOk());
              }
              lmtpClient.abruptClose();
         }
-    }
-
-
-
-    @Override
-    public void tearDown()
-    throws Exception {
-        setQuotaWarnPercent(originalWarnPercent);
-        setQuotaWarnInterval(originalWarnInterval);
-        TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, originalServerDiskThreshold);
-        TestUtil.setConfigAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, originalConfigDiskThreshold);
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, originalQuota);
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota,
-            originalAllowReceiveButNotSendWhenOverQuota);
-        TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, originalDedupeCacheSize);
-        TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, originalDedupeCacheTimeout);
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraPrefMessageIdDedupingEnabled, originalDedupingEnabled);
-        cleanUp();
-    }
-
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(USER_NAME, "Quota warning");
-        TestUtil.deleteTestData(USER2_NAME, NAME_PREFIX);
     }
 
     public static void main(String[] args)

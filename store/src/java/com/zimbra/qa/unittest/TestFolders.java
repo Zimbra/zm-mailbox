@@ -17,43 +17,54 @@
 
 package com.zimbra.qa.unittest;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.google.common.base.Strings;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 
-public class TestFolders extends TestCase
-{
-    private static String USER_NAME = "user1";
-    private static String NAME_PREFIX = "TestFolders";
+public class TestFolders {
+    private static String USER_NAME = TestFolders.class.getSimpleName();
 
-    private String mOriginalEmptyFolderBatchSize;
+    private static String mOriginalEmptyFolderBatchSize;
 
-    @Override
-    protected void setUp()
-    throws Exception {
-        cleanUp();
+
+    @BeforeClass
+    public static void init() throws Exception {
         mOriginalEmptyFolderBatchSize = TestUtil.getServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize);
     }
 
+    @Before
+    public void setUp() throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.createAccount(USER_NAME);
+    }
 
-    public void testEmptyLargeFolder()
-    throws Exception {
+    @Test
+    public void testEmptyLargeFolder() throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize, Integer.toString(3));
 
         // Create folders.
-        String parentPath = "/" + NAME_PREFIX + "-parent";
+        String parentPath = "/parent";
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder parent = TestUtil.createFolder(mbox, parentPath);
         ZFolder child = TestUtil.createFolder(mbox, parent.getId(), "child");
 
         // Add messages.
         for (int i = 1; i <= 5; i++) {
-            TestUtil.addMessage(mbox, NAME_PREFIX + " parent " + i, parent.getId());
-            TestUtil.addMessage(mbox, NAME_PREFIX + " child " + i, child.getId());
+            TestUtil.addMessage(mbox, "parent " + i, parent.getId());
+            TestUtil.addMessage(mbox, "child " + i, child.getId());
         }
         mbox.noOp();
         assertEquals(5, parent.getMessageCount());
@@ -67,7 +78,7 @@ public class TestFolders extends TestCase
 
         // Add more messages to the parent folder.
         for (int i = 6; i <= 10; i++) {
-            TestUtil.addMessage(mbox, NAME_PREFIX + " parent " + i, parent.getId());
+            TestUtil.addMessage(mbox, "parent " + i, parent.getId());
         }
         mbox.noOp();
         assertEquals(5, parent.getMessageCount());
@@ -81,16 +92,13 @@ public class TestFolders extends TestCase
         assertEquals(0, parent.getMessageCount());
         assertNull(mbox.getFolderByPath(childPath));
     }
-    
+
+    @Ignore
+    @Test
     public void testCreateManyFolders() throws Exception {
         //normally skip this test since it takes a long time to complete. just keep it around for quick perf checks
-        boolean skip = true;
-        if (skip) {
-            return;
-        }
-
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        String parentPath = "/" + NAME_PREFIX + "-parent";
+        String parentPath = "/parent";
 
         ZFolder parent = TestUtil.createFolder(mbox, parentPath);
         int max = 10000;
@@ -115,19 +123,13 @@ public class TestFolders extends TestCase
         }
     }
 
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        ZFolder f = mbox.getFolderByPath("/f1");
-        if (f != null) {
-            mbox.deleteFolder(f.getId());
-        }
+    @After
+    public void tearDown() throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        cleanUp();
+    @AfterClass
+    public static void shutdown() throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize, mOriginalEmptyFolderBatchSize);
     }
 

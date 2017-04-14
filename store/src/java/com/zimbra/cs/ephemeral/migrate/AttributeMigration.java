@@ -124,6 +124,10 @@ public class AttributeMigration {
         converterMap.put(attribute, converter);
     }
 
+    public static AttributeConverter getConverter(String attrName) {
+        return converterMap.get(attrName);
+    }
+
     public void setSource(EntrySource source) {
         this.source = source;
     }
