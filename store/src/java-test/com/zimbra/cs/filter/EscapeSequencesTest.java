@@ -33,6 +33,7 @@ import org.junit.Test;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
@@ -57,12 +58,13 @@ public final class EscapeSequencesTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         MailboxTestUtil.clearData();
-        Provisioning prov = Provisioning.getInstance();
+        MockProvisioning prov = new MockProvisioning();
+        Provisioning.setInstance(prov);
 
         Map<String, Object> attrs = Maps.newHashMap();
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, "TRUE");
-        prov.getConfig().modify(attrs);
+        prov.getLocalServer().modify(attrs);
 
         prov.createDomain("zimbra.com", attrs);
 
