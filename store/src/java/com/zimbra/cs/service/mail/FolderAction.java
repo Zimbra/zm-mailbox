@@ -119,7 +119,7 @@ public class FolderAction extends ItemAction {
         if (FOLDER_OPS.contains(operation)) {
             successes = handleFolder(context, request, operation, result);
         } else {
-            successes = Joiner.on(",").join(handleCommon(context, request, operation, MailItem.Type.FOLDER).getSuccessIds());
+            successes = Joiner.on(",").join(handleCommon(context, request, MailItem.Type.FOLDER).getSuccessIds());
         }
         result.addAttribute(MailConstants.A_ID, successes);
         result.addAttribute(MailConstants.A_OPERATION, operation);
@@ -192,7 +192,7 @@ public class FolderAction extends ItemAction {
                         Domain domain = Provisioning.getInstance().getDomain(mbox.getAccount());
                         String granteeDomainName = ((MailTarget) nentry).getDomainName();
                         if (domain.isInternalSharingCrossDomainEnabled() ||
-                                domain.getName().equals(granteeDomainName) || 
+                                domain.getName().equals(granteeDomainName) ||
                                 Sets.newHashSet(domain.getInternalSharingDomain()).contains(granteeDomainName)) {
                             guestGrantee = false;
                             zid = nentry.getId();
@@ -420,7 +420,7 @@ public class FolderAction extends ItemAction {
         } else {
             throw ServiceException.INVALID_REQUEST("invalid grantee type for revokeOrphanGrants", null);
         }
-        
+
         String query = "(" + Provisioning.A_zimbraId + "=" + granteeId + ")";
         opts.setFilterString(FilterId.SEARCH_GRANTEE, query);
         opts.setOnMaster(true);  // search the grantee on LDAP master
@@ -429,7 +429,7 @@ public class FolderAction extends ItemAction {
         if (entries.size() != 0) {
             throw ServiceException.INVALID_REQUEST("grantee " + granteeId + " exists", null);
         }
-        
+
         // the grantee indeed does not exist, revoke all grants granted to the grantee
         // in this folder and all subfolders
         FolderNode rootNode = mbox.getFolderTree(octxt, iid, true);
@@ -469,5 +469,5 @@ public class FolderAction extends ItemAction {
         for (FolderNode subNode : node.mSubfolders)
             revokeOrphanGrants(octxt, mbox, subNode, granteeId, gtype);
     }
-    
+
 }
