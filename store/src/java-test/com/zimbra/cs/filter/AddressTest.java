@@ -36,6 +36,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.lmtpserver.LmtpAddress;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -449,6 +451,48 @@ public class AddressTest {
             Assert.assertEquals(0, msg.getTags().length);
         } catch (Exception e) {
             fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testDomainIs() {
+        String filterScript = "require  [\"envelope\", \"tag\"];\n"
+                + "if address :domain :is \"to\" \"zimbra.com\" {\n"
+                + "    tag \"is-domain\";\n"
+                + "}\n"
+                + "if address :localpart :is \"to\" \"xyz\" {\n"
+                + "    tag \"is-local\";\n"
+                + "}\n"
+                + "if address :all :is \"to\" \"xyz@zimbra.com\" {"
+                + "    tag \"is-all\";\n"
+                + "}";
+
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Account account = prov.createAccount("xyz@zimbra.com", "secret", new HashMap<String, Object>());
+            account.setMail("xyz@zimbra.com");
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage("To: xyz@zimbra.com".getBytes(), false), 0,
+                    account.getName(),
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+
+            String[] tags = msg.getTags();
+            Assert.assertTrue(tags != null);
+            Assert.assertEquals(3, tags.length);
+            Assert.assertEquals("is-domain", tags[0]);
+            Assert.assertEquals("is-local", tags[1]);
+            Assert.assertEquals("is-all", tags[2]);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e);
         }
     }
 }
