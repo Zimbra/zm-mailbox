@@ -40,7 +40,7 @@ public class MsgAction extends ItemAction {
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
 
-        String successes = Joiner.on(",").join(handleCommon(context, request, operation, MailItem.Type.MESSAGE).getSuccessIds());
+        String successes = Joiner.on(",").join(handleCommon(context, request, MailItem.Type.MESSAGE).getSuccessIds());
 
         Element response = lc.createElement(MailConstants.MSG_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailConstants.E_ACTION);

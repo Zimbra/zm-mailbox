@@ -77,7 +77,7 @@ public class TagAction extends ItemAction  {
             mbox.setRetentionPolicy(octxt, iid.getId(), MailItem.Type.TAG, rp);
             successes = new ItemIdFormatter(zsc).formatItemId(iid);
         } else {
-            successes = Joiner.on(",").join(handleCommon(context, request, opAttr, MailItem.Type.TAG).getSuccessIds());
+            successes = Joiner.on(",").join(handleCommon(context, request, MailItem.Type.TAG).getSuccessIds());
         }
 
         Element response = zsc.createElement(MailConstants.TAG_ACTION_RESPONSE);
