@@ -9506,7 +9506,6 @@ TODO: delete them permanently from here
   <desc>Specifies the amount of time a thread will wait for a JedisPool resource. A value of 0 will cause the thread to block indefinitely.</desc>
 </attr>
 
-<<<<<<< HEAD
 <attr id="3012" name="zimbraOpenImapFolderRequestChunkSize" type="integer" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.1">
   <globalConfigValue>1000</globalConfigValue>
   <desc>The max number of IMAP messages returned by OpenImapFolderRequest before pagination begins</desc>
@@ -9536,11 +9535,5 @@ TODO: delete them permanently from here
   <globalConfigValue>32</globalConfigValue>
   <desc>Configures the 'upstream_fair_shm_size' value used by Nginx to set the size of shared memory for storing information about the busy-ness of backends. Values are in kilobytes.</desc>
 </attr>
-=======
-<attr id="3012" name="zimbraOpenImapFolderRequestChunkSize" type="integer" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
-  <globalConfigValue>1000</globalConfigValue>
-  <desc>The max number of IMAP messages returned by OpenImapFolderRequest before pagination begins</desc>
-</attr>
 
->>>>>>> zimbraOpenImapFolderRequestChunkSize attribute
 </attrs>
