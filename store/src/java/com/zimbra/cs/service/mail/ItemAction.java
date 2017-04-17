@@ -144,7 +144,7 @@ public class ItemAction extends MailDocumentHandler {
         Account remoteNotify = forceRemoteSession(zsc, context, octxt, opStr, action);
 
         // handle referenced items living on other servers
-        ItemActionResult remoteResults = proxyRemoteItems(action, remote, request, context);
+        ItemActionResult result = proxyRemoteItems(action, remote, request, context);
 
         // handle referenced items living on this server
         if (!local.isEmpty()) {
@@ -231,7 +231,12 @@ public class ItemAction extends MailDocumentHandler {
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + opStr, null);
             }
-            successes.appendSuccessIds(localResults.getSuccessIds());
+
+            result.appendSuccessIds(localResults.getSuccessIds());
+            if (opStr.equals(MailConstants.OP_HARD_DELETE))
+            {
+                ((DeleteActionResult)result).appendNonExistentIds(((DeleteActionResult)localResults).getNonExistentIds());
+            }
         }
 
         // for moves/copies, make sure that we received notifications from the target folder
@@ -239,7 +244,7 @@ public class ItemAction extends MailDocumentHandler {
             proxyRequest(zsc.createElement(MailConstants.NO_OP_REQUEST), context, remoteNotify.getId());
         }
 
-        return successes;
+        return result;
     }
 
     protected ItemActionResult handleTrashOperation(OperationContext octxt, Element request, Mailbox mbox,
