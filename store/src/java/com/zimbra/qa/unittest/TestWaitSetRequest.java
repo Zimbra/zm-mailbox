@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.bind.JAXBException;
@@ -56,6 +57,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.CommitId;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetRequest;
@@ -80,13 +82,14 @@ public class TestWaitSetRequest {
     private static final String NAME_PREFIX = TestWaitSetRequest.class.getSimpleName();
     Account acc1 = null;
     Account acc2 = null;
-    private boolean cbCalled = false;
+    Account acc3 = null;
+    private AtomicBoolean cbCalled = new AtomicBoolean(false);
     private Marshaller marshaller;
     private String waitSetId = null;
     private String failureMessage = null;
-    private boolean success = false;
+    private AtomicBoolean success = new AtomicBoolean(false);
     private AtomicInteger numSignalledAccounts = new AtomicInteger(0);
-    private AtomicInteger lastSeqNum = new AtomicInteger(0);
+    private String lastSeqNum = null;
     private final SoapProvisioning soapProv = new SoapProvisioning();
 
     @Before
@@ -116,15 +119,19 @@ public class TestWaitSetRequest {
             acc2.deleteAccount();
             acc2 = null;
         }
-        cbCalled = false;
+        if(acc3 != null) {
+            acc3.deleteAccount();
+            acc3 = null;
+        }
+        cbCalled.set(false);
         numSignalledAccounts.set(0);
-        lastSeqNum.set(0);
+        lastSeqNum = null;
         if(waitSetId != null) {
             WaitSetMgr.destroy(null, null, waitSetId);
             waitSetId = null;
         }
         failureMessage = null;
-        success = false;
+        success.set(false);
     }
 
     private String envelope(String authToken, String requestBody, String urn) {
@@ -289,7 +296,7 @@ public class TestWaitSetRequest {
         folderInterest.add(user1FunFolder.getFolderIdInOwnerMailbox());
 
         //initially only interested in user1::funFolder
-        AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken);
+        AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken, false);
         Assert.assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
         int seq = resp.getSequence();
@@ -542,18 +549,77 @@ public class TestWaitSetRequest {
         return add;
     }
 
-    private AdminCreateWaitSetResponse createAdminWaitSet(Set<String> accountIds, String authToken) throws Exception {
-        AdminCreateWaitSetRequest req = new AdminCreateWaitSetRequest("all", false);
-        for(String accountId : accountIds) {
-            WaitSetAddSpec add = new WaitSetAddSpec();
-            add.setId(accountId);
-            req.addAccount(add);
+    private AdminCreateWaitSetResponse createAdminWaitSet(Set<String> accountIds, String authToken, boolean all) throws Exception {
+        AdminCreateWaitSetRequest req = new AdminCreateWaitSetRequest("all", all);
+        if(accountIds != null) {
+            for(String accountId : accountIds) {
+                WaitSetAddSpec add = new WaitSetAddSpec();
+                add.setId(accountId);
+                req.addAccount(add);
+            }
         }
 
         DocumentResult dr = new DocumentResult();
         marshaller.marshal(req, dr);
         Document doc = dr.getDocument();
         return (AdminCreateWaitSetResponse)sendReq(envelope(authToken, doc.getRootElement().asXML(), "urn:zimbra"), TestUtil.getAdminSoapUrl() + "AdminCreateWaitSetRequest");
+    }
+
+    @Test
+    public void testBlockingAdminWaitAllAccounts() throws Exception {
+        ZimbraLog.test.info("Starting testBlockingAdminWaitAllAccounts");
+        String user1Name = "testBlockingAdminWaitAllAccounts_user1";
+        String user2Name = "testBlockingAdminWaitAllAccounts_user2";
+        String user3Name = "testBlockingAdminWaitAllAccounts_user3";
+        acc1 = TestUtil.createAccount(user1Name);
+        acc2 = TestUtil.createAccount(user2Name);
+        acc3 = TestUtil.createAccount(user3Name);
+        ZMailbox mbox = TestUtil.getZMailbox(user1Name);
+        ZMailbox mbox2 = TestUtil.getZMailbox(user2Name);
+        ZMailbox mbox3 = TestUtil.getZMailbox(user3Name);
+        String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
+        AdminCreateWaitSetResponse resp = createAdminWaitSet(null, adminAuthToken, true);
+        Assert.assertNotNull(resp);
+        waitSetId = resp.getWaitSetId();
+        Assert.assertNotNull(waitSetId);
+        int seq = resp.getSequence();
+
+        AdminWaitSetRequest waitSetReq = new AdminWaitSetRequest(waitSetId, Integer.toString(seq));
+        waitSetReq.setBlock(true);
+        final CountDownLatch doneSignal = new CountDownLatch(1);
+        waitForAccounts(Arrays.asList(mbox.getAccountId(), mbox2.getAccountId(), mbox3.getAccountId()), doneSignal, waitSetReq, "testBlockingAdminWaitAllAccounts", true);
+        String subject = NAME_PREFIX + " test wait set request 1";
+        TestUtil.addMessage(mbox, subject);
+        TestUtil.addMessage(mbox2, subject);
+        TestUtil.addMessage(mbox3, subject);
+        try {
+            doneSignal.await(5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        Assert.assertTrue("callback was not triggered.", cbCalled.get());
+        Assert.assertTrue(failureMessage, success.get());
+        int signalled = numSignalledAccounts.intValue();
+        while(signalled < 3) {
+            cbCalled.set(false);
+            success.set(false);
+            failureMessage = null;
+            //the waitset may be triggered for all accounts at once or be triggered for each account separately
+            waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum);
+            waitSetReq.setBlock(true);
+            final CountDownLatch doneSignal1 = new CountDownLatch(1);
+            waitForAccounts(Arrays.asList(mbox.getAccountId(), mbox2.getAccountId(), mbox3.getAccountId()), doneSignal1, waitSetReq, "testBlockingAdminWaitAllAccounts", true);
+            try {
+                doneSignal1.await(5, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                Assert.fail("Wait interrupted.");
+            }
+            signalled += numSignalledAccounts.intValue();
+            ZimbraLog.test.debug("Signalled %d accounts", signalled);
+            Assert.assertTrue("callback was not triggered.", cbCalled.get());
+            Assert.assertTrue(failureMessage, success.get());
+        }
+        Assert.assertEquals("This waitset has to signal 3 accounts", 3, signalled);
     }
 
     @Test
@@ -569,7 +635,7 @@ public class TestWaitSetRequest {
         ZMailbox mbox2 = TestUtil.getZMailbox(user2Name);
         accountIds.add(mbox2.getAccountId());
         String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
-        AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken);
+        AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken, false);
         Assert.assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
         Assert.assertNotNull(waitSetId);
@@ -578,7 +644,7 @@ public class TestWaitSetRequest {
         AdminWaitSetRequest waitSetReq = new AdminWaitSetRequest(waitSetId, Integer.toString(seq));
         waitSetReq.setBlock(true);
         final CountDownLatch doneSignal = new CountDownLatch(1);
-        waitForAccounts(Arrays.asList(mbox.getAccountId(), mbox2.getAccountId()), doneSignal, waitSetReq, "testBlockingAdminWait2Accounts");
+        waitForAccounts(Arrays.asList(mbox.getAccountId(), mbox2.getAccountId()), doneSignal, waitSetReq, "testBlockingAdminWait2Accounts", false);
         String subject = NAME_PREFIX + " test wait set request 1";
         TestUtil.addMessage(mbox, subject);
         TestUtil.addMessage(mbox2, subject);
@@ -587,24 +653,24 @@ public class TestWaitSetRequest {
         } catch (Exception e) {
             Assert.fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback was not triggered.", cbCalled);
-        Assert.assertTrue(failureMessage, success);
+        Assert.assertTrue("callback was not triggered.", cbCalled.get());
+        Assert.assertTrue(failureMessage, success.get());
         if(numSignalledAccounts.intValue() < 2) {
-            cbCalled = false;
-            success = false;
+            cbCalled.set(false);
+            success.set(false);
             failureMessage = null;
-            //the waitset may get return both accounts at once or be triggered for each account separately
-            waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
+            //the waitset may be triggered for both accounts at once or be triggered for each account separately
+            waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum);
             waitSetReq.setBlock(true);
             final CountDownLatch doneSignal1 = new CountDownLatch(1);
-            waitForAccounts(Arrays.asList(mbox.getAccountId(), mbox2.getAccountId()), doneSignal1, waitSetReq, "testBlockingAdminWait2Accounts");
+            waitForAccounts(Arrays.asList(mbox.getAccountId(), mbox2.getAccountId()), doneSignal1, waitSetReq, "testBlockingAdminWait2Accounts", false);
             try {
                 doneSignal1.await(5, TimeUnit.SECONDS);
             } catch (Exception e) {
                 Assert.fail("Wait interrupted.");
             }
-            Assert.assertTrue("callback was not triggered.", cbCalled);
-            Assert.assertTrue(failureMessage, success);
+            Assert.assertTrue("callback was not triggered.", cbCalled.get());
+            Assert.assertTrue(failureMessage, success.get());
             Assert.assertEquals("If WaitSet was triggered again, it should have returned only one account", 1, numSignalledAccounts.intValue());
         }
     }
@@ -621,7 +687,7 @@ public class TestWaitSetRequest {
         accountIds.add(mbox.getAccountId());
         ZMailbox mbox2 = TestUtil.getZMailbox(user2Name);
         String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
-        AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken);
+        AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken, false);
         Assert.assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
         Assert.assertNotNull(waitSetId);
@@ -630,7 +696,7 @@ public class TestWaitSetRequest {
         AdminWaitSetRequest waitSetReq = new AdminWaitSetRequest(waitSetId, Integer.toString(seq));
         waitSetReq.setBlock(true);
         final CountDownLatch doneSignal = new CountDownLatch(1);
-        waitForAccounts(Arrays.asList(mbox.getAccountId()), doneSignal, waitSetReq, "testBlockingAdminWait1Account");
+        waitForAccounts(Arrays.asList(mbox.getAccountId()), doneSignal, waitSetReq, "testBlockingAdminWait1Account", false);
         String subject = NAME_PREFIX + " test wait set request 1";
         TestUtil.addMessage(mbox, subject);
         TestUtil.addMessage(mbox2, subject);
@@ -639,8 +705,8 @@ public class TestWaitSetRequest {
         } catch (Exception e) {
             Assert.fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback was not triggered.", cbCalled);
-        Assert.assertTrue(failureMessage, success);
+        Assert.assertTrue("callback was not triggered.", cbCalled.get());
+        Assert.assertTrue(failureMessage, success.get());
     }
 
     @Test
@@ -654,7 +720,7 @@ public class TestWaitSetRequest {
         ZMailbox mbox1 = TestUtil.getZMailbox(user1Name);
         accountIds.add(mbox1.getAccountId());
         String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
-        AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken);
+        AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken, false);
         Assert.assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
         Assert.assertNotNull(waitSetId);
@@ -664,7 +730,7 @@ public class TestWaitSetRequest {
         waitSetReq.setBlock(true);
         final CountDownLatch doneSignal = new CountDownLatch(1);
         ZimbraLog.test.info("Should signal only account %s", mbox1.getAccountId());
-        waitForAccounts(Arrays.asList(mbox1.getAccountId()), doneSignal, waitSetReq, "testBlockingAdminAddAccount - 1"); //should catch only update for user1
+        waitForAccounts(Arrays.asList(mbox1.getAccountId()), doneSignal, waitSetReq, "testBlockingAdminAddAccount - 1", false); //should catch only update for user1
         String subject = NAME_PREFIX + " test wait set request 1";
         ZMailbox mbox2 = TestUtil.getZMailbox(user2Name);
         TestUtil.addMessage(mbox1, subject); //this event will notify waitset
@@ -674,15 +740,15 @@ public class TestWaitSetRequest {
         } catch (Exception e) {
             Assert.fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback was not triggered.", cbCalled);
-        Assert.assertTrue(failureMessage, success);
+        Assert.assertTrue("callback was not triggered.", cbCalled.get());
+        Assert.assertTrue(failureMessage, success.get());
 
         //test 2, add user2 to the existing waitset
         ZimbraLog.test.info("Sending 2d AdminWaitSetRequest");
-        success = false;
+        success.set(false);
         failureMessage = null;
-        cbCalled = false;
-        waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
+        cbCalled.set(false);
+        waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum);
         waitSetReq.setBlock(true);
 
         //add user2 to the same waitset
@@ -695,49 +761,49 @@ public class TestWaitSetRequest {
         ZimbraLog.test.info("Should signal accounts %s and %s", mbox1.getAccountId(), mbox2.getAccountId());
         subject = NAME_PREFIX + " test wait set request 2";
 
-        waitForAccounts(Arrays.asList(mbox1.getAccountId(), mbox2.getAccountId()), doneSignal2, waitSetReq, "testBlockingAdminAddAccount - 2");
-        TestUtil.addMessage(mbox2, subject);
+        waitForAccounts(Arrays.asList(mbox1.getAccountId(), mbox2.getAccountId()), doneSignal2, waitSetReq, "testBlockingAdminAddAccount - 2", false);
         TestUtil.addMessage(mbox1, subject);
+        TestUtil.addMessage(mbox2, subject);
 
         try {
             doneSignal2.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
             Assert.fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback2 was not triggered.", cbCalled);
-        Assert.assertTrue(failureMessage, success);
-
-        if(numSignalledAccounts.intValue() < 2) {
-            cbCalled = false;
-            success = false;
+        Assert.assertTrue("callback2 was not triggered.", cbCalled.get());
+        Assert.assertTrue(failureMessage, success.get());
+        int signalled = numSignalledAccounts.intValue();
+        while(signalled < 2) {
+            cbCalled.set(false);
+            success.set(false);
             failureMessage = null;
             ZimbraLog.test.info("Sending followup to 2d AdminWaitSetRequest");
             //the waitset may return both accounts at once or be triggered for each account separately
-            waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
+            waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum);
             waitSetReq.setBlock(true);
             final CountDownLatch doneSignal1 = new CountDownLatch(1);
-            waitForAccounts(Arrays.asList(mbox1.getAccountId(), mbox2.getAccountId()), doneSignal1, waitSetReq, "testBlockingAdminAddAccount - 2.5");
+            waitForAccounts(Arrays.asList(mbox1.getAccountId(), mbox2.getAccountId()), doneSignal1, waitSetReq, "testBlockingAdminAddAccount - 2.5", false);
             try {
                 doneSignal1.await(5, TimeUnit.SECONDS);
             } catch (Exception e) {
                 Assert.fail("Wait interrupted.");
             }
-            Assert.assertTrue("callback2.5 was not triggered.", cbCalled);
-            Assert.assertTrue(failureMessage, success);
-            Assert.assertEquals("If WaitSet was triggered again, it should have returned only one account", 1, numSignalledAccounts.intValue());
+            Assert.assertTrue("callback2.5 was not triggered.", cbCalled.get());
+            Assert.assertTrue(failureMessage, success.get());
+            signalled+=numSignalledAccounts.intValue();
         }
-
+        Assert.assertEquals("Should signal 2 accounts in total", 2, signalled);
         //3rd request
         ZimbraLog.test.info("Sending 3rd AdminWaitSetRequest");
-        success = false;
+        success.set(false);
         failureMessage = null;
-        cbCalled = false;
+        cbCalled.set(false);
         final CountDownLatch doneSignal3 = new CountDownLatch(1);
-        waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
+        waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum);
         waitSetReq.setBlock(true);
 
         //both accounts should get signaled at this time
-        waitForAccounts(Arrays.asList(mbox1.getAccountId(), mbox2.getAccountId()), doneSignal3, waitSetReq, "testBlockingAdminAddAccount - 3");
+        waitForAccounts(Arrays.asList(mbox1.getAccountId(), mbox2.getAccountId()), doneSignal3, waitSetReq, "testBlockingAdminAddAccount - 3", false);
         TestUtil.addMessage(mbox2, subject);
         TestUtil.addMessage(mbox1, subject);
         try {
@@ -745,48 +811,48 @@ public class TestWaitSetRequest {
         } catch (Exception e) {
             Assert.fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback3 was not triggered.", cbCalled);
-        Assert.assertTrue(failureMessage, success);
-
-        if(numSignalledAccounts.intValue() < 2) {
-            cbCalled = false;
-            success = false;
+        Assert.assertTrue("callback3 was not triggered.", cbCalled.get());
+        Assert.assertTrue(failureMessage, success.get());
+        signalled = numSignalledAccounts.intValue();
+        while(signalled < 2) {
+            cbCalled.set(false);
+            success.set(false);
             failureMessage = null;
             ZimbraLog.test.info("Sending followup to 3rd AdminWaitSetRequest");
             //the waitset may get return both accounts at once or be triggered for each account separately
-            waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
+            waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum);
             waitSetReq.setBlock(true);
             final CountDownLatch doneSignal1 = new CountDownLatch(1);
-            waitForAccounts(Arrays.asList(mbox1.getAccountId(), mbox2.getAccountId()), doneSignal1, waitSetReq, "testBlockingAdminAddAccount - 3.5");
+            waitForAccounts(Arrays.asList(mbox1.getAccountId(), mbox2.getAccountId()), doneSignal1, waitSetReq, "testBlockingAdminAddAccount - 3.5", false);
             try {
                 doneSignal1.await(5, TimeUnit.SECONDS);
             } catch (Exception e) {
                 Assert.fail("Wait interrupted.");
             }
-            Assert.assertTrue("callback3.5 was not triggered.", cbCalled);
-            Assert.assertTrue(failureMessage, success);
-            Assert.assertEquals("If WaitSet was triggered again, it should have returned only one account", 1, numSignalledAccounts.intValue());
+            Assert.assertTrue("callback3.5 was not triggered.", cbCalled.get());
+            Assert.assertTrue(failureMessage, success.get());
+            signalled+=numSignalledAccounts.intValue();
         }
-
+        Assert.assertEquals("Should signal 2 accounts in total", 2, signalled);
         //4th request
         ZimbraLog.test.info("Sending 4th AdminWaitSetRequest");
-        success = false;
+        success.set(false);
         failureMessage = null;
-        cbCalled = false;
+        cbCalled.set(false);
         final CountDownLatch doneSignal4 = new CountDownLatch(1);
-        waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum.toString());
+        waitSetReq = new AdminWaitSetRequest(waitSetId, lastSeqNum);
         waitSetReq.setBlock(true);
 
         //only second account should get signaled this time
-        waitForAccounts(Arrays.asList(mbox2.getAccountId()), doneSignal4, waitSetReq, "testBlockingAdminAddAccount - 4");
+        waitForAccounts(Arrays.asList(mbox2.getAccountId()), doneSignal4, waitSetReq, "testBlockingAdminAddAccount - 4", false);
         TestUtil.addMessage(mbox2, subject);
         try {
             doneSignal4.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
             Assert.fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback4 was not triggered.", cbCalled);
-        Assert.assertTrue(failureMessage, success);
+        Assert.assertTrue("callback4 was not triggered.", cbCalled.get());
+        Assert.assertTrue(failureMessage, success.get());
     }
 
     @Test
@@ -810,32 +876,33 @@ public class TestWaitSetRequest {
         mbox.getTransport().invokeAsync(JaxbUtil.jaxbToElement(waitSetReq), new FutureCallback<HttpResponse>() {
             @Override
             public void completed(final HttpResponse response) {
-                cbCalled = true;
+                cbCalled.set(true);;
                 int respCode = response.getStatusLine().getStatusCode();
-                success = (respCode == 200);
-                if(!success) {
+                success.set((respCode == 200));
+                if(!success.get()) {
                     failureMessage = "Response code " + respCode;
                 }
-                if(success) {
+                if(success.get()) {
                     Element envelope;
                     try {
                         envelope = W3cDomUtil.parseXML(response.getEntity().getContent());
                         SoapProtocol proto = SoapProtocol.determineProtocol(envelope);
                         Element doc = proto.getBodyElement(envelope);
+                        ZimbraLog.test.info(new String(doc.toUTF8(), "UTF-8"));
                         WaitSetResponse wsResp = (WaitSetResponse) JaxbUtil.elementToJaxb(doc);
-                        success = (Integer.parseInt(wsResp.getSeqNo()) > 0);
-                        if(!success) {
+                        success.set((Integer.parseInt(wsResp.getSeqNo()) > 0));
+                        if(!success.get()) {
                             failureMessage = "wrong squence number. Sequence #" + wsResp.getSeqNo();
                         }
-                        if(success) {
-                            success = (wsResp.getSignalledAccounts().size() == 1);
-                            if(!success) {
+                        if(success.get()) {
+                            success.set((wsResp.getSignalledAccounts().size() == 1));
+                            if(!success.get()) {
                                 failureMessage = "wrong number of signaled accounts " + wsResp.getSignalledAccounts().size();
                             }
                         }
-                        if(success) {
-                            success = wsResp.getSignalledAccounts().get(0).getId().equalsIgnoreCase(accId);
-                            if(!success) {
+                        if(success.get()) {
+                            success.set(wsResp.getSignalledAccounts().get(0).getId().equalsIgnoreCase(accId));
+                            if(!success.get()) {
                                 failureMessage = "signaled wrong account " +  wsResp.getSignalledAccounts().get(0).getId();
                             }
                         }
@@ -850,7 +917,7 @@ public class TestWaitSetRequest {
             @Override
             public void failed(final Exception ex) {
                 ZimbraLog.test.error("request :: failed ", ex);
-                success = false;
+                success.set(false);
                 failureMessage = ex.getMessage();
                 doneSignal.countDown();
             }
@@ -858,7 +925,7 @@ public class TestWaitSetRequest {
             @Override
             public void cancelled() {
                 ZimbraLog.test.info("request :: cancelled");
-                success = false;
+                success.set(false);
                 failureMessage = "request :: cancelled";
                 doneSignal.countDown();
             }
@@ -871,22 +938,21 @@ public class TestWaitSetRequest {
         } catch (Exception e) {
             Assert.fail("Wait interrupted. ");
         }
-        Assert.assertTrue("callback was not triggered.", cbCalled);
-        Assert.assertTrue(failureMessage, success);
+        Assert.assertTrue("callback was not triggered.", cbCalled.get());
+        Assert.assertTrue(failureMessage, success.get());
     }
 
-    private void waitForAccounts(List<String> accountIds, CountDownLatch doneSignal, Object req, String caller) throws Exception {
+    private void waitForAccounts(List<String> accountIds, CountDownLatch doneSignal, Object req, String caller, boolean allAccounts) throws Exception {
         soapProv.invokeJaxbAsync(req,  new FutureCallback<HttpResponse>() {
             @Override
             public void completed(final HttpResponse response) {
                 ZimbraLog.test.info("waitForAccounts %s :: completed", caller);
-                cbCalled = true;
+                cbCalled.set(true);;
                 int respCode = response.getStatusLine().getStatusCode();
-                success = (respCode == 200);
-                if(!success) {
+                success.set((respCode == 200));
+                if(!success.get()) {
                     failureMessage = "response code " + respCode;
-                }
-                if(success) {
+                } else {
                     Element envelope;
                     try {
                         envelope = W3cDomUtil.parseXML(response.getEntity().getContent());
@@ -894,35 +960,48 @@ public class TestWaitSetRequest {
                         Element doc = proto.getBodyElement(envelope);
                         AdminWaitSetResponse wsResp = (AdminWaitSetResponse) JaxbUtil.elementToJaxb(doc);
                         ZimbraLog.test.info(new String(doc.toUTF8(), "UTF-8"));
+                        ZimbraLog.test.info("Setting numSignalledAccounts to %d", wsResp.getSignalledAccounts().size());
+                        numSignalledAccounts.set(wsResp.getSignalledAccounts().size());
+                        lastSeqNum = wsResp.getSeqNo();
+
                         for(int i=0; i < wsResp.getSignalledAccounts().size(); i++) {
                             ZimbraLog.test.info("signalled account " + wsResp.getSignalledAccounts().get(i).getId());
                         }
-                        success = (Integer.parseInt(wsResp.getSeqNo()) > 0);
-                        if(!success) {
+
+                        //check that we are getting expected signals
+                        if(allAccounts) {
+                            //AllAccountsWaitSet uses encoded redolog commit sequence instead of linear sequence number
+                            CommitId commitSeq = CommitId.decodeFromString(wsResp.getSeqNo());
+                            success.set(commitSeq.getRedoSeq() > 0);
+                        } else {
+                            success.set((Integer.parseInt(wsResp.getSeqNo()) > 0));
+                        }
+                        if(!success.get()) {
                             failureMessage = "wrong squence number. Sequence #" + wsResp.getSeqNo();
-                        }
-                        lastSeqNum.set(Integer.parseInt(wsResp.getSeqNo()));
-                        if(success) {
-                            success = (wsResp.getSignalledAccounts().size() <= accountIds.size());
-                            if(!success) {
+                        } else {
+                            success.set((wsResp.getSignalledAccounts().size() <= accountIds.size()));
+                            if(!success.get()) {
                                 failureMessage = "wrong number of signaled accounts " + wsResp.getSignalledAccounts().size();
-                            }
-                            numSignalledAccounts.set(wsResp.getSignalledAccounts().size());
-                        }
-                        if(success) {
-                            for(int i=0; i < wsResp.getSignalledAccounts().size(); i++) {
-                                success = accountIds.contains(wsResp.getSignalledAccounts().get(i).getId());
-                                if(!success) {
-                                    failureMessage = "received notificaiton for an unexpected account " + wsResp.getSignalledAccounts().get(i).getId();
-                                    break;
+                            } else if(!allAccounts) {
+                                //AllAccountsWaitSet may receive notifications for other accounts that are being changed outside of this test run
+                                //e.g.: admin account receiving system notifications
+                                for(int i=0; i < wsResp.getSignalledAccounts().size(); i++) {
+                                    success.set(accountIds.contains(wsResp.getSignalledAccounts().get(i).getId()));
+                                    if(!success.get()) {
+                                        failureMessage = "received notificaiton for an unexpected account " + wsResp.getSignalledAccounts().get(i).getId();
+                                        break;
+                                    }
                                 }
                             }
                         }
                     } catch (UnsupportedOperationException | IOException | ServiceException e) {
-                        success = false;
+                        success.set(false);
                         failureMessage = e.getMessage();
                         ZimbraLog.test.error(e);
                     }
+                }
+                if(!failureMessage.isEmpty()) {
+                    ZimbraLog.test.error(failureMessage);
                 }
                 try { Thread.sleep(100); } catch (Exception e) {}
                 doneSignal.countDown();
@@ -931,7 +1010,7 @@ public class TestWaitSetRequest {
             @Override
             public void failed(final Exception ex) {
                 ZimbraLog.test.error("waitForAccounts :: failed ", ex);
-                success = false;
+                success.set(false);
                 failureMessage = ex.getMessage();
                 doneSignal.countDown();
             }
@@ -939,7 +1018,7 @@ public class TestWaitSetRequest {
             @Override
             public void cancelled() {
                 ZimbraLog.test.info("waitForAccounts :: cancelled");
-                success = false;
+                success.set(false);
                 failureMessage = "waitForAccounts :: cancelled";
                 doneSignal.countDown();
             }
