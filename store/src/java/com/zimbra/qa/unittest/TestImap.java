@@ -437,8 +437,8 @@ public class TestImap {
          for (ListData le : listResult) {
             Assert.assertTrue(String.format("mailbox '%s' contains 'Contacts'", le.getMailbox()),
                     le.getMailbox().contains("Contacts"));
-            }
-         }
+        }
+    }
 
     @Test
     public void testAppend() throws Exception {
