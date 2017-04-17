@@ -553,6 +553,9 @@ public class ItemAction extends MailDocumentHandler {
             ItemId iidFolder = new ItemId(folderStr, getZimbraSoapContext(context));
             action.addAttribute(MailConstants.A_FOLDER, iidFolder.toString());
         }
+
+        String opStr = getOperation(request);
+
         ItemActionResult result = null;
         if (opStr.equals(MailConstants.OP_HARD_DELETE))
         {
