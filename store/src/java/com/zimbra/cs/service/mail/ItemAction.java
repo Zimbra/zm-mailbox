@@ -120,6 +120,18 @@ public class ItemAction extends MailDocumentHandler {
         return (opAttr.startsWith("!") ? opAttr.substring(1) : opAttr).toLowerCase();
     }
 
+    protected String getOperation(Element request) throws ServiceException {
+        Element action = request.getElement(MailConstants.E_ACTION);
+        String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
+        return getOperation(operation);
+    }
+
+    protected boolean isOperationFlagged(Element request) throws ServiceException {
+        Element action = request.getElement(MailConstants.E_ACTION);
+        String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
+        return operation.startsWith("!");
+    }
+
     protected ItemActionResult handleCommon(Map<String, Object> context, Element request, String opAttr, MailItem.Type type)
     throws ServiceException {
         Element action = request.getElement(MailConstants.E_ACTION);
@@ -129,8 +141,8 @@ public class ItemAction extends MailDocumentHandler {
         SoapProtocol responseProto = zsc.getResponseProtocol();
 
         // determine the requested operation
-        boolean flagValue = !opAttr.startsWith("!");
-        String opStr = getOperation(opAttr);
+        boolean flagValue = !isOperationFlagged(request);
+        String opStr = getOperation(request);
 
         // figure out which items are local and which ones are remote, and proxy accordingly
         List<Integer> local = new ArrayList<Integer>();
