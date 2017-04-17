@@ -27,6 +27,7 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -73,10 +74,13 @@ public class TestRemoteImapNotifications {
     }
 
     @AfterClass
-    public static void afterClass() throws ServiceException {
-        imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
+    public static void afterClass() throws Exception {
+        if (imapServer != null) {
+            imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
+            imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
+        }
+        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
     }
-
 
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
@@ -94,10 +98,6 @@ public class TestRemoteImapNotifications {
     @After
     public void tearDown() throws ServiceException, DocumentException, ConfigException, IOException  {
         sharedCleanup();
-        if (imapServer != null) {
-            imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
-        }
-        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
     }
 
     private ImapConnection connect(Server server) throws IOException {
