@@ -541,8 +541,15 @@ public class ItemAction extends MailDocumentHandler {
             ItemId iidFolder = new ItemId(folderStr, getZimbraSoapContext(context));
             action.addAttribute(MailConstants.A_FOLDER, iidFolder.toString());
         }
-
-        ItemActionResult result = new ItemActionResult();
+        ItemActionResult result = null;
+        if (opStr.equals(MailConstants.OP_HARD_DELETE))
+        {
+            result = new DeleteActionResult();
+        }
+        else
+        {
+            result = new ItemActionResult();
+        }
         for (Map.Entry<String, StringBuilder> entry : remote.entrySet()) {
             // update the <action> element to reference the subset of target items belonging to this user...
             String itemIds = entry.getValue().toString();
