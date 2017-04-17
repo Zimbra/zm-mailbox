@@ -65,7 +65,7 @@ public class ContactAction extends ItemAction {
         if (CONTACT_OPS.contains(operation)) {
             successes = handleContact(context, request, operation);
         } else {
-            successes = handleCommon(context, request, operation, MailItem.Type.CONTACT);
+            successes = handleCommon(context, request, MailItem.Type.CONTACT);
         }
         Element response = zsc.createElement(MailConstants.CONTACT_ACTION_RESPONSE);
         Element actionOut = response.addUniqueElement(MailConstants.E_ACTION);
