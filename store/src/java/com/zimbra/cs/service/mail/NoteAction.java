@@ -68,7 +68,7 @@ public class NoteAction extends ItemAction {
         if (NOTE_OPS.contains(operation)) {
             successes = handleNote(context, request, operation);
         } else {
-            successes = Joiner.on(",").join(handleCommon(context, request, operation, MailItem.Type.NOTE).getSuccessIds());
+            successes = Joiner.on(",").join(handleCommon(context, request, MailItem.Type.NOTE).getSuccessIds());
         }
         Element response = lc.createElement(MailConstants.NOTE_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailConstants.E_ACTION);
