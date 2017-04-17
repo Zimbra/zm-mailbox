@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.service.mail;
 
+import com.google.common.base.Joiner;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +61,7 @@ public class ContactAction extends ItemAction {
             throw ServiceException.INVALID_REQUEST("invalid operation on contact: " + operation, null);
         }
 
-        String successes;
+        ItemActionResult successes;
         if (CONTACT_OPS.contains(operation)) {
             successes = handleContact(context, request, operation);
         } else {
@@ -67,12 +69,12 @@ public class ContactAction extends ItemAction {
         }
         Element response = zsc.createElement(MailConstants.CONTACT_ACTION_RESPONSE);
         Element actionOut = response.addUniqueElement(MailConstants.E_ACTION);
-        actionOut.addAttribute(MailConstants.A_ID, successes);
+        actionOut.addAttribute(MailConstants.A_ID, Joiner.on(",").join(successes.getSuccessIds()));
         actionOut.addAttribute(MailConstants.A_OPERATION, operation);
         return response;
     }
 
-    private String handleContact(Map<String,Object> context, Element request, String operation)
+    private ItemActionResult handleContact(Map<String,Object> context, Element request, String operation)
     throws ServiceException, SoapFaultException {
         Element action = request.getElement(MailConstants.E_ACTION);
 
@@ -84,10 +86,10 @@ public class ContactAction extends ItemAction {
         ArrayList<Integer> local = new ArrayList<Integer>();
         HashMap<String, StringBuilder> remote = new HashMap<String, StringBuilder>();
         partitionItems(zsc, action.getAttribute(MailConstants.A_ID), local, remote);
-        StringBuilder successes = proxyRemoteItems(action, remote, request, context);
+        ItemActionResult successes = proxyRemoteItems(action, remote, request, context);
 
         if (!local.isEmpty()) {
-            String localResults;
+            ItemActionResult localResults;
             if (operation.equals(OP_UPDATE)) {
                 // duplicating code from ItemAction.java for now...
                 String folderId = action.getAttribute(MailConstants.A_FOLDER, null);
@@ -111,9 +113,9 @@ public class ContactAction extends ItemAction {
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
             }
-            successes.append(successes.length() > 0 ? "," : "").append(localResults);
+            successes.appendSuccessIds(localResults.getSuccessIds());
         }
 
-        return successes.toString();
+        return successes;
     }
 }
