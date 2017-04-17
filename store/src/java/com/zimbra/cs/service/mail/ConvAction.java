@@ -40,7 +40,7 @@ public class ConvAction extends ItemAction {
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
 
-        String successes = Joiner.on(",").join(handleCommon(context, request, operation, MailItem.Type.CONVERSATION).getSuccessIds());
+        String successes = Joiner.on(",").join(handleCommon(context, request, MailItem.Type.CONVERSATION).getSuccessIds());
 
         Element response = lc.createElement(MailConstants.CONV_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailConstants.E_ACTION);
