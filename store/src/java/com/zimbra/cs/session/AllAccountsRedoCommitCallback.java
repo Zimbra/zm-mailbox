@@ -22,6 +22,11 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.redolog.CommitId;
 import com.zimbra.cs.redolog.RedoCommitCallback;
 
+/**
+ * 
+ * @deprecated AllAccountsWaitSet is being deprecated
+ *
+ */
 public class AllAccountsRedoCommitCallback implements RedoCommitCallback {
     private final String accountId;
     private final Set<MailItem.Type> changeTypes;
