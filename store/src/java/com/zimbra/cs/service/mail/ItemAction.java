@@ -101,7 +101,7 @@ public class ItemAction extends MailDocumentHandler {
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
 
-        ItemActionResult result = handleCommon(context, request, operation, MailItem.Type.UNKNOWN);
+        ItemActionResult result = handleCommon(context, request, MailItem.Type.UNKNOWN);
 
         Element response = zsc.createElement(MailConstants.ITEM_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailConstants.E_ACTION);
@@ -132,7 +132,7 @@ public class ItemAction extends MailDocumentHandler {
         return operation.startsWith("!");
     }
 
-    protected ItemActionResult handleCommon(Map<String, Object> context, Element request, String opAttr, MailItem.Type type)
+    protected ItemActionResult handleCommon(Map<String, Object> context, Element request, MailItem.Type type)
     throws ServiceException {
         Element action = request.getElement(MailConstants.E_ACTION);
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
