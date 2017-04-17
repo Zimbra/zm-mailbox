@@ -36,6 +36,7 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.optional.Envelope;
+import org.hsqldb.lib.StringUtil;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -127,19 +128,21 @@ public class EnvelopeTest extends Envelope {
                 } catch (ServiceException e) {
                     recipient = "";
                 }
-                headerValues.add(recipient);
+                headerValues.add(getMatchAddressPart(addressPart, recipient));
             } else if ("from".equalsIgnoreCase(headerName)) {
-                List<String> value = getMatchingValues(mail, headerName);
-                if (value != null) {
+                List<String> values = getMatchingValues(mail, headerName);
+                if (values != null) {
                     if (matchType.equalsIgnoreCase(COUNT_TAG)) {
                         // RFC 5231 Section 4.2 Match Type COUNT says:
                         // | The envelope "from" will be 0 if the MAIL FROM is empty, or 1 if MAIL
                         // | FROM is not empty.
                         // This method could be called for other match type, such as :value or :is,
                         // remove the empty element only if the match type is :count.
-                        value.removeIf(s -> Strings.isNullOrEmpty(s));
+                        values.removeIf(s -> Strings.isNullOrEmpty(s));
                     }
-                    headerValues.addAll(value);
+                    for (String value : values) {
+                        headerValues.add(getMatchAddressPart(addressPart, value));
+                    }
                 }
             } else {
                 throw new SyntaxException("Unexpected header name as a value for <envelope-part>: '" + headerName + "'");
@@ -164,6 +167,24 @@ public class EnvelopeTest extends Envelope {
         
        
         return isMatched;
+    }
+
+    private String getMatchAddressPart(String addressPart, String email) {
+        if (StringUtil.isEmpty(email)) {
+            return "";
+        }
+        if (ALL_TAG.equalsIgnoreCase(addressPart)) {
+            return email;
+        }
+        MailAdapter.Address[] addresses = ZimbraMailAdapter.stringAddress2MailAdapterAddress(new String[] {email});
+        final int length = addresses.length;
+        if (0 == length) {
+            return "";
+        }
+        MailAdapter.Address address = addresses[0];
+        final String localPart = address.getLocalPart();
+        final String domain = address.getDomain();
+        return AddressTest.getMatchAddress(addressPart, localPart, domain);
     }
 
     private boolean match(String comparator, String matchType, String operator,
