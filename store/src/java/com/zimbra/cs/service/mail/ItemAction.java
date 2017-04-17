@@ -144,7 +144,7 @@ public class ItemAction extends MailDocumentHandler {
         Account remoteNotify = forceRemoteSession(zsc, context, octxt, opStr, action);
 
         // handle referenced items living on other servers
-        ItemActionResult successes = proxyRemoteItems(action, remote, request, context);
+        ItemActionResult remoteResults = proxyRemoteItems(action, remote, request, context);
 
         // handle referenced items living on this server
         if (!local.isEmpty()) {
