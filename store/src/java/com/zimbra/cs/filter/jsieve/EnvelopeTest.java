@@ -36,11 +36,11 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.optional.Envelope;
-import org.hsqldb.lib.StringUtil;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
@@ -170,7 +170,7 @@ public class EnvelopeTest extends Envelope {
     }
 
     private String getMatchAddressPart(String addressPart, String email) {
-        if (StringUtil.isEmpty(email)) {
+        if (StringUtil.isNullOrEmpty(email)) {
             return "";
         }
         if (ALL_TAG.equalsIgnoreCase(addressPart)) {
