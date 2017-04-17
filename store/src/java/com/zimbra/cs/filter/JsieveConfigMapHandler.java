@@ -69,14 +69,7 @@ public class JsieveConfigMapHandler {
             ZimbraLog.filter.debug("Zimbra 'notify' is loaded");
         }
 
-        boolean isRejectSupported = true;
-        try {
-            isRejectSupported = Provisioning.getInstance().getConfig().getBooleanAttr(
-                Provisioning.A_zimbraSieveRejectEnabled, true);
-        } catch (ServiceException e) {
-            // 'reject' action is supported as default
-        }
-        if (isRejectSupported) {
+        if (isZimbraSieveRejectEnabled()) {
             mCommandMap.put("reject", com.zimbra.cs.filter.jsieve.Reject.class.getName());
         } else {
             // Disable the 'reject' action defined by the jSieve library
@@ -158,18 +151,34 @@ public class JsieveConfigMapHandler {
     }
 
     /**
-     * Checks the global config attribute 'zimbraMailSieveNotifyActionRFCCompliant'.
-     * @return <tt>true</tt> if the RFC compliant notify action is allowed to execute.
+     * Checks the global config attribute
+     * 'zimbraMailSieveNotifyActionRFCCompliant'.
+     *
+     * @return <tt>true</tt> if the RFC compliant notify action is allowed to
+     *         execute.
      */
     public static boolean isNotifyActionRFCCompliantAvailable() {
         boolean isNotifyActionRFCCompliant = false;
         try {
-            isNotifyActionRFCCompliant = Provisioning.getInstance().getConfig().getBooleanAttr(
-                Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, false);
+            isNotifyActionRFCCompliant = Provisioning.getInstance().getLocalServer()
+                .isMailSieveNotifyActionRFCCompliant();
         } catch (ServiceException e) {
             // the legacy Zimbra specific 'notify' action is used
         }
         return isNotifyActionRFCCompliant;
     }
-    
+
+    /**
+     * Checks the global config attribute 'zimbraSieveRejectEnabled'.
+     *
+     * @return <tt>true</tt> if zimbraSieveRejectEnabled is enabled.
+     */
+    public static boolean isZimbraSieveRejectEnabled() {
+        boolean isZimbraSieveRejectEnabled = true;
+        try {
+            isZimbraSieveRejectEnabled = Provisioning.getInstance().getLocalServer().isSieveRejectEnabled();
+        } catch (ServiceException e) {
+        }
+        return isZimbraSieveRejectEnabled;
+    }
 }

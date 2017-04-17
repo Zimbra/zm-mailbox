@@ -17704,6 +17704,93 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @return zimbraMailSieveNotifyActionRFCCompliant, or false if unset
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2095)
+    public boolean isMailSieveNotifyActionRFCCompliant() {
+        return getBooleanAttr(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, false, true);
+    }
+
+    /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @param zimbraMailSieveNotifyActionRFCCompliant new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2095)
+    public void setMailSieveNotifyActionRFCCompliant(boolean zimbraMailSieveNotifyActionRFCCompliant) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, zimbraMailSieveNotifyActionRFCCompliant ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @param zimbraMailSieveNotifyActionRFCCompliant new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2095)
+    public Map<String,Object> setMailSieveNotifyActionRFCCompliant(boolean zimbraMailSieveNotifyActionRFCCompliant, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, zimbraMailSieveNotifyActionRFCCompliant ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2095)
+    public void unsetMailSieveNotifyActionRFCCompliant() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2095)
+    public Map<String,Object> unsetMailSieveNotifyActionRFCCompliant(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, "");
+        return attrs;
+    }
+
+    /**
      * In our web app, AJAX and standard html client, we have support for
      * adding the HTTP client IP address as X-Originating-IP in an outbound
      * message. We also use the HTTP client IP address in our logging. In the
@@ -46807,6 +46894,83 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetShortTermGranteeCacheSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraShortTermGranteeCacheSize, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @return zimbraSieveRejectEnabled, or true if unset
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2094)
+    public boolean isSieveRejectEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSieveRejectEnabled, true, true);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @param zimbraSieveRejectEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2094)
+    public void setSieveRejectEnabled(boolean zimbraSieveRejectEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, zimbraSieveRejectEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @param zimbraSieveRejectEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2094)
+    public Map<String,Object> setSieveRejectEnabled(boolean zimbraSieveRejectEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, zimbraSieveRejectEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2094)
+    public void unsetSieveRejectEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2094)
+    public Map<String,Object> unsetSieveRejectEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRejectEnabled, "");
         return attrs;
     }
 
