@@ -542,7 +542,7 @@ public class ItemAction extends MailDocumentHandler {
             action.addAttribute(MailConstants.A_FOLDER, iidFolder.toString());
         }
 
-        ItemActionResult successes = new ItemActionResult();
+        ItemActionResult result = new ItemActionResult();
         for (Map.Entry<String, StringBuilder> entry : remote.entrySet()) {
             // update the <action> element to reference the subset of target items belonging to this user...
             String itemIds = entry.getValue().toString();
@@ -565,7 +565,7 @@ public class ItemAction extends MailDocumentHandler {
             }
         }
 
-        return successes;
+        return result;
     }
 
     /**
