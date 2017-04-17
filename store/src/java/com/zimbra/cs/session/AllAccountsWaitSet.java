@@ -40,6 +40,7 @@ import com.zimbra.soap.admin.type.WaitSetInfo;
 
 /**
  * An implementation of IWaitSet that listens across all accounts on the server
+ * @deprecated this API is not being used by any known clients
  */
 public final class AllAccountsWaitSet extends WaitSetBase {
 
