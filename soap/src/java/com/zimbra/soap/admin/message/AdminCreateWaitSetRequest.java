@@ -68,7 +68,7 @@ public class AdminCreateWaitSetRequest implements CreateWaitSetReq {
     private final String defaultInterests;
 
     /**
-     * @zm-api-field-tag all-accounts
+     * @zm-api-field-tag deprecated-all-accounts
      * @zm-api-field-description If <b>{all-accounts}</b> is set, then all mailboxes on the system will be listened
      * to, including any mailboxes which are created on the system while the WaitSet is in existence.
      * Additionally:
@@ -81,6 +81,7 @@ public class AdminCreateWaitSetRequest implements CreateWaitSetReq {
      * &lt;WaitSetRequest> passing in your previous sequence number.  The server will attempt to resynchronize the
      * waitset using the sequence number you provide (the server's ability to do this is limited by the RedoLogs that
      * are available)
+     * Note: AllAccounts WaitSets are deprecated
      */
     @XmlAttribute(name=MailConstants.A_ALL_ACCOUNTS /* allAccounts */, required=false)
     private final ZmBoolean allAccounts;
