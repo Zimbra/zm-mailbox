@@ -9497,4 +9497,14 @@ TODO: delete them permanently from here
   <desc>The max number of IMAP messages returned by OpenImapFolderRequest before pagination begins</desc>
 </attr>
 
+<attr id="3013" name="zimbraRemoteImapServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Controls if the remote IMAP (non-SSL) service is enabled for a given server. See also zimbraRemoteImapSSLServerEnabled and zimbraReverseProxyUpstreamImapServers.</desc>
+</attr>
+
+<attr id="3014" name="zimbraRemoteImapSSLServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Controls if the remote IMAP SSL server is enabled for a given server. See also zimbraRemoteImapServerEnabled and zimbraReverseProxyUpstreamImapServers.</desc>
+</attr>
+
 </attrs>

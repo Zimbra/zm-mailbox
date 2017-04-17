@@ -38406,6 +38406,170 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @return zimbraRemoteImapSSLServerEnabled, or false if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3014)
+    public boolean isRemoteImapSSLServerEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraRemoteImapSSLServerEnabled, false, true);
+    }
+
+    /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param zimbraRemoteImapSSLServerEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3014)
+    public void setRemoteImapSSLServerEnabled(boolean zimbraRemoteImapSSLServerEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLServerEnabled, zimbraRemoteImapSSLServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param zimbraRemoteImapSSLServerEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3014)
+    public Map<String,Object> setRemoteImapSSLServerEnabled(boolean zimbraRemoteImapSSLServerEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLServerEnabled, zimbraRemoteImapSSLServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3014)
+    public void unsetRemoteImapSSLServerEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLServerEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3014)
+    public Map<String,Object> unsetRemoteImapSSLServerEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLServerEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @return zimbraRemoteImapServerEnabled, or false if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3013)
+    public boolean isRemoteImapServerEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraRemoteImapServerEnabled, false, true);
+    }
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param zimbraRemoteImapServerEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3013)
+    public void setRemoteImapServerEnabled(boolean zimbraRemoteImapServerEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapServerEnabled, zimbraRemoteImapServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param zimbraRemoteImapServerEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3013)
+    public Map<String,Object> setRemoteImapServerEnabled(boolean zimbraRemoteImapServerEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapServerEnabled, zimbraRemoteImapServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3013)
+    public void unsetRemoteImapServerEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapServerEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3013)
+    public Map<String,Object> unsetRemoteImapServerEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapServerEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Path to remote management command to execute on this server
      *
      * @return zimbraRemoteManagementCommand, or "/opt/zimbra/libexec/zmrcd" if unset
