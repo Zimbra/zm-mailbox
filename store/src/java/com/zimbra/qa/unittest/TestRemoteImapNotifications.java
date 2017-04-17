@@ -75,8 +75,8 @@ public class TestRemoteImapNotifications {
 
     @AfterClass
     public static void afterClass() throws Exception {
-        imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
         if (imapServer != null) {
+            imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
             imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
         }
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
