@@ -186,10 +186,10 @@ import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
 import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.message.RecordIMAPSessionRequest;
 import com.zimbra.soap.mail.message.RecordIMAPSessionResponse;
+import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
-import com.zimbra.soap.mail.type.IdAndOperation;
 import com.zimbra.soap.mail.type.ImportContact;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.CalDataSource;
@@ -6026,8 +6026,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
          ActionSelector action = ActionSelector.createForIdsAndOperation(ids, MailConstants.OP_HARD_DELETE);
          ItemActionRequest req = new ItemActionRequest(action);
          ItemActionResponse resp = invokeJaxb(req);
-         IdAndOperation idOperation = resp.getAction();
-         for (String id: idOperation.getNonExistentIds().split(","))
+         ActionResult ar = resp.getAction();
+         for (String id: ar.getNonExistentIds().split(","))
          {
              nonExistingItems.add(Integer.parseInt(id));
          }
