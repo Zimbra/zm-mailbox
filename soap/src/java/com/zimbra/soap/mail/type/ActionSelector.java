@@ -153,6 +153,13 @@ public class ActionSelector {
     protected String tagNames;
 
     /**
+     * @zm-api-field-tag non-existent-ids
+     * @zm-api-field-description Comma-separated list of non-existent ids
+     */
+    @XmlAttribute(name=MailConstants.A_NON_EXISTENT_IDS /* nei */, required=false)
+    protected String nonExistentIds;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     protected ActionSelector() {
