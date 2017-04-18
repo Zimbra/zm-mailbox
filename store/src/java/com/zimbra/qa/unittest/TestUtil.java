@@ -40,6 +40,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.dom4j.DocumentException;
 import org.junit.runner.JUnitCore;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.zimbra.client.ZAuthResult;
@@ -137,6 +138,10 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.rmgmt.RemoteCommands;
+import com.zimbra.cs.rmgmt.RemoteMailQueue;
+import com.zimbra.cs.rmgmt.RemoteMailQueue.QueueAttr;
+import com.zimbra.cs.rmgmt.RemoteManager;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.BuildInfo;
@@ -525,18 +530,62 @@ public class TestUtil extends Assert {
     }
 
     /**
-     * @param numMsgsExpected
-     *            - 0 means don't expect a message to arrive before timeout_millis
-     * @param timeout_millis
-     * @throws ServiceException
+     * @return true if likely to have had things delayed in the deferred queue
      */
-    public static List<ZMessage> waitForMessages(ZMailbox mbox, String query, int numMsgsExpected, int timeout_millis)
-            throws ServiceException {
-        int orig_timeout_millis = timeout_millis;
-        List<ZMessage> msgs = Lists.newArrayListWithExpectedSize(0);
+    private static boolean postfixFlushDeferredMailQueue(Server server, long waitMillis) {
+        long start = System.currentTimeMillis();
+        try {
+            if (null == server) {
+                server = Provisioning.getInstance().getLocalServer();
+            }
+            RemoteMailQueue rmq = RemoteMailQueue.getRemoteMailQueue(server, "deferred", true /* scan */);
+            boolean stillScanning = rmq.waitForScan(waitMillis);
+            if (stillScanning) {
+                ZimbraLog.test.info("postfixFlushDeferredMailQueue - taking too long to scan queue.");
+                return true;
+            }
+            RemoteMailQueue.SearchResult sr = rmq.search(null, 0, Integer.MAX_VALUE);
+            if (sr.qitems.size() == 0) {
+                ZimbraLog.test.info("postfixFlushDeferredMailQueue - deferred queue was empty.");
+                return false;
+            }
+            String[] ids = new String[sr.qitems.size()];
+            int i = 0;
+            StringBuilder qinfo = new StringBuilder();
+            for (Map<QueueAttr,String> qitem : sr.qitems) {
+                qinfo.append("\nDEFERRED_POSTFIX_QUEUE_ENTRY:");
+                ids[i++] = qitem.get(QueueAttr.id);
+                for (QueueAttr qattr : QueueAttr.values()) {
+                    String val = qitem.get(qattr);
+                    if (!Strings.isNullOrEmpty(val)) {
+                        qinfo.append(" ").append(qattr.name()).append("=").append(val);
+                    }
+                }
+            }
+            ZimbraLog.test.info("postfixFlushDeferredMailQueue - deferred queue:%s", qinfo);
+            rmq.action(server, RemoteMailQueue.QueueAction.requeue, ids);
+            ZimbraLog.test.info("postfixFlushDeferredMailQueue done requeue");
+            // requeueing isn't enough on its own to get things moving
+            RemoteManager rmgr = RemoteManager.getRemoteManager(server);
+            rmgr.execute(RemoteCommands.FLUSHQUEUE);
+            ZimbraLog.test.info("postfixFlushDeferredMailQueue finished [%s]",
+                                ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
+        } catch (ServiceException e) {
+            ZimbraLog.test.error("postfixFlushDeferredMailQueue - Problem getting 'deferred' mail queue", e);
+        }
+        return true;
+    }
+
+    private static List<ZMessage> helpWait4Msgs(ZMailbox mbox, String query, int numMsgsExpected, long timeout_millis)
+    throws ServiceException
+    {
+        long start = System.currentTimeMillis();
+        List<ZMessage> msgs = Lists.newArrayListWithExpectedSize(numMsgsExpected);
         while (timeout_millis > 0) {
             msgs = search(mbox, query);
             if ((numMsgsExpected > 0) && (msgs.size() == numMsgsExpected)) {
+                ZimbraLog.test.debug("helpWait4Msgs succeeded - mbox='%s' query='%s' %s", mbox.getName(), query,
+                        ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
                 return msgs;
             }
             if (msgs.size() > numMsgsExpected) {
@@ -555,9 +604,52 @@ public class TestUtil extends Assert {
                 ZimbraLog.test.debug("sleep got interrupted", e);
             }
         }
+        ZimbraLog.test.debug("helpWait4Msgs finished for mbox='%s' query='%s' %s", mbox.getName(), query,
+                ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
+        return msgs;
+    }
+
+    /**
+     * @param numMsgsExpected
+     *            - 0 means don't expect a message to arrive before timeout_millis
+     * @param timeout_millis
+     * @throws ServiceException
+     */
+    public static List<ZMessage> waitForMessages(ZMailbox mbox, String query, int numMsgsExpected, int timeout_millis)
+            throws ServiceException {
+        long start = System.currentTimeMillis();
+        long finishBy = start + timeout_millis;
+        List<ZMessage> msgs;
+        // Just wait for a third of the time initially.  If hasn't arrived in that time, poke postfix to process
+        // its queue and wait up to the rest of the time
+        msgs = helpWait4Msgs(mbox, query, numMsgsExpected, timeout_millis / 3);
+        if ((numMsgsExpected > 0) && (msgs.size() == numMsgsExpected)) {
+            return msgs;
+        }
+        if (numMsgsExpected > 0) {
+            /* One last try.  See if got stuck in Postfix mailq - seen mailq entries like this before now:
+             * E980B183AF8     2622 Thu Mar 30 14:49:54  user1@example.com
+             * (delivery temporarily suspended: connect to example.com[XXX.XXX.XXX.XXX]:7025: Connection refused)
+             *                           user1@example.com
+             * and:
+             * DD410183B37     2619 Thu Mar 30 15:59:31  user1@example.com
+             * (host example.com[XXX.XXX.XXX.XXX] said:
+             *     451 4.0.0 Temporary message delivery failure try again (in reply to end of DATA command))
+             *                           user1@example.com
+             */
+            if (postfixFlushDeferredMailQueue(AccountTestUtil.getServer(mbox.getName()),
+                    finishBy - System.currentTimeMillis())) {
+                ZimbraLog.test.debug("waitForMessages allowing another 5 seconds because of deferrals");
+                finishBy += 5000;  // allow a bit more time if we spotted things getting deferred
+            }
+            msgs = helpWait4Msgs(mbox, query, numMsgsExpected, finishBy - System.currentTimeMillis());
+            if ((numMsgsExpected > 0) && (msgs.size() == numMsgsExpected)) {
+                return msgs;
+            }
+        }
         if (numMsgsExpected > 0) {
             Assert.fail(String.format("Message%s for query '%s' didn't arrive within %d millisecs.  %s",
-                    (numMsgsExpected == 1) ? "" : "s", query, orig_timeout_millis,
+                    (numMsgsExpected == 1) ? "" : "s", query, System.currentTimeMillis() - start,
                     "Either the MTA is not running or the test failed."));
         }
         return msgs;
@@ -848,6 +940,11 @@ public class TestUtil extends Assert {
     public static void setAccountAttr(String userName, String attrName, String attrValue) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, getAddress(userName));
+        if (null == account) {
+            throw ServiceException.FAILURE(
+                    String.format("Trying to setAccountAttr(%s,%s,%s) on non-existent account %s",
+                            userName, attrName, attrValue, userName), null);
+        }
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(attrName, attrValue);
         prov.modifyAttrs(account, attrs);
@@ -1027,9 +1124,9 @@ public class TestUtil extends Assert {
                 break;
             }
         }
-        assertEquals(expectedSuccess, status.getSuccess());
+        assertEquals("importDataSource status success value", expectedSuccess, status.getSuccess());
         if (!expectedSuccess) {
-            assertNotNull(status.getError());
+            assertNotNull("importDataSource status error value", status.getError());
         }
 
         // Get any state changes from the server
@@ -1047,8 +1144,8 @@ public class TestUtil extends Assert {
 
         // Create auth element
         Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
-        auth.addElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
-        auth.addElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());
+        auth.addNonUniqueElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
+        auth.addNonUniqueElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());
 
         // Authenticate and get auth token
         Element response = transport.invoke(auth);
@@ -1067,8 +1164,8 @@ public class TestUtil extends Assert {
 
         // Create auth element
         Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
-        auth.addElement(AdminConstants.E_NAME).setText(adminName);
-        auth.addElement(AdminConstants.E_PASSWORD).setText(adminPassword);
+        auth.addNonUniqueElement(AdminConstants.E_NAME).setText(adminName);
+        auth.addNonUniqueElement(AdminConstants.E_PASSWORD).setText(adminPassword);
 
         // Authenticate and get auth token
         Element response = transport.invoke(auth);
@@ -1147,9 +1244,11 @@ public class TestUtil extends Assert {
         }
         if (expected == null) {
             Assert.fail("expected was null but actual was not.");
+            return; // shuts up warnings in Eclipse
         }
         if (actual == null) {
             Assert.fail("expected was not null but actual was.");
+            return; // shuts up warnings in Eclipse
         }
         assertEquals("Arrays have different length.", expected.length, actual.length);
         for (int i = 0; i < expected.length; i++) {

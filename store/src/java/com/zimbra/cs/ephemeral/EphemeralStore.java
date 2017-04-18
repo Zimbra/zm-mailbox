@@ -114,6 +114,15 @@ public abstract class EphemeralStore {
     public abstract void purgeExpired(EphemeralKey key, EphemeralLocation location)
             throws ServiceException;
 
+    /**
+     * Delete all ephemeral data for the specified EphemeralLocation
+     *
+     * @param location
+     * @throws ServiceException
+     */
+    public abstract void deleteData(EphemeralLocation location)
+            throws ServiceException;
+
     public static void registerFactory(String prefix, String klass) {
         if (factories.containsKey(prefix)) {
             ZimbraLog.ephemeral.warn("Replacing ephemeral factory class '%s' registered for '%s' with '%s'",
@@ -312,7 +321,8 @@ public abstract class EphemeralStore {
         try {
             theFactory.test(url);
         } catch (ServiceException e) {
-            ZimbraLog.ephemeral.error("cannot set '%s' to '%s'", Provisioning.A_zimbraEphemeralBackendURL, url);
+            ZimbraLog.ephemeral.error("cannot set '%s' to '%s' (%s)", Provisioning.A_zimbraEphemeralBackendURL,
+                    url, e.getMessage());
             return false;
         }
         ZimbraLog.ephemeral.debug("Successfully connected to URL '%s'.  Valid value for '%s'",

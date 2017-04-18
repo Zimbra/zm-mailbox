@@ -216,7 +216,7 @@ public class MigrateAttributesTest {
             fail("synchronous migration should throw an exception");
         } catch (ServiceException e) {
             //make sure the root exception got thrown
-            assertTrue(e.getMessage().contains("error during migration"));
+            assertTrue(e.getMessage().contains("Failure during migration"));
         }
         assertEquals(0, results.size()); //make sure nothing got migrated
         migration = new AttributeMigration(attrsToMigrate, source, callback, 3);
@@ -225,7 +225,7 @@ public class MigrateAttributesTest {
             migration.migrateAllAccounts();
             fail("async migration should throw an exception");
         } catch (ServiceException e) {
-            assertTrue(e.getMessage().contains("error during migration"));
+            assertTrue(e.getMessage().contains("Failure during migration"));
         }
         assertEquals(0, results.size());
     }

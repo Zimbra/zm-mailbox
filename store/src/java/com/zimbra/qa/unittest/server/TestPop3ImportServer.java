@@ -22,7 +22,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZDataSource;
 import com.zimbra.client.ZFilterRules;
@@ -42,19 +52,30 @@ import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 
-public class TestPop3ImportServer extends TestCase {
-    private static final String USER_NAME = "user1";
+public class TestPop3ImportServer {
+
+    @Rule
+    public TestName testInfo = new TestName();
+
     private static final String NAME_PREFIX = TestPop3ImportServer.class.getSimpleName();
     private static final String DATA_SOURCE_NAME = NAME_PREFIX;
     private static final String TEMP_USER_NAME = NAME_PREFIX + "Temp";
-    
+    private static String USER_NAME;
+    private static String PREFIX;
+    private Account mAccount;
+    private Provisioning mProv;
+
     private ZFilterRules mOriginalRules;
     private boolean mIsServerSideTest;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
+        PREFIX = String.format("%s-%s-", this.getClass().getName(), testInfo.getMethodName()).toLowerCase();
+        USER_NAME = String.format("%s-%s", PREFIX, "user1");
+        mProv = Provisioning.getInstance();
         mIsServerSideTest = false;
-        cleanUp();
+        tearDown();
+        mAccount = TestUtil.createAccount(USER_NAME);
         createDataSource();
         mOriginalRules = TestUtil.getZMailbox(USER_NAME).getIncomingFilterRules();
     }
@@ -62,6 +83,7 @@ public class TestPop3ImportServer extends TestCase {
     /*
      * Tests the UID persistence methods in {@link DbPop3Message}.
      */
+    @Test
     public void testUidPersistence() throws Exception {
         mIsServerSideTest = true;
         DataSource ds = getDataSource();
@@ -74,35 +96,36 @@ public class TestPop3ImportServer extends TestCase {
         Set<String> uids = new HashSet<String>();
         uids.add(uid1);
         uids.add(uid2);
-        
+
         // Make sure no id's match
         Set<String> matchingUids = DbPop3Message.getMatchingUids(mbox, ds, uids);
         assertEquals("Test 1: set size", 0, matchingUids.size());
-        
+
         // Store uid1 and make sure it matches
         DbPop3Message.storeUid(mbox, ds.getId(), uid1, Mailbox.ID_FOLDER_INBOX);
         matchingUids = DbPop3Message.getMatchingUids(mbox, ds, uids);
         assertEquals("Test 2: set size", 1, matchingUids.size());
         assertTrue("Test 2: did not find uid1", matchingUids.contains(uid1));
         assertFalse("Test 2: found uid2", matchingUids.contains(uid2));
-        
+
         // Store uid2 and make sure it matches
         DbPop3Message.storeUid(mbox, ds.getId(), uid2, Mailbox.ID_FOLDER_TRASH);
         matchingUids = DbPop3Message.getMatchingUids(mbox, ds, uids);
         assertEquals("Test 3: set size", 2, matchingUids.size());
         assertTrue("Test 3: did not find uid1", matchingUids.contains(uid1));
         assertTrue("Test 3: did not find uid2", matchingUids.contains(uid2));
-        
+
         // Test delete
         DbPop3Message.deleteUids(mbox, ds.getId());
         matchingUids = DbPop3Message.getMatchingUids(mbox, ds, uids);
         assertEquals("Test 3: set size", 0, matchingUids.size());
     }
-    
+
     /*
      * Confirms that the UID database gets cleared when the host name, account
-     * name or leave on server flag are changed. 
+     * name or leave on server flag are changed.
      */
+    @Test
     public void testModifyDataSource() throws Exception {
         mIsServerSideTest = true;
 
@@ -110,36 +133,36 @@ public class TestPop3ImportServer extends TestCase {
         ZPop3DataSource zds = getZDataSource();
         zds.setHost(zds.getHost() + "2");
         modifyAndCheck(zds, false);
-        
+
         // Test modifying username
         zds = getZDataSource();
         zds.setUsername(zds.getUsername() + "2");
         modifyAndCheck(zds, false);
-        
+
         // Test modifying leave on server
         zds = getZDataSource();
         ZimbraLog.test.info("Old leaveOnServer value: " + zds.leaveOnServer());
         zds.setLeaveOnServer(!zds.leaveOnServer());
         modifyAndCheck(zds, true);
     }
-    
+
     /*
      * Confirms that POP3 data is deleted when the mailbox is deleted (bug 14574).  Any leftover POP3
      * data will cause a foreign key violation.
      */
+    @Test
     public void testDeleteMailbox() throws Exception {
         mIsServerSideTest = true;
 
         // Create temp account and mailbox
-        Provisioning prov = Provisioning.getInstance();
-        Account account = prov.createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
+        Account account = mProv.createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        
+
         // Store bogus POP3 message row and delete mailbox
         DbPop3Message.storeUid(mbox, "TestPop3Import", "uid1", Mailbox.ID_FOLDER_INBOX);
         mbox.deleteMailbox();
     }
-    
+
     /*
      * Modifies the data source and confirms whether UID data was deleted.
      */
@@ -156,7 +179,7 @@ public class TestPop3ImportServer extends TestCase {
         // Modify data source and make sure the existing
         // UID's were deleted
         zmbox.modifyDataSource(zds);
-        
+
         Set<String> uids = new HashSet<String>();
         uids.add("1");
         Set<String> matchingUids = DbPop3Message.getMatchingUids(mbox, ds, uids);
@@ -175,16 +198,15 @@ public class TestPop3ImportServer extends TestCase {
         fail("Could not find data source " + DATA_SOURCE_NAME);
         return null;
     }
-    
-    @Override
+
+    @After
     public void tearDown() throws Exception {
-        cleanUp();
-        TestUtil.getZMailbox(USER_NAME).saveIncomingFilterRules(mOriginalRules);
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(TEMP_USER_NAME);
+
     }
-    
+
     private void createDataSource() throws Exception {
-        Provisioning prov = Provisioning.getInstance();
-        Account account = TestUtil.getAccount(USER_NAME);
         int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraPop3BindPort));
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceEnabled, ProvisioningConstants.FALSE);
@@ -195,28 +217,11 @@ public class TestPop3ImportServer extends TestCase {
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(Mailbox.ID_FOLDER_INBOX));
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "cleartext");
         attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, ProvisioningConstants.FALSE);
-        prov.createDataSource(account, DataSourceType.pop3, DATA_SOURCE_NAME, attrs);
+        mProv.createDataSource(mAccount, DataSourceType.pop3, DATA_SOURCE_NAME, attrs);
     }
-    
+
     private DataSource getDataSource() throws Exception {
-        Provisioning prov = Provisioning.getInstance();
-        Account account = TestUtil.getAccount(USER_NAME);
-        return prov.get(account, Key.DataSourceBy.name, DATA_SOURCE_NAME);
+        return mProv.get(mAccount, Key.DataSourceBy.name, DATA_SOURCE_NAME);
     }
-    
-    private void cleanUp() throws Exception {
-        // Delete data source
-        Provisioning prov = Provisioning.getInstance();
-        DataSource ds = getDataSource();
-        if (ds != null) {
-            Account account = TestUtil.getAccount(USER_NAME);
-            if (mIsServerSideTest) {
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-                DbPop3Message.deleteUids(mbox, ds.getId());
-            }
-            prov.deleteDataSource(account, ds.getId());
-        }
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteAccount(TEMP_USER_NAME);
-    }
+
 }

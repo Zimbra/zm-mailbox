@@ -16,6 +16,10 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -28,7 +32,11 @@ import java.util.regex.Pattern;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
@@ -45,69 +53,104 @@ import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.util.JMSession;
 
-public class TestSpam extends TestCase {
+public class TestSpam {
+
+    @Rule
+    public TestName testInfo = new TestName();
 
     private static final String NAME_PREFIX = TestSpam.class.getSimpleName();
-    private static final String USER_NAME = "user1";
-    private static final String SPAM_NAME = "user2";
-    private static final String HAM_NAME = "user3";
-    private static final String REMOTE_USER_NAME = "user4";
+    private static String USER_NAME = null;
+    private static String SPAM_NAME = null;
+    private static String HAM_NAME = null;
+    private static String REMOTE_USER_NAME = null;
 
+    private static final Provisioning prov = Provisioning.getInstance();
     private String mOriginalSpamHeaderValue;
     private String mOriginalSpamAccount;
     private String mOriginalHamAccount;
     private String mOriginalSieveScript;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
-        cleanUp();
+        String prefix = String.format("%s-%s-", NAME_PREFIX, testInfo.getMethodName()).toLowerCase();
+        USER_NAME = String.format("%s-%s-", prefix, "user1");
+        SPAM_NAME = String.format("%s-%s-", prefix, "spam");
+        HAM_NAME = String.format("%s-%s-", prefix, "ham");
+        REMOTE_USER_NAME = String.format("%s-%s-", prefix, "remote");
 
-        Config config = Provisioning.getInstance().getConfig();
+        Config config = prov.getConfig();
         mOriginalSpamHeaderValue = config.getSpamHeaderValue();
         mOriginalSpamAccount = config.getSpamIsSpamAccount();
         mOriginalHamAccount = config.getSpamIsNotSpamAccount();
+        cleanUp();
+
+        Account account = TestUtil.createAccount(USER_NAME);
+        mOriginalSieveScript = account.getMailSieveScript();
+    }
+
+    @After
+    public void tearDown()
+    throws Exception {
+        Config config = prov.getConfig();
+        config.setSpamHeaderValue(mOriginalSpamHeaderValue);
+        config.setSpamIsSpamAccount(mOriginalSpamAccount);
+        config.setSpamIsNotSpamAccount(mOriginalHamAccount);
 
         Account account = TestUtil.getAccount(USER_NAME);
-        mOriginalSieveScript = account.getMailSieveScript();
+        account.setMailSieveScript(mOriginalSieveScript);
+
+        cleanUp();
+    }
+
+    private void cleanUp()
+    throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(SPAM_NAME);
+        TestUtil.deleteAccountIfExists(HAM_NAME);
+        TestUtil.deleteAccountIfExists(REMOTE_USER_NAME);
     }
 
     /**
      * Tests {@link Mime#isSpam}.
      */
-    public void xtestSpam()
+    @Test
+    public void testSpam()
     throws Exception {
         String coreContent = TestUtil.getTestMessage(NAME_PREFIX + " testSpam", USER_NAME, USER_NAME, null);
         MimeMessage msg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(coreContent.getBytes()));
-        assertFalse(SpamHandler.isSpam(msg));
+        assertFalse("Msg should not be identified as spam", SpamHandler.isSpam(msg));
 
         // Test single-line spam header (common case)
-        String headerName = Provisioning.getInstance().getConfig().getSpamHeader();
+        String headerName = prov.getConfig().getSpamHeader();
         String singleLineSpamContent = headerName + ": YES\r\n" + coreContent;
         msg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(singleLineSpamContent.getBytes()));
-        assertTrue(SpamHandler.isSpam(msg));
+        assertTrue("Msg should be identified as spam", SpamHandler.isSpam(msg));
 
         // Test folded spam header (bug 24954).
-        Provisioning.getInstance().getConfig().setSpamHeaderValue("spam.*");
+        prov.getConfig().setSpamHeaderValue("spam.*");
         String folderSpamContent = headerName + ": spam, SpamAssassin (score=5.701, required 5,\r\n" +
             "   DCC_CHECK 1.37, FH_RELAY_NODNS 1.45, RATWARE_RCVD_PF 2.88)\r\n" + coreContent;
         msg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(folderSpamContent.getBytes()));
-        assertTrue(SpamHandler.isSpam(msg));
+        assertTrue("Msg should be identified as spam", SpamHandler.isSpam(msg));
     }
 
+    @Test
     public void testSpamHandler()
     throws Exception {
+        TestUtil.createAccount(REMOTE_USER_NAME);
+        TestUtil.createAccount(SPAM_NAME);
+        TestUtil.createAccount(HAM_NAME);
         //check if AS is installed
-        List<String> zimbraServiceInstalled = Arrays.asList(Provisioning.getInstance().getLocalServer().getServiceInstalled());
+        List<String> zimbraServiceInstalled = Arrays.asList(prov.getLocalServer().getServiceInstalled());
         if(zimbraServiceInstalled == null || zimbraServiceInstalled.isEmpty() || !zimbraServiceInstalled.contains("antispam")) {
             return;
         }
-        Config config = Provisioning.getInstance().getConfig();
+        Config config = prov.getConfig();
         config.setSpamIsSpamAccount(TestUtil.getAddress(SPAM_NAME));
         config.setSpamIsNotSpamAccount(TestUtil.getAddress(HAM_NAME));
 
@@ -165,9 +208,10 @@ public class TestSpam extends TestCase {
             String rprtKey, boolean lcase, String expected) {
         String actual = Strings.nullToEmpty(report.get(rprtKey));
         expected = Strings.nullToEmpty(expected);
-        if (lcase)
+        if (lcase) {
             expected = expected.toLowerCase();
-        assertEquals("Value for " + rprtKey,
+        }
+        assertEquals(String.format("spamReportEntryCheck - Value for '%s'", rprtKey),
                 expected, Strings.nullToEmpty(actual));
     }
 
@@ -194,28 +238,6 @@ public class TestSpam extends TestCase {
         spamReportEntryCheck(report, "Source-Folder", false, sourceFolder);
         spamReportEntryCheck(report, "Destination-Folder", false, destFolder);
         spamReportEntryCheck(report, "Destination-Mailbox", true, destMailbox);
-    }
-
-    @Override
-    public void tearDown()
-    throws Exception {
-        Config config = Provisioning.getInstance().getConfig();
-        config.setSpamHeaderValue(mOriginalSpamHeaderValue);
-        config.setSpamIsSpamAccount(mOriginalSpamAccount);
-        config.setSpamIsNotSpamAccount(mOriginalHamAccount);
-
-        Account account = TestUtil.getAccount(USER_NAME);
-        account.setMailSieveScript(mOriginalSieveScript);
-
-        cleanUp();
-    }
-
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(SPAM_NAME, "zimbra-spam-report");
-        TestUtil.deleteTestData(HAM_NAME, "zimbra-spam-report");
-        TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
     }
 
     public static void main(String[] args)

@@ -80,7 +80,7 @@
       <param name="base.dir" value="${dist.dir}"/>
     </antcall>
   </target>
-  <target name="generate-buildinfo" depends="build-init">
+  <target name="generate-buildinfo" depends="build-init,setversion">
     <mkdir dir="${build.dir}/buildinfo/com/zimbra/cs/util"/>
     <echo file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java">
             package com.zimbra.cs.util;
@@ -356,5 +356,19 @@
       </classpath>
        <arg line="-o ${dist.dir}"/>
     </java>
+  </target>
+  <target name="setup-for-soap-tests" description="Does necessary setup for RunUnitTestsRequests">
+    <exec executable="sudo" failonerror="false">
+      <arg value="mkdir"/>
+      <arg value="/opt/zimbra/unittest"/>
+    </exec>
+    <exec executable="sudo" failonerror="false">
+      <arg value="chown"/>
+      <arg value="zimbra"/>
+      <arg value="/opt/zimbra/unittest"/>
+    </exec>
+    <copy todir="/opt/zimbra/unittest" >
+      <fileset dir="data/unittest" includes="**"/>
+    </copy>
   </target>
 </project>
