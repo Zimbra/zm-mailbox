@@ -65,7 +65,7 @@ import com.zimbra.cs.util.BuildInfo;
 
 import junit.framework.Assert;
 
-public class TestRemoteImap {
+public class TestRemoteImapMultiServer {
     private static final String USER = "TestRemoteImap-user";
     private static final String PASS = "test123";
     private String[] imapServersForLocalhost = null;
