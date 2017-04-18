@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class IdAndOperation {
+public class ActionResult {
 
     /**
      * @zm-api-field-tag id
@@ -52,11 +52,11 @@ public class IdAndOperation {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    protected IdAndOperation() {
+    protected ActionResult() {
         this((String) null, (String) null);
     }
 
-    public IdAndOperation(String id, String operation) {
+    public ActionResult(String id, String operation) {
         this.id = id;
         this.operation = operation;
     }
