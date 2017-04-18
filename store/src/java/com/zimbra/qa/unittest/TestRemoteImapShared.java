@@ -23,6 +23,7 @@ public class TestRemoteImapShared extends SharedImapTests {
 
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
+        USER = "TestRemoteImapShared-user";
         saved_imap_always_use_remote_store = LC.imap_always_use_remote_store.booleanValue();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(true));
         super.sharedSetUp();
