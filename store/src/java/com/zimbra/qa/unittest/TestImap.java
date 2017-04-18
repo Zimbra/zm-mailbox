@@ -37,7 +37,9 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -81,8 +83,9 @@ import com.zimbra.cs.mailclient.imap.ResponseHandler;
  * IMAP server tests.
  */
 public class TestImap {
-    private static final String USER = "imap-test-user";
-    private static final String PASS = "test123";
+    static final String NAME_PREFIX = TestImap.class.getSimpleName().toLowerCase();
+    static String USER;
+    static final String PASS = "test123";
 
     private ImapConnection connection;
     private static SoapProvisioning sp;
@@ -94,6 +97,7 @@ public class TestImap {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
+        USER = NAME_PREFIX + "-user1";
         sp = new SoapProvisioning();
         prov = Provisioning.getInstance();
         homeServer = prov.getLocalServer();
@@ -1037,7 +1041,7 @@ public class TestImap {
         void run() throws Exception;
     }
 
-    private ImapConnection connect() throws IOException {
+    ImapConnection connect() throws IOException {
         ImapConfig config = new ImapConfig(homeServer.getServiceHostname());
         config.setPort(homeServer.getImapBindPort());
         config.setAuthenticationId(USER);
@@ -1102,7 +1106,7 @@ public class TestImap {
         Assert.assertTrue("folderList * does not contain Junk", hasJunk);
     }
 
-    private void cleanup() throws Exception {
+    void cleanup() throws Exception {
         if (connection != null) {
             connection.close();
         }
