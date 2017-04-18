@@ -50,7 +50,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
 import com.zimbra.client.ZEmailAddress;
 import com.zimbra.client.ZFilterAction;
 import com.zimbra.client.ZFilterAction.MarkOp;
