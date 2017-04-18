@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlSeeAlso({
@@ -154,10 +155,10 @@ public class ActionSelector {
 
     /**
      * @zm-api-field-tag non-existent-ids
-     * @zm-api-field-description Comma-separated list of non-existent ids
+     * @zm-api-field-description Flag to signify any non-existent ids should be returned
      */
     @XmlAttribute(name=MailConstants.A_NON_EXISTENT_IDS /* nei */, required=false)
-    protected String nonExistentIds;
+    protected ZmBoolean nonExistentIds;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -187,7 +188,7 @@ public class ActionSelector {
     public void setColor(Byte color) { this.color = color; }
     public void setName(String name) { this.name = name; }
     public void setFlags(String flags) { this.flags = flags; }
-    public void setNonExistentIds(String ids) { this.nonExistentIds = ids; };
+    public void setNonExistentIds(boolean r) { this.nonExistentIds = ZmBoolean.fromBool(r); };
     /**
      * Use {@link ActionSelector#setTagNames(String)} instead.
      */
@@ -198,7 +199,7 @@ public class ActionSelector {
     public String getIds() { return ids; }
     public String getOperation() { return operation; }
     public String getConstraint() { return constraint; }
-    public String getNonExistentIds() { return nonExistentIds; };
+    public boolean getNonExistentIds() { return ZmBoolean.toBool(nonExistentIds); };
 
     /**
      * Use {@link ActionSelector#getTagNames()} instead.
