@@ -6024,6 +6024,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public void delete(OpContext octxt, List<Integer> itemIds, List<Integer> nonExistingItems) throws ServiceException {
          String ids = Joiner.on(",").join(itemIds);
          ActionSelector action = ActionSelector.createForIdsAndOperation(ids, MailConstants.OP_HARD_DELETE);
+         action.setNonExistentIds(true);
          ItemActionRequest req = new ItemActionRequest(action);
          ItemActionResponse resp = invokeJaxb(req);
          ActionResult ar = resp.getAction();
