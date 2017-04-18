@@ -100,7 +100,7 @@ public class ItemAction extends MailDocumentHandler {
 
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
-
+        boolean nonExistentIdsRequested = action.getAttributeBool(MailConstants.A_NON_EXISTENT_IDS, false);
         ItemActionResult result = handleCommon(context, request, MailItem.Type.UNKNOWN);
 
         Element response = zsc.createElement(MailConstants.ITEM_ACTION_RESPONSE);
@@ -108,7 +108,7 @@ public class ItemAction extends MailDocumentHandler {
         act.addAttribute(MailConstants.A_ID, Joiner.on(",").join(result.getSuccessIds()));
         act.addAttribute(MailConstants.A_OPERATION, operation);
         String opStr = getOperation(operation);
-        if (opStr.equals(MailConstants.OP_HARD_DELETE))
+        if (opStr.equals(MailConstants.OP_HARD_DELETE) && nonExistentIdsRequested)
         {
             act.addAttribute(MailConstants.A_NON_EXISTENT_IDS, Joiner.on(",").join(((DeleteActionResult)result).getNonExistentIds()));
         }
@@ -547,6 +547,8 @@ public class ItemAction extends MailDocumentHandler {
 
     protected ItemActionResult proxyRemoteItems(Element action, Map<String, StringBuilder> remote, Element request, Map<String, Object> context)
     throws ServiceException {
+        boolean nonExistentIdsRequested = action.getAttributeBool(MailConstants.A_NON_EXISTENT_IDS, false);
+
         String folderStr = action.getAttribute(MailConstants.A_FOLDER, null);
         if (folderStr != null) {
             // fully qualify the folder ID (if any) in order for proxying to work
@@ -571,8 +573,6 @@ public class ItemAction extends MailDocumentHandler {
             action.addAttribute(MailConstants.A_ID, itemIds);
             // ... proxy to the target items' owner's server...
             String accountId = entry.getKey();
-            // TODO: Add 'advanced' option to trigger Create / Delete additional information response
-
             Element response = proxyRequest(request, context, accountId);
             // ... and try to extract the list of items affected by the operation
             try {
@@ -581,7 +581,12 @@ public class ItemAction extends MailDocumentHandler {
                 {
                     result.appendSuccessId(id);
                 }
-                // TODO: Handle Copy createdIds and Delete: non-existent IDs
+                if (opStr.equals(MailConstants.OP_HARD_DELETE) && nonExistentIdsRequested)
+                {
+                    for (String nonExistentId: response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_NON_EXISTENT_IDS).split(",")) {
+                        ((DeleteActionResult)result).appendNonExistentId(nonExistentId);
+                    }
+                }
             } catch (ServiceException e) {
                 ZimbraLog.misc.warn("could not extract ItemAction successes from proxied response", e);
             }
